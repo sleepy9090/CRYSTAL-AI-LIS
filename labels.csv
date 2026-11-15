@@ -284,7 +284,11 @@ bank,addr,name,comment
 *,06E3,pending_msg_group,group for ShowPendingMessage 30:D085
 30,D22B,GiveItemA,A -> $057F (slot $1F spawn param) then GiveItem with $0623=$1F
 30,D3EB,GiveItem,item id obj_spawn_param Y -> $07DC; SFX; msg 32.12 You now have {ITEM}
-30,D40C,ItemRemapTable,indexed by item id $50-$7F -> $07DC
+30,D40C,ItemRemapTable,base for LDA D40C+Y with Y=$50-$6F (bytes really at D45C-D47B); display-name remap only -> $07DC
+30,D3DA,TrapChest,item $70: ObjInit chest slot as type $73 (chest monster AI $2B 27:AC60); sub_state=8
+30,D47C,GiveItemFull,GiveItem fail path: msg 32.15 too many items + SFX $29 if $08&$0F=0
+30,D497,ItemUseMenu,item menu use: $0715 checks ($08 teleport -> SaveGame) then ItemEventHook(1) -> EventActionDispatch
+30,D526,ItemUseFail,sub_state=$10; pending msg 32.19 Nothing happens, SFX $4E
 30,D31C,NpcVanish,Y=$0623: obj_active=$53 $0660=1 SFX $6D (entry D31F with Y set)
 30,D1FF,SpawnFxAtSlot,X=src slot: ObjInit type $DF in slot $1E at slot X position; AreaLoadB
 30,D16D,TalkFullRestore,HP $03C1=$03C0; MP $0708=$0709; HUD redraw; NpcVanish
@@ -389,4 +393,6 @@ bank,addr,name,comment
 15,BAFE,BossFleeRecPtrs,ptr16[14] by boss rec index ($0600) -> 5-byte recs (?, $031F, $033F, msg id, group)
 15,BB29,ClearEnemySlots,obj_active=0 for slots $0D-$1E except X and AI $78/$7F/$30/$39; slots 4-11 cleared
 14,85E0,NpcPresenceLo,ptr16[128] NpcHidden lists for params 00-7F
+19,BC04,SwordRaisePose,event act 1 cutscene: player meta $B8 + CHR R2=$5C R3=$42; jingle $93; 127-frame hold; sub_state=8
+27,AC60,AI_TrapChest,AI $2B (type $73): phase0 meta $AA wait; phase1 meta $90 wander with $0620 timer
 14,86E0,NpcPresenceHi,ptr16[128] NpcHidden lists for params 80-FF (bosses $C0-$CC: !F100-!F10C)
