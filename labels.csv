@@ -48,7 +48,10 @@ bank,addr,name,comment
 24,847D,SndOpDuration,op $50-$6F: note length = SndDurationTable[byte-$50]
 24,848A,SndOpLegato,op $7x: change pitch without retrigger (x=7 = tie/no-op); ends frame
 24,8532,SndOpVolume,op $8x: base volume x into $0168 low nibble
-24,854D,SndOpDuty,op $9x: duty/const-vol config ($0168 high bits); triangle path differs
+24,854D,SndOpDuty,op $9x: TRI $0168 hi nibble=x; SQ/NOISE duty=(x&6)<<5 constvol=x bit0 +$20 halt; x bit0=0 clears env flag
+24,86AA,SndVibratoTick,per-frame vibrato; phase in $0162 low 3 bits; lo-period only; off-by-one index Y=oct*16+e+2
+24,8714,SndVibStepTable,16 bytes: (depth>>1)*4+phase -> offset-table byte index e (0=no offset)
+24,8724,SndVibOffsetTable,s16 period offsets; row per octave at $8726+oct*16
 24,8584,SndOpFlow,op $Ax: A0 lo hi=jump; A1 n=loop1 start; A2 n=loop2 start; A4=loop1 end; A3/A5+=loop2 end
 24,85F7,SndOpEnvelope,op $Ex: envelope #x ($015C=x<<4) enable ($0114 bit6)
 24,8685,SndOpVibrato,op $Fx: vibrato depth x*8 ($0162); x<8 on; x=8 off; x>8 = wait one frame
