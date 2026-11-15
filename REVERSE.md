@@ -225,6 +225,30 @@ Object RAM (32 slots, index X 0-31): `$70/$90` X lo/hi, `$B0/$D0` Y lo/hi, `$030
 
 **`tools/meta_dump.py` (session 6)** — `text [ids]` prints decoded records (FF-mirror resolved); `png [out] [--chr R2,R3,R4,R5] [--cell N] [--frames N]` renders all 256 ids in a 16×16 grid (frames side by side, attr palette tinted, origin pixel marked) → `gfx/metasprites.png`. Default `--chr 40,42,50,51`. Verified: ids `00-07` (player: 4 facings + 4 sword/attack poses) render clean with R2=`$40`; ids using tiles ≥`$80` need the area's R4/R5 (the `50,51` default is a placeholder, so those look scrambled). Only 4 of the 256 ids are empty. Next: decode the `$9300` area table so each id range can be rendered with its real R4/R5.
 
+**Area records (session 7)** — `AreaLoad` `31:E14A` (entries `AreaLoadA` `E144` sets `$18`=1, `AreaLoadB` `E148` sets `$18`=0; callers `30:D1C0/D1DC/D6EC` and JMP tails `30:D199/D21A/31:E6FF`; `$18` not read in this routine). `SwitchBank16(6)` → banks 12/13, then ptr = `AreaPtrTable` `12:9201`[`$6C`] (one ptr16 table — the `$9301` load is the same table's upper half, chosen by the carry from `ASL $6C`). **`$6C` = current area id**; table has **252 entries** (ends `$93F9`, where area `$3C`'s record starts). Ptr hi bit7 clear → no record (`$0000` nulls, e.g. areas 11, 13, 18, 19). `LoadAreaChrRecord` `E16D` is the record body:
+```
+00                       must be 0 (else whole record ignored)
+e6 e7                    -> $07E6, $07E7 (meaning TBD; flag-item handler overrides both with ($6C&7)+9)
+R4 R5                    -> $07F4/$07F5 sprite CHR (1KB banks for tiles $80-$FF); $FF seen in 30+ areas (meaning TBD — likely "keep")
+{b0 b1 b2 b3}*           one 4-byte entry per object slot, X starting at $0D (slots $0D-$1F)
+FF                       end
+```
+- `FE` as b0 → slot skipped (4 bytes). b1 bit7 → slot skipped (`E19D` ASL/BCC).
+- **Position:** Y = b0·16 + 12 (`$D0`=b0>>4, `$B0`=b0<<4|`$0C`); X = (b1&`$7F`)·16 + 8 + (b2 b6 ? 8 : 0) (`$90`=(b1>>4)&7). 16-px cell grid, up to 8 screens wide/16 high.
+- **b2**: bits0-2 = handler index (`SpawnHandlerTable` `31:E218`, 5 valid entries — entry 4 = `$E222`, the code right after the table; bytes beyond are code, so values 5-7 are invalid); bits0-1 also → `$0540,X`; b6 = x+8; b7 → `$0380` b5 (tile+`$40`, via `E3C7`).
+- **b3** = param `$2F` → `$0560,X`.
+- Every handler calls `ObjInit` `30:C25D` (slot `$10`=X, type `$11`; type 1 = no-op) then common tail `SpawnCommonTail` `E28E`.
+
+| h | Addr | Spawn |
+|---|------|-------|
+| 0 | `E27F` | type = p+`$50` |
+| 1 | `E2B5` | indirect: `SwitchBank16(2)` (banks 4/5), 4-byte rec at `$8000 + (p>>2)·$100 + $F0 + (p&3)·4` → `$20-$23`. If `$20`=`$FF`: type=`$21`. Else type `$30`, `$0680`=`$20`, `$06A0`=`$21`, `$22` b7 → `$04A0`/`$06E0`=`$22&$7F`, else `$06E0`=`$22`, `$0320`=`$22&$70`; `$22` b3 → y\|=`$0E`; `$0300`=`$06C0`=`$23`; `$0600` from `E35F[p&3]` unless `$06E0` b2. Then bank 14 `$80A0` with `$23`=p |
+| 2 | `E375` | p bit7 → type `$0E`; else type `$0D` + bank 14 `$85BF` (`$23`=p); p ∈ {`$25 $3B $3C`} → meta id `$4C` |
+| 3 | `E2A3` | type = p+`$D0` |
+| 4 | `E222` | type = p; if p&`$F0`=`$40` (**flag item**): `$07E6/$07E7`=(`$6C`&7)+9; in areas `$C2-$C4` (flag `$84`) / `$F5-$F7` (flag `$27`) if WRAM bit `$6480[f>>3] & BitMask[f&7]` set → p=`$4E` (already-collected replacement). `BitMask` = `30:C000` (`01 02 … 80`) |
+
+`tools/area_dump.py [list|chr|spawns] [areas]` decodes all of it. `chr` mode groups areas by (R4,R5): 120+ distinct pairs; most common `4A/4A` (28 areas, `$BC-$FB` range), `67/66` (12 areas: `11 23 24 26 27 2D 44 48 49 4B 4E 4F`), `FF/FF` (10). Verified: `meta_dump.py png --chr 40,42,67,66` renders the blue humanoid enemy ids (`$58-$5F`, `$6B-$6F`, `$8C-$8F`) cleanly where the old `50,51` placeholder scrambled them → `gfx/metasprites_area67_66.png`.
+
 **Port note:** reimplement as: for slot in order[rot&3]: compute screen pos, resolve record (follow one `FF` with mirror), emit N sprites of frame f; then hide rest; then orbit ring. Sprite limit is 63 (OAM `$04-$FF`) minus 8 orbit slots overlapped — the orbit writes `$E0-$FC` unconditionally after the hide pass, overwriting objects there.
 
 ### Data Structures
@@ -252,6 +276,7 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 | `tools/sound_ids.py` | groups `LDA #id / JSR PlaySound` sites by id. Written session 3, not yet run (permission prompt) |
 | `tools/sound_dump.py` | `music <id>` / `sfx <id>` / `all` (`--max N`): prints each channel stream as op text (notes, LEN frames, loops/CALL with SFX `+$2000` fix-up, drums on NOISE); `all` lists every header. Written session 4, not yet run (permission prompt) — first run should verify `music 0x13` matches the bytes quoted above |
 | `tools/meta_dump.py` | metasprite records `text [ids]` / `png [out] [--chr R2,R3,R4,R5]` → `gfx/metasprites.png` (session 6, run + verified on player ids) |
+| `tools/area_dump.py` | `list`/`chr`/`spawns [areas]` — decodes `AreaPtrTable` `12:9201` (252 areas): `$07E6/$07E7`, R4/R5, per-slot spawn entries (session 7, run + verified) |
 | `tools/bank_calls.py` | lists each `LDA #n / JSR SwitchBank16` site with n, 8KB pair, and following `$8000-$BFFF` JSR/JMP targets (`--summary` groups by n). Not yet run (permission prompt) |
 
 `nesrom.py` gained `bank_window(bank)` (30→$C000, 31→$E000, even→$8000, odd→$A000), `bank_cpu_addr`, `parse_bank_addr("BB:AAAA")`.
@@ -287,7 +312,8 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 - [x] Ph3: sound follow-ups — decode `SndOpDuty` `24:854D` triangle path + vibrato `24:86AA` exactly; check SFX table entries 48-87 for nulls; name music `$0C`/`$12`/`$13` by their callers' states; write `tools/sound_dump.py` to disassemble a stream into op text — done session 4: duty bit layout, vibrato algorithm incl. original off-by-one table index; SFX nulls `$59 $70 $71 $73 $77`; `$13`=interrupting jingle, `$12`=entity/boss track, `$0C`=event theme; `sound_dump.py` written (unrun, needs approval)
 - [x] Ph3: trace bank 28 `$800E` object sprite pass fully (object table `$04A0`/`$70` layout, metasprite format at `$83D8/$83DC`) — done session 5: 32-slot object table, 4 draw-order permutations, metasprite record format (count/mask/frames, `FF` mirrored redirect, `$80` terminator, attr b2 half-hide), obj 1 = player (hit flash `$0710`, orbit/burst ring `$06C0/$06C1`). See "Object sprite pass".
 - [x] Ph4: write `tools/meta_dump.py` — render metasprite ids 0-255 from `28:845C/855C` using CHR (needs sprite CHR banks from MMC3 R2-R5 at draw time) — done session 6: tool written + run → `gfx/metasprites.png`; sprite CHR shadows `$07F0-$07F5`/`$58-$5D` found, player R2=`$40/$41`, R3=`$42-$46`; ids 0-7 (player) verified clean. See "Sprite CHR banks".
-- [ ] Ph3: decode area table at `$9300` (bank pair TBD, read by `31:E15F`) + `LoadAreaChrRecord` `31:E16D` record fields (`$07E6/$07E7`, R4/R5, rest) → per-area enemy CHR so `meta_dump.py --chr` can render each enemy set correctly
+- [x] Ph3: decode area table at `$9300` (bank pair TBD, read by `31:E15F`) + `LoadAreaChrRecord` `31:E16D` record fields (`$07E6/$07E7`, R4/R5, rest) → per-area enemy CHR so `meta_dump.py --chr` can render each enemy set correctly — done session 7: one 252-entry `AreaPtrTable` `12:9201` indexed by area `$6C` (banks 12/13); record = `00 e6 e7 R4 R5` + 4-byte per-slot spawn entries (slots `$0D+`, `FF` end) with 5 spawn handlers `31:E218`; `tools/area_dump.py` written + run. See "Area records".
+- [ ] Ph3: area follow-ups — meaning of `$07E6/$07E7` and R4/R5 = `$FF`; `ObjInit` `30:C25D` type dispatch; bank 4/5 indirect spawn records (`$80F0+`); what sets `$6C` (area transitions); `$18` reader
 - [ ] Ph3: decode `30:CADE`/`CB2E` substate tables (length, name each state-1 substate handler)
 - [ ] Ph3: trace `31:EF38` packed bank+pointer decoder — find the pointer tables that feed it (banks 0-7 data streams)
 - [ ] Ph3: decode jump tables at start of swappable banks (`$8000-$802F` in banks 12, 18, …)

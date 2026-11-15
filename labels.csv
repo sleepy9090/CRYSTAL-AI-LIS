@@ -154,4 +154,24 @@ bank,addr,name,comment
 *,005D,chr_r5_alt,CHR R5 shadow (2nd set)
 31,F883,ApplyChrPlay,write $07F0-$07F5 to MMC3 R0-R5; JSR'd from F779/F785/F7C8
 31,F64F,ApplyChrAlt,write $58-$5D to MMC3 R0-R5
-31,E16D,LoadAreaChrRecord,(ptr $10) record: 00 then $07E6 $07E7 R4 R5 ...; nonzero first byte = no-op
+31,E16D,LoadAreaChrRecord,(ptr $10) record: 00 then $07E6 $07E7 R4 R5 + 4-byte spawn entries from slot $0D; FF end FE skip
+31,E144,AreaLoadA,$18=1 then AreaLoad
+31,E148,AreaLoadB,$18=0 then AreaLoad
+31,E14A,AreaLoad,SwitchBank16(6); ptr=AreaPtrTable[$6C]; falls into LoadAreaChrRecord
+31,E1B6,AreaSpawnEntry,decode 4-byte spawn entry for slot X then JMP (SpawnHandlerTable[b2&7])
+31,E218,SpawnHandlerTable,5 x ptr16 spawn handlers (entries 5-7 are code bytes)
+31,E222,SpawnH4_Item,type=p; p&F0=$40 flag item (WRAM $6480 bit set -> p=$4E)
+31,E27F,SpawnH0,type=p+$50
+31,E28E,SpawnCommonTail,$0540=b2&3 $0560=p; restore Y/$10/$11
+31,E2A3,SpawnH3,type=p+$D0
+31,E2B5,SpawnH1_Indirect,4-byte rec from banks 4/5 at $80F0+; type $30 or rec[1]
+31,E375,SpawnH2,type $0D (+bank14 $85BF) or $0E if p bit7
+31,E3C7,SpawnSetTileHi,$0380 |= (b2 bit7)>>2
+30,C000,BitMask,01 02 04 08 10 20 40 80
+30,C25D,ObjInit,init object slot $10 with type $11 (type 1 = no-op)
+12,9201,AreaPtrTable,252 x ptr16 area records indexed by $6C
+*,006C,area_id,current area id (AreaPtrTable index)
+*,07E6,area_e6,area record byte1 (TBD)
+*,07E7,area_e7,area record byte2 (TBD)
+*,0540,obj_spawn_b2,spawn entry b2&3
+*,0560,obj_spawn_param,spawn entry param byte
