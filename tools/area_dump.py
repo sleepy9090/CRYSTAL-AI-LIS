@@ -5,6 +5,7 @@ usage: area_dump.py [list|chr|spawns] [area ...]
   list    (default) one line per area: ptr, $07E6/$07E7, R4/R5, spawn count
   chr     group areas by (R4,R5) sprite CHR pair (for meta_dump.py --chr)
   spawns  full decode of each area's spawn entries
+  indirect  every handler-1 param used + its bank 4/5 record (session 8)
 
 Format (session 7, see REVERSE.md "Area records"):
   AreaPtrTable 12:9201 ptr16 indexed by $6C (area id 0-255; banks 12/13 via
@@ -80,9 +81,51 @@ def decode(area):
     return {'ptr': p, 'e6': e6, 'e7': e7, 'r4': r4, 'r5': r5, 'ents': ents, 'end': y}
 
 
+def indirect_rec(p):
+    """Handler-1 record: banks 4/5 (SwitchBank16(2)), $8000+(p>>2)*$100+$F0+(p&3)*4."""
+    a = 0x8000 + (p >> 2) * 0x100 + 0xF0 + (p & 3) * 4
+    b = 4 + (1 if a >= 0xA000 else 0)
+    o = b * 0x2000 + (a & 0x1FFF)
+    return a, bytes(PRG[o:o + 4])
+
+
+def describe_indirect(r):
+    r20, r21, r22, r23 = r
+    if r20 == 0xFF:
+        return f'type=${r21:02X}'
+    s = f'type=$30 $0680={r20:02X} $06A0={r21:02X} meta/$06C0={r23:02X} '
+    if r22 & 0x80:
+        s += f'$04A0/$06E0={r22 & 0x7F:02X}'
+    else:
+        s += f'$06E0={r22:02X} tile+={r22 & 0x70:02X}'
+    if r22 & 0x08:
+        s += ' y|=0E'
+    return s
+
+
+MODES = ('list', 'chr', 'spawns', 'indirect')
+
+
 def main(argv):
-    mode = argv[0] if argv and argv[0] in ('list', 'chr', 'spawns') else 'list'
-    rest = [a for a in argv if a not in ('list', 'chr', 'spawns')]
+    mode = argv[0] if argv and argv[0] in MODES else 'list'
+    rest = [a for a in argv if a not in MODES]
+    if mode == 'indirect':
+        # every handler-1 spawn across all areas, with its bank 4/5 record
+        n = table_len()
+        seen = {}
+        for a in (int(x, 0) for x in rest) if rest else range(n):
+            d = decode(a)
+            if not d or 'ents' not in d:
+                continue
+            for x, e in d['ents']:
+                if isinstance(e, tuple) and e[2] == 1:
+                    seen.setdefault(e[3], []).append(a)
+        for p in sorted(seen):
+            addr, r = indirect_rec(p)
+            print(f'p=${p:02X} rec {4 + (addr >= 0xA000)}:{addr:04X} {r.hex(" ")}  '
+                  f'{describe_indirect(r):<52} areas ' + ' '.join(f'{a:02X}' for a in seen[p]))
+        print(f'-- {len(seen)} distinct params')
+        return 0
     n = table_len()
     areas = [int(a, 0) for a in rest] or list(range(n))
     print(f'; AreaPtrTable 12:{TABLE:04X}, {n} entries (table end ${TABLE + 2 * n:04X})')

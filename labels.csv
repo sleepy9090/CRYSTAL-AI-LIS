@@ -171,7 +171,18 @@ bank,addr,name,comment
 30,C25D,ObjInit,init object slot $10 with type $11 (type 1 = no-op)
 12,9201,AreaPtrTable,252 x ptr16 area records indexed by $6C
 *,006C,area_id,current area id (AreaPtrTable index)
-*,07E6,area_e6,area record byte1 (TBD)
-*,07E7,area_e7,area record byte2 (TBD)
+*,07E6,pal_id_spr2,sprite sub-palette 2 id (area record byte1); palette ids $07E0-$07E7
+*,07E7,pal_id_spr3,sprite sub-palette 3 id (area record byte2)
+*,07E0,pal_ids,8 palette ids (BG0-3 spr0-3) -> PaletteBuild 26:8C0E
+*,07E8,pal_nofade_mask,bit i = palette i ignores fade step in PaletteBuild
+*,6140,pal_buf,32-byte palette buffer (WRAM) written by PaletteLoadOne
+*,006D,area_entry,entry point/dest in new area (from exit record byte3; meaning TBD)
+26,8C0E,PaletteBuild,$11=0 (no fade) then builds $6140-$615F from ids $07E0-$07E7; 8C10 = entry with A=fade step
+26,8C6E,PaletteLoadOne,A=id (+$B0 sprite): 4 colours from bank 2/3 $A000+(id>>2&1F)*$100+$F0+(id&3)*4
+26,8C32,PaletteBlackFill,$6040-$605F <- $0F
+30,C7A5,AreaSubTable,A=k: SwitchBank16(5); ($10)=header(10:8300[$6C])[k]; Y=0. k=3 exit list
+31,EB09,ExitLookup,player 16px cell vs exit list (xc yc area entry)*,FF; sub_state 8 -> load area
+13,AC00,ObjTypeTable,ptr16 per object type ($AD00 upper half) -> ObjInit records (snd + 4 bitmask groups)
+30,CBEC,AreaByIndexTable,16 area ids indexed by $0780&15 (warp/continue)
 *,0540,obj_spawn_b2,spawn entry b2&3
 *,0560,obj_spawn_param,spawn entry param byte

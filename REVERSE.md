@@ -228,8 +228,8 @@ Object RAM (32 slots, index X 0-31): `$70/$90` X lo/hi, `$B0/$D0` Y lo/hi, `$030
 **Area records (session 7)** — `AreaLoad` `31:E14A` (entries `AreaLoadA` `E144` sets `$18`=1, `AreaLoadB` `E148` sets `$18`=0; callers `30:D1C0/D1DC/D6EC` and JMP tails `30:D199/D21A/31:E6FF`; `$18` not read in this routine). `SwitchBank16(6)` → banks 12/13, then ptr = `AreaPtrTable` `12:9201`[`$6C`] (one ptr16 table — the `$9301` load is the same table's upper half, chosen by the carry from `ASL $6C`). **`$6C` = current area id**; table has **252 entries** (ends `$93F9`, where area `$3C`'s record starts). Ptr hi bit7 clear → no record (`$0000` nulls, e.g. areas 11, 13, 18, 19). `LoadAreaChrRecord` `E16D` is the record body:
 ```
 00                       must be 0 (else whole record ignored)
-e6 e7                    -> $07E6, $07E7 (meaning TBD; flag-item handler overrides both with ($6C&7)+9)
-R4 R5                    -> $07F4/$07F5 sprite CHR (1KB banks for tiles $80-$FF); $FF seen in 30+ areas (meaning TBD — likely "keep")
+e6 e7                    -> $07E6, $07E7 = sprite sub-palette 2/3 ids (session 8; flag-item handler overrides both with ($6C&7)+9)
+R4 R5                    -> $07F4/$07F5 sprite CHR (1KB banks for tiles $80-$FF); $FF = CHR bank 127, not "keep" (session 8)
 {b0 b1 b2 b3}*           one 4-byte entry per object slot, X starting at $0D (slots $0D-$1F)
 FF                       end
 ```
@@ -247,7 +247,36 @@ FF                       end
 | 3 | `E2A3` | type = p+`$D0` |
 | 4 | `E222` | type = p; if p&`$F0`=`$40` (**flag item**): `$07E6/$07E7`=(`$6C`&7)+9; in areas `$C2-$C4` (flag `$84`) / `$F5-$F7` (flag `$27`) if WRAM bit `$6480[f>>3] & BitMask[f&7]` set → p=`$4E` (already-collected replacement). `BitMask` = `30:C000` (`01 02 … 80`) |
 
-`tools/area_dump.py [list|chr|spawns] [areas]` decodes all of it. `chr` mode groups areas by (R4,R5): 120+ distinct pairs; most common `4A/4A` (28 areas, `$BC-$FB` range), `67/66` (12 areas: `11 23 24 26 27 2D 44 48 49 4B 4E 4F`), `FF/FF` (10). Verified: `meta_dump.py png --chr 40,42,67,66` renders the blue humanoid enemy ids (`$58-$5F`, `$6B-$6F`, `$8C-$8F`) cleanly where the old `50,51` placeholder scrambled them → `gfx/metasprites_area67_66.png`.
+**Palette ids `$07E0-$07E7` (session 8)** — `$07E6/$07E7` are **sprite sub-palettes 2 and 3** (the enemy palettes). `$07E0-$07E7` = 8 palette ids (BG 0-3, sprite 0-3). `PaletteBuild` `26:8C0E` (sets fade `$11`=0, i.e. full brightness; 18 callers in banks 26/27/30/31; `8C10` is an A=fade-step entry with no direct xrefs) loops X=0..$1F step 4, calls `PaletteLoadOne` `26:8C6E` with A=`$07E0[X>>2]`:
+- id p (+`$B0` if a sprite palette, X≥`$10`) → `SetR7(2 + (p>>7))` (banks 2/3 at `$A000`), source = `$A000 + ((p>>2)&$1F)·$100 + $F0 + (p&3)·4`: **4-byte palette records live in the last 16 bytes of every 256-byte page of banks 2/3** (512 slots; same page-tail layout as the bank 4/5 spawn records of handler 1).
+- each colour: `$FF` → copy of `$6140` (backdrop); then colour − `$11` (fade, steps of `$10`), negative → `$0F` black; written to **palette buffer `$6140-$615F`** (WRAM).
+- `$07E8` = per-palette "ignore fade" mask, bit i = palette i (shifted out LSB first; only 8 bits, one per palette). Also tested via `BIT` at `30:C0E5`, `31:E3FE/E4E5/E4F4`.
+- So the flag-item handler's `($6C&7)+9` → sprite ids `$B9-$C0`.
+- `$6040-$605F` filled with `$0F` by `26:8C32` (a second palette buffer — target/black).
+
+**R4/R5 = `$FF` (session 8)** — `LoadAreaChrRecord` stores it unchanged and `ApplyChrPlay` `31:F883` writes `$07F4/$07F5` to MMC3 R4/R5 with no check. So `$FF` is **not** a "keep" marker: it selects CHR bank `$FF` mod 128 = **1KB bank 127**. Those areas probably have no enemies that use tiles `$80-$FF` (not verified).
+
+**`ObjInit` `30:C25D` (session 8)** — type `$11` (1 = no-op). `SetR7($0D)` (bank 13 at `$A000`), ptr = `ObjTypeTable` `13:AC00`[type·2] (`$AD00` upper half when type ≥ `$80`, using the carry from ASL). Record:
+```
+snd                 if ≠0 → PlaySound(snd)
+                    (then all 32 columns $0300/$0400/$0500/$0600,X+n·$20 are zeroed for the slot; type $FF stops here)
+m0 {..}             bitmask, MSB first: each set bit → next byte stored to $0300,$0320,…,$03E0 (,X)
+m1 {..}             → $0400 … $04E0   ($04A0 = active, $04E0 = anim)
+m2 {..}             → $0500 … $05E0   ($0540/$0560 spawn b2/param, $0580 overlay, $05C0/$05E0 screen pos)
+m3 {..}             → $0600 … $06E0   ($06C0 last; $06E0 only if bit 0 set)
+```
+So each object type is a sparse initialiser for the 32 `$0300-$06E0` column arrays. Spawn handlers write their position/param fields after `ObjInit`.
+
+**Area transitions — what sets `$6C` (session 8)** — `AreaSubTable` `30:C7A5` (A=k): `SwitchBank16(5)` (banks 10/11), header ptr = `10:8300`[`$6C`·2] (`$8400` upper half), returns `($10)` = header's k-th ptr16, Y=0. **Sub-table 3 = exit list**, scanned by `ExitLookup` `31:EB09`: player (obj 0 `$70/$90`, `$B0/$D0`) → 16-px cell ($12 = x>>4 | xhi<<4, $13 = y>>4 | yhi<<4); records `xc yc area dest6D`, `FF` end. On a match: if `$41`=8 → `$6C`=area, `$6D`=dest, `$41`=1 and the two return addresses are popped (aborts the caller). Otherwise it returns Y at the record's byte 2, and the caller (`30:DAAB`, after a walk-up/door animation that runs until `$B0`=`$8F`) does the same stores itself (+ `$51`=`$4B`=0). `$6D` = entry point in the new area (meaning TBD). Other writers: `30:C96F` (=0, new game, after clearing `$6480/$6580` flags), `30:CBDC` (`AreaByIndexTable` `30:CBEC`[`$0780`&15] = `02 03 04 14 1A 20 40 42 60 64 72 78 7C 90 A8 98` — warp/continue destinations), `30:D5CB` (=`$F2`, scripted), `30:DC93` (`30:DC58`[`$22`]), `31:E5E3` (restored from stack), plus banks 10/22/23/28.
+
+**`$18` (session 8)** — the flag `AreaLoadA/B` writes has **no reader**. Fixed banks 30/31 only store to `$18`, and the zp hits in banks 12/13/14 (the banks mapped during AreaLoad and its spawn handlers) all decode as data. `Bank26_FadeA/B` reuse `$18` as a temp. It is most likely a dead write. Not checked in an emulator.
+
+**Handler-1 indirect spawn records (session 8)** — `area_dump.py indirect` lists every handler-1 param used by any area together with its bank 4/5 record. 137 distinct params; all records exist (no garbage):
+- p `$00-$8E` → `00 00 xx mm`-style **type `$30` generic objects**. Byte 3 = meta id, mostly `$2C-$4A` (static props/NPCs: `$2C $30 $34 $38` most common), some `$AD`/`$DB`/`$BF`. Byte 2 is usually `$02/$04/$06` (→ `$06E0` behaviour flags) and sometimes has b3 set (y\|=`$0E`, sits low in its cell). `$0680/$06A0` are non-zero in only ~15 records (e.g. p `$5E` = `41 34`, `$7E` = `47 48`). These are probably talk/dialogue or event ids (TBD).
+- p `$C0-$CC` → `FF tt FF FF` = **direct type redirect** (type `$57 $5E $68 $70 $8B $90 $93 $97 $9C $9D $9B $A5`), one per area (`0A 1A 28 43 A9 AC B9 B6 A0 9F/A6 6C`). These are probably bosses or unique objects.
+- only p `$65` (area `$01`) has `$22` b7 set (`$04A0`=`$50`, i.e. starts inactive/special).
+
+`tools/area_dump.py [list|chr|spawns|indirect] [areas]` decodes all of it. `chr` mode groups areas by (R4,R5): 120+ distinct pairs; most common `4A/4A` (28 areas, `$BC-$FB` range), `67/66` (12 areas: `11 23 24 26 27 2D 44 48 49 4B 4E 4F`), `FF/FF` (10). Verified: `meta_dump.py png --chr 40,42,67,66` renders the blue humanoid enemy ids (`$58-$5F`, `$6B-$6F`, `$8C-$8F`) cleanly where the old `50,51` placeholder scrambled them → `gfx/metasprites_area67_66.png`.
 
 **Port note:** reimplement as: for slot in order[rot&3]: compute screen pos, resolve record (follow one `FF` with mirror), emit N sprites of frame f; then hide rest; then orbit ring. Sprite limit is 63 (OAM `$04-$FF`) minus 8 orbit slots overlapped — the orbit writes `$E0-$FC` unconditionally after the hide pass, overwriting objects there.
 
@@ -276,7 +305,8 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 | `tools/sound_ids.py` | groups `LDA #id / JSR PlaySound` sites by id. Written session 3, not yet run (permission prompt) |
 | `tools/sound_dump.py` | `music <id>` / `sfx <id>` / `all` (`--max N`): prints each channel stream as op text (notes, LEN frames, loops/CALL with SFX `+$2000` fix-up, drums on NOISE); `all` lists every header. Written session 4, not yet run (permission prompt) — first run should verify `music 0x13` matches the bytes quoted above |
 | `tools/meta_dump.py` | metasprite records `text [ids]` / `png [out] [--chr R2,R3,R4,R5]` → `gfx/metasprites.png` (session 6, run + verified on player ids) |
-| `tools/area_dump.py` | `list`/`chr`/`spawns [areas]` — decodes `AreaPtrTable` `12:9201` (252 areas): `$07E6/$07E7`, R4/R5, per-slot spawn entries (session 7, run + verified) |
+| `tools/area_dump.py` | `list`/`chr`/`spawns`/`indirect [areas]` — decodes `AreaPtrTable` `12:9201` (252 areas): `$07E6/$07E7`, R4/R5, per-slot spawn entries (session 7, run + verified); `indirect` = handler-1 bank 4/5 records (session 8, run) |
+| `tools/near_reads.py` | `<addr> [span]` — abs,X/abs,Y reads whose base is ≤ addr within span (finds table reads xref.py misses; `--all-ops` adds stores). Not sync-checked (session 8, run) |
 | `tools/bank_calls.py` | lists each `LDA #n / JSR SwitchBank16` site with n, 8KB pair, and following `$8000-$BFFF` JSR/JMP targets (`--summary` groups by n). Not yet run (permission prompt) |
 
 `nesrom.py` gained `bank_window(bank)` (30→$C000, 31→$E000, even→$8000, odd→$A000), `bank_cpu_addr`, `parse_bank_addr("BB:AAAA")`.
@@ -313,7 +343,8 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 - [x] Ph3: trace bank 28 `$800E` object sprite pass fully (object table `$04A0`/`$70` layout, metasprite format at `$83D8/$83DC`) — done session 5: 32-slot object table, 4 draw-order permutations, metasprite record format (count/mask/frames, `FF` mirrored redirect, `$80` terminator, attr b2 half-hide), obj 1 = player (hit flash `$0710`, orbit/burst ring `$06C0/$06C1`). See "Object sprite pass".
 - [x] Ph4: write `tools/meta_dump.py` — render metasprite ids 0-255 from `28:845C/855C` using CHR (needs sprite CHR banks from MMC3 R2-R5 at draw time) — done session 6: tool written + run → `gfx/metasprites.png`; sprite CHR shadows `$07F0-$07F5`/`$58-$5D` found, player R2=`$40/$41`, R3=`$42-$46`; ids 0-7 (player) verified clean. See "Sprite CHR banks".
 - [x] Ph3: decode area table at `$9300` (bank pair TBD, read by `31:E15F`) + `LoadAreaChrRecord` `31:E16D` record fields (`$07E6/$07E7`, R4/R5, rest) → per-area enemy CHR so `meta_dump.py --chr` can render each enemy set correctly — done session 7: one 252-entry `AreaPtrTable` `12:9201` indexed by area `$6C` (banks 12/13); record = `00 e6 e7 R4 R5` + 4-byte per-slot spawn entries (slots `$0D+`, `FF` end) with 5 spawn handlers `31:E218`; `tools/area_dump.py` written + run. See "Area records".
-- [ ] Ph3: area follow-ups — meaning of `$07E6/$07E7` and R4/R5 = `$FF`; `ObjInit` `30:C25D` type dispatch; bank 4/5 indirect spawn records (`$80F0+`); what sets `$6C` (area transitions); `$18` reader
+- [x] Ph3: area follow-ups — meaning of `$07E6/$07E7` and R4/R5 = `$FF`; `ObjInit` `30:C25D` type dispatch; bank 4/5 indirect spawn records (`$80F0+`); what sets `$6C` (area transitions); `$18` reader — done session 8: `$07E0-$07E7` = 8 palette ids (`PaletteBuild` `26:8C0E`, palette records in banks 2/3 page tails); R4/R5 `$FF` = CHR bank 127 (no check); `ObjInit` = bitmask-sparse column initialiser from `13:AC00`; `$6C` set by exit lists (`AreaSubTable` `30:C7A5` k=3, `ExitLookup` `31:EB09`); `$18` has no reader; `area_dump.py indirect` written + run. See "Area records".
+- [ ] Ph3: area follow-ups 2 — decode the other `AreaSubTable` sub-tables (k≠3, `10:8300` headers) and the meaning of `$6D` (entry point); write `tools/palette_dump.py` that renders palette ids from banks 2/3 page tails; dump `ObjTypeTable` `13:AC00` records per type (extend `area_dump.py` or a new `objtype_dump.py`); meaning of `$0680/$06A0` in type `$30` objects
 - [ ] Ph3: decode `30:CADE`/`CB2E` substate tables (length, name each state-1 substate handler)
 - [ ] Ph3: trace `31:EF38` packed bank+pointer decoder — find the pointer tables that feed it (banks 0-7 data streams)
 - [ ] Ph3: decode jump tables at start of swappable banks (`$8000-$802F` in banks 12, 18, …)
