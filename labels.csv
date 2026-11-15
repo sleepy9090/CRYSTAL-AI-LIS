@@ -31,7 +31,15 @@ bank,addr,name,comment
 31,FFBE,FarCall_B26_8CC0,push $6E/$6F; SetR6($1A); JSR 26:$8CC0; JMP RestoreBanks
 31,FFCF,FarCall_D354,push $6E/$6F; JSR $D354; JMP RestoreBanks
 31,FFDB,RestoreBanks,PLA->SetR7; PLA->JMP SetR6 (pairs with push $6E,$6F)
-28,800E,Bank28_FrameTick,LDA $08 frame ctr; DEC $07FF (called via SwitchBank16(14) from 4 sites; purpose TBD)
+28,800E,Bank28_ObjSpriteDraw,NOT sound: per-frame object->OAM pass; $07FF rotates start slot (sprite flicker); reads $04A0+X active and $70+X pos minus scroll
+24,8000,SndTrackPtrTable,ptr16[16] sound data ptrs (8364 8364 83E5 8422 ...)
+24,8020,SndInit,silence all: $F0=0 $0111/$0112=$FF $0114-$0119=0 SND_CHN=0; called from Reset 31:F325
+24,8048,SndCommand,cmd in $0110: $FF=none; bit7=pause toggle; <$20 music ($80E4); >=$20 SFX ($8094); sets $F0 bit0 busy
+24,8094,SndStartSfx,maps R7=bank 12; ptr=$9FC0+id*2 (=12:$A000+(id-$20)*2); first byte=priority vs $0112
+24,80E4,SndStartMusic,$0111=id&$7F; inits 4 channel streams via $812A
+24,8186,SndTick,per-frame playback; returns early if $F0 bit0 (command in progress)
+30,C125,PlaySound,A=sound id (Y kept in $010F); music <$20 deduped vs $0102; enqueue to $0103-$0108; 85 callers
+31,F7FE,SoundUpdate,from NMI F4CF / IRQ F611 (+JMP F6DC F76B F77F); maps 24/25; drains 1 queued id -> SndCommand; R7=25; JSR SndTick; restore banks
 26,8C3D,Bank26_FadeA,A->$18; $11=0 $19=$10 (fade step +; tentative)
 26,8C49,Bank26_FadeB,A->$18; $11=$40 $19=$F0 (fade step -; tentative)
 26,8CC0,Bank26_8CC0,clears $6060-$6070 to $20; reads $03C0 (called via FarCall_B26_8CC0)
@@ -54,3 +62,13 @@ bank,addr,name,comment
 *,0182,warmboot_sig,'USO' (55 53 4F) => warm boot
 *,07D8,scroll_x_irq,used by IRQ split
 *,07FE,irq_delay,DelayX count for IRQ handler (init 9)
+*,0100,snd_queue_count,number of pending ids in snd_queue (max 5; SFX overwrites last slot when full)
+*,0101,snd_queue_lock,1 while PlaySound edits queue; SoundUpdate skips drain
+*,0102,snd_cur_music,last requested music id; bit7 = re-issue pending
+*,0103,snd_queue,FIFO of sound ids $0103-$0108 (shifted down after each drain)
+*,010F,snd_saved_y,PlaySound returns caller Y from here
+*,0110,snd_cmd,command byte handed to SndCommand
+*,0111,snd_music_id,currently playing music id ($FF none)
+*,0112,snd_sfx_priority,priority of playing SFX ($FF none)
+*,00F0,snd_flags,bit0 busy; bit5 paused; bit6 SFX lockout; bit7 music-start inhibit
+*,00FB,snd_chn_shadow,$4015 enable mask mirror (SFX sets $0A)

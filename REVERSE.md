@@ -103,9 +103,9 @@ PRG mode: reset writes `$8000=$00` → PRG mode 0, CHR mode 0 (2KB banks at `$00
 | 8 | 16/17 | `C7FA`, `C944`, `C94C`, `C82E`(JMP) | `JMP $A000` (state 4), `JMP $A100` (state 5) | main states 4/5 |
 | 9 | 18/19 | `C931`, `C939`, `C9EB`, `CA5F`, `CC78`, `D5AF`, `D974`, `F397` | `JMP $9FCC` (state 2), `JMP $A015` (state 3, after `JSR $FEE0`), `$BA65` (×4), `$BC04`, `$8028` (cold boot) | main states 2/3 + common screen setup `$BA65` |
 | 10 | 20/21 | `D9B6` | `$9400` | single subsystem (TBD) |
-| 12 | 24/25 | `F320` (Reset) | `$8020` | boot init (sound driver init? — check) |
+| 12 | 24/25 | `F320` (Reset) | `$8020` SndInit | **sound driver** (confirmed session 6; also mapped directly by `SoundUpdate` `31:F7FE`) |
 | 13 | 26/27 | `C7A0`(JMP), `C7E2`, `C80C`, `CB79`, `CCD1`, `CD82`, `DA3C`, `DAC2`, `E43C`, `E461`, `E47F`, `E547`, `E5E8` | `$8C3D`/`$8C49` (fade, A=3/4), `$8F6E`, `$9B45` (X=1), `$9824`, `$9897`/`$98A8` (X=0/1), `$9CEF` | most-used: palette/fade + per-player (X=0/1) HUD/screen routines |
-| 14 | 28/29 | `C1B4`, `CB71`, `E4CD`, `FF92` | `$800E` (all four) | per-frame tick (`$08` frame ctr, `DEC $07FF`) — sound driver candidate |
+| 14 | 28/29 | `C1B4`, `CB71`, `E4CD`, `FF92` | `$800E` (all four) | **object→OAM sprite pass** (not sound — session 6): `$07FF` decremented each call rotates start slot (flicker); `$04A0,X` active flag, `$70,X` pos − `$02` scroll |
 
 Remaining sites (checked):
 - `30:DA6D` `LDA #8 / JMP` → n=8 tail-call.
@@ -116,6 +116,21 @@ Remaining sites (checked):
 Never mapped by any found path: banks 22/23 as a pair (n=11; 23 only via `SetR7($17)`), 30/31 (fixed).
 
 **`30:C7D6` FadeSaveZpToWram** — copies ZP `$0A-$29` → `$6000`, `SwitchBank16(13)`, `26:$8C3D(A=4)`, waits 30 frames on `$09`, `26:$8C49(A=4)`, `SwitchBank16(8)`, restores `$6000`→`$0A`. `$8C3D` sets `$11=0,$19=$10`; `$8C49` sets `$11=$40,$19=$F0` → opposite step directions (fade out/in, tentative).
+
+**Sound driver (bank 24/25, session 6)** — `search_bytes.py "8D ?? 40"`: the only swappable-bank `STA $40xx` writes are in bank 24 (19 hits `24:8042-8EBB`); bank 28 has none. Layers:
+
+| Addr | Name | Role |
+|------|------|------|
+| `30:C125` | PlaySound | **Game API**, 85 callers (banks 14/15/19/23/26/27/30/31). A=id. Y saved/returned via `$010F`. Ids `<$20` = music: skipped if == `$0102`, else `$0102`=id. `$80-$9F` → `AND #$7F` (forced re-issue). `≥$A0` / `$20-$7F` → SFX. Sets `$0101` lock, appends to FIFO `$0103+$0100`; when 5 queued, SFX overwrite slot 5, music is dropped. (`C120` is a 2nd entry used by bank 6 data? — xrefs `06:80FE/84FE` are likely false positives.) |
+| `31:F7FE` | SoundUpdate | Called from NMI (`F4CF`, wrapped by `$06`=1) and IRQ handler 5 (`F611`), plus JMP tails `F6DC/F76B/F77F` (other IRQ handlers). Writes MMC3 R6=24, R7=25 directly (no shadow update). If `$0102` bit7 and music idle (`$0111=$FF`, `$0168-$016A`=0?) re-issues music. Else if not locked and queue non-empty: `$0110`←`$0103`, `JSR SndCommand`, shift FIFO, `DEC $0100`. Then R7=25, `JSR SndTick`, restore R6/R7 from `$6E/$6F` and `$8000` from `$50`. → **one sound command per frame**. |
+| `24:8020` | SndInit | silence: `$F0`=0, `$0111/$0112`=`$FF`, `$0114-$0119`=0, `$FB`=0, `$4015`=0. Called once from Reset (`31:F325`). |
+| `24:8048` | SndCommand | sets `$F0` bit0 (busy), dispatches `$0110`: `$FF` → `$FE=$BC` (none); bit7 → pause toggle (`$F0` bit5, `$4015`←`$FB`, re-init 4 channels via `$8465/$8388`); `<$20` → SndStartMusic `$80E4`; `≥$20` → SndStartSfx `$8094`. |
+| `24:8094` | SndStartSfx | R7←bank **12** (`$0C`); header ptr = `$9FC0+id*2` → for id≥`$20` this lands in `12:$A000+(id−$20)*2` (SFX pointer table lives at start of bank 12). Byte 0 = priority: rejected if > `$0112`. Sets `$FB=$0A` (pulse2+noise?), inits channels 4 and 3 via `$8169`, flags `$0115/$0117` bit7. Ignored if `$F0` bit6. |
+| `24:80E4` | SndStartMusic | `$8177` check, `$0111`=id&`$7F`, clears `$FE/$FF`, inits 4 channel streams `$812A` (Y=1,3,5,7 → stream ptr pairs). |
+| `24:8186` | SndTick | per-frame playback; exits if `$F0` bit0 set; stops music on `$F0` bit7 (sets `$0111`=`$FF`, `$4015`←`$FB`). |
+| `24:8000` | SndTrackPtrTable | 16 ptr16 (`8364 8364 83E5 8422 8436 847D 847D 848A 8532 854D 8584 85E2 8395 83C2 83F7 8685`) — not a jump table; bank 24's "entry" is `$8020` because this table occupies `$8000-$801F`. Contents TBD. |
+
+Sound RAM: `$0100-$0112` (queue + state), `$0114-$0119` channel flags, `$F0` flags, `$F3`, `$F5/$F6` data ptr, `$FB` `$4015` shadow, `$FD-$FF`. **Port note:** sound can be implemented as a FIFO of ids consumed one per frame; music ids `$00-$1F`, SFX `$20-$9F` (data in bank 12 `$A000`), bank 25 holds tick-time data.
 
 **Main loop (`30:C900`)** — spins on `$09` (set by NMI), then dispatches `MainStateTable[$40]` (`30:C91F`) through the ZP trampoline `$10: JMP abs`, clears `$09`, repeats. States: 0=`C957` 1=`CAB6` 2=`C931` (initial) 3=`C939` 4=`C944` 5=`C94C`.
 
@@ -174,7 +189,9 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 - [x] Ph1: identify binary header and platform
 - [x] Ph3: build `tools/search_bytes.py` and `tools/xref.py` (bank-aware, reuse `nesrom.py` + `instruction_set.py`) — verified: `xref.py C40E` → 48 call sites, **all in fixed banks 30/31** (swappable banks never call SwitchBank16 directly); `xref.py 40 --bank 30` → C904/C977/C9F5; `--data` found `31:F422` IrqDefaultPtr. Pattern for next task: `search_bytes.py "A9 ?? 20 0E C4" --disasm`
 - [x] Ph3: confirm `30:C427` (R7 setter) and document `SwitchBank16` fully; find all `LDA #n / JSR C40E` call sites → map which 16KB bank holds which subsystem — done session 5: SetR6 `C418`/SetR7 `C427`, far-call trampolines `FF80-FFE2`, full n→bank table in Key Findings; corrected reset bank (n=$0C → 24/25). New `tools/bank_calls.py` written (needs run-permission approval; not yet executed — `search_bytes.py --disasm --context 14` used instead)
-- [ ] Ph3: verify bank 28 `$800E` (n=14) and bank 24 `$8020` (reset init) — which is the sound driver? Check for `$4000-$4015` writes in banks 24-29
+- [x] Ph3: verify bank 28 `$800E` (n=14) and bank 24 `$8020` (reset init) — which is the sound driver? Check for `$4000-$4015` writes in banks 24-29 — done session 6: **bank 24/25 = sound driver** (SndInit `$8020`, SndCommand `$8048`, SndTick `$8186`; API `PlaySound` `30:C125`, per-frame `SoundUpdate` `31:F7FE`); bank 28 `$800E` = object→OAM sprite pass. See "Sound driver" in Key Findings.
+- [ ] Ph3: decode sound data formats — music ptr table `24:$8000`, channel stream init `$812A`, SFX table `12:$A000`, tick `24:$8186` opcode set; list all music/SFX ids used by PlaySound callers
+- [ ] Ph3: trace bank 28 `$800E` object sprite pass fully (object table `$04A0`/`$70` layout, metasprite format at `$83D8/$83DC`)
 - [ ] Ph3: decode `30:CADE`/`CB2E` substate tables (length, name each state-1 substate handler)
 - [ ] Ph3: trace `31:EF38` packed bank+pointer decoder — find the pointer tables that feed it (banks 0-7 data streams)
 - [ ] Ph3: decode jump tables at start of swappable banks (`$8000-$802F` in banks 12, 18, …)
@@ -182,7 +199,7 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 - [ ] Ph3: trace NMI fully (`31:F3B6`-`F421`): PPU update queue, `$51` modes 7/9, scroll writes, sound driver call
 - [ ] Ph3: decode IRQ handlers 1-7 (`IrqHandlerTable`) — which screens use which split
 - [ ] Ph3: identify controller read routine and input RAM vars
-- [ ] Ph3: identify sound driver bank + entry points
+- [x] Ph3: identify sound driver bank + entry points — covered by session 6 (see above)
 - [ ] Ph3: trace cold-init subs `F1CD`, `FE80`, `F0A4` and the WRAM save layout (`$6000-$7FFF`, `$7D00` block)
 - [ ] Ph4: build `tools/extract_tiles.py` — dump all 128 CHR 1KB banks to `gfx/` with grayscale palette
 - [ ] Ph4: locate palette data (writes to PPU `$3F00`) and build `tools/palette_dump.py`
