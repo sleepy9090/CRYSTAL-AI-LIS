@@ -13,7 +13,7 @@ bank,addr,name,comment
 31,F451,DelayX,busy loop DEX/BPL
 31,F455,IrqHandler0,
 31,F1CD,ColdInitSub,called once on cold boot (unknown)
-31,FE80,ColdInitSub2,called once on cold boot (unknown)
+31,FE80,ReadPads,per-frame gameplay pad read (pads X=1/0): $43 prev $4B new $49 dir $4D act (A/B hold counters $45/$47); was ColdInitSub2
 31,F0A4,BootSub,called on every boot before SRAM copy (unknown)
 30,C40E,SwitchBank16,A=16KB bank n -> SetR7(2n+1) then SetR6(2n) (falls into C418 path); clobbers A
 30,C418,SetR6,A=8KB bank for $8000 window; $6E=shadow; $50=6 (also called directly e.g. A=$1A bank 26)
@@ -408,3 +408,25 @@ bank,addr,name,comment
 *,0715,use_item_sel,selected use item id - $1C (0 = none); $0563 = +$1C
 *,0718,equip_ball,equipped ball/bracelet 0 none 1-4 ball 5-8 bracelet (element = (v-1)&3)
 *,0719,sword_power,0/1/2 from SwordPowerLevel; caps orbit_level via SwordChargeCap
+31,FED0,PadDirTable,u8[16] d-pad nibble (U8 D4 L2 R1) -> direction 0-7 clockwise from up; FF = none/opposed
+31,FEE0,ReadPadsMenu,menu pad read: $4B new presses + d-pad auto-repeat (delay $0C then every 3 frames via $45)
+31,FF17,ReadPadStable,read pad X until two reads agree -> $4F
+31,FF28,ReadPadRaw,strobe $4016 and shift 8 bits of JOY1+X into $4F (A=b7 B=b6 Sel=b5 Start=b4 U D L R)
+26,9B45,PlayerUpdate,player AI (type $04 AI $01; slot X=1): B new press + use_item_sel!=0 + sub_state 8 -> sub_state 6 (use item); then 9BF6/9CEF/A1C9 + status anims
+30,CB62,SubstPlay,sub_state 8: normal gameplay frame (ReadPads + objects + sprite pass + HUD)
+*,0043,pad_prev,u8[2] previous pad state (pad1 $43 / pad2 $44)
+*,0045,pad_hold_a,u8[2] A-hold counter (gameplay) / d-pad repeat timer (menu)
+*,0047,pad_hold_b,u8[2] B-hold counter (b6 of $4D pulses every 32 frames)
+*,0049,pad_dir,u8[2] d-pad direction 0-7 from PadDirTable or FF
+*,004B,pad_new,u8[2] newly pressed buttons (A=b7 B=b6 Sel=b5 Start=b4 U D L R)
+*,004D,pad_act,u8[2] pad_new | b7 A held 31+ frames | b6 B-hold 32-frame pulse
+*,004F,pad_raw,u8 raw pad byte from ReadPadRaw
+27,AE31,AiPathWalk,AI $32 (type $38): walk path AiPathTable[$0680] step $0620 one dir byte per 16 steps; FC/FD/FE/FF terminators
+27,AF04,AiPathTable,ptr16[16] direction-byte paths for AiPathWalk (data AF24-AFA5)
+27,B2C5,AiCountdown,AI $14: obj_anim -= $0600 per frame; borrow -> 27:98C7
+27,B39E,AiWander16,AI $40 (types $55 $7C): new 16-way direction every $D0 frames from 27:B41E + position
+15,A400,BossPhaseDispatch,A=boss base: JMP (15:A413[(A+$0600 X)*2]) per-boss phase handlers
+15,A413,BossPhaseTable,ptr16[] phase handlers for BossPhaseDispatch
+15,ADD4,AiBoss88,AI $E7 (type $88): $07D7=4 when phase!=0; 26:9B07 A=$C0; BossPhaseDispatch base $1B
+15,B2DA,AiBowOfTruth9E,AI $EB (type $9E): 26:9B07 A=$C7; $07D7=$10 + IRQ mode 7 when phase!=0; BossPhaseDispatch base $2B
+*,0743,opel_revive,$40 while the Opel Statue revive runs so sub_state 6 consumes the statue; 0 = manual use is refused
