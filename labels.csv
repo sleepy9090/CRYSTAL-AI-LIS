@@ -332,3 +332,27 @@ bank,addr,name,comment
 14,A17A,EventTriggerTable,67 ptrs for trigger ids $80-$C2: conds (all true) + result + set-list
 30,D552,EventActionDispatch,JMP via EventActionTable[$22]
 30,D563,EventActionTable,32 words: action handlers for event triggers (ItemHook2 path)
+30,D5A4,EvActThunderWarp,act 1: msg 28.17 then warp to area $F2 entry $41
+30,D5E6,EvActMesiaMessage,act 7: slot 13 anim + type $DE fx + msg 14.5
+30,D659,EvActSpawnType38,act 9: ObjInit type $38 in slot $1E from EvType38Pos by area/entry
+30,D6A8,EvType38Pos,9 x 5 bytes: x lo/hi y lo/hi $069E ($FF = none)
+30,D718,EvActClearSlot13,act 19: clear slot 13 then shared slot-15 spawn check
+30,D71F,EvActClearSlot14,act 20: clear slot 14; both empty -> $07D7=$7F + ObjInit slot 15 type $04CF
+30,D746,EvActSpawn9E,act 21: stop music + ObjInit type $9E in slot 13
+30,D75E,EvActTwoFollowers,act 24: slots 13+14 -> type $32 followers
+30,D791,EvActHistory,act 23: msgs 22.0/22.2/22.4/22.6
+30,D7B7,EvActPushBack,act 25: player y += 8 (carry bug: INC low byte)
+30,D7CE,EvActMakeFollowers,act 27: active slots 13-14 -> type $32 followers
+30,D805,EvActConsume,act 29: clear trigger slot; area $F2 spawns type $88 in slot 13
+30,D827,EvActEnding,act 30: sub_state=$1B and drop caller return
+30,D88B,WaitSfxDone,WaitFrame until snd_sfx_priority == $FF
+30,D23F,MakeFollower13,slot 13 -> type $32 follower (talk act 6/13)
+30,C169,WaitFrame,clear frame_ready and spin until NMI sets it
+26,8FBB,HitHandlerTable,4 words: object hit handlers ($90AA $9357 $94B0 $8FC4)
+26,8FC4,HitHandler3,object Y hit: kill + HitSetFlag
+26,9011,HitSetFlag,param $13 in 26:9045 list -> set flag 26:904F[i]
+26,9045,HitFlagParams,0-terminated spawn params: 26 27 5E 5F 62 6D 6C 34 25
+26,904F,HitFlagIds,flag ids (F0xx) for HitFlagParams
+26,9058,HitImmuneParams,20 params immune when obj_spawn_b2 == 1
+30,DD58,TestFlagF2F0,A+5 -> test flag F2F0+A+5
+31,E7C4,AreaFollowerHook,area $1C: F053 & !F045 -> set F045 + slot 14 follower $0C; else clr F053
