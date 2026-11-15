@@ -282,3 +282,34 @@ bank,addr,name,comment
 *,6200,ppu_queue,8x4-byte PPU upload ring (hi lo len srcoff from page $60); wr $0B rd $0A
 *,06C3,pending_msg_id,message for ShowPendingMessage 30:D085
 *,06E3,pending_msg_group,group for ShowPendingMessage 30:D085
+30,D22B,GiveItemA,A -> $057F (slot $1F spawn param) then GiveItem with $0623=$1F
+30,D3EB,GiveItem,item id obj_spawn_param Y -> $07DC; SFX; msg 32.12 You now have {ITEM}
+30,D40C,ItemRemapTable,indexed by item id $50-$7F -> $07DC
+30,D31C,NpcVanish,Y=$0623: obj_active=$53 $0660=1 SFX $6D (entry D31F with Y set)
+30,D1FF,SpawnFxAtSlot,X=src slot: ObjInit type $DF in slot $1E at slot X position; AreaLoadB
+30,D16D,TalkFullRestore,HP $03C1=$03C0; MP $0708=$0709; HUD redraw; NpcVanish
+30,D263,TalkGiveGold100,$0702+=100 (carry bug: INC $0702 not $0703)
+26,8E46,HudRedraw,A=element 0-6; records 26:8EC5 (value ptr; PPU addr; digits; flags)
+26,8EC5,HudElemTable,7 x 6 bytes
+26,9897,TempToObjPos,$34-$37 -> slot X x/y
+26,98A8,ObjPosToTemp,slot X x/y -> $34-$37
+26,946D,PickupGold,gold += 26:8BDE[($0500>>4)*2]; saturate $FFFF; SFX $24
+*,0702,gold,16-bit gold $0702/$0703 (saturating)
+*,0708,mp_cur,magic points (HudRedraw 4)
+*,0709,mp_max,max magic points (HudRedraw 5)
+*,03C1,player_hp,obj slot 1 of $03C0 array
+*,03C0,player_hp_max,slot 0 of $03C0 array used as max HP
+30,D834,ItemEventHook,A=hook 0-2 -> bank14 word 30:D885[A] (826F/831E/80E3); shows $21:$20 msg
+30,D885,ItemEventHookTable,3 words: 14:826F 14:831E 14:80E3
+30,DB28,SubstTeleportMenu,substate 20: msg 33.0 town list
+30,DD6B,SubstTelepathySelect,substate 21: msg 33.2 pick sage
+30,DE04,SubstTelepathyReply,substate 22: 14:816F -> message
+30,DEC1,SubstChangeForm,substate 23: msg 33.1 What form will you take?
+14,80A0,NpcHidden,$23=param; $20!=0 -> NPC absent (called 31:E34B spawn handler)
+14,80E3,ItemHook2,item ids >=$80; table 14:A17A; applies set-list
+14,816F,Telepathy,MP<8 -> fail row; else MP-=8; random row; msg word 14:9A2C[(row*4+sage)*2]
+14,821A,TelepathyClass,8 bytes: class for random value 0-7
+14,822F,TelepathyRandSeq,64 bytes 0-7 indexed by $07C0&$3F
+14,9A2C,TelepathyMsgTable,words (hi lo linear msg id) rows x 4 sages
+*,07C0,telepathy_rng,incremented by Telepathy 14:816F
+19,BFE8,EventMsgTable19,5 x (group msg) indexed by $2E
