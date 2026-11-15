@@ -1,0 +1,56 @@
+bank,addr,name,comment
+31,F2A4,Reset,RESET vector entry
+31,F3B6,NMI,NMI vector (vblank); skips work if $60!=0 or $06!=0
+31,F443,IRQ,IRQ vector (MMC3 scanline IRQ); ack then JMP ($0054)
+31,FFFA,Vectors,NMI/RESET/IRQ
+31,F374,ColdBootInit,taken when $0182-0184 != 'USO' signature
+31,F39F,WarmBootContinue,common path after cold/warm boot
+31,F3A2,CopySramBlock,copy $7D00-$7EFF -> $6480-$657F then JMP MainLoop
+31,F421,IrqDefault,default IRQ handler target (initial $0054/$0055)
+31,F422,IrqDefaultPtr,.dw $F421 - Reset copies this word to $0054/$0055 (LDA $F422/$F423)
+31,F424,SetIrqHandler,A=index -> $56; $0054/$0055 = IrqHandlerTable[A]
+31,F433,IrqHandlerTable,ptr16[8] IRQ handlers: F455 F488 F4E5 F54B F5E1 F60E F691 F61A
+31,F451,DelayX,busy loop DEX/BPL
+31,F455,IrqHandler0,
+31,F1CD,ColdInitSub,called once on cold boot (unknown)
+31,FE80,ColdInitSub2,called once on cold boot (unknown)
+31,F0A4,BootSub,called on every boot before SRAM copy (unknown)
+30,C40E,SwitchBank16,A=16KB bank n -> SetR7(2n+1) then SetR6(2n) (falls into C418 path); clobbers A
+30,C418,SetR6,A=8KB bank for $8000 window; $6E=shadow; $50=6 (also called directly e.g. A=$1A bank 26)
+30,C427,SetR7,A=8KB bank for $A000 window; $6F=shadow; $50=7 (verified)
+30,C7A0,SwitchBank16_13,tail-call SwitchBank16(13) -> banks 26/27
+30,CADE,SubstateHandlerTable,ptr16[40?] state-1 handlers indexed by $41 (CAB6 dispatcher; JMP ($0010))
+30,CB2E,SubstateBankTable,u8[40?] SwitchBank16 n per substate $41 (3->9, 12/13->7, rest 0)
+31,E3D4,SwitchBank16_6,tail-call SwitchBank16(6) -> banks 12/13 (restores default after n=7 entity calls)
+*,0041,sub_state,state-1 substate index (SubstateHandlerTable/SubstateBankTable)
+30,C7D6,FadeSaveZpToWram,copy ZP $0A-$29 -> $6000; banks 26/27 $8C3D(A=4); wait 30 frames; $8C49; bank 16/17; restore (tentative fade)
+31,FF80,FarCall_C25D,push $6E/$6F; JSR $C25D; JMP RestoreBanks
+31,FF8C,FarCall_B14_800E,push $6E/$6F; SwitchBank16(14); JSR 28:$800E; JMP RestoreBanks
+31,FF9D,FarCall_EB91,push $6E/$6F; JSR $EB91; JMP RestoreBanks
+31,FFA9,FarCall_B26_8E46,A->$10; push $6E/$6F; SetR6($1A); JSR 26:$8E46 with A; JMP RestoreBanks
+31,FFBE,FarCall_B26_8CC0,push $6E/$6F; SetR6($1A); JSR 26:$8CC0; JMP RestoreBanks
+31,FFCF,FarCall_D354,push $6E/$6F; JSR $D354; JMP RestoreBanks
+31,FFDB,RestoreBanks,PLA->SetR7; PLA->JMP SetR6 (pairs with push $6E,$6F)
+28,800E,Bank28_FrameTick,LDA $08 frame ctr; DEC $07FF (called via SwitchBank16(14) from 4 sites; purpose TBD)
+26,8C3D,Bank26_FadeA,A->$18; $11=0 $19=$10 (fade step +; tentative)
+26,8C49,Bank26_FadeB,A->$18; $11=$40 $19=$F0 (fade step -; tentative)
+26,8CC0,Bank26_8CC0,clears $6060-$6070 to $20; reads $03C0 (called via FarCall_B26_8CC0)
+30,C900,MainLoop,wait $09 (NMI flag) then dispatch on state $40 via MainStateTable
+30,C91F,MainStateTable,ptr16[6]: C957 CAB6 C931 C939 C944 C94C
+*,0000,ppuctrl_shadow,
+*,0002,scroll_shadow0,copied to $07D8 in NMI
+*,0006,nmi_busy_flag,if !=0 NMI only sets $07 and returns
+*,0007,nmi_missed_flag,
+*,0009,frame_ready,set by NMI; MainLoop waits on it then clears
+*,0010,jmp_trampoline,4C lo hi - indirect JSR via zero page
+*,0040,main_state,index into MainStateTable (reset sets 2)
+*,0050,mmc3_banksel_shadow,
+*,0051,irq_mode,checked in NMI (7/9 special)
+*,0054,irq_vector,ptr used by IRQ JMP ($0054)
+*,0056,irq_handler_idx,
+*,0060,nmi_disable,NMI returns immediately if !=0
+*,006E,cur_bank16_x2,R6 shadow = 8KB bank at $8000 (=2n after SwitchBank16)
+*,006F,r7_shadow,R7 shadow = 8KB bank at $A000
+*,0182,warmboot_sig,'USO' (55 53 4F) => warm boot
+*,07D8,scroll_x_irq,used by IRQ split
+*,07FE,irq_delay,DelayX count for IRQ handler (init 9)
