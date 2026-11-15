@@ -219,3 +219,41 @@ bank,addr,name,comment
 18,81F0,NtRectBlit,stream ($8E): W H then H rows of W tiles (+$06FE) to PPU $8C/$8D stride $20
 18,824B,NtRectBlitQueued,same W H format; one row per frame through $6200 queue
 17,A751,NtFill_b17,bank 17 duplicate of 18:81A1
+20,83FE,TextGroupBank,36 bytes: PRG bank (21/22/23) per text group $07DF
+20,8422,TextGroupPtrs,34 ptr16: per-group message ptr arrays (bank 20 $8000-$83FD)
+20,8528,TextPrintBox,load window params 20:8889 -> $20-$2F then TextPrint
+20,853A,TextPrint,print message $07DE&$1F of group $07DF; ctrl <$0A / word >=$80 / else ASCII
+20,8593,TextCtrlDispatch,A=ctrl code 0-9 via table 20:85A2
+20,85A2,TextCtrlTable,10 ptr16 handlers for codes 00-09
+20,85B8,TextFlush,upload $6000 line buffer 4x$40 to PPU $2820/$2860/$28A0/$28E0
+20,8619,TextPageWait,code 03: prompt tile at $2910 then wait A/B then clear
+20,866B,TextPlayerName,code 04: print zero-terminated name at $6400
+20,8693,TextPrintStr,print ($2A) zero-terminated then auto-space rule and resume message
+20,86F5,TextWord,dict word code >=$80 -> TextDictPtrs
+20,8720,TextClearBuf,fill $6000-$60FF rows FE 1E 29x20 1F; cursor $28=$20
+20,8753,TextSpaces,code 09 n: n spaces
+20,8772,TextCurItem,code 08: item name 20:8A5C indexed by $07DC ($FF -> $49 blank)
+20,87AE,TextChar,$6000+$28 = A; $28++; Y++
+20,885A,TextSetR7,inline R7 write (sets $6F/$50) used for text banks
+20,8900,TextDictPtrs,128 ptr16 dictionary words for codes $80-$FF
+20,8A00,TextStr05,10 ptr16 strings for ctrl 05
+20,8A14,TextStr06,36 ptr16 proper-noun strings for ctrl 06
+20,8A5C,TextStr07,74 ptr16 item/spell names for ctrl 07/08
+20,8AF0,TextDict,zero-terminated dictionary + table strings
+23,BC00,SaveJumpTable,BC00 SaveGame / BC03 LoadGame / BC06 LoadGameAndInit
+23,BC09,SaveGame,if SaveAllowed: clear $7D00-7FFF + player state + 5 block copies + checksum; mirror to $6D00
+23,BC8E,LoadGame,4 block copies from 23:BDDE + LoadPlayerState
+23,BCDA,LoadGameAndInit,LoadGame + $7E00/$7F00 -> $6480/$6580; $6D=$FF; substate 1
+23,BCF7,BlockCopy,($10)->($12) count lo/hi at $14/$15 (copies lo+1+hi bytes - quirk)
+23,BD1F,SavePlayerState,area/player pos/$03C0/$03C1/$0421/$0620 -> $7DF0-$7DF8 + tag at $7DFD
+23,BD60,LoadPlayerState,inverse of SavePlayerState
+23,BD92,SaveChecksum,8-bit sum of $7D00-$7FFF -> $70F5/$70F4
+23,BDC0,SaveCopyDesc,5x6 bytes src dst count
+23,BDDE,LoadCopyDesc,4x6 bytes src dst count
+23,BDF6,SaveAllowed,C = bit7 of 23:BF00 indexed by $6C
+23,BF00,AreaSaveFlags,256 bytes per area: $80/$81 save allowed
+*,07DE,text_msg_id,message index (low 5 bits) within group
+*,07DF,text_group,text group 0-33 (TextGroupBank/TextGroupPtrs)
+*,6400,player_name,zero-terminated name (printed by text code 04; saved to $7D00)
+*,7DFD,save_tag,41 4D 49 save signature
+*,70F5,save_checksum,8-bit sum of $7D00-$7FFF (copy at $70F4)
