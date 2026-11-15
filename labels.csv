@@ -176,13 +176,31 @@ bank,addr,name,comment
 *,07E0,pal_ids,8 palette ids (BG0-3 spr0-3) -> PaletteBuild 26:8C0E
 *,07E8,pal_nofade_mask,bit i = palette i ignores fade step in PaletteBuild
 *,6140,pal_buf,32-byte palette buffer (WRAM) written by PaletteLoadOne
-*,006D,area_entry,entry point/dest in new area (from exit record byte3; meaning TBD)
+*,006D,area_entry,entry index into area sub-table 2 (camera start $34-$37); $FF none; $2x keep camera
 26,8C0E,PaletteBuild,$11=0 (no fade) then builds $6140-$615F from ids $07E0-$07E7; 8C10 = entry with A=fade step
 26,8C6E,PaletteLoadOne,A=id (+$B0 sprite): 4 colours from bank 2/3 $A000+(id>>2&1F)*$100+$F0+(id&3)*4
 26,8C32,PaletteBlackFill,$6040-$605F <- $0F
-30,C7A5,AreaSubTable,A=k: SwitchBank16(5); ($10)=header(10:8300[$6C])[k]; Y=0. k=3 exit list
+30,C7A5,AreaSubTable,A=k: SwitchBank16(5); ($10)=header(10:8300[$6C])[k]; Y=0. k0 map/music k1 gfx k2 entries k3 exits k4 screen flags k5 edge links
 31,EB09,ExitLookup,player 16px cell vs exit list (xc yc area entry)*,FF; sub_state 8 -> load area
 13,AC00,ObjTypeTable,ptr16 per object type ($AD00 upper half) -> ObjInit records (snd + 4 bitmask groups)
 30,CBEC,AreaByIndexTable,16 area ids indexed by $0780&15 (warp/continue)
 *,0540,obj_spawn_b2,spawn entry b2&3
 *,0560,obj_spawn_param,spawn entry param byte
+10,8300,AreaHeaderTable,ptr16 per area ($8400 half) -> 5 (or 6) sub-table ptrs k0-k4(k5)
+31,E628,AreaLoadMap,area sub-table 0: PlaySound(music) + $62FC-$62FF + screen grid -> $6300
+31,E6B9,AreaLoadGfx,area sub-table 1: BG palette ids $07E0-$07E2 + $67/$69 + BG CHR R0/R1 then AreaLoadB
+31,E702,AreaRestoreVisited,area sub-table 4: screen visited bits $62F0 from WRAM flags $64C0
+31,E573,AreaEdgeLink,area sub-table 5 (10 areas): pit/edge link to another area
+30,C75C,MarkScreenVisited,set $62F0[y_hi] |= BitMask[x_hi]; sub-table 4 -> set $64C0 flag
+31,EA72,CameraClampX,clamp camera $34/$35 to 0..$62FC screens
+*,0034,cam_x_lo,camera X lo (area sub-table 2 entry bytes 0-3 -> $34-$37)
+*,0035,cam_x_hi,camera X hi (screen)
+*,0036,cam_y_lo,camera Y lo
+*,0037,cam_y_hi,camera Y hi (screen)
+*,62F0,visited_map,12 rows x 8 bits: visited screens of current area (automap)
+*,62FC,area_w,area width-1 in screens (sub-table 0)
+*,62FD,area_h,area height-1 in screens (sub-table 0)
+*,62FE,area_f62FE,sub-table 0 byte 3 (x8 at 31:E75E; TBD)
+*,62FF,area_f62FF,sub-table 0 byte 4; b7 -> SetR6($0A) for map reads at 31:EBE5
+*,6300,screen_grid,8x16 screen ids of current area ($80 = none)
+*,64C0,screen_flags,WRAM persistent screen flags (area sub-table 4)
