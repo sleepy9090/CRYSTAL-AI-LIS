@@ -313,3 +313,22 @@ bank,addr,name,comment
 14,9A2C,TelepathyMsgTable,words (hi lo linear msg id) rows x 4 sages
 *,07C0,telepathy_rng,incremented by Telepathy 14:816F
 19,BFE8,EventMsgTable19,5 x (group msg) indexed by $2E
+16,8933,MenuPrint,bank16 menu string printer: A=id -> record 16:8C1B (PPU lo/hi + ptr); escapes FF end FE name FD level FC item
+16,8A02,MenuPutc,store A to $6000[$28]; INY; $24++ $28++
+16,8AB0,MenuFlush,queue ($21 $20 $24 $25) in PPU ring $6200; wait if rendering on
+16,8C1B,MenuStrings,59 x 4-byte records: PPU addr lo/hi + string ptr (bank 16)
+16,9086,MenuItemNames,74 ptrs to FF-terminated item names (menu font; $49 blank)
+16,89E0,MenuLevelDigits,17 two-char pairs 00..16 for FD escape
+16,9CE0,SaveSlotCopy,A=descriptor 16:9D32: copy $300 bytes between slot image and $7D00
+16,9D32,SaveSlotDescs,8 x (src dst): $7100/$7400/$7700/$7A00 <-> $7D00
+*,0421,player_level,player level 0-16 (menu FD escape via $7DF7; HUD LV:)
+*,6418,player_name6,6-char name-entry buffer (menu FE escape via slot offset $18)
+*,7100,save_slot0,slot 0 image ($300 bytes; backup at $7400)
+*,7700,save_slot1,slot 1 image ($300 bytes; backup at $7A00)
+14,98F4,TelepathyHintClass,256 bytes: area -> hint class 0-6
+14,8213,TelepathyLevelGate,7 bytes 02..0E: hint only if player_level > gate
+14,99F4,TelepathyHintLists,28 ptrs [(class*4+sage)]: flagref msg [alt] entries; first FALSE cond wins
+14,81D1,TelepathyHint,walk hint list; end -> fixed row 3
+14,A17A,EventTriggerTable,67 ptrs for trigger ids $80-$C2: conds (all true) + result + set-list
+30,D552,EventActionDispatch,JMP via EventActionTable[$22]
+30,D563,EventActionTable,32 words: action handlers for event triggers (ItemHook2 path)
