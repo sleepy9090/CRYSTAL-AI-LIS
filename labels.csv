@@ -356,3 +356,16 @@ bank,addr,name,comment
 26,9058,HitImmuneParams,20 params immune when obj_spawn_b2 == 1
 30,DD58,TestFlagF2F0,A+5 -> test flag F2F0+A+5
 31,E7C4,AreaFollowerHook,area $1C: F053 & !F045 -> set F045 + slot 14 follower $0C; else clr F053
+14,826F,ItemGetHook,hook 0: store item $23 via 14:9B00 record; then result + set-list; chain next item
+14,82A0,InvStoreItem,count bit7 = fixed equip slot else first $FF slot; Crystalis merge; bracelet unequips ball
+14,831E,ItemUseHook,hook 1: handler 14:8399[item] + record 14:9BE2[item]; then result + set-list; removes item unless $36
+14,8354,InvRemoveItem,remove item $23 from its inventory range (shift down + $FF); $642A+(X>>3)=$FF; $0715=0
+14,8399,ItemUseHandlers,80 words (items 00-4F); $84DB = cannot use
+14,8469,UseFindSlotObj,record param/b2 matches an object in slots 0D-1F
+14,8497,UseTouchMatch,record param/b2 == touched spawn ($0643); Z set = match
+14,84DB,UseFail,$23=$FF (item cannot be used here)
+14,9B00,ItemGetTable,113 words (items 00-70) -> start count r0 r1 set-list next
+14,9BE2,ItemUseTable,80 words (items 00-4F) -> use records
+14,9D66,ItemStoreValue,113 bytes: value stored in the inventory slot (ids 50-70 -> base item)
+*,6430,inventory,$6430-$645F: 6430-33 swords 6434-37 armor 6438-3B shields 643C-3F balls/bracelets 6440-47 consumables 6448-4F rings 6450-57 key items 6458-5F magic
+*,6428,inv_select,$6428-$642F per-category selection ($FF = none; static guess); $6428-$6477 = $FF on new game (30:C957)
