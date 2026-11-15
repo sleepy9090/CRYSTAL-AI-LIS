@@ -193,9 +193,36 @@ Sound RAM: `$0100-$0112` (queue + state), `$0114-$0119` channel flags, `$F0` fla
 
 **IRQ (`31:F443`)** — ack/re-enable MMC3 IRQ, `JMP ($0054)`. Handler table `IrqHandlerTable` at `31:F433` (8 entries) selected by `SetIrqHandler` (`31:F424`, A=index). Handler 0 (`F455`) does a delayed mid-frame scroll split from `$07D8`.
 
+**Object sprite pass (`28:800E` ObjSpriteDraw, session 9)** — reached via `SwitchBank16(14)` from `C1B4/CB71/E4CD` and far-call `FF8C`.
+1. `$07FF` (obj_draw_rot) `DEC`; order = `ObjDrawOrderTable` `28:83DC + ObjDrawOrderOfs[$07FF&3]` — **4 fixed 32-slot permutations** (not a simple rotation): `04 05 06 07 02 01 03 08…1F 00`, a shuffled one, another, and `02 01 1F 1E … 03 00`. Slot 0 is drawn last in 3 of 4; slots 1/2 near the front.
+2. OAM write ptr `$10` starts at 4 (sprite 0 reserved for split). For each slot X with `$04A0,X≠0`: sx = (`$70`,`$90`) − (`$02`,`$03`), hi must be 0. Store `$05C0`. sy = (`$B0`,`$D0`) − (`$04`,`$05`) with 240-row wrap (extra −16 on borrow), hi must be 0; sy ≥ `$E8` → skipped silently; sy < `$10` or off-page → `$0380` b7 set (offscreen). Else `$05E0`=sy, b7 cleared, draw unless OAM full or (b2 half-rate and (X+`$07FF`) odd).
+3. `ObjHideUnusedOam` `80A5`: Y=`$F0` from `$10` to end. If `$0710` b7: clears palette bits of obj 1's 6 sprites (4 if `$0381` b6) from `$07EF` → **hit flash for obj 1 = player**.
+4. `OrbitSprites` `80D6`: 8 sprites in OAM `$E0-$FC` (attr 1) centred on obj 1. `$06C1≠0`: burst — timer decrements, drawn while <`$0E`, tile `$29`, rays from `BurstDirTable` `81DE` × `BurstRadiusTable` `81FE`. Else if `$06C0≥8`: orbit — 8 points on `OrbitSineTable` `81BA` (32 s8, radius ≈`$21`) phase `$08`+k·8, tile `OrbitTileTable[$06C0>>3]` (`29 29 2A 32 20`). Points that wrap horizontally are skipped.
+
+**Metasprite drawing (`ObjDrawMeta` `822E`)**
+- Y origin `$13` = sy (+3 if `$0380` b6). If `$0380` b1: first draws overlay id `$0580,X` (temporarily `$0300`←`$0580`, b0 set, b5 clear), then the main sprite.
+- id = `$0300,X` + (`$0380` b0 ? 0 : `$0360,X`). id `<$80` → `ObjMetaPtrTableA` `28:845C`, else `ObjMetaPtrTableB` `28:855C` (ptr16, targets up to `$BFxx` → bank 29). `X==1` records `$07EF`=OAM offset.
+- tile add `$1A` = `$0320,X` + (`$0380` b5 ? `$40`:0); attr OR = `$0380` b4 → bit5 (behind BG).
+
+*Metasprite record format* (all in banks 28/29):
+```
+FF lo hi            redirect: draw record at hi:lo HORIZONTALLY MIRRORED (x' = -dx-8, attr ^= $40)
+00                  nothing drawn
+N  M  {frames}      N = sprites per frame (1..), M = frame mask
+                    frame f = ($04E0,X >> 3) & M  (anim advances every 8 ticks)
+                    frame data at +2 + f*N*4; each sprite = dx(s8) dy(s8) attr tile
+                    dx = $80 → end of frame early (frames padded with 80 80 80 80)
+                    attr bit2 (unused by PPU) = "lower part": if $0380 b6, drawing STOPS at it
+```
+Example id 2 (`$865C`): `06 01` → 6 sprites, 2 frames; 16×24 body: `F8 E9 00 1A / 00 E9 00 1B / F8 F1 00 00 / 00 F1 00 01 / F8 F9 04 20 / 00 F9 04 21` (bottom row flagged b2 → hidden when sinking); frame 1 is the same body with attr `$40` (self-mirrored) rows. Id 0 (`$868E`) uses tiles `1E 1F 06 07 26 27`. Id 3 (`$86F2`) = `FF C0 86` → mirrored id 1 — facing variants are `FF` aliases.
+
+Object RAM (32 slots, index X 0-31): `$70/$90` X lo/hi, `$B0/$D0` Y lo/hi, `$0300` meta id, `$0320` tile ofs, `$0340` b7 (palette-cycle, read but **unused** — `$1D` is computed and never read: dead code), `$0360` dir/anim id add, `$0380` flags (b0 no-dir, b1 overlay, b2 half-rate flicker, b4 behind BG, b5 tile+$40, b6 sink/half-hide, b7 offscreen out), `$04A0` active, `$04E0` anim counter, `$0580` overlay id, `$05C0/$05E0` screen X/Y out. **Obj 1 = player** (hit flash, orbit centre).
+
+**Port note:** reimplement as: for slot in order[rot&3]: compute screen pos, resolve record (follow one `FF` with mirror), emit N sprites of frame f; then hide rest; then orbit ring. Sprite limit is 63 (OAM `$04-$FF`) minus 8 orbit slots overlapped — the orbit writes `$E0-$FC` unconditionally after the hide pass, overwriting objects there.
+
 ### Data Structures
 
-*(none yet)*
+*(none yet — object table: see Object sprite pass)*
 
 ### State Machine
 
@@ -250,7 +277,8 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 - [x] Ph3: verify bank 28 `$800E` (n=14) and bank 24 `$8020` (reset init) — which is the sound driver? Check for `$4000-$4015` writes in banks 24-29 — done session 6: **bank 24/25 = sound driver** (SndInit `$8020`, SndCommand `$8048`, SndTick `$8186`; API `PlaySound` `30:C125`, per-frame `SoundUpdate` `31:F7FE`); bank 28 `$800E` = object→OAM sprite pass. See "Sound driver" in Key Findings.
 - [x] Ph3: decode sound data formats — music ptr table `24:$8000`, channel stream init `$812A`, SFX table `12:$A000`, tick `24:$8186` opcode set; list all music/SFX ids used by PlaySound callers — done session 7: `24:8000` is the **opcode** table (16 ops); music headers `24:8C0C`, SFX headers file-bank 12 offset 0; hex-letter note encoding; ids listed. See "Sound data format".
 - [x] Ph3: sound follow-ups — decode `SndOpDuty` `24:854D` triangle path + vibrato `24:86AA` exactly; check SFX table entries 48-87 for nulls; name music `$0C`/`$12`/`$13` by their callers' states; write `tools/sound_dump.py` to disassemble a stream into op text — done session 8: duty bit layout, vibrato algorithm incl. original off-by-one table index; SFX nulls `$59 $70 $71 $73 $77`; `$13`=interrupting jingle, `$12`=entity/boss track, `$0C`=event theme; `sound_dump.py` written (unrun, needs approval)
-- [ ] Ph3: trace bank 28 `$800E` object sprite pass fully (object table `$04A0`/`$70` layout, metasprite format at `$83D8/$83DC`)
+- [x] Ph3: trace bank 28 `$800E` object sprite pass fully (object table `$04A0`/`$70` layout, metasprite format at `$83D8/$83DC`) — done session 9: 32-slot object table, 4 draw-order permutations, metasprite record format (count/mask/frames, `FF` mirrored redirect, `$80` terminator, attr b2 half-hide), obj 1 = player (hit flash `$0710`, orbit/burst ring `$06C0/$06C1`). See "Object sprite pass".
+- [ ] Ph4: write `tools/meta_dump.py` — render metasprite ids 0-255 from `28:845C/855C` using CHR (needs sprite CHR banks from MMC3 R2-R5 at draw time)
 - [ ] Ph3: decode `30:CADE`/`CB2E` substate tables (length, name each state-1 substate handler)
 - [ ] Ph3: trace `31:EF38` packed bank+pointer decoder — find the pointer tables that feed it (banks 0-7 data streams)
 - [ ] Ph3: decode jump tables at start of swappable banks (`$8000-$802F` in banks 12, 18, …)

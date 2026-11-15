@@ -31,7 +31,43 @@ bank,addr,name,comment
 31,FFBE,FarCall_B26_8CC0,push $6E/$6F; SetR6($1A); JSR 26:$8CC0; JMP RestoreBanks
 31,FFCF,FarCall_D354,push $6E/$6F; JSR $D354; JMP RestoreBanks
 31,FFDB,RestoreBanks,PLA->SetR7; PLA->JMP SetR6 (pairs with push $6E,$6F)
-28,800E,Bank28_ObjSpriteDraw,NOT sound: per-frame object->OAM pass; $07FF rotates start slot (sprite flicker); reads $04A0+X active and $70+X pos minus scroll
+28,800E,ObjSpriteDraw,per-frame pass over 32 object slots -> OAM $0204+; order from ObjDrawOrderTable[$07FF&3]; then ObjHideUnusedOam + OrbitSprites
+28,808E,ObjSpriteDraw_Next,loop tail (INC $11 / DEC $1B count 32)
+28,809A,ObjSpriteDraw_Offscreen,sets $0380,X bit7 (offscreen) and skips
+28,80A5,ObjHideUnusedOam,Y=$F0 for OAM from $10 to $FF; if $0710 bit7 clears palette bits of obj1's 6 (4 if $0381 b6) sprites at $07EF
+28,80D6,OrbitSprites,8 sprites at OAM $E0-$FC around obj1 ($05C1/$05E1): $06C1!=0 burst (tile $29) else $06C0>>3 orbit (sine $81BA)
+28,81A5,BurstRadius,Y=ray*4(+2 for Y): radius $81FE[$81DE[Y]|$06C1] negated if $81DF[Y] bit7
+28,81BA,OrbitSineTable,32 x s8 sine (radius $21) for OrbitSprites
+28,81DA,OrbitTileTable,tile per $06C0>>3: 29 29 2A 32 20
+28,81DE,BurstDirTable,8 rays x (Xidx,Xsign,Yidx,Ysign): idx 00/10/20 selects radius row
+28,81FE,BurstRadiusTable,3 rows x 16 radii (row0 diagonal 05..60; row1 04..44; row2 zeros) indexed by $06C1
+28,822E,ObjDrawMeta,draw obj X metasprite: optional overlay $0580,X first if $0380 b1; $0380 b6 -> Y+3
+28,8268,ObjDrawMetaMain,id=$0300,X(+$0360,X unless $0380 b0) -> ObjMetaPtrLo/Hi; frame=($04E0,X>>3)&mask; emits OAM
+28,8331,MetaEmitNormal,4-byte entries dx,dy,attr,tile; dx=$80 ends; X wrap skips entry
+28,8380,MetaEmitHFlip,used after FF redirect: X=-dx-8, attr^=$40
+28,83D8,ObjDrawOrderOfs,4 x u8 (00 20 40 60) offset into ObjDrawOrderTable
+28,83DC,ObjDrawOrderTable,4 x 32 slot permutations (flicker order); 0=04..1F,00; 3=02 01 1F..03 00
+28,845C,ObjMetaPtrTableA,ptr16[128] metasprite ids $00-$7F
+28,855C,ObjMetaPtrTableB,ptr16[128] metasprite ids $80-$FF (bank 29 $A000 range)
+*,04A0,obj_active,32 slots; 0 = slot empty (skipped by ObjSpriteDraw)
+*,0070,obj_x_lo,32 slots ($70-$8F) world X lo
+*,0090,obj_x_hi,32 slots ($90-$AF) world X hi (screen page)
+*,00B0,obj_y_lo,32 slots ($B0-$CF) world Y lo (240-row pages)
+*,00D0,obj_y_hi,32 slots ($D0-$EF) world Y hi
+*,0300,obj_meta_id,metasprite base id
+*,0320,obj_tile_ofs,added to every tile number
+*,0340,obj_flags2,bit7: palette-cycle select ($1D) - value unused by emitter
+*,0360,obj_meta_dir,added to meta id unless $0380 b0
+*,0380,obj_flags,b0 no dir add; b1 draw overlay $0580; b2 half-rate flicker; b4 behind BG; b5 tile+$40; b6 sink 3px + hide attr-b2 parts; b7 offscreen (out)
+*,0580,obj_overlay_id,metasprite id drawn over obj when $0380 b1
+*,04E0,obj_anim,frame counter; frame = (v>>3) & meta mask
+*,05C0,obj_screen_x,written by ObjSpriteDraw
+*,05E0,obj_screen_y,written by ObjSpriteDraw
+*,06C0,orbit_level,>>3 indexes OrbitTileTable; 0..7 = no orbit
+*,06C1,orbit_burst_timer,counts down; burst drawn while <$0E
+*,07EF,obj1_oam_ofs,OAM offset of obj 1's first sprite (for palette flash)
+*,07FF,obj_draw_rot,DEC each ObjSpriteDraw; &3 picks draw order; parity for half-rate flicker
+*,0710,obj1_flash,bit7: force obj1 sprites to palette 0
 24,8000,SndOpcodeTable,ptr16[16] stream opcode handlers indexed by byte>>4 (see REVERSE.md Sound data format)
 24,8132,SndInitChannel,X=chn: $011A/$0120=stream ptr; dur=1; octave=0; regs cleared; $0114=1 (active)
 24,8169,SndInitSfxChannel,like SndInitChannel but stream hi += $20 (bank 12 data assembled at $8xxx; played at $Axxx)
