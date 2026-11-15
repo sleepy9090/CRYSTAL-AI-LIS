@@ -204,3 +204,18 @@ bank,addr,name,comment
 *,62FF,area_f62FF,sub-table 0 byte 4; b7 -> SetR6($0A) for map reads at 31:EBE5
 *,6300,screen_grid,8x16 screen ids of current area ($80 = none)
 *,64C0,screen_flags,WRAM persistent screen flags (area sub-table 4)
+31,EF1F,ScreenAtCamera,A = $6300[(cam_y_hi<<3&$78)|(cam_x_hi&7)] screen id
+31,EF33,ScreenPageAtCamera,ScreenAtCamera then ScreenPagePtr
+31,EF36,ScreenPagePtr,screen id S: SwitchBank16(S>>6) and $10/$11 = $8000+(S&$3F)*$100 (raw 16x15 metatile page)
+31,EBC1,ScreenRowRender,reads metatile ids from screen page(s) into $6000 buffer then expands + queues to PPU
+31,EC6C,ScreenVisitedBit,A = visited bit of screen index Y in $62F0 bitmap
+31,ED64,CamNtAddr,$10/$11 = nametable address for camera ($34/$36)
+31,ED89,ScreenSubstPtr,$23/$24 = $BE00+($67&$3C)*8 (bank 9 visited-screen metatile substitution)
+31,ED99,ScreenTileSubst,metatile <$20 in a visited screen -> bank 9 ($23)+M replacement
+31,EDBA,MetatileExpand,$6000 metatile ids -> tile ids via 4 pages at $67&$FC +0..3 (banks 8/9)
+31,EDE5,MetatileAttr,attribute pass; ptr table 31:EEEF[($67&$3C)>>1] in bank 9
+31,EEEF,MetatileAttrPtrTable,ptr16 per tileset (bank 9)
+18,81A1,NtFill,A=PPU hi; X=tile x$3C0; Y=attr x$40 (rendering off)
+18,81F0,NtRectBlit,stream ($8E): W H then H rows of W tiles (+$06FE) to PPU $8C/$8D stride $20
+18,824B,NtRectBlitQueued,same W H format; one row per frame through $6200 queue
+17,A751,NtFill_b17,bank 17 duplicate of 18:81A1
