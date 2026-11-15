@@ -104,6 +104,7 @@ def script(p):
         if st in seen:
             continue
         a = bbase + st
+        conds = set()  # (flag, inverted) seen in this chain
         for _ in range(64):
             if a - bbase in seen:
                 break
@@ -114,10 +115,21 @@ def script(p):
             if b0 & 0x40:
                 e['sets'], a = setlist(a)
             out['B'].append(e)
-            todo.append(e['next'])
+            # cond F000 (not inverted) is never true -> its `next` is never applied
+            # (session 19: chain sentinels like `80 00 00 00 FF` otherwise lead into junk)
+            if (b0 & 0x27, b1) != (0, 0):
+                todo.append(e['next'])
             if b0 & 0x80:
                 e['last'] = True
                 break
+            # session 19: a chain is exhaustive (the VM never reads past it) once a cond is
+            # always true (!F000) or negates an earlier cond of the same chain (e.g. $45:
+            # F030 after !F030 with no last bit; the next script's bytes follow).
+            fl, inv = ((b0 & 7) << 8) | b1, bool(b0 & 0x20)
+            if (fl == 0 and inv) or (fl, not inv) in conds:
+                e['exhaustive'] = True
+                break
+            conds.add((fl, inv))
         ends.append(a)
     out['B'].sort(key=lambda e: e['off'])
     out['end'] = max(ends)

@@ -24,6 +24,7 @@ import npc_script_dump as N  # noqa
 import item_dump as I  # noqa
 import presence_dump as P  # noqa
 import area_dump as A  # noqa
+import npc_script_check as C  # noqa
 
 CODE_SITES = os.path.join(os.path.dirname(__file__), '..', 'gfx', 'flag_code_sites.txt')
 
@@ -58,10 +59,26 @@ def main():
     def add(f, kind, txt):
         sites.setdefault(f, []).append((kind, txt))
 
+    pidx = A.param_index()
+    placed2 = {p for (h, p) in pidx if h == 2}
+    placed1 = {p for (h, p) in pidx if h == 1}
+    unplaced = {}  # flag -> [where] for hook-2 triggers / junk NPC scripts that are never placed
+
+    def to_unplaced(f, k, t):
+        unplaced.setdefault(f, []).append((k, t))
+
+    junk_npc = []
     for p in range(256):
         if not N.valid(p):
             continue
         s = N.script(p)
+        # session 19: params no area places whose decode has overlapping (misaligned) section-B
+        # entries are pointers into code/other data (npc_script_check.py) -> not real scripts
+        # pointer 14:8000 = the VM code itself (boss params $CB/$D0/$D5/$DA) is always junk
+        junk = s['ptr'] == 0x8000 or (p not in placed1 and bool(C.check(p)[1]))
+        if junk:
+            junk_npc.append(p)
+        dst = to_unplaced if junk else add
         for sec in ('A', 'B'):
             for e in s[sec]:
                 if e['group'] >= 34:
@@ -69,19 +86,17 @@ def main():
                 c = e['cond']
                 f = int(c.lstrip('!')[1:4], 16)
                 where = 'npc %02X %s+%02X msg %d.%d' % (p, sec, e['off'], e['group'], e['idx'])
+                if junk:
+                    where += ' [junk script]'
                 if f:
-                    add(f, 'test', '%s (%s)' % (where, c.split('(')[0]))
+                    dst(f, 'test', '%s (%s)' % (where, c.split('(')[0]))
                 for st in e.get('sets', []):
                     op, fl = st.split()
-                    add(int(fl[1:], 16), op, where)
-    pidx = A.param_index()
-    placed2 = {p for (h, p) in pidx if h == 2}
-    placed1 = {p for (h, p) in pidx if h == 1}
-    unplaced = {}  # flag -> [where] for hook-2 triggers that are never placed
+                    dst(int(fl[1:], 16), op, where)
     h2 = hook2_entries()
     for e in h2:
         where = 'hook2 item %02X msg %d.%d act %d' % (e['id'], e['res']['group'], e['res']['idx'], e['res']['action'])
-        dst = add if e['id'] in placed2 else (lambda f, k, t: unplaced.setdefault(f, []).append((k, t)))
+        dst = add if e['id'] in placed2 else to_unplaced
         for b0, b1 in e['conds']:
             if fnum(b0, b1):
                 dst(fnum(b0, b1), 'test', where + (' (!)' if b0 & 0x20 else ''))
@@ -161,7 +176,9 @@ def main():
     only = sorted(set(unplaced) - set(sites))
     L.append('')
     L.append('unplaced-only: %d flags referenced only by hook-2 triggers that no area places '
-             '(placed: %s)' % (len(only), ' '.join('%02X' % p for p in sorted(placed2) if p >= 0x80)))
+             '(placed: %s) or by junk NPC scripts (unplaced, misaligned: %s)' % (
+                 len(only), ' '.join('%02X' % p for p in sorted(placed2) if p >= 0x80),
+                 ' '.join('%02X' % p for p in junk_npc)))
     for f in only:
         L.append('F%03X ($%04X&%02X)' % (f, 0x6480 + (f >> 3), 1 << (f & 7)))
         for kind, txt in sorted(set(unplaced[f])):

@@ -396,3 +396,15 @@ bank,addr,name,comment
 19,BC04,SwordRaisePose,event act 1 cutscene: player meta $B8 + CHR R2=$5C R3=$42; jingle $93; 127-frame hold; sub_state=8
 27,AC60,AI_TrapChest,AI $2B (type $73): phase0 meta $AA wait; phase1 meta $90 wander with $0620 timer
 14,86E0,NpcPresenceHi,ptr16[128] NpcHidden lists for params 80-FF (bosses $C0-$CC: !F100-!F10C)
+30,D9D8,SwordPowerLevel,Y=0/1/2 sword power from $0711 sword + $0718 ball/bracelet element match -> $0719
+30,C17D,OamClipTop,hide OAM sprites 1-63 with Y <= $58-($04&7) (Y=$F0) under the top window
+30,DB0E,SelectedUseItem,$0715 = selected consumable ($642C/$6440) or key item ($642E/$6450) id - $1C
+19,B900,PlayerDeath,substate 3 handler (bank n=9); Opel Statue selected ($0715=$0A) -> OpelRevive
+19,B9B0,OpelRevive,$0743=$40; SFX $68; refill HP to max 4/frame; sub_state=6
+26,9D7E,SwordChargeCap,u8[3] 08 10 18 max orbit_level per $0719 power level
+26,8DDD,ChargeMeterIndex,u8[] index ($0719*8 | blink | stage*2) -> offset into ChargeMeterTiles
+26,8DF5,ChargeMeterTiles,9-byte HUD tile rows copied to $6067-$606F
+*,0711,equip_sword,equipped sword 1-4 (5 = Crystalis)
+*,0715,use_item_sel,selected use item id - $1C (0 = none); $0563 = +$1C
+*,0718,equip_ball,equipped ball/bracelet 0 none 1-4 ball 5-8 bracelet (element = (v-1)&3)
+*,0719,sword_power,0/1/2 from SwordPowerLevel; caps orbit_level via SwordChargeCap
