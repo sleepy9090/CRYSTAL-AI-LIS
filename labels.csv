@@ -140,3 +140,18 @@ bank,addr,name,comment
 *,0112,snd_sfx_priority,priority of playing SFX ($FF none)
 *,00F0,snd_flags,bit0 busy; bit5 paused; bit6 SFX lockout; bit7 music-start inhibit
 *,00FB,snd_chn_shadow,$4015 enable mask mirror (SFX sets $0A)
+*,07F0,chr_r0_play,CHR R0 shadow (play-field set) applied by ApplyChrPlay 31:F883 from IRQ-side code
+*,07F1,chr_r1_play,CHR R1 shadow (play-field set)
+*,07F2,chr_r2_play,CHR R2 shadow = sprite tiles $00-$3F; $40/$41 player ($0713)
+*,07F3,chr_r3_play,CHR R3 shadow = sprite tiles $40-$7F; $41+clamp($0711 1..5)
+*,07F4,chr_r4_play,CHR R4 shadow = sprite tiles $80-$BF; per-area record (31:E16D)
+*,07F5,chr_r5_play,CHR R5 shadow = sprite tiles $C0-$FF; per-area record (31:E16D)
+*,0058,chr_r0_alt,CHR R0 shadow (2nd set) applied by ApplyChrAlt 31:F64F
+*,0059,chr_r1_alt,CHR R1 shadow (2nd set)
+*,005A,chr_r2_alt,CHR R2 shadow (2nd set)
+*,005B,chr_r3_alt,CHR R3 shadow (2nd set)
+*,005C,chr_r4_alt,CHR R4 shadow (2nd set)
+*,005D,chr_r5_alt,CHR R5 shadow (2nd set)
+31,F883,ApplyChrPlay,write $07F0-$07F5 to MMC3 R0-R5; JSR'd from F779/F785/F7C8
+31,F64F,ApplyChrAlt,write $58-$5D to MMC3 R0-R5
+31,E16D,LoadAreaChrRecord,(ptr $10) record: 00 then $07E6 $07E7 R4 R5 ...; nonzero first byte = no-op

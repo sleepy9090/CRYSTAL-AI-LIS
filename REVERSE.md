@@ -71,14 +71,14 @@ PRG mode: reset writes `$8000=$00` → PRG mode 0, CHR mode 0 (2KB banks at `$00
 3. `$51=3`; IRQ vector `$0054` ← `$F421` (default).
 4. Toggles PPUADDR A12 16× (MMC3 IRQ counter clock sanity).
 5. Fills `$6200-$621F` and `$6140-$615F` with `$FF`.
-6. `SwitchBank16($0C)` → banks 24/25 at `$8000`; `JSR $8020` (init in bank 24). *(Corrected session 5: earlier note said n=6/bank 12 — the immediate at `31:F320` is `A9 0C`.)*
+6. `SwitchBank16($0C)` → banks 24/25 at `$8000`; `JSR $8020` (init in bank 24). *(Corrected session 1: earlier note said n=6/bank 12 — the immediate at `31:F320` is `A9 0C`.)*
 7. State `$40=2`, clears `$0700-$07FF`, PPUCTRL=`$88` (NMI on, sprites @ `$1000`), `$07FE=9`, CLI.
 8. Warm-boot check: if `$0182-$0184` == `"USO"` skip to `F39F`; else cold init (`F1CD`, write signature, `FE80`, `$0F` = (`$43`==`$C0`), `SwitchBank16(9)` → `JSR $8028` in bank 18).
 9. `F0A4`, then copy WRAM `$7D00-$7EFF` → `$6480-$657F`, `JMP $C900`.
 
 **Bank switching (`30:C40E` SwitchBank16)** — A = 16KB bank index *n*; maps 8KB banks `2n+1` (via `C427`, $A000 window) and `2n` (R6, $8000). `$6E` = current 2n, `$50` = select-register shadow. So the game treats PRG as 16KB pairs at `$8000-$BFFF` with `$C000-$FFFF` fixed. Bank-switched entry points are at fixed offsets (`$8020`, `$8028` …) → likely a jump table at the start of each swappable bank.
 
-**Bank-switch primitives (verified session 5)** — three entry points share one body:
+**Bank-switch primitives (verified session 1)** — three entry points share one body:
 
 | Addr | Name | In | Effect |
 |------|------|----|--------|
@@ -103,9 +103,9 @@ PRG mode: reset writes `$8000=$00` → PRG mode 0, CHR mode 0 (2KB banks at `$00
 | 8 | 16/17 | `C7FA`, `C944`, `C94C`, `C82E`(JMP) | `JMP $A000` (state 4), `JMP $A100` (state 5) | main states 4/5 |
 | 9 | 18/19 | `C931`, `C939`, `C9EB`, `CA5F`, `CC78`, `D5AF`, `D974`, `F397` | `JMP $9FCC` (state 2), `JMP $A015` (state 3, after `JSR $FEE0`), `$BA65` (×4), `$BC04`, `$8028` (cold boot) | main states 2/3 + common screen setup `$BA65` |
 | 10 | 20/21 | `D9B6` | `$9400` | single subsystem (TBD) |
-| 12 | 24/25 | `F320` (Reset) | `$8020` SndInit | **sound driver** (confirmed session 6; also mapped directly by `SoundUpdate` `31:F7FE`) |
+| 12 | 24/25 | `F320` (Reset) | `$8020` SndInit | **sound driver** (confirmed session 2; also mapped directly by `SoundUpdate` `31:F7FE`) |
 | 13 | 26/27 | `C7A0`(JMP), `C7E2`, `C80C`, `CB79`, `CCD1`, `CD82`, `DA3C`, `DAC2`, `E43C`, `E461`, `E47F`, `E547`, `E5E8` | `$8C3D`/`$8C49` (fade, A=3/4), `$8F6E`, `$9B45` (X=1), `$9824`, `$9897`/`$98A8` (X=0/1), `$9CEF` | most-used: palette/fade + per-player (X=0/1) HUD/screen routines |
-| 14 | 28/29 | `C1B4`, `CB71`, `E4CD`, `FF92` | `$800E` (all four) | **object→OAM sprite pass** (not sound — session 6): `$07FF` decremented each call rotates start slot (flicker); `$04A0,X` active flag, `$70,X` pos − `$02` scroll |
+| 14 | 28/29 | `C1B4`, `CB71`, `E4CD`, `FF92` | `$800E` (all four) | **object→OAM sprite pass** (not sound — session 2): `$07FF` decremented each call rotates start slot (flicker); `$04A0,X` active flag, `$70,X` pos − `$02` scroll |
 
 Remaining sites (checked):
 - `30:DA6D` `LDA #8 / JMP` → n=8 tail-call.
@@ -117,7 +117,7 @@ Never mapped by any found path: banks 22/23 as a pair (n=11; 23 only via `SetR7(
 
 **`30:C7D6` FadeSaveZpToWram** — copies ZP `$0A-$29` → `$6000`, `SwitchBank16(13)`, `26:$8C3D(A=4)`, waits 30 frames on `$09`, `26:$8C49(A=4)`, `SwitchBank16(8)`, restores `$6000`→`$0A`. `$8C3D` sets `$11=0,$19=$10`; `$8C49` sets `$11=$40,$19=$F0` → opposite step directions (fade out/in, tentative).
 
-**Sound driver (bank 24/25, session 6)** — `search_bytes.py "8D ?? 40"`: the only swappable-bank `STA $40xx` writes are in bank 24 (19 hits `24:8042-8EBB`); bank 28 has none. Layers:
+**Sound driver (bank 24/25, session 2)** — `search_bytes.py "8D ?? 40"`: the only swappable-bank `STA $40xx` writes are in bank 24 (19 hits `24:8042-8EBB`); bank 28 has none. Layers:
 
 | Addr | Name | Role |
 |------|------|------|
@@ -128,17 +128,17 @@ Never mapped by any found path: banks 22/23 as a pair (n=11; 23 only via `SetR7(
 | `24:8094` | SndStartSfx | R7←bank **12** (`$0C`); header ptr = `$9FC0+id*2` → for id≥`$20` this lands in `12:$A000+(id−$20)*2` (SFX pointer table lives at start of bank 12). Byte 0 = priority: rejected if > `$0112`. Sets `$FB=$0A` (pulse2+noise?), inits channels 4 and 3 via `$8169`, flags `$0115/$0117` bit7. Ignored if `$F0` bit6. |
 | `24:80E4` | SndStartMusic | `$8177` check, `$0111`=id&`$7F`, clears `$FE/$FF`, inits 4 channel streams `$812A` (Y=1,3,5,7 → stream ptr pairs). |
 | `24:8186` | SndTick | per-frame playback; exits if `$F0` bit0 set; stops music on `$F0` bit7 (sets `$0111`=`$FF`, `$4015`←`$FB`). |
-| `24:8000` | SndOpcodeTable | **Corrected session 7:** this IS a jump table — the stream-byte opcode dispatch (`24:8347` SndReadOp: `op = byte>>4`, `JMP (SndOpcodeTable+op*2)`). See "Sound data format" below. |
+| `24:8000` | SndOpcodeTable | **Corrected session 3:** this IS a jump table — the stream-byte opcode dispatch (`24:8347` SndReadOp: `op = byte>>4`, `JMP (SndOpcodeTable+op*2)`). See "Sound data format" below. |
 
 Sound RAM: `$0100-$0112` (queue + state), `$0114-$0119` channel flags, `$F0` flags, `$F3`, `$F5/$F6` data ptr, `$FB` `$4015` shadow, `$FD-$FF`. **Port note:** sound can be implemented as a FIFO of ids consumed one per frame; music ids `$00-$1F`, SFX `$20-$9F` (data in bank 12 `$A000`), bank 25 holds tick-time data.
 
-**Sound data format (session 7)** — tables decoded with `tools/decode_tables.py`.
+**Sound data format (session 3)** — tables decoded with `tools/decode_tables.py`.
 
 *Channels* (X index, arrays 6 wide at `$0114+X`…): 0=SQ1, 1=SQ2, 2=TRI, 3=NOISE (music); 4=SFX on SQ2, 5=SFX on NOISE. `SndChnTypeTable` `24:87A6` = `00 01 02 03 01 03`, reg offset `87AC` = `0 4 8 C 4 C`, `$4015` mask `87B2`. While an SFX plays, music chn 1/3 get `$0114` bit7 (muted, stream keeps running).
 
 *Headers*
 - Music: `SndMusicTable` `24:8C0C` ptr16[32], ids `$00-$1F`; null (ignored) ids `$02 $05 $10`. Header = 1 byte (unused by code, always `01` so far) + 4 stream ptr16 (SQ1, SQ2, TRI, NOISE). Id `$00` (`$8C4C`) = silence: each stream `53 40 00`.
-- SFX: `SfxPtrTable` = file bank 12 offset 0, seen at `$A000` via `SetR7(12)` (`SndStartSfx` indexes `$9FC0+id*2`, so id `$20` → entry 0). 88 entries → ids `$20-$77`; null ids (all 88 checked, session 8): `$22 $2D $34 $35 $38 $44 $46 $4D $4F $59 $70 $71 $73 $77`. First header at `$A0B0` = end of the 88-entry table, confirming the count. Header = priority byte (lower = more important; rejected if > `$0112`, `$FF` = idle) + 2 stream ptr16 (SQ2, NOISE). Stream ptrs are stored as `$8xxx` and `+$20` hi (`SndInitSfxChannel` `24:8169`) — data assembled for bank 12's native window.
+- SFX: `SfxPtrTable` = file bank 12 offset 0, seen at `$A000` via `SetR7(12)` (`SndStartSfx` indexes `$9FC0+id*2`, so id `$20` → entry 0). 88 entries → ids `$20-$77`; null ids (all 88 checked, session 4): `$22 $2D $34 $35 $38 $44 $46 $4D $4F $59 $70 $71 $73 $77`. First header at `$A0B0` = end of the 88-entry table, confirming the count. Header = priority byte (lower = more important; rejected if > `$0112`, `$FF` = idle) + 2 stream ptr16 (SQ2, NOISE). Stream ptrs are stored as `$8xxx` and `+$20` hi (`SndInitSfxChannel` `24:8169`) — data assembled for bank 12's native window.
 
 *Per-channel RAM* (`+X`): `$0114` flags (b0 active, b4 rest/hold, b5 vibrato, b6 envelope, b7 stolen-by-SFX), `$011A/$0120` stream ptr, `$0126/$0132/$013E` loop1 ptr/count, `$012C/$0138/$0144` loop2 ptr/count, `$014A` frames left, `$0150` note length, `$0156` octave×16, `$015C` envelope#<<4 | step, `$0162` vibrato depth, `$0168` `$4000` shadow (duty/vol), `$016E` sweep, `$0174/$017A` period lo/hi. `$0113` = next music id (chain). `$FC` = per-frame reg-dirty bits (b0 vol, b1 sweep, b2 lo, b3 hi). `$FE` = fade timer (`$BC` on cmd `$FF`; decrements volumes via `24:8609`). `$FF` = DMC-pending/`$4015` DMC bit.
 
@@ -163,11 +163,11 @@ Sound RAM: `$0100-$0112` (queue + state), `$0114-$0119` channel flags, `$F0` fla
 | `Ex` | `85F7` | envelope #x (`$015C`=x<<4, enables `$0114` b6) |
 | `Fx` | `8685` | vibrato depth x·8; x<8 on, x=8 off, x>8 = empty frame |
 
-*Op `9x` exact (`SndOpDuty` `24:854D`, session 8)* — writes the high nibble of the `$0168` reg-0 shadow (low nibble = volume kept), sets `$FC` b0:
+*Op `9x` exact (`SndOpDuty` `24:854D`, session 4)* — writes the high nibble of the `$0168` reg-0 shadow (low nibble = volume kept), sets `$FC` b0:
 - **TRI** (type 2): high nibble = x verbatim → `$4008` bit7 (control/halt) + linear-reload bits 4-6 (`$0168 = x<<4 | vol`).
 - **SQ/NOISE**: x bit0 → const-volume bit4; x bits1-2 → duty bits6-7; bit5 (length halt) always set. So `$4000` high nibble = `(x&6)<<5 | (x&1)<<4 | $20`. If x bit0 = 0 (hardware envelope), the software-envelope flag `$0114` b6 is cleared.
 
-*Vibrato tick (`SndVibratoTick` `24:86AA`, session 8)* — called per frame from `24:82F0` when `$0114` b5. Skipped if b7 (SFX-stolen); if software envelope active (b6), waits until env step (`$015C`&`$0F`) = `$F`. `INC $FD`. `$0162` = depth x<<3 | phase(0-7); phase = (phase+1)&7; p = x odd ? phase>>1 : phase, then p&=3 (x odd = half speed). `e = SndVibStepTable[(x>>1)*4 + p]` (`24:8714`: `00 02 00 04 / 00 06 00 08 / 00 0A 00 0C / 00 0E 00 10`); e=0 → offset 0, else **Y = octave×16 + e + 2** and offset = s16 at `SndVibOffsetTable` `24:8724+Y`. Period lo written to `$4002+reg` = (`$0174` + offset) **only if** the hi byte would be unchanged (no hi write, base `$0174/$017A` untouched — non-cumulative).
+*Vibrato tick (`SndVibratoTick` `24:86AA`, session 4)* — called per frame from `24:82F0` when `$0114` b5. Skipped if b7 (SFX-stolen); if software envelope active (b6), waits until env step (`$015C`&`$0F`) = `$F`. `INC $FD`. `$0162` = depth x<<3 | phase(0-7); phase = (phase+1)&7; p = x odd ? phase>>1 : phase, then p&=3 (x odd = half speed). `e = SndVibStepTable[(x>>1)*4 + p]` (`24:8714`: `00 02 00 04 / 00 06 00 08 / 00 0A 00 0C / 00 0E 00 10`); e=0 → offset 0, else **Y = octave×16 + e + 2** and offset = s16 at `SndVibOffsetTable` `24:8724+Y`. Period lo written to `$4002+reg` = (`$0174` + offset) **only if** the hi byte would be unchanged (no hi write, base `$0174/$017A` untouched — non-cumulative).
 - Offset table is 8 s16 per octave row starting at `$8726+oct*16`: oct0 `+4 −4 +8 −8 +12 −12 +16 −16`, oct1 `+2 −2 +4 −4 +6 −6 +8 −8`, oct2 `+1 −1 +2 −2 +3 −3 +4 −4`, oct3 `+1 −1 +1 −1 +2 −2 +2 −2`, oct4-7 `+1 −1` repeated.
 - **Original off-by-one** (replicate in port): because of `+2` instead of `+0`, phase1 reads the *negative* of pair k and phase3 reads the *positive* of pair k+1 — e.g. depth 0/1, octave 0: cycle `0, −4, 0, +8`. Depth 6/7 phase3 reads the next octave row's first word; at octave 7 that is `$87A6` = `SndChnTypeTable` bytes `00 01` → **+256** (harmless only if unused).
 
@@ -180,7 +180,7 @@ Sound RAM: `$0100-$0112` (queue + state), `$0114-$0119` channel flags, `$F0` fla
 - SFX: `$21 $23×2 $24 $25×4 $26 $29×7 $2F $31×3 $36×2 $39×3 $3A $3D×2 $3E $3F×2 $43 $44 $45 $48 $4B×2 $4E×2 $54 $56 $5C $5D $5F $64 $66 $68 $6B×2 $6E $6F $76` (`$29` is the most common — 15:BAF3, 19:BFDA, 27:BB32, 30:D0AE/D0C8/D1CA/D48F). Note `$44` is a null SFX entry (26:92D6 → silently ignored).
 - The other ~18 PlaySound callers load A from RAM/tables (not enumerated).
 
-*Music ids by caller (session 8)* — headers: `$0C` `24:9F4B`, `$12` `25:A5DB`, `$13` `25:A796` (all byte0 `01`).
+*Music ids by caller (session 4)* — headers: `$0C` `24:9F4B`, `$12` `25:A5DB`, `$13` `25:A796` (all byte0 `01`).
 - **`$13` = interrupting jingle** ("fanfare"). Always issued as `$93` right after the caller sets `snd_cur_music` (`$0102`) bit7, so when `$13` ends (every stream ends `00` = stop, ~150 frames ≈ 2.5 s; SQ1: `93 8F E9 60 34 2D 5C 2E 2F 54 20 65 2A 50 41 20 54 2A 56 77 53 40 00`) `SoundUpdate` re-issues the previous track. Played *instead of* an SFX on a special case: `30:D090` if `$06C3=$0D && $06E3=$20` (else SFX `$29`); `30:D41C` if `$07DC&$F0=$40` (else SFX `$3F`); also `19:BC38`. Likely an item/achievement jingle — confirm when `$06C3/$06E3/$07DC` are named.
 - **`$12` = entity-triggered track.** 8 sites in bank 15 (n=7, entity logic), each an entity handler doing `STA $05A0` (value `$00`/`$10`) then, only if `$07D5≠0`, `PlaySound $12`. Uses loops (`A1`/`A4`) → a full looping piece; likely boss/encounter music (one per boss-type entity).
 - **`$0C`** — single site `15:B310`, entity handler that first far-calls bank 14 `$800E`, sets `$07E8=$38`, calls `15:8C3D` (A=`$10`); a scene/event theme. Semantics TBD with entity tracing.
@@ -193,7 +193,7 @@ Sound RAM: `$0100-$0112` (queue + state), `$0114-$0119` channel flags, `$F0` fla
 
 **IRQ (`31:F443`)** — ack/re-enable MMC3 IRQ, `JMP ($0054)`. Handler table `IrqHandlerTable` at `31:F433` (8 entries) selected by `SetIrqHandler` (`31:F424`, A=index). Handler 0 (`F455`) does a delayed mid-frame scroll split from `$07D8`.
 
-**Object sprite pass (`28:800E` ObjSpriteDraw, session 9)** — reached via `SwitchBank16(14)` from `C1B4/CB71/E4CD` and far-call `FF8C`.
+**Object sprite pass (`28:800E` ObjSpriteDraw, session 5)** — reached via `SwitchBank16(14)` from `C1B4/CB71/E4CD` and far-call `FF8C`.
 1. `$07FF` (obj_draw_rot) `DEC`; order = `ObjDrawOrderTable` `28:83DC + ObjDrawOrderOfs[$07FF&3]` — **4 fixed 32-slot permutations** (not a simple rotation): `04 05 06 07 02 01 03 08…1F 00`, a shuffled one, another, and `02 01 1F 1E … 03 00`. Slot 0 is drawn last in 3 of 4; slots 1/2 near the front.
 2. OAM write ptr `$10` starts at 4 (sprite 0 reserved for split). For each slot X with `$04A0,X≠0`: sx = (`$70`,`$90`) − (`$02`,`$03`), hi must be 0. Store `$05C0`. sy = (`$B0`,`$D0`) − (`$04`,`$05`) with 240-row wrap (extra −16 on borrow), hi must be 0; sy ≥ `$E8` → skipped silently; sy < `$10` or off-page → `$0380` b7 set (offscreen). Else `$05E0`=sy, b7 cleared, draw unless OAM full or (b2 half-rate and (X+`$07FF`) odd).
 3. `ObjHideUnusedOam` `80A5`: Y=`$F0` from `$10` to end. If `$0710` b7: clears palette bits of obj 1's 6 sprites (4 if `$0381` b6) from `$07EF` → **hit flash for obj 1 = player**.
@@ -217,6 +217,13 @@ N  M  {frames}      N = sprites per frame (1..), M = frame mask
 Example id 2 (`$865C`): `06 01` → 6 sprites, 2 frames; 16×24 body: `F8 E9 00 1A / 00 E9 00 1B / F8 F1 00 00 / 00 F1 00 01 / F8 F9 04 20 / 00 F9 04 21` (bottom row flagged b2 → hidden when sinking); frame 1 is the same body with attr `$40` (self-mirrored) rows. Id 0 (`$868E`) uses tiles `1E 1F 06 07 26 27`. Id 3 (`$86F2`) = `FF C0 86` → mirrored id 1 — facing variants are `FF` aliases.
 
 Object RAM (32 slots, index X 0-31): `$70/$90` X lo/hi, `$B0/$D0` Y lo/hi, `$0300` meta id, `$0320` tile ofs, `$0340` b7 (palette-cycle, read but **unused** — `$1D` is computed and never read: dead code), `$0360` dir/anim id add, `$0380` flags (b0 no-dir, b1 overlay, b2 half-rate flicker, b4 behind BG, b5 tile+$40, b6 sink/half-hide, b7 offscreen out), `$04A0` active, `$04E0` anim counter, `$0580` overlay id, `$05C0/$05E0` screen X/Y out. **Obj 1 = player** (hit flash, orbit centre).
+
+**Sprite CHR banks (session 6)** — PPUCTRL `$88` → 8×8 sprites from `$1000` = MMC3 R2-R5 (1KB each; tile t uses R[2 + t>>6]). Two shadow sets: `$07F0-$07F5` (play field, `ApplyChrPlay` `31:F883`, called from IRQ-side code `F779/F785/F7C8`) and `$58-$5D` (`ApplyChrAlt` `31:F64F`, inside an IRQ handler). In-game writers:
+- R2 `$07F2` = `$40`, or `$41` if `$0713`≠0 (`30:C0B8`) → **player tiles**. Other scenes: `$64`/`$4D` (`30:C100/C107`), `$73` (`30:DCDF`), `$5C` (`30:DD7F`, also `$5A`), plus 9 sites in bank 19 and `17:A935`.
+- R3 `$07F3` = `$41` + clamp(`$0711`, 1..5) = `$42-$46` (`30:C0C3`; clamped value also → `$07E5`); `$42` at `30:C114`.
+- R4/R5 `$07F4/$07F5` = per-area: `LoadAreaChrRecord` `31:E16D` reads a record via `($10)` (ptr from `$9300,Y` table): byte0 must be 0, then `$07E6`, `$07E7`, R4, R5, … Also `$FF/$51` at `31:E832`, `$4D` at `30:DF44`, and bank 15 entity handlers (8 sites, same handlers as the music `$12` sites → boss CHR swap).
+
+**`tools/meta_dump.py` (session 6)** — `text [ids]` prints decoded records (FF-mirror resolved); `png [out] [--chr R2,R3,R4,R5] [--cell N] [--frames N]` renders all 256 ids in a 16×16 grid (frames side by side, attr palette tinted, origin pixel marked) → `gfx/metasprites.png`. Default `--chr 40,42,50,51`. Verified: ids `00-07` (player: 4 facings + 4 sword/attack poses) render clean with R2=`$40`; ids using tiles ≥`$80` need the area's R4/R5 (the `50,51` default is a placeholder, so those look scrambled). Only 4 of the 256 ids are empty. Next: decode the `$9300` area table so each id range can be rendered with its real R4/R5.
 
 **Port note:** reimplement as: for slot in order[rot&3]: compute screen pos, resolve record (follow one `FF` with mirror), emit N sprites of frame f; then hide rest; then orbit ring. Sprite limit is 63 (OAM `$04-$FF`) minus 8 orbit slots overlapped — the orbit writes `$E0-$FC` unconditionally after the hide pass, overwriting objects there.
 
@@ -242,8 +249,9 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 | `tools/xref.py` | xrefs to `[BB:]addr`: abs/abx/aby/ind, zp forms (targets <$100), same-bank rel branches; sync-check filters data false-positives (`--loose` to show); `--data` raw `.dw` words, `--imm` split `#lo/#hi` immediates; `$8000-$BFFF` targets with `BB:` scan only the 16KB pair + fixed banks (`--all` to widen) |
 
 | `tools/decode_tables.py` | `BB:AAAA count fmt` — fmt `u8`/`s8`/`u16`/`ptr16`/`hex<N>`/`split:<hiaddr>`; resolves `$8000-$BFFF` within the 16KB pair (so a bank mapped via R7 at `$A000`, e.g. bank 12, must be read as `12:8000`) |
-| `tools/sound_ids.py` | groups `LDA #id / JSR PlaySound` sites by id. Written session 7, not yet run (permission prompt) |
-| `tools/sound_dump.py` | `music <id>` / `sfx <id>` / `all` (`--max N`): prints each channel stream as op text (notes, LEN frames, loops/CALL with SFX `+$2000` fix-up, drums on NOISE); `all` lists every header. Written session 8, not yet run (permission prompt) — first run should verify `music 0x13` matches the bytes quoted above |
+| `tools/sound_ids.py` | groups `LDA #id / JSR PlaySound` sites by id. Written session 3, not yet run (permission prompt) |
+| `tools/sound_dump.py` | `music <id>` / `sfx <id>` / `all` (`--max N`): prints each channel stream as op text (notes, LEN frames, loops/CALL with SFX `+$2000` fix-up, drums on NOISE); `all` lists every header. Written session 4, not yet run (permission prompt) — first run should verify `music 0x13` matches the bytes quoted above |
+| `tools/meta_dump.py` | metasprite records `text [ids]` / `png [out] [--chr R2,R3,R4,R5]` → `gfx/metasprites.png` (session 6, run + verified on player ids) |
 | `tools/bank_calls.py` | lists each `LDA #n / JSR SwitchBank16` site with n, 8KB pair, and following `$8000-$BFFF` JSR/JMP targets (`--summary` groups by n). Not yet run (permission prompt) |
 
 `nesrom.py` gained `bank_window(bank)` (30→$C000, 31→$E000, even→$8000, odd→$A000), `bank_cpu_addr`, `parse_bank_addr("BB:AAAA")`.
@@ -273,12 +281,13 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 
 - [x] Ph1: identify binary header and platform
 - [x] Ph3: build `tools/search_bytes.py` and `tools/xref.py` (bank-aware, reuse `nesrom.py` + `instruction_set.py`) — verified: `xref.py C40E` → 48 call sites, **all in fixed banks 30/31** (swappable banks never call SwitchBank16 directly); `xref.py 40 --bank 30` → C904/C977/C9F5; `--data` found `31:F422` IrqDefaultPtr. Pattern for next task: `search_bytes.py "A9 ?? 20 0E C4" --disasm`
-- [x] Ph3: confirm `30:C427` (R7 setter) and document `SwitchBank16` fully; find all `LDA #n / JSR C40E` call sites → map which 16KB bank holds which subsystem — done session 5: SetR6 `C418`/SetR7 `C427`, far-call trampolines `FF80-FFE2`, full n→bank table in Key Findings; corrected reset bank (n=$0C → 24/25). New `tools/bank_calls.py` written (needs run-permission approval; not yet executed — `search_bytes.py --disasm --context 14` used instead)
-- [x] Ph3: verify bank 28 `$800E` (n=14) and bank 24 `$8020` (reset init) — which is the sound driver? Check for `$4000-$4015` writes in banks 24-29 — done session 6: **bank 24/25 = sound driver** (SndInit `$8020`, SndCommand `$8048`, SndTick `$8186`; API `PlaySound` `30:C125`, per-frame `SoundUpdate` `31:F7FE`); bank 28 `$800E` = object→OAM sprite pass. See "Sound driver" in Key Findings.
-- [x] Ph3: decode sound data formats — music ptr table `24:$8000`, channel stream init `$812A`, SFX table `12:$A000`, tick `24:$8186` opcode set; list all music/SFX ids used by PlaySound callers — done session 7: `24:8000` is the **opcode** table (16 ops); music headers `24:8C0C`, SFX headers file-bank 12 offset 0; hex-letter note encoding; ids listed. See "Sound data format".
-- [x] Ph3: sound follow-ups — decode `SndOpDuty` `24:854D` triangle path + vibrato `24:86AA` exactly; check SFX table entries 48-87 for nulls; name music `$0C`/`$12`/`$13` by their callers' states; write `tools/sound_dump.py` to disassemble a stream into op text — done session 8: duty bit layout, vibrato algorithm incl. original off-by-one table index; SFX nulls `$59 $70 $71 $73 $77`; `$13`=interrupting jingle, `$12`=entity/boss track, `$0C`=event theme; `sound_dump.py` written (unrun, needs approval)
-- [x] Ph3: trace bank 28 `$800E` object sprite pass fully (object table `$04A0`/`$70` layout, metasprite format at `$83D8/$83DC`) — done session 9: 32-slot object table, 4 draw-order permutations, metasprite record format (count/mask/frames, `FF` mirrored redirect, `$80` terminator, attr b2 half-hide), obj 1 = player (hit flash `$0710`, orbit/burst ring `$06C0/$06C1`). See "Object sprite pass".
-- [ ] Ph4: write `tools/meta_dump.py` — render metasprite ids 0-255 from `28:845C/855C` using CHR (needs sprite CHR banks from MMC3 R2-R5 at draw time)
+- [x] Ph3: confirm `30:C427` (R7 setter) and document `SwitchBank16` fully; find all `LDA #n / JSR C40E` call sites → map which 16KB bank holds which subsystem — done session 1: SetR6 `C418`/SetR7 `C427`, far-call trampolines `FF80-FFE2`, full n→bank table in Key Findings; corrected reset bank (n=$0C → 24/25). New `tools/bank_calls.py` written (needs run-permission approval; not yet executed — `search_bytes.py --disasm --context 14` used instead)
+- [x] Ph3: verify bank 28 `$800E` (n=14) and bank 24 `$8020` (reset init) — which is the sound driver? Check for `$4000-$4015` writes in banks 24-29 — done session 2: **bank 24/25 = sound driver** (SndInit `$8020`, SndCommand `$8048`, SndTick `$8186`; API `PlaySound` `30:C125`, per-frame `SoundUpdate` `31:F7FE`); bank 28 `$800E` = object→OAM sprite pass. See "Sound driver" in Key Findings.
+- [x] Ph3: decode sound data formats — music ptr table `24:$8000`, channel stream init `$812A`, SFX table `12:$A000`, tick `24:$8186` opcode set; list all music/SFX ids used by PlaySound callers — done session 3: `24:8000` is the **opcode** table (16 ops); music headers `24:8C0C`, SFX headers file-bank 12 offset 0; hex-letter note encoding; ids listed. See "Sound data format".
+- [x] Ph3: sound follow-ups — decode `SndOpDuty` `24:854D` triangle path + vibrato `24:86AA` exactly; check SFX table entries 48-87 for nulls; name music `$0C`/`$12`/`$13` by their callers' states; write `tools/sound_dump.py` to disassemble a stream into op text — done session 4: duty bit layout, vibrato algorithm incl. original off-by-one table index; SFX nulls `$59 $70 $71 $73 $77`; `$13`=interrupting jingle, `$12`=entity/boss track, `$0C`=event theme; `sound_dump.py` written (unrun, needs approval)
+- [x] Ph3: trace bank 28 `$800E` object sprite pass fully (object table `$04A0`/`$70` layout, metasprite format at `$83D8/$83DC`) — done session 5: 32-slot object table, 4 draw-order permutations, metasprite record format (count/mask/frames, `FF` mirrored redirect, `$80` terminator, attr b2 half-hide), obj 1 = player (hit flash `$0710`, orbit/burst ring `$06C0/$06C1`). See "Object sprite pass".
+- [x] Ph4: write `tools/meta_dump.py` — render metasprite ids 0-255 from `28:845C/855C` using CHR (needs sprite CHR banks from MMC3 R2-R5 at draw time) — done session 6: tool written + run → `gfx/metasprites.png`; sprite CHR shadows `$07F0-$07F5`/`$58-$5D` found, player R2=`$40/$41`, R3=`$42-$46`; ids 0-7 (player) verified clean. See "Sprite CHR banks".
+- [ ] Ph3: decode area table at `$9300` (bank pair TBD, read by `31:E15F`) + `LoadAreaChrRecord` `31:E16D` record fields (`$07E6/$07E7`, R4/R5, rest) → per-area enemy CHR so `meta_dump.py --chr` can render each enemy set correctly
 - [ ] Ph3: decode `30:CADE`/`CB2E` substate tables (length, name each state-1 substate handler)
 - [ ] Ph3: trace `31:EF38` packed bank+pointer decoder — find the pointer tables that feed it (banks 0-7 data streams)
 - [ ] Ph3: decode jump tables at start of swappable banks (`$8000-$802F` in banks 12, 18, …)
@@ -286,11 +295,11 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 - [ ] Ph3: trace NMI fully (`31:F3B6`-`F421`): PPU update queue, `$51` modes 7/9, scroll writes, sound driver call
 - [ ] Ph3: decode IRQ handlers 1-7 (`IrqHandlerTable`) — which screens use which split
 - [ ] Ph3: identify controller read routine and input RAM vars
-- [x] Ph3: identify sound driver bank + entry points — covered by session 6 (see above)
+- [x] Ph3: identify sound driver bank + entry points — covered by session 2 (see above)
 - [ ] Ph3: trace cold-init subs `F1CD`, `FE80`, `F0A4` and the WRAM save layout (`$6000-$7FFF`, `$7D00` block)
 - [ ] Ph4: build `tools/extract_tiles.py` — dump all 128 CHR 1KB banks to `gfx/` with grayscale palette
 - [ ] Ph4: locate palette data (writes to PPU `$3F00`) and build `tools/palette_dump.py`
-- [ ] Ph5: build `tools/check_bank_refs.py` (`tools/decode_tables.py` done session 7)
+- [ ] Ph5: build `tools/check_bank_refs.py` (`tools/decode_tables.py` done session 3)
 - [ ] Ph5.5: decide whether a scriptable 6502+MMC3 emulator (`tools/emu/`) is needed
 
 ### Web Port Fixes
