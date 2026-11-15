@@ -8,6 +8,8 @@ usage: area_dump.py [list|chr|spawns] [area ...]
   indirect  every handler-1 param used + its bank 4/5 record (session 8)
   sub     AreaSubTable (30:C7A5) header 10:8300[$6C] sub-tables k0-k5 (session 9)
   sub stats  list areas whose header has a 6th (k5) pointer
+  params [h ...]  index (handler, param) -> areas.slots that spawn it (session 17)
+  --out f   write to file f instead of stdout
 
 Format (session 7, see REVERSE.md "Area records"):
   AreaPtrTable 12:9201 ptr16 indexed by $6C (area id 0-255; banks 12/13 via
@@ -168,12 +170,51 @@ def decode_sub(area):
     return out
 
 
-MODES = ('list', 'chr', 'spawns', 'indirect', 'sub')
+MODES = ('list', 'chr', 'spawns', 'indirect', 'sub', 'params')
+
+
+def param_index():
+    """(handler, param) -> [(area, slot, b2, x, y)] over every area (session 17)."""
+    idx = {}
+    for a in range(table_len()):
+        d = decode(a)
+        if not d or 'ents' not in d:
+            continue
+        for slot, e in d['ents']:
+            if isinstance(e, tuple):
+                yy, xx, h, prm, b2 = e
+                idx.setdefault((h, prm), []).append((a, slot, b2, xx, yy))
+    return idx
 
 
 def main(argv):
+    if '--out' in argv:
+        i = argv.index('--out')
+        sys.stdout = open(argv[i + 1], 'w')
+        argv = argv[:i] + argv[i + 2:]
     mode = argv[0] if argv and argv[0] in MODES else 'list'
     rest = [a for a in argv if a not in MODES]
+    if mode == 'params':
+        # params [h] : every (handler, param) with the areas/slots that spawn it
+        idx = param_index()
+        hs = {int(x, 0) for x in rest}
+        for (h, p), lst in sorted(idx.items()):
+            if hs and h not in hs:
+                continue
+            what = HANDLERS.get(h, 'INVALID')
+            if h == 0:
+                what = f'type ${(p + 0x50) & 0xFF:02X}'
+            elif h == 3:
+                what = f'type ${(p + 0xD0) & 0xFF:02X}'
+            elif h == 4:
+                what = f'type ${p:02X}' + (' (flag item)' if p & 0xF0 == 0x40 else '')
+            elif h == 1:
+                what = describe_indirect(indirect_rec(p)[1])
+            elif h == 2:
+                what = 'trigger/NPC $0D/$0E'
+            print(f'h{h} p=${p:02X} {what:<40} {len(lst):3d}x: ' + ' '.join(
+                f'{a:02X}.{s:02X}' for a, s, _, _, _ in lst))
+        return 0
     if mode == 'sub':
         if rest == ['stats']:
             # header size check: is sub-table 0 always right after a 5-ptr header?

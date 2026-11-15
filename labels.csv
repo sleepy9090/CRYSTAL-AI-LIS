@@ -369,3 +369,24 @@ bank,addr,name,comment
 14,9D66,ItemStoreValue,113 bytes: value stored in the inventory slot (ids 50-70 -> base item)
 *,6430,inventory,$6430-$645F: 6430-33 swords 6434-37 armor 6438-3B shields 643C-3F balls/bracelets 6440-47 consumables 6448-4F rings 6450-57 key items 6458-5F magic
 *,6428,inv_select,$6428-$642F per-category selection ($FF = none; static guess); $6428-$6477 = $FF on new game (30:C957)
+30,CCCC,ObjUpdateAll,banks 26/27; slots 0-30: $05A0 timer (hit-flag clear) then JSR ObjAiTable[obj_active&$7F]; ids $60-$6F map bank 15 at $A000; id $1A -> 30:CD7F
+27,A314,ObjAiTable,ptr16[128] object AI handlers indexed by obj_active&$7F (0 = none); ids $60-$6F run in bank 15 (SetR7($0F))
+26,9152,EnemyKilled,HP underflow: AddXp; $04C0=0 -> EnemyDeathFx else ObjInit(slot,$04C0); level-up check (XP $0704 >= $0706)
+26,91FA,EnemyDeathFx,obj Y -> AI $7D death puff (overlay $AB, anim $1F, $04C0=$0B)
+26,924B,AddXp,$0520,Y xp value: bit7 clear -> +value, set -> +(value&$7F)*16 (to $0704/$0705)
+26,8B7F,LevelHpTable,u8[16] max HP per level (index player_level)
+26,8B8F,LevelMpTable,u8[16] max MP per level
+26,8B9E,LevelXpTable,u16[16] XP needed for next level -> $0706/$0707
+26,98CD,ObjBecomeNext,ObjInit(slot X, type $04C0,X) (death-type chain)
+*,0704,xp,player XP (16-bit) $0704/$0705
+*,0706,xp_next,XP needed for next level $0706/$0707 (26:8B9E[level])
+27,B83B,ObjAiExplode,AI $74 boss explosion (types $DC -> $DD -> $CF via ObjBecomeNext)
+15,B807,BossDefeated,AI $6F (type $CF): slot -> type $0F reward drop; BossAreaList[area] -> 21-byte BossRecs record
+15,B95D,BossAreaList,14 areas: 0A 1A 28 FF 6E F2 A9 AC B9 B6 9F A6 6C 5F
+15,B96B,BossRecPtrs,ptr16[14] -> 21-byte records (code ptr, ?, music, drop param, 8 pal ids, 6 CHR, $62FE, clear-enemies flag)
+15,B987,BossRecs,13 x 21 bytes (see REVERSE.md Boss defeat)
+15,BA98,BossFleeSpeech,record hook for areas 28/6E/F2: player reset, slot $1F type $2B, msg from BossFleeRecs, clear enemies
+15,BAFE,BossFleeRecPtrs,ptr16[14] by boss rec index ($0600) -> 5-byte recs (?, $031F, $033F, msg id, group)
+15,BB29,ClearEnemySlots,obj_active=0 for slots $0D-$1E except X and AI $78/$7F/$30/$39; slots 4-11 cleared
+14,85E0,NpcPresenceLo,ptr16[128] NpcHidden lists for params 00-7F
+14,86E0,NpcPresenceHi,ptr16[128] NpcHidden lists for params 80-FF (bosses $C0-$CC: !F100-!F10C)
