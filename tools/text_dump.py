@@ -98,6 +98,14 @@ def main():
     if '--out' in args:  # redirect listing to a file
         i = args.index('--out'); sys.stdout = open(args[i + 1], 'w'); del args[i:i + 2]
     mode = args[0] if args else 'all'
+    if mode == 'at':  # text_dump.py at BB:AAAA [count] -- decode consecutive messages from an address
+        b, a = args[1].split(':'); bank, addr = int(b), int(a, 16)
+        for _ in range(int(args[2]) if len(args) > 2 else 1):
+            txt, endp = decode(bank, addr)
+            print(f'-- {bank}:{addr:04X}-{endp-1:04X}')
+            print('   ' + txt.replace('\n', '\n   '))
+            addr = endp
+        return
     if mode in ('dict', 'all'):
         print('== dictionary 20:8900 (code: word)')
         for i, s in enumerate(DICT):

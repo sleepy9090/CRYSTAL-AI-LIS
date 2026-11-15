@@ -251,9 +251,34 @@ bank,addr,name,comment
 23,BDC0,SaveCopyDesc,5x6 bytes src dst count
 23,BDDE,LoadCopyDesc,4x6 bytes src dst count
 23,BDF6,SaveAllowed,C = bit7 of 23:BF00 indexed by $6C
-23,BF00,AreaSaveFlags,256 bytes per area: $80/$81 save allowed
+23,BF00,AreaSaveFlags,256 bytes per area: bit7 SaveGame writes record; bit0 menu Save allowed
+30,D085,ShowPendingMessage,show msg ($06C3 $06E3) set by entity code; restores $51
+30,D0C8,NpcTalk,touched spawn entry $0623 -> NpcScript -> ShowMessagePacked -> TalkActionTable
+30,D123,TalkActionTable,32 words indexed by NPC script action $22
+30,D347,ShowMessagePacked,$21:$20 linear msg id -> $07DF/$07DE then ShowMessage
+30,D354,ShowMessage,font CHR R0=$3C R1=$38; window open; TextPrintBox; Select=replay A/B=close
+30,D3C2,TextIdUnpack,$07DF = $07DF*8 + ($07DE>>5); $07DE &= $1F
+14,8000,NpcScript,$23 = NPC param; returns $20/$21 msg id and $22 action
+14,8078,NpcResult,r0 r1 -> $22 = r0>>3; $21 = r0&7; $20 = r1
+14,8112,NpcFlagApply,set-list: bit7 clear else set; stop at bit6
+14,8135,NpcFlagTest,Z clear = cond true (b0 bit5 = invert)
+14,8148,NpcFlagRef,2-byte flag ref -> X byte index into $6480 + $28 mask + $26 flags
+14,895D,NpcScriptPtrsLo,128 script ptrs for params $00-$7F
+14,8A5D,NpcScriptPtrsHi,128 script ptrs for params $80-$FF
+20,8500,TextWindowOpen,params 20:8879 -> draw frame NT2 rows 0-9 + attrs; clear queue $6200
+20,87B7,TextDrawFrame,5x TextFrameRows from templates 20:8899; attr $2BC0 = $FF
+20,87EF,TextFrameRows,2 rows of 32 tiles ($FE left fill*29 right) -> queue
+20,8836,TextQueueUpload,append [hi lo len srcoff] to PPU queue ring $6200 (wr $0B rd $0A)
+20,8879,TextWinParamsOpen,16-byte params -> $20-$2F (dest $2800 stride $40 len $40)
+20,8899,TextFrameTiles,3-byte row templates 18 19 1A / 1E 20 1F / 1B 1C 1D
+16,9BE1,MenuSave,menu Save command: checks AreaSaveFlags bit0 and $0710; slot by $646B bit0
 *,07DE,text_msg_id,message index (low 5 bits) within group
 *,07DF,text_group,text group 0-33 (TextGroupBank/TextGroupPtrs)
 *,6400,player_name,zero-terminated name (printed by text code 04; saved to $7D00)
 *,7DFD,save_tag,41 4D 49 save signature
 *,70F5,save_checksum,8-bit sum of $7D00-$7FFF (copy at $70F4)
+*,6480,story_flags,2048 event flag bits $6480-$657F (NPC scripts; saved $7E00)
+*,6580,npc_state,per-NPC-param conversation state offsets $6580-$667F
+*,6200,ppu_queue,8x4-byte PPU upload ring (hi lo len srcoff from page $60); wr $0B rd $0A
+*,06C3,pending_msg_id,message for ShowPendingMessage 30:D085
+*,06E3,pending_msg_group,group for ShowPendingMessage 30:D085
