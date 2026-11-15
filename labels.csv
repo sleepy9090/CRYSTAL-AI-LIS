@@ -32,7 +32,36 @@ bank,addr,name,comment
 31,FFCF,FarCall_D354,push $6E/$6F; JSR $D354; JMP RestoreBanks
 31,FFDB,RestoreBanks,PLA->SetR7; PLA->JMP SetR6 (pairs with push $6E,$6F)
 28,800E,Bank28_ObjSpriteDraw,NOT sound: per-frame object->OAM pass; $07FF rotates start slot (sprite flicker); reads $04A0+X active and $70+X pos minus scroll
-24,8000,SndTrackPtrTable,ptr16[16] sound data ptrs (8364 8364 83E5 8422 ...)
+24,8000,SndOpcodeTable,ptr16[16] stream opcode handlers indexed by byte>>4 (see REVERSE.md Sound data format)
+24,8132,SndInitChannel,X=chn: $011A/$0120=stream ptr; dur=1; octave=0; regs cleared; $0114=1 (active)
+24,8169,SndInitSfxChannel,like SndInitChannel but stream hi += $20 (bank 12 data assembled at $8xxx; played at $Axxx)
+24,8177,SndGetMusicHeader,A=music id -> $F5/$F6 = SndMusicTable[id]; Z=1 if null
+24,8276,SndChannelTick,X=chn 0-5: dec duration; on 0 read ops until a frame-ending op; envelope/vibrato; write regs per $FC dirty bits
+24,8347,SndReadOp,read stream byte -> $F3; JMP (SndOpcodeTable + (byte>>4)*2)
+24,8364,SndOpEnd,op $0x/$1x: channel stops; music: $0113=byte&$1F = next music id (chain/loop); sfx: release channel
+24,8395,SndOpSweep,op $Cx: next byte = sweep reg; x bit0=1 -> sweep off else on; ends frame
+24,83C2,SndOpNoteDetune,op $Dx: note + octave-dependent detune ($83DA); noise chn -> DMC drum trigger ($863B)
+24,83E2,SndOpNoteSweep,op $Bx: sweep(next byte) + note
+24,83E5,SndOpNote,op $2x: note x (hex-letter pitch) in current octave; ends frame
+24,8422,SndOpOctave,op $3x: octave = (x-1)*$10 into $0156
+24,8436,SndOpRest,op $4x: hold/rest; x=0 silences channel; else volume=x (no envelope)
+24,847D,SndOpDuration,op $50-$6F: note length = SndDurationTable[byte-$50]
+24,848A,SndOpLegato,op $7x: change pitch without retrigger (x=7 = tie/no-op); ends frame
+24,8532,SndOpVolume,op $8x: base volume x into $0168 low nibble
+24,854D,SndOpDuty,op $9x: duty/const-vol config ($0168 high bits); triangle path differs
+24,8584,SndOpFlow,op $Ax: A0 lo hi=jump; A1 n=loop1 start; A2 n=loop2 start; A4=loop1 end; A3/A5+=loop2 end
+24,85F7,SndOpEnvelope,op $Ex: envelope #x ($015C=x<<4) enable ($0114 bit6)
+24,8685,SndOpVibrato,op $Fx: vibrato depth x*8 ($0162); x<8 on; x=8 off; x>8 = wait one frame
+24,87A6,SndChnTypeTable,u8[6] channel -> APU type 0 1 2 3 1 3 (chn 4=sfx on SQ2 / 5=sfx on noise)
+24,87AC,SndChnRegTable,u8[6] channel -> $4000 reg offset 0 4 8 C 4 C
+24,87B2,SndChnMaskTable,u8[6] $4015 mask with channel bit cleared
+24,87B8,SndPeriodLo,u8[128] period lo indexed octave*16+note; hi at $8838
+24,88B8,SndEnvTableTonal,u8[16x16] volume envelopes for pulse/tri (bit4=loop/hold)
+24,89B8,SndEnvTableNoise,u8[16x16] volume envelopes for noise
+24,8AB8,SndDurationTable,u8[32] frames per note for ops $50-$6F
+24,8BD8,SndDmcTable,4-byte DMC records (freq raw start len) for noise-channel drum triggers
+24,8C0C,SndMusicTable,ptr16[32] music headers for ids $00-$1F (0 = null); header = 1 byte + 4 stream ptrs (SQ1 SQ2 TRI NOISE)
+12,8000,SfxPtrTable,ptr16[88] SFX headers for ids $20-$77 (bank 12 mapped at $A000 via R7); header = priority + 2 stream ptrs (SQ2 NOISE)
 24,8020,SndInit,silence all: $F0=0 $0111/$0112=$FF $0114-$0119=0 SND_CHN=0; called from Reset 31:F325
 24,8048,SndCommand,cmd in $0110: $FF=none; bit7=pause toggle; <$20 music ($80E4); >=$20 SFX ($8094); sets $F0 bit0 busy
 24,8094,SndStartSfx,maps R7=bank 12; ptr=$9FC0+id*2 (=12:$A000+(id-$20)*2); first byte=priority vs $0112

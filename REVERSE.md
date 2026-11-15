@@ -128,9 +128,51 @@ Never mapped by any found path: banks 22/23 as a pair (n=11; 23 only via `SetR7(
 | `24:8094` | SndStartSfx | R7←bank **12** (`$0C`); header ptr = `$9FC0+id*2` → for id≥`$20` this lands in `12:$A000+(id−$20)*2` (SFX pointer table lives at start of bank 12). Byte 0 = priority: rejected if > `$0112`. Sets `$FB=$0A` (pulse2+noise?), inits channels 4 and 3 via `$8169`, flags `$0115/$0117` bit7. Ignored if `$F0` bit6. |
 | `24:80E4` | SndStartMusic | `$8177` check, `$0111`=id&`$7F`, clears `$FE/$FF`, inits 4 channel streams `$812A` (Y=1,3,5,7 → stream ptr pairs). |
 | `24:8186` | SndTick | per-frame playback; exits if `$F0` bit0 set; stops music on `$F0` bit7 (sets `$0111`=`$FF`, `$4015`←`$FB`). |
-| `24:8000` | SndTrackPtrTable | 16 ptr16 (`8364 8364 83E5 8422 8436 847D 847D 848A 8532 854D 8584 85E2 8395 83C2 83F7 8685`) — not a jump table; bank 24's "entry" is `$8020` because this table occupies `$8000-$801F`. Contents TBD. |
+| `24:8000` | SndOpcodeTable | **Corrected session 7:** this IS a jump table — the stream-byte opcode dispatch (`24:8347` SndReadOp: `op = byte>>4`, `JMP (SndOpcodeTable+op*2)`). See "Sound data format" below. |
 
 Sound RAM: `$0100-$0112` (queue + state), `$0114-$0119` channel flags, `$F0` flags, `$F3`, `$F5/$F6` data ptr, `$FB` `$4015` shadow, `$FD-$FF`. **Port note:** sound can be implemented as a FIFO of ids consumed one per frame; music ids `$00-$1F`, SFX `$20-$9F` (data in bank 12 `$A000`), bank 25 holds tick-time data.
+
+**Sound data format (session 7)** — tables decoded with `tools/decode_tables.py`.
+
+*Channels* (X index, arrays 6 wide at `$0114+X`…): 0=SQ1, 1=SQ2, 2=TRI, 3=NOISE (music); 4=SFX on SQ2, 5=SFX on NOISE. `SndChnTypeTable` `24:87A6` = `00 01 02 03 01 03`, reg offset `87AC` = `0 4 8 C 4 C`, `$4015` mask `87B2`. While an SFX plays, music chn 1/3 get `$0114` bit7 (muted, stream keeps running).
+
+*Headers*
+- Music: `SndMusicTable` `24:8C0C` ptr16[32], ids `$00-$1F`; null (ignored) ids `$02 $05 $10`. Header = 1 byte (unused by code, always `01` so far) + 4 stream ptr16 (SQ1, SQ2, TRI, NOISE). Id `$00` (`$8C4C`) = silence: each stream `53 40 00`.
+- SFX: `SfxPtrTable` = file bank 12 offset 0, seen at `$A000` via `SetR7(12)` (`SndStartSfx` indexes `$9FC0+id*2`, so id `$20` → entry 0). 88 entries → ids `$20-$77`; nulls among ids `$20-$4F` (only the first 48 entries checked): `$22 $2D $34 $35 $38 $44 $46 $4D $4F`. Header = priority byte (lower = more important; rejected if > `$0112`, `$FF` = idle) + 2 stream ptr16 (SQ2, NOISE). Stream ptrs are stored as `$8xxx` and `+$20` hi (`SndInitSfxChannel` `24:8169`) — data assembled for bank 12's native window.
+
+*Per-channel RAM* (`+X`): `$0114` flags (b0 active, b4 rest/hold, b5 vibrato, b6 envelope, b7 stolen-by-SFX), `$011A/$0120` stream ptr, `$0126/$0132/$013E` loop1 ptr/count, `$012C/$0138/$0144` loop2 ptr/count, `$014A` frames left, `$0150` note length, `$0156` octave×16, `$015C` envelope#<<4 | step, `$0162` vibrato depth, `$0168` `$4000` shadow (duty/vol), `$016E` sweep, `$0174/$017A` period lo/hi. `$0113` = next music id (chain). `$FC` = per-frame reg-dirty bits (b0 vol, b1 sweep, b2 lo, b3 hi). `$FE` = fade timer (`$BC` on cmd `$FF`; decrements volumes via `24:8609`). `$FF` = DMC-pending/`$4015` DMC bit.
+
+*Stream bytes* — `SndReadOp` `24:8347`: opcode = high nibble → `SndOpcodeTable` `24:8000`. Ops are read in a loop until one "ends the frame" (sets `$F2`), then the channel waits `$0150` frames.
+
+| Byte | Handler | Meaning |
+|------|---------|---------|
+| `0x`/`1x` | `8364` | end of stream. Music: `$0113` = byte&`$1F` → when all 4 channels end, music id `$0113` restarts (≠0 = loop/chain, 0 = stop). SFX: channel released. |
+| `2x` | `83E5` | **note** x, ends frame |
+| `3x` | `8422` | octave: `$0156` = (x−1)·`$10` (x=1..8) |
+| `4x` | `8436` | rest/hold, ends frame; x=0 → channel silenced, else const volume x |
+| `50-6F` | `847D` | note length = `SndDurationTable[byte−$50]` (`24:8AB8`: `05 40 38 01 14 02 28 03 50 04 1E 1C 07 2A 13 15 06 08 0C 09 18 0A 30 0B 60 12 24 0D 20 0E 10 0F` frames) |
+| `7x` | `848A` | legato pitch change (no retrigger unless hi period changes); x=7 = tie; ends frame |
+| `8x` | `8532` | base volume x (skipped during fade) |
+| `9x` | `854D` | duty / const-volume bits of `$4000` shadow |
+| `A0 lo hi` | `8584` | jump to ptr (also stores return in loop2 slot) |
+| `A1 n` / `A2 n` | `8584` | loop1 / loop2 start, count n |
+| `A4` / `A3`,`A5+` | `8584` | loop1 end / loop2 end (dec count, jump back if ≠0) |
+| `Bx yy` | `83E2` | sweep on (yy) + note x |
+| `Cx yy` | `8395` | sweep reg = yy (x bit0: 1=off, 0=on), ends frame |
+| `Dx` | `83C2` | note x with octave-dependent detune `$83DA` (`0C 06 04 03 02 02 01 01`); on NOISE chn → DMC drum #x (`SndDmcTable` `24:8BD8`, 4-byte `$4010-$4013` records) |
+| `Ex` | `85F7` | envelope #x (`$015C`=x<<4, enables `$0114` b6) |
+| `Fx` | `8685` | vibrato depth x·8; x<8 on, x=8 off, x>8 = empty frame |
+
+*Pitch*: `SndPeriodLo/Hi` `24:87B8`/`24:8838`, 128 entries indexed `octave*16 + x`. **The note nibble is the note's hex letter**: `C`=C, `D`=D, `E`=E, `F`=F, `A`=A, `B`=B, plus `0`=G, `1`=C♯, `2`=D♯, `4`=F♯, `5`=G♯, `6`=A♯ (`3 7 8 9` = 0, unused). Row 0: C=`$6AC` (65.4 Hz, C2) … B=`$388`; each row = +1 octave. NOISE chn uses x directly as noise period.
+
+*Envelopes*: `$84AF` steps `$015C` through `SndEnvTableTonal` `24:88B8` (noise: `24:89B8`), 16 envelopes × 16 steps; value low nibble = volume, bits6-7 = duty override, bit4 = hold last step (or back up 2 during fade).
+
+*Ids used by PlaySound callers* (`search_bytes.py "A9 ?? 20 25 C1" --disasm`, 67 immediate sites):
+- Music: `$00` (19:B91C, silence), `$0C` (15:B310), `$12` ×8 (bank 15: A4B7 A68F A99A ACB0 AE0E AF82 B186), `$80` (15:BAAE → forced `$00` = stop), `$93` ×3 (19:BC38, 30:D0A6, 30:D42D → forced `$13`).
+- SFX: `$21 $23×2 $24 $25×4 $26 $29×7 $2F $31×3 $36×2 $39×3 $3A $3D×2 $3E $3F×2 $43 $44 $45 $48 $4B×2 $4E×2 $54 $56 $5C $5D $5F $64 $66 $68 $6B×2 $6E $6F $76` (`$29` is the most common — 15:BAF3, 19:BFDA, 27:BB32, 30:D0AE/D0C8/D1CA/D48F). Note `$44` is a null SFX entry (26:92D6 → silently ignored).
+- The other ~18 PlaySound callers load A from RAM/tables (not enumerated).
+
+**Port note:** this is enough to write a JS sequencer: per channel, read ops until a frame-ending op, count down `SndDurationTable` frames, apply envelope table steps per frame, map note nibble via period table to APU square/triangle/noise.
 
 **Main loop (`30:C900`)** — spins on `$09` (set by NMI), then dispatches `MainStateTable[$40]` (`30:C91F`) through the ZP trampoline `$10: JMP abs`, clears `$09`, repeats. States: 0=`C957` 1=`CAB6` 2=`C931` (initial) 3=`C939` 4=`C944` 5=`C94C`.
 
@@ -159,6 +201,8 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 | `tools/search_bytes.py` | byte-pattern search, `??` wildcards; `--context N --disasm --bank B --chr --max M`; hits as `BB:AAAA` in the bank's default window |
 | `tools/xref.py` | xrefs to `[BB:]addr`: abs/abx/aby/ind, zp forms (targets <$100), same-bank rel branches; sync-check filters data false-positives (`--loose` to show); `--data` raw `.dw` words, `--imm` split `#lo/#hi` immediates; `$8000-$BFFF` targets with `BB:` scan only the 16KB pair + fixed banks (`--all` to widen) |
 
+| `tools/decode_tables.py` | `BB:AAAA count fmt` — fmt `u8`/`s8`/`u16`/`ptr16`/`hex<N>`/`split:<hiaddr>`; resolves `$8000-$BFFF` within the 16KB pair (so a bank mapped via R7 at `$A000`, e.g. bank 12, must be read as `12:8000`) |
+| `tools/sound_ids.py` | groups `LDA #id / JSR PlaySound` sites by id. Written session 7, not yet run (permission prompt) |
 | `tools/bank_calls.py` | lists each `LDA #n / JSR SwitchBank16` site with n, 8KB pair, and following `$8000-$BFFF` JSR/JMP targets (`--summary` groups by n). Not yet run (permission prompt) |
 
 `nesrom.py` gained `bank_window(bank)` (30→$C000, 31→$E000, even→$8000, odd→$A000), `bank_cpu_addr`, `parse_bank_addr("BB:AAAA")`.
@@ -190,7 +234,8 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 - [x] Ph3: build `tools/search_bytes.py` and `tools/xref.py` (bank-aware, reuse `nesrom.py` + `instruction_set.py`) — verified: `xref.py C40E` → 48 call sites, **all in fixed banks 30/31** (swappable banks never call SwitchBank16 directly); `xref.py 40 --bank 30` → C904/C977/C9F5; `--data` found `31:F422` IrqDefaultPtr. Pattern for next task: `search_bytes.py "A9 ?? 20 0E C4" --disasm`
 - [x] Ph3: confirm `30:C427` (R7 setter) and document `SwitchBank16` fully; find all `LDA #n / JSR C40E` call sites → map which 16KB bank holds which subsystem — done session 5: SetR6 `C418`/SetR7 `C427`, far-call trampolines `FF80-FFE2`, full n→bank table in Key Findings; corrected reset bank (n=$0C → 24/25). New `tools/bank_calls.py` written (needs run-permission approval; not yet executed — `search_bytes.py --disasm --context 14` used instead)
 - [x] Ph3: verify bank 28 `$800E` (n=14) and bank 24 `$8020` (reset init) — which is the sound driver? Check for `$4000-$4015` writes in banks 24-29 — done session 6: **bank 24/25 = sound driver** (SndInit `$8020`, SndCommand `$8048`, SndTick `$8186`; API `PlaySound` `30:C125`, per-frame `SoundUpdate` `31:F7FE`); bank 28 `$800E` = object→OAM sprite pass. See "Sound driver" in Key Findings.
-- [ ] Ph3: decode sound data formats — music ptr table `24:$8000`, channel stream init `$812A`, SFX table `12:$A000`, tick `24:$8186` opcode set; list all music/SFX ids used by PlaySound callers
+- [x] Ph3: decode sound data formats — music ptr table `24:$8000`, channel stream init `$812A`, SFX table `12:$A000`, tick `24:$8186` opcode set; list all music/SFX ids used by PlaySound callers — done session 7: `24:8000` is the **opcode** table (16 ops); music headers `24:8C0C`, SFX headers file-bank 12 offset 0; hex-letter note encoding; ids listed. See "Sound data format".
+- [ ] Ph3: sound follow-ups — decode `SndOpDuty` `24:854D` triangle path + vibrato `24:86AA` exactly; check SFX table entries 48-87 for nulls; name music `$0C`/`$12`/`$13` by their callers' states; write `tools/sound_dump.py` to disassemble a stream into op text
 - [ ] Ph3: trace bank 28 `$800E` object sprite pass fully (object table `$04A0`/`$70` layout, metasprite format at `$83D8/$83DC`)
 - [ ] Ph3: decode `30:CADE`/`CB2E` substate tables (length, name each state-1 substate handler)
 - [ ] Ph3: trace `31:EF38` packed bank+pointer decoder — find the pointer tables that feed it (banks 0-7 data streams)
@@ -203,7 +248,7 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 - [ ] Ph3: trace cold-init subs `F1CD`, `FE80`, `F0A4` and the WRAM save layout (`$6000-$7FFF`, `$7D00` block)
 - [ ] Ph4: build `tools/extract_tiles.py` — dump all 128 CHR 1KB banks to `gfx/` with grayscale palette
 - [ ] Ph4: locate palette data (writes to PPU `$3F00`) and build `tools/palette_dump.py`
-- [ ] Ph5: build `tools/decode_tables.py` and `tools/check_bank_refs.py`
+- [ ] Ph5: build `tools/check_bank_refs.py` (`tools/decode_tables.py` done session 7)
 - [ ] Ph5.5: decide whether a scriptable 6502+MMC3 emulator (`tools/emu/`) is needed
 
 ### Web Port Fixes
