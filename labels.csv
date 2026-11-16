@@ -98,7 +98,16 @@ bank,addr,name,comment
 24,88B8,SndEnvTableTonal,u8[16x16] volume envelopes for pulse/tri (bit4=loop/hold)
 24,89B8,SndEnvTableNoise,u8[16x16] volume envelopes for noise
 24,8AB8,SndDurationTable,u8[32] frames per note for ops $50-$6F
-24,8BD8,SndDmcTable,4-byte DMC records (freq raw start len) for noise-channel drum triggers
+24,8BD8,SndDmcTable,4-byte DMC records (freq raw start len) for noise-channel drum triggers; 13 records all point at 31:FA00 len $3E; record 0 unreachable
+24,8AD8,SndVolumeTable,u8[16x16] output vol = max(env+base-15;1) if both >0 else 0 (row base vol; col env vol)
+24,842D,SndOctaveTable,octave op $3x reads $842D+x: x=1..8 -> $00-$70; x=0 reads RTS byte $60 (quirk)
+24,83DA,SndDetuneTable,u8[8] per-octave period lo add for op $Dx notes
+24,84AF,SndEnvelopeTick,per-frame envelope step: vol = SndVolumeTable[base*16+env]; entry bit4 = end/hold (fade: back up 2 steps)
+24,8465,SndChannelOff,clear channel bit in $4015 (keeps DMC bit from $FF); skipped if chn stolen by SFX
+24,8609,SndFadeStep,fade step: TRI cut; other active music chn base vol -1
+24,863B,SndDrumSelect,op $Dx on music NOISE: x=0 drums off ($FF=0 $4013=0); else $FF=$10|x (arm DMC record x)
+24,8651,SndDrumTrigger,noise note: if drum armed ($FF&$0F) restart DMC with SndDmcTable[x]
+31,FA00,SndDmcSample,the only DMC sample: 993 bytes $FA00-$FDE0 ($4012=$E8 $4013=$3E); drum kit = this sample at different rates
 24,8C0C,SndMusicTable,ptr16[32] music headers for ids $00-$1F (0 = null); header = 1 byte + 4 stream ptrs (SQ1 SQ2 TRI NOISE)
 12,8000,SfxPtrTable,ptr16[88] SFX headers for ids $20-$77 (bank 12 mapped at $A000 via R7); header = priority + 2 stream ptrs (SQ2 NOISE)
 24,8020,SndInit,silence all: $F0=0 $0111/$0112=$FF $0114-$0119=0 SND_CHN=0; called from Reset 31:F325
