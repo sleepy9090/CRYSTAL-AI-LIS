@@ -482,3 +482,25 @@ bank,addr,name,comment
 9,BF80,StaleFill09_BF80,dead filler to BFFF: subst tables k>=12 unused; = 7:BF80 screen page
 11,BCFA,StaleFill11_BCFA,dead filler to BDFF: after last area sub-table record (= 9:BCFA)
 11,BEE0,StaleFill11_BEE0,dead filler to BFFF: copy of 9:BEE0 subst tables
+*,07D7,boss_cam_lock,1-7F: camera frozen N frames (no exits/teleport; bows usable); 80+: align camera to screen grid
+31,E8F6,CameraUpdate,$07D7 1-7F -> DEC + skip follow/ExitLookup; else follow + ExitLookup
+14,8451,UseBowCheck,Bow of Moon/Sun use: target object in 0D-1F and $07D7 in 1..7F
+15,A477,BossAiE0,boss AI $E0 (types $57 $A5) phase base $00 x8
+15,A675,BossAiE2,boss AI $E2 phase base $08 x2
+15,A95D,BossAiE3,boss AI $E3 (types $68 $8B) phase base $0A x5
+15,ABDA,AiTalkEventE5,area $43 type $70: talk event (NpcTalk p $C3; act 26 Ball of Water / act 27 throw out)
+15,AC7B,BossAiE6,boss AI $E6 (type $90) phase base $17 x2
+15,AF48,BossAiE8,boss AI $E8 (type $97) phase base $21 x3
+15,B0B6,BossAiE9,boss AI $E9 (statues $9C/$9D) phase base $24 x3
+15,B130,BossAiEA,boss AI $EA (type $9B) phase base $27 x4
+27,B0B5,AiStraightMover,AI $10: lifetime $0480, ObjStepVector, optional BG collision via $0460
+27,ACD9,AiNpcWander,AI $30: talkable NPC random 4-dir wander with pauses
+27,AD9C,NpcLookAhead,4 x (dx,dy) 16px look-ahead per dir
+27,A915,AiWalkPause,AI $20: walk $0480 frames / pause $0600 frames
+27,A94A,AiWalkPick,random dir&6, walk (rand*4+$20), pause ($08&7)*8
+26,8480,ObjStepVector,A=dir: $31/$30 = dy/dx from speed tables 84BC/84CC/84DC, 8-frame patterns
+26,9861,TempAddStep,add signed $30/$31 to $34-$37 with 240-line y wrap
+26,97D7,Rand64,A = 26:97E4[++$0E & $3F]
+26,98C7,ObjDespawn,obj_active,X = 0
+26,98D7,ObjMoveSlide,move in obj_meta_dir via 26:9947; diagonals also try dir-1/dir+1; C=1 blocked
+26,9A30,ObjBgProbe,metatile attrs at $34-$37 -> $20
