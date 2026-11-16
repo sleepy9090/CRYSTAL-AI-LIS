@@ -366,7 +366,7 @@ bank,addr,name,comment
 14,8213,TelepathyLevelGate,7 bytes 02..0E: hint only if player_level > gate
 14,99F4,TelepathyHintLists,28 ptrs [(class*4+sage)]: flagref msg [alt] entries; first FALSE cond wins
 14,81D1,TelepathyHint,walk hint list; end -> fixed row 3
-14,A17A,EventTriggerTable,67 ptrs for trigger ids $80-$C2: conds (all true) + result + set-list
+15,A17A,EventTriggerTable,(bank fixed s32: was 14:A17A; bank 15 at $A000 via SwitchBank16(7)) 67 ptrs for trigger ids $80-$C2: conds (all true) + result + set-list
 30,D552,EventActionDispatch,JMP via EventActionTable[$22]
 30,D563,EventActionTable,32 words: action handlers for event triggers (ItemHook2 path)
 30,D5A4,EvActThunderWarp,act 1: msg 28.17 then warp to area $F2 entry $41
@@ -492,7 +492,7 @@ bank,addr,name,comment
 15,BF97,StaleFill15_BF97,dead filler to BFFF: copy of 13:BF97
 9,BF80,StaleFill09_BF80,dead filler to BFFF: subst tables k>=12 unused; = 7:BF80 screen page
 11,BCFA,StaleFill11_BCFA,dead filler to BDFF: after last area sub-table record (= 9:BCFA)
-11,BEE0,StaleFill11_BEE0,dead filler to BFFF: copy of 9:BEE0 subst tables
+11,BF00,StaleFill11_BF00,dead filler to BFFF: copy of 9:BF00 subst tables (s32: BEE0-BEFF is read by the $6000 page copy)
 *,07D7,boss_cam_lock,1-7F: camera frozen N frames (no exits/teleport; bows usable); 80+: align camera to screen grid
 31,E8F6,CameraUpdate,$07D7 1-7F -> DEC + skip follow/ExitLookup; else follow + ExitLookup
 14,8451,UseBowCheck,Bow of Moon/Sun use: target object in 0D-1F and $07D7 in 1..7F
@@ -772,3 +772,26 @@ bank,addr,name,comment
 26,96F1,CollPairTable,s30: 15 x {slot first last handler}: attacker slot vs targets first+1..last-1 ($0D-$1E); handler -> HitHandlerTable
 26,972D,SpawnShot,s30: A=shot id, Y=dir; record ShotTable 20:BC00[A*4] (ids >=$40 at $BD00) with bank 20 at $A000 via SetR7($14); C=0 = none spawned
 20,BC00,ShotTable,s30: 4-byte projectile records for SpawnShot 26:972D (bank 20 mapped at $A000); ids >=$40 continue at $BD00; fields not decoded
+10,8400,AreaHeaderTableHi,s32: .dw[128] area header ptrs for area ids $80-$FF (30:C7BB; C=1 after ASL area_id); 8 nulls
+12,9301,AreaPtrTableHi,s32: .dw area record ptrs for ids $80-$FF (31:E0EB / 31:E15F); second half of AreaPtrTable 12:9201
+13,AD00,ObjTypeTableHi,s32: .dw ObjType record ptrs for types $80-$FF (30:C27D); second half of ObjTypeTable 13:AC00
+14,9C82,ItemAuxPtrs,s32: .dw[item id $23] -> bank 15 $A106-$A178 records (14:85C8); follows ItemUseTable; count not bounded (<=114)
+15,BEB7,PtrTable15_BEB7,s32: .dw[4] read at 15:BE83 (tracer ctx 06/15 -> $80F0-$97F0); consumer code looks odd, unconfirmed
+16,8B1F,MenuPtrTable_8B1F,s32: .dw[$12] (16:86D7) -> $12/$13; 5 plausible entries
+18,8F3B,State3PtrTable_8F3B,s32: .dw[zp_72] (18:80F5) -> $86/$87; 11 entries $8F52-$901D
+20,9767,TextPtrTable_9767,s32: .dw[A] (20:973F) -> $26/$27; count unknown (scan overruns at 35)
+20,9A6A,TextPtrTable_9A6A,s32: .dw[$20] (20:94CB) -> $26/$27; 12 entries $9A82-$9AF2
+17,A11A,JmpTable17_A11A,s32: untraced dispatch (17:A117 JMP ($008E)); <=4 entries
+19,A193,JmpTable19_A193,s32: untraced dispatch (19:A190 JMP ($06FC)); <=7 entries $A1A1-$A57C
+19,A6F3,JmpTable19_A6F3,s32: untraced dispatch (19:A6F0 JMP ($06FC)); <=3 entries
+19,A7BC,JmpTable19_A7BC,s32: dispatch (19:A7B9 JMP ($06FC)); <=25 entries, 8 already traced
+19,AC07,JmpTable19_AC07,s32: dispatch (19:AC04 JMP ($06FC)); <=28 entries, 9 already traced
+27,A072,JmpTable27_A072,s32: untraced dispatch (27:A06E JMP ($0010), A*2); <=16 entries
+27,BA40,JmpTable27_BA40,s32: untraced AI phase dispatch (27:BA3D, obj_phase*2); <=16 entries
+30,DBDC,JmpTable30_DBDC,s32: untraced dispatch (30:DBD9) after SubstTeleportMenu; <=8 entries
+30,DDBD,JmpTable30_DDBD,s32: untraced dispatch (30:DDBA) after SubstTelepathySelect; <=8 entries
+30,DF0E,JmpTable30_DF0E,s32: untraced dispatch (30:DF0B) after SubstChangeForm; <=8 entries
+31,E3D9,JmpTable31_E3D9,s32: untraced dispatch (31:E419, index A>>4); <=8 entries
+31,F6C2,JmpTable31_F6C2,s32: untraced dispatch (31:F6BF JMP ($0052), irq_mode*2); <=10 entries
+11,BE00,Wram6000InitTable,s32: 256 B copied to wram_buf $6000-$60FF by 30:CCA4 and 19:BE5E (SetR6($0B): bank 11 at $8000, read as $9E00); contents not decoded
+27,A8A2,AiDirTable_A8A2,s32: 4 bytes 08 08 09 07 = obj_meta_dir by Rand64&3 (27:A898); tracer decodes them as code because the BNE at A8A0 is always taken

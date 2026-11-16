@@ -1,0 +1,99 @@
+# docs/bank_refs.txt — tools/check_bank_refs.py (session 32)
+
+Traced code from tools/disasm_all.py; ctx = (8KB bank at $8000, bank at $A000), -- = unknown.
+
+## calls: 2057 — OK 2052, UNRESOLVED 1, UNTRACED 4
+  UNRESOLVED  15:AB84 JSR -> $9824  ctx=--/15
+  UNTRACED    16:9BC6 JSR -> 17:BC03 sub_17_BC03  ctx=16/17
+  UNTRACED    16:9BD6 JSR -> 17:BC03 sub_17_BC03  ctx=16/17
+  UNTRACED    16:9C4B JSR -> 17:BC00 sub_17_BC00  ctx=16/17
+  UNTRACED    16:9C64 JSR -> 17:BC00 sub_17_BC00  ctx=16/17
+
+## tables: 404 — NULL 39, OK 365
+  NULL        19:A060 .dw $0000
+  NULL        19:A062 .dw $0000
+  NULL        27:A314 .dw $0000
+  NULL        27:A326 .dw $0000
+  NULL        27:A35A .dw $0000
+  NULL        27:A36E .dw $0000
+  NULL        27:A37E .dw $0000
+  NULL        27:A382 .dw $0000
+  NULL        27:A38A .dw $0000
+  NULL        27:A38E .dw $0000
+  NULL        27:A390 .dw $0000
+  NULL        27:A398 .dw $0000
+  NULL        27:A39A .dw $0000
+  NULL        27:A3A0 .dw $0000
+  NULL        27:A3A2 .dw $0000
+  NULL        27:A3A6 .dw $0000
+  NULL        27:A3A8 .dw $0000
+  NULL        27:A3AA .dw $0000
+  NULL        27:A3B2 .dw $0000
+  NULL        27:A3C0 .dw $0000
+  NULL        27:A3C6 .dw $0000
+  NULL        27:A3C8 .dw $0000
+  NULL        27:A3CA .dw $0000
+  NULL        27:A3F6 .dw $0000
+  NULL        27:A3F8 .dw $0000
+  NULL        27:A3FA .dw $0000
+  NULL        27:A3FE .dw $0000
+  NULL        27:A408 .dw $0000
+  NULL        27:A410 .dw $0000
+  NULL        30:CAE2 .dw $0000
+  NULL        30:CAE8 .dw $0000
+  NULL        30:CAF0 .dw $0000
+  NULL        30:CAF2 .dw $0000
+  NULL        30:CAF4 .dw $0000
+  NULL        30:CAFA .dw $0000
+  NULL        30:CAFC .dw $0000
+  NULL        30:CB28 .dw $0000
+  NULL        30:CB2A .dw $0000
+  NULL        30:CB2C .dw $0000
+
+## banks: 136 — DYNAMIC 24, OK 112
+  DYNAMIC     15:AB51 SetR6        JSR Rand64 @15:AB4E
+  DYNAMIC     15:AB70 SetR6        PLA  @15:AB6F
+  DYNAMIC     26:8C2F SetR7        PLA  @26:8C2E
+  DYNAMIC     26:8C93 SetR7        TYA  @26:8C92
+  DYNAMIC     26:976E SetR7        PLA  @26:976D
+  DYNAMIC     26:97D1 SetR7        PLA  @26:97D0
+  DYNAMIC     30:C050 SetR6        PLA  @30:C04F
+  DYNAMIC     30:C0F9 SetR7        PLA  @30:C0F8
+  DYNAMIC     30:C0FD SetR6        PLA  @30:C0FC
+  DYNAMIC     30:C209 SetR7        PLA  @30:C208
+  DYNAMIC     30:C20D SetR6        PLA  @30:C20C
+  DYNAMIC     30:C413 SetR7        ORA #$01 @30:C411
+  DYNAMIC     30:C859 SetR7        PLA  @30:C858
+  DYNAMIC     30:C85D SetR6        PLA  @30:C85C
+  DYNAMIC     30:CAD8 SwitchBank16 LDA SubstateBankTable,X @30:CAD5
+  DYNAMIC     31:E757 SetR7        PLA  @31:E756
+  DYNAMIC     31:E75B SetR6        PLA  @31:E75A
+  DYNAMIC     31:EDB2 SetR7        PLA  @31:EDB1
+  DYNAMIC     31:EF43 SwitchBank16 AND #$03 @31:EF41
+  DYNAMIC     31:F1CA SetR7        LDA boot_r7_save @31:F1C7
+  DYNAMIC     31:F877 SetR7        LDA r7_shadow @31:F875
+  DYNAMIC     31:F87C SetR6        LDA cur_bank16_x2 @31:F87A
+  DYNAMIC     31:FFDC SetR7        PLA  @31:FFDB
+  DYNAMIC     31:FFE0 SetR6        PLA  @31:FFDF
+
+## data: 570 — CODE-READ 4, MAPPER 80, OK 474, OUTWIN 12
+  OUTWIN      19:BE5E LDA $9E00,Y    -> 11:9E00  ctx=11/19
+  CODE-READ   24:8427 LDA $842D,Y    -> 24:842D SndOctaveTable  ctx=24/25
+  OUTWIN      26:973E LDA $BC00,Y    -> 20:BC00 ShotTable  ctx=26/20
+  OUTWIN      26:9743 LDA $BC01,Y    -> 20:BC01  ctx=26/20
+  OUTWIN      26:9748 LDA $BC02,Y    -> 20:BC02  ctx=26/20
+  OUTWIN      26:974D LDA $BC03,Y    -> 20:BC03  ctx=26/20
+  OUTWIN      26:9754 LDA $BD00,Y    -> 20:BD00  ctx=26/20
+  OUTWIN      26:9759 LDA $BD01,Y    -> 20:BD01  ctx=26/20
+  OUTWIN      26:975E LDA $BD02,Y    -> 20:BD02  ctx=26/20
+  OUTWIN      26:9763 LDA $BD03,Y    -> 20:BD03  ctx=26/20
+  OUTWIN      26:97B5 LDA $BD80,Y    -> 20:BD80  ctx=26/20
+  OUTWIN      26:97BA LDA $BD81,Y    -> 20:BD81  ctx=26/20
+  CODE-READ   27:A898 LDA $A8A2,Y    -> 27:A8A2 AiDirTable_A8A2  ctx=26/27
+  CODE-READ   27:B2E7 ADC $B2F1,X    -> 27:B2F1  ctx=26/27
+  OUTWIN      30:CCA4 LDA $9E00,Y    -> 11:9E00  ctx=11/19
+  CODE-READ   30:D416 LDA $D40C,Y    -> 30:D40C ItemRemapTable  ctx=11/19
+
+## labels: 428 — OK 427, OUTWIN 1
+  OUTWIN      20:BC00 ShotTable — bank 20 sits at $8000; same 16KB pair: 21:BC00
+

@@ -38,7 +38,8 @@ def runs_for_pair(a, b, minlen):
 DEAD = [
     (9, 0xBF80, 0xBFFF, '07:BF80', 'subst tables k>=12 never selected ($67 max $AC); = bank 7 last screen page'),
     (11, 0xBCFA, 0xBDFF, '09:BCFA', 'after last area sub-table record (area $5F ends 11:BCF9)'),
-    (11, 0xBEE0, 0xBFFF, '09:BEE0', 'copy of bank 9 subst tables + bank 7 page'),
+    # session 32: was BEE0; 11:BE00-BEFF is copied to WRAM $6000 (30:CCA4, 19:BE5E with bank 11 at $8000)
+    (11, 0xBF00, 0xBFFF, '09:BF00', 'copy of bank 9 subst tables + bank 7 page'),
     (13, 0xABA3, 0xABFF, '05:ABA3', 'between area records (end ~A9D7) and ObjTypeTable AC00; 0 xrefs'),
     (13, 0xBE91, 0xBFEF, '05:BE91', 'after last ObjType record ($FE @BE7D); BFF0 = area 0 record'),
     (15, 0xA3C0, 0xA3FF, '13:A3C0', '13:A3C0 is live (ptr at 13:B93A); BossPhaseDispatch starts 15:A400'),
