@@ -1,0 +1,111 @@
+; Object slot struct (struct_dump.py obj, session 30). 32 slots, stride $20.
+; col | name | r w | fixed-slot refs | banks | types init (n, distinct values)
+;   W: writer routines (bank:routine(sites))   R: reader routines
+$0070 obj_x_lo           r105 w98  fixed[s00:18 s01:7 s02:11 s03:9 s0D:2 s0E:1 s10:4 s11:2 s12:3 s13:2 s14:1 s15:3 s16:3 s17:3 s18:7 s19:2 s1A:1 s1B:1 s1C:9 s1D:10 s1E:14 s1F:13] banks[14 15 17 18 19 23 26 27 28 30 31] init 0/0v []
+    W: 19:sub_19_A0B5(10) 18:NtRectBlit(9) 18:NtRectBlitQueued(9) 19:sub_19_BD91(8) 19:sub_19_A653(7) 30:sub_30_DA0C(4) +26
+    R: 18:sub_18_80DF(14) 18:NtRectBlitQueued(13) 18:NtRectBlit(12) 19:sub_19_BD91(8) 27:sub_27_A753(7) 30:sub_30_DA0C(6) +31
+$0090 obj_x_hi           r23  w14  fixed[s00:6 s01:2 s0D:1 s0E:1 s13:1 s1E:1] banks[15 19 23 26 27 28 30 31] init 0/0v []
+    W: 31:AreaEdgeLink(2) 15:sub_15_A50B(1) 15:sub_15_A73C(1) 23:LoadPlayerState(1) 26:TempToObjPos(1) 26:sub_26_9947(1) +7
+    R: 15:sub_15_A87E(2) 26:sub_26_8409(2) 27:sub_27_A616(2) 30:MarkScreenVisited(2) 15:sub_15_A50B(1) 15:sub_15_A5EE(1) +13
+$00B0 obj_y_lo           r65  w49  fixed[s00:35 s01:13 s0D:4 s0E:5 s13:1 s18:1 s1E:1 s1F:1] banks[15 19 23 26 27 28 30 31] init 0/0v []
+    W: 19:sub_19_BDF2(8) 30:EvActPushBack(4) 30:sub_30_DA0C(4) 27:sub_27_A70E(3) 15:sub_15_AC5B(2) 15:sub_15_ACF5(2) +22
+    R: 19:sub_19_BDF2(11) 30:sub_30_DA0C(6) 30:EvActPushBack(4) 27:sub_27_A70E(3) 15:sub_15_A581(2) 26:sub_26_8409(2) +34
+$00D0 obj_y_hi           r25  w13  fixed[s00:8 s01:2 s0D:1 s0E:1 s13:1 s1E:1] banks[15 19 23 26 27 28 30 31] init 0/0v []
+    W: 15:sub_15_A73C(2) 31:AreaEdgeLink(2) 15:sub_15_A50B(1) 23:LoadPlayerState(1) 26:TempToObjPos(1) 26:sub_26_9947(1) +5
+    R: 15:sub_15_A73C(2) 26:sub_26_8409(2) 27:sub_27_A41A(2) 27:sub_27_B5F3(2) 30:MarkScreenVisited(2) 15:sub_15_A50B(1) +14
+$0300 obj_meta_id        r38  w106 fixed[s00:5 s01:36 s0D:6 s0E:3 s1F:2] banks[15 19 26 27 28 30 31] init 211/70v [02 14 18 1D 1E 1F 20 24 28 29 2C 2F …]
+    W: 19:sub_19_BDF2(10) 19:sub_19_BB39(4) 26:PlayerUpdate(4) 26:sub_26_9D9A(4) 19:sub_19_BB9D(3) 19:sub_19_BCB0(3) +58
+    R: 26:sub_26_9BF6(6) 27:sub_27_A1C9(4) 26:PlayerUpdate(3) 26:sub_26_9535(3) 26:sub_26_94B0(2) 27:sub_27_A969(2) +18
+$0320 obj_tile_ofs       r4   w20  fixed[s01:5 s1E:3 s1F:2] banks[15 19 27 28 30 31] init 155/6v [00 01 02 40 42 C0]
+    W: 27:sub_27_B850(2) 30:sub_30_C008(2) 15:sub_15_A73C(1) 15:sub_15_B728(1) 15:BossDefeated(1) 27:sub_27_A9E4(1) +12
+    R: 27:sub_27_A9E4(1) 27:sub_27_B850(1) 28:ObjDrawMetaMain(1) 30:sub_30_DADA(1)
+$0340 obj_flags2         r26  w23  fixed[s00:6] banks[15 26 27 28 30 31] init 185/15v [00 01 02 03 04 05 06 07 08 09 0A 0B …]
+    W: 30:ObjUpdateAll(3) 26:sub_26_9431(2) 27:sub_27_AAFA(2) 27:AiWander16(2) 15:sub_15_ACF5(1) 26:EnemyDeathFx(1) +12
+    R: 30:ObjUpdateAll(3) 26:sub_26_95C0(2) 26:sub_26_95F8(2) 27:sub_27_A802(2) 27:sub_27_B436(2) 15:sub_15_A581(1) +14
+$0360 obj_meta_dir       r77  w76  fixed[s00:8 s1F:1] banks[15 26 27 28 30] init 166/5v [00 02 03 04 08]
+    W: 15:sub_15_AA46(4) 26:sub_26_98D7(4) 27:sub_27_B0F6(4) 30:sub_30_DA0C(4) 26:sub_26_9D9A(3) 27:sub_27_AAB0(3) +42
+    R: 26:sub_26_98D7(5) 15:sub_15_ACF5(4) 27:sub_27_ACD9(4) 27:sub_27_B0F6(4) 26:sub_26_9947(3) 27:sub_27_A9E4(3) +37
+$0380 obj_flags          r79  w43  fixed[s00:3 s01:28 s0D:2 s0E:3 s18:1 s1F:1] banks[14 15 19 26 27 28 30 31] init 213/8v [01 03 05 07 09 0B 0D 81]
+    W: 26:sub_26_9CEF(2) 28:ObjDrawMeta(2) 19:sub_19_BDF2(2) 30:sub_30_C008(2) 31:sub_31_EF55(2) 15:sub_15_A4D8(1) +32
+    R: 26:sub_26_9CEF(3) 27:sub_27_A9E4(3) 28:ObjDrawMetaMain(3) 30:sub_30_CD8A(3) 26:sub_26_95F8(2) 26:sub_26_972D(2) +55
+$03A0 obj_coll           r12  w31  fixed[s0D:5 s0E:1] banks[15 26 27 30 31] init 189/29v [00 08 09 0E 10 11 13 14 1D 1E 1F 30 …]
+    W: 26:sub_26_94B0(2) 26:sub_26_9535(2) 26:sub_26_9CEF(2) 27:sub_27_ABAC(2) 27:sub_27_B339(2) 27:sub_27_A2B4(2) +19
+    R: 26:sub_26_95F8(4) 27:sub_27_B339(2) 15:sub_15_A4D8(1) 15:sub_15_A54A(1) 26:sub_26_94B0(1) 26:sub_26_9535(1) +2
+$03C0 player_hp_max      r26  w18  fixed[s00:12 s01:20] banks[14 15 16 19 23 26 27 30 31] init 159/48v [00 02 03 04 05 08 09 0A 0C 0D 0F 10 …]
+    W: 23:LoadPlayerState(2) 26:EnemyKilled(2) 30:sub_30_D8C7(2) 31:sub_31_EF55(2) 26:sub_26_9357(2) 14:sub_14_84E0(1) +7
+    R: 31:sub_31_EF55(4) 14:sub_14_84E0(3) 19:OpelRevive(3) 26:Bank26_8CC0(3) 23:SavePlayerState(2) 30:sub_30_D8C7(2) +9
+$03E0 obj_attack         r3   w3   fixed[s01:2 s02:1] banks[26 30] init 159/59v [00 02 03 04 06 08 09 0B 0C 0F 10 13 …]
+    W: 30:sub_30_C008(1) 30:ObjInit(1) 26:sub_26_9BF6(1)
+    R: 26:sub_26_90AA(2) 26:sub_26_9357(1)
+$0400 obj_defense        r3   w4   fixed[s00:2 s01:1] banks[26 30] init 110/17v [00 02 03 04 05 06 08 0A 0C 0D 0E 0F …]
+    W: 30:sub_30_C008(2) 30:ObjInit(2)
+    R: 26:sub_26_9357(2) 26:sub_26_90AA(1)
+$0420 obj_hitflags       r19  w4   fixed[s01:14] banks[14 23 26 30] init 115/42v [00 01 02 03 04 05 06 07 08 09 0A 0B …]
+    W: 23:LoadPlayerState(1) 26:EnemyKilled(1) 30:sub_30_D8C7(1) 30:ObjInit(1)
+    R: 26:EnemyKilled(4) 30:sub_30_C008(3) 26:sub_26_90AA(2) 26:sub_26_907C(2) 26:sub_26_95F8(2) 14:Telepathy(1) +5
+$0440 obj_shot_id        r24  w4   fixed[] banks[15 27 30] init 108/42v [00 1C 21 23 26 27 2D 30 31 32 34 37 …]
+    W: 27:sub_27_ACD9(2) 27:sub_27_A9B4(1) 30:ObjInit(1)
+    R: 27:sub_27_A85F(2) 27:sub_27_A9E4(2) 27:sub_27_ACD9(2) 27:sub_27_B4BA(2) 15:sub_15_A581(1) 15:sub_15_ACF5(1) +14
+$0460 obj_bg_mask        r7   w6   fixed[s00:1] banks[26 27 30] init 147/12v [00 06 10 12 14 1F 32 54 55 57 5F 77]
+    W: 26:sub_26_9D9A(4) 27:sub_27_B12D(1) 30:ObjInit(1)
+    R: 26:sub_26_9D9A(2) 27:sub_27_B0BE(2) 26:sub_26_9947(1) 26:sub_26_9A30(1) 27:sub_27_B12D(1)
+$0480 obj_timer          r49  w36  fixed[s00:1] banks[15 26 27 30] init 172/19v [00 01 03 04 08 0B 10 12 13 18 1F 20 …]
+    W: 15:sub_15_A9C6(3) 15:sub_15_A87E(2) 27:sub_27_B436(2) 15:sub_15_A4C3(1) 15:sub_15_AA46(1) 15:sub_15_AAA7(1) +26
+    R: 15:sub_15_AAE6(4) 27:sub_27_B778(3) 15:sub_15_A9C6(2) 15:sub_15_AA46(2) 27:sub_27_A915(2) 27:sub_27_AA57(2) +27
+$04A0 obj_active         r37  w104 fixed[s00:5 s02:1 s04:3 s05:1 s06:1 s0C:2 s0D:13 s0E:10 s15:1 s16:1 s17:1 s18:1 s1E:3 s1F:6] banks[14 15 19 26 27 28 30 31] init 213/86v [01 03 04 05 08 0E 0F 10 11 12 13 14 …]
+    W: 27:AiPathWalk(5) 15:ClearEnemySlots(4) 26:sub_26_90AA(4) 19:sub_19_BD91(4) 27:sub_27_A2B4(3) 30:EvActTwoFollowers(3) +74
+    R: 26:sub_26_90AA(4) 30:ObjUpdateAll(3) 30:EvActClearSlot14(2) 26:sub_26_9357(2) 26:sub_26_94B0(2) 14:sub_14_84B3(1) +23
+$04C0 obj_death_type     r8   w2   fixed[s0D:2 s0E:1 s0F:1] banks[26 27 30] init 177/14v [00 01 02 03 12 4D 4F CF D4 D6 DB DC …]
+    W: 26:EnemyDeathFx(1) 30:ObjInit(1)
+    R: 26:EnemyKilled(2) 26:sub_26_907C(1) 26:ObjBecomeNext(1) 27:sub_27_A660(1) 27:sub_27_A6C5(1) 30:sub_30_D63F(1) +1
+$04E0 obj_anim           r129 w157 fixed[s00:2 s01:23 s0D:8 s0E:8 s0F:2 s10:2 s11:2 s13:6 s1E:1 s1F:1] banks[15 19 26 27 28 30 31] init 189/19v [00 01 04 08 0B 0F 10 12 13 17 1A 1F …]
+    W: 19:sub_19_BDF2(9) 15:sub_15_A87E(6) 27:AiWander16(5) 15:sub_15_AB8A(4) 27:sub_27_B955(4) 15:sub_15_A8FF(4) +87
+    R: 27:AiWander16(7) 19:sub_19_BDF2(7) 27:sub_27_B955(5) 15:sub_15_ACF5(4) 19:sub_19_BCB0(3) 27:sub_27_A915(3) +64
+$0500 obj_elem_drop      r8   w7   fixed[s02:1] banks[26 27 30] init 104/50v [00 01 02 04 05 07 08 0B 0D 0E 0F 18 …]
+    W: 27:sub_27_B626(2) 27:sub_27_B9AA(2) 30:ObjInit(2) 26:sub_26_9BF6(1)
+    R: 27:sub_27_B9AA(3) 26:sub_26_907C(2) 26:sub_26_90AA(2) 26:PickupGold(1)
+$0520 obj_xp_value       r2   w1   fixed[] banks[26 30] init 81/46v [00 01 02 03 04 05 06 08 0A 0C 0F 14 …]
+    W: 30:ObjInit(1)
+    R: 26:AddXp(2)
+$0540 obj_spawn_b2       r13  w5   fixed[s01:4 s1E:1] banks[14 26 27 30 31] init 70/3v [00 01 FF]
+    W: 30:ObjInit(1) 31:SpawnCommonTail(1) 26:sub_26_8F6E(1) 26:sub_26_9431(1) 30:sub_30_D2F4(1)
+    R: 26:sub_26_9357(3) 14:UseFindSlotObj(1) 14:UseTouchMatch(1) 26:HitHandler3(1) 26:sub_26_907C(1) 26:sub_26_9229(1) +5
+$0560 obj_spawn_param    r21  w12  fixed[s01:7 s03:1 s15:1 s1E:1 s1F:2] banks[14 15 19 26 27 30 31] init 70/6v [00 01 02 03 04 69]
+    W: 26:sub_26_9D9A(2) 15:BossDefeated(1) 30:ObjInit(1) 30:sub_30_D70D(1) 31:SpawnCommonTail(1) 19:sub_19_BC6B(1) +5
+    R: 27:sub_27_B4BA(2) 30:NpcTalk(2) 30:GiveItem(2) 14:UseFindSlotObj(1) 14:UseTouchMatch(1) 15:sub_15_B728(1) +12
+$0580 obj_overlay_id     r3   w27  fixed[s01:13 s1F:1] banks[15 19 26 27 28 30] init 17/7v [08 1C 2A 4C 69 A7 B5]
+    W: 19:sub_19_BDF2(5) 15:sub_15_ACF5(2) 19:sub_19_BCB0(2) 26:sub_26_9BF6(2) 19:SwordRaisePose(2) 15:sub_15_ABE4(1) +13
+    R: 27:sub_27_A85F(1) 28:ObjDrawMeta(1) 19:SwordRaisePose(1)
+$05A0 obj_freeze         r7   w28  fixed[s00:18] banks[14 15 19 26 27 30 31] init 0/0v []
+    W: 15:sub_15_AC8F(3) 15:sub_15_A48B(2) 15:sub_15_A971(2) 26:HitHandler3(2) 14:sub_14_853A(1) 15:sub_15_A5D5(1) +17
+    R: 30:ObjUpdateAll(2) 26:sub_26_9431(1) 26:sub_26_94B0(1) 30:NpcTalk(1) 30:EvActMakeFollowers(1) 31:sub_31_EF55(1)
+$05C0 obj_screen_x       r7   w2   fixed[s00:1 s01:2] banks[26 27 28 30 31] init 0/0v []
+    W: 28:ObjSpriteDraw(1) 30:ObjInit(1)
+    R: 26:sub_26_95F8(2) 27:sub_27_A85F(2) 28:OrbitSprites(2) 31:sub_31_E9AD(1)
+$05E0 obj_screen_y       r7   w2   fixed[s01:2] banks[26 27 28 30] init 0/0v []
+    W: 28:ObjSpriteDraw(1) 30:ObjInit(1)
+    R: 26:sub_26_95F8(2) 27:sub_27_A85F(2) 28:OrbitSprites(2) 27:sub_27_A519(1)
+$0600 obj_phase          r111 w101 fixed[s00:12 s01:1 s02:2 s03:6 s0D:4 s0E:2 s17:2 s18:1 s1E:1 s1F:3] banks[14 15 17 18 19 26 27 30 31] init 26/9v [00 01 02 08 09 0C 20 55 FF]
+    W: 19:sub_19_A0B5(5) 15:sub_15_A9C6(4) 17:?(4) 27:AiWander16(4) 27:sub_27_B4BA(4) 27:sub_27_B850(3) +64
+    R: 19:sub_19_A1AA(5) 27:sub_27_B4BA(5) 27:AiWander16(4) 15:sub_15_A9C6(3) 15:sub_15_B728(3) 26:sub_26_9D9A(3) +65
+$0620 obj_timer2         r103 w79  fixed[s00:22 s03:32 s07:4 s0D:3 s0E:3 s0F:2 s19:1 s1D:1 s1E:1] banks[15 17 19 23 26 27 30 31] init 21/9v [00 02 06 20 21 22 23 80 FF]
+    W: 19:sub_19_A1AA(4) 27:AiPathWalk(4) 19:sub_19_A212(4) 19:sub_19_A0B5(3) 27:sub_27_A660(3) 27:sub_27_A753(3) +44
+    R: 26:sub_26_9D9A(16) 15:sub_15_ACF5(4) 19:sub_19_A1AA(4) 27:sub_27_B850(4) 27:sub_27_A660(3) 27:sub_27_A753(3) +46
+$0640 obj_act_timer      r43  w37  fixed[s00:5 s01:10 s03:3 s0D:2 s0E:2] banks[14 15 26 27 30 31] init 13/5v [00 01 12 20 FF]
+    W: 26:sub_26_9D9A(5) 27:sub_27_A660(3) 30:EvActTwoFollowers(2) 26:sub_26_8F6E(1) 26:sub_26_94B0(1) 15:sub_15_A9C6(1) +24
+    R: 27:sub_27_A969(5) 27:sub_27_A9E4(4) 27:sub_27_B595(4) 27:sub_27_AB61(3) 27:sub_27_ABAC(3) 27:sub_27_ABF8(3) +12
+$0660 obj_aux            r25  w16  fixed[s01:2 s0D:2] banks[15 26 27 30] init 5/2v [00 01]
+    W: 26:sub_26_9D9A(5) 27:sub_27_A7CD(2) 15:sub_15_A50B(1) 27:sub_27_A70E(1) 27:sub_27_A969(1) 27:sub_27_AB61(1) +5
+    R: 26:sub_26_9D9A(6) 27:sub_27_A7CD(4) 27:sub_27_A70E(2) 27:sub_27_A969(2) 27:sub_27_AB61(2) 27:sub_27_ABF8(2) +5
+$0680 obj_param1         r8   w17  fixed[s0D:3 s0E:4 s1E:1] banks[15 26 27 30 31] init 4/2v [00 04]
+    W: 26:sub_26_9D9A(2) 27:AiPathWalk(2) 30:sub_30_D2D3(2) 30:EvActTwoFollowers(2) 15:sub_15_A581(1) 15:sub_15_A5EE(1) +7
+    R: 15:sub_15_A5EE(2) 27:AiPathWalk(2) 26:sub_26_9D9A(1) 26:sub_26_9FD2(1) 27:sub_27_B339(1) 30:sub_30_D225(1)
+$06A0 obj_param2         r12  w18  fixed[s12:5 s14:2 s15:1 s1B:2] banks[15 19 26 27 30 31] init 21/7v [01 02 03 04 23 25 27]
+    W: 27:sub_27_B339(3) 19:sub_19_A0B5(3) 19:sub_19_A653(3) 26:sub_26_9D9A(2) 15:sub_15_A581(1) 15:sub_15_A5EE(1) +5
+    R: 27:sub_27_B339(3) 15:sub_15_A5EE(2) 26:sub_26_9D9A(2) 27:sub_27_A9B4(1) 27:sub_27_AB42(1) 30:sub_30_D21D(1) +2
+$06C0 orbit_level        r48  w62  fixed[s00:29 s01:8 s02:2 s03:17 s04:2 s05:3 s06:2 s07:2 s08:5 s0D:3 s0F:6 s10:1 s1D:1] banks[15 18 19 26 27 28 30 31] init 51/10v [00 01 28 58 60 65 67 78 8A A7]
+    W: 18:sub_18_80DF(5) 19:sub_19_A1AA(5) 26:sub_26_9BF6(3) 26:sub_26_9D9A(3) 27:sub_27_A2B4(3) 19:PlayerDeath(2) +36
+    R: 19:sub_19_A1AA(7) 28:OrbitSprites(5) 18:sub_18_80DF(4) 26:sub_26_8D59(3) 26:sub_26_9BF6(3) 26:sub_26_9D9A(3) +18
+$06E0 obj_behav          r40  w67  fixed[s00:1 s03:19 s0D:1 s10:7 s11:9 s12:3 s13:10 s1C:6 s1D:6 s1E:5 s1F:10] banks[15 18 19 26 27 30 31] init 96/22v [00 01 02 04 05 06 07 08 09 0A 58 5F …]
+    W: 18:sub_18_8028(6) 19:sub_19_A653(5) 18:MainState2Init(4) 19:sub_19_ABB4(4) 27:sub_27_A2B4(3) 19:sub_19_A0B5(3) +28
+    R: 18:sub_18_8028(7) 27:sub_27_A85F(3) 30:ShowPendingMessage(2) 18:Sub18_9FC2(2) 19:MainState3(2) 26:sub_26_94B0(2) +22

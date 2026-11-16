@@ -231,9 +231,9 @@
 038E  ram          1   2   0  -              19:0/1 27:1/1                  obj_flags_s0E
 0398  ram          0   1   0  -              19:0/1                         (obj_flags_s0E+10)
 039F  ram          0   1   0  -              30:0/1                         (obj_flags_s0E+17)
-03A0  ram         12  25   0  X33 Y4         15:2/6 26:6/7 27:4/9 30:0/2 31:0/1 obj_u03A0
-03AD  ram          0   5   0  -              27:0/3 30:0/2                  obj_u03A0_s0D
-03AE  ram          0   1   0  -              30:0/1                         (obj_u03A0_s0D+1)
+03A0  ram         12  25   0  X33 Y4         15:2/6 26:6/7 27:4/9 30:0/2 31:0/1 obj_coll
+03AD  ram          0   5   0  -              27:0/3 30:0/2                  obj_coll_s0D
+03AE  ram          0   1   0  -              30:0/1                         (obj_coll_s0D+1)
 03C0  ram         13   9   0  X8 Y2          14:2/0 15:2/1 16:1/0 19:1/0 23:1/1 26:3/4 27:0/1 30:2/2 31:1/0 player_hp_max
 03C1  ram         13   9   0  -              14:1/1 16:0/1 19:2/1 23:1/1 26:3/1 30:3/2 31:3/2 player_hp
 03E0  ram          2   1   0  X2 Y1          26:2/0 30:0/1                  obj_attack
@@ -243,7 +243,7 @@
 0401  ram          0   1   0  -              30:0/1                         (obj_defense+1)
 0420  ram          7   1   0  X4 Y4          26:7/0 30:0/1                  obj_hitflags
 0421  ram         12   3   0  -              14:1/0 23:1/1 26:6/1 30:4/1    player_level
-0440  ram         24   4   0  X27            15:2/0 27:22/3 30:0/1          obj_pause_timer
+0440  ram         24   4   0  X27            15:2/0 27:22/3 30:0/1          obj_shot_id
 0460  ram          7   6   0  X12            26:4/4 27:3/1 30:0/1           obj_bg_mask
 0480  ram         47  35   0  X55            15:12/10 26:3/2 27:31/21 30:1/2 obj_timer
 049F  ram          2   1   0  X3             27:2/1                         obj_timer_s1F
@@ -291,7 +291,7 @@
 0580  ram          2  14   0  X15 Y1         15:0/7 19:0/2 26:0/3 27:1/1 28:1/0 30:0/1 obj_overlay_id
 0581  ram          1  12   0  -              19:1/10 27:0/1 30:0/1          obj_overlay_id_s01
 059F  ram          0   1   0  -              30:0/1                         (obj_overlay_id_s01+30)
-05A0  ram          7  28   0  X7 Y9          14:0/1 15:0/11 19:0/1 26:2/4 27:0/6 30:4/3 31:1/2 obj_u05A0
+05A0  ram          7  28   0  X7 Y9          14:0/1 15:0/11 19:0/1 26:2/4 27:0/6 30:4/3 31:1/2 obj_freeze
 05C0  ram          5   2   0  X5 Y1          26:2/0 27:2/0 28:0/1 30:0/1 31:1/0 obj_screen_x
 05C1  ram          2   0   0  -              28:2/0                         (obj_screen_x+1)
 05E0  ram          5   2   0  X6 Y1          26:2/0 27:3/0 28:0/1 30:0/1    obj_screen_y
@@ -318,14 +318,14 @@
 0639  ram          0   1   0  -              17:0/1                         (ram_062F+10)
 063D  ram          0   1   0  -              17:0/1                         (ram_062F+14)
 063E  ram          0   1   0  -              17:0/1                         (ram_062F+15)
-0640  ram         37  26   0  X47            15:3/3 26:1/4 27:33/16 30:0/1 31:0/2 obj_u0640
-0641  ram          5   5   0  -              26:2/3 27:1/0 30:0/1 31:2/1    obj_u0640_s01
-0643  ram          1   2   0  -              14:1/0 26:0/2                  obj_u0640_s03
-064D  ram          0   2   0  -              30:0/2                         (obj_u0640_s03+10)
-064E  ram          0   2   0  -              30:0/2                         (obj_u0640_s03+11)
-0660  ram         21  14   0  X26 Y1         15:2/1 26:7/5 27:12/6 30:0/2   obj_u0660
-0661  ram          2   1   0  -              26:2/1                         obj_u0660_s01
-066D  ram          2   1   0  -              26:2/1                         obj_u0660_s0D
+0640  ram         37  26   0  X47            15:3/3 26:1/4 27:33/16 30:0/1 31:0/2 obj_act_timer
+0641  ram          5   5   0  -              26:2/3 27:1/0 30:0/1 31:2/1    obj_act_timer_s01
+0643  ram          1   2   0  -              14:1/0 26:0/2                  obj_act_timer_s03
+064D  ram          0   2   0  -              30:0/2                         (obj_act_timer_s03+10)
+064E  ram          0   2   0  -              30:0/2                         (obj_act_timer_s03+11)
+0660  ram         21  14   0  X26 Y1         15:2/1 26:7/5 27:12/6 30:0/2   obj_aux
+0661  ram          2   1   0  -              26:2/1                         obj_aux_s01
+066D  ram          2   1   0  -              26:2/1                         obj_aux_s0D
 0680  ram          8   9   0  X14 Y3         15:2/2 26:2/2 27:3/1 30:1/2 31:0/2 obj_param1
 068D  ram          0   3   0  -              27:0/1 30:0/2                  obj_param1_s0D
 068E  ram          0   4   0  -              27:0/1 30:0/3                  obj_param1_s0E
@@ -616,7 +616,7 @@
 
 ; parallel arrays (indexed bases, same index register, fixed stride, >=3 bases)
 X stride $20: 0070 0090 00B0 00D0  [obj_x_lo, obj_x_hi, obj_y_lo, obj_y_hi]
-X stride $20: 0300 0320 0340 0360 0380 03A0 03C0 03E0 0400 0420 0440 0460 0480 04A0 04C0 04E0 0500 0520 0540 0560 0580 05A0 05C0 05E0 0600 0620 0640 0660 0680 06A0 06C0 06E0 0700  [obj_meta_id, obj_tile_ofs, obj_flags2, obj_meta_dir, obj_flags, obj_u03A0, player_hp_max, obj_attack, obj_defense, obj_hitflags, obj_pause_timer, obj_bg_mask, obj_timer, obj_active, obj_death_type, obj_anim, obj_elem_drop, obj_xp_value, obj_spawn_b2, obj_spawn_param, obj_overlay_id, obj_u05A0, obj_screen_x, obj_screen_y, obj_phase, obj_timer2, obj_u0640, obj_u0660, obj_param1, obj_param2, orbit_level, obj_behav, $0700]
+X stride $20: 0300 0320 0340 0360 0380 03A0 03C0 03E0 0400 0420 0440 0460 0480 04A0 04C0 04E0 0500 0520 0540 0560 0580 05A0 05C0 05E0 0600 0620 0640 0660 0680 06A0 06C0 06E0 0700  [obj_meta_id, obj_tile_ofs, obj_flags2, obj_meta_dir, obj_flags, obj_coll, player_hp_max, obj_attack, obj_defense, obj_hitflags, obj_shot_id, obj_bg_mask, obj_timer, obj_active, obj_death_type, obj_anim, obj_elem_drop, obj_xp_value, obj_spawn_b2, obj_spawn_param, obj_overlay_id, obj_freeze, obj_screen_x, obj_screen_y, obj_phase, obj_timer2, obj_act_timer, obj_aux, obj_param1, obj_param2, orbit_level, obj_behav, $0700]
 X stride $20: 6000 6020 6040 6060 6080 60A0 60C0  [wram_buf, wram_6020, wram_6040, wram_6060, $6080, $60A0, $60C0]
 X stride $20: 6001 6021 6041 6061  [wram_6001, wram_6021, wram_6041, $6061]
 X stride $20: 6002 6022 6042  [wram_6002, $6022, $6042]
@@ -626,7 +626,7 @@ X stride $10: 0010 0020 0030  [jmp_trampoline, tmp_20, tmp_30]
 X stride $10: 0608 0618 0628  [$0608, ram_0618, ram_0628]
 X stride $10: 6418 6428 6438 6448  [player_name6, inv_select, $6438, $6448]
 Y stride $20: 0070 0090 00B0 00D0  [obj_x_lo, obj_x_hi, obj_y_lo, obj_y_hi]
-Y stride $20: 0300 0320 0340 0360 0380 03A0 03C0 03E0 0400 0420  [obj_meta_id, obj_tile_ofs, obj_flags2, obj_meta_dir, obj_flags, obj_u03A0, player_hp_max, obj_attack, obj_defense, obj_hitflags]
-Y stride $20: 04A0 04C0 04E0 0500 0520 0540 0560 0580 05A0 05C0 05E0 0600  [obj_active, obj_death_type, obj_anim, obj_elem_drop, obj_xp_value, obj_spawn_b2, obj_spawn_param, obj_overlay_id, obj_u05A0, obj_screen_x, obj_screen_y, obj_phase]
-Y stride $20: 0660 0680 06A0  [obj_u0660, obj_param1, obj_param2]
+Y stride $20: 0300 0320 0340 0360 0380 03A0 03C0 03E0 0400 0420  [obj_meta_id, obj_tile_ofs, obj_flags2, obj_meta_dir, obj_flags, obj_coll, player_hp_max, obj_attack, obj_defense, obj_hitflags]
+Y stride $20: 04A0 04C0 04E0 0500 0520 0540 0560 0580 05A0 05C0 05E0 0600  [obj_active, obj_death_type, obj_anim, obj_elem_drop, obj_xp_value, obj_spawn_b2, obj_spawn_param, obj_overlay_id, obj_freeze, obj_screen_x, obj_screen_y, obj_phase]
+Y stride $20: 0660 0680 06A0  [obj_aux, obj_param1, obj_param2]
 Y stride $40: 6400 6440 6480 64C0  [player_name, $6440, story_flags, screen_flags]
