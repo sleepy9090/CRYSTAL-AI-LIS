@@ -504,3 +504,249 @@ bank,addr,name,comment
 26,98C7,ObjDespawn,obj_active,X = 0
 26,98D7,ObjMoveSlide,move in obj_meta_dir via 26:9947; diagonals also try dir-1/dir+1; C=1 blocked
 26,9A30,ObjBgProbe,metatile attrs at $34-$37 -> $20
+*,0001,tmp_01,zp scratch; auto (ram_map.py s29): r22 w16 banks 15;16;17;18;26;27;30;31
+*,0003,tmp_03,zp scratch; auto (ram_map.py s29): r3 w6 banks 17;18;19;28;30;31
+*,0004,tmp_04,zp scratch; auto (ram_map.py s29): r12 w10 banks 17;18;19;26;28;30;31
+*,0005,tmp_05,zp scratch; auto (ram_map.py s29): r3 w8 banks 17;18;19;28;30;31
+*,0008,tmp_08,zp scratch; auto (ram_map.py s29): r54 w5 banks 15;19;26;27;28;30;31
+*,000A,tmp_0A,zp scratch; auto (ram_map.py s29): r12 w4 banks 20;30;31
+*,000B,tmp_0B,zp scratch; auto (ram_map.py s29): r19 w11 banks 16;18;20;26;30;31
+*,000C,tmp_0C,zp scratch; auto (ram_map.py s29): r3 w1 banks 30
+*,000E,tmp_0E,zp scratch; auto (ram_map.py s29): r2 w2 banks 26
+*,0011,tmp_11,zp scratch; auto (ram_map.py s29): r146 w157 banks 15;16;19;23;26;27;28;30;31
+*,0012,tmp_12,zp scratch; auto (ram_map.py s29): r87 w56 banks 15;16;23;26;27;28;30;31
+*,0013,tmp_13,zp scratch; auto (ram_map.py s29): r78 w41 banks 16;23;26;27;28;30;31
+*,0014,tmp_14,zp scratch; auto (ram_map.py s29): r17 w17 banks 16;23;26;31
+*,0015,tmp_15,zp scratch; auto (ram_map.py s29): r30 w20 banks 16;23;26;28;31
+*,0016,tmp_16,zp scratch; auto (ram_map.py s29): r31 w13 banks 26;28;31
+*,0017,tmp_17,zp scratch; auto (ram_map.py s29): r16 w16 banks 15;16;23;26;28;30
+*,0018,tmp_18,zp scratch; auto (ram_map.py s29): r35 w22 banks 15;16;26;28;31
+*,0019,tmp_19,zp scratch; auto (ram_map.py s29): r23 w26 banks 15;16;26;28;31
+*,001A,tmp_1A,zp scratch; auto (ram_map.py s29): r5 w4 banks 26;28
+*,001B,tmp_1B,zp scratch; auto (ram_map.py s29): r5 w5 banks 26;28
+*,001C,tmp_1C,zp scratch; auto (ram_map.py s29): r5 w5 banks 26;28
+*,001D,tmp_1D,zp scratch; auto (ram_map.py s29): r6 w9 banks 26;28
+*,001E,tmp_1E,zp scratch; auto (ram_map.py s29): r3 w6 banks 26;28;31
+*,001F,tmp_1F,zp scratch; auto (ram_map.py s29): r20 w23 banks 15;26;27;30;31
+*,0020,tmp_20,zp scratch; auto (ram_map.py s29): r86 w74 banks 14;15;16;19;20;26;27;30;31
+*,0021,tmp_21,zp scratch; auto (ram_map.py s29): r36 w41 banks 14;15;16;19;20;26;27;30;31
+*,0022,tmp_22,zp scratch; auto (ram_map.py s29): r22 w24 banks 14;16;19;20;26;30;31
+*,0023,tmp_23,zp scratch; auto (ram_map.py s29): r40 w27 banks 14;16;20;26;27;30;31
+*,0024,tmp_24,zp scratch; auto (ram_map.py s29): r31 w24 banks 14;16;20;26;30;31
+*,0025,tmp_25,zp scratch; auto (ram_map.py s29): r35 w33 banks 14;16;20;26;30;31
+*,0026,tmp_26,zp scratch; auto (ram_map.py s29): r36 w23 banks 14;16;20;26;30;31
+*,0027,tmp_27,zp scratch; auto (ram_map.py s29): r18 w17 banks 14;16;20
+*,0028,tmp_28,zp scratch; auto (ram_map.py s29): r21 w17 banks 14;16;20;26;31
+*,0029,tmp_29,zp scratch; auto (ram_map.py s29): r23 w22 banks 14;16;20;31
+*,002A,tmp_2A,zp scratch; auto (ram_map.py s29): r30 w23 banks 16;20;31
+*,002B,tmp_2B,zp scratch; auto (ram_map.py s29): r45 w24 banks 16;20;27
+*,002C,tmp_2C,zp scratch; auto (ram_map.py s29): r9 w10 banks 16;20;27;31
+*,002D,tmp_2D,zp scratch; auto (ram_map.py s29): r12 w14 banks 16;20;27;31
+*,002E,tmp_2E,zp scratch; auto (ram_map.py s29): r18 w26 banks 16;19;20;26;27;30;31
+*,002F,tmp_2F,zp scratch; auto (ram_map.py s29): r34 w26 banks 14;15;16;19;20;26;27;30;31
+*,0030,tmp_30,zp scratch; auto (ram_map.py s29): r17 w39 banks 15;19;26;27;30;31
+*,0031,tmp_31,zp scratch; auto (ram_map.py s29): r10 w34 banks 15;19;26;27;30;31
+*,003A,zp_3A,auto (ram_map.py s29): r2 w5 banks 31
+*,003B,zp_3B,auto (ram_map.py s29): r1 w4 banks 31
+*,003C,zp_3C,auto (ram_map.py s29): r11 w2 banks 27;30;31
+*,003D,zp_3D,auto (ram_map.py s29): r5 w0 banks 27;30;31
+*,003E,zp_3E,auto (ram_map.py s29): r6 w0 banks 27;30;31
+*,003F,zp_3F,auto (ram_map.py s29): r4 w0 banks 27;30;31
+*,004C,zp_4C,auto (ram_map.py s29): r3 w1 banks 30;31
+*,0057,zp_57,auto (ram_map.py s29): r8 w4 banks 31
+*,005E,zp_5E,auto (ram_map.py s29): r2 w4 banks 16;31
+*,005F,zp_5F,auto (ram_map.py s29): r2 w4 banks 16;31
+*,0066,zp_66,auto (ram_map.py s29): r2 w1 banks 31
+*,0067,zp_67,auto (ram_map.py s29): r8 w3 banks 31
+*,0068,zp_68,auto (ram_map.py s29): r3 w3 banks 26;31
+*,0069,zp_69,auto (ram_map.py s29): r2 w1 banks 26;31
+*,0071,obj_x_lo_s01,slot 0x01 (player) of obj_x_lo; auto (ram_map.py s29): r5 w4 banks 15;19;27;30
+*,0072,zp_72,auto (ram_map.py s29): r6 w6 banks 18;19
+*,0073,zp_73,auto (ram_map.py s29): r5 w6 banks 18;19
+*,0080,zp_80,auto (ram_map.py s29): r2 w3 banks 17
+*,0082,zp_82,auto (ram_map.py s29): r1 w3 banks 17;19
+*,0085,zp_85,auto (ram_map.py s29): r3 w3 banks 19
+*,0086,zp_86,auto (ram_map.py s29): r10 w3 banks 18;19
+*,0087,zp_87,auto (ram_map.py s29): r10 w3 banks 18;19
+*,0088,zp_88,auto (ram_map.py s29): r5 w6 banks 18;19
+*,008C,zp_8C,auto (ram_map.py s29): r3 w7 banks 17;18;19
+*,008D,zp_8D,auto (ram_map.py s29): r4 w6 banks 18;19
+*,008E,zp_8E,auto (ram_map.py s29): r10 w10 banks 17;18;19;30
+*,008F,zp_8F,auto (ram_map.py s29): r10 w9 banks 17;18;19
+*,00B1,obj_y_lo_s01,slot 0x01 (player) of obj_y_lo; auto (ram_map.py s29): r8 w10 banks 15;19;27;30;31
+*,00BD,obj_y_lo_s0D,slot 0x0d of obj_y_lo; auto (ram_map.py s29): r1 w3 banks 15;26;30
+*,00BE,obj_y_lo_s0E,slot 0x0e of obj_y_lo; auto (ram_map.py s29): r4 w3 banks 19
+*,00F1,snd_zpF1,sound driver zp; auto (ram_map.py s29): r10 w7 banks 24
+*,00F2,snd_zpF2,sound driver zp; auto (ram_map.py s29): r8 w8 banks 24
+*,00F3,snd_zpF3,sound driver zp; auto (ram_map.py s29): r26 w15 banks 24
+*,00F5,snd_zpF5,sound driver zp; auto (ram_map.py s29): r18 w5 banks 24
+*,00F6,snd_zpF6,sound driver zp; auto (ram_map.py s29): r16 w5 banks 24
+*,00F7,snd_zpF7,sound driver zp; auto (ram_map.py s29): r1 w2 banks 24
+*,00FC,snd_zpFC,sound driver zp; auto (ram_map.py s29): r13 w13 banks 24
+*,00FD,snd_zpFD,sound driver zp; auto (ram_map.py s29): r3 w3 banks 24
+*,00FE,snd_zpFE,sound driver zp; auto (ram_map.py s29): r5 w4 banks 24;31
+*,00FF,snd_zpFF,sound driver zp; auto (ram_map.py s29): r4 w6 banks 24
+*,0114,snd_ch0114,sound driver per-channel array (;X); auto (ram_map.py s29): r19 w12 banks 24
+*,0115,snd_ch0115,sound driver per-channel array (;X); auto (ram_map.py s29): r2 w3 banks 24
+*,0117,snd_ch0117,sound driver per-channel array (;X); auto (ram_map.py s29): r2 w3 banks 24
+*,011A,snd_ch011A,sound driver per-channel array (;X); auto (ram_map.py s29): r1 w4 banks 24
+*,0120,snd_ch0120,sound driver per-channel array (;X); auto (ram_map.py s29): r1 w3 banks 24
+*,013E,snd_ch013E,sound driver per-channel array (;X); auto (ram_map.py s29): r1 w2 banks 24
+*,014A,snd_ch014A,sound driver per-channel array (;X); auto (ram_map.py s29): r1 w4 banks 24
+*,0150,snd_ch0150,sound driver per-channel array (;X); auto (ram_map.py s29): r1 w2 banks 24
+*,0156,snd_ch0156,sound driver per-channel array (;X); auto (ram_map.py s29): r3 w2 banks 24
+*,015C,snd_ch015C,sound driver per-channel array (;X); auto (ram_map.py s29): r7 w6 banks 24
+*,0162,snd_ch0162,sound driver per-channel array (;X); auto (ram_map.py s29): r4 w3 banks 24
+*,0168,snd_ch0168,sound driver per-channel array (;X); auto (ram_map.py s29): r10 w5 banks 24;31
+*,016E,snd_ch016E,sound driver per-channel array (;X); auto (ram_map.py s29): r2 w4 banks 24
+*,0174,snd_ch0174,sound driver per-channel array (;X); auto (ram_map.py s29): r2 w3 banks 24
+*,017A,snd_ch017A,sound driver per-channel array (;X); auto (ram_map.py s29): r4 w3 banks 24
+*,0200,oam_y,OAM shadow page $0200-$02FF: sprite Y (DMA each NMI)
+*,0201,oam_tile,OAM shadow: tile
+*,0202,oam_attr,OAM shadow: attributes
+*,0203,oam_x,OAM shadow: X
+*,0301,obj_meta_id_s01,slot 0x01 of obj_meta_id; auto (ram_map.py s29): r12 w24 banks 15;19;26;27;30
+*,030D,obj_meta_id_s0D,slot 0x0d of obj_meta_id; auto (ram_map.py s29): r0 w6 banks 15;19;27;30
+*,030E,obj_meta_id_s0E,slot 0x0e of obj_meta_id; auto (ram_map.py s29): r0 w3 banks 19
+*,0321,obj_tile_ofs_s01,slot 0x01 of obj_tile_ofs; auto (ram_map.py s29): r0 w5 banks 19;30
+*,033E,obj_tile_ofs_s1E,slot 0x1e of obj_tile_ofs; auto (ram_map.py s29): r0 w3 banks 30
+*,0381,obj_flags_s01,slot 0x01 of obj_flags; auto (ram_map.py s29): r15 w13 banks 19;26;28;30;31
+*,038E,obj_flags_s0E,slot 0x0e of obj_flags; auto (ram_map.py s29): r1 w2 banks 19;27
+*,03A0,obj_u03A0,32 slots; low nibble kept when a boss part dies (15:A4E5); NpcVanish clears; meaning TBD (Ph5 structs 2/5)
+*,03AD,obj_u03A0_s0D,slot 0x0d of obj_u03A0; auto (ram_map.py s29): r0 w5 banks 27;30
+*,03E0,obj_attack,32 slots; attack power: 26:910C sums player $03E1 + attacker $03E0;X
+*,0400,obj_defense,32 slots; defence: target $0400;Y subtracted from the attack sum at 26:911E
+*,0420,obj_hitflags,32 slots; hit flags: b5 tested in the hit path 26:8FDF
+*,0440,obj_pause_timer,32 slots; AiWalkPause stand-still timer (decrement; no move while !=0)
+*,0460,obj_bg_mask,32 slots; BG collision mask: 0 = flies through walls; & ObjBgProbe attr bits & 6 -> blocked
+*,0480,obj_timer,32 slots; lifetime / walk time (DEC per frame); low 3 bits = ObjStepVector frame phase
+*,049F,obj_timer_s1F,slot 0x1f of obj_timer; auto (ram_map.py s29): r2 w1 banks 27
+*,04A4,obj_active_s04,slot 0x04 of obj_active; auto (ram_map.py s29): r1 w2 banks 26;30
+*,04AD,obj_active_s0D,slot 0x0d of obj_active; auto (ram_map.py s29): r4 w9 banks 14;27;30
+*,04AE,obj_active_s0E,slot 0x0e of obj_active; auto (ram_map.py s29): r3 w7 banks 27;30
+*,04BE,obj_active_s1E,slot 0x1e of obj_active; auto (ram_map.py s29): r1 w2 banks 30;31
+*,04BF,obj_active_s1F,slot 0x1f of obj_active; auto (ram_map.py s29): r0 w6 banks 15;30
+*,04C0,obj_death_type,32 slots; type ObjInit runs when the object dies (0 = EnemyDeathFx puff)
+*,04E1,obj_anim_s01,slot 0x01 of obj_anim; auto (ram_map.py s29): r13 w22 banks 19;26;27;30
+*,04ED,obj_anim_s0D,slot 0x0d of obj_anim; auto (ram_map.py s29): r1 w8 banks 19;27;30
+*,04EE,obj_anim_s0E,slot 0x0e of obj_anim; auto (ram_map.py s29): r2 w8 banks 15;19;27;30
+*,04F3,obj_anim_s13,slot 0x13 of obj_anim; auto (ram_map.py s29): r5 w1 banks 15
+*,0500,obj_elem_drop,32 slots; lo nibble = element bits (attacker&target&$0F !=0 -> no damage; 26:9111); hi nibble = gold-drop class (26:946D)
+*,0520,obj_xp_value,32 slots; XP on kill (AddXp 26:924B; b7 -> (v&$7F)*16)
+*,0541,obj_spawn_b2_s01,slot 0x01 of obj_spawn_b2; auto (ram_map.py s29): r2 w2 banks 26;27;31
+*,0561,obj_spawn_param_s01,slot 0x01 of obj_spawn_param; auto (ram_map.py s29): r4 w3 banks 26;27;30;31
+*,0581,obj_overlay_id_s01,slot 0x01 of obj_overlay_id; auto (ram_map.py s29): r1 w12 banks 19;27;30
+*,05A0,obj_u05A0,32 slots; timer: $FF on hit (26:8FF1); bosses set $10 each frame; at 0 on b2=1 objects HitSetFlag clears; meaning TBD
+*,0600,obj_phase,32 slots; AI phase/state (BossPhaseDispatch index); also speed bit pattern / pause count in walker AIs
+*,0603,obj_phase_s03,slot 0x03 of obj_phase; auto (ram_map.py s29): r4 w3 banks 26;27
+*,060D,obj_phase_s0D,slot 0x0d of obj_phase; auto (ram_map.py s29): r1 w3 banks 14;30
+*,0617,ram_0617,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r1 w2 banks 19
+*,0618,ram_0618,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r2 w3 banks 17;19
+*,061F,ram_061F,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r1 w2 banks 19
+*,0620,obj_timer2,32 slots; secondary AI timer (e.g. chest monster wander)
+*,0623,obj_timer2_s03,slot 0x03 of obj_timer2; auto (ram_map.py s29): r22 w10 banks 15;19;26;27;30
+*,0627,ram_0627,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r2 w3 banks 19
+*,0628,ram_0628,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r1 w3 banks 19
+*,062D,obj_timer2_s0D,slot 0x0d of obj_timer2; auto (ram_map.py s29): r0 w3 banks 27;30
+*,062E,obj_timer2_s0E,slot 0x0e of obj_timer2; auto (ram_map.py s29): r0 w3 banks 27;30
+*,062F,ram_062F,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r1 w2 banks 19
+*,0640,obj_u0640,32 slots; meaning TBD (Ph5 structs 2/5)
+*,0641,obj_u0640_s01,slot 0x01 of obj_u0640; auto (ram_map.py s29): r5 w5 banks 26;27;30;31
+*,0643,obj_u0640_s03,slot 0x03 of obj_u0640; auto (ram_map.py s29): r1 w2 banks 14;26
+*,0660,obj_u0660,32 slots; NpcVanish sets 1; meaning TBD
+*,0661,obj_u0660_s01,slot 0x01 of obj_u0660; auto (ram_map.py s29): r2 w1 banks 26
+*,066D,obj_u0660_s0D,slot 0x0d of obj_u0660; auto (ram_map.py s29): r2 w1 banks 26
+*,0680,obj_param1,32 slots; type-$30 NPC param 1 (spawn rec byte 0; item given by talk act 3)
+*,068D,obj_param1_s0D,slot 0x0d of obj_param1; auto (ram_map.py s29): r0 w3 banks 27;30
+*,068E,obj_param1_s0E,slot 0x0e of obj_param1; auto (ram_map.py s29): r0 w4 banks 27;30
+*,06A0,obj_param2,32 slots; type-$30 NPC param 2 (spawn rec byte 1; talk act 17)
+*,06B2,ram_06B2,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r1 w4 banks 19
+*,06C5,ram_06C5,auto (ram_map.py s29): r1 w2 banks 18;19
+*,06C8,ram_06C8,auto (ram_map.py s29): r4 w2 banks 19
+*,06CD,ram_06CD,auto (ram_map.py s29): r1 w2 banks 27;30
+*,06CF,ram_06CF,auto (ram_map.py s29): r4 w4 banks 18
+*,06D0,ram_06D0,auto (ram_map.py s29): r4 w2 banks 18
+*,06E0,obj_behav,32 slots; type-$30 behaviour flags (b2 = AiNpcWander alt mode 27:AE16); menus reuse $06D0-$06EF as palette sets
+*,06F0,ram_06F0,auto (ram_map.py s29): r3 w6 banks 18;19
+*,06F1,ram_06F1,auto (ram_map.py s29): r5 w5 banks 18;19
+*,06F2,ram_06F2,auto (ram_map.py s29): r0 w3 banks 18;19
+*,06F3,ram_06F3,auto (ram_map.py s29): r3 w7 banks 18;19
+*,06FC,ram_06FC,auto (ram_map.py s29): r0 w6 banks 19
+*,06FD,ram_06FD,auto (ram_map.py s29): r0 w6 banks 19
+*,06FE,ram_06FE,auto (ram_map.py s29): r2 w4 banks 18;19
+*,06FF,ram_06FF,auto (ram_map.py s29): r9 w6 banks 18;19
+*,0703,gold_hi,gold hi byte
+*,0705,xp_hi,XP hi byte
+*,0707,xp_next_hi,XP-for-next-level hi byte
+*,0712,ram_0712,auto (ram_map.py s29): r2 w1 banks 27;30;31
+*,0713,ram_0713,auto (ram_map.py s29): r4 w1 banks 26;30;31
+*,0714,ram_0714,auto (ram_map.py s29): r7 w1 banks 15;19;26;30
+*,0716,ram_0716,auto (ram_map.py s29): r8 w1 banks 26;27;30;31
+*,071A,ram_071A,auto (ram_map.py s29): r3 w5 banks 19;26;30;31
+*,0744,ram_0744,auto (ram_map.py s29): r1 w4 banks 30;31
+*,0780,ram_0780,auto (ram_map.py s29): r2 w1 banks 30
+*,07D5,ram_07D5,auto (ram_map.py s29): r5 w3 banks 15;27;31
+*,07D6,ram_07D6,auto (ram_map.py s29): r2 w5 banks 15;26;27;31
+*,07DA,ram_07DA,auto (ram_map.py s29): r2 w2 banks 31
+*,07DB,ram_07DB,auto (ram_map.py s29): r0 w3 banks 15;31
+*,07DC,ram_07DC,auto (ram_map.py s29): r2 w2 banks 20;30
+*,07DD,ram_07DD,auto (ram_map.py s29): r9 w2 banks 16
+*,07E1,pal_id_bg1,BG palette 1 id (pal_ids+1)
+*,07E2,pal_id_bg2,BG palette 2 id (pal_ids+2)
+*,07E3,pal_id_bg3,BG palette 3 id (pal_ids+3)
+*,6000,wram_buf,shared WRAM scratch $6000-$60FF: metatile row/col buffer; text box rows (8x32); SaveGame zp $10-$2F copy; FadeSaveZpToWram
+*,6001,wram_6001,auto (ram_map.py s29): r1 w9 banks 15;16;19;30;31
+*,6002,wram_6002,auto (ram_map.py s29): r1 w7 banks 15;16;30;31
+*,6003,wram_6003,auto (ram_map.py s29): r1 w4 banks 15;30;31
+*,6004,wram_6004,auto (ram_map.py s29): r1 w3 banks 15;30;31
+*,6005,wram_6005,auto (ram_map.py s29): r1 w3 banks 15;30;31
+*,6006,wram_6006,auto (ram_map.py s29): r1 w4 banks 15;30;31
+*,6007,wram_6007,auto (ram_map.py s29): r2 w5 banks 15;30;31
+*,6020,wram_6020,auto (ram_map.py s29): r0 w4 banks 15;16;19
+*,6021,wram_6021,auto (ram_map.py s29): r0 w4 banks 16;19;30
+*,6040,wram_6040,auto (ram_map.py s29): r0 w5 banks 15;16;19;26
+*,6041,wram_6041,auto (ram_map.py s29): r0 w3 banks 15;16
+*,605F,wram_605F,auto (ram_map.py s29): r0 w3 banks 15;26
+*,6060,wram_6060,auto (ram_map.py s29): r0 w9 banks 15;19;26;30
+*,60DF,wram_60DF,auto (ram_map.py s29): r3 w2 banks 16
+*,60F8,wram_60F8,auto (ram_map.py s29): r15 w13 banks 16;20
+*,60F9,wram_60F9,auto (ram_map.py s29): r1 w6 banks 16
+*,60FA,wram_60FA,auto (ram_map.py s29): r1 w6 banks 16
+*,60FB,wram_60FB,auto (ram_map.py s29): r1 w6 banks 16
+*,60FC,wram_60FC,auto (ram_map.py s29): r1 w7 banks 20
+*,60FF,wram_60FF,auto (ram_map.py s29): r2 w7 banks 20
+*,6100,attr_shadow,BG attribute shadow (MetatileAttrBits merge; 31:EE80/EEA4)
+*,6150,wram_6150,auto (ram_map.py s29): r0 w7 banks 16;20;30;31
+*,6154,wram_6154,auto (ram_map.py s29): r0 w5 banks 16;20
+*,6201,ppu_queue_1,ppu_queue record byte 1
+*,6202,ppu_queue_2,ppu_queue record byte 2
+*,6203,ppu_queue_3,ppu_queue record byte 3
+*,6424,wram_6424,auto (ram_map.py s29): r18 w3 banks 16
+*,6426,wram_6426,auto (ram_map.py s29): r2 w3 banks 16
+*,6427,wram_6427,auto (ram_map.py s29): r18 w13 banks 16
+*,643F,inv_643F,inventory byte ($6430-$645F)
+*,646A,wram_646A,auto (ram_map.py s29): r3 w2 banks 16
+*,646B,save_slot_sel,b0 = save slot picked by MenuSave (0 -> $7100; 1 -> $7700); r6 w2 banks 16
+*,646C,wram_646C,auto (ram_map.py s29): r3 w1 banks 16
+*,646D,wram_646D,auto (ram_map.py s29): r6 w2 banks 16
+*,646E,wram_646E,auto (ram_map.py s29): r0 w4 banks 16
+*,6470,wram_6470,auto (ram_map.py s29): r6 w2 banks 16
+*,6474,wram_6474,auto (ram_map.py s29): r5 w9 banks 16
+*,6475,wram_6475,auto (ram_map.py s29): r5 w9 banks 16
+*,6478,wram_6478,auto (ram_map.py s29): r1 w2 banks 16
+*,6488,story_flags_F040,story_flags byte F040-F047 (area hook 31:E7C4: F045)
+*,648A,story_flags_F050,story_flags byte F050-F057 (area hook 31:E7C4: F053)
+*,657F,story_flags_F7F8,last story_flags byte F7F8-F7FF
+*,6D00,save_mirror,backup mirror of $7D00 (SaveGame copies $7D00-$7FFF -> $6D00-$6FFF)
+*,6E00,save_mirror_flags,backup mirror of $7E00
+*,6F00,save_mirror_npc,backup mirror of $7F00
+*,7000,menu_save_state,MenuSave sets $FB on entry and $AB on exit (16:9BE1); r2 w9 banks 16;30
+*,7001,wram_7001,auto (ram_map.py s29): r2 w6 banks 16;31
+*,7005,wram_7005,auto (ram_map.py s29): r1 w2 banks 31
+*,70F0,save_csum0_a,save slot 0 checksum byte A (MenuSave writes $70F5 here; also read/written by cold-init sub 31:F0A4 at F0EC-F116)
+*,70F1,save_csum0_b,save slot 0 checksum byte B
+*,70F2,save_csum1_a,save slot 1 checksum byte A
+*,70F3,save_csum1_b,save slot 1 checksum byte B
+*,7D00,save_cur,current save image $7D00-$7FFF (player name; $7D80 -> $0702; $7DB0 -> $07DC)
+*,7E00,save_flags,save image: story flags -> $6480
+*,7F00,save_npc_state,save image: per-NPC state -> $6580
