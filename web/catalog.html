@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>re-c asset catalog</title>
+<style>
+  body { background: #1b1b1f; color: #ddd; font: 13px/1.4 system-ui, sans-serif; margin: 0; }
+  header { background: #26262c; padding: 6px 12px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  header h1 { font-size: 15px; margin: 0 12px 0 0; }
+  header button { background: #333; color: #ddd; border: 1px solid #555; padding: 4px 10px; cursor: pointer; }
+  header button.on { background: #4a6fa5; border-color: #6a8fc5; color: #fff; }
+  main { padding: 10px 14px; }
+  section { display: none; } section.on { display: block; }
+  canvas, img.px { image-rendering: pixelated; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
+  .grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cell { background: #24242a; border: 1px solid #333; padding: 4px; font-size: 11px; text-align: center; }
+  .cell.sel { border-color: #6a8fc5; }
+  .info { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; color: #bbb; }
+  select, input { background: #2a2a30; color: #ddd; border: 1px solid #555; padding: 2px 4px; }
+  table { border-collapse: collapse; font-size: 12px; }
+  td, th { border-bottom: 1px solid #333; padding: 2px 6px; text-align: left; vertical-align: top; }
+  th { color: #9ab; position: sticky; top: 0; background: #1b1b1f; }
+  .sw { display: inline-block; width: 18px; height: 18px; border: 1px solid #000; vertical-align: middle; }
+  .scroll { max-height: 72vh; overflow: auto; }
+  #status { color: #e9a; margin-left: auto; font-size: 12px; }
+  .imgwrap { overflow: auto; max-height: 78vh; border: 1px solid #333; background: #000; }
+</style>
+</head>
+<body>
+<header>
+  <h1>re-c asset catalog</h1>
+  <button data-tab="chr" class="on">CHR</button>
+  <button data-tab="pal">Palettes</button>
+  <button data-tab="spr">Sprites</button>
+  <button data-tab="area">Areas</button>
+  <button data-tab="scr">Screens</button>
+  <button data-tab="snd">Sound</button>
+  <button data-tab="txt">Text</button>
+  <span id="status">loading…</span>
+</header>
+<main>
+  <section id="chr" class="on">
+    <div class="row">
+      <label>Palette slot <select id="chrPal"></select></label>
+      <label>Scale <select id="chrScale"><option>2</option><option selected>3</option><option>4</option></select></label>
+      <span class="info">128 × 1KB CHR banks from <code>data/chr.bin</code> (0-63 BG art, 64-127 sprites). Click a bank to enlarge.</span>
+    </div>
+    <div class="row"><canvas id="chrBig"></canvas><div class="info" id="chrInfo"></div></div>
+    <div class="grid" id="chrGrid"></div>
+  </section>
+
+  <section id="pal">
+    <div class="info">256 palette slots (banks 2/3 page tails, <code>../gfx/palettes.json</code>). Slot = BG id or sprite id + $B0. Colour 0 $FF = backdrop (checker). Hover for areas.</div>
+    <div class="row"><b>Master palette</b> <span id="master"></span></div>
+    <div class="grid" id="palGrid"></div>
+  </section>
+
+  <section id="spr">
+    <div class="row">
+      <label>Area <select id="sprArea"></select></label>
+      <label>Scale <select id="sprScale"><option>2</option><option selected>3</option><option>4</option></select></label>
+      <label><input type="checkbox" id="sprAnim" checked> animate (frame = (counter&gt;&gt;3) &amp; mask, counter −1/frame)</label>
+      <label><input type="checkbox" id="sprAll"> all 256 metasprites</label>
+    </div>
+    <div class="info" id="sprInfo"></div>
+    <div class="grid" id="sprGrid"></div>
+    <h3>Static sheet (meta_dump.py sprites)</h3>
+    <img class="px" id="sprSheet">
+  </section>
+
+  <section id="area">
+    <div class="row">
+      <label>Area <select id="areaSel"></select></label>
+      <label>Zoom <select id="areaZoom"><option value="0.25">25%</option><option value="0.5" selected>50%</option><option value="1">100%</option></select></label>
+    </div>
+    <div class="info" id="areaInfo"></div>
+    <div class="imgwrap"><img class="px" id="areaImg"></div>
+  </section>
+
+  <section id="scr">
+    <div class="row">
+      <label>Filter <input id="scrFilter" placeholder="e.g. _b10, 012, _a03"></label>
+      <span class="info">Screen pages (<code>render_screen.py</code>) and title/menu nametables (<code>render_rects.py</code>).</span>
+    </div>
+    <h3>Title / menu / cut-scene pages</h3>
+    <div class="grid" id="rectGrid"></div>
+    <h3>Screen pages</h3>
+    <div class="grid" id="scrGrid"></div>
+  </section>
+
+  <section id="snd">
+    <div class="row">
+      <button id="sndStop">■ stop</button>
+      <label>mute: <span id="sndMute"></span></label>
+      <label>max seconds <input id="sndMax" type="number" value="90" min="5" max="600" style="width:60px"></label>
+    </div>
+    <div class="info">Offline render from <code>data/sound.json</code> events (<code>apu_preview.js</code>): envelopes, vibrato quirk, DMC drums. Sweep and fades are not modelled — preview only.</div>
+    <div class="row" style="align-items:flex-start">
+      <div class="scroll"><table id="sndTable"></table></div>
+      <div class="scroll" style="flex:1"><div class="info" id="sndInfo"></div></div>
+    </div>
+  </section>
+
+  <section id="txt">
+    <div class="row">
+      <label>Search <input id="txtQ" size="30"></label>
+      <label>Table <select id="txtTab"><option value="messages">messages</option><option value="dict">dict</option><option value="t05">t05</option><option value="t06">t06 (names)</option><option value="t07">t07 (items)</option></select></label>
+      <span class="info" id="txtCount"></span>
+    </div>
+    <div class="scroll"><table id="txtTable"></table></div>
+  </section>
+</main>
+<script type="module" src="catalog.js"></script>
+</body>
+</html>

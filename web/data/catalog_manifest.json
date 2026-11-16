@@ -1,0 +1,2468 @@
+{
+ "source": "tools/catalog_export.py (session 27)",
+ "chr": "data/chr.bin",
+ "json": {
+  "sprites": "../gfx/sprites.json",
+  "palettes": "../gfx/palettes.json",
+  "sound": "data/sound.json",
+  "text": "data/text.json"
+ },
+ "images": {
+  "chr_all": "../gfx/chr_all.png",
+  "font": "../gfx/font.png",
+  "palettes": "../gfx/palettes.png"
+ },
+ "areas": [
+  {
+   "id": "00",
+   "png": "../gfx/areas/area_000.png",
+   "info": "  0 $00  1x1 $67=98 R0=28 R1=00 pal=7C 7D 7E 7F  grid FF"
+  },
+  {
+   "id": "01",
+   "png": "../gfx/areas/area_001.png",
+   "info": "  1 $01  1x1 $67=80 R0=00 R1=0C pal=00 01 02 7F  grid 2D"
+  },
+  {
+   "id": "02",
+   "png": "../gfx/areas/area_002.png",
+   "info": "  2 $02  2x2 $67=84 R0=0C R1=00 pal=4D 4E 4F 7F  grid 63 64 / 65 66"
+  },
+  {
+   "id": "03",
+   "png": "../gfx/areas/area_003.png",
+   "info": "  3 $03  5x7 $67=80 R0=00 R1=0C pal=00 01 02 7F  grid 00 00 2B 00 00 / 00 2C 2A 00 00 / 0C 16 16 0D 00 / 15 29 24 04 00 / 01 27 23 0B 0D / 0E 07 37 1D 03 / 00 00 0E 1E 0F"
+  },
+  {
+   "id": "04",
+   "png": "../gfx/areas/area_004.png",
+   "info": "  4 $04  3x3 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 80 83 97 / 83 8E 96 / 9E 85 96"
+  },
+  {
+   "id": "05",
+   "png": "../gfx/areas/area_005.png",
+   "info": "  5 $05  4x3 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 80 83 97 80 / 83 8D 96 80 / 9E 85 82 96"
+  },
+  {
+   "id": "06",
+   "png": "../gfx/areas/area_006.png",
+   "info": "  6 $06  3x1 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 98 82 9C"
+  },
+  {
+   "id": "07",
+   "png": "../gfx/areas/area_007.png",
+   "info": "  7 $07  3x6 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 80 9B 9B / 80 81 8F / 98 88 89 / 9C 86 8C / 80 80 81 / 80 80 9B"
+  },
+  {
+   "id": "08",
+   "png": "../gfx/areas/area_008.png",
+   "info": "  8 $08  1x3 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 9B / 81 / 9A"
+  },
+  {
+   "id": "09",
+   "png": "../gfx/areas/area_009.png",
+   "info": "  9 $09  5x3 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 99 8A 95 9C 80 / 80 8F 80 80 80 / 99 8B 82 95 97"
+  },
+  {
+   "id": "0A",
+   "png": "../gfx/areas/area_010.png",
+   "info": " 10 $0A  3x2 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 80 80 91 / 99 82 86"
+  },
+  {
+   "id": "0C",
+   "png": "../gfx/areas/area_012.png",
+   "info": " 12 $0C  2x3 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 99 84 / 80 8F / 80 9E"
+  },
+  {
+   "id": "0E",
+   "png": "../gfx/areas/area_014.png",
+   "info": " 14 $0E  3x4 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 80 9B 80 / 80 81 80 / 83 8B 84 / 9E 80 9E"
+  },
+  {
+   "id": "0F",
+   "png": "../gfx/areas/area_015.png",
+   "info": " 15 $0F  1x1 $67=A0 R0=34 R1=36 pal=73 74 75 7F  grid 4F"
+  },
+  {
+   "id": "10",
+   "png": "../gfx/areas/area_016.png",
+   "info": " 16 $10  4x4 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 99 84 80 80 / 80 9E 80 80 / 80 92 83 84 / 80 85 86 9E"
+  },
+  {
+   "id": "11",
+   "png": "../gfx/areas/area_017.png",
+   "info": " 17 $11  2x4 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 83 96 / 8C 80 / 85 84 / 80 9E"
+  },
+  {
+   "id": "14",
+   "png": "../gfx/areas/area_020.png",
+   "info": " 20 $14  8x8 $67=90 R0=02 R1=04 pal=09 0A 0B 7F  grid 00 00 00 2A 00 0C 16 0D / 00 0C 11 16 0D 0E 33 0F / 0C 34 14 17 18 0C 16 0D / 15 06 20 21 30 26 32 10 / 1C 05 2E 09 22 37 32 04 / 0E 37 2F 03 00 0E 07 0F / 0C 34 2E 35 0D 00 00 00 / 1A 07 22 33 0F 00 00 00"
+  },
+  {
+   "id": "15",
+   "png": "../gfx/areas/area_021.png",
+   "info": " 21 $15  8x8 $67=90 R0=02 R1=04 pal=09 0A 0B 7F  grid 00 00 00 2A 00 0C 16 0D / 00 0C 11 16 0D 0E 33 0F / 0C 34 14 17 18 0C 16 0D / 15 06 20 21 30 26 32 10 / 1C 05 2E 09 22 37 32 04 / 0E 37 2F 03 00 0E 07 0F / 0C 34 2E 35 0D 00 00 00 / 1A 07 22 33 0F 00 00 00"
+  },
+  {
+   "id": "18",
+   "png": "../gfx/areas/area_024.png",
+   "info": " 24 $18  3x1 $67=84 R0=0C R1=00 pal=0A 51 52 7F  grid 52 50 51"
+  },
+  {
+   "id": "19",
+   "png": "../gfx/areas/area_025.png",
+   "info": " 25 $19  1x1 $67=80 R0=00 R1=0C pal=09 0A 0B 7F  grid 25"
+  },
+  {
+   "id": "1A",
+   "png": "../gfx/areas/area_026.png",
+   "info": " 26 $1A  5x5 $67=A0 R0=0E R1=20 pal=84 85 86 7F  grid 7F 76 7E 7F 7C / 76 7A 78 76 78 / 76 77 77 7A 75 / 7A 77 7D 77 7B / 79 75 76 75 7F"
+  },
+  {
+   "id": "1B",
+   "png": "../gfx/areas/area_027.png",
+   "info": " 27 $1B  2x1 $67=84 R0=0C R1=00 pal=0A 51 52 7F  grid 55 56"
+  },
+  {
+   "id": "1C",
+   "png": "../gfx/areas/area_028.png",
+   "info": " 28 $1C  2x2 $67=84 R0=0C R1=00 pal=4D 58 4F 7F  grid 6C 6D / 6E 6F"
+  },
+  {
+   "id": "1E",
+   "png": "../gfx/areas/area_030.png",
+   "info": " 30 $1E  1x1 $67=A0 R0=34 R1=36 pal=70 68 59 7F  grid 4E"
+  },
+  {
+   "id": "20",
+   "png": "../gfx/areas/area_032.png",
+   "info": " 32 $20  6x5 $67=94 R0=14 R1=0C pal=12 13 14 7F  grid BF BF BF A9 AA BF / BF BF AE A7 AC AD / B0 AE BD AD AB B3 / A9 B2 B7 B4 AC AD / AB B4 B2 AD AB B4"
+  },
+  {
+   "id": "21",
+   "png": "../gfx/areas/area_033.png",
+   "info": " 33 $21  6x5 $67=94 R0=14 R1=0C pal=12 13 14 7F  grid BF BF BF A9 AA BF / BF BF AE A7 AC AD / B0 AE BE AD AB AD / A9 B2 B7 B4 AC AD / AB B4 B2 AD AB B4"
+  },
+  {
+   "id": "22",
+   "png": "../gfx/areas/area_034.png",
+   "info": " 34 $22  5x5 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 80 80 80 9A / 83 84 80 83 86 / 9A 8F 80 8F 80 / 80 85 8A 86 80 / 80 80 9E 80 80"
+  },
+  {
+   "id": "23",
+   "png": "../gfx/areas/area_035.png",
+   "info": " 35 $23  5x3 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 9C 8A 82 84 80 / 80 9A 83 94 97 / 80 80 9E 80 80"
+  },
+  {
+   "id": "24",
+   "png": "../gfx/areas/area_036.png",
+   "info": " 36 $24  4x5 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 9A 80 80 80 / 81 80 80 80 / 87 84 80 80 / 8F 85 95 9C / 9E 80 80 08"
+  },
+  {
+   "id": "25",
+   "png": "../gfx/areas/area_037.png",
+   "info": " 37 $25  2x1 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 98 97"
+  },
+  {
+   "id": "26",
+   "png": "../gfx/areas/area_038.png",
+   "info": " 38 $26  2x5 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 83 97 / 8C 80 / 8F 80 / 85 84 / 80 9E"
+  },
+  {
+   "id": "27",
+   "png": "../gfx/areas/area_039.png",
+   "info": " 39 $27  3x5 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 83 9C / 83 94 84 / 85 8A 86 / 80 8F 80 / 80 9E 80"
+  },
+  {
+   "id": "28",
+   "png": "../gfx/areas/area_040.png",
+   "info": " 40 $28  8x8 $67=94 R0=14 R1=0C pal=12 13 14 7F  grid BF BF BF BF B5 BF BF BF / BF BF BF BF B6 AE B9 BF / BF BF BF B1 B7 B8 AF BF / A9 AD AE B4 BE B4 B9 BF / AB B4 B2 AD BA B1 AF BF / BF B1 AD A9 B2 BC B9 BF / BF BF BB AF BF A9 AF BF / BF BF BF BF BF AB B4 B9"
+  },
+  {
+   "id": "29",
+   "png": "../gfx/areas/area_041.png",
+   "info": " 41 $29  8x8 $67=94 R0=14 R1=0C pal=12 13 14 7F  grid BF BF BF BF B5 BF BF BF / BF BF BF BF B6 AE B9 BF / BF BF BF B1 B7 B8 AF BF / A9 AD AE B4 BD B4 B9 BF / AB B4 B2 AD BA B1 AF BF / BF B1 AD A9 B2 BC B9 BF / BF BF BB AF B5 A9 AF BF / BF BF BF BF B5 AB B4 B9"
+  },
+  {
+   "id": "2A",
+   "png": "../gfx/areas/area_042.png",
+   "info": " 42 $2A  4x4 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 83 8E 82 9C / 8F 83 97 80 / 85 89 80 80 / 80 9E 80 80"
+  },
+  {
+   "id": "2B",
+   "png": "../gfx/areas/area_043.png",
+   "info": " 43 $2B  4x6 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 9A 80 80 / 80 81 80 80 / 80 8C 80 80 / 80 8F 80 9A / 80 87 90 86 / 99 86 80 80"
+  },
+  {
+   "id": "2C",
+   "png": "../gfx/areas/area_044.png",
+   "info": " 44 $2C  3x5 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 83 97 / 83 86 80 / 8D 82 80 / 85 82 84 / 80 80 9E"
+  },
+  {
+   "id": "2D",
+   "png": "../gfx/areas/area_045.png",
+   "info": " 45 $2D  3x3 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 83 95 97 / 87 90 9C / 85 97 80"
+  },
+  {
+   "id": "2E",
+   "png": "../gfx/areas/area_046.png",
+   "info": " 46 $2E  6x4 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 80 80 80 80 80 / 80 9A 80 83 90 97 / 80 81 80 81 80 80 / 99 8B 90 86 80 80"
+  },
+  {
+   "id": "2F",
+   "png": "../gfx/areas/area_047.png",
+   "info": " 47 $2F  5x1 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 9C 82 94 94 97"
+  },
+  {
+   "id": "30",
+   "png": "../gfx/areas/area_048.png",
+   "info": " 48 $30  1x1 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 92"
+  },
+  {
+   "id": "31",
+   "png": "../gfx/areas/area_049.png",
+   "info": " 49 $31  1x2 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 9B / 81"
+  },
+  {
+   "id": "32",
+   "png": "../gfx/areas/area_050.png",
+   "info": " 50 $32  1x1 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 92"
+  },
+  {
+   "id": "33",
+   "png": "../gfx/areas/area_051.png",
+   "info": " 51 $33  1x2 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 9A / 81"
+  },
+  {
+   "id": "34",
+   "png": "../gfx/areas/area_052.png",
+   "info": " 52 $34  2x3 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 99 84 / 80 81 / 99 86"
+  },
+  {
+   "id": "35",
+   "png": "../gfx/areas/area_053.png",
+   "info": " 53 $35  3x3 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 83 82 84 / 9E 80 8C / 92 80 9E"
+  },
+  {
+   "id": "38",
+   "png": "../gfx/areas/area_056.png",
+   "info": " 56 $38  1x4 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 9A / 81 / 81 / 9E"
+  },
+  {
+   "id": "39",
+   "png": "../gfx/areas/area_057.png",
+   "info": " 57 $39  2x2 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 99 84 / 80 9E"
+  },
+  {
+   "id": "3C",
+   "png": "../gfx/areas/area_060.png",
+   "info": " 60 $3C  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00"
+  },
+  {
+   "id": "3D",
+   "png": "../gfx/areas/area_061.png",
+   "info": " 61 $3D  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01"
+  },
+  {
+   "id": "3E",
+   "png": "../gfx/areas/area_062.png",
+   "info": " 62 $3E  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 46"
+  },
+  {
+   "id": "40",
+   "png": "../gfx/areas/area_064.png",
+   "info": " 64 $40  5x9 $67=90 R0=02 R1=04 pal=0C 0D 0E 7F  grid 3E 00 0C 31 0D / 13 11 26 2F 19 / 12 17 21 28 03 / 0E 07 33 22 0F / 00 00 2A 00 00 / 00 0C 16 0D 00 / 0C 26 14 18 00 / 01 32 2F 10 0A / 1A 07 22 0F 00"
+  },
+  {
+   "id": "41",
+   "png": "../gfx/areas/area_065.png",
+   "info": " 65 $41  5x9 $67=90 R0=02 R1=04 pal=0C 0D 0E 7F  grid 3E 00 0C 31 0D / 13 11 26 2F 19 / 12 17 21 28 03 / 0E 07 33 22 0F / 00 00 2A 00 00 / 00 0C 16 0D 00 / 0C 26 14 18 00 / 01 32 2F 10 0A / 1A 07 22 0F 00"
+  },
+  {
+   "id": "42",
+   "png": "../gfx/areas/area_066.png",
+   "info": " 66 $42  3x3 $67=90 R0=02 R1=04 pal=09 0A 0B 7F  grid 0C 16 0D / 0E 37 10 / FF 0E 0F"
+  },
+  {
+   "id": "43",
+   "png": "../gfx/areas/area_067.png",
+   "info": " 67 $43  1x1 $67=94 R0=0E R1=20 pal=18 19 1A 7F  grid 74"
+  },
+  {
+   "id": "44",
+   "png": "../gfx/areas/area_068.png",
+   "info": " 68 $44  2x4 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 83 97 / 8F 80 / 85 84 / 80 9E"
+  },
+  {
+   "id": "45",
+   "png": "../gfx/areas/area_069.png",
+   "info": " 69 $45  4x4 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 9C 95 8A 9C / 80 80 87 84 / 83 90 86 8F / 9A 80 80 9B"
+  },
+  {
+   "id": "46",
+   "png": "../gfx/areas/area_070.png",
+   "info": " 70 $46  3x4 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 98 84 80 / 83 86 80 / 85 90 84 / 80 80 9E"
+  },
+  {
+   "id": "47",
+   "png": "../gfx/areas/area_071.png",
+   "info": " 71 $47  2x3 $67=80 R0=00 R1=0C pal=4D 80 81 7F  grid 0C 3F / 15 04 / 0E 0F"
+  },
+  {
+   "id": "48",
+   "png": "../gfx/areas/area_072.png",
+   "info": " 72 $48  3x5 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 83 90 9C / 87 82 84 / 87 84 81 / 9B 8F 9A / 80 9E 80"
+  },
+  {
+   "id": "49",
+   "png": "../gfx/areas/area_073.png",
+   "info": " 73 $49  2x1 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 98 97"
+  },
+  {
+   "id": "4A",
+   "png": "../gfx/areas/area_074.png",
+   "info": " 74 $4A  4x5 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 80 80 80 9B / 80 80 80 8F / 80 80 98 89 / 9C 8A 90 86 / 98 94 82 97"
+  },
+  {
+   "id": "4B",
+   "png": "../gfx/areas/area_075.png",
+   "info": " 75 $4B  3x2 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 83 84 80 / 85 94 97"
+  },
+  {
+   "id": "4C",
+   "png": "../gfx/areas/area_076.png",
+   "info": " 76 $4C  4x5 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 83 8A 82 97 / 8F 8F 83 96 / 9A 8F 8F 9A / 81 85 8D 86 / 85 95 86 80"
+  },
+  {
+   "id": "4D",
+   "png": "../gfx/areas/area_077.png",
+   "info": " 77 $4D  4x5 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 83 8A 82 97 / 8F 8F 83 96 / 9A 8F 8F 9A / 81 85 8E 86 / 85 95 86 80"
+  },
+  {
+   "id": "4E",
+   "png": "../gfx/areas/area_078.png",
+   "info": " 78 $4E  4x5 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 80 9B 83 84 / 80 8F 8F 9A / 80 85 8D 86 / 80 83 86 80 / 80 9A 80 80"
+  },
+  {
+   "id": "4F",
+   "png": "../gfx/areas/area_079.png",
+   "info": " 79 $4F  4x5 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 80 9B 83 84 / 80 8F 8F 9A / 80 85 8E 86 / 80 83 86 80 / 80 9A 80 80"
+  },
+  {
+   "id": "50",
+   "png": "../gfx/areas/area_080.png",
+   "info": " 80 $50  2x2 $67=84 R0=0C R1=00 pal=4D 80 81 7F  grid 58 59 / 5A 5B"
+  },
+  {
+   "id": "51",
+   "png": "../gfx/areas/area_081.png",
+   "info": " 81 $51  1x1 $67=84 R0=0C R1=00 pal=4D 80 81 7F  grid 5D"
+  },
+  {
+   "id": "52",
+   "png": "../gfx/areas/area_082.png",
+   "info": " 82 $52  1x1 $67=98 R0=28 R1=00 pal=7C 9D 9E 7F  grid FF"
+  },
+  {
+   "id": "54",
+   "png": "../gfx/areas/area_084.png",
+   "info": " 84 $54  5x6 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 80 80 83 96 / 83 90 84 8F 80 / 8F 83 88 86 80 / 85 86 85 84 80 / 80 80 80 81 80 / 80 80 80 9E 80"
+  },
+  {
+   "id": "55",
+   "png": "../gfx/areas/area_085.png",
+   "info": " 85 $55  3x2 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 83 96 / 99 86 80"
+  },
+  {
+   "id": "56",
+   "png": "../gfx/areas/area_086.png",
+   "info": " 86 $56  5x5 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid E9 80 80 80 E9 / E0 E3 80 E2 E1 / 80 72 80 72 80 / 80 E0 E8 E1 80 / 80 80 71 80 80"
+  },
+  {
+   "id": "57",
+   "png": "../gfx/areas/area_087.png",
+   "info": " 87 $57  5x5 $67=88 R0=14 R1=04 pal=0F 10 11 7F  grid 80 9B F0 80 80 / 80 81 DF 90 9C / 83 8B DE 83 84 / 81 80 DF 86 81 / 9A 80 F0 80 9A"
+  },
+  {
+   "id": "58",
+   "png": "../gfx/areas/area_088.png",
+   "info": " 88 $58  1x1 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 3D"
+  },
+  {
+   "id": "59",
+   "png": "../gfx/areas/area_089.png",
+   "info": " 89 $59  6x4 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 40 39 42 38 40 00 / 40 38 41 39 40 00 / 40 41 41 38 39 40 / 40 42 41 41 38 40"
+  },
+  {
+   "id": "5A",
+   "png": "../gfx/areas/area_090.png",
+   "info": " 90 $5A  6x4 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 40 39 42 38 40 00 / 40 38 41 39 40 00 / 40 41 41 38 39 40 / 40 42 41 41 38 40"
+  },
+  {
+   "id": "5B",
+   "png": "../gfx/areas/area_091.png",
+   "info": " 91 $5B  6x4 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 40 39 42 38 40 00 / 40 38 41 39 40 00 / 40 41 41 38 39 40 / 40 42 41 41 38 40"
+  },
+  {
+   "id": "5C",
+   "png": "../gfx/areas/area_092.png",
+   "info": " 92 $5C  6x4 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 40 39 42 38 40 00 / 40 38 41 39 40 00 / 40 41 41 38 39 40 / 40 42 41 41 38 40"
+  },
+  {
+   "id": "5D",
+   "png": "../gfx/areas/area_093.png",
+   "info": " 93 $5D  1x2 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 3A / 3B"
+  },
+  {
+   "id": "5E",
+   "png": "../gfx/areas/area_094.png",
+   "info": " 94 $5E  1x1 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 3C"
+  },
+  {
+   "id": "5F",
+   "png": "../gfx/areas/area_095.png",
+   "info": " 95 $5F  1x1 $67=AC R0=30 R1=32 pal=AF AF AF 7F  grid 5C"
+  },
+  {
+   "id": "60",
+   "png": "../gfx/areas/area_096.png",
+   "info": " 96 $60  8x9 $67=94 R0=02 R1=04 pal=24 01 26 7F  grid 0D 0C 0D C5 0D 0C 0D 0C / 35 34 35 34 35 34 35 34 / C3 C4 C3 C3 C3 C3 C3 C3 / CA 36 37 80 C6 80 80 80 / 36 0F 02 80 36 C0 37 80 / 35 C1 34 80 04 00 02 80 / 37 80 80 C6 C7 C8 34 36 / 0E 37 36 C0 C0 37 36 0F / 00 0E C2 00 00 0E C9 D1"
+  },
+  {
+   "id": "61",
+   "png": "../gfx/areas/area_097.png",
+   "info": " 97 $61  1x1 $67=A0 R0=34 R1=36 pal=75 5C 5D 7F  grid 46"
+  },
+  {
+   "id": "62",
+   "png": "../gfx/areas/area_098.png",
+   "info": " 98 $62  1x1 $67=A0 R0=34 R1=36 pal=70 71 72 7F  grid 4F"
+  },
+  {
+   "id": "64",
+   "png": "../gfx/areas/area_100.png",
+   "info": "100 $64  4x3 $67=88 R0=14 R1=04 pal=1E 1F 20 7F  grid 9F D2 A0 80 / 80 80 A1 80 / 80 A2 A3 A4"
+  },
+  {
+   "id": "65",
+   "png": "../gfx/areas/area_101.png",
+   "info": "101 $65  1x3 $67=84 R0=0C R1=00 pal=4D 80 81 7F  grid 5E / 61 / 62"
+  },
+  {
+   "id": "68",
+   "png": "../gfx/areas/area_104.png",
+   "info": "104 $68  3x1 $67=88 R0=14 R1=04 pal=1E 1F 20 7F  grid 9F D2 D0"
+  },
+  {
+   "id": "69",
+   "png": "../gfx/areas/area_105.png",
+   "info": "105 $69  7x7 $67=88 R0=14 R1=04 pal=1E 04 20 7F  grid F0 80 80 80 80 9B 80 / DF 96 83 96 80 8F 9B / F2 80 8F 80 83 88 86 / D4 D8 DC F3 DC DC D9 / F5 D4 83 DE 80 80 D6 / DA DB 81 DA D7 F1 DB / 80 80 9A 80 80 80 80"
+  },
+  {
+   "id": "6A",
+   "png": "../gfx/areas/area_106.png",
+   "info": "106 $6A  7x5 $67=88 R0=14 R1=04 pal=1E 04 20 7F  grid 83 97 83 97 83 8A 9C / 8F 80 87 8A 89 EC 80 / 85 8A 86 8F 9B 81 80 / 80 85 82 86 87 86 80 / 80 80 80 99 86 80 80"
+  },
+  {
+   "id": "6B",
+   "png": "../gfx/areas/area_107.png",
+   "info": "107 $6B  2x3 $67=88 R0=14 R1=04 pal=1E 04 20 7F  grid F0 80 / DF 96 / F2 80"
+  },
+  {
+   "id": "6C",
+   "png": "../gfx/areas/area_108.png",
+   "info": "108 $6C  6x7 $67=A4 R0=18 R1=20 pal=2D 2E 2F 7F  grid 80 83 96 80 80 80 / 80 9E 80 80 80 80 / 80 FD 80 80 80 80 / E5 72 80 80 9A 80 / E0 E6 E3 80 FD 80 / 80 E0 E6 EA E1 80 / 80 80 71 80 80 80"
+  },
+  {
+   "id": "6D",
+   "png": "../gfx/areas/area_109.png",
+   "info": "109 $6D  5x7 $67=A4 R0=18 R1=20 pal=2D 2E 2F 7F  grid 83 97 80 83 84 / 81 80 80 81 9B / 81 80 83 89 EE / 85 84 81 9A ED / 80 EC 87 EB 86 / 80 81 81 80 9A / 80 9B 85 82 86"
+  },
+  {
+   "id": "6E",
+   "png": "../gfx/areas/area_110.png",
+   "info": "110 $6E  1x3 $67=A4 R0=18 R1=20 pal=2D 2E 2F 7F  grid FE / FD / 71"
+  },
+  {
+   "id": "70",
+   "png": "../gfx/areas/area_112.png",
+   "info": "112 $70  2x2 $67=88 R0=14 R1=04 pal=03 04 05 7F  grid 83 97 / 9E 80"
+  },
+  {
+   "id": "71",
+   "png": "../gfx/areas/area_113.png",
+   "info": "113 $71  2x2 $67=84 R0=0C R1=00 pal=4D 4E 4F 7F  grid 63 6A / 68 6B"
+  },
+  {
+   "id": "72",
+   "png": "../gfx/areas/area_114.png",
+   "info": "114 $72  3x1 $67=84 R0=0C R1=00 pal=53 54 4F 7F  grid 53 50 54"
+  },
+  {
+   "id": "73",
+   "png": "../gfx/areas/area_115.png",
+   "info": "115 $73  1x1 $67=84 R0=0C R1=00 pal=53 54 4F 7F  grid 1F"
+  },
+  {
+   "id": "78",
+   "png": "../gfx/areas/area_120.png",
+   "info": "120 $78  5x5 $67=80 R0=00 R1=0C pal=42 8B 8C 7F  grid 00 00 00 00 00 / 00 0C 11 08 0D / 0C 34 29 24 03 / 1A 37 27 23 10 / 00 0E 33 07 0F"
+  },
+  {
+   "id": "7C",
+   "png": "../gfx/areas/area_124.png",
+   "info": "124 $7C  6x8 $67=9C R0=14 R1=04 pal=33 34 35 7F  grid BF BF A5 AD BF BF / B5 BF BA BF BF BF / A6 B4 BD AC AD BF / BF A9 A8 AF B1 AA / BF AB BD AD B0 BF / BF BF BA A9 AD BF / BF B1 A8 A7 B9 BF / BF BF BF BF AB B4"
+  },
+  {
+   "id": "7D",
+   "png": "../gfx/areas/area_125.png",
+   "info": "125 $7D  2x2 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 99 84 / 80 9E"
+  },
+  {
+   "id": "7E",
+   "png": "../gfx/areas/area_126.png",
+   "info": "126 $7E  2x1 $67=94 R0=14 R1=0C pal=33 34 35 7F  grid BB AD"
+  },
+  {
+   "id": "7F",
+   "png": "../gfx/areas/area_127.png",
+   "info": "127 $7F  3x2 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 99 8A 97 / 80 9E 80"
+  },
+  {
+   "id": "80",
+   "png": "../gfx/areas/area_128.png",
+   "info": "128 $80  5x3 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 80 80 9A 80 80 / 98 8A 89 83 97 / 80 9E 85 86 80"
+  },
+  {
+   "id": "81",
+   "png": "../gfx/areas/area_129.png",
+   "info": "129 $81  3x2 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 99 8A 96 / 80 85 97"
+  },
+  {
+   "id": "82",
+   "png": "../gfx/areas/area_130.png",
+   "info": "130 $82  2x2 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 98 84 / 80 9B"
+  },
+  {
+   "id": "83",
+   "png": "../gfx/areas/area_131.png",
+   "info": "131 $83  2x3 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 80 9A / 80 8F / 99 86"
+  },
+  {
+   "id": "84",
+   "png": "../gfx/areas/area_132.png",
+   "info": "132 $84  2x3 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 80 E9 / E2 E1 / 71 80"
+  },
+  {
+   "id": "85",
+   "png": "../gfx/areas/area_133.png",
+   "info": "133 $85  2x2 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 83 84 / 9E 9E"
+  },
+  {
+   "id": "86",
+   "png": "../gfx/areas/area_134.png",
+   "info": "134 $86  4x3 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 83 96 99 84 / 87 90 95 86 / 9A 80 80 80"
+  },
+  {
+   "id": "87",
+   "png": "../gfx/areas/area_135.png",
+   "info": "135 $87  2x3 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 99 84 / 80 8F / 80 9E"
+  },
+  {
+   "id": "88",
+   "png": "../gfx/areas/area_136.png",
+   "info": "136 $88  5x5 $67=A4 R0=18 R1=20 pal=30 31 32 7F  grid 80 FD 80 FD 80 / 80 E0 E8 E1 80 / 80 80 72 80 80 / 80 80 72 80 80 / 80 80 71 80 80"
+  },
+  {
+   "id": "89",
+   "png": "../gfx/areas/area_137.png",
+   "info": "137 $89  5x6 $67=A4 R0=18 R1=20 pal=30 31 32 7F  grid 80 9B F0 F0 80 / 80 81 D6 D6 80 / D8 DC F4 DB F0 / DF 82 96 9C DE / DA DD F1 DD DB / 80 9E 80 9E 80"
+  },
+  {
+   "id": "8A",
+   "png": "../gfx/areas/area_138.png",
+   "info": "138 $8A  4x6 $67=A4 R0=18 R1=20 pal=30 31 32 7F  grid 80 9B 80 80 / 80 EE 80 80 / 83 EF 82 9C / EC ED 80 80 / 87 86 80 80 / 85 97 80 80"
+  },
+  {
+   "id": "8C",
+   "png": "../gfx/areas/area_140.png",
+   "info": "140 $8C  1x3 $67=84 R0=0C R1=00 pal=53 54 4F 7F  grid 5E / 5F / 60"
+  },
+  {
+   "id": "8E",
+   "png": "../gfx/areas/area_142.png",
+   "info": "142 $8E  2x2 $67=84 R0=0C R1=00 pal=55 56 57 7F  grid 67 64 / 68 69"
+  },
+  {
+   "id": "8F",
+   "png": "../gfx/areas/area_143.png",
+   "info": "143 $8F  1x3 $67=A4 R0=18 R1=20 pal=27 28 29 7F  grid 9B / 8F / 9E"
+  },
+  {
+   "id": "90",
+   "png": "../gfx/areas/area_144.png",
+   "info": "144 $90  6x6 $67=9C R0=16 R1=04 pal=06 07 01 7F  grid 00 0C 16 11 0D 00 / 0C 34 80 09 0F 00 / 02 CD C6 35 11 0D / 0E CF 80 CE 80 04 / 00 02 C6 80 36 0F / 00 0E C0 C0 0F 00"
+  },
+  {
+   "id": "91",
+   "png": "../gfx/areas/area_145.png",
+   "info": "145 $91  8x12 $67=88 R0=14 R1=04 pal=06 07 01 7F  grid 83 82 9C 80 80 80 80 80 / 81 80 F2 80 80 80 80 80 / 81 D8 F4 F3 F3 F3 D5 D9 / 85 DE D8 F4 D3 F4 D9 D6 / 80 F5 D6 D8 F4 D9 F6 F6 / 80 D6 F5 F6 80 D6 F5 D6 / 80 DF DE F5 9A DF DE F5 / 98 DE D6 DA DC DB F6 D4 / 80 F5 DA F3 D7 F3 DB D6 / 80 DA F3 F4 D7 F4 D5 DB / 80 80 F0 80 80 80 80 80 / 06 07 01 88 B5 14 04 D0"
+  },
+  {
+   "id": "92",
+   "png": "../gfx/areas/area_146.png",
+   "info": "146 $92  3x3 $67=88 R0=14 R1=00 pal=06 07 01 7F  grid 99 82 84 / 80 80 81 / 80 80 9A"
+  },
+  {
+   "id": "93",
+   "png": "../gfx/areas/area_147.png",
+   "info": "147 $93  2x1 $67=84 R0=0C R1=00 pal=82 87 83 7F  grid 55 57"
+  },
+  {
+   "id": "94",
+   "png": "../gfx/areas/area_148.png",
+   "info": "148 $94  1x1 $67=9C R0=16 R1=04 pal=06 07 01 7F  grid 0A"
+  },
+  {
+   "id": "95",
+   "png": "../gfx/areas/area_149.png",
+   "info": "149 $95  3x3 $67=88 R0=14 R1=04 pal=03 04 05 7F  grid 80 83 97 / 80 81 80 / 99 86 80"
+  },
+  {
+   "id": "96",
+   "png": "../gfx/areas/area_150.png",
+   "info": "150 $96  3x2 $67=80 R0=00 R1=0C pal=09 0A 0B 7F  grid 0C C1 0D / 0E 1E 0F"
+  },
+  {
+   "id": "98",
+   "png": "../gfx/areas/area_152.png",
+   "info": "152 $98  4x6 $67=9C R0=16 R1=20 pal=06 07 01 7F  grid 00 0C 11 0D / 0C 34 CC 04 / 02 C6 36 0F / 0E 37 35 0D / 00 15 CB 04 / 00 0E C0 0F"
+  },
+  {
+   "id": "9C",
+   "png": "../gfx/areas/area_156.png",
+   "info": "156 $9C  1x2 $67=8C R0=1A R1=20 pal=39 3A 3B 7F  grid FD / 71"
+  },
+  {
+   "id": "9D",
+   "png": "../gfx/areas/area_157.png",
+   "info": "157 $9D  3x2 $67=8C R0=1A R1=20 pal=39 3A 3B 7F  grid 98 8A 97 / 80 9E 80"
+  },
+  {
+   "id": "9E",
+   "png": "../gfx/areas/area_158.png",
+   "info": "158 $9E  7x11 $67=8C R0=1A R1=20 pal=39 3A 3B 7F  grid 80 80 80 9A 80 80 80 / 80 80 80 9E 80 80 80 / 80 80 9A 91 9A 80 80 / 80 80 9E 9A 9E 80 80 / 99 84 91 9A 91 83 96 / 99 88 88 88 88 88 96 / 99 88 88 8B 88 88 96 / 99 88 88 95 88 88 96 / 80 85 88 8A 88 86 F9 / 80 80 9A 9A 9A 80 72 / 80 80 80 80 80 80 71"
+  },
+  {
+   "id": "9F",
+   "png": "../gfx/areas/area_159.png",
+   "info": "159 $9F  1x3 $67=8C R0=1A R1=20 pal=39 3A 3B 7F  grid F9 / 72 / 71"
+  },
+  {
+   "id": "A0",
+   "png": "../gfx/areas/area_160.png",
+   "info": "160 $A0  3x5 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid 80 80 9A / 80 80 81 / 80 80 81 / F8 80 81 / 85 82 86"
+  },
+  {
+   "id": "A1",
+   "png": "../gfx/areas/area_161.png",
+   "info": "161 $A1  4x5 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid 80 80 80 FD / E2 E3 E2 E1 / 72 E5 72 80 / E0 E6 E1 80 / 80 71 80 80"
+  },
+  {
+   "id": "A2",
+   "png": "../gfx/areas/area_162.png",
+   "info": "162 $A2  5x5 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid 80 9B 9A 9B 80 / 80 EC EE EC 80 / 80 87 EF 89 80 / 80 EC ED EC 80 / 99 86 9E 85 97"
+  },
+  {
+   "id": "A3",
+   "png": "../gfx/areas/area_163.png",
+   "info": "163 $A3  2x5 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid 80 9B / 80 EE / 80 F7 / 80 ED / 98 86"
+  },
+  {
+   "id": "A4",
+   "png": "../gfx/areas/area_164.png",
+   "info": "164 $A4  2x5 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid 9B 80 / EE 80 / F7 80 / ED 80 / 85 96"
+  },
+  {
+   "id": "A5",
+   "png": "../gfx/areas/area_165.png",
+   "info": "165 $A5  3x6 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid 83 8A 84 / EE 9A EE / F7 EC F7 / ED EC ED / 85 86 81 / 80 80 9B"
+  },
+  {
+   "id": "A6",
+   "png": "../gfx/areas/area_166.png",
+   "info": "166 $A6  1x2 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid FA / FB"
+  },
+  {
+   "id": "A8",
+   "png": "../gfx/areas/area_168.png",
+   "info": "168 $A8  1x3 $67=A4 R0=18 R1=20 pal=27 28 29 7F  grid E9 / 72 / 71"
+  },
+  {
+   "id": "A9",
+   "png": "../gfx/areas/area_169.png",
+   "info": "169 $A9  7x9 $67=A4 R0=18 R1=20 pal=27 28 29 7F  grid 80 80 80 80 80 80 73 / E2 EA EA EA E3 80 72 / E4 E2 EA E3 E5 E2 E1 / E0 E6 EA E6 E7 E1 80 / 80 E4 80 E0 E3 80 80 / 80 E0 E3 80 E5 80 80 / 80 80 E4 80 E4 80 80 / 80 80 E0 E8 E1 80 80 / 80 80 80 71 80 80 80"
+  },
+  {
+   "id": "AA",
+   "png": "../gfx/areas/area_170.png",
+   "info": "170 $AA  1x3 $67=A4 R0=18 R1=20 pal=45 46 47 7F  grid 9A / 9E / 91"
+  },
+  {
+   "id": "AB",
+   "png": "../gfx/areas/area_171.png",
+   "info": "171 $AB  8x9 $67=A4 R0=18 R1=20 pal=45 46 47 7F  grid 80 9B 80 80 80 80 9A 80 / 80 81 80 80 F0 80 8F 80 / 80 91 80 D8 D3 D5 DC D9 / 80 8F 80 F5 DA D9 80 F2 / D8 DC F3 DB 80 D6 80 F2 / DA D5 D3 DD F3 D3 DD DB / 80 80 F5 81 F6 F0 85 84 / 80 83 DE 85 DE DA 80 9B / 80 9A DA D7 DB 80 80 80"
+  },
+  {
+   "id": "AC",
+   "png": "../gfx/areas/area_172.png",
+   "info": "172 $AC  1x7 $67=A4 R0=18 R1=20 pal=48 49 4A 7F  grid 9A / 9E / 91 / 9E / 91 / 81 / 9A"
+  },
+  {
+   "id": "AD",
+   "png": "../gfx/areas/area_173.png",
+   "info": "173 $AD  5x8 $67=A4 R0=18 R1=20 pal=48 49 4A 7F  grid 80 80 9B 80 80 / 98 84 EE 83 96 / 80 EE ED EE 80 / 9C EF 88 EF 84 / 83 EF 88 EF 86 / 85 EF 88 EF 9C / 80 ED 81 ED 80 / 98 86 9A 9B 80"
+  },
+  {
+   "id": "AE",
+   "png": "../gfx/areas/area_174.png",
+   "info": "174 $AE  3x7 $67=A4 R0=18 R1=20 pal=4B 4C 08 7F  grid 80 99 84 / 80 80 EC / 9C 82 89 / 80 9B EC / 80 8F EC / 80 85 89 / 80 99 86"
+  },
+  {
+   "id": "AF",
+   "png": "../gfx/areas/area_175.png",
+   "info": "175 $AF  4x11 $67=A4 R0=18 R1=20 pal=4B 4C 08 7F  grid 9A 80 80 80 / 9E 80 80 80 / 91 80 80 80 / 9E 80 80 80 / 91 83 97 80 / 9A EC 80 80 / 81 87 82 9C / EC EC 80 80 / 9E 81 80 80 / 91 EC 80 80 / 85 86 80 80"
+  },
+  {
+   "id": "B0",
+   "png": "../gfx/areas/area_176.png",
+   "info": "176 $B0  3x4 $67=A4 R0=18 R1=20 pal=25 2B 43 7F  grid 9A 80 9A / 85 8A 86 / 83 86 80 / 9A 80 80"
+  },
+  {
+   "id": "B1",
+   "png": "../gfx/areas/area_177.png",
+   "info": "177 $B1  2x4 $67=A4 R0=18 R1=20 pal=25 2B 43 7F  grid 83 97 / 8C 80 / 81 80 / 9A 80"
+  },
+  {
+   "id": "B2",
+   "png": "../gfx/areas/area_178.png",
+   "info": "178 $B2  3x6 $67=A4 R0=18 R1=20 pal=25 2B 43 7F  grid 80 99 84 / 80 98 8D / 98 82 8D / 80 83 89 / 80 9A 9A / 80 86 85"
+  },
+  {
+   "id": "B3",
+   "png": "../gfx/areas/area_179.png",
+   "info": "179 $B3  2x2 $67=A4 R0=18 R1=20 pal=25 2B 43 7F  grid 9A 9A / 85 86"
+  },
+  {
+   "id": "B4",
+   "png": "../gfx/areas/area_180.png",
+   "info": "180 $B4  7x9 $67=A4 R0=18 R1=20 pal=25 2B 43 7F  grid 80 83 97 80 80 80 80 / 80 9E 80 80 80 80 80 / 80 91 80 80 80 80 80 / 99 8B EB EB EB 8A 97 / 80 80 80 99 84 8F 80 / 80 80 80 98 8E 8B 84 / 80 80 98 82 8E 8A 86 / 80 80 80 83 89 81 80 / 80 80 80 9A 9A 9A 80"
+  },
+  {
+   "id": "B5",
+   "png": "../gfx/areas/area_181.png",
+   "info": "181 $B5  6x5 $67=A4 R0=18 R1=20 pal=44 28 29 7F  grid 80 9A 9B 9B 80 80 / 80 EE EE EE 80 80 / 98 EF EF EF 82 96 / 80 ED ED ED 80 80 / 80 9B 9B 9B 80 80"
+  },
+  {
+   "id": "B6",
+   "png": "../gfx/areas/area_182.png",
+   "info": "182 $B6  1x5 $67=A4 R0=18 R1=20 pal=44 28 29 7F  grid 9B / 9E / FD / 72 / 71"
+  },
+  {
+   "id": "B8",
+   "png": "../gfx/areas/area_184.png",
+   "info": "184 $B8  4x10 $67=88 R0=14 R1=02 pal=03 5E 05 7F  grid 80 80 83 96 / 80 80 EE 80 / 80 80 F7 80 / 80 80 F7 80 / 80 80 F7 80 / 80 80 F7 80 / 80 80 ED 80 / F1 DD DC F1 / 80 87 97 80 / 80 9A 80 80"
+  },
+  {
+   "id": "B9",
+   "png": "../gfx/areas/area_185.png",
+   "info": "185 $B9  4x11 $67=A4 R0=18 R1=20 pal=4B 4C 08 7F  grid 9A 80 80 80 / 9E 80 80 80 / 91 80 80 80 / 9E 80 80 80 / 91 83 97 80 / 9A EC 80 80 / 81 87 82 9C / EC EC 80 80 / 9E 81 80 80 / 91 EC 80 80 / 85 86 80 80"
+  },
+  {
+   "id": "BA",
+   "png": "../gfx/areas/area_186.png",
+   "info": "186 $BA  7x9 $67=A4 R0=18 R1=20 pal=25 2B 43 7F  grid 80 83 97 80 80 80 80 / 80 9E 80 80 80 80 80 / 80 91 80 80 80 80 80 / 99 8B EB EB EB 8A 97 / 80 80 80 99 84 8F 80 / 80 80 80 98 8E 8B 84 / 80 80 98 82 8E 8A 86 / 80 80 80 83 89 81 80 / 80 80 80 9A 9A 9A 80"
+  },
+  {
+   "id": "BB",
+   "png": "../gfx/areas/area_187.png",
+   "info": "187 $BB  1x1 $67=A0 R0=34 R1=36 pal=50 5C 5D 7F  grid 46"
+  },
+  {
+   "id": "BC",
+   "png": "../gfx/areas/area_188.png",
+   "info": "188 $BC  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00"
+  },
+  {
+   "id": "BE",
+   "png": "../gfx/areas/area_190.png",
+   "info": "190 $BE  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01"
+  },
+  {
+   "id": "BF",
+   "png": "../gfx/areas/area_191.png",
+   "info": "191 $BF  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 45"
+  },
+  {
+   "id": "C0",
+   "png": "../gfx/areas/area_192.png",
+   "info": "192 $C0  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 43"
+  },
+  {
+   "id": "C1",
+   "png": "../gfx/areas/area_193.png",
+   "info": "193 $C1  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 44"
+  },
+  {
+   "id": "C2",
+   "png": "../gfx/areas/area_194.png",
+   "info": "194 $C2  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00"
+  },
+  {
+   "id": "C3",
+   "png": "../gfx/areas/area_195.png",
+   "info": "195 $C3  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01"
+  },
+  {
+   "id": "C4",
+   "png": "../gfx/areas/area_196.png",
+   "info": "196 $C4  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02"
+  },
+  {
+   "id": "C5",
+   "png": "../gfx/areas/area_197.png",
+   "info": "197 $C5  1x1 $67=A0 R0=34 R1=36 pal=50 5C 5D 7F  grid 46"
+  },
+  {
+   "id": "C6",
+   "png": "../gfx/areas/area_198.png",
+   "info": "198 $C6  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 45"
+  },
+  {
+   "id": "C7",
+   "png": "../gfx/areas/area_199.png",
+   "info": "199 $C7  1x1 $67=A0 R0=34 R1=36 pal=64 65 66 7F bank10  grid 01"
+  },
+  {
+   "id": "C8",
+   "png": "../gfx/areas/area_200.png",
+   "info": "200 $C8  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00"
+  },
+  {
+   "id": "C9",
+   "png": "../gfx/areas/area_201.png",
+   "info": "201 $C9  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02"
+  },
+  {
+   "id": "CB",
+   "png": "../gfx/areas/area_203.png",
+   "info": "203 $CB  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01"
+  },
+  {
+   "id": "CD",
+   "png": "../gfx/areas/area_205.png",
+   "info": "205 $CD  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 43"
+  },
+  {
+   "id": "CE",
+   "png": "../gfx/areas/area_206.png",
+   "info": "206 $CE  1x1 $67=A0 R0=34 R1=36 pal=50 5C 5D 7F  grid 46"
+  },
+  {
+   "id": "CF",
+   "png": "../gfx/areas/area_207.png",
+   "info": "207 $CF  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01"
+  },
+  {
+   "id": "D0",
+   "png": "../gfx/areas/area_208.png",
+   "info": "208 $D0  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00"
+  },
+  {
+   "id": "D1",
+   "png": "../gfx/areas/area_209.png",
+   "info": "209 $D1  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00"
+  },
+  {
+   "id": "D2",
+   "png": "../gfx/areas/area_210.png",
+   "info": "210 $D2  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01"
+  },
+  {
+   "id": "D3",
+   "png": "../gfx/areas/area_211.png",
+   "info": "211 $D3  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02"
+  },
+  {
+   "id": "D4",
+   "png": "../gfx/areas/area_212.png",
+   "info": "212 $D4  1x1 $67=A0 R0=34 R1=36 pal=6D 6E 6F 7F  grid 47"
+  },
+  {
+   "id": "D5",
+   "png": "../gfx/areas/area_213.png",
+   "info": "213 $D5  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F  grid 1B"
+  },
+  {
+   "id": "D6",
+   "png": "../gfx/areas/area_214.png",
+   "info": "214 $D6  1x1 $67=A0 R0=34 R1=36 pal=75 5C 5D 7F  grid 46"
+  },
+  {
+   "id": "D7",
+   "png": "../gfx/areas/area_215.png",
+   "info": "215 $D7  1x1 $67=A0 R0=34 R1=36 pal=76 77 78 7F  grid 4A"
+  },
+  {
+   "id": "D8",
+   "png": "../gfx/areas/area_216.png",
+   "info": "216 $D8  1x1 $67=A0 R0=34 R1=36 pal=79 7A 7B 7F  grid 4C"
+  },
+  {
+   "id": "D9",
+   "png": "../gfx/areas/area_217.png",
+   "info": "217 $D9  1x1 $67=A0 R0=34 R1=36 pal=64 65 66 7F bank10  grid 01"
+  },
+  {
+   "id": "DA",
+   "png": "../gfx/areas/area_218.png",
+   "info": "218 $DA  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02"
+  },
+  {
+   "id": "DC",
+   "png": "../gfx/areas/area_220.png",
+   "info": "220 $DC  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00"
+  },
+  {
+   "id": "DD",
+   "png": "../gfx/areas/area_221.png",
+   "info": "221 $DD  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01"
+  },
+  {
+   "id": "DE",
+   "png": "../gfx/areas/area_222.png",
+   "info": "222 $DE  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 46"
+  },
+  {
+   "id": "DF",
+   "png": "../gfx/areas/area_223.png",
+   "info": "223 $DF  1x1 $67=A0 R0=34 R1=36 pal=6D 6E 6F 7F  grid 4B"
+  },
+  {
+   "id": "E0",
+   "png": "../gfx/areas/area_224.png",
+   "info": "224 $E0  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 46"
+  },
+  {
+   "id": "E1",
+   "png": "../gfx/areas/area_225.png",
+   "info": "225 $E1  1x1 $67=A0 R0=34 R1=36 pal=76 77 78 7F  grid 4D"
+  },
+  {
+   "id": "E2",
+   "png": "../gfx/areas/area_226.png",
+   "info": "226 $E2  1x1 $67=A0 R0=34 R1=36 pal=6D 6E 6F 7F  grid 49"
+  },
+  {
+   "id": "E3",
+   "png": "../gfx/areas/area_227.png",
+   "info": "227 $E3  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 43"
+  },
+  {
+   "id": "E4",
+   "png": "../gfx/areas/area_228.png",
+   "info": "228 $E4  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 44"
+  },
+  {
+   "id": "E5",
+   "png": "../gfx/areas/area_229.png",
+   "info": "229 $E5  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01"
+  },
+  {
+   "id": "E7",
+   "png": "../gfx/areas/area_231.png",
+   "info": "231 $E7  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00"
+  },
+  {
+   "id": "E8",
+   "png": "../gfx/areas/area_232.png",
+   "info": "232 $E8  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 48"
+  },
+  {
+   "id": "E9",
+   "png": "../gfx/areas/area_233.png",
+   "info": "233 $E9  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 49"
+  },
+  {
+   "id": "EB",
+   "png": "../gfx/areas/area_235.png",
+   "info": "235 $EB  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01"
+  },
+  {
+   "id": "EC",
+   "png": "../gfx/areas/area_236.png",
+   "info": "236 $EC  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 44"
+  },
+  {
+   "id": "ED",
+   "png": "../gfx/areas/area_237.png",
+   "info": "237 $ED  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00"
+  },
+  {
+   "id": "EE",
+   "png": "../gfx/areas/area_238.png",
+   "info": "238 $EE  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02"
+  },
+  {
+   "id": "EF",
+   "png": "../gfx/areas/area_239.png",
+   "info": "239 $EF  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 45"
+  },
+  {
+   "id": "F0",
+   "png": "../gfx/areas/area_240.png",
+   "info": "240 $F0  1x1 $67=A0 R0=34 R1=36 pal=64 65 66 7F bank10  grid 01"
+  },
+  {
+   "id": "F1",
+   "png": "../gfx/areas/area_241.png",
+   "info": "241 $F1  1x1 $67=A0 R0=34 R1=36 pal=70 68 59 7F  grid 4E"
+  },
+  {
+   "id": "F2",
+   "png": "../gfx/areas/area_242.png",
+   "info": "242 $F2  1x1 $67=A0 R0=34 R1=36 pal=5A 5B 6A 7F  grid 70"
+  },
+  {
+   "id": "F3",
+   "png": "../gfx/areas/area_243.png",
+   "info": "243 $F3  1x1 $67=A0 R0=34 R1=36 pal=70 68 59 7F  grid 4E"
+  },
+  {
+   "id": "F4",
+   "png": "../gfx/areas/area_244.png",
+   "info": "244 $F4  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 46"
+  },
+  {
+   "id": "F5",
+   "png": "../gfx/areas/area_245.png",
+   "info": "245 $F5  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02"
+  },
+  {
+   "id": "F6",
+   "png": "../gfx/areas/area_246.png",
+   "info": "246 $F6  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01"
+  },
+  {
+   "id": "F7",
+   "png": "../gfx/areas/area_247.png",
+   "info": "247 $F7  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00"
+  },
+  {
+   "id": "F8",
+   "png": "../gfx/areas/area_248.png",
+   "info": "248 $F8  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00"
+  },
+  {
+   "id": "F9",
+   "png": "../gfx/areas/area_249.png",
+   "info": "249 $F9  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01"
+  },
+  {
+   "id": "FA",
+   "png": "../gfx/areas/area_250.png",
+   "info": "250 $FA  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 43"
+  },
+  {
+   "id": "FB",
+   "png": "../gfx/areas/area_251.png",
+   "info": "251 $FB  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02"
+  }
+ ],
+ "sprite_sheets": [
+  {
+   "id": "00",
+   "png": "../gfx/sprites/area_000.png",
+   "info": "area $00  chr 40,42,6F,6F  pal 00,01,20,20  "
+  },
+  {
+   "id": "01",
+   "png": "../gfx/sprites/area_001.png",
+   "info": "area $01  chr 40,42,4B,4E  pal 00,01,FF,0A  t28:4C t30:39"
+  },
+  {
+   "id": "02",
+   "png": "../gfx/sprites/area_002.png",
+   "info": "area $02  chr 40,42,4E,4B  pal 00,01,11,0A  t30:38+40 t30:2C+40 t30:40 t30:34+40 t0E:4C"
+  },
+  {
+   "id": "03",
+   "png": "../gfx/sprites/area_003.png",
+   "info": "area $03  chr 40,42,64,60  pal 00,01,21,20  t28:4C t51:58+40 t50:64 tB0:AE+40"
+  },
+  {
+   "id": "04",
+   "png": "../gfx/sprites/area_004.png",
+   "info": "area $04  chr 40,42,65,FF  pal 00,01,22,FF  t52:64"
+  },
+  {
+   "id": "05",
+   "png": "../gfx/sprites/area_005.png",
+   "info": "area $05  chr 40,42,65,FF  pal 00,01,22,FF  t52:64"
+  },
+  {
+   "id": "06",
+   "png": "../gfx/sprites/area_006.png",
+   "info": "area $06  chr 40,42,64,FF  pal 00,01,23,FF  t53:64 t0D:AA"
+  },
+  {
+   "id": "07",
+   "png": "../gfx/sprites/area_007.png",
+   "info": "area $07  chr 40,42,60,6C  pal 00,01,21,24  tD0:4C t0D:AA"
+  },
+  {
+   "id": "08",
+   "png": "../gfx/sprites/area_008.png",
+   "info": "area $08  chr 40,42,60,6C  pal 00,01,21,24  t54:65 t0D:AA"
+  },
+  {
+   "id": "09",
+   "png": "../gfx/sprites/area_009.png",
+   "info": "area $09  chr 40,42,64,66  pal 00,01,23,22  t56:58+40 t53:64 tD0:4C"
+  },
+  {
+   "id": "0A",
+   "png": "../gfx/sprites/area_010.png",
+   "info": "area $0A  chr 40,42,6C,6C  pal 00,01,21,21  t57:65"
+  },
+  {
+   "id": "0C",
+   "png": "../gfx/sprites/area_012.png",
+   "info": "area $0C  chr 40,42,FF,FF  pal 00,01,FF,FF  tD0:4C"
+  },
+  {
+   "id": "0E",
+   "png": "../gfx/sprites/area_014.png",
+   "info": "area $0E  chr 40,42,51,4C  pal 00,01,0B,0B  t30:4F+20 t30:2E+40"
+  },
+  {
+   "id": "0F",
+   "png": "../gfx/sprites/area_015.png",
+   "info": "area $0F  chr 40,42,60,FF  pal 00,01,20,FF  tB1:AF"
+  },
+  {
+   "id": "10",
+   "png": "../gfx/sprites/area_016.png",
+   "info": "area $10  chr 40,42,FF,50  pal 00,01,FF,0C  tD1:4C t30:32+40 t0E:4C+40"
+  },
+  {
+   "id": "11",
+   "png": "../gfx/sprites/area_017.png",
+   "info": "area $11  chr 40,42,67,66  pal 00,01,27,23  t61:64 t63:58+40"
+  },
+  {
+   "id": "14",
+   "png": "../gfx/sprites/area_020.png",
+   "info": "area $14  chr 40,42,64,65  pal 00,01,21,24  tD2:4C"
+  },
+  {
+   "id": "15",
+   "png": "../gfx/sprites/area_021.png",
+   "info": "area $15  chr 40,42,64,65  pal 00,01,21,24  t0D:4C"
+  },
+  {
+   "id": "18",
+   "png": "../gfx/sprites/area_024.png",
+   "info": "area $18  chr 40,42,4B,4D  pal 00,01,15,10  t30:46+40 t30:34+40 t30:30 t30:38 t30:34 t30:2C t0E:4C"
+  },
+  {
+   "id": "19",
+   "png": "../gfx/sprites/area_025.png",
+   "info": "area $19  chr 40,42,FF,FF  pal 00,01,FF,FF  "
+  },
+  {
+   "id": "1A",
+   "png": "../gfx/sprites/area_026.png",
+   "info": "area $1A  chr 40,42,6F,4F  pal 00,01,10,23  t5E:4C t30:4A+40"
+  },
+  {
+   "id": "1B",
+   "png": "../gfx/sprites/area_027.png",
+   "info": "area $1B  chr 40,42,4A,49  pal 00,01,14,14  t30:2E t30:2C+40 t30:34+40 t30:34 t0E:4C"
+  },
+  {
+   "id": "1C",
+   "png": "../gfx/sprites/area_028.png",
+   "info": "area $1C  chr 40,42,4F,4F  pal 00,01,10,10  t30:3E t30:3C t30:42 t30:40 t0E:4C"
+  },
+  {
+   "id": "1E",
+   "png": "../gfx/sprites/area_030.png",
+   "info": "area $1E  chr 40,42,50,4D  pal 00,01,06,FF  t30:2E+40 t30:2E t0E:4C"
+  },
+  {
+   "id": "20",
+   "png": "../gfx/sprites/area_032.png",
+   "info": "area $20  chr 40,42,67,50  pal 00,01,06,21  t0D:AA"
+  },
+  {
+   "id": "21",
+   "png": "../gfx/sprites/area_033.png",
+   "info": "area $21  chr 40,42,67,50  pal 00,01,06,21  t30:2E+40 t0D:AA"
+  },
+  {
+   "id": "22",
+   "png": "../gfx/sprites/area_034.png",
+   "info": "area $22  chr 40,42,67,FF  pal 00,01,27,FF  t61:64 tD1:4C"
+  },
+  {
+   "id": "23",
+   "png": "../gfx/sprites/area_035.png",
+   "info": "area $23  chr 40,42,67,66  pal 00,01,27,23  t62:67 t63:58+40 t61:64 tD1:4C t0D:AA"
+  },
+  {
+   "id": "24",
+   "png": "../gfx/sprites/area_036.png",
+   "info": "area $24  chr 40,42,67,66  pal 00,01,27,23  t63:58+40 t62:67 tD1:4C"
+  },
+  {
+   "id": "25",
+   "png": "../gfx/sprites/area_037.png",
+   "info": "area $25  chr 40,42,67,FF  pal 00,01,27,FF  t61:64"
+  },
+  {
+   "id": "26",
+   "png": "../gfx/sprites/area_038.png",
+   "info": "area $26  chr 40,42,67,66  pal 00,01,27,23  t63:58+40 t61:64 tD1:4C"
+  },
+  {
+   "id": "27",
+   "png": "../gfx/sprites/area_039.png",
+   "info": "area $27  chr 40,42,67,66  pal 00,01,27,23  t61:64 tD1:4C t0D:AA"
+  },
+  {
+   "id": "28",
+   "png": "../gfx/sprites/area_040.png",
+   "info": "area $28  chr 40,42,6B,51  pal 00,01,0C,09  t68:D3 t2C:4C t30:5A t64:58 t30:AD+40"
+  },
+  {
+   "id": "29",
+   "png": "../gfx/sprites/area_041.png",
+   "info": "area $29  chr 40,42,66,FF  pal 00,01,21,21  t65:98"
+  },
+  {
+   "id": "2A",
+   "png": "../gfx/sprites/area_042.png",
+   "info": "area $2A  chr 40,42,67,FF  pal 00,01,23,FF  t66:64 tD1:4C t0D:AA"
+  },
+  {
+   "id": "2B",
+   "png": "../gfx/sprites/area_043.png",
+   "info": "area $2B  chr 40,42,60,6C  pal 00,01,23,21  t67:65 t55:64+40 tD1:4C"
+  },
+  {
+   "id": "2C",
+   "png": "../gfx/sprites/area_044.png",
+   "info": "area $2C  chr 40,42,60,6C  pal 00,01,FF,21  t67:65"
+  },
+  {
+   "id": "2D",
+   "png": "../gfx/sprites/area_045.png",
+   "info": "area $2D  chr 40,42,67,66  pal 00,01,23,23  t66:64 tD1:4C t0D:AA"
+  },
+  {
+   "id": "2E",
+   "png": "../gfx/sprites/area_046.png",
+   "info": "area $2E  chr 40,42,6B,FF  pal 00,01,FF,20  t64:58 tD1:4C"
+  },
+  {
+   "id": "2F",
+   "png": "../gfx/sprites/area_047.png",
+   "info": "area $2F  chr 40,42,6B,FF  pal 00,01,FF,20  t64:58 tD1:4C"
+  },
+  {
+   "id": "30",
+   "png": "../gfx/sprites/area_048.png",
+   "info": "area $30  chr 40,42,4A,4A  pal 00,01,0B,0B  tD1:4C t30:30 t30:38"
+  },
+  {
+   "id": "31",
+   "png": "../gfx/sprites/area_049.png",
+   "info": "area $31  chr 40,42,64,FF  pal 00,01,FF,FF  t0D:AA"
+  },
+  {
+   "id": "32",
+   "png": "../gfx/sprites/area_050.png",
+   "info": "area $32  chr 40,42,4E,4B  pal 00,01,11,0A  tD1:4C t30:38+40 t30:2C+40 t30:34+40 t30:3E t30:40"
+  },
+  {
+   "id": "33",
+   "png": "../gfx/sprites/area_051.png",
+   "info": "area $33  chr 40,42,FF,FF  pal 00,01,FF,FF  "
+  },
+  {
+   "id": "34",
+   "png": "../gfx/sprites/area_052.png",
+   "info": "area $34  chr 40,42,6B,FF  pal 00,01,FF,20  t64:58"
+  },
+  {
+   "id": "35",
+   "png": "../gfx/sprites/area_053.png",
+   "info": "area $35  chr 40,42,48,FF  pal 00,01,09,0B  t30:32 tD1:4C"
+  },
+  {
+   "id": "38",
+   "png": "../gfx/sprites/area_056.png",
+   "info": "area $38  chr 40,42,FF,FF  pal 00,01,FF,FF  t0E:4C"
+  },
+  {
+   "id": "39",
+   "png": "../gfx/sprites/area_057.png",
+   "info": "area $39  chr 40,42,6B,FF  pal 00,01,FF,20  t64:58"
+  },
+  {
+   "id": "3C",
+   "png": "../gfx/sprites/area_060.png",
+   "info": "area $3C  chr 40,42,4A,4A  pal 00,01,0D,0D  t40:33"
+  },
+  {
+   "id": "3D",
+   "png": "../gfx/sprites/area_061.png",
+   "info": "area $3D  chr 40,42,4A,4A  pal 00,01,0E,0E  t41:2F"
+  },
+  {
+   "id": "3E",
+   "png": "../gfx/sprites/area_062.png",
+   "info": "area $3E  chr 40,42,49,4C  pal 00,01,11,0E  t30:38+40 t30:2C"
+  },
+  {
+   "id": "40",
+   "png": "../gfx/sprites/area_064.png",
+   "info": "area $40  chr 40,42,65,66  pal 00,01,23,26  t6A:58 tD2:4C"
+  },
+  {
+   "id": "41",
+   "png": "../gfx/sprites/area_065.png",
+   "info": "area $41  chr 40,42,65,66  pal 00,01,23,26  tD2:4C"
+  },
+  {
+   "id": "42",
+   "png": "../gfx/sprites/area_066.png",
+   "info": "area $42  chr 40,42,68,FF  pal 00,01,25,FF  "
+  },
+  {
+   "id": "43",
+   "png": "../gfx/sprites/area_067.png",
+   "info": "area $43  chr 40,42,53,45  pal 00,01,2A,03  t70:4C"
+  },
+  {
+   "id": "44",
+   "png": "../gfx/sprites/area_068.png",
+   "info": "area $44  chr 40,42,67,66  pal 00,01,23,25  t74:67 tD0:4C"
+  },
+  {
+   "id": "45",
+   "png": "../gfx/sprites/area_069.png",
+   "info": "area $45  chr 40,42,66,65  pal 00,01,2B,25  t72:98 t63:58 t71:66+40 tD0:4C t0D:AA"
+  },
+  {
+   "id": "46",
+   "png": "../gfx/sprites/area_070.png",
+   "info": "area $46  chr 40,42,66,65  pal 00,01,2B,25  t72:98 tD0:4C"
+  },
+  {
+   "id": "47",
+   "png": "../gfx/sprites/area_071.png",
+   "info": "area $47  chr 40,42,6F,FF  pal 00,01,2C,23  t0D:4C"
+  },
+  {
+   "id": "48",
+   "png": "../gfx/sprites/area_072.png",
+   "info": "area $48  chr 40,42,67,66  pal 00,01,23,2C  tD0:4C t0D:AA"
+  },
+  {
+   "id": "49",
+   "png": "../gfx/sprites/area_073.png",
+   "info": "area $49  chr 40,42,67,66  pal 00,01,FF,2C  t72:98+40"
+  },
+  {
+   "id": "4A",
+   "png": "../gfx/sprites/area_074.png",
+   "info": "area $4A  chr 40,42,65,6C  pal 00,01,2B,2C  t0D:AA+40 tD0:4C"
+  },
+  {
+   "id": "4B",
+   "png": "../gfx/sprites/area_075.png",
+   "info": "area $4B  chr 40,42,67,66  pal 00,01,23,2C  tD0:4C"
+  },
+  {
+   "id": "4C",
+   "png": "../gfx/sprites/area_076.png",
+   "info": "area $4C  chr 40,42,65,66  pal 00,01,2B,2C  t71:66 tD0:4C"
+  },
+  {
+   "id": "4D",
+   "png": "../gfx/sprites/area_077.png",
+   "info": "area $4D  chr 40,42,65,66  pal 00,01,2B,2C  t71:66 tD0:4C"
+  },
+  {
+   "id": "4E",
+   "png": "../gfx/sprites/area_078.png",
+   "info": "area $4E  chr 40,42,67,66  pal 00,01,23,23  t74:67 t63:58+40 tD0:4C"
+  },
+  {
+   "id": "4F",
+   "png": "../gfx/sprites/area_079.png",
+   "info": "area $4F  chr 40,42,67,66  pal 00,01,23,23  t63:58+40 t74:67 tD0:4C t0D:AA"
+  },
+  {
+   "id": "50",
+   "png": "../gfx/sprites/area_080.png",
+   "info": "area $50  chr 40,42,48,49  pal 00,01,0F,14  t30:2C t30:34 t30:3A t30:38+40 t30:34+40 t0E:4C"
+  },
+  {
+   "id": "51",
+   "png": "../gfx/sprites/area_081.png",
+   "info": "area $51  chr 40,42,52,52  pal 00,01,08,FF  t39:C1 t0E:4C"
+  },
+  {
+   "id": "52",
+   "png": "../gfx/sprites/area_082.png",
+   "info": "area $52  chr 40,42,47,FF  pal 00,01,06,FF  t30:4C"
+  },
+  {
+   "id": "54",
+   "png": "../gfx/sprites/area_084.png",
+   "info": "area $54  chr 40,42,68,6C  pal 00,01,23,28  t6D:64 t0D:AA+40 tD1:4C"
+  },
+  {
+   "id": "55",
+   "png": "../gfx/sprites/area_085.png",
+   "info": "area $55  chr 40,42,FF,48  pal 00,01,FF,28  t30:3A+40 t30:44+40"
+  },
+  {
+   "id": "56",
+   "png": "../gfx/sprites/area_086.png",
+   "info": "area $56  chr 40,42,6E,FF  pal 00,01,29,28  t6C:60 tD1:4C"
+  },
+  {
+   "id": "57",
+   "png": "../gfx/sprites/area_087.png",
+   "info": "area $57  chr 40,42,6E,4D  pal 00,01,29,28  t30:3A+40 t30:46+40 tD1:4C t0D:AA"
+  },
+  {
+   "id": "58",
+   "png": "../gfx/sprites/area_088.png",
+   "info": "area $58  chr 40,42,FF,FF  pal 00,01,FF,FF  "
+  },
+  {
+   "id": "59",
+   "png": "../gfx/sprites/area_089.png",
+   "info": "area $59  chr 40,42,57,56  pal 00,01,3C,3D  tA1:4C+40 tA0:4C tA2:64"
+  },
+  {
+   "id": "5A",
+   "png": "../gfx/sprites/area_090.png",
+   "info": "area $5A  chr 40,42,57,56  pal 00,01,3C,3D  tA1:4C+40 tA0:4C tA2:64"
+  },
+  {
+   "id": "5B",
+   "png": "../gfx/sprites/area_091.png",
+   "info": "area $5B  chr 40,42,57,56  pal 00,01,3C,3D  tA1:4C+40 tA0:4C tA2:64"
+  },
+  {
+   "id": "5C",
+   "png": "../gfx/sprites/area_092.png",
+   "info": "area $5C  chr 40,42,FF,FF  pal 00,01,FF,FF  tDA:4C+40"
+  },
+  {
+   "id": "5D",
+   "png": "../gfx/sprites/area_093.png",
+   "info": "area $5D  chr 40,42,FF,FF  pal 00,01,FF,FF  t0E:4C"
+  },
+  {
+   "id": "5E",
+   "png": "../gfx/sprites/area_094.png",
+   "info": "area $5E  chr 40,42,47,FF  pal 00,01,06,1D  t30:2E t0E:4C"
+  },
+  {
+   "id": "5F",
+   "png": "../gfx/sprites/area_095.png",
+   "info": "area $5F  chr 40,42,78,7B  pal 00,01,3E,3F  tA4:4C tB4:FD"
+  },
+  {
+   "id": "60",
+   "png": "../gfx/sprites/area_096.png",
+   "info": "area $60  chr 40,42,6A,52  pal 00,01,08,2D  t0E:4C t3A:C1"
+  },
+  {
+   "id": "61",
+   "png": "../gfx/sprites/area_097.png",
+   "info": "area $61  chr 40,42,51,4A  pal 00,01,0C,0C  t30:4D t30:38+40"
+  },
+  {
+   "id": "62",
+   "png": "../gfx/sprites/area_098.png",
+   "info": "area $62  chr 40,42,51,78  pal 00,01,0C,0C  t30:4F t30:4D+70"
+  },
+  {
+   "id": "64",
+   "png": "../gfx/sprites/area_100.png",
+   "info": "area $64  chr 40,42,52,52  pal 00,01,08,08  t30:BF tD2:4C"
+  },
+  {
+   "id": "65",
+   "png": "../gfx/sprites/area_101.png",
+   "info": "area $65  chr 40,42,4B,67  pal 00,01,09,24  t30:30 t30:2C t30:34 t30:38 t0E:4C"
+  },
+  {
+   "id": "68",
+   "png": "../gfx/sprites/area_104.png",
+   "info": "area $68  chr 40,42,6A,52  pal 00,01,08,2D  t76:64"
+  },
+  {
+   "id": "69",
+   "png": "../gfx/sprites/area_105.png",
+   "info": "area $69  chr 40,42,66,65  pal 00,01,23,2F  tD2:4C t0D:AA"
+  },
+  {
+   "id": "6A",
+   "png": "../gfx/sprites/area_106.png",
+   "info": "area $6A  chr 40,42,66,62  pal 00,01,2C,2F  t78:58 tD0:4C t7E:B6+40 t0D:AA"
+  },
+  {
+   "id": "6B",
+   "png": "../gfx/sprites/area_107.png",
+   "info": "area $6B  chr 40,42,66,6C  pal 00,01,23,2F  t78:58 t0D:AA+40 t0D:AA tD2:4C"
+  },
+  {
+   "id": "6C",
+   "png": "../gfx/sprites/area_108.png",
+   "info": "area $6C  chr 40,42,6B,68  pal 00,01,25,20  tA5:65"
+  },
+  {
+   "id": "6D",
+   "png": "../gfx/sprites/area_109.png",
+   "info": "area $6D  chr 40,42,69,62  pal 00,01,2E,23  t7B:A7 t7E:B6+40 t0D:AA"
+  },
+  {
+   "id": "6E",
+   "png": "../gfx/sprites/area_110.png",
+   "info": "area $6E  chr 40,42,47,75  pal 00,01,06,1D  t30:2E t2A:4C+40 t29:4C"
+  },
+  {
+   "id": "70",
+   "png": "../gfx/sprites/area_112.png",
+   "info": "area $70  chr 40,42,FF,FF  pal 00,01,FF,FF  "
+  },
+  {
+   "id": "71",
+   "png": "../gfx/sprites/area_113.png",
+   "info": "area $71  chr 40,42,4A,4B  pal 00,01,11,07  t30:38 t30:34 t30:38+40 t30:30+40 t0E:4C"
+  },
+  {
+   "id": "72",
+   "png": "../gfx/sprites/area_114.png",
+   "info": "area $72  chr 40,42,4D,4B  pal 00,01,12,0C  t30:34+40 t30:30+40 t30:32 t30:38+40 t30:2C+40 t0E:4C"
+  },
+  {
+   "id": "73",
+   "png": "../gfx/sprites/area_115.png",
+   "info": "area $73  chr 40,42,6B,FF  pal 00,01,FF,09  t0E:4C t30:5A"
+  },
+  {
+   "id": "78",
+   "png": "../gfx/sprites/area_120.png",
+   "info": "area $78  chr 40,42,68,6B  pal 00,01,25,22  "
+  },
+  {
+   "id": "7C",
+   "png": "../gfx/sprites/area_124.png",
+   "info": "area $7C  chr 40,42,68,6D  pal 00,01,23,2F  t2C:4C t82:CE+40 t0D:AA"
+  },
+  {
+   "id": "7D",
+   "png": "../gfx/sprites/area_125.png",
+   "info": "area $7D  chr 40,42,FF,FF  pal 00,01,FF,FF  "
+  },
+  {
+   "id": "7E",
+   "png": "../gfx/sprites/area_126.png",
+   "info": "area $7E  chr 40,42,51,4F  pal 00,01,0B,0B  t30:36+40 t30:AD+10 t0E:4C"
+  },
+  {
+   "id": "7F",
+   "png": "../gfx/sprites/area_127.png",
+   "info": "area $7F  chr 40,42,68,71  pal 00,01,23,2F  t84:78+40 t6D:64"
+  },
+  {
+   "id": "80",
+   "png": "../gfx/sprites/area_128.png",
+   "info": "area $80  chr 40,42,68,71  pal 00,01,23,2F  t6D:64 t84:78+40"
+  },
+  {
+   "id": "81",
+   "png": "../gfx/sprites/area_129.png",
+   "info": "area $81  chr 40,42,5E,71  pal 00,01,25,2F  t85:60 t84:78+40"
+  },
+  {
+   "id": "82",
+   "png": "../gfx/sprites/area_130.png",
+   "info": "area $82  chr 40,42,68,FF  pal 00,01,23,FF  t6D:64 t0D:AA"
+  },
+  {
+   "id": "83",
+   "png": "../gfx/sprites/area_131.png",
+   "info": "area $83  chr 40,42,5E,71  pal 00,01,25,2F  t85:60 t84:78+40 tD0:4C"
+  },
+  {
+   "id": "84",
+   "png": "../gfx/sprites/area_132.png",
+   "info": "area $84  chr 40,42,5E,6C  pal 00,01,25,2F  t85:60 t55:64+40 tD0:4C"
+  },
+  {
+   "id": "85",
+   "png": "../gfx/sprites/area_133.png",
+   "info": "area $85  chr 40,42,64,6C  pal 00,01,23,23  t53:64 t0D:AA+40"
+  },
+  {
+   "id": "86",
+   "png": "../gfx/sprites/area_134.png",
+   "info": "area $86  chr 40,42,68,71  pal 00,01,23,2F  t6D:64 t84:78+40 tD0:4C"
+  },
+  {
+   "id": "87",
+   "png": "../gfx/sprites/area_135.png",
+   "info": "area $87  chr 40,42,68,71  pal 00,01,23,2F  t84:78+40 t6D:64 tD0:4C"
+  },
+  {
+   "id": "88",
+   "png": "../gfx/sprites/area_136.png",
+   "info": "area $88  chr 40,42,61,69  pal 00,01,18,23  t87:65+40 t8F:4C"
+  },
+  {
+   "id": "89",
+   "png": "../gfx/sprites/area_137.png",
+   "info": "area $89  chr 40,42,6D,6C  pal 00,01,23,2F  t0D:AA+40 tD2:4C t0D:AA"
+  },
+  {
+   "id": "8A",
+   "png": "../gfx/sprites/area_138.png",
+   "info": "area $8A  chr 40,42,5E,62  pal 00,01,25,25  t7E:B6+40 t0D:AA"
+  },
+  {
+   "id": "8C",
+   "png": "../gfx/sprites/area_140.png",
+   "info": "area $8C  chr 40,42,4C,4D  pal 00,01,06,10  t30:2E+40 t30:46+40 t30:34 t30:30 t30:2C t0E:4C t30:50+50 t30:AD+70 t30:AD+60 t30:AD+40"
+  },
+  {
+   "id": "8E",
+   "png": "../gfx/sprites/area_142.png",
+   "info": "area $8E  chr 40,42,4B,4D  pal 00,01,14,0A  t30:30+40 t30:32+40 t30:34+40 t30:34 t30:30 t30:2C t0E:4C"
+  },
+  {
+   "id": "8F",
+   "png": "../gfx/sprites/area_143.png",
+   "info": "area $8F  chr 40,42,61,6C  pal 00,01,18,19  tD3:4C t0D:AA"
+  },
+  {
+   "id": "90",
+   "png": "../gfx/sprites/area_144.png",
+   "info": "area $90  chr 40,42,67,68  pal 00,01,23,24  "
+  },
+  {
+   "id": "91",
+   "png": "../gfx/sprites/area_145.png",
+   "info": "area $91  chr 40,42,6F,6F  pal 00,01,2C,2C  tD2:4C t0D:AA"
+  },
+  {
+   "id": "92",
+   "png": "../gfx/sprites/area_146.png",
+   "info": "area $92  chr 40,42,69,FF  pal 00,01,30,30  "
+  },
+  {
+   "id": "93",
+   "png": "../gfx/sprites/area_147.png",
+   "info": "area $93  chr 40,42,49,48  pal 00,01,09,0E  t30:2C t30:38 t30:2C+40 t30:3A+40 t30:32+40 t0E:4C"
+  },
+  {
+   "id": "94",
+   "png": "../gfx/sprites/area_148.png",
+   "info": "area $94  chr 40,42,FF,FF  pal 00,01,FF,FF  "
+  },
+  {
+   "id": "95",
+   "png": "../gfx/sprites/area_149.png",
+   "info": "area $95  chr 40,42,69,FF  pal 00,01,30,30  "
+  },
+  {
+   "id": "96",
+   "png": "../gfx/sprites/area_150.png",
+   "info": "area $96  chr 40,42,4E,FF  pal 00,01,13,FF  t30:4A"
+  },
+  {
+   "id": "98",
+   "png": "../gfx/sprites/area_152.png",
+   "info": "area $98  chr 40,42,6D,63  pal 00,01,24,24  "
+  },
+  {
+   "id": "9C",
+   "png": "../gfx/sprites/area_156.png",
+   "info": "area $9C  chr 40,42,FF,53  pal 00,01,06,0C  t30:DB+40"
+  },
+  {
+   "id": "9D",
+   "png": "../gfx/sprites/area_157.png",
+   "info": "area $9D  chr 40,42,69,FF  pal 00,01,2E,23  t96:67 t8C:A7"
+  },
+  {
+   "id": "9E",
+   "png": "../gfx/sprites/area_158.png",
+   "info": "area $9E  chr 40,42,5E,5F  pal 00,01,2C,30  t0D:AA"
+  },
+  {
+   "id": "9F",
+   "png": "../gfx/sprites/area_159.png",
+   "info": "area $9F  chr 40,42,79,FF  pal 00,01,41,40  t9B:DB"
+  },
+  {
+   "id": "A0",
+   "png": "../gfx/sprites/area_160.png",
+   "info": "area $A0  chr 40,42,74,62  pal 00,01,1A,02  t9C:B2+40 t28:4C"
+  },
+  {
+   "id": "A1",
+   "png": "../gfx/sprites/area_161.png",
+   "info": "area $A1  chr 40,42,5F,5F  pal 00,01,30,30  "
+  },
+  {
+   "id": "A2",
+   "png": "../gfx/sprites/area_162.png",
+   "info": "area $A2  chr 40,42,5F,62  pal 00,01,2F,30  t9F:B6+40"
+  },
+  {
+   "id": "A3",
+   "png": "../gfx/sprites/area_163.png",
+   "info": "area $A3  chr 40,42,6D,6C  pal 00,01,24,30  t0D:AA+40 t98:CE"
+  },
+  {
+   "id": "A4",
+   "png": "../gfx/sprites/area_164.png",
+   "info": "area $A4  chr 40,42,6D,68  pal 00,01,FF,28  "
+  },
+  {
+   "id": "A5",
+   "png": "../gfx/sprites/area_165.png",
+   "info": "area $A5  chr 40,42,5F,62  pal 00,01,2C,30  t9F:B6+40 t0D:AA"
+  },
+  {
+   "id": "A6",
+   "png": "../gfx/sprites/area_166.png",
+   "info": "area $A6  chr 40,42,79,7A  pal 00,01,06,0C  t9B:DB t2C:4C"
+  },
+  {
+   "id": "A8",
+   "png": "../gfx/sprites/area_168.png",
+   "info": "area $A8  chr 40,42,61,61  pal 00,01,18,19  t8F:4C"
+  },
+  {
+   "id": "A9",
+   "png": "../gfx/sprites/area_169.png",
+   "info": "area $A9  chr 40,42,63,5F  pal 00,01,23,30  t8B:D3"
+  },
+  {
+   "id": "AA",
+   "png": "../gfx/sprites/area_170.png",
+   "info": "area $AA  chr 40,42,FF,50  pal 00,01,FF,0C  t30:32+40 t29:4C+40"
+  },
+  {
+   "id": "AB",
+   "png": "../gfx/sprites/area_171.png",
+   "info": "area $AB  chr 40,42,6F,71  pal 00,01,23,2C  tD3:4C t0D:AA"
+  },
+  {
+   "id": "AC",
+   "png": "../gfx/sprites/area_172.png",
+   "info": "area $AC  chr 40,42,75,50  pal 00,01,06,1D  t90:DB t30:2E+40 t29:4C+40"
+  },
+  {
+   "id": "AD",
+   "png": "../gfx/sprites/area_173.png",
+   "info": "area $AD  chr 40,42,6E,63  pal 00,01,29,29  t0D:AA"
+  },
+  {
+   "id": "AE",
+   "png": "../gfx/sprites/area_174.png",
+   "info": "area $AE  chr 40,42,70,62  pal 00,01,2E,31  t7E:B6+40 tD3:4C t0D:AA"
+  },
+  {
+   "id": "AF",
+   "png": "../gfx/sprites/area_175.png",
+   "info": "area $AF  chr 40,42,69,62  pal 00,01,2F,23  t7C:66+40 t7E:B6+40 t0D:AA"
+  },
+  {
+   "id": "B0",
+   "png": "../gfx/sprites/area_176.png",
+   "info": "area $B0  chr 40,42,69,72  pal 00,01,2E,30  t8C:A7"
+  },
+  {
+   "id": "B1",
+   "png": "../gfx/sprites/area_177.png",
+   "info": "area $B1  chr 40,42,68,6B  pal 00,01,23,22  t80:58+40 t6D:64"
+  },
+  {
+   "id": "B2",
+   "png": "../gfx/sprites/area_178.png",
+   "info": "area $B2  chr 40,42,70,68  pal 00,01,2E,28  t92:58+40 t91:67"
+  },
+  {
+   "id": "B3",
+   "png": "../gfx/sprites/area_179.png",
+   "info": "area $B3  chr 40,42,69,72  pal 00,01,2E,30  t95:78+40"
+  },
+  {
+   "id": "B4",
+   "png": "../gfx/sprites/area_180.png",
+   "info": "area $B4  chr 40,42,5E,62  pal 00,01,2C,2F  t7C:66+40 t7F:B6+40 tD3:4C"
+  },
+  {
+   "id": "B5",
+   "png": "../gfx/sprites/area_181.png",
+   "info": "area $B5  chr 40,42,6D,6C  pal 00,01,24,28  t98:CE t86:67 t0D:AA"
+  },
+  {
+   "id": "B6",
+   "png": "../gfx/sprites/area_182.png",
+   "info": "area $B6  chr 40,42,61,74  pal 00,01,18,18  t97:DB+40 t8F:4C t0D:AA+40"
+  },
+  {
+   "id": "B8",
+   "png": "../gfx/sprites/area_184.png",
+   "info": "area $B8  chr 40,42,5E,5E  pal 00,01,FF,FF  t0D:AA"
+  },
+  {
+   "id": "B9",
+   "png": "../gfx/sprites/area_185.png",
+   "info": "area $B9  chr 40,42,76,50  pal 00,01,06,1E  t93:D9 t30:36+40 t29:4C+40"
+  },
+  {
+   "id": "BA",
+   "png": "../gfx/sprites/area_186.png",
+   "info": "area $BA  chr 40,42,64,78  pal 00,01,0C,0C  t30:64 t29:4C+40 t30:4D+70"
+  },
+  {
+   "id": "BB",
+   "png": "../gfx/sprites/area_187.png",
+   "info": "area $BB  chr 40,42,4B,FF  pal 00,01,FF,0A  t30:38"
+  },
+  {
+   "id": "BC",
+   "png": "../gfx/sprites/area_188.png",
+   "info": "area $BC  chr 40,42,4A,4A  pal 00,01,0D,0D  t40:33"
+  },
+  {
+   "id": "BE",
+   "png": "../gfx/sprites/area_190.png",
+   "info": "area $BE  chr 40,42,4A,4A  pal 00,01,0F,0F  t41:2F"
+  },
+  {
+   "id": "BF",
+   "png": "../gfx/sprites/area_191.png",
+   "info": "area $BF  chr 40,42,4D,4A  pal 00,01,09,0A  t30:30 t30:36+40 t30:32+40"
+  },
+  {
+   "id": "C0",
+   "png": "../gfx/sprites/area_192.png",
+   "info": "area $C0  chr 40,42,48,4E  pal 00,01,11,0B  t30:32 t30:3E+40"
+  },
+  {
+   "id": "C1",
+   "png": "../gfx/sprites/area_193.png",
+   "info": "area $C1  chr 40,42,48,4E  pal 00,01,09,0B  t30:4A+40"
+  },
+  {
+   "id": "C2",
+   "png": "../gfx/sprites/area_194.png",
+   "info": "area $C2  chr 40,42,4A,4A  pal 00,01,0B,0B  t40:33"
+  },
+  {
+   "id": "C3",
+   "png": "../gfx/sprites/area_195.png",
+   "info": "area $C3  chr 40,42,4A,4A  pal 00,01,0C,0C  t41:2F"
+  },
+  {
+   "id": "C4",
+   "png": "../gfx/sprites/area_196.png",
+   "info": "area $C4  chr 40,42,4A,4A  pal 00,01,0D,0D  t42:3B"
+  },
+  {
+   "id": "C5",
+   "png": "../gfx/sprites/area_197.png",
+   "info": "area $C5  chr 40,42,4C,FF  pal 00,01,0B,FF  t30:2E"
+  },
+  {
+   "id": "C6",
+   "png": "../gfx/sprites/area_198.png",
+   "info": "area $C6  chr 40,42,48,4C  pal 00,01,12,0C  t30:31+40 t30:2F t30:34 t30:32"
+  },
+  {
+   "id": "C7",
+   "png": "../gfx/sprites/area_199.png",
+   "info": "area $C7  chr 40,42,4A,4A  pal 00,01,10,10  t43:37"
+  },
+  {
+   "id": "C8",
+   "png": "../gfx/sprites/area_200.png",
+   "info": "area $C8  chr 40,42,4A,4A  pal 00,01,09,09  t40:33"
+  },
+  {
+   "id": "C9",
+   "png": "../gfx/sprites/area_201.png",
+   "info": "area $C9  chr 40,42,4A,4A  pal 00,01,0A,0A  t42:3B"
+  },
+  {
+   "id": "CB",
+   "png": "../gfx/sprites/area_203.png",
+   "info": "area $CB  chr 40,42,4A,4A  pal 00,01,0C,0C  t41:2F"
+  },
+  {
+   "id": "CD",
+   "png": "../gfx/sprites/area_205.png",
+   "info": "area $CD  chr 40,42,4F,FF  pal 00,01,10,FF  t30:51"
+  },
+  {
+   "id": "CE",
+   "png": "../gfx/sprites/area_206.png",
+   "info": "area $CE  chr 40,42,4F,4F  pal 00,01,10,10  t30:42 t30:4A"
+  },
+  {
+   "id": "CF",
+   "png": "../gfx/sprites/area_207.png",
+   "info": "area $CF  chr 40,42,4F,4F  pal 00,01,10,10  t44:3F"
+  },
+  {
+   "id": "D0",
+   "png": "../gfx/sprites/area_208.png",
+   "info": "area $D0  chr 40,42,4F,4F  pal 00,01,09,09  t45:3F"
+  },
+  {
+   "id": "D1",
+   "png": "../gfx/sprites/area_209.png",
+   "info": "area $D1  chr 40,42,49,49  pal 00,01,0A,0A  t46:2F"
+  },
+  {
+   "id": "D2",
+   "png": "../gfx/sprites/area_210.png",
+   "info": "area $D2  chr 40,42,49,49  pal 00,01,0B,0B  t47:37"
+  },
+  {
+   "id": "D3",
+   "png": "../gfx/sprites/area_211.png",
+   "info": "area $D3  chr 40,42,49,49  pal 00,01,0C,0C  t48:3B"
+  },
+  {
+   "id": "D4",
+   "png": "../gfx/sprites/area_212.png",
+   "info": "area $D4  chr 40,42,47,4A  pal 00,01,0D,0D  t30:2E+40 t30:4D+10"
+  },
+  {
+   "id": "D5",
+   "png": "../gfx/sprites/area_213.png",
+   "info": "area $D5  chr 40,42,4A,4B  pal 00,01,10,0D  t30:38+40 t30:2C+40 t30:30 t0E:4C"
+  },
+  {
+   "id": "D6",
+   "png": "../gfx/sprites/area_214.png",
+   "info": "area $D6  chr 40,42,FF,4B  pal 00,01,08,0D  t30:32+40 t30:34+40"
+  },
+  {
+   "id": "D7",
+   "png": "../gfx/sprites/area_215.png",
+   "info": "area $D7  chr 40,42,4A,FF  pal 00,01,FF,0E  t30:3A t0E:4C"
+  },
+  {
+   "id": "D8",
+   "png": "../gfx/sprites/area_216.png",
+   "info": "area $D8  chr 40,42,47,FF  pal 00,01,FF,06  t30:4E"
+  },
+  {
+   "id": "D9",
+   "png": "../gfx/sprites/area_217.png",
+   "info": "area $D9  chr 40,42,4A,4A  pal 00,01,0A,0A  t43:37"
+  },
+  {
+   "id": "DA",
+   "png": "../gfx/sprites/area_218.png",
+   "info": "area $DA  chr 40,42,4A,4A  pal 00,01,0B,0B  t42:3B"
+  },
+  {
+   "id": "DC",
+   "png": "../gfx/sprites/area_220.png",
+   "info": "area $DC  chr 40,42,4A,4A  pal 00,01,0D,0D  t40:33"
+  },
+  {
+   "id": "DD",
+   "png": "../gfx/sprites/area_221.png",
+   "info": "area $DD  chr 40,42,4A,4A  pal 00,01,0E,0E  t41:2F"
+  },
+  {
+   "id": "DE",
+   "png": "../gfx/sprites/area_222.png",
+   "info": "area $DE  chr 40,42,4A,4C  pal 00,01,06,0E  t30:38 t30:3A t30:32+40"
+  },
+  {
+   "id": "DF",
+   "png": "../gfx/sprites/area_223.png",
+   "info": "area $DF  chr 40,42,4A,47  pal 00,01,06,0E  t30:4D+50 t30:3A"
+  },
+  {
+   "id": "E0",
+   "png": "../gfx/sprites/area_224.png",
+   "info": "area $E0  chr 40,42,49,4C  pal 00,01,11,14  t30:2C t30:3A t30:36+40"
+  },
+  {
+   "id": "E1",
+   "png": "../gfx/sprites/area_225.png",
+   "info": "area $E1  chr 40,42,50,47  pal 00,01,06,FF  t30:4D+50 t30:36"
+  },
+  {
+   "id": "E2",
+   "png": "../gfx/sprites/area_226.png",
+   "info": "area $E2  chr 40,42,5E,FF  pal 00,01,FF,FF  t0D:AA"
+  },
+  {
+   "id": "E3",
+   "png": "../gfx/sprites/area_227.png",
+   "info": "area $E3  chr 40,42,48,49  pal 00,01,06,09  t30:31 t30:38+40 t30:2C+40"
+  },
+  {
+   "id": "E4",
+   "png": "../gfx/sprites/area_228.png",
+   "info": "area $E4  chr 40,42,4C,FF  pal 00,01,FF,11  t30:32 t2C:4C"
+  },
+  {
+   "id": "E5",
+   "png": "../gfx/sprites/area_229.png",
+   "info": "area $E5  chr 40,42,4A,4A  pal 00,01,0E,0E  t41:2F"
+  },
+  {
+   "id": "E7",
+   "png": "../gfx/sprites/area_231.png",
+   "info": "area $E7  chr 40,42,4A,4A  pal 00,01,10,10  t40:33"
+  },
+  {
+   "id": "E8",
+   "png": "../gfx/sprites/area_232.png",
+   "info": "area $E8  chr 40,42,4E,FF  pal 00,01,14,24  t30:3C"
+  },
+  {
+   "id": "E9",
+   "png": "../gfx/sprites/area_233.png",
+   "info": "area $E9  chr 40,42,4C,FF  pal 00,01,FF,11  t30:32"
+  },
+  {
+   "id": "EB",
+   "png": "../gfx/sprites/area_235.png",
+   "info": "area $EB  chr 40,42,4A,4A  pal 00,01,0C,0C  t41:2F"
+  },
+  {
+   "id": "EC",
+   "png": "../gfx/sprites/area_236.png",
+   "info": "area $EC  chr 40,42,4D,FF  pal 00,01,06,FF  t30:2E"
+  },
+  {
+   "id": "ED",
+   "png": "../gfx/sprites/area_237.png",
+   "info": "area $ED  chr 40,42,4A,4A  pal 00,01,0E,0E  t40:33"
+  },
+  {
+   "id": "EE",
+   "png": "../gfx/sprites/area_238.png",
+   "info": "area $EE  chr 40,42,4A,4A  pal 00,01,0F,0F  t42:3B"
+  },
+  {
+   "id": "EF",
+   "png": "../gfx/sprites/area_239.png",
+   "info": "area $EF  chr 40,42,4D,78  pal 00,01,0C,09  t30:32 t30:4D+70 t30:3A t0E:4C+40"
+  },
+  {
+   "id": "F0",
+   "png": "../gfx/sprites/area_240.png",
+   "info": "area $F0  chr 40,42,4A,4A  pal 00,01,09,09  t43:37"
+  },
+  {
+   "id": "F1",
+   "png": "../gfx/sprites/area_241.png",
+   "info": "area $F1  chr 40,42,49,78  pal 00,01,0C,11  t30:36 t30:4D+70 t30:32 t30:2E"
+  },
+  {
+   "id": "F2",
+   "png": "../gfx/sprites/area_242.png",
+   "info": "area $F2  chr 40,42,53,50  pal 00,01,06,0C  t30:DB t30:32+40 t30:2E+40 t30:36+40 t0E:4C"
+  },
+  {
+   "id": "F3",
+   "png": "../gfx/sprites/area_243.png",
+   "info": "area $F3  chr 40,42,4E,50  pal 00,01,06,06  t30:2E+40 t30:56"
+  },
+  {
+   "id": "F4",
+   "png": "../gfx/sprites/area_244.png",
+   "info": "area $F4  chr 40,42,4F,50  pal 00,01,06,FF  t30:36+40 t30:36"
+  },
+  {
+   "id": "F5",
+   "png": "../gfx/sprites/area_245.png",
+   "info": "area $F5  chr 40,42,4A,4A  pal 00,01,0E,0E  t42:3B"
+  },
+  {
+   "id": "F6",
+   "png": "../gfx/sprites/area_246.png",
+   "info": "area $F6  chr 40,42,4A,4A  pal 00,01,0F,0F  t41:2F"
+  },
+  {
+   "id": "F7",
+   "png": "../gfx/sprites/area_247.png",
+   "info": "area $F7  chr 40,42,4A,4A  pal 00,01,10,10  t40:33"
+  },
+  {
+   "id": "F8",
+   "png": "../gfx/sprites/area_248.png",
+   "info": "area $F8  chr 40,42,4A,4A  pal 00,01,09,09  t40:33"
+  },
+  {
+   "id": "F9",
+   "png": "../gfx/sprites/area_249.png",
+   "info": "area $F9  chr 40,42,4A,4A  pal 00,01,0A,0A  t41:2F"
+  },
+  {
+   "id": "FA",
+   "png": "../gfx/sprites/area_250.png",
+   "info": "area $FA  chr 40,42,4C,FF  pal 00,01,09,09  t30:3A t30:34"
+  },
+  {
+   "id": "FB",
+   "png": "../gfx/sprites/area_251.png",
+   "info": "area $FB  chr 40,42,4A,4A  pal 00,01,0C,0C  t43:37"
+  }
+ ],
+ "screens": [
+  "../gfx/screens/screen_000.png",
+  "../gfx/screens/screen_000_b10.png",
+  "../gfx/screens/screen_001.png",
+  "../gfx/screens/screen_001_b10.png",
+  "../gfx/screens/screen_002.png",
+  "../gfx/screens/screen_002_b10.png",
+  "../gfx/screens/screen_003.png",
+  "../gfx/screens/screen_004.png",
+  "../gfx/screens/screen_005.png",
+  "../gfx/screens/screen_006.png",
+  "../gfx/screens/screen_007.png",
+  "../gfx/screens/screen_008.png",
+  "../gfx/screens/screen_009.png",
+  "../gfx/screens/screen_010.png",
+  "../gfx/screens/screen_011.png",
+  "../gfx/screens/screen_012.png",
+  "../gfx/screens/screen_013.png",
+  "../gfx/screens/screen_014.png",
+  "../gfx/screens/screen_015.png",
+  "../gfx/screens/screen_016.png",
+  "../gfx/screens/screen_017.png",
+  "../gfx/screens/screen_018.png",
+  "../gfx/screens/screen_019.png",
+  "../gfx/screens/screen_020.png",
+  "../gfx/screens/screen_021.png",
+  "../gfx/screens/screen_022.png",
+  "../gfx/screens/screen_023.png",
+  "../gfx/screens/screen_024.png",
+  "../gfx/screens/screen_025.png",
+  "../gfx/screens/screen_026.png",
+  "../gfx/screens/screen_027.png",
+  "../gfx/screens/screen_028.png",
+  "../gfx/screens/screen_029.png",
+  "../gfx/screens/screen_030.png",
+  "../gfx/screens/screen_031.png",
+  "../gfx/screens/screen_032.png",
+  "../gfx/screens/screen_033.png",
+  "../gfx/screens/screen_034.png",
+  "../gfx/screens/screen_035.png",
+  "../gfx/screens/screen_036.png",
+  "../gfx/screens/screen_037.png",
+  "../gfx/screens/screen_038.png",
+  "../gfx/screens/screen_039.png",
+  "../gfx/screens/screen_040.png",
+  "../gfx/screens/screen_041.png",
+  "../gfx/screens/screen_042.png",
+  "../gfx/screens/screen_043.png",
+  "../gfx/screens/screen_044.png",
+  "../gfx/screens/screen_045.png",
+  "../gfx/screens/screen_046.png",
+  "../gfx/screens/screen_047.png",
+  "../gfx/screens/screen_048.png",
+  "../gfx/screens/screen_049.png",
+  "../gfx/screens/screen_050.png",
+  "../gfx/screens/screen_051.png",
+  "../gfx/screens/screen_052.png",
+  "../gfx/screens/screen_053.png",
+  "../gfx/screens/screen_054.png",
+  "../gfx/screens/screen_055.png",
+  "../gfx/screens/screen_056.png",
+  "../gfx/screens/screen_057.png",
+  "../gfx/screens/screen_058.png",
+  "../gfx/screens/screen_059.png",
+  "../gfx/screens/screen_060.png",
+  "../gfx/screens/screen_061.png",
+  "../gfx/screens/screen_062.png",
+  "../gfx/screens/screen_063.png",
+  "../gfx/screens/screen_064.png",
+  "../gfx/screens/screen_065.png",
+  "../gfx/screens/screen_066.png",
+  "../gfx/screens/screen_067.png",
+  "../gfx/screens/screen_068.png",
+  "../gfx/screens/screen_069.png",
+  "../gfx/screens/screen_070.png",
+  "../gfx/screens/screen_071.png",
+  "../gfx/screens/screen_072.png",
+  "../gfx/screens/screen_073.png",
+  "../gfx/screens/screen_074.png",
+  "../gfx/screens/screen_075.png",
+  "../gfx/screens/screen_076.png",
+  "../gfx/screens/screen_077.png",
+  "../gfx/screens/screen_078.png",
+  "../gfx/screens/screen_079.png",
+  "../gfx/screens/screen_080.png",
+  "../gfx/screens/screen_081.png",
+  "../gfx/screens/screen_082.png",
+  "../gfx/screens/screen_083.png",
+  "../gfx/screens/screen_084.png",
+  "../gfx/screens/screen_085.png",
+  "../gfx/screens/screen_086.png",
+  "../gfx/screens/screen_087.png",
+  "../gfx/screens/screen_088.png",
+  "../gfx/screens/screen_089.png",
+  "../gfx/screens/screen_090.png",
+  "../gfx/screens/screen_091.png",
+  "../gfx/screens/screen_092.png",
+  "../gfx/screens/screen_093.png",
+  "../gfx/screens/screen_094.png",
+  "../gfx/screens/screen_095.png",
+  "../gfx/screens/screen_096.png",
+  "../gfx/screens/screen_097.png",
+  "../gfx/screens/screen_098.png",
+  "../gfx/screens/screen_099.png",
+  "../gfx/screens/screen_099_a02.png",
+  "../gfx/screens/screen_100.png",
+  "../gfx/screens/screen_101.png",
+  "../gfx/screens/screen_102.png",
+  "../gfx/screens/screen_103.png",
+  "../gfx/screens/screen_104.png",
+  "../gfx/screens/screen_105.png",
+  "../gfx/screens/screen_106.png",
+  "../gfx/screens/screen_107.png",
+  "../gfx/screens/screen_108.png",
+  "../gfx/screens/screen_109.png",
+  "../gfx/screens/screen_110.png",
+  "../gfx/screens/screen_111.png",
+  "../gfx/screens/screen_112.png",
+  "../gfx/screens/screen_113.png",
+  "../gfx/screens/screen_114.png",
+  "../gfx/screens/screen_115.png",
+  "../gfx/screens/screen_116.png",
+  "../gfx/screens/screen_117.png",
+  "../gfx/screens/screen_118.png",
+  "../gfx/screens/screen_119.png",
+  "../gfx/screens/screen_120.png",
+  "../gfx/screens/screen_121.png",
+  "../gfx/screens/screen_122.png",
+  "../gfx/screens/screen_123.png",
+  "../gfx/screens/screen_124.png",
+  "../gfx/screens/screen_125.png",
+  "../gfx/screens/screen_126.png",
+  "../gfx/screens/screen_127.png",
+  "../gfx/screens/screen_128.png",
+  "../gfx/screens/screen_128_a04.png",
+  "../gfx/screens/screen_129.png",
+  "../gfx/screens/screen_130.png",
+  "../gfx/screens/screen_131.png",
+  "../gfx/screens/screen_132.png",
+  "../gfx/screens/screen_133.png",
+  "../gfx/screens/screen_134.png",
+  "../gfx/screens/screen_135.png",
+  "../gfx/screens/screen_136.png",
+  "../gfx/screens/screen_137.png",
+  "../gfx/screens/screen_138.png",
+  "../gfx/screens/screen_139.png",
+  "../gfx/screens/screen_140.png",
+  "../gfx/screens/screen_141.png",
+  "../gfx/screens/screen_142.png",
+  "../gfx/screens/screen_143.png",
+  "../gfx/screens/screen_144.png",
+  "../gfx/screens/screen_145.png",
+  "../gfx/screens/screen_146.png",
+  "../gfx/screens/screen_148.png",
+  "../gfx/screens/screen_149.png",
+  "../gfx/screens/screen_150.png",
+  "../gfx/screens/screen_151.png",
+  "../gfx/screens/screen_152.png",
+  "../gfx/screens/screen_153.png",
+  "../gfx/screens/screen_154.png",
+  "../gfx/screens/screen_155.png",
+  "../gfx/screens/screen_156.png",
+  "../gfx/screens/screen_158.png",
+  "../gfx/screens/screen_159.png",
+  "../gfx/screens/screen_160.png",
+  "../gfx/screens/screen_161.png",
+  "../gfx/screens/screen_162.png",
+  "../gfx/screens/screen_163.png",
+  "../gfx/screens/screen_164.png",
+  "../gfx/screens/screen_165.png",
+  "../gfx/screens/screen_166.png",
+  "../gfx/screens/screen_167.png",
+  "../gfx/screens/screen_168.png",
+  "../gfx/screens/screen_169.png",
+  "../gfx/screens/screen_170.png",
+  "../gfx/screens/screen_171.png",
+  "../gfx/screens/screen_172.png",
+  "../gfx/screens/screen_173.png",
+  "../gfx/screens/screen_174.png",
+  "../gfx/screens/screen_175.png",
+  "../gfx/screens/screen_176.png",
+  "../gfx/screens/screen_177.png",
+  "../gfx/screens/screen_178.png",
+  "../gfx/screens/screen_179.png",
+  "../gfx/screens/screen_180.png",
+  "../gfx/screens/screen_181.png",
+  "../gfx/screens/screen_182.png",
+  "../gfx/screens/screen_183.png",
+  "../gfx/screens/screen_184.png",
+  "../gfx/screens/screen_185.png",
+  "../gfx/screens/screen_186.png",
+  "../gfx/screens/screen_187.png",
+  "../gfx/screens/screen_188.png",
+  "../gfx/screens/screen_189.png",
+  "../gfx/screens/screen_190.png",
+  "../gfx/screens/screen_191.png",
+  "../gfx/screens/screen_192.png",
+  "../gfx/screens/screen_193.png",
+  "../gfx/screens/screen_194.png",
+  "../gfx/screens/screen_195.png",
+  "../gfx/screens/screen_196.png",
+  "../gfx/screens/screen_197.png",
+  "../gfx/screens/screen_198.png",
+  "../gfx/screens/screen_199.png",
+  "../gfx/screens/screen_200.png",
+  "../gfx/screens/screen_201.png",
+  "../gfx/screens/screen_202.png",
+  "../gfx/screens/screen_203.png",
+  "../gfx/screens/screen_204.png",
+  "../gfx/screens/screen_205.png",
+  "../gfx/screens/screen_206.png",
+  "../gfx/screens/screen_207.png",
+  "../gfx/screens/screen_208.png",
+  "../gfx/screens/screen_209.png",
+  "../gfx/screens/screen_210.png",
+  "../gfx/screens/screen_211.png",
+  "../gfx/screens/screen_212.png",
+  "../gfx/screens/screen_213.png",
+  "../gfx/screens/screen_214.png",
+  "../gfx/screens/screen_215.png",
+  "../gfx/screens/screen_216.png",
+  "../gfx/screens/screen_217.png",
+  "../gfx/screens/screen_218.png",
+  "../gfx/screens/screen_219.png",
+  "../gfx/screens/screen_220.png",
+  "../gfx/screens/screen_221.png",
+  "../gfx/screens/screen_222.png",
+  "../gfx/screens/screen_223.png",
+  "../gfx/screens/screen_224.png",
+  "../gfx/screens/screen_225.png",
+  "../gfx/screens/screen_226.png",
+  "../gfx/screens/screen_227.png",
+  "../gfx/screens/screen_228.png",
+  "../gfx/screens/screen_229.png",
+  "../gfx/screens/screen_230.png",
+  "../gfx/screens/screen_231.png",
+  "../gfx/screens/screen_232.png",
+  "../gfx/screens/screen_233.png",
+  "../gfx/screens/screen_234.png",
+  "../gfx/screens/screen_235.png",
+  "../gfx/screens/screen_236.png",
+  "../gfx/screens/screen_237.png",
+  "../gfx/screens/screen_238.png",
+  "../gfx/screens/screen_239.png",
+  "../gfx/screens/screen_240.png",
+  "../gfx/screens/screen_241.png",
+  "../gfx/screens/screen_242.png",
+  "../gfx/screens/screen_243.png",
+  "../gfx/screens/screen_244.png",
+  "../gfx/screens/screen_245.png",
+  "../gfx/screens/screen_246.png",
+  "../gfx/screens/screen_247.png",
+  "../gfx/screens/screen_248.png",
+  "../gfx/screens/screen_249.png",
+  "../gfx/screens/screen_250.png",
+  "../gfx/screens/screen_251.png",
+  "../gfx/screens/screen_253.png",
+  "../gfx/screens/screen_254.png",
+  "../gfx/screens/screen_255.png",
+  "../gfx/screens/screen_255_a00.png"
+ ],
+ "rects": [
+  {
+   "png": "../gfx/rects/screen_18_802E.png",
+   "info": "screen_18_802E.png: 10 events, R0=28 R1=0E pal set 10 nametables $2000 $2800"
+  },
+  {
+   "png": "../gfx/rects/screen_19_A0C9.png",
+   "info": "screen_19_A0C9.png: 8 events, R0=3C R1=36 pal set 13 nametables $2000"
+  },
+  {
+   "png": "../gfx/rects/screen_19_A662.png",
+   "info": "screen_19_A662.png: 6 events, R0=1C R1=1E pal set 12 nametables $2000"
+  },
+  {
+   "png": "../gfx/rects/screen_19_A7FC.png",
+   "info": "screen_19_A7FC.png: 17 events, R0=3C R1=16 pal set 0 nametables $2000"
+  },
+  {
+   "png": "../gfx/rects/screen_19_A95E.png",
+   "info": "screen_19_A95E.png: 6 events, R0=3C R1=10 pal set 0 nametables $2000"
+  },
+  {
+   "png": "../gfx/rects/screen_19_A9B3.png",
+   "info": "screen_19_A9B3.png: 9 events, R0=3C R1=10 pal set 2 nametables $2800"
+  },
+  {
+   "png": "../gfx/rects/screen_19_AA51.png",
+   "info": "screen_19_AA51.png: 9 events, R0=3C R1=10 pal set 3 nametables $2000"
+  },
+  {
+   "png": "../gfx/rects/screen_19_AB1E.png",
+   "info": "screen_19_AB1E.png: 8 events, R0=3C R1=10 pal set 4 nametables $2000"
+  },
+  {
+   "png": "../gfx/rects/screen_19_AC3F.png",
+   "info": "screen_19_AC3F.png: 11 events, R0=3C R1=12 pal set 5 nametables $2000 $2800"
+  },
+  {
+   "png": "../gfx/rects/screen_19_AE09.png",
+   "info": "screen_19_AE09.png: 5 events, R0=3C R1=12 pal set 0 nametables $2800"
+  },
+  {
+   "png": "../gfx/rects/screen_19_AE3D.png",
+   "info": "screen_19_AE3D.png: 8 events, R0=3C R1=12 pal set 7 nametables $2000 $2800"
+  },
+  {
+   "png": "../gfx/rects/screen_19_AFD5.png",
+   "info": "screen_19_AFD5.png: 5 events, R0=3C R1=12 pal set 0 nametables $2800"
+  },
+  {
+   "png": "../gfx/rects/screen_19_B00C.png",
+   "info": "screen_19_B00C.png: 8 events, R0=3C R1=16 pal set 6 nametables $2000"
+  },
+  {
+   "png": "../gfx/rects/screen_19_B0FE.png",
+   "info": "screen_19_B0FE.png: 7 events, R0=3C R1=16 pal set 6 nametables $2000"
+  }
+ ]
+}
