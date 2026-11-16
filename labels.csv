@@ -12,9 +12,20 @@ bank,addr,name,comment
 31,F433,IrqHandlerTable,ptr16[8] IRQ handlers: F455 F488 F4E5 F54B F5E1 F60E F691 F61A
 31,F451,DelayX,busy loop DEX/BPL
 31,F455,IrqHandler0,
-31,F1CD,ColdInitSub,called once on cold boot (unknown)
+31,F1CD,ColdSaveInit,cold boot only: $700E/$700F=0; unconditionally re-inits the current save image $7D00-$7FFF + mirror $6D00 from template 23:BE00 (was ColdInitSub)
 31,FE80,ReadPads,per-frame gameplay pad read (pads X=1/0): $43 prev $4B new $49 dir $4D act (A/B hold counters $45/$47); was ColdInitSub2
-31,F0A4,BootSub,called on every boot before SRAM copy (unknown)
+31,F0A4,BootSaveCheck,every boot: verify/repair save slots 0/1 (primary vs backup, checksum, AMI tag) and current image $7D00 vs mirror $6D00; bank 23 mapped at $A000 (was BootSub)
+31,F11F,SaveSlot0Reset,slot 0 invalid: $7100/$7400 <- template 23:BE00 + 2 zero pages; $7001=$FF
+31,F140,BootCheckSlot1,slot 1 check (same as slot 0; primary-ok path falls into the backup check)
+31,F1A3,SaveSlot1Reset,slot 1 invalid: $7700/$7A00 <- template 23:BE00 + 2 zero pages; $7001=$FF
+31,F1C7,BootSaveRestoreR7,SetR7($7005) and return
+31,F1E2,BootCheckCurrent,compare $7D00-$7FFF with mirror $6D00-$6FFF + AMI tag at $7DFD; mismatch -> CurSaveReset (no checksum)
+31,F219,CurSaveReset,$7D00/$6D00 <- template 23:BE00; $7E00/$7F00/$6E00/$6F00 zeroed; $7001=$FF
+31,F23D,SaveSumSlot,X = page-table index (31:F26D): adds 3 pages into $16 (8-bit) WITHOUT clearing $16 first (seed quirk)
+31,F26D,SaveSumPages,6 page bases for SaveSumSlot: 71 74 77 7A 7D 7D
+31,F273,SlotCopy,A = pair index: copy 3 pages src->dst from SlotCopyPages 31:F298
+31,F298,SlotCopyPages,6 src/dst page pairs: 71>74 74>71 77>7A 7A>77 7D>7D 7D>7D
+23,BE00,NewSaveTemplate,256-byte default $7D00 page (name ------ / inventory FF / gold 0 / xp_next 30 / MP 34 / HP 48 / level 1 / area 0 at x $88 y $78 / AMI tag)
 30,C40E,SwitchBank16,A=16KB bank n -> SetR7(2n+1) then SetR6(2n) (falls into C418 path); clobbers A
 30,C418,SetR6,A=8KB bank for $8000 window; $6E=shadow; $50=6 (also called directly e.g. A=$1A bank 26)
 30,C427,SetR7,A=8KB bank for $A000 window; $6F=shadow; $50=7 (verified)
@@ -741,8 +752,12 @@ bank,addr,name,comment
 *,6E00,save_mirror_flags,backup mirror of $7E00
 *,6F00,save_mirror_npc,backup mirror of $7F00
 *,7000,menu_save_state,MenuSave sets $FB on entry and $AB on exit (16:9BE1); r2 w9 banks 16;30
-*,7001,wram_7001,auto (ram_map.py s29): r2 w6 banks 16;31
-*,7005,wram_7005,auto (ram_map.py s29): r1 w2 banks 31
+*,7001,save_reset_flag,boot sets 0 then $FF if any save image was re-initialised (31:F0A6/F13D/F1C1/F237); never read as such - bank 16 menu printer reuses it as Y scratch (16:8995-89DB)
+*,7005,boot_r7_save,R7 shadow saved by BootSaveCheck/ColdSaveInit while bank 23 is mapped; restored at 31:F1C7
+*,700E,wram_700E,written 0 by ColdSaveInit and by 17:A052; no reader found (static)
+*,700F,wram_700F,written 0 by ColdSaveInit only; no reader found (static)
+*,70F4,save_checksum_b,copy of save_checksum $70F5 (SaveChecksum 23:BD92); no reader
+*,000F,boot_ab_flag,cold boot: 1 if A+B held ($43==$C0) else 0; no reader found (static) - dead debug switch?
 *,70F0,save_csum0_a,save slot 0 checksum byte A (MenuSave writes $70F5 here; also read/written by cold-init sub 31:F0A4 at F0EC-F116)
 *,70F1,save_csum0_b,save slot 0 checksum byte B
 *,70F2,save_csum1_a,save slot 1 checksum byte A

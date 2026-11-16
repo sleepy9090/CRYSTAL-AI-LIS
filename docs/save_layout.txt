@@ -1,0 +1,127 @@
+== SaveCopyDesc 23:BDC0 (SaveGame, 5 records) ==
+ #  src    dst    cnt(lo,hi)  copied(quirk)  intended
+ 0  $6400  $7D00  7F 00        128 ($6400-$647F)   128
+ 1  $6480  $7E00  FF 01        257 ($6480-$6580)   512
+ 2  $0702  $7D80  1C 00         29 ($0702-$071E)    29
+ 3  $07DC  $7DB0  23 00         36 ($07DC-$07FF)    36
+ 4  $7D00  $6D00  FF 02        258 ($7D00-$7E01)   768
+
+== LoadCopyDesc 23:BDDE (LoadGame, 4 records) ==
+ 0  $7D00  $6400  7F 00        128 ($6400-$647F)   128
+ 1  $7E00  $6480  FF 01        257 ($6480-$6580)   512
+ 2  $7D80  $0702  1C 00         29 ($0702-$071E)    29
+ 3  $7DB0  $07DC  23 00         36 ($07DC-$07FF)    36
+
+== SaveSumSlot 31:F23D page table 31:F26D (X -> 3 pages summed) ==
+  X=0:$7100  X=1:$7400  X=2:$7700  X=3:$7A00  X=4:$7D00  X=5:$7D00
+== SlotCopy 31:F273 table 31:F298 (A -> src page, dst page; 3 pages) ==
+  A=0:$7100->$7400  A=1:$7400->$7100  A=2:$7700->$7A00  A=3:$7A00->$7700  A=4:$7D00->$7D00  A=5:$7D00->$7D00
+== Slot descriptors 16:9D32 (16:9CE0, A -> src, dst) ==
+  0:$7100->$7D00  1:$7400->$7D00  2:$7700->$7D00  3:$7A00->$7D00  4:$7D00->$7100  5:$7D00->$7400  6:$7D00->$7700  7:$7D00->$7A00
+
+== Current save image $7D00-$7FFF after SaveGame (byte ownership, runs) ==
+  $7D00-$7D7F (128)  <- $6400-$647F
+  $7D80-$7D9C ( 29)  <- $0702-$071E
+  $7D9D-$7DAF ( 19)  zero (cleared at 23:BC2B, never written)
+  $7DB0-$7DD3 ( 36)  <- $07DC-$07FF
+  $7DD4-$7DEF ( 28)  zero (cleared at 23:BC2B, never written)
+  $7DF0-$7DF8 (  9)  SavePlayerState 23:BD1F
+  $7DF9-$7DFC (  4)  zero (cleared at 23:BC2B, never written)
+  $7DFD-$7DFF (  3)  "AMI" tag
+  $7E00-$7F00 (257)  <- $6480-$6580
+  $7F01-$7FFF (255)  zero (cleared at 23:BC2B, never written)
+
+  player-state bytes:
+    $7DF0  area_id $6C
+    $7DF1  obj_x_lo $70 (player slot 0)
+    $7DF2  obj_x_hi $90
+    $7DF3  obj_y_lo $B0
+    $7DF4  obj_y_hi $D0
+    $7DF5  player_hp_max $03C0
+    $7DF6  player_hp $03C1
+    $7DF7  player_level $0421
+    $7DF8  $0620 (obj_timer2 slot 0)
+    $7DFD  tag "A"
+    $7DFE  tag "M"
+    $7DFF  tag "I"
+
+== New-save template 23:BE00 (-> $7D00 page; $7E00/$7F00 pages zeroed) ==
+  +00 ($7D00)  2D 2D 2D 2D 2D 2D 00 98 FF DA FF 28 FF E2 FF 7F
+  +10 ($7D10)  20 20 20 20 20 20 BD 00 2D 2D 2D 2D 2D 2D CD 10
+  +20 ($7D20)  06 00 FF 00 01 00 08 00 FF FF FF FF FF FF FF FF
+  +30 ($7D30)  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
+  +40 ($7D40)  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
+  +50 ($7D50)  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
+  +60 ($7D60)  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
+  +70 ($7D70)  FF FF FF FF FF FF FF FF 1E 00 28 00 3C 00 32 00
+  +80 ($7D80)  00 00 00 00 1E 00 22 22 00 00 00 00 00 00 00 00
+  +90 ($7D90)  00 00 00 00 00 00 00 00 00 00 00 00 00 00 7F 10
+  +A0 ($7DA0)  FF 20 BF 40 E7 04 FF 88 FF 81 FF 08 FE 04 BF 77
+  +B0 ($7DB0)  00 00 00 00 7C 7D 7E 7F 4F 4F 20 20 FF 00 00 00
+  +C0 ($7DC0)  00 00 00 04 28 00 40 42 6F 6F 00 00 00 00 00 00
+  +D0 ($7DD0)  00 00 08 FE 3D 00 F8 24 FE 10 D5 40 FF 00 BF 10
+  +E0 ($7DE0)  FF 90 FF 60 E7 00 DF 20 FF 00 FB A0 FF 12 BE 6A
+  +F0 ($7DF0)  00 88 00 78 00 30 30 01 30 00 00 00 00 41 4D 49
+
+  $6400 page fields (template +$00-$7F):
+    +00-06  player_name  2D 2D 2D 2D 2D 2D 00  zero-terminated name used by dialogue code 04 ("------",0 in template)
+    +07-17  $6407-$6417  98 FF DA FF 28 FF E2 FF 7F 20 20 20 ..  only static ref: $6410,X read in bank 15; purpose unknown
+    +18-1D  player_name6 2D 2D 2D 2D 2D 2D  6-char name-entry buffer (menu FE escape reads slot+$18)
+    +1E-27  $641E-$6427  CD 10 06 00 FF 00 01 00 08 00  bank-16 menu vars ($6424/$6426/$6427 used by bank 16)
+    +28-2F  inv_select   FF FF FF FF FF FF FF FF  equipped/selected item row $6428-$642F (template FF)
+    +30-5F  inventory    FF FF FF FF FF FF FF FF FF FF FF FF ..  $6430-$645F inventory (template FF = empty)
+    +60-69  $6460-$6469  FF FF FF FF FF FF FF FF FF FF  template FF; no static refs
+    +6A-77  menu vars    FF FF FF FF FF FF FF FF FF FF FF FF ..  $646A-$6477 bank-16 menu vars incl. save_slot_sel $646B
+    +78-7F  wram_6478    1E 00 28 00 3C 00 32 00  $6478-$647F: words 30,40,60,50 in template (bank-16 reads $6478,X)
+  $0702 block (template +$80-$9C, 29 bytes -> $0702-$071E):
+    $7D80 = $0702 gold             00
+    $7D81 = $0703 gold_hi          00
+    $7D82 = $0704 xp               00
+    $7D83 = $0705 xp_hi            00
+    $7D84 = $0706 xp_next          1E
+    $7D85 = $0707 xp_next_hi       00
+    $7D86 = $0708 mp_cur           22
+    $7D87 = $0709 mp_max           22
+    $7D88 = $070A                  00
+    $7D89 = $070B                  00
+    $7D8A = $070C                  00
+    $7D8B = $070D                  00
+    $7D8C = $070E                  00
+    $7D8D = $070F                  00
+    $7D8E = $0710 obj1_flash       00
+    $7D8F = $0711 equip_sword      00
+    $7D90 = $0712 ram_0712         00
+    $7D91 = $0713 ram_0713         00
+    $7D92 = $0714 ram_0714         00
+    $7D93 = $0715 use_item_sel     00
+    $7D94 = $0716 ram_0716         00
+    $7D95 = $0717                  00
+    $7D96 = $0718 equip_ball       00
+    $7D97 = $0719 sword_power      00
+    $7D98 = $071A ram_071A         00
+    $7D99 = $071B                  00
+    $7D9A = $071C                  00
+    $7D9B = $071D                  00
+    $7D9C = $071E                  00
+  $07DC block (template +$B0-$D3, 36 bytes -> $07DC-$07FF):
+    ram_07DC=00  ram_07DD=00  text_msg_id=00  text_group=00  pal_ids=7C  pal_id_bg1=7D
+    pal_id_bg2=7E  pal_id_bg3=7F  pal_id_spr0=4F  pal_id_spr1=4F  pal_id_spr2=20  pal_id_spr3=20
+    pal_nofade_mask=FF  $07E9=00  $07EA=00  $07EB=00  $07EC=00  $07ED=00
+    $07EE=00  obj1_oam_ofs=04  chr_r0_play=28  chr_r1_play=00  chr_r2_play=40  chr_r3_play=42
+    chr_r4_play=6F  chr_r5_play=6F  $07F6=00  $07F7=00  $07F8=00  $07F9=00
+    $07FA=00  $07FB=00  $07FC=00  $07FD=00  irq_delay=08  obj_draw_rot=FE
+  player state (template +$F0-$FF):
+    $7DF0  area_id $6C                  00
+    $7DF1  obj_x_lo $70 (player slot 0) 88
+    $7DF2  obj_x_hi $90                 00
+    $7DF3  obj_y_lo $B0                 78
+    $7DF4  obj_y_hi $D0                 00
+    $7DF5  player_hp_max $03C0          30
+    $7DF6  player_hp $03C1              30
+    $7DF7  player_level $0421           01
+    $7DF8  $0620 (obj_timer2 slot 0)    30
+    $7DFD  tag "A"                      41
+    $7DFE  tag "M"                      4D
+    $7DFF  tag "I"                      49
+  bytes outside every load range (stale, never loaded): +9D-AF = 00 7F 10 FF 20 BF 40 E7 04 FF 88 FF 81 FF 08 FE 04 BF 77
+                                                         +D4-EF = 3D 00 F8 24 FE 10 D5 40 FF 00 BF 10 FF 90 FF 60 E7 00 DF 20 FF 00 FB A0 FF 12 BE 6A

@@ -126,8 +126,8 @@ The recursive-descent tracer classifies **40,170 bytes as code (15.3% of PRG)**.
 5. Fills `$6200-$621F` and `$6140-$615F` with `$FF`.
 6. `SwitchBank16($0C)` → banks 24/25 at `$8000`; `JSR $8020` (init in bank 24). *(Corrected session 1: earlier note said n=6/bank 12 — the immediate at `31:F320` is `A9 0C`.)*
 7. State `$40=2`, clears `$0700-$07FF`, PPUCTRL=`$88` (NMI on, sprites @ `$1000`), `$07FE=9`, CLI.
-8. Warm-boot check: if `$0182-$0184` == `"USO"` skip to `F39F`; else cold init (`F1CD`, write signature, `FE80`, `$0F` = (`$43`==`$C0`), `SwitchBank16(9)` → `JSR $8028` in bank 18).
-9. `F0A4`, then copy WRAM `$7D00-$7EFF` → `$6480-$657F`, `JMP $C900`.
+8. Warm-boot check: if `$0182-$0184` == `"USO"` skip to `F39F`; else cold init (`ColdSaveInit` `F1CD`, write signature, `ReadPads` `FE80`, `$0F` = (`$43`==`$C0`), `SwitchBank16(9)` → `JSR $8028` in bank 18).
+9. `BootSaveCheck` `F0A4`, then copy WRAM `$7D00-$7EFF` → `$6480-$657F` (one page off; see "Save data + WRAM layout"), `JMP $C900`.
 
 **Bank switching (`30:C40E` SwitchBank16)** — A = 16KB bank index *n*; maps 8KB banks `2n+1` (via `C427`, $A000 window) and `2n` (R6, $8000). `$6E` = current 2n, `$50` = select-register shadow. So the game treats PRG as 16KB pairs at `$8000-$BFFF` with `$C000-$FFFF` fixed. Bank-switched entry points are at fixed offsets (`$8020`, `$8028` …) → likely a jump table at the start of each swappable bank.
 
@@ -922,7 +922,7 @@ The bank 16 menu (shops, inn, pawn shop, inventory drop/use, save/load) does not
 
 ### Save / load module, bank 23 `$BC00` (session 11)
 
-Bank 23 `$BC00-$BEFF` is code, not text. Jump table: `BC00`→`SaveGame` `BC09`, `BC03`→`LoadGame` `BC8E`, `BC06`→`LoadGameAndInit` `BCDA`. Bank 23 is mapped at `$A000` by `SetR7($17)` at **7 sites** (not one): `30:C9DF` (state-5 entry `C9DA` → `BC06`), `30:D4EC` (`JMP $BC00`), `30:D8DF` (together with `SetR6($10)`, then `JSR $8000` = bank 16 menu, which calls `BC00` at `16:9C4B/9C64` and `BC03` at `16:9BC6/9BD6`), `31:E500/E535` (`BC00`), `31:F0B0/F1DC` (boot: compares the WRAM copies `$7100-73FF` vs `$7400-76FF` and the `AMI` tag at `$71FD`; this is a second save layout, see the Ph5 save task).
+Bank 23 `$BC00-$BEFF` is code, not text. Jump table: `BC00`→`SaveGame` `BC09`, `BC03`→`LoadGame` `BC8E`, `BC06`→`LoadGameAndInit` `BCDA`. Bank 23 is mapped at `$A000` by `SetR7($17)` at **7 sites** (not one): `30:C9DF` (state-5 entry `C9DA` → `BC06`), `30:D4EC` (`JMP $BC00`), `30:D8DF` (together with `SetR6($10)`, then `JSR $8000` = bank 16 menu, which calls `BC00` at `16:9C4B/9C64` and `BC03` at `16:9BC6/9BD6`), `31:E500/E535` (`BC00`), `31:F0B0/F1DC` (boot: compares the WRAM copies `$7100-73FF` vs `$7400-76FF` and the `AMI` tag at `$71FD`; this is the boot slot check `BootSaveCheck`, see "Save data + WRAM layout" (session 31)).
 
 - **`SaveGame`**: saves `$10-$2F` → `$6000` and keeps `$0710` hi nibble only. `SaveAllowed` `BDF6` (C = bit 7 of `23:BF00`[`$6C`]) decides what happens:
   - **Save allowed:** zero `$7D00-$7FFF`, then `SavePlayerState` `BD1F`: `$7DF0`=`$6C` area, `$7DF1-F4` = player x lo/hi, y lo/hi (`$70/$90/$B0/$D0`), `$7DF5/F6`=`$03C0/$03C1`, `$7DF7`=`$0421`, `$7DF8`=`$0620`, and the tag `$7DFD-$7DFF` = `41 4D 49`. Then 5 block copies from descriptors `23:BDC0` (6 bytes: src, dst, count lo/hi): `$6400→$7D00` (128), `$6480→$7E00`, `$0702→$7D80`, `$07DC→$7DB0`, `$7D00→$6D00`. Then `SaveChecksum` `BD92`: an 8-bit sum of `$7D00-$7FFF`, stored in `$70F5` (copy `$70F4`).
@@ -935,7 +935,7 @@ Bank 23 `$BC00-$BEFF` is code, not text. Jump table: `BC00`→`SaveGame` `BC09`,
 
 ### Data Structures
 
-*(object slot struct: "Object slot struct" below (session 30); the other per-struct field tables are Ph5 structs 3/5-5/5)*
+*(object slot struct: "Object slot struct" below (session 30); save data + WRAM: "Save data + WRAM layout" below (session 31); the other per-struct field tables are Ph5 structs 4/5-5/5)*
 
 #### RAM Map (session 29, `tools/ram_map.py` → `docs/ram_map.txt`)
 
@@ -971,7 +971,7 @@ Result: **612 distinct addresses** referenced; 118 were labelled, now **364** (2
 | `$6480-$657F` | `story_flags` (+ `story_flags_F040/F050/F7F8`) | 256 | 2048 flags | saved via `$7E00` |
 | `$6580-$667F` | `npc_state` | 256 | per-NPC | saved via `$7F00` |
 | `$6D00-$6FFF` | `save_mirror*` | 768 | backup mirror | of `$7D00-$7FFF` |
-| `$7000-$70FF` | `menu_save_state` `$7000`, `$7001`, `$7005`, `save_csum0_a/b` `$70F0/1`, `save_csum1_a/b` `$70F2/3` | – | WRAM save header | |
+| `$7000-$70FF` | `menu_save_state` `$7000`, `save_reset_flag` `$7001`, `boot_r7_save` `$7005`, `save_csum0_a/b` `$70F0/1`, `save_csum1_a/b` `$70F2/3`, `save_checksum(_b)` `$70F5/$70F4` | – | WRAM save header | see "Save data + WRAM layout" (session 31) |
 | `$7100-$7CFF` | save slots 0/1 + backups | 4×`$300` | save images | `$7100/$7400/$7700/$7A00` |
 | `$7D00-$7FFF` | `save_cur`, `save_flags`, `save_npc_state` | 768 | current save image | |
 
@@ -1039,6 +1039,76 @@ Parallel-array scan (the useful hits): `$70-$D0` (4 cols) and `$0300-$0600` (str
 | `$06E0` | `obj_behav` | 96/22 | 40/67 | behaviour bits (b2 = NPC alt mode; ORed into meta id by `27:A9E4`) | AIs, bank 18/19 scenes |
 
 Fixed slots seen in the code: 0 = a second player-body slot (`ExitLookup` and the edge links read slot 0's position; 18 fixed `$05A0` and 22 fixed `$0620` refs; exact role → "gameplay 1/3"), **1 = player**, 2-11 = player shots + enemy shots (collision attackers), 12 (`$0C`) = special attacker (`HitHandler3`), 13/14 = followers/scripted, `$0D-$1E` = enemies/NPCs (collision targets), `$1F` = never updated (`ObjUpdateAll` stops at `$1E` and clears `obj_active_s1F`).
+
+#### Save data + WRAM layout (session 31, `tools/save_dump.py` → `docs/save_layout.txt`)
+
+*Static RE only.* `save_dump.py` reads the copy descriptors, the boot page tables, the slot descriptors and the new-save template straight from the ROM. It prints the copy lengths with the `BlockCopy` quirk next to the intended lengths, plus a byte-ownership map of the current save image. The save/load routines themselves are described under "Save / load module" (session 11); this section covers the boot side and the field layout.
+
+**Boot save check** (`BootSaveCheck` `31:F0A4`, every boot, called from `WarmBootContinue` `31:F39F`; was `BootSub`). It sets `$7001` (`save_reset_flag`) = 0, saves R7 in `$7005`, maps bank 23 at `$A000` (for the template), then checks three images in turn:
+1. **Slot 0** (`$7100-$73FF` primary, `$7400-$76FF` backup):
+   - Primary == backup (all 768 bytes) → only check the `AMI` tag at `$71FD`. A bad tag → `SaveSlot0Reset` `31:F11F`.
+   - Otherwise `SaveSumSlot`(0) sums the primary into `$16` and compares the result with `save_csum0_a` `$70F0`. On a match, `SlotCopy`(0) copies primary→backup and both checksums are set to the sum.
+   - Otherwise the backup is tried the same way against `$70F1`. On a match it is restored to the primary with `SlotCopy`(1). If both fail → `SaveSlot0Reset`.
+2. **Slot 1** (`$7700` / `$7A00`, checksums `$70F2/$70F3`): the same steps, with one asymmetry. When the primary checksum matches, the code copies primary→backup and sets only `$70F2`, then **falls through into the backup check** (`31:F18A`) instead of jumping on. If that second compare fails, slot 1 is wiped (`SaveSlot1Reset` `31:F1A3`). Slot 0 jumps straight on (`JMP $F140`).
+3. **Current image** (`BootCheckCurrent` `31:F1E2`): `$7D00-$7FFF` must equal the mirror `$6D00-$6FFF` **and** carry the `AMI` tag at `$7DFD`. There is no checksum here. Otherwise → `CurSaveReset` `31:F219`.
+   - Then `SetR7($7005)` and return (`31:F1C7`).
+
+**Reset paths.** Each one sets `$7001`=`$FF`.
+- `SaveSlot0Reset` / `SaveSlot1Reset`: write template page `23:BE00` to the primary and backup first page, and zero their other two pages. Checksums are not rewritten.
+- `CurSaveReset`: write the template to `$7D00` and `$6D00`, and zero `$7E00/$7F00/$6E00/$6F00`.
+- `ColdSaveInit` `31:F1CD` (cold boot only, when `$0182-$0184` ≠ `"USO"`; was `ColdInitSub`): clears `$700E/$700F`, then jumps to `CurSaveReset` **unconditionally**. So a power-on always starts with a fresh current image. Slots 0/1 survive; they are checked by `BootSaveCheck` right after.
+
+**Checksum.** It is a plain 8-bit sum of 768 bytes (3 pages).
+- `SaveChecksum` `23:BD92` starts from 0 and writes `$70F5` + copy `$70F4`. `MenuSave` copies `$70F5` to `$70F0/$70F1` (slot 0) or `$70F2/$70F3` (slot 1).
+- **Seed quirk:** `SaveSumSlot` `31:F23D` never clears `$16`. The sum starts from whatever `$16` holds at boot (power-on RAM, or leftovers on reset; `Reset` does not clear it). The backup check also starts from the failed primary sum.
+- So the repair path only works when `$16` happens to be 0 (primary) or the two sums cancel out. This path only runs when primary ≠ backup (a save interrupted between the two `16:9CE0` copies). A port that wants exact behaviour must keep `$16` live; a port that only wants sane behaviour can seed 0 (record it as a deviation).
+
+**Boot copy quirk** (`CopySramBlock` `31:F3A2`): copies `$7D00`→`$6480` and `$7E00`→`$6580`. That is one page off from the save layout (`$7E00` = flags → `$6480`). So at the title screen `story_flags` holds the name/stats page and `npc_state` holds the flags. The only path into gameplay found so far is `30:C9DA` → `LoadGameAndInit` `23:BCDA`. It reloads both pages from `$7E00/$7F00`, so the bad copy is transient. Confirm with an emulator write watch (Ph5.5).
+
+**SaveGame length quirk → NPC state is not saved.** Descriptor 1 (`$6480→$7E00`, count `FF 01`) was meant to copy 512 bytes (`$6480-$667F` = flags + `npc_state`). `BlockCopy` copies lo+1+hi = **257** bytes, so only `npc_state[0]` (`$6580` → `$7F00`) is saved. `$7F01-$7FFF` stay zero from the clear at `23:BC2B`. `LoadGameAndInit` then copies `$7F00`→`$6580`, so **every per-NPC state byte except NPC 0 resets to 0 on load**. `LoadGame` descriptor 1 has the same 257-byte length. Descriptor 4 (`$7D00→$6D00`, `FF 02`, meant to be 768) copies 258 bytes, but the explicit mirror loop at `23:BC65` copies all 768 anyway, so it does no harm. The port must reproduce the 257-byte copy.
+
+**Current save image `$7D00-$7FFF`** (slot images `$7100/$7400/$7700/$7A00` have the same layout):
+
+| Offset | Bytes | Source (SaveGame) / dest (LoadGame) | New-save template (`23:BE00`) |
+|---|---|---|---|
+| `+00-7F` | 128 | `$6400-$647F`: `player_name` `+00` (0-terminated), `$6410` (bank 15 reads it, purpose unknown), `player_name6` `+18` (6-char menu name), menu vars `$6424-$6427`, `inv_select` `$6428-$642F`, `inventory` `$6430-$645F`, menu vars `$646A-$6477` (`save_slot_sel` `$646B`), `$6478-$647F` | `------`,0; inventory/selection `FF`; `$6478` = words 30, 40, 60, 50 |
+| `+80-9C` | 29 | `$0702-$071E`: `gold`, `xp`, `xp_next`, `mp_cur/max`, `$070A-$070F`, `obj1_flash` (hi nibble only, `SaveGame` masks it), `equip_*`, `use_item_sel`, `sword_power`, … | gold 0, xp 0, xp_next 30, MP 34/34, rest 0 |
+| `+9D-AF` | 19 | never written (zero after a save) | stale bytes in the template, never loaded |
+| `+B0-D3` | 36 | `$07DC-$07FF`: `text_msg_id/group`, `pal_ids` `$07E0-$07E7`, `pal_nofade_mask`, `obj1_oam_ofs`, `chr_r0-r5_play` `$07F0-$07F5`, `irq_delay`, `obj_draw_rot` | pal ids `7C 7D 7E 7F 4F 4F 20 20`, CHR `28 00 40 42 6F 6F`, `irq_delay` 8 |
+| `+D4-EF` | 28 | never written | stale template bytes |
+| `+F0-F8` | 9 | `SavePlayerState` `23:BD1F`: `area_id`, **slot 0** x lo/hi, y lo/hi (`$70/$90/$B0/$D0`), `$03C0`, `$03C1`, `player_level` `$0421`, `$0620` | area 0, x `$0088`, y `$0078`, HP `$30/$30`, level 1, `$0620`=`$30` |
+| `+F9-FC` | 4 | zero | 0 |
+| `+FD-FF` | 3 | tag `41 4D 49` "AMI" (boot validity check) | "AMI" |
+| `+100-200` | 257 | `$6480-$6580` story flags (F000-F7FF; `$64C0+` = k4 visited-screen persistence) + `npc_state[0]` | page zeroed |
+| `+201-2FF` | 255 | zero (intended `npc_state[1..255]`) | page zeroed |
+
+**WRAM `$6000-$7FFF` field table:**
+
+| Range | Name | Lifetime | Written by / notes |
+|---|---|---|---|
+| `$6000-$601F` | `wram_buf` (+ `SaveGame`/`LoadGame` zp save `$10-$2F`) | scratch | also the metatile row/col buffer, text box rows, HUD `$6060`, 2nd palette buffer `$6040`, menu vars `$60F8-$60FF` (RAM Map) |
+| `$6100-$613F` | `attr_shadow` | per screen | attribute shadow |
+| `$6140-$615F` | `pal_buf` | per frame | `$FF`-filled at reset (`31:F315`); `PaletteUpload` source |
+| `$6200-$621F` | `ppu_queue` ring (8×4) | per frame | `$FF`-filled at reset; write index `$0B`, read index `$0A` |
+| `$62F0-$62FB` | `visited_map` | per area | 12 rows × 8 bits, automap/substitution (`ScreenVisitedBit` `31:EC6C`) |
+| `$62FC-$62FF` | `area_w`, `area_h`, `area_f62FE`, `area_f62FF` (b7 = bank-10 pages) | per area | area k0 |
+| `$6300-$635F` | `screen_grid` | per area | 8 wide × ≤12 rows, k0 |
+| `$6400-$647F` | name / inventory / menu vars | **saved** (`$7D00`) | see the image table |
+| `$6480-$657F` | `story_flags` (+ k4 `screen_flags` `$64C0`) | **saved** (`$7E00`) | |
+| `$6580-$667F` | `npc_state` | **only byte 0 saved** | quirk above |
+| `$6700-$6CFF` | – | – | only `$6700/$6701` (bank 20, 1 write each); no other static refs |
+| `$6D00-$6FFF` | `save_mirror*` | persistent | copy of `$7D00-$7FFF` (`SaveGame`, boot check) |
+| `$7000` | `menu_save_state` | | `MenuSave` `$FB`/`$AB`; `30:D918/D932` |
+| `$7001` | `save_reset_flag` | | boot: `$FF` = an image was re-initialised; never read as such (bank 16 reuses it as Y scratch) |
+| `$7005` | `boot_r7_save` | boot | R7 save |
+| `$700E/$700F` | `wram_700E/F` | | written 0 only (`ColdSaveInit`, `17:A052`); no readers |
+| `$70F0-$70F3` | `save_csum0_a/b`, `save_csum1_a/b` | persistent | slot checksums |
+| `$70F4/$70F5` | `save_checksum_b`, `save_checksum` | | last `SaveChecksum` result |
+| `$7100-$73FF` / `$7400-$76FF` | slot 0 primary / backup | persistent | `16:9CE0` descriptors 4/5 (save), 0/1 (load) |
+| `$7700-$79FF` / `$7A00-$7CFF` | slot 1 primary / backup | persistent | descriptors 6/7, 2/3 |
+| `$7D00-$7FFF` | current save image | persistent | `SaveGame` (also autosave in areas with `AreaSaveFlags` b7, and on teleport) |
+
+Other boot finds: `boot_ab_flag` `$0F` = 1 if A+B are held at cold boot (`31:F38D`), but nothing reads it (a dead debug switch?).
 
 ### State Machine
 
@@ -1113,6 +1183,7 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD. Session 22: state 2 
 | `gfx/boss_phases.txt` | `tools/boss_phase_dump.py [--out f]` (session 28): per bank 15 boss AI → `BossPhaseTable` base + phase handler addresses |
 | `docs/ram_map.txt` | `tools/ram_map.py [--csv f] [--unlabeled N] [--emit-labels N \| --append-labels N]` (session 29): one line per RAM/WRAM address (`addr region R W ptr idx banks(r/w) name`), then parallel-array chains. Reads `disasm/bank_NN.asm`, so re-run `disasm_all.py` first if labels or code coverage change |
 | `docs/obj_struct.txt`, `docs/obj_struct_inits.txt` | `tools/struct_dump.py obj [--sites] [--out f]` / `objtype [cols]` (session 30): per object column name, r/w sites, fixed-slot refs, banks, writer/reader routines (nearest named label in `disasm/`), and `ObjTypeTable` init counts/values. `struct_dump.py rec <layout> BB:AAAA [n]` decodes fixed-size records (`area_hdr spawn k1-k5 hitbox collpair`); variable-length formats stay in their own tools (area_dump, meta_dump, sound_dump, palette_dump, objtype_dump). Imports `ram_map.scan()`, so it also reads `disasm/` (routine names reflect the labels at the last `disasm_all.py` run) |
+| `docs/save_layout.txt` | `tools/save_dump.py [--out f]` (session 31): reads ROM only (no `disasm/` dependency). Save/load copy descriptors `23:BDC0/BDDE` with quirk vs intended lengths, boot page tables `31:F26D/F298`, slot descriptors `16:9D32`, a byte-ownership map of `$7D00-$7FFF` after `SaveGame`, and the new-save template `23:BE00` decoded per field |
 | `web/catalog.html`, `web/catalog.js` | asset browser (ES module, no dependencies; serve the repo root). Tabs CHR / Palettes / Sprites / Areas / Screens / Sound / Text; see the Ph4 5/5 task note (session 27) |
 | `web/apu_preview.js` | exports `channelFrames(ch, tables, n)` (per-frame `{period, vol, duty, on, dmc}` from `sound.json` events: envelope tick with `envTonal`/`envNoise` + `volume`, vibrato through `vibRawFrom8714` incl. the `+2` quirk and "lo only if hi unchanged", rest/hold, triangle linear counter, noise period table, DMC triggers), `renderTrack(track, sound, sampleRate, {maxSeconds, mute})` → mono Float32Array (2 pulse, triangle, 15-bit LFSR noise, 1-bit DMC with `DMC_RATES`, NESdev non-linear mixer, DC-blocking high-pass), `trackFrames`, `CPU_HZ`, `FRAME_HZ` (session 27). Preview only: no sweep, no fades |
 | `web/test/catalog_check.mjs` | `node web/test/catalog_check.mjs`: headless load test of `catalog.js` with stub DOM/fetch/canvas (session 27, run: all 7 tabs init OK) |
@@ -1225,7 +1296,7 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD. Session 22: state 2 
 - [x] Ph3 (low priority) text/gameplay leftovers from sessions 11-20 (was "text follow-ups 10") — done session 28 for (f) in part: `BossPhaseTable` `15:A413` decoded (50 entries, 10 boss AIs with base + phase handlers; `tools/boss_phase_dump.py` → `gfx/boss_phases.txt`); `$07D7` = `boss_cam_lock` (camera freeze/align, gates exits, teleport and the three Bows); the area `$43` "boss" is a talk event (NPC p `$C3`, talk act 26 gives Ball of Water); generic AIs `$10` `AiStraightMover`, `$20` `AiWalkPause`, `$30` `AiNpcWander` + helpers (`ObjStepVector 26:8480`, `TempAddStep 26:9861`, `Rand64 26:97D7`, `ObjMoveSlide 26:98D7`, `ObjBgProbe 26:9A30`) documented under "Object update + boss defeat"; 23 labels. Remaining parts moved: AI `$28`, hit handlers, `27:AE16`, `26:9947` → "gameplay 3/3"; Crystalis `$0711` check + `PlayerUpdate` sub-calls → "gameplay 1/3"; (c) + (h) → new low-priority task at the end. Original: (c) join `gfx/spawn_params.txt` with `npc_scripts`/`presence`/trigger records so each NPC param / trigger / `HitFlagParams` entry gets its areas and script in one report (reuse `npc_script_check.placed_params`); (f) the generic AIs `$10` `27:B0B5` (types `$32 $E2` + 26 others; helpers `27:9897/98A8/98C7/98CD/9861`, `27:8480`, `27:9A30`), `$20` `27:A915` (`$53` + 9), `$28` `27:AB61` (`$54 $67`), `$30` `27:ACD9` (talkable NPC); hit handlers `26:90AA/9357/94B0` + `26:906C/907C`; the area `$43` boss reward path (type `$70`, AI `$E5`, no `BossRecs` entry); decode `BossPhaseTable` `15:A413` (count, per-boss base indices: `$1B` = type `$88`, `$2B` = type `$9E`) and what `$07D7` does; (h) menu glyph tiles via `font_dump.py`; plus from session 20: whether `26:9C56-9CC8` (other `$0711` readers) special-case Crystalis (`equip_sword`=5) so its charge level does not depend on the first consumable's parity; `PlayerUpdate` sub-calls `26:9BF6/9CEF/A1C9` (hand to "gameplay 1/3" if large).
 - [x] Ph5 structs 1/5 — RAM map — done session 29: `tools/ram_map.py` → `docs/ram_map.txt`; 612 RAM/WRAM addresses referenced, labelled 118 → 364 (246 new labels, every address with ≥3 refs). "RAM Map" table under `### Data Structures`. Object table = 4 zp + 30 `$0300-$06BF` columns + `$06E0` (stride `$20`); newly named columns from documented behaviour: `obj_attack` `$03E0`, `obj_defense` `$0400`, `obj_hitflags` `$0420`, `obj_pause_timer` `$0440`, `obj_bg_mask` `$0460`, `obj_timer` `$0480`, `obj_death_type` `$04C0`, `obj_elem_drop` `$0500`, `obj_xp_value` `$0520`, `obj_phase` `$0600`, `obj_timer2` `$0620`, `obj_param1/2` `$0680/$06A0`, `obj_behav` `$06E0`; `obj_u03A0/u05A0/u0640/u0660` still unknown (→ structs 2/5). Sound driver per-channel arrays `$0114-$017F` (stride 6, bank 24 only → structs 4/5). Save checksums `$70F0-$70F3`, `save_slot_sel` `$646B`. Banks 17-19 title code reuses `$72-$8F` and `$0600-$06FF` while the object table is cleared. Original: RAM map: write `tools/ram_map.py` that scans all code (use `disasm_all.py` output if present, else `xref.py` logic) and lists every RAM address `$0000-$07FF` and WRAM `$6000-$7FFF` with read/write counts per bank, the `labels.csv` name, and whether it is indexed (`,X`/`,Y`). Detect parallel arrays (same index register, stride-1 bases 32 apart, e.g. the object table). Output `docs/ram_map.txt`, then write a "RAM Map" table under `### Data Structures` (range, name, size, type, notes) and add labels for every unlabeled address with ≥3 references.
 - [x] Ph5 structs 2/5 — object slot struct — done session 30: `tools/struct_dump.py` (`obj` → `docs/obj_struct.txt`, `objtype` → `docs/obj_struct_inits.txt`, `rec <layout>` for fixed-size records incl. new `hitbox`/`collpair`); "Object slot struct" field table under Data Structures (all 36 columns: meaning, init counts, r/w, writers → readers, fixed-slot roles). Resolved the four unknown columns: `$03A0` = `obj_coll` (collision group mask + hitbox id), `$05A0` = `obj_freeze` (AI-freeze timer), `$0640` = `obj_act_timer` (attack countdown → `SpawnShot`), `$0660` = `obj_aux` (per-AI sub-step); `$0440` renamed `obj_shot_id` (per-AI: shot id / NPC pause). Found object collision `ObjCollideAll` `26:8F6E` + `CollPairTable` `26:96F1` + `ObjOverlapScan` `26:95F8` + `HitboxTable` `26:9691` (24 AABBs), knockback (`HitKnockbackSet` `26:95C0`, `$0340` hi-nibble counter, 8 frames) and the `ObjUpdateAll` skip order; `SpawnShot` `26:972D` (`ShotTable` `20:BC00`, fields → "gameplay 3/3"). 14 labels (7 new, 7 renamed). Original: object slot struct: full field table for the 32-slot object arrays (`$70/$90/$B0/$D0`, `$0300-$06FF`, `$04A0/$04E0`, `$0680/$06A0`, …). For each field: base, size, type, who writes it (`ObjInit` `30:C25D`, spawn handlers `31:E218`, entity logic bank 15), who reads it (`ObjSpriteDraw` `28:800E`, collision, AI). Decode `ObjTypeTable` `13:AC00` per-type records with a new `tools/struct_dump.py` (pre-configured layouts: objtype, area record, area sub-tables k0-k5, sound headers, metasprite, palette record, metatile). Reuse/close the `objtype_dump.py` part of "area follow-ups 3".
-- [ ] Ph5 structs 3/5 — save data: trace cold-init subs `F1CD`, `FE80`, `F0A4`, the `$7D00-$7EFF`→`$6480` copy, `$6140`/`$6200` (`$FF`-filled at reset), `$62F0`/`$64C0` visited-screen flags, `$6300` screen grid; produce a field table for `$6000-$7FFF` and identify the save/checksum routine (if any).
+- [x] Ph5 structs 3/5 — save data — done session 31: `tools/save_dump.py` → `docs/save_layout.txt`; "Save data + WRAM layout" under Data Structures (current save image field table with the new-save template `23:BE00`, WRAM `$6000-$7FFF` field table). Boot check `BootSaveCheck` `31:F0A4` decoded (slot primary/backup compare, 8-bit checksums `$70F0-$70F3`, `AMI` tag, repair with `SlotCopy` `31:F273`, reset from template). `ColdSaveInit` `31:F1CD` always re-inits the current image. Quirks: `SaveSumSlot` doesn't clear its `$16` seed; slot 1's primary-ok path falls into the backup check; the boot `$7D00→$6480` copy is one page off (transient); **`SaveGame`'s 257-byte copy means only `npc_state[0]` is saved**. Dead vars `$0F`, `$700E/F`, `$7001` (write-only). 15 new labels, 4 renamed (`BootSub`→`BootSaveCheck`, `ColdInitSub`→`ColdSaveInit`, `wram_7001`→`save_reset_flag`, `wram_7005`→`boot_r7_save`). `$62F0`/`$64C0`/`$6300`/`$6140`/`$6200` were already covered (sessions 9/10/23); they are listed in the WRAM table. Original: trace cold-init subs `F1CD`, `FE80`, `F0A4`, the `$7D00-$7EFF`→`$6480` copy, `$6140`/`$6200` (`$FF`-filled at reset), `$62F0`/`$64C0` visited-screen flags, `$6300` screen grid; produce a field table for `$6000-$7FFF` and identify the save/checksum routine (if any).
 - [ ] Ph5 structs 4/5 — pointer tables + bank refs: write `tools/check_bank_refs.py` (every `.dw` pointer and far-call/`SwitchBank16`/`SetR6`/`SetR7` target lands inside a valid bank window and on decoded code/data) and `tools/find_ptr_tables.py` (runs of ≥4 plausible pointers per bank, cross-checked against `xref.py` indexed loads `LDA tbl,X` / `LDA tbl+1,X`). Catalogue every table in a "Pointer Tables" list under Data Structures (bank:addr, count, element type, consumer); label the unlabeled ones and queue tasks for any undecoded ones.
 - [ ] Ph5 structs 5/5 — consolidate: rewrite `### Data Structures` as an index — one field table per struct (object slot, object type, area record + sub-tables k0-k5, screen page/metatile, metasprite, palette record, sound music/SFX headers + channel state, save data, RAM map) with links to the subsystem sections that explain behaviour. Mark each struct "static-RE only" until the Ph5 emulator memory-dump checkpoint confirms it.
 - [ ] Ph5.5 emu 1/6 — CPU + memory: `tools/emu/` package (pure Python, no third-party emulators). `cpu.py` (all official 6502 opcodes + the illegal ones in `instruction_set.py`, exact cycle counts incl. page-cross/branch penalties, NMI/IRQ/BRK, no decimal mode — reuse `instruction_set.OPCODES`), `memory.py` (2KB RAM mirrored, 8KB WRAM, register dispatch), `loader.py` (iNES via `nesrom.py`). Write `tools/emu/test_cpu.py`: hand-written per-opcode unit tests for flags (ADC/SBC overflow, CMP, BIT, shifts, page-wrap of `JMP ($xxFF)` and zp,X), run and passing.
@@ -1272,6 +1343,7 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD. Session 22: state 2 
   - Confirm in the emulator that `$62FF` areas never expose the bank-10 row/column quirk.
   - Check which areas actually use the `--visited` substitution (k4 screens) and render those variants.
 - [ ] Ph3 (low priority) text leftovers from session 28 (parts (c) and (h) of the old "text follow-ups 10"): (c) join `gfx/spawn_params.txt` with `npc_scripts`/`presence`/trigger records so each NPC param / trigger / `HitFlagParams` entry gets its areas and script in one report (reuse `npc_script_check.placed_params`; note p `$C3` lists no areas in `npc_scripts.txt` although it is placed in area `$43`); (h) dump the menu glyph tiles with `font_dump.py`.
+- [ ] Ph5 (low priority) save leftovers from session 31: trace the new-game path (how a fresh game gets the `23:BE00` template into `$7D00` before `LoadGameAndInit` `30:C9DA`, and the `30:C9C8` MP=`$22` init); check that `30:C9DA` is the only way into gameplay, which would make the off-by-one-page boot copy `31:F3A2` harmless; work out what `$6410` (bank 15) and the `$6478-$647F` words 30/40/60/50 (bank 16) are for; confirm with an emulator write watch that `npc_state[1..]` is lost across save/load.
 
 ### Web Port Fixes
 
