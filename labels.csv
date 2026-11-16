@@ -153,6 +153,7 @@ bank,addr,name,comment
 *,005C,chr_r4_alt,CHR R4 shadow (2nd set)
 *,005D,chr_r5_alt,CHR R5 shadow (2nd set)
 31,F883,ApplyChrPlay,write $07F0-$07F5 to MMC3 R0-R5; JSR'd from F779/F785/F7C8
+31,F8CB,PaletteUpload,NMI (31:F40F X=0): skip if $51 b7; PPUMASK=0; $3F00 <- pal_buf $6140-$615F (backdrop forced into every group); PPUADDR $3F00 then $0000
 31,F64F,ApplyChrAlt,write $58-$5D to MMC3 R0-R5
 31,E16D,LoadAreaChrRecord,(ptr $10) record: 00 then $07E6 $07E7 R4 R5 + 4-byte spawn entries from slot $0D; FF end FE skip
 31,E144,AreaLoadA,$18=1 then AreaLoad
