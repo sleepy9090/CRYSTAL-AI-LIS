@@ -60,7 +60,7 @@ bank,addr,name,comment
 *,0360,obj_meta_dir,added to meta id unless $0380 b0
 *,0380,obj_flags,b0 no dir add; b1 draw overlay $0580; b2 half-rate flicker; b4 behind BG; b5 tile+$40; b6 sink 3px + hide attr-b2 parts; b7 offscreen (out)
 *,0580,obj_overlay_id,metasprite id drawn over obj when $0380 b1
-*,04E0,obj_anim,frame counter; frame = (v>>3) & meta mask
+*,04E0,obj_anim,frame counter; frame = (v>>3) & meta mask; stepped by each AI handler (1-3x/frame), no global tick
 *,05C0,obj_screen_x,written by ObjSpriteDraw
 *,05E0,obj_screen_y,written by ObjSpriteDraw
 *,06C0,orbit_level,>>3 indexes OrbitTileTable; 0..7 = no orbit
@@ -172,6 +172,8 @@ bank,addr,name,comment
 30,C25D,ObjInit,init object slot $10 with type $11 (type 1 = no-op)
 12,9201,AreaPtrTable,252 x ptr16 area records indexed by $6C
 *,006C,area_id,current area id (AreaPtrTable index)
+*,07E4,pal_id_spr0,sprite palette 0 id (player body): 0 or $4D when obj1_flash&$0F=2 (30:C05E)
+*,07E5,pal_id_spr1,sprite palette 1 id (weapon) = clamp(equip_sword,1..5); same value+$41 -> R3 (30:C0D0)
 *,07E6,pal_id_spr2,sprite sub-palette 2 id (area record byte1); palette ids $07E0-$07E7
 *,07E7,pal_id_spr3,sprite sub-palette 3 id (area record byte2)
 *,07E0,pal_ids,8 palette ids (BG0-3 spr0-3) -> PaletteBuild 26:8C0E
