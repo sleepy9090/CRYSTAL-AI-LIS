@@ -216,6 +216,16 @@ bank,addr,name,comment
 31,EDBA,MetatileExpand,$6000 metatile ids -> tile ids via 4 pages at $67&$FC +0..3 (banks 8/9)
 31,EDE5,MetatileAttr,attribute pass; ptr table 31:EEEF[($67&$3C)>>1] in bank 9
 31,EEEF,MetatileAttrPtrTable,ptr16 per tileset (bank 9)
+31,EB91,BgRowRender,row render entry: $C72B(A=0); INC cam_y_hi if $31>=0; -> ScreenRowRender
+31,EC87,BgColRender,column render entry: $C72B(A=$20); INC cam_x_hi if $30>=0; no $62FF bank-10 check
+31,EE31,MetatileAttrCol,column twin of MetatileAttr (step 8 into $6100)
+31,EECC,MetatileAttrBits,A = attr byte for metatile $6000,X: (tbl[M>>2]>>2*(M&3))&3 -> $EF17 replicate
+31,EF07,AttrRowOffset,16 bytes 00 00 08 08 .. 38 38: $6100 row offset for cam_y>>4
+31,EF17,AttrReplicate,00 55 AA FF: 2-bit pal into all 4 quadrants; $EF1B/$EF1D half masks 03 30 / 0C C0
+9,B000,MetatileAttrTables,12 x 64 B used (tileset ($67&$3C)>>2): 2-bit BG pal per metatile, 4/byte LSB first
+18,82BE,MenuPalLoad,A b7=0 BG/1 sprite half; A&15 -> 16-byte set 18:838B -> $06D0/$06E0; backdrop into spr slots
+18,838B,MenuPalSets,16 x 16-byte full palette sets for bank 18/19 screens (MenuPalLoad)
+4,8000,ScreenBlank80,screen page $80: 240 x metatile $80 = black; the grid 'no screen' id is a real page
 18,81A1,NtFill,A=PPU hi; X=tile x$3C0; Y=attr x$40 (rendering off)
 18,81F0,NtRectBlit,stream ($8E): W H then H rows of W tiles (+$06FE) to PPU $8C/$8D stride $20
 18,824B,NtRectBlitQueued,same W H format; one row per frame through $6200 queue

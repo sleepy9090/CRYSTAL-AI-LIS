@@ -344,6 +344,18 @@ So each object type is a sparse initialiser for the 32 `$0300-$06E0` column arra
 5. **Metatile → tiles** (`MetatileExpand` `31:EDBA`, banks 8/9 via `SwitchBank16(4)` at `EC14`): 4 parallel 256-byte pages at `$67&$FC` + 0/1/2/3 = TL/TR/BL/BR tile of metatile M (`$66`=0, so `($66),Y` with Y=M). `$67` = k1 `v67` (tileset). Attributes: `31:EDE5` → `SetR7(9)`, ptr table `31:EEEF`[(`$67`&`$3C`)>>1].
 6. PPU upload: `31:ED64` builds nametable addr from camera, queued as a 4-byte record in `$6200+$0B` (`$6200`=hi\|`$0744`, `$6201`=lo&`$E0`, `$6202`=`$20` length, `$6203`=0), ring of 8 entries (`$0B` += 4 &`$1F`).
 
+**Background details (session 24, `tools/render_screen.py`)**
+- **`MetatileAttr` `31:EDE5`** handles a row; `31:EE31` is its column twin. Both return early unless `$2F` ≠ 0, then `SetR7(9)`. The table pointer is `MetatileAttrPtrTable` `31:EEEF`[(`$67`&`$3C`)>>1], which gives `$B000 + i·$40` for i = 0..15. Tilesets in use need i 0..11, so `9:B000-B2FF` is live.
+  - The helper `MetatileAttrBits` `31:EECC` computes, for each metatile M in the `$6000` buffer (already substituted), `pal = (tbl[M>>2] >> 2·(M&3)) & 3`. So each metatile carries **one 2-bit BG palette**, packed 4 per byte, LSB first.
+  - `$EF17` = `00 55 AA FF` replicates pal into all four quadrants. `$EF1B/$EF1D` = `03 30` / `0C C0` are the nibble masks for the left/right (or top/bottom) half. These are merged into the attribute shadow `$6100` (row step 1 at `EE80`, column step 8 at `EEA4`). `$EF07` = `00 00 08 08 … 38 38` is the attribute-row offset for cam_y>>4.
+- **`MetatileExpand` `31:EDBA`**: `$12` is the quadrant start and `$13` the step. Rows use `$12` = 0/2 (top/bottom half from cam_y b3) with step 1, giving TL,TR or BL,BR. Columns use `$12` = 0/1 with step 2, giving TL,BL or TR,BR. The low 2 bits of k1 `v67` are therefore ignored; `$67` is rewritten during the loop but keeps `&$FC`.
+- **`$62FF` b7 = bank-10 screen pages.** `ScreenRowRender` `31:EBE5` does `SetR6($0A)` after `ScreenPagePtr`, so screen ids with (S&`$3F`) < `$20` read their page from **bank 10** (`$8000 + (S&$1F)·$100`) instead of bank 2·(S>>6).
+  - This flag is set in 32 areas: `3C 3D BC BE C2 C3 C4 C7 C8 C9 CB CF D0 D1 D2 D3 D9 DA DC DD E5 E7 EB ED EE F0 F5 F6 F7 F8 F9 FB`. Together they have 32 cells in bank 10.
+  - **Quirk:** only the row path does this. When a row crosses into the next screen (`EC04`), it calls `ScreenPagePtr` again and loops back to `EBEF`, skipping the `SetR6`. The column render `31:EC87` never checks `$62FF` at all. So in those areas, horizontally scrolled columns and the second screen of a row read the normal bank. Presumably those areas never scroll in a way that exposes this (check in the emulator).
+- **Row render entry `BgRowRender` `31:EB91`** (callers `30:C851`, `31:E95E`, `31:FFA3`): `JSR $C72B` (A=0), `INC cam_y_hi` if `$31` ≥ 0, then on through `EB9C` into `ScreenRowRender` `EBC1`. **Column render `BgColRender` `31:EC87`** (caller `31:E945`): `JSR $C72B` (A=`$20`), then `INC cam_x_hi` if `$30` ≥ 0. The next screen down is grid index Y+8, wrapping at `$60` (`SBC #$5F`), so the grid has **12 rows** at most (`$6300-$635F`).
+- **Grid ids → banks** (`render_screen.py --stats`, 213 areas with a valid k0/k1). Cells per page bank: 0:290 1:144 2:111 3:71 **4:1431** 5:244 6:125 7:201 10:32. There are 253 distinct ids. Tilesets `$67` used: `80 84 88 8C 90 94 98 9C A0 A4 A8 AC` (`A0`×67 and `88`×41 are the most common).
+- **`$80` "no screen" is a real page.** Bank 4 page 0 (`4:8000-80EF`) is 240 bytes of metatile `$80`, which renders as an all-black screen in every tileset tried. The engine never special-cases `$80` in the grid; it is simply read as screen `$80`. 660 grid cells inside the W×H rectangles are `$80` (e.g. area `$04` (0,0)), and the `$6300` prefill means anything outside the rectangle also draws black.
+
 **Controller input (session 20)** — the only `$4016` readers are in `31:FF28-FF43`. Both pads are read (X=1 = pad 2 via `JOY1+X` = `$4017`, then X=0 = pad 1), so every pad variable is a 2-byte pair (pad 1 at the even address).
 - `ReadPadRaw` `31:FF28`: strobe `$4016` 1/0, then 8× `LDA $4016,X` / `AND #3` (bit 0 or Famicom expansion bit 1) / `ROL $4F`. Byte layout of `pad_raw` `$4F`: **A=b7, B=b6, Select=b5, Start=b4, Up=b3, Down=b2, Left=b1, Right=b0**.
 - `ReadPadStable` `31:FF17`: reads until two reads agree (DPCM-glitch guard); `$49,X` is used as the scratch copy.
@@ -409,6 +421,18 @@ So `tools/decompress.py` is not needed. The web port can load screens, metatiles
 - `NtRectBlit` `18:81F0`: stream at `($8E)` = **`W H` then H rows of W raw tile bytes**, each + `$06FE` (tile bias), written to PPU at `$8C/$8D`, row stride `$20`. 32 callers (bank 18 `8071`, 31 in bank 19 `A10B-B148`) → title/menu/cut-scene screens.
 - `NtRectBlitQueued` `18:824B` (no static xref — reached indirectly or dead): same `W H {rows}` format but each row is copied to `$6000` and queued as a `$6200` PPU record, one row per frame (`$8198` waits for `$09`).
 → **No RLE/LZ**: tile maps are raw W×H rectangles.
+
+**Title/menu screen setup (session 24, `tools/render_rects.py`)**
+- Every blit site uses the form `LDA ptr / STA $8E / LDA ptr+1 / STA $8F / LDA #lo / STA $8C / LDA #hi / STA $8D / JSR NtRectBlit`. The stream address is read from a **pointer word stored just before the data** (ptr = data−2, e.g. `18:99D0` → `18:99D2`). 31 of the 32 `NtRectBlit` callers match this pattern (including `18:805F`). The odd one out is not modelled.
+- **`MenuPalLoad` `18:82BE`** (A): b7 selects the half (0 = BG `$06D0-$06DF`, 1 = sprite `$06E0-$06EF`), and A&15 selects a 16-byte set from **`MenuPalSets` `18:838B`** (16 sets). The BG backdrop `$06D0` is then copied into sprite slots `$06E0/E4/E8/EC`. Unlike gameplay, menus use full 16-byte sets, not the 4-byte slot records.
+- Blits that target `$23C0`/`$2BC0` (32×1 or 32×2) are **attribute rows**, i.e. the same stream format is used for attribute data.
+- Pages and their setup state:
+  - `19:A0C9` name entry: R0 `$3C`, R1 `$36`, set 13.
+  - `19:A662`: a full-screen 32×32 page, R0 `$1C`, R1 `$1E`.
+  - `19:A7FC-AB5B`: the intro cut-scene. Each page is `NtFill $2000 tile $10 attr $FF`, then a 28×14 picture at `$2042` (bias `$80` from page 2 on), an attribute row, and a 30×5/7 text block at `$2240`.
+  - `19:AC3F-B136`: the ending/cut-scene pages, some drawing into `$2800` (10×24 strips).
+  - `18:802E`: the boot logo (`NtFill` tile `$FF`, then a 12×3 rect at `$21CA`).
+- Limits of the static model: branches are ignored, palette fades are not modelled, and the palette shown is the last BG set loaded in the group, so cut-scene colours are approximate. Tiles and layout match.
 
 **`$18` (session 8)** — the flag `AreaLoadA/B` writes has **no reader**. Fixed banks 30/31 only store to `$18`, and the zp hits in banks 12/13/14 (the banks mapped during AreaLoad and its spawn handlers) all decode as data. `Bank26_FadeA/B` reuse `$18` as a temp. It is most likely a dead write. Not checked in an emulator.
 
@@ -890,6 +914,12 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD. Session 22: state 2 
 | `tools/palette_dump.py` | `[--out base] [--scale N]`: all 256 palette slots (banks 2/3 page tails) → PNG + JSON, with per-area BG/sprite references taken from `area_dump` (session 23, run). Uses the common 2C02 RGB approximation (`7C7C7C 0000FC …`, the NESdev wiki "PPU palettes" table); helpers `slot_addr`, `bg_slot`, `spr_slot`, `rgb` |
 | `gfx/palettes.png` | 16×16 slots, each 4 swatches; `$FF` (backdrop) shown as a checker; left gutter bar green = area BG id, magenta = area sprite id, yellow = both (session 23) |
 | `gfx/palettes.json` | `{format, master_palette:[64 hex RGB], slots:[{slot, bank, addr, colors:[4], bg_areas, spr_areas}]}` (session 23) |
+| `tools/render_screen.py` | `<id> --area A [--visited]`, `--area A --all`, `--every`, `--stats`. Static model of the BG pipeline: page (incl. `$62FF` bank 10) → visited substitution → metatile quadrants (banks 8/9) → per-metatile attribute (`9:B000`) → BG CHR R0/R1 → k1 palettes + `$7F`. Library: `area_bg(area)` (k0+k1 dict), `Renderer(a).screen(s, visited, px, W, ox, oy)`, `page_loc`, `mt_tiles`, `mt_attr`, `subst` (session 24, run) |
+| `gfx/screens/screen_NNN[_b10].png` | 256 PNGs, 256×240: each placed screen id (decimal NNN) drawn with the tileset/CHR/palettes of the first area that places it; `_b10` = the bank-10 page variant. `screen_NNN_aAA[_v].png` = per-area renders (`_v` = visited substitution) (session 24) |
+| `tools/render_level.py` | `[area_hex …] [--all] [--visited] [--scale-down N]`: whole area = W×H screens stitched (session 24, run: 213 areas in about 43 s) |
+| `gfx/areas/area_NNN.png` + `index.txt` | 213 area maps (W·256 × H·240) plus an index line per area (size, `$67`, R0/R1, palette ids, bank10 flag, grid). Null/garbage areas are listed but not rendered (session 24) |
+| `tools/render_rects.py` | `[--list]`: static replay of the bank 18/19 screen-setup code (`NtFill`, `NtRectBlit`, R0/R1, `$06FE` bias, `MenuPalLoad` palette sets) into a 4-nametable VRAM model. Pattern-based; branches are ignored (session 24, run) |
+| `gfx/rects/screen_BB_AAAA.png` + `index.txt` | 14 title/menu/cut-scene pages (BB:AAAA = first setup event), with the nametables written placed side by side; index lists every blit (data address, W×H, PPU dest, bias, CHR) (session 24) |
 | `tools/bank_calls.py` | lists each `LDA #n / JSR SwitchBank16` site with n, 8KB pair, and following `$8000-$BFFF` JSR/JMP targets (`--summary` groups by n). Not yet run (permission prompt) |
 
 `nesrom.py` gained `bank_window(bank)` (30→$C000, 31→$E000, even→$8000, odd→$A000), `bank_cpu_addr`, `parse_bank_addr("BB:AAAA")`.
@@ -976,7 +1006,16 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD. Session 22: state 2 
 
   Original task: write `tools/disasm_all.py`: recursive-descent code tracer seeded from the vectors, every `labels.csv` code label, the `SwitchBank16`/far-call (`31:FF80-FFE2`) targets, and known jump/pointer tables (MainStateTable, IrqHandlerTable, SndOpcodeTable, substate tables, swappable-bank `$8000` entry tables). Follow JSR/JMP/branches within the bank (bank 30/31 targets cross into fixed banks; `$8000-$BFFF` targets need the bank from the call context). Output `disasm/bank_NN.asm` (one per 8KB bank, CPU origin per `nesrom.bank_window`) with labels + comments from `labels.csv`, auto-names `sub_BB_AAAA`/`loc_BB_AAAA` for unlabeled targets, data as `.db` rows (16/line), and `disasm/coverage.txt` (code/data/unknown bytes per bank). Verify: reassembling is not required, but every decoded byte must round-trip (concatenated bytes of each .asm == the bank). Update the Data-Range Map from the coverage report.
 - [x] Ph4 assets 1/5 — done session 23: `tools/extract_tiles.py` → `gfx/chr/chr_000-127.png` + `gfx/chr_all.png`; `tools/palette_dump.py` → `gfx/palettes.png/.json` (all 256 slots, area BG/sprite references; this covers the `palette_dump.py` part of "area follow-ups 3"). Corrected the slot count to **256**, not 512; sprite ids wrap via `+$B0`. The `$3F00` writer is `PaletteUpload` `31:F8CB`, called only from the NMI. It is skipped while `$51` b7 is set, and the backdrop is forced into every group. See "Palette ids". 1 label. Original: tiles + palettes: `tools/extract_tiles.py` dumps all 128 CHR 1KB banks to `gfx/chr/chr_NNN.png` (grayscale, 16x4 tiles, 4x scale) + one `gfx/chr_all.png` sheet; `tools/palette_dump.py` (shared with "area follow-ups 3" — reuse if it already exists) with a standard 64-color NES master palette (2C02 RGB in the tool, cited), renders every palette id from `PaletteBuild` `26:8C0E` / bank 2/3 page tails to `gfx/palettes.png` and writes `gfx/palettes.json`. Also find the PPU `$3F00` writer and confirm the palette upload path.
-- [ ] Ph4 assets 2/5 — backgrounds (format known, no compression — see "Compression", session 10): decode `MetatileAttr` `31:EDE5`/`EEEF` and the bank 9 `$BE00` visited-screen substitution tables; check which grid ids map to which banks and whether `$80` (no screen) is ever read. Write `tools/render_screen.py` (screen id → packed bank+page `31:EF36` → raw 16×15 metatile page in banks 0-7 → metatiles from banks 8/9 with tileset `$67` → BG CHR R0/R1 + k1 palettes → `gfx/screens/screen_NNN.png`) and `tools/render_level.py` (whole area from the `$6300` screen grid via `area_dump` k0 → `gfx/areas/area_NNN.png`). Render every area `area_dump.py` lists, plus the title/menu `W H` rectangles from banks 17/18.
+- [x] Ph4 assets 2/5 — done session 24:
+  - `MetatileAttr` decoded: one 2-bit palette per metatile, `9:B000` + tileset·`$40`.
+  - `$62FF` b7 = bank-10 screen pages. This is a row-only quirk: the column path never checks it.
+  - `$80` "no screen" is a real all-black page (`4:8000`).
+  - Grid-id → bank statistics recorded.
+  - New tools `render_screen.py`, `render_level.py`, `render_rects.py` → `gfx/screens/` (256), `gfx/areas/` (213 areas), `gfx/rects/` (14 title/menu/cut-scene pages). Spot-checked by eye: village, overworld, bank-10 room, name entry, intro.
+  - `MenuPalLoad` `18:82BE` and 16-byte sets `18:838B` added. 10 labels.
+  - Cut-scene palettes and the 32nd blit site moved to the leftovers task at the end of the list.
+
+  Original: backgrounds (format known, no compression — see "Compression", session 10): decode `MetatileAttr` `31:EDE5`/`EEEF` and the bank 9 `$BE00` visited-screen substitution tables; check which grid ids map to which banks and whether `$80` (no screen) is ever read. Write `tools/render_screen.py` (screen id → packed bank+page `31:EF36` → raw 16×15 metatile page in banks 0-7 → metatiles from banks 8/9 with tileset `$67` → BG CHR R0/R1 + k1 palettes → `gfx/screens/screen_NNN.png`) and `tools/render_level.py` (whole area from the `$6300` screen grid via `area_dump` k0 → `gfx/areas/area_NNN.png`). Render every area `area_dump.py` lists, plus the title/menu `W H` rectangles from banks 17/18.
 - [ ] Ph4 assets 3/5 — sprites: extend `meta_dump.py` to render each area's enemy sets with the correct R4/R5 CHR (`LoadAreaChrRecord`) and sprite palettes, and export animation frame sequences (frame mask, ÷8 timing) to `gfx/sprites/` + `gfx/sprites.json` (id → frames, offsets, attrs, tiles).
 - [ ] Ph4 assets 4/5 — audio + text: write `tools/sound_export.py` that converts every music track and SFX (via `sound_dump.py` decoding) to `web/data/sound.json` (per-channel event lists: notes, lengths, duty, envelope, vibrato params) so the web port can synthesize them; optionally render WAV previews to `gfx/audio/`. Text: build on the "banks 21-23 text" task above; find the font tiles and any text/string tables (character encoding → `tools/text_dump.py`, `gfx/text.txt`); if the game has no text beyond tile graphics, record that.
 - [ ] Ph4 assets 5/5 — `web/catalog.html` asset browser (plain HTML+JS, `python3 -m http.server`): CHR banks, palettes, sprites with animation playback per area, rendered screens/areas, sound player (WebAudio from `sound.json`), text. All data loaded from `gfx/*.json`/`web/data/`. Record the asset formats and output files in REVERSE.md (Intermediate Output Files + format specs).
@@ -1024,6 +1063,11 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD. Session 22: state 2 
   - Confirm that banks 25 and 29 hold no code (sound data via R7=25; metasprites via `ObjMetaPtrTableB`).
   - Re-check `15:AB84` (`PLA → SetR6`, likely 26:9824).
   - Then update the Data-Range Map coverage table.
+- [ ] Ph4 (low priority) background leftovers from session 24:
+  - Find the one `NtRectBlit` caller that `render_rects.py` does not match.
+  - Model the cut-scene palette per page (which `MenuPalLoad` id is live at each blit, and fades) so `gfx/rects/` colours are exact.
+  - Confirm in the emulator that `$62FF` areas never expose the bank-10 row/column quirk.
+  - Check which areas actually use the `--visited` substitution (k4 screens) and render those variants.
 
 ### Web Port Fixes
 
