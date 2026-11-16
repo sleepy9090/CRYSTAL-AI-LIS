@@ -430,3 +430,28 @@ bank,addr,name,comment
 15,ADD4,AiBoss88,AI $E7 (type $88): $07D7=4 when phase!=0; 26:9B07 A=$C0; BossPhaseDispatch base $1B
 15,B2DA,AiBowOfTruth9E,AI $EB (type $9E): 26:9B07 A=$C7; $07D7=$10 + IRQ mode 7 when phase!=0; BossPhaseDispatch base $2B
 *,0743,opel_revive,$40 while the Opel Statue revive runs so sub_state 6 consumes the statue; 0 = manual use is refused
+20,8466,StaleText20_8466,dead filler to 84FF: copy of 22:A466 text (filler_scan.DEAD)
+20,88A5,StaleText20_88A5,dead filler to 88FF: copy of 22:A8A5 text
+20,923D,StaleText20_923D,dead filler to 93FF: copy of 22:B23D text
+20,9B4E,StaleText20_9B4E,dead filler to 9BFF: copy of 22:BB4E text
+20,9E30,StaleText20_9E30,dead filler to 9FFF: copy of 22:BE30 text + 18 tail
+30,C8C0,StaleText30_C8C0,dead filler to C8FF: copy of 22:A8C0 text between RTS and MainLoop
+31,F9BA,StaleText31_F9BA,dead filler to F9FF: copy of 23:B9BA text
+31,FDE0,StaleSave31_FDE0,dead filler to FDFF: copy of 23:BDE0 load descriptors + SaveAllowed
+31,FE2E,StalePad31_FE2E,dead $FF pad to FE7F (8 stale bytes at FE78)
+21,BF32,StaleSaveTbl21,dead filler to BFFF: copy of 23:BF32 save table
+27,BE40,StaleText27_BE40,dead filler to BFFF: copy of 21:BE40 text + 23 save table
+22,BF90,StaleFill22_BF90,dead filler to BFFF: copy of 18:9F90 after last bank 22 message
+18,9F05,NameCharGrid,char grid A-Z a-z 0-9 punct ($FF empty) to 9FC1; no reader found
+18,9FC2,StaleCode18_9FC2,dead filler to 9FFF: same bytes as live code 19:ABA1; 0 xrefs
+19,B895,StaleFill19_B895,dead filler to B8FF: copy of 17:B895 rect ptr table
+23,BBD3,StaleCode23_BBD3,dead filler to BBFF: copy of 19:BBD3 code
+16,9FB0,StaleSnd16_9FB0,dead filler to 9FFF: copy of 24:9FB0 sound data
+13,ABA3,StaleFill13_ABA3,dead filler to ABFF: copy of bank 5 screen page
+13,BE91,StaleFill13_BE91,dead filler to BFEF: copy of bank 5 screen pages (BFF0 = area 0 record)
+15,A3C0,StaleFill15_A3C0,dead filler to A3FF: copy of 13:A3C0
+15,BBAF,StaleFill15_BBAF,dead filler to BC3F: copy of 13 ObjType records
+15,BF97,StaleFill15_BF97,dead filler to BFFF: copy of 13:BF97
+9,BF80,StaleFill09_BF80,dead filler to BFFF: subst tables k>=12 unused; = 7:BF80 screen page
+11,BCFA,StaleFill11_BCFA,dead filler to BDFF: after last area sub-table record (= 9:BCFA)
+11,BEE0,StaleFill11_BEE0,dead filler to BFFF: copy of 9:BEE0 subst tables
