@@ -45,7 +45,6 @@ DEAD = [
     (15, 0xBBAF, 0xBC3F, '13:BBAF', 'copy of ObjType records ($B8 @BBBE, $3F @BBFD)'),
     (15, 0xBF97, 0xBFFF, '13:BF97', 'copy of bank 5 page + 13 area 0 record'),
     (16, 0x9FB0, 0x9FFF, '24:9FB0', 'after FF terminator; = sound-stream bytes'),
-    (18, 0x9FC2, 0x9FFF, '19:ABA1', 'stale code: same bytes as live 19:ABA1 (other offset); 0 xrefs'),
     (19, 0xB895, 0xB8FF, '17:B895', 'bank 17 rect ptr table B8D4 -> B8E6..; in 19 they would point into PlayerDeath'),
     (20, 0x8466, 0x84FF, '22:A466', 'bank 22 text (msgs 15.18-15.23)'),
     (20, 0x88A5, 0x88FF, '22:A8A5', 'bank 22 text; frame templates 8899-88A1 stay live'),
@@ -66,6 +65,8 @@ DEAD = [
 LIVE_BOTH = [
     ('08:8835/09:A835 x4', 'tilesets $88 and $A8 share quadrant-page rows'),
     ('09:BCFA-BDFF', 'unreferenced by known readers (attr tables end B2FF); kept as data, unproven'),
+    ('18:9FC2-9FFF', 'session 22: NOT dead - main state 2 (30:C931 SwitchBank16(9); JMP $9FCC) '
+                     'enters at 18:9FCC and runs on into 19:A000; 9FC2-9FCB has no caller yet'),
 ]
 
 # Banks the game maps somewhere other than nesrom.bank_window (text banks via SetR7).

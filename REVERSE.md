@@ -69,7 +69,7 @@ PRG mode: reset writes `$8000=$00` → PRG mode 0, CHR mode 0 (2KB banks at `$00
 
 The scan compares every pair of 8KB PRG banks at the **same in-bank offset** and lists runs of ≥32 identical bytes. Runs with fewer than 4 distinct byte values are classed as padding (18 runs, 952 bytes, mostly `$80` in screen banks 0-7 and `$FF`). That leaves 32 content runs. Each one was judged by hand, using the decoded-text coverage (`gfx/text.json`, which the tool prints as `text%A/B`), the known table extents, xrefs and the code boundaries. The tool's `refs` column (abs operands pointing into the run) is too noisy in the data and text banks to decide anything on its own.
 
-**Result: 25 dead ranges, 4164 bytes.** They are listed in `filler_scan.DEAD`, which `disasm_all.py` should import and treat as `.db`:
+**Result: 25 dead ranges, 4164 bytes** (session 21). **Session 22 correction: 24 ranges, 4102 bytes.** `18:9FC2-9FFF` turned out to be live code (see its row below) and was moved from `DEAD` to `LIVE_BOTH`. The ranges are listed in `filler_scan.DEAD`, which `disasm_all.py` imports and emits as `.db`:
 
 | Dead range | Live source | Evidence |
 |---|---|---|
@@ -80,7 +80,7 @@ The scan compares every pair of 8KB PRG banks at the **same in-bank offset** and
 | `31:FE2E-FE7F`, `23:BE2E-BE7F` | — | `$FF` padding + 8 stale bytes (`1E 00 28 00 3C 00 32 00`) before `ReadPads` `FE80`. Both sides are dead |
 | `21:BF32-BFFF`, `27:BE40-BFFF` | `21:BE40` text + `23:BF30` | `23:BF00` is the 256-byte per-area save table. Bank 27 also holds a copy of the bank 21 message tails |
 | `22:BF90-BFFF` | `18:9F90` | lies after the last bank 22 message. Bank 22's own tail is a stale copy of bank 18, and `20:9F90` copies the same bytes |
-| `18:9FC2-9FFF` | `19:ABA1` (different offset) | stale **code**: the same bytes as the live `DEC $06FE / BEQ / RTS / INC $06F1 / RTS / JSR …` at `19:ABA1`, with 0 xrefs. `18:9F05-9FC1` is a name-entry-style character grid (`A-Z`, `a-z`, `0-9 : ; ? ! " & ' , - . _`, `$FF` = empty cell). No reader has been found; the same characters appear as the displayed rectangle at `18:9E5A` (on a `$10` background) |
+| ~~`18:9FC2-9FFF`~~ **LIVE (session 22)** | `19:ABA1` (different offset) | **Wrong in session 21.** Main state 2 (`30:C931`: `SwitchBank16(9)`, `JMP $9FCC`) enters at `18:9FCC` (`MainState2Init`) and runs on across the window edge into `19:A000`; the `STA $04` at `18:9FFF` is split between the banks. `xref.py` missed this because the `JMP` comes from fixed bank 30 into a swapped window. `9FC2-9FCB` (`Sub18_9FC2`, the same bytes as `19:ABA1`) still has no caller, but it sits in a live code run. Session 21 text: stale **code**: the same bytes as the live `DEC $06FE / BEQ / RTS / INC $06F1 / RTS / JSR …` at `19:ABA1`, with 0 xrefs. `18:9F05-9FC1` is a name-entry-style character grid (`A-Z`, `a-z`, `0-9 : ; ? ! " & ' , - . _`, `$FF` = empty cell). No reader has been found; the same characters appear as the displayed rectangle at `18:9E5A` (on a `$10` background) |
 | `19:B895-B8FF` | `17:B895` | `17:B8D4` is a pointer table into bank 17 `W H` rectangles (`B8E6` = `10 08` + spaces). In bank 19 the same pointers would land inside `PlayerDeath` `19:B900` |
 | `23:BBD3-BBFF` | `19:BBD3` | a copy of the code just before `SwordRaisePose` (the `19:BBE4` `OamClipTop` call; the session-19 note already called `23:BBE4` a stale copy) |
 | `16:9FB0-9FFF` | `24:9FB0` | follows an `$FF` terminator in bank 16. The bytes are bank 24 sound-stream data |
@@ -93,6 +93,24 @@ The scan compares every pair of 8KB PRG banks at the **same in-bank offset** and
 **Matches that are not filler:** `08:8835/8935/8A3F/8B3F` ↔ `09:A835/…` are the `$88` and `$A8` tilesets sharing quadrant-page rows; both are live. `09:BCFA-BDFF` is the live source of the bank 11 copy, but nothing known reads it either (`9:B300-BDFF` lies past the attribute tables `B000-B2FF` from `31:EEEF`). It stays as data and is unproven.
 
 The pattern: a bank's unused tail keeps the bytes the build buffer held from another bank. That bank is usually close in number (20←22, 27←21, 15←13, 13←5, 11←9) or is the text bank mapped next to it (30←22, 31←23).
+
+### Code coverage (session 22, `tools/disasm_all.py` → `disasm/coverage.txt`)
+
+The recursive-descent tracer classifies **40,170 bytes as code (15.3% of PRG)**. 159,084 bytes are known data: banks 0-9, 12 and 21-22, the text in 23, the DEAD filler, jump tables, vectors, and labelled data runs (each counted from the label to the next label or code byte, so this is an upper bound). The remaining 62,890 bytes are unknown. All 32 banks round-trip byte-exact.
+
+| Bank | Code % | Note |
+|---|---|---|
+| 30 / 31 | 77.2 / 72.4 | fixed banks; the unknown bytes are mostly the 8 untraced dispatch tables and their handlers (task at the end of RE Investigation) |
+| 27 / 26 | 67.8 / 56.6 | object AI + player/HUD (`ObjAiTable` seeds all 128 entries) |
+| 16 | 58.8 | menus. Entered with **16 at `$8000` and 23 at `$A000`** (`30:D8DD`: `SetR7($17)`, `JSR $8000`), which is why bank 16 calls `SaveJumpTable` `$BC00/$BC03` without mapping bank 23 itself |
+| 15 | 41.3 | boss/AI code (context 26/15) |
+| 19 / 18 | 29.0 / 11.2 | main states 2/3 (title/menu screens; see "Main states 2/3" below). Most of 18 is `W H` rectangle data |
+| 24 | 21.5 | sound driver; the rest is sound data |
+| 20 / 14 | 19.0 / 15.3 | text printer / NPC scripts; the rest is tables + script data |
+| 28 | 10.5 | sprite pass; the rest is metasprite data |
+| 23 | 5.5 | save module `BC00-BDFF` only |
+| 17 | 4.0 | state 4/5 entries `$A000/$A100` + the `17:A117` dispatcher (untraced table `17:A11A`); mostly `W H` rectangles |
+| 10, 11, 13, 25, 29 | 0 | no code reached. 10/11 = area headers + sub-tables, 13 = area records + `ObjTypeTable`. **25 and 29 are 100% unknown**: 25 = sound data used through R7=25 (`SoundUpdate`), 29 = metasprite data (`ObjMetaPtrTableB` → `$A000`). No label points into either yet |
 
 ---
 
@@ -330,6 +348,48 @@ So each object type is a sparse initialiser for the 32 `$0300-$06E0` column arra
 - **`ReadPads` `31:FE80`** (gameplay; was mislabelled `ColdInitSub2`, 7 callers incl. `SubstPlay` `30:CB62` and the message wait loops): `pad_dir` `$49` = `PadDirTable` `31:FED0`[d-pad nibble] (0 = up, clockwise to 7 = up-left; `$FF` = none, U+D, L+R or all four; with three keys the opposed pair cancels, e.g. U+L+R → 0, U+D+L → 6); `pad_new` `$4B` = ~`pad_prev` & raw (edge); `pad_prev` `$43` = raw. Hold counters: on a new A (B) press `$45` (`$47`) = 0; while held it counts up. A: saturates at 31 and then sets carry each frame → `pad_act` `$4D` b7 = "A held ≥31 frames" (continuous). B: wraps every 32 frames → `$4D` b6 pulses once per 32 frames. `pad_act` = those two bits \| `pad_new`.
 - **`ReadPadsMenu` `31:FEE0`** (menus: `16:80D4/8494/84EC/9887/9B42`, `15:BDE1`, `22:8BA3`): `pad_new` as above, plus **d-pad auto-repeat**: a new d-pad press loads `$45` = `$0C`; while the same d-pad bits stay held `$45` counts down, and at 0 it reloads 3 and ORs the d-pad bits into `pad_new` again (12-frame delay, then every 3 frames). `$45` therefore means A-hold in gameplay and d-pad repeat in menus.
 - Known uses of `pad_new`: b7/b6 A/B close or advance messages (text code `03`, `30:D354`); b5 Select replays a message; **b6 B with an item selected → `PlayerUpdate` `26:9B45`** (use the item).
+
+### Full-ROM disassembly (session 22, `tools/disasm_all.py`)
+
+**Method.** Recursive descent from these seeds:
+- the 3 vectors;
+- every labels.csv ROM label whose name is not a data name (`--labels` shows the split);
+- 15 dispatch tables, each with the bank context its dispatcher sets up: `MainStateTable`, `IrqHandlerTable`, `SubstateHandlerTable` (context from `SubstateBankTable`), `TalkActionTable`, `EventActionTable`, `ItemEventHookTable` (14/15), `SpawnHandlerTable` (12/13), `SndOpcodeTable` (24/25), `TextCtrlTable`, `HitHandlerTable`, `ItemUseHandlers`, `ObjAiTable` (26/27, ids `$60-$6F` → 26/15), `BossPhaseTable` (auto count **25**), and the new `State3ModeTable`/`State3SubTable`.
+
+Each path carries `ctx = (r6, r7)`:
+- `LDA #n` before `JSR/JMP SwitchBank16 / SetR6 / SetR7` updates it, and so do the fixed tail-calls `C7A0` (26/27) and `E3D4` (12/13).
+- Any other `JSR` applies the **callee's summarised bank effect**: the tool walks the callee's fall-through path to its `RTS`. This catches helpers like `30:DA0C` (maps 20/21 before `JSR $9500`) and `19:B9FB` (`SetR6($1A)`, `JMP $8CC0`). A path through `RestoreBanks` `FFDB` counts as no change.
+- Code running from a swappable window always keeps its own bank pinned there.
+- If the context is unknown, a target resolves only when exactly one bank has a code label at that address.
+- Each target must pass a 10-instruction decode check before it is traced; targets that fail are reported as "rejected".
+- Z/N/C are tracked through `LDx #imm`, `CLC/SEC`, flag-neutral instructions and not-taken branches. This makes `LDA #0 / STA / BEQ` and `BNE x / BEQ y` pairs unconditional (e.g. MainLoop `C91D`, `15:BF1A`).
+- Code and operands may run across a window edge into the next window's bank (16KB pairs, and `$C000→$E000`).
+
+There are no JSR-with-inline-data helpers: all 6 `PLA/STA/PLA/STA` sites restore values pushed earlier. Swappable banks have **no** JMP entry table at `$8000`/`$A000`; the call-site map's "fixed entry offsets" (`$8020`, `$8028` …) are plain routine addresses.
+
+**Results:**
+- 40,170 code bytes; 1,978 auto-named targets.
+- 0 warnings, 0 rejected targets.
+- 1 unresolved target: `15:AB84 JSR $9824`, after `PLA / JSR SetR6` at `15:AB6F` restores a pushed bank, almost certainly 26. `15:AB87 JMP $9897` resolves through the `TempToObjPos` label.
+- 2 straddling instructions: `18:9FFF` (`STA $04` → `19:A000`) and `30:DFFF` (`STA abs` → `31:E000`). `26:9FF4` branches across into `27:A002`.
+- 33 indirect-jump sites. All but 8 are the known tables. The 8 dispatchers with untraced tables:
+
+| Site | Index | Table | Note |
+|---|---|---|---|
+| `17:A117` `JMP ($008E)` | `$0A`·2 | `17:A11A` | state 4/5 code |
+| `27:A06E` `JMP ($0010)` | A·2 | `27:A072` | AI code |
+| `27:BA3D` `JMP ($0010)` | `$0600,X`·2 | `27:BA40` | AI phase dispatch |
+| `30:DBD9` `JMP ($0010)` | A·2 | `30:DBDC` | after `SubstTeleportMenu` |
+| `30:DDBA` `JMP ($0010)` | A·2 | `30:DDBD` | after `SubstTelepathySelect` |
+| `30:DF0B` `JMP ($0010)` | A·2 | `30:DF0E` | after `SubstChangeForm` |
+| `31:E419` `JMP ($0010)` | A>>4 (no ASL) | `31:E3D9` | after `SwitchBank16_6`; spawn/entity path |
+| `31:F6BF` `JMP ($0052)` | `irq_mode`·2 | `31:F6C2` | NMI/IRQ-mode dispatch |
+
+**Main states 2/3 (new, session 22).**
+- State 2 `30:C931` = `SwitchBank16(9)`, `JMP $9FCC`. This lands in **`18:9FCC` `MainState2Init`**, which session 21 had wrongly listed as dead filler. It calls `18:82B3`, `81D8` and `8198`, sets `irq_mode`=3, and clears zero page `$70-$98` (object x/y arrays), `$0600-$0628` and `$0680-$06FF`. It then runs straight on across the window edge into `19:A000`, sets `$06B2`=`$FF`, does `INC main_state` (→ 3), and calls `19:A07C` twice.
+- State 3 `30:C939` = `ReadPadsMenu`, then `JMP $A015` (**`MainState3`**). It calls `A07C` unless `$06B2` bit 7 is set, clears `frame_ready`, decrements `$06FF`, and dispatches on `$06F3` through `State3ModeTable` `19:A038` (3 entries: `19:A03E`, `18:8310`, `18:834A`).
+- Mode 0, `State3SubDispatch` `19:A03E`, dispatches on `$06F0` through `State3SubTable` `19:A052`: 7 handlers `A79F ABB4 ABEA A0B5 A176 A653 A6DF` plus 2 null words.
+- Reset sets state 2, so states 2/3 are the boot / title-side screens. The individual modes are not named yet.
 
 ### Compression (session 10)
 
@@ -776,7 +836,7 @@ Bank 23 `$BC00-$BEFF` is code, not text. Jump table: `BC00`→`SaveGame` `BC09`,
 
 ### State Machine
 
-Main state `$40` — 6 states, see MainLoop. Semantics TBD.
+Main state `$40` — 6 states, see MainLoop. Semantics TBD. Session 22: state 2 = init (`18:9FCC` → `19:A000`, ends `INC main_state`), state 3 = per-frame `19:A015` with sub-modes `$06F3`/`$06F0` (see "Full-ROM disassembly").
 
 ---
 
@@ -819,6 +879,9 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 | `tools/near_reads.py` | `<addr> [span]` — abs,X/abs,Y reads whose base is ≤ addr within span (finds table reads xref.py misses; `--all-ops` adds stores). Not sync-checked (session 8, run) |
 | `tools/bank_entropy.py` | `[--block N] [banks]` — Shannon entropy per 8KB PRG bank (+ per N-byte block), `00`/`FF` share, distinct bytes (session 10, run) |
 | `tools/filler_scan.py` | `[--min N] [--distinct D] [--pad] [--out f]`: same-offset identical runs between all PRG bank pairs, with text coverage, abs-operand ref hints and labels per side, plus the hand-judged `DEAD` / `LIVE_BOTH` verdict lists (session 21, run, 0.2 s) → `gfx/filler_scan.txt`. It uses manual argv parsing because `tools/dis.py` shadows the stdlib `dis` module, which breaks `argparse` on Python 3.14 |
+| `tools/disasm_all.py` | `[--quiet] [--labels]`: full-ROM recursive-descent disassembler (session 22, run, 0.7 s). See "Full-ROM disassembly" under Key Findings. `--labels` prints how each ROM label is classified (code/data by name: `DATA_NAME_RE`, `CODE_NAMES`). Its output is checked by a built-in 2-pass assembler that re-assembles every file and compares it with the ROM; the run fails if any byte differs |
+| `disasm/bank_NN.asm` | 32 files, one per 8KB bank, ca65-like syntax: `.org` = CPU window (bank 22 at `$A000`); `NAME = $XXXX` equates for symbols outside the file; `a:` forces absolute mode on operands below `$100`; jump tables as `.dw name`; data as `.db` (16 per line, split at labels); each code line ends with `; AAAA  raw bytes`. Auto-names are `sub_BB_AAAA` (JSR / table targets) and `loc_BB_AAAA` (branch / JMP targets). An instruction that runs over a window edge is emitted as `.db` with a `-- continues in the next window` comment |
+| `disasm/coverage.txt` | code / data / unknown bytes per bank, round-trip status, auto-name count, auto table counts, the 33 indirect `JMP (…)` sites, unresolved `$8000-$BFFF` targets, rejected targets, and warnings |
 | `tools/bank_calls.py` | lists each `LDA #n / JSR SwitchBank16` site with n, 8KB pair, and following `$8000-$BFFF` JSR/JMP targets (`--summary` groups by n). Not yet run (permission prompt) |
 
 `nesrom.py` gained `bank_window(bank)` (30→$C000, 31→$E000, even→$8000, odd→$A000), `bank_cpu_addr`, `parse_bank_addr("BB:AAAA")`.
@@ -894,7 +957,16 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 
   Original task: (c) join `gfx/spawn_params.txt` with `npc_scripts`/`presence`/trigger records so each NPC param / trigger / `HitFlagParams` entry gets its areas and script in one report (reuse `npc_script_check.placed_params`); (f) object types `$32 $38 $53 $54 $55 $73 $88 $9E $DE $DF $E2` via `objtype_dump.py` + their AI handlers (`gfx/obj_ai.txt`), hit handlers `26:90AA/9357/94B0` + `26:906C/907C`, and the reward path for the area `$43` boss (type `$70`, AI `$E5`, no `BossRecs` entry); (h) menu glyph tiles via `font_dump.py`; plus from session 19: what `$0743` is (Opel revive sets `$40`; item `$0A` use clears it), `$4B` b6 in `26:9B45` (quick-use button?), the `$643B`+`$0711` read for Crystalis (`$6440`) in `SwordPowerLevel`, and the `$7E` overlapping set-list (confirm in the emulator).
 - [x] Ph2: stale-copy filler scan — done session 21: `tools/filler_scan.py` → `gfx/filler_scan.txt`. It finds 32 content runs plus 18 padding runs. Judged by hand: **25 dead ranges (4164 bytes)**, listed in `filler_scan.DEAD` for `disasm_all.py`, with a table under "Stale-copy filler" in the Data-Range Map. New finds: stale text inside the fixed banks (`30:C8C0-C8FF`, `31:F9BA-F9FF`), stale code at `18:9FC2`, and the fact that substitution tables k≥12 (`9:BF80+`) are unused. Corrected `20:8466-8527` to `84FF`. Original: write `tools/filler_scan.py`: for every bank, find runs ≥ 32 bytes that are byte-identical to another bank at the **same in-bank offset** (known: `20:8466`↔`22:A466`, `21:BF32`↔`23:BF32`, `31:FDE0`↔`23:BDE0`), report them, and mark them as dead filler in the Data-Range Map so `disasm_all.py` treats them as data.
-- [ ] Ph3: full-ROM disassembly — write `tools/disasm_all.py`: recursive-descent code tracer seeded from the vectors, every `labels.csv` code label, the `SwitchBank16`/far-call (`31:FF80-FFE2`) targets, and known jump/pointer tables (MainStateTable, IrqHandlerTable, SndOpcodeTable, substate tables, swappable-bank `$8000` entry tables). Follow JSR/JMP/branches within the bank (bank 30/31 targets cross into fixed banks; `$8000-$BFFF` targets need the bank from the call context). Output `disasm/bank_NN.asm` (one per 8KB bank, CPU origin per `nesrom.bank_window`) with labels + comments from `labels.csv`, auto-names `sub_BB_AAAA`/`loc_BB_AAAA` for unlabeled targets, data as `.db` rows (16/line), and `disasm/coverage.txt` (code/data/unknown bytes per bank). Verify: reassembling is not required, but every decoded byte must round-trip (concatenated bytes of each .asm == the bank). Update the Data-Range Map from the coverage report.
+- [x] Ph3: full-ROM disassembly — done session 22:
+  - `tools/disasm_all.py` → `disasm/bank_00-31.asm` + `disasm/coverage.txt`. **All 32 banks re-assemble byte-exact** with the built-in 2-pass assembler.
+  - Bank context is tracked per path, including summarised callee bank effects, and straddling across window edges is handled. 40,170 code bytes, 1,978 auto-names, 0 warnings, 1 unresolved target.
+  - **Found:** `18:9FC2-9FFF` is **live** main-state-2 code (`MainState2Init` `18:9FCC` → `19:A000`), not dead filler; `filler_scan.DEAD` is now 24 ranges.
+  - State 3 sub-dispatch decoded: `State3ModeTable` `19:A038`, `State3SubTable` `19:A052`.
+  - Bank 16 menus run with bank 23 at `$A000`.
+  - Swappable banks have no `$8000` entry JMP tables.
+  - 8 dispatch tables are still untraced and banks 25/29 are 100% unknown; both are in the new task at the end of the list. Data-Range Map "Code coverage" added. 6 labels.
+
+  Original task: write `tools/disasm_all.py`: recursive-descent code tracer seeded from the vectors, every `labels.csv` code label, the `SwitchBank16`/far-call (`31:FF80-FFE2`) targets, and known jump/pointer tables (MainStateTable, IrqHandlerTable, SndOpcodeTable, substate tables, swappable-bank `$8000` entry tables). Follow JSR/JMP/branches within the bank (bank 30/31 targets cross into fixed banks; `$8000-$BFFF` targets need the bank from the call context). Output `disasm/bank_NN.asm` (one per 8KB bank, CPU origin per `nesrom.bank_window`) with labels + comments from `labels.csv`, auto-names `sub_BB_AAAA`/`loc_BB_AAAA` for unlabeled targets, data as `.db` rows (16/line), and `disasm/coverage.txt` (code/data/unknown bytes per bank). Verify: reassembling is not required, but every decoded byte must round-trip (concatenated bytes of each .asm == the bank). Update the Data-Range Map from the coverage report.
 - [ ] Ph4 assets 1/5 — tiles + palettes: `tools/extract_tiles.py` dumps all 128 CHR 1KB banks to `gfx/chr/chr_NNN.png` (grayscale, 16x4 tiles, 4x scale) + one `gfx/chr_all.png` sheet; `tools/palette_dump.py` (shared with "area follow-ups 3" — reuse if it already exists) with a standard 64-color NES master palette (2C02 RGB in the tool, cited), renders every palette id from `PaletteBuild` `26:8C0E` / bank 2/3 page tails to `gfx/palettes.png` and writes `gfx/palettes.json`. Also find the PPU `$3F00` writer and confirm the palette upload path.
 - [ ] Ph4 assets 2/5 — backgrounds (format known, no compression — see "Compression", session 10): decode `MetatileAttr` `31:EDE5`/`EEEF` and the bank 9 `$BE00` visited-screen substitution tables; check which grid ids map to which banks and whether `$80` (no screen) is ever read. Write `tools/render_screen.py` (screen id → packed bank+page `31:EF36` → raw 16×15 metatile page in banks 0-7 → metatiles from banks 8/9 with tileset `$67` → BG CHR R0/R1 + k1 palettes → `gfx/screens/screen_NNN.png`) and `tools/render_level.py` (whole area from the `$6300` screen grid via `area_dump` k0 → `gfx/areas/area_NNN.png`). Render every area `area_dump.py` lists, plus the title/menu `W H` rectangles from banks 17/18.
 - [ ] Ph4 assets 3/5 — sprites: extend `meta_dump.py` to render each area's enemy sets with the correct R4/R5 CHR (`LoadAreaChrRecord`) and sprite palettes, and export animation frame sequences (frame mask, ÷8 timing) to `gfx/sprites/` + `gfx/sprites.json` (id → frames, offsets, attrs, tiles).
@@ -938,6 +1010,12 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD.
 - [x] Ph3: identify controller read routine and input RAM vars — done session 20 (see "Controller input" under the screen pipeline in Key Findings)
 - [x] Ph3: identify sound driver bank + entry points — covered by session 2 (see above)
 - [ ] Ph2 (low priority) filler leftovers from session 21 — find the reader of `NameCharGrid` `18:9F05-9FC1` (it may be read through a `(zp),Y` pointer; if no reader exists, add it to `filler_scan.DEAD`), and check whether anything reads `9:B300-BDFF` (past the attribute tables `B000-B2FF`; `09:BCFA-BDFF` is the live source of the bank 11 copy). Confirm both with an emulator read watch once Ph5.5 exists.
+- [ ] Ph3 (low priority) disasm coverage leftovers from session 22:
+  - Decode the 8 untraced dispatch tables (table under "Full-ROM disassembly": `17:A11A`, `27:A072`, `27:BA40`, `30:DBDC`, `30:DDBD`, `30:DF0E`, `31:E3D9` (index A>>4), `31:F6C2` (`irq_mode`)). Find their counts from the index range, then add them to `disasm_all.JUMP_TABLES` with the right bank context and re-run.
+  - Name the state-3 modes (`State3SubTable` handlers `19:A79F…A6DF`, modes 1/2 `18:8310`/`18:834A`).
+  - Confirm that banks 25 and 29 hold no code (sound data via R7=25; metasprites via `ObjMetaPtrTableB`).
+  - Re-check `15:AB84` (`PLA → SetR6`, likely 26:9824).
+  - Then update the Data-Range Map coverage table.
 
 ### Web Port Fixes
 

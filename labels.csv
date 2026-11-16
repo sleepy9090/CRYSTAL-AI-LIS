@@ -443,7 +443,12 @@ bank,addr,name,comment
 27,BE40,StaleText27_BE40,dead filler to BFFF: copy of 21:BE40 text + 23 save table
 22,BF90,StaleFill22_BF90,dead filler to BFFF: copy of 18:9F90 after last bank 22 message
 18,9F05,NameCharGrid,char grid A-Z a-z 0-9 punct ($FF empty) to 9FC1; no reader found
-18,9FC2,StaleCode18_9FC2,dead filler to 9FFF: same bytes as live code 19:ABA1; 0 xrefs
+18,9FC2,Sub18_9FC2,DEC $06FE / INC $06F1 helper (same bytes as 19:ABA1); no caller found yet - NOT dead (session 22 correction)
+18,9FCC,MainState2Init,main state 2 (30:C931 SwitchBank16(9) JMP $9FCC): JSR 82B3/81D8/8198; irq_mode=3; clear zp $70-$98 + $0600-$0628 + $0680-$06FF; runs on into 19:A000; INC main_state -> 3
+19,A015,MainState3,main state 3 frame (30:C939 ReadPadsMenu then JMP $A015): $06FF--; dispatch $06F3 via State3ModeTable
+19,A038,State3ModeTable,ptr16[3] by $06F3: A03E 18:8310 18:834A (JMP ($06FC) at 19:A035)
+19,A03E,State3SubDispatch,mode 0: dispatch $06F0 via State3SubTable (JMP ($06FC))
+19,A052,State3SubTable,ptr16[9] by $06F0: A79F ABB4 ABEA A0B5 A176 A653 A6DF 0000 0000
 19,B895,StaleFill19_B895,dead filler to B8FF: copy of 17:B895 rect ptr table
 23,BBD3,StaleCode23_BBD3,dead filler to BBFF: copy of 19:BBD3 code
 16,9FB0,StaleSnd16_9FB0,dead filler to 9FFF: copy of 24:9FB0 sound data
