@@ -587,31 +587,31 @@ bank,addr,name,comment
 *,00B1,obj_y_lo_s01,slot 0x01 (player) of obj_y_lo; auto (ram_map.py s29): r8 w10 banks 15;19;27;30;31
 *,00BD,obj_y_lo_s0D,slot 0x0d of obj_y_lo; auto (ram_map.py s29): r1 w3 banks 15;26;30
 *,00BE,obj_y_lo_s0E,slot 0x0e of obj_y_lo; auto (ram_map.py s29): r4 w3 banks 19
-*,00F1,snd_zpF1,sound driver zp; auto (ram_map.py s29): r10 w7 banks 24
-*,00F2,snd_zpF2,sound driver zp; auto (ram_map.py s29): r8 w8 banks 24
-*,00F3,snd_zpF3,sound driver zp; auto (ram_map.py s29): r26 w15 banks 24
-*,00F5,snd_zpF5,sound driver zp; auto (ram_map.py s29): r18 w5 banks 24
-*,00F6,snd_zpF6,sound driver zp; auto (ram_map.py s29): r16 w5 banks 24
-*,00F7,snd_zpF7,sound driver zp; auto (ram_map.py s29): r1 w2 banks 24
-*,00FC,snd_zpFC,sound driver zp; auto (ram_map.py s29): r13 w13 banks 24
-*,00FD,snd_zpFD,sound driver zp; auto (ram_map.py s29): r3 w3 banks 24
-*,00FE,snd_zpFE,sound driver zp; auto (ram_map.py s29): r5 w4 banks 24;31
-*,00FF,snd_zpFF,sound driver zp; auto (ram_map.py s29): r4 w6 banks 24
-*,0114,snd_ch0114,sound driver per-channel array (;X); auto (ram_map.py s29): r19 w12 banks 24
-*,0115,snd_ch0115,sound driver per-channel array (;X); auto (ram_map.py s29): r2 w3 banks 24
-*,0117,snd_ch0117,sound driver per-channel array (;X); auto (ram_map.py s29): r2 w3 banks 24
-*,011A,snd_ch011A,sound driver per-channel array (;X); auto (ram_map.py s29): r1 w4 banks 24
-*,0120,snd_ch0120,sound driver per-channel array (;X); auto (ram_map.py s29): r1 w3 banks 24
-*,013E,snd_ch013E,sound driver per-channel array (;X); auto (ram_map.py s29): r1 w2 banks 24
-*,014A,snd_ch014A,sound driver per-channel array (;X); auto (ram_map.py s29): r1 w4 banks 24
-*,0150,snd_ch0150,sound driver per-channel array (;X); auto (ram_map.py s29): r1 w2 banks 24
-*,0156,snd_ch0156,sound driver per-channel array (;X); auto (ram_map.py s29): r3 w2 banks 24
-*,015C,snd_ch015C,sound driver per-channel array (;X); auto (ram_map.py s29): r7 w6 banks 24
-*,0162,snd_ch0162,sound driver per-channel array (;X); auto (ram_map.py s29): r4 w3 banks 24
-*,0168,snd_ch0168,sound driver per-channel array (;X); auto (ram_map.py s29): r10 w5 banks 24;31
-*,016E,snd_ch016E,sound driver per-channel array (;X); auto (ram_map.py s29): r2 w4 banks 24
-*,0174,snd_ch0174,sound driver per-channel array (;X); auto (ram_map.py s29): r2 w3 banks 24
-*,017A,snd_ch017A,sound driver per-channel array (;X); auto (ram_map.py s29): r4 w3 banks 24
+*,00F1,snd_stream_ofs,sound: Y offset into the current stream while reading ops (INC per byte; renamed s33 from snd_zpF1); r10 w7 banks 24
+*,00F2,snd_frame_end,sound: set by an op that ends the channel's frame (renamed s33 from snd_zpF2); r8 w8 banks 24
+*,00F3,snd_op,sound: current op byte / channel scratch (renamed s33 from snd_zpF3); r26 w15 banks 24
+*,00F5,snd_ptr,sound: stream data ptr lo (with $F6) (renamed s33 from snd_zpF5); r18 w5 banks 24
+*,00F6,snd_ptr_hi,sound: stream data ptr hi (renamed s33 from snd_zpF6); r16 w5 banks 24
+*,00F7,snd_tmp,sound: note/period scratch (renamed s33 from snd_zpF7); r1 w2 banks 24
+*,00FC,snd_reg_dirty,sound: per-frame reg-dirty bits b0 vol b1 sweep b2 period lo b3 period hi (renamed s33 from snd_zpFC); r13 w13 banks 24
+*,00FD,snd_op_count,sound: ops read + vibrato ticks this frame; SFX skipped if >=20 (renamed s33 from snd_zpFD); r3 w3 banks 24
+*,00FE,snd_fade_timer,sound: fade timer ($BC on cmd $FF; DEC per channel tick) (renamed s33 from snd_zpFE); r5 w4 banks 24;31
+*,00FF,snd_dmc_drum,sound: $10|x = DMC drum x armed, 0 = off (renamed s33 from snd_zpFF); r4 w6 banks 24
+*,0114,snd_ch_flags,sound chn[6]: b0 active b4 rest/hold b5 vibrato b6 sw envelope b7 stolen by SFX (renamed s33); r19 w12 banks 24
+*,0115,snd_ch_flags_1,snd_ch_flags[1] (SQ2) fixed-index ref (renamed s33); r2 w3 banks 24
+*,0117,snd_ch_flags_3,snd_ch_flags[3] (NOISE) fixed-index ref (renamed s33); r2 w3 banks 24
+*,011A,snd_ch_ptr_lo,sound chn[6]: stream ptr lo (renamed s33); r1 w4 banks 24
+*,0120,snd_ch_ptr_hi,sound chn[6]: stream ptr hi (renamed s33); r1 w3 banks 24
+*,013E,snd_ch_loop1_cnt,sound chn[6]: loop1 count (ptr lo/hi $0126/$0132) (renamed s33); r1 w2 banks 24
+*,014A,snd_ch_wait,sound chn[6]: frames left until next op read (renamed s33); r1 w4 banks 24
+*,0150,snd_ch_note_len,sound chn[6]: note length in frames (0=256) (renamed s33); r1 w2 banks 24
+*,0156,snd_ch_octave,sound chn[6]: octave*16 (renamed s33); r3 w2 banks 24
+*,015C,snd_ch_env,sound chn[6]: envelope#<<4 | step (renamed s33); r7 w6 banks 24
+*,0162,snd_ch_vib,sound chn[6]: vibrato depth<<3 | phase (renamed s33); r4 w3 banks 24
+*,0168,snd_ch_reg0,sound chn[6]: $4000/$4004/$4008/$400C shadow (duty/vol) (renamed s33); r10 w5 banks 24;31
+*,016E,snd_ch_sweep,sound chn[6]: sweep reg shadow (renamed s33); r2 w4 banks 24
+*,0174,snd_ch_period_lo,sound chn[6]: base period lo (renamed s33); r2 w3 banks 24
+*,017A,snd_ch_period_hi,sound chn[6]: base period hi (renamed s33); r4 w3 banks 24
 *,0200,oam_y,OAM shadow page $0200-$02FF: sprite Y (DMA each NMI)
 *,0201,oam_tile,OAM shadow: tile
 *,0202,oam_attr,OAM shadow: attributes

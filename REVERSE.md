@@ -935,7 +935,112 @@ Bank 23 `$BC00-$BEFF` is code, not text. Jump table: `BC00`→`SaveGame` `BC09`,
 
 ### Data Structures
 
-*(object slot struct: "Object slot struct" below (session 30); save data + WRAM: "Save data + WRAM layout" below (session 31); the other per-struct field tables are Ph5 structs 4/5-5/5)*
+**Struct index (session 33).** One row per struct. The field tables below are the reference layouts. The linked sections explain the behaviour. Every struct is **static-RE only**: none has been checked against an emulator memory dump yet (Ph5 checkpoint, needs Ph5.5).
+
+| Struct | Location | Size / count | Field table | Behaviour (Key Findings / other sections) | Tool | Status |
+|---|---|---|---|---|---|---|
+| RAM map | `$0000-$07FF`, `$6000-$7FFF` | 612 addrs | "RAM Map" | – | `ram_map.py` → `docs/ram_map.txt` | static-RE only |
+| Object slot | 32 slots, columns `$70-$D0` + `$0300-$06E0` (stride `$20`) | 34 columns | "Object slot struct" | "Object sprite pass", "Object update + boss defeat", "Object-vs-object collision" | `struct_dump.py obj` → `docs/obj_struct.txt` | static-RE only |
+| Object type record | `ObjTypeTable` `13:AC00/AD00` → bank 13 | 254 records, variable | "Object type record" (below) | "`ObjInit`", "Object update + boss defeat" | `objtype_dump.py`, `struct_dump.py objtype` | static-RE only |
+| Area record (CHR + spawns) | `AreaPtrTable` `12:9201/9301` → banks 12/13 | 252 ptrs, variable | "Area record + header sub-tables" (below) | "Area records", "Per-area sprite sets", "Handler-1 indirect spawn records" | `area_dump.py` | static-RE only |
+| Area header k0-k5 | `10:8300/8400` → banks 10/11 | 252 headers × 5-6 ptrs | same | "Area header sub-tables", "Area transitions" | `area_dump.py sub` | static-RE only |
+| Handler-1 spawn record | page tails `$F0-$FF` of banks 4/5 | 4 B × 4 per page | same | "Area records" (handler 1), "Handler-1 indirect spawn records" | `area_dump.py indirect` | static-RE only |
+| Screen page / metatile set / attr table / subst table | banks 0-7, 10 (pages); 8/9 (metatiles, attrs, subst) | 256 B / 1 KB / 64 B / 32 B | "Screen page + metatile tables" (below) | "Screen / metatile pipeline", "Background details" | `render_screen.py`, `render_level.py` | static-RE only |
+| Metasprite record | `ObjMetaPtrTableA/B` `28:845C/855C` → banks 28/29 | 256 ids, variable | "Metasprite record" (below) | "Metasprite drawing", "Per-area sprite sets" | `meta_dump.py` | static-RE only |
+| Palette record | page tails `$F0-$FF` of banks 2/3 | 256 slots × 4 B | "Palette record" (below) | "Palette ids `$07E0-$07E7`" | `palette_dump.py` | static-RE only |
+| Sound music / SFX header | `SndMusicTable` `24:8C0C`, `SfxPtrTable` `12:A000` | 32 + 88 ids | "Sound headers + channel state" (below) | "Sound driver", "Sound data format" | `decode_tables.py` | static-RE only |
+| Sound channel state | `$0114-$017F` (6-wide arrays) + zp `$F0-$FF` | 6 chn × 18 fields | same | "Sound data format" (*Per-channel RAM*, *Tick timing*) | – | static-RE only |
+| Save image / WRAM | `$7D00-$7FFF`, slots `$7100-$7CFF`, `$6000-$7FFF` | 768 B ×5 | "Save data + WRAM layout" | "Save / load module" | `save_dump.py` → `docs/save_layout.txt` | static-RE only |
+| Pointer tables | 62 tables, all banks | – | "Pointer tables + bank references" | – | `find_ptr_tables.py`, `check_bank_refs.py` | static-RE only |
+
+#### Object type record (`ObjTypeTable` `13:AC00`, read by `ObjInit` `30:C25D`)
+
+Index = type (`$11`); type ≥ `$80` uses the upper half `13:AD00`. Type 1 = no-op. The record is a sparse initialiser for the slot columns:
+
+| Offset | Field | Meaning |
+|---|---|---|
+| +0 | `snd` | ≠0 → `PlaySound(snd)`. Then all 32 `$0300-$06E0` columns of the slot are zeroed. Type `$FF` stops here |
+| +1 | `m0` | bitmask, MSB first: each set bit consumes the next byte → `$0300`,`$0320`,…,`$03E0` |
+| … | `m1` + bytes | → `$0400`…`$04E0` |
+| … | `m2` + bytes | → `$0500`…`$05E0` |
+| … | `m3` + bytes | → `$0600`…`$06E0` (`$06E0` = bit 0) |
+
+What each column means → "Object slot struct". Init counts per column → `docs/obj_struct_inits.txt`. Position, `$0540`, `$0560` and (handler 1) `$0300/$0320/$0680/$06A0/$06E0` are written by the spawn handler after `ObjInit`.
+
+#### Area record + header sub-tables
+
+**Area record** (`AreaPtrTable` `12:9201`[`$6C`], body read by `LoadAreaChrRecord` `31:E16D`; ptr hi b7 clear = no record):
+
+| Offset | Field | Dest / meaning |
+|---|---|---|
+| +0 | `00` | must be 0, else the record is ignored |
+| +1, +2 | `e6`, `e7` | `$07E6/$07E7` sprite palette ids 2/3 (flag items override with `($6C&7)+9`) |
+| +3, +4 | `R4`, `R5` | `$07F4/$07F5` sprite CHR 1KB banks (`$FF` = bank 127) |
+| +5 … | spawn entries `b0 b1 b2 b3` | one per slot from `$0D`; `FF` = end |
+
+Spawn entry: `b0` = y cell (Y = b0·16+12; `FE` = skip slot); `b1` = x cell (b7 = skip slot; X = (b1&`$7F`)·16+8); `b2` b0-2 = handler (`SpawnHandlerTable` `31:E218`, 0-4), b0-1 → `$0540`, b6 = x+8, b7 → `$0380` b5 (tile+`$40`); `b3` = param → `$0560`. **Handler-1 record** (banks 4/5, `$8000+(p>>2)·$100+$F0+(p&3)·4`): `$20-$23` = `FF type` or `$0680 $06A0 behav/tile meta`.
+
+**Header** (`10:8300`[`$6C`], `AreaSubTable` `30:C7A5`(k)) = k0-k4 ptr16 (k5 only in areas `6A 6D 6E 8A 9F A2 A5 AE AF B4`):
+
+| k | Record | Fields |
+|---|---|---|
+| 0 | map (once) | `snd W H f62FE f62FF` + grid (H+1 rows × W+1 ids, row stride 8 → `$6300`; `$80` = black page) |
+| 1 | gfx (once) | `p0 p1 p2` → `$07E0-$07E2` (`$07E3`=`$7F`), `v67` tileset, `v69`, `R0 R1` → `$07F0/$07F1` |
+| 2 | entry points | 4 B `camXlo camXhi camYlo camYhi` → `$34-$37`, index `$6D`&`$1F` |
+| 3 | exits | 4 B `xcell ycell area entry`, `FF` end (`ExitLookup` `31:EB09`) |
+| 4 | persistent screens | 2 B `flag scr` (scr = y_hi<<4\|x_hi), `FF` end → `$64C0` bits |
+| 5 | edge links | 4 B `area a21 a22 a23`, no terminator (`31:E573`) |
+
+#### Screen page + metatile tables
+
+| Table | Location | Layout |
+|---|---|---|
+| Screen page | screen id S → bank 2·(S>>6)(+1) page S&`$3F` (`$62FF` b7 and S&`$3F`<`$20` → bank 10 page S&`$1F`, row path only) | 240 B = 16×15 metatile ids, byte (y&`$F0`)\|(x>>4); tail `$F0-$FF` reused (palette / spawn records) |
+| Metatile set | banks 8/9, `$67&$FC` + 0..3 | 4 parallel 256-byte pages = TL, TR, BL, BR tile of metatile M |
+| Metatile attrs | `9:B000 + i·$40`, i = (`$67`&`$3C`)>>2 via `MetatileAttrPtrTable` `31:EEEF` | 64 B, 2-bit BG palette per metatile, 4 per byte, LSB first |
+| Visited substitution | `9:BE00 + ($67&$3C)·8` | 32 B: replacement for metatile M < `$20` on visited screens |
+
+#### Metasprite record (banks 28/29, `ObjDrawMeta` `28:822E`)
+
+Id = `$0300` + (`$0380` b0 ? 0 : `$0360`); id < `$80` → `ObjMetaPtrTableA` `28:845C`, else `ObjMetaPtrTableB` `28:855C`.
+
+| Form | Bytes | Meaning |
+|---|---|---|
+| redirect | `FF lo hi` | draw the record at `hi:lo` horizontally mirrored (x' = −dx−8, attr ^ `$40`) |
+| empty | `00` | nothing drawn |
+| frames | `N M` + frames | N sprites per frame, frame = (`$04E0`>>3)&M at +2+f·N·4 |
+| sprite | `dx dy attr tile` | dx/dy s8; dx=`$80` ends the frame; attr b2 = "lower part" (stop here when `$0380` b6) |
+
+#### Palette record (banks 2/3, `PaletteLoadOne` `26:8C6E`)
+
+Slot s (BG id p, or sprite id p+`$B0` mod 256) → bank 2+(s>>7), `$A000 + ((s>>2)&$1F)·$100 + $F0 + (s&3)·4`. Record = 4 NES colours; `$FF` = copy of the backdrop `$6140`. Built into `pal_buf` `$6140-$615F` (minus fade `$11`; negative → `$0F`), uploaded by `PaletteUpload` `31:F8CB`.
+
+#### Sound headers + channel state (bank 24/25, SFX data bank 12)
+
+| Struct | Layout |
+|---|---|
+| Music header (`SndMusicTable` `24:8C0C`[id], id `$00-$1F`) | `01` (unused) + 4 stream ptr16 (SQ1, SQ2, TRI, NOISE) |
+| SFX header (`12:A000`[id−`$20`], id `$20-$77`) | priority (lower wins; rejected if > `$0112`) + 2 stream ptr16 (SQ2, NOISE), stored as `$8xxx` (+`$20` hi at load) |
+| Stream | op bytes, see the *Stream bytes* table in "Sound data format" |
+
+Channel state = 6-wide arrays indexed X (0 SQ1, 1 SQ2, 2 TRI, 3 NOISE, 4 SFX-SQ2, 5 SFX-NOISE):
+
+| Base | Label | Field |
+|---|---|---|
+| `$0114` | `snd_ch_flags` | b0 active, b4 rest/hold, b5 vibrato, b6 software envelope, b7 stolen by SFX |
+| `$011A/$0120` | `snd_ch_ptr_lo/hi` | stream pointer |
+| `$0126/$0132`, `$013E` | –, `snd_ch_loop1_cnt` | loop1 return ptr lo/hi, count |
+| `$012C/$0138`, `$0144` | – | loop2 / `A0` call return ptr lo/hi, count |
+| `$014A` | `snd_ch_wait` | frames left until the next op read |
+| `$0150` | `snd_ch_note_len` | note length (0 = 256) |
+| `$0156` | `snd_ch_octave` | octave·16 |
+| `$015C` | `snd_ch_env` | envelope# <<4 \| step |
+| `$0162` | `snd_ch_vib` | vibrato depth<<3 \| phase |
+| `$0168` | `snd_ch_reg0` | `$4000`-style reg shadow (duty/vol) |
+| `$016E` | `snd_ch_sweep` | sweep reg shadow |
+| `$0174/$017A` | `snd_ch_period_lo/hi` | base period |
+
+Globals: `snd_flags` `$F0`, `snd_stream_ofs` `$F1`, `snd_frame_end` `$F2`, `snd_op` `$F3`, `snd_ptr` `$F5/$F6`, `snd_tmp` `$F7`, `snd_chn_shadow` `$FB`, `snd_reg_dirty` `$FC`, `snd_op_count` `$FD`, `snd_fade_timer` `$FE`, `snd_dmc_drum` `$FF`; queue/API `$0100-$0113` (RAM Map). The zp and channel labels were renamed from the session-29 auto names (`snd_zpF1`…, `snd_ch0114`…) in session 33.
 
 #### RAM Map (session 29, `tools/ram_map.py` → `docs/ram_map.txt`)
 
@@ -952,9 +1057,9 @@ Result: **612 distinct addresses** referenced; 118 were labelled, now **364** (2
 | `$50-$6F` | bank/IRQ shadows, CHR alt set, `area_id`, `area_entry`, `$66-$69` metatile ptrs | 32 | zp | |
 | `$70-$EF` | `obj_x_lo/x_hi/y_lo/y_hi` (+ `obj_x_lo_s01` `$71`, `obj_y_lo_s01` `$B1` = player, `obj_y_lo_s0D/s0E`) | 4×32 | **object columns** (zp) | stride `$20`, X or Y = slot |
 | `$72-$73`, `$80-$8F` | `zp_72` … `zp_8F` | – | zp (title reuse) | used only by banks 17-19 title/menu/state 2-3 code while the object table is cleared (`MainState2Init` zeroes `$70-$98`); overlaps `obj_x_lo` slots |
-| `$F0-$FF` | `snd_flags`, `snd_chn_shadow`, `snd_zpF1-FF` | 16 | zp | sound driver only (bank 24) |
+| `$F0-$FF` | `snd_flags`, `snd_chn_shadow`, `snd_stream_ofs` … `snd_dmc_drum` | 16 | zp | sound driver only (bank 24); fields → "Sound headers + channel state" |
 | `$0100-$0112` | `snd_queue*`, `snd_cmd`, `snd_music_id`, `snd_sfx_priority` | 19 | vars | sound API |
-| `$0114-$017F` | `snd_ch0114` … `snd_ch017A` | ~108 | **sound channel arrays** | `,X`-indexed, bases 6 apart (`$0114 $011A $0120 … $017A`) = 6-entry (per-channel) arrays, 18 fields (bank 24 only). Field meanings → Ph5 structs 4/5 |
+| `$0114-$017F` | `snd_ch_flags` … `snd_ch_period_hi` | ~108 | **sound channel arrays** | `,X`-indexed, bases 6 apart (`$0114 $011A $0120 … $017A`) = 6-entry (per-channel) arrays, 18 fields (bank 24 only). Field meanings → "Sound headers + channel state" |
 | `$0180-$01FF` | `warmboot_sig` `$0182`, stack | – | stack | |
 | `$0200-$02FF` | `oam_y/tile/attr/x` | 256 | OAM shadow | `,X` = sprite·4 |
 | `$0300-$06BF` | 30 object columns | 30×32 | **object columns** | stride `$20`, `,X`/`,Y` = slot (0/1 = player, 13/14 = followers/NPC events, `$1E/$1F` specials). Named: `obj_meta_id` `$0300`, `obj_tile_ofs` `$0320`, `obj_flags2` `$0340`, `obj_meta_dir` `$0360`, `obj_flags` `$0380`, `obj_coll` `$03A0`, `player_hp_max`/HP `$03C0`, `obj_attack` `$03E0`, `obj_defense` `$0400`, `obj_hitflags` `$0420`, `obj_shot_id` `$0440`, `obj_bg_mask` `$0460`, `obj_timer` `$0480`, `obj_active` `$04A0` (AI id), `obj_death_type` `$04C0`, `obj_anim` `$04E0`, `obj_elem_drop` `$0500`, `obj_xp_value` `$0520`, `obj_spawn_b2` `$0540`, `obj_spawn_param` `$0560`, `obj_overlay_id` `$0580`, `obj_freeze` `$05A0`, `obj_screen_x/y` `$05C0/$05E0`, `obj_phase` `$0600`, `obj_timer2` `$0620`, `obj_act_timer` `$0640`, `obj_aux` `$0660`, `obj_param1/2` `$0680/$06A0`. Fixed-slot refs are labelled `<column>_sNN` (e.g. `obj_flags_s01`, `obj_active_s0D`) |
@@ -1370,7 +1475,7 @@ Main state `$40` — 6 states, see MainLoop. Semantics TBD. Session 22: state 2 
 - [x] Ph5 structs 2/5 — object slot struct — done session 30: `tools/struct_dump.py` (`obj` → `docs/obj_struct.txt`, `objtype` → `docs/obj_struct_inits.txt`, `rec <layout>` for fixed-size records incl. new `hitbox`/`collpair`); "Object slot struct" field table under Data Structures (all 36 columns: meaning, init counts, r/w, writers → readers, fixed-slot roles). Resolved the four unknown columns: `$03A0` = `obj_coll` (collision group mask + hitbox id), `$05A0` = `obj_freeze` (AI-freeze timer), `$0640` = `obj_act_timer` (attack countdown → `SpawnShot`), `$0660` = `obj_aux` (per-AI sub-step); `$0440` renamed `obj_shot_id` (per-AI: shot id / NPC pause). Found object collision `ObjCollideAll` `26:8F6E` + `CollPairTable` `26:96F1` + `ObjOverlapScan` `26:95F8` + `HitboxTable` `26:9691` (24 AABBs), knockback (`HitKnockbackSet` `26:95C0`, `$0340` hi-nibble counter, 8 frames) and the `ObjUpdateAll` skip order; `SpawnShot` `26:972D` (`ShotTable` `20:BC00`, fields → "gameplay 3/3"). 14 labels (7 new, 7 renamed). Original: object slot struct: full field table for the 32-slot object arrays (`$70/$90/$B0/$D0`, `$0300-$06FF`, `$04A0/$04E0`, `$0680/$06A0`, …). For each field: base, size, type, who writes it (`ObjInit` `30:C25D`, spawn handlers `31:E218`, entity logic bank 15), who reads it (`ObjSpriteDraw` `28:800E`, collision, AI). Decode `ObjTypeTable` `13:AC00` per-type records with a new `tools/struct_dump.py` (pre-configured layouts: objtype, area record, area sub-tables k0-k5, sound headers, metasprite, palette record, metatile). Reuse/close the `objtype_dump.py` part of "area follow-ups 3".
 - [x] Ph5 structs 3/5 — save data — done session 31: `tools/save_dump.py` → `docs/save_layout.txt`; "Save data + WRAM layout" under Data Structures (current save image field table with the new-save template `23:BE00`, WRAM `$6000-$7FFF` field table). Boot check `BootSaveCheck` `31:F0A4` decoded (slot primary/backup compare, 8-bit checksums `$70F0-$70F3`, `AMI` tag, repair with `SlotCopy` `31:F273`, reset from template). `ColdSaveInit` `31:F1CD` always re-inits the current image. Quirks: `SaveSumSlot` doesn't clear its `$16` seed; slot 1's primary-ok path falls into the backup check; the boot `$7D00→$6480` copy is one page off (transient); **`SaveGame`'s 257-byte copy means only `npc_state[0]` is saved**. Dead vars `$0F`, `$700E/F`, `$7001` (write-only). 15 new labels, 4 renamed (`BootSub`→`BootSaveCheck`, `ColdInitSub`→`ColdSaveInit`, `wram_7001`→`save_reset_flag`, `wram_7005`→`boot_r7_save`). `$62F0`/`$64C0`/`$6300`/`$6140`/`$6200` were already covered (sessions 9/10/23); they are listed in the WRAM table. Original: trace cold-init subs `F1CD`, `FE80`, `F0A4`, the `$7D00-$7EFF`→`$6480` copy, `$6140`/`$6200` (`$FF`-filled at reset), `$62F0`/`$64C0` visited-screen flags, `$6300` screen grid; produce a field table for `$6000-$7FFF` and identify the save/checksum routine (if any).
 - [x] Ph5 structs 4/5 — pointer tables + bank refs — done session 32: `tools/check_bank_refs.py` → `docs/bank_refs.txt` (calls/tables/bank-switch values/data operands/label windows; 0 hard failures; 5 call false-positives explained) and `tools/find_ptr_tables.py` → `docs/ptr_tables.txt` (62 consumer-found pointer tables + 245 filtered orphan runs). "Pointer tables + bank references" catalogue under Data Structures. Found: `EventTriggerTable` mis-banked (`14:A17A` → **`15:A17A`**, fixed everywhere); 4 more untraced `JMP ($06FC)` dispatch tables in bank 19 (merged into the dispatch-table task); odd-window mappings (bank 20 at `$A000`, bank 11 at `$8000`); the `11:BE00` → `$6000` page copy, which shrinks DEAD `11:BEE0` → `11:BF00`; quirks: random-bank read `15:AB4E`, self-code noise `27:B2E7`, data decoded as code at `27:A8A2`. 23 new labels + 2 fixed; `disasm_all` still round-trips. Leftovers → new low-priority task at the end. Original: write `tools/check_bank_refs.py` (every `.dw` pointer and far-call/`SwitchBank16`/`SetR6`/`SetR7` target lands inside a valid bank window and on decoded code/data) and `tools/find_ptr_tables.py` (runs of ≥4 plausible pointers per bank, cross-checked against `xref.py` indexed loads `LDA tbl,X` / `LDA tbl+1,X`). Catalogue every table in a "Pointer Tables" list under Data Structures (bank:addr, count, element type, consumer); label the unlabeled ones and queue tasks for any undecoded ones.
-- [ ] Ph5 structs 5/5 — consolidate: rewrite `### Data Structures` as an index — one field table per struct (object slot, object type, area record + sub-tables k0-k5, screen page/metatile, metasprite, palette record, sound music/SFX headers + channel state, save data, RAM map) with links to the subsystem sections that explain behaviour. Mark each struct "static-RE only" until the Ph5 emulator memory-dump checkpoint confirms it.
+- [x] Ph5 structs 5/5 — done session 33: struct index table at the top of `### Data Structures` plus new field tables (object type record, area record + k0-k5 + handler-1 record, screen page/metatile/attr/subst tables, metasprite, palette record, sound headers + channel state); every struct marked static-RE only; 25 sound driver labels renamed from the s29 auto names (`snd_ch_*`, `snd_stream_ofs`…`snd_dmc_drum`); disasm round-trip OK. Original: consolidate: rewrite `### Data Structures` as an index — one field table per struct (object slot, object type, area record + sub-tables k0-k5, screen page/metatile, metasprite, palette record, sound music/SFX headers + channel state, save data, RAM map) with links to the subsystem sections that explain behaviour. Mark each struct "static-RE only" until the Ph5 emulator memory-dump checkpoint confirms it.
 - [ ] Ph5.5 emu 1/6 — CPU + memory: `tools/emu/` package (pure Python, no third-party emulators). `cpu.py` (all official 6502 opcodes + the illegal ones in `instruction_set.py`, exact cycle counts incl. page-cross/branch penalties, NMI/IRQ/BRK, no decimal mode — reuse `instruction_set.OPCODES`), `memory.py` (2KB RAM mirrored, 8KB WRAM, register dispatch), `loader.py` (iNES via `nesrom.py`). Write `tools/emu/test_cpu.py`: hand-written per-opcode unit tests for flags (ADC/SBC overflow, CMP, BIT, shifts, page-wrap of `JMP ($xxFF)` and zp,X), run and passing.
 - [ ] Ph5.5 emu 2/6 — MMC3 mapper: `mapper.py` with R0-R7, PRG mode 0/1, CHR mode 0/1 (2KB/1KB banks), mirroring, PRG-RAM enable/protect, and the scanline IRQ counter (latch/reload/disable/enable, clocked on PPU A12 rises — approximate at PPU dot 260 of each visible+pre-render line when BG/sprites use opposite pattern tables). Test: replay Reset `31:F2A4` → `SwitchBank16` and check banks 24/25 mapped and `$8020` reached; verify `$C40E` bank shadows `$6E/$50`.
 - [ ] Ph5.5 emu 3/6 — PPU + frame loop: `ppu.py` with `$2000-$2007` semantics (v/t/x/w latch, `$2007` read buffer, increment 1/32, palette mirroring, PPUSTATUS vblank/sprite-0/overflow clears), OAM DMA (`$4014`, 513/514 cycles), vblank NMI at scanline 241, sprite-0 hit. Scanline renderer (BG + 8x8/8x16 sprites, priority, 8-per-line limit, left-8 masking, per-scanline scroll so the IRQ splits at `IrqHandlerTable` render correctly) using the 2C02 palette from `palette_dump.py`. `--dump-screen FILE.png` (Pillow if available, else a tiny PNG writer in `tools/emu/png.py`). APU: register writes logged only (`--log-apu`), `$4015` reads and frame-counter IRQ stubbed. Controllers: `$4016/$4017` strobe+shift.

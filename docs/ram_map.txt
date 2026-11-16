@@ -16,7 +16,7 @@
 000C  zp           3   1   0  -              30:3/1                         tmp_0C
 000D  zp           1   1   0  -              30:1/1                         (tmp_0C+1)
 000E  zp           2   2   0  -              26:2/2                         tmp_0E
-000F  zp           0   2   0  -              31:0/2                         (tmp_0E+1)
+000F  zp           0   2   0  -              31:0/2                         boot_ab_flag
 0010  zp         189 193  69  (),Y69 X10 Y1  15:17/20 16:7/5 19:2/5 23:6/7 26:38/46 27:28/28 28:11/9 30:24/41 31:56/32 jmp_trampoline
 0011  zp         146 157   0  -              15:10/13 16:5/2 19:0/3 23:2/1 26:22/37 27:5/9 28:5/5 30:49/66 31:48/21 tmp_11
 0012  zp          87  56  50  (),Y50         15:0/1 16:10/11 23:2/1 26:10/9 27:5/3 28:5/4 30:40/11 31:15/16 tmp_12
@@ -146,20 +146,20 @@
 00E3  zp           1   0   0  -              31:1/0                         (obj_y_hi+19)
 00EE  zp           0   1   0  -              30:0/1                         (obj_y_hi+30)
 00F0  zp          10   9   0  -              24:10/9                        snd_flags
-00F1  zp          10   7   0  -              24:10/7                        snd_zpF1
-00F2  zp           8   8   0  -              24:8/8                         snd_zpF2
-00F3  zp          26  15   0  -              24:26/15                       snd_zpF3
-00F5  zp          18   5  13  (),Y13         24:18/5                        snd_zpF5
-00F6  zp          16   5   0  -              24:16/5                        snd_zpF6
-00F7  zp           1   2   0  -              24:1/2                         snd_zpF7
-00F8  zp           0   1   0  -              24:0/1                         (snd_zpF7+1)
-00F9  zp           0   1   0  -              24:0/1                         (snd_zpF7+2)
-00FA  zp           1   1   0  -              24:1/1                         (snd_zpF7+3)
+00F1  zp          10   7   0  -              24:10/7                        snd_stream_ofs
+00F2  zp           8   8   0  -              24:8/8                         snd_frame_end
+00F3  zp          26  15   0  -              24:26/15                       snd_op
+00F5  zp          18   5  13  (),Y13         24:18/5                        snd_ptr
+00F6  zp          16   5   0  -              24:16/5                        snd_ptr_hi
+00F7  zp           1   2   0  -              24:1/2                         snd_tmp
+00F8  zp           0   1   0  -              24:0/1                         (snd_tmp+1)
+00F9  zp           0   1   0  -              24:0/1                         (snd_tmp+2)
+00FA  zp           1   1   0  -              24:1/1                         (snd_tmp+3)
 00FB  zp           7   4   0  -              24:7/4                         snd_chn_shadow
-00FC  zp          13  13   0  -              24:13/13                       snd_zpFC
-00FD  zp           3   3   0  -              24:3/3                         snd_zpFD
-00FE  zp           5   4   0  -              24:4/4 31:1/0                  snd_zpFE
-00FF  zp           4   6   0  -              24:4/6                         snd_zpFF
+00FC  zp          13  13   0  -              24:13/13                       snd_reg_dirty
+00FD  zp           3   3   0  -              24:3/3                         snd_op_count
+00FE  zp           5   4   0  -              24:4/4 31:1/0                  snd_fade_timer
+00FF  zp           4   6   0  -              24:4/6                         snd_dmc_drum
 0100  stack-page   3   7   0  -              16:0/1 17:0/1 19:0/1 20:0/1 30:1/1 31:2/2 snd_queue_count
 0101  stack-page   1  11   0  -              16:0/2 17:0/2 19:0/2 20:0/2 30:0/2 31:1/1 snd_queue_lock
 0102  stack-page   7   8   0  -              15:1/2 19:1/1 30:3/3 31:2/2    snd_cur_music
@@ -171,32 +171,32 @@
 0111  stack-page   4   4   0  -              24:3/4 31:1/0                  snd_music_id
 0112  stack-page   4   4   0  -              24:3/4 30:1/0                  snd_sfx_priority
 0113  stack-page   1   1   0  -              24:1/1                         (snd_sfx_priority+1)
-0114  stack-page  19  12   0  X27 Y2         24:19/12                       snd_ch0114
-0115  stack-page   2   3   0  -              24:2/3                         snd_ch0115
-0116  stack-page   1   1   0  -              24:1/1                         (snd_ch0115+1)
-0117  stack-page   2   3   0  -              24:2/3                         snd_ch0117
-0118  stack-page   0   1   0  -              24:0/1                         (snd_ch0117+1)
-0119  stack-page   0   1   0  -              24:0/1                         (snd_ch0117+2)
-011A  stack-page   1   4   0  X5             24:1/4                         snd_ch011A
-0120  stack-page   1   3   0  X4             24:1/3                         snd_ch0120
-0126  stack-page   1   1   0  X2             24:1/1                         (snd_ch0120+6)
-012C  stack-page   0   1   0  X1             24:0/1                         (snd_ch0120+12)
-0132  stack-page   1   1   0  X2             24:1/1                         (snd_ch0120+18)
-0138  stack-page   0   1   0  X1             24:0/1                         (snd_ch0120+24)
-013E  stack-page   1   2   0  X2             24:1/2                         snd_ch013E
-0144  stack-page   0   1   0  X1             24:0/1                         (snd_ch013E+6)
-014A  stack-page   1   4   0  X4             24:1/4                         snd_ch014A
-0150  stack-page   1   2   0  X3             24:1/2                         snd_ch0150
-0156  stack-page   3   2   0  X5             24:3/2                         snd_ch0156
-015C  stack-page   7   6   0  X10            24:7/6                         snd_ch015C
-0162  stack-page   4   3   0  X7             24:4/3                         snd_ch0162
-0168  stack-page  10   5   0  X10 Y4         24:9/5 31:1/0                  snd_ch0168
-0169  stack-page   1   0   0  -              31:1/0                         (snd_ch0168+1)
-016A  stack-page   1   0   0  -              31:1/0                         (snd_ch0168+2)
-016B  stack-page   1   0   0  -              31:1/0                         (snd_ch0168+3)
-016E  stack-page   2   4   0  X6             24:2/4                         snd_ch016E
-0174  stack-page   2   3   0  X5             24:2/3                         snd_ch0174
-017A  stack-page   4   3   0  X7             24:4/3                         snd_ch017A
+0114  stack-page  19  12   0  X27 Y2         24:19/12                       snd_ch_flags
+0115  stack-page   2   3   0  -              24:2/3                         snd_ch_flags_1
+0116  stack-page   1   1   0  -              24:1/1                         (snd_ch_flags_1+1)
+0117  stack-page   2   3   0  -              24:2/3                         snd_ch_flags_3
+0118  stack-page   0   1   0  -              24:0/1                         (snd_ch_flags_3+1)
+0119  stack-page   0   1   0  -              24:0/1                         (snd_ch_flags_3+2)
+011A  stack-page   1   4   0  X5             24:1/4                         snd_ch_ptr_lo
+0120  stack-page   1   3   0  X4             24:1/3                         snd_ch_ptr_hi
+0126  stack-page   1   1   0  X2             24:1/1                         (snd_ch_ptr_hi+6)
+012C  stack-page   0   1   0  X1             24:0/1                         (snd_ch_ptr_hi+12)
+0132  stack-page   1   1   0  X2             24:1/1                         (snd_ch_ptr_hi+18)
+0138  stack-page   0   1   0  X1             24:0/1                         (snd_ch_ptr_hi+24)
+013E  stack-page   1   2   0  X2             24:1/2                         snd_ch_loop1_cnt
+0144  stack-page   0   1   0  X1             24:0/1                         (snd_ch_loop1_cnt+6)
+014A  stack-page   1   4   0  X4             24:1/4                         snd_ch_wait
+0150  stack-page   1   2   0  X3             24:1/2                         snd_ch_note_len
+0156  stack-page   3   2   0  X5             24:3/2                         snd_ch_octave
+015C  stack-page   7   6   0  X10            24:7/6                         snd_ch_env
+0162  stack-page   4   3   0  X7             24:4/3                         snd_ch_vib
+0168  stack-page  10   5   0  X10 Y4         24:9/5 31:1/0                  snd_ch_reg0
+0169  stack-page   1   0   0  -              31:1/0                         (snd_ch_reg0+1)
+016A  stack-page   1   0   0  -              31:1/0                         (snd_ch_reg0+2)
+016B  stack-page   1   0   0  -              31:1/0                         (snd_ch_reg0+3)
+016E  stack-page   2   4   0  X6             24:2/4                         snd_ch_sweep
+0174  stack-page   2   3   0  X5             24:2/3                         snd_ch_period_lo
+017A  stack-page   4   3   0  X7             24:4/3                         snd_ch_period_hi
 0182  stack-page   1   1   0  -              31:1/1                         warmboot_sig
 0183  stack-page   1   1   0  -              31:1/1                         (warmboot_sig+1)
 0184  stack-page   1   1   0  -              31:1/1                         (warmboot_sig+2)
@@ -568,15 +568,15 @@
 6E00  wram         1   2   0  X3             23:0/1 31:1/1                  save_mirror_flags
 6F00  wram         1   2   0  X3             23:0/1 31:1/1                  save_mirror_npc
 7000  wram         2   9   0  -              16:1/8 30:1/1                  menu_save_state
-7001  wram         2   6   0  -              16:2/2 31:0/4                  wram_7001
-7005  wram         1   2   0  -              31:1/2                         wram_7005
-700E  wram         0   2   0  -              17:0/1 31:0/1                  (wram_7005+9)
-700F  wram         0   1   0  -              31:0/1                         (wram_7005+10)
+7001  wram         2   6   0  -              16:2/2 31:0/4                  save_reset_flag
+7005  wram         1   2   0  -              31:1/2                         boot_r7_save
+700E  wram         0   2   0  -              17:0/1 31:0/1                  wram_700E
+700F  wram         0   1   0  -              31:0/1                         wram_700F
 70F0  wram         1   3   0  -              16:0/1 31:1/2                  save_csum0_a
 70F1  wram         1   3   0  -              16:0/1 31:1/2                  save_csum0_b
 70F2  wram         1   2   0  -              16:0/1 31:1/1                  save_csum1_a
 70F3  wram         1   2   0  -              16:0/1 31:1/1                  save_csum1_b
-70F4  wram         0   2   0  -              23:0/2                         (save_csum1_b+1)
+70F4  wram         0   2   0  -              23:0/2                         save_checksum_b
 70F5  wram         5   4   0  -              16:2/0 23:3/4                  save_checksum
 7100  wram         1   1   0  X2             31:1/1                         save_slot0
 71F7  wram         1   0   0  -              16:1/0                         
