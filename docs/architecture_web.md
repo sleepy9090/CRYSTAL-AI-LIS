@@ -88,17 +88,20 @@ the ROM writes (CHR regs, scroll, PPU queue writes, OAM shadow, `$4000-$4017`).
 ### 2.1 Machine.runFrame(buttons)
 
 ```
-runFrame(buttons):
-  pads.latch(buttons)                       // what $4016 would return this frame
-  if ram[$09] == 0 (frame_ready): mainloop.step()     // MainStateTable[$40] → state/substate handler
-  // the handler may span several frames in the ROM (wait loops on $09); see §4
-  ppu.beginFrame(splitList)                 // splits registered by the IRQ set-up of the NMI-mode routine
-  irqWork()                                 // e.g. handler 1: HUD split at line 190 + SoundUpdate
-  nmiWork()                                 // OAM DMA if !overran, scroll copy, PpuQueueFlush, PaletteUpload,
-                                            // NmiModeDispatch[$51], INC $09
-  ppu.render()                              // framebuffer for this frame (uses split list)
-  apu.endFrame()                            // flush audio samples for 1/60.0988 s
+runFrame(buttons):                          // as implemented in game/machine.js (s51)
+  m.buttons = [buttons, 0]                  // what ReadPadRaw would assemble (ROM order A b7 … Right b0)
+  mainStep(m)                               // only if $09 != 0 (the NMI set it): MainStateTable[$40], then $09 = 0
+  // a state may be a generator spanning several frames (ROM wait loops on $09); see §4
+  _installSplits()                          // split list from the last NMI-mode routine → ppu.splits (latch L → line L+1)
+  ppu.renderFrame()                         // frame shown between the two NMIs; IRQ handler bodies run as split hooks
+  nmiWork(m)                                // early-outs $60/$06; OAM DMA + $07D8-DB copy only if $09 == 0
+                                            // (else main loop overran); PpuQueueFlush, PaletteUpload,
+                                            // PPUMASK ← $01, NmiModeDispatch[$51] (schedules splits), INC $09
+  apu.endFrame()                            // (7/8) flush audio samples for 1/60.0988 s
 ```
+
+Correction (s51): MainLoop `30:C900` runs the state when `frame_ready` **≠ 0** and clears it afterwards; the NMI
+skips the OAM DMA and scroll copy while it is still ≠ 0. The first version of this section had the test inverted.
 
 ---
 

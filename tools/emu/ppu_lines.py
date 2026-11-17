@@ -33,6 +33,7 @@ def snapshot(state_path, frames=1):
     # so ppu_check.mjs reports such lines separately instead of failing them.
     writes = []
     orig_wr, orig_mw = ppu.write_reg, m.write
+    sel = [0]                                      # last $8000 value (bank select + CHR inversion b7)
 
     def wr(r, v):
         ppu.sync()
@@ -40,13 +41,36 @@ def snapshot(state_path, frames=1):
         orig_wr(r, v)
 
     def mw(a, v):
+        # only writes that can change the picture: $8001 to R0-R5, or $8000 flipping CHR inversion.
+        # PRG switches (R6/R7) happen mid-frame all the time (FarCall) and do not affect the PPU.
         if a < 0xA000:
-            ppu.sync()
-            writes.append((ppu.frame_no, ppu.line, ppu.dot, 'mmc3', a, v))
+            if a & 1:
+                chr_write = (sel[0] & 7) < 6
+            else:
+                chr_write = (v ^ sel[0]) & 0x80
+                sel[0] = v
+            if chr_write:
+                ppu.sync()
+                writes.append((ppu.frame_no, ppu.line, ppu.dot, 'mmc3', a, v))
         orig_mw(a, v)
 
     ppu.write_reg, m.write = wr, mw
-    nes.run_frames(frames)
+    lines = []
+    orig = ppu._next_line
+    start_frame = None
+
+    def rec():
+        orig()
+        if ppu.frame_no == start_frame and ppu.line < 240:
+            lines.append([ppu.v, ppu.x, ppu.ctrl, ppu.mask, list(m.chr_banks)])
+
+    # run_to() catches up a whole CPU instruction, so run_frame() returns a few dots into line 0.
+    # Hook _next_line one frame early so line 0 is recorded exactly at its dot 0.
+    nes.run_frames(frames - 1)
+    start_frame = ppu.frame_no + 1
+    ppu._next_line = rec
+    nes.run_frame()
+    assert ppu.frame_no == start_frame and len(lines) == 1, (ppu.frame_no, len(lines))
     out = {
         'state': os.path.relpath(state_path, ROOT),
         'frame': ppu.frame_no,
@@ -54,20 +78,8 @@ def snapshot(state_path, frames=1):
         'pal': bytes(ppu.pal).hex(),
         'oam': bytes(ppu.oam).hex(),
         'mirroring': m.mirroring,
-        'lines': [],
+        'lines': lines,
     }
-    lines = out['lines']
-    start_frame = ppu.frame_no
-    orig = ppu._next_line
-
-    def rec():
-        orig()
-        if ppu.frame_no == start_frame and ppu.line < 240:
-            lines.append([ppu.v, ppu.x, ppu.ctrl, ppu.mask, list(m.chr_banks)])
-
-    # line 0 has already started: record it from the current registers
-    lines.append([ppu.v, ppu.x, ppu.ctrl, ppu.mask, list(m.chr_banks)])
-    ppu._next_line = rec
     nes.run_frame()
     ppu._next_line = orig
     ppu.write_reg, m.write = orig_wr, orig_mw

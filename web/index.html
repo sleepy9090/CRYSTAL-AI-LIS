@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>re-c — web port</title>
+<style>
+  html, body { margin: 0; background: #111; color: #ccc; font: 13px system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; align-items: center; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; background: #000; margin-top: 8px; }
+  #help { padding: 6px; opacity: .7; }
+  #status { min-height: 1.2em; color: #e96; }
+</style>
+</head>
+<body>
+<canvas id="screen" width="256" height="240"></canvas>
+<div id="status"></div>
+<div id="help">arrows/WASD d-pad · X/K = A · Z/J = B · Enter = Start · Right Shift/Tab = Select · P = pause · gamepad supported</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

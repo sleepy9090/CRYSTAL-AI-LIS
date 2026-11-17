@@ -518,7 +518,7 @@ bank,addr,name,comment
 26,98C7,ObjDespawn,obj_active;X = 0
 26,98D7,ObjMoveSlide,move in obj_meta_dir via 26:9947; diagonals also try dir-1/dir+1; C=1 blocked
 26,9A30,ObjBgProbe,metatile collision attr at $34-$37 -> $20 (bank 9 page $69); A b7 = cached if same 16px cell; A b6 = update obj_flags b4/b6 (s46)
-*,0001,tmp_01,zp scratch; auto (ram_map.py s29): r22 w16 banks 15;16;17;18;26;27;30;31
+*,0001,ppumask_shadow,PPUMASK shadow: NMI 31:F412 writes it to $2001 after PaletteUpload; NmiMode0 tests b3/b4 (s51; was tmp_01); auto (ram_map.py s29): r22 w16 banks 15;16;17;18;26;27;30;31
 *,0003,cam_x_hi,camera X hi: ObjSpriteDraw subtracts ($02;$03) from obj x (emu-verified s39); was tmp_03 (banks 17-19 reuse it as scratch); r3 w6
 *,0004,cam_y_lo,camera Y lo: ObjSpriteDraw subtracts ($04;$05) from obj y with 240-row wrap; $EC in the start rooms (emu s39); was tmp_04; r12 w10
 *,0005,cam_y_hi,camera Y hi (screen row: map y = s8($05)*240+$04 (s42)); was tmp_05 (banks 17-19 reuse it); r3 w8
@@ -881,3 +881,6 @@ bank,addr,name,comment
 31,E0B8,SubstPlayTail,s48: SubstPlay JMP tail: skipped if boss_cam_lock; JSR E75E; every 16 frames slot $0D+($08>>4) if empty -> re-read area record (respawn tick; static RE only)
 26,84BC,ObjStepSpeedTables,s49: u8[3x16] speed tables 84BC/84CC/84DC read by ObjStepVector 26:8480 (exported to web/data/tables.json)
 26,97E4,Rand64Table,s49: u8[64] read by Rand64 26:97D7 as [++$0E & $3F]
+31,EB6D,PpuScrollWrite,s51: PPUSCROLL <- $07D8 then $07DA; ppuctrl_shadow b0-1 = ($07DB b0)<<1 | ($07D9 b0) -> PPUCTRL (web: mainloop.js ppuScrollWrite)
+31,F71B,NmiScrollSet,s51: PpuScrollWrite with $07DB temporarily = ($07DA >= $E8); called by NmiMode0 F6DF (web: nmiScrollSet)
+31,F705,NmiMode0HudIrq,s51: SetIrqHandler(1); latch = $BE - $57 (= $BE unless handler 0 was armed first); IRQ on. Reached when ppuctrl_shadow b1 set or $EF-$07DA >= $BC; else F6F5 arms handler 0 at latch $EF-$07DA

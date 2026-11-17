@@ -106,8 +106,8 @@
    "kind": "json",
    "source": "labels.csv bank *",
    "desc": "RAM/WRAM name -> address",
-   "size": 6388,
-   "sha1": "f2a06f23684264ed27e292e19582f66852418bc6"
+   "size": 6396,
+   "sha1": "233a875300cca1b56b9f5afe50c1d3cf6d04ac6f"
   },
   "text.json": {
    "kind": "json",

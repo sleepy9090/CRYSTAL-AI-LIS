@@ -1,0 +1,128 @@
+// re-c web port — MainLoop 30:C900, MainStateTable 30:C91F, NMI 31:F3B6, NmiModeDispatch 31:F6AD.
+// Ph7 web 2/8: the frame skeleton is ported line by line; the six main states are stubs that later
+// tasks replace (states/*.js). See docs/architecture_web.md §2.1 / §4.
+//
+// Multi-frame routines: a state handler may be a generator (function*). It `yield`s where the ROM waits
+// for the next NMI; step() resumes it on the next frame. A plain function = one frame of work.
+import { R } from './ram.js';
+import { readPadsMenu } from './pads.js';
+import { paletteUpload } from './palette.js';
+
+// ---------------------------------------------------------------- main states (stubs)
+// Each entry: ROM address, name, handler(m). Stub bodies only do what REVERSE.md documents for the
+// state's first instructions; everything else is TODO for Ph7 web 4/8-7/8.
+const stub = (name) => (m) => { m.stubHits[name] = (m.stubHits[name] || 0) + 1; };
+
+export const MAIN_STATES = [
+  { addr: '30:C957', name: 'state0_newgame', fn: stub('state0_newgame') },
+  { addr: '30:CAB6', name: 'state1_gameplay', fn: stub('state1_gameplay') },   // -> SubstateHandlerTable[$41]
+  // state 2: MainState2Init (18:9FCC -> 19:A000) ends with INC main_state (REVERSE.md "State Machine")
+  { addr: '30:C931', name: 'state2_init', fn: (m) => { stub('state2_init')(m); m.wr(R.main_state, m.rd(R.main_state) + 1); } },
+  // state 3: ReadPadsMenu, then JMP MainState3 19:A015 (title / menus / name entry)
+  { addr: '30:C939', name: 'state3_title', fn: (m) => { readPadsMenu(m); stub('state3_title')(m); } },
+  { addr: '30:C944', name: 'state4', fn: stub('state4') },                     // 17:A000, never reached in emu runs
+  { addr: '30:C94C', name: 'state5', fn: stub('state5') },                     // 17:A100, never reached in emu runs
+];
+
+/** MainLoop body for one frame: runs only when the NMI has set frame_ready ($09 != 0). */
+export function mainStep(m) {
+  if (m.rd(R.frame_ready) === 0) return false;
+  if (m.pending) {                                  // resume a multi-frame routine
+    if (m.pending.next().done) m.pending = null;
+  } else {
+    const st = MAIN_STATES[m.rd(R.main_state)];
+    if (!st) throw new Error(`main_state ${m.rd(R.main_state)} out of range`);
+    const r = st.fn(m);
+    if (r && typeof r.next === 'function' && !r.next().done) m.pending = r;
+  }
+  m.wr(R.frame_ready, 0);                           // 30:C919 (wait loops inside routines clear it too)
+  return true;
+}
+
+// ---------------------------------------------------------------- NMI
+/** NMI 31:F3B6 */
+export function nmiWork(m) {
+  if (m.rd(R.nmi_disable)) return;                  // F3BA
+  if (m.rd(R.nmi_busy_flag)) { m.wr(R.nmi_missed_flag, 1); return; }   // F3BE
+  if (m.rd(R.frame_ready) === 0) {                  // F3CC: main loop finished -> DMA + scroll copy
+    m.ppu.oamAddr = 0;                              // F3D0 STA OAMADDR (A = 0)
+    m.ppu.oamDma(m.ram.page(2));                    // F3D5 $4014 <- 2
+    const src = (m.rd(R.irq_mode) === 9 || m.rd(R.irq_mode) === 7)
+      ? [0x83, 0xA3, 0xC3, 0xE3]                    // F3F6: object slot $13 x lo/hi, y lo/hi
+      : [R.scroll_shadow0, R.cam_x_hi, R.cam_y_lo, R.cam_y_hi];
+    for (let i = 0; i < 4; i++) m.wr(R.scroll_x_irq + i, m.rd(src[i]));
+  }
+  m.ppuQueueFlush(m);                               // F40A PpuQueueFlush 30:C67D (world/ppuqueue.js, 4/8)
+  paletteUpload(m, 0);                              // F40F
+  m.ppu.writeReg(1, m.rd(R.ppumask_shadow));        // F412
+  nmiModeDispatch(m);                               // F417
+  m.wr(R.frame_ready, m.rd(R.frame_ready) + 1);     // F41A
+}
+
+// ---------------------------------------------------------------- NMI-mode routines + IRQ split schedule
+/** SetIrqHandler 31:F424: $56 = index (IrqHandlerTable 31:F433). The port keeps a split list instead of $54/$55. */
+export function setIrqHandler(m, i, latch) {
+  m.wr(0x56, i);
+  m.irqSplits.push({ handler: i, latch });
+}
+
+/** 31:EB6D: PPUSCROLL <- $07D8, $07DA; ppuctrl_shadow nametable bits = ($07DB b0) << 1 | ($07D9 b0) */
+export function ppuScrollWrite(m) {
+  const ppu = m.ppu;
+  ppu.writeReg(5, m.rd(R.scroll_x_irq));
+  ppu.writeReg(5, m.rd(R.scroll_x_irq + 2));
+  const nt = (((m.rd(R.scroll_x_irq + 3) << 1) | (m.rd(R.scroll_x_irq + 1) & 1)) & 3);
+  const ctrl = (m.rd(R.ppuctrl_shadow) & 0xFC) | nt;
+  m.wr(R.ppuctrl_shadow, ctrl);
+  ppu.writeReg(0, ctrl);
+}
+
+/** 31:F71B: ppuScrollWrite with $07DB temporarily = ($07DA >= $E8) */
+export function nmiScrollSet(m) {
+  const yHi = m.rd(R.scroll_x_irq + 3);
+  m.wr(R.scroll_x_irq + 3, m.rd(R.scroll_x_irq + 2) >= 0xE8 ? 1 : 0);
+  ppuScrollWrite(m);
+  m.wr(R.scroll_x_irq + 3, yHi);
+}
+
+/** ApplyChrPlay 31:F883: MMC3 R0-R5 <- $07F0-$07F5 */
+export function applyChrPlay(m) {
+  for (let r = 0; r < 6; r++) m.ppu.setChrReg(r, m.rd(R.chr_r0_play + r));
+}
+
+/** NmiMode0 31:F6D6 (irq_mode 0 and 7) */
+function nmiMode0(m) {
+  if ((m.rd(R.ppumask_shadow) & 0x18) === 0) { m.soundUpdate(m); return; }   // F6DC JMP SoundUpdate
+  nmiScrollSet(m);                                  // F6DF
+  applyChrPlay(m);                                  // F6E2
+  let a;
+  if (!(m.rd(R.ppuctrl_shadow) & 2)) {              // F6E5 LSR LSR -> C = b1 (lower nametable)
+    a = (0xEF - m.rd(R.scroll_x_irq + 2)) & 0xFF;   // lines until the 240-row wrap
+    if (a < 0xBC) {                                 // F6F1: wrap above the HUD -> handler 0 first
+      m.wr(R.zp_57, a);
+      setIrqHandler(m, 0, a);                       // F6F5-F702: latch a, IRQ on, SetIrqHandler(0)
+      return;                                       // handler 0 (31:F455) re-arms handler 1 with $BE - a
+    }
+  }
+  setIrqHandler(m, 1, 0xBE);                        // F705: HUD split, latch $BE - $57 with $57 = 0
+  m.wr(R.zp_57, 0xBE);
+}
+
+/** JmpTable31_F6C2: irq_mode -> NMI routine. Unported modes log once and do nothing. */
+const unportedMode = (addr) => (m) => {
+  if (!m.unported.has(addr)) { m.unported.add(addr); m.log(`NMI mode routine ${addr} not ported yet`); }
+};
+export const NMI_MODES = [
+  nmiMode0, unportedMode('31:F731'), unportedMode('31:F751'), unportedMode('31:F771'),
+  unportedMode('31:F782'), unportedMode('31:F7C5'), unportedMode('31:F7DB'), nmiMode0,
+  null, unportedMode('31:F731'),
+];
+
+/** NmiModeDispatch 31:F6AD: $57 = 0, JMP (JmpTable31_F6C2[irq_mode]) */
+export function nmiModeDispatch(m) {
+  m.wr(R.zp_57, 0);
+  m.irqSplits = [];
+  const fn = NMI_MODES[m.rd(R.irq_mode)];
+  if (!fn) throw new Error(`irq_mode ${m.rd(R.irq_mode)}: null NMI-mode entry`);
+  fn(m);
+}
