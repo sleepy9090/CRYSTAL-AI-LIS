@@ -2,10 +2,11 @@
 """Dump emulator screens at given frames (emu 3/6 check tool).
 
 usage: python3 tools/emu/shots.py OUTDIR FRAME[,FRAME...] [--press FRAME:BUTTONS[:LEN] ...]
-                                  [--scale S] [--splits]
+                                  [--scale S] [--splits] [--vblank]
   --press 300:START:4  holds START on pad 1 for frames 300-303 (default length 2)
   --splits             print PPUCTRL/MASK/SCROLL/ADDR writes made during lines 0-239 of each
                        dumped frame (the IRQ split writes), as line:dot reg=value
+  --vblank             like --splits but also logs writes made in vblank/pre-render lines
 Writes OUTDIR/frame_NNNN.png.
 """
 import os
@@ -20,7 +21,7 @@ REG = {0: 'CTRL', 1: 'MASK', 5: 'SCROLL', 6: 'ADDR'}
 
 def main(argv):
     out, frames = argv[0], sorted(int(f) for f in argv[1].split(','))
-    presses, scale, splits = [], 1, False
+    presses, scale, splits, vblank = [], 1, False, False
     i = 2
     while i < len(argv):
         if argv[i] == '--press':
@@ -33,12 +34,16 @@ def main(argv):
         elif argv[i] == '--splits':
             splits = True
             i += 1
+        elif argv[i] == '--vblank':
+            splits = vblank = True
+            i += 1
         else:
             raise SystemExit(f'unknown arg {argv[i]}')
     os.makedirs(out, exist_ok=True)
     nes = NES()
     if splits:
         nes.ppu.split_log = []
+        nes.ppu.split_all = vblank
     for f in range(frames[-1] + 1):
         m = 0
         for start, mask, n in presses:

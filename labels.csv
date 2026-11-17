@@ -678,10 +678,10 @@ bank,addr,name,comment
 *,06CF,ram_06CF,auto (ram_map.py s29): r4 w4 banks 18
 *,06D0,ram_06D0,auto (ram_map.py s29): r4 w2 banks 18
 *,06E0,obj_behav,32 slots; type-$30 behaviour flags (b2 = AiNpcWander alt mode 27:AE16); menus reuse $06D0-$06EF as palette sets
-*,06F0,ram_06F0,auto (ram_map.py s29): r3 w6 banks 18;19
-*,06F1,ram_06F1,auto (ram_map.py s29): r5 w5 banks 18;19
+*,06F0,title_mode,State3SubTable index (s38 emu: 1 title, 2 intro story, 3 intro skip, 4 status/name-entry screen)
+*,06F1,title_step,step within a title_mode (mode 4: 5 = name entry 19:A3F6, 6 = start game 19:A57C)
 *,06F2,ram_06F2,auto (ram_map.py s29): r0 w3 banks 18;19
-*,06F3,ram_06F3,auto (ram_map.py s29): r3 w7 banks 18;19
+*,06F3,state3_mode,State3ModeTable index (0 = State3SubDispatch; 1/2 = 18:8310/18:834A transition modes)
 *,06FC,ram_06FC,auto (ram_map.py s29): r0 w6 banks 19
 *,06FD,ram_06FD,auto (ram_map.py s29): r0 w6 banks 19
 *,06FE,ram_06FE,auto (ram_map.py s29): r2 w4 banks 18;19
@@ -795,3 +795,11 @@ bank,addr,name,comment
 31,F6C2,JmpTable31_F6C2,s32: untraced dispatch (31:F6BF JMP ($0052), irq_mode*2); <=10 entries
 11,BE00,Wram6000InitTable,s32: 256 B copied to wram_buf $6000-$60FF by 30:CCA4 and 19:BE5E (SetR6($0B): bank 11 at $8000, read as $9E00); contents not decoded
 27,A8A2,AiDirTable_A8A2,s32: 4 bytes 08 08 09 07 = obj_meta_dir by Rand64&3 (27:A898); tracer decodes them as code because the BNE at A8A0 is always taken
+19,ABEA,TitleIntroStory,s38: title_mode 2 (intro story pages); START/SELECT ($4B&$30) -> 19:B15C skip -> title_mode 3
+19,A176,TitleStatusScreen,s38: title_mode 4 (green status screen + name entry); steps via JmpTable19_A193 by $06F1
+19,A3F6,NameEntryInput,s38: title_step 5; B=back cursor, START=finish (19:A4E3; all-blank name -> default from 19:A56C), A=type $06CC at $6420 (F0/F1/F2 = end/right/left)
+19,A585,NameEntryCursor,s38: pad_new bits 0-3 move grid cursor $8A (col 0-31 wrap) / $8B (row $10-$16 step 2), skipping $FF cells of 19:9EC2
+19,A57C,NameEntryDone,s38: title_step 6 -> 19:A6F9 starts the game (main_state 0 written at 19:A6FD, gameplay $40=1 two frames later)
+30,CA5F,SubstNewGameInit,s38: substate 0; sets substate $13 then falls into CAA2: if any button held that frame (pad_prev) -> substate 8 (skips the wake-up cut-scene)
+30,D9B6,SubstWakeCutscene,s38: substate $13 handler: SwitchBank16(10) + JSR 20:9400 (self-timed cut-scene loop), then JMP 30:D91F
+20,9400,WakeCutscene,s38: own frame loop (LSR frame_ready); ~504 frames (emu f2351-2855) then substate 8 at 20:948E

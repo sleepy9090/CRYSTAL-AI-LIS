@@ -91,6 +91,7 @@ class PPU:
         self.nmi_count = 0
         self.on_frame = None        # optional callable(ppu) when line 240 starts (frame complete)
         self.split_log = None       # optional list: (frame, line, dot, reg, value) of writes on lines 0-239
+        self.split_all = False      # True: split_log also records vblank/pre-render writes (shots.py --vblank)
 
     _STATE_KEYS = ('ctrl', 'mask', 'status', 'oam_addr', 'v', 't', 'x', 'w', 'buf', 'io_latch',
                    'line', 'dot', 'abs', 'frame_no', 'odd', 'nmi_count')
@@ -170,7 +171,7 @@ class PPU:
     def write_reg(self, r, v):
         self.sync()
         self.io_latch = v
-        if self.split_log is not None and self.line < 240 and r in (0, 1, 5, 6):
+        if self.split_log is not None and (self.split_all or self.line < 240) and r in (0, 1, 5, 6):
             self.split_log.append((self.frame_no, self.line, self.dot, r, v))
         if r == 0:
             old = self.ctrl
