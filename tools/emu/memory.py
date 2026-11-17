@@ -10,8 +10,9 @@ $6000-$7FFF  8KB WRAM (battery)                 -> mapper.wram_enabled / wram_wr
 $8000-$FFFF  PRG ROM                            -> mapper.read(a) / mapper.write(a, v)
 
 Devices are optional; missing ones read as open bus (last value on the bus) and ignore writes.
-Without a mapper, `FixedPrg` maps PRG mode 0 power-on layout: $8000=bank 0, $A000=bank 1,
-$C000=second-last, $E000=last (re-c: 30/31). The MMC3 mapper replaces it in emu 2/6.
+With a cart and no explicit mapper, the bus builds `mapper.make_mapper(cart)` (MMC3 for re-c,
+emu 2/6) and sets `mapper.bus = self`. `FixedPrg` (static $8000=bank 0, $A000=bank 1,
+$C000=second-last, $E000=last) stays available as an explicit stand-in for CPU-only tests.
 
 `FlatBus` is a 64KB RAM bus for CPU unit tests.
 """
@@ -39,7 +40,12 @@ class Bus:
         self.ram = bytearray(0x800)
         self.wram = bytearray(0x2000)
         self.cart = cart
-        self.mapper = mapper if mapper is not None else (FixedPrg(cart) if cart else None)
+        if mapper is None and cart is not None:
+            from .mapper import make_mapper
+            mapper = make_mapper(cart)
+        self.mapper = mapper
+        if mapper is not None and hasattr(mapper, 'bus'):
+            mapper.bus = self            # MMC3 reaches bus.cpu to assert its IRQ
         self.ppu = ppu
         self.apu = apu
         self.pads = pads
