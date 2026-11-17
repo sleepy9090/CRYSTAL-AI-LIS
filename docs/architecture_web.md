@@ -55,9 +55,13 @@ web/index.html
       │   ├─ camera.js                CameraUpdate, CameraFollow, CameraClampX, scroll copy $07D8-$07DB
       │   └─ exits.js                 ExitLookup (k3), AreaPitFall, AreaEdgeLink (k5), visited bitmap $62F0
       ├─ src/game/obj/
-      │   ├─ objects.js               ObjInit (ObjTypeTable records), ObjUpdateAll, free-slot search, respawn tick
+      │   ├─ objinit.js               (s55, done) ObjInit 30:C25D (ObjTypeTable records via cpuRd) + FarCall_C25D
+      │   ├─ util.js                  (s55, done) Rand64, ObjFindFree, ObjPosToTemp/TempToObjPos, TempAddOffset/Step,
+      │   │                           DirToTarget, ObjStepVector, ObjDespawn, ObjBecomeNext, SpawnShot, ObjBgProbe
+      │   ├─ ai_static.js             (s55, done) AIs $10 $11 $2C $4C/$4D $4E + AiShootCheck; AI_HANDLERS id → fn
+      │   ├─ objects.js               ObjUpdateAll (JSR $0010 dispatch; an AI returning true = "popped" → return), respawn tick
       │   ├─ ai_table.js              ObjAiTable (128 ids) → JS functions; unported ids log once + despawn-safe no-op
-      │   ├─ ai/*.js                  generic enemies, NPC/path, platforms, bosses (BossPhaseTable), shots
+      │   ├─ ai/*.js                  generic enemies, NPC/path, platforms, bosses (BossPhaseTable)
       │   ├─ player.js                PlayerMove (slot 0), PlayerUpdate (slot 1), sword/charge, PlayerMagic, SpendMp
       │   ├─ move.js                  ObjStepVector, ObjMoveStep, BgProbePoints, ObjBgProbe, ObjScreenEdge
       │   ├─ collide.js               ObjCollideAll, HitboxTable, CollPairTable, HitPlayer, EnemyKilled, AddXp
@@ -70,12 +74,14 @@ web/index.html
       │   ├─ items.js                 ItemGetTable/ItemUseTable + handlers, GiveItem, ItemUseMenu
       │   ├─ menus.js                 bank 16/17/19 menus: status, equipment, save/load page, teleport, change form
       │   └─ save.js                  SaveGame/LoadGame on wram $7100-$7FFF; persistence = localStorage (base64 WRAM)
+      ├─ src/game/playsound.js        (s55, done) PlaySound 30:C125 FIFO $0103 (5 deep) — RAM side only
+      ├─ src/game/prg.js              (s55) prgByte / cpuRd (current m.prgR6/prgR7 mapping) / setR6 / setR7 / farRestore
       ├─ src/game/sound/
-      │   ├─ playsound.js             PlaySound FIFO $0103 (5 deep), SoundUpdate (≤1 command per call)
+      │   ├─ (soundupdate.js)         SoundUpdate (≤1 command per call)
       │   └─ driver.js                SndCommand, SndStartMusic/Sfx, SndTick, 16 stream ops, envelopes, vibrato quirk
       ├─ src/game/palette.js          PaletteBuild, fades, PaletteUpload ($6140-$615F → ppu palette RAM)
       ├─ src/game/pads.js             ReadPads / ReadPadsMenu ($43-$4F hold/repeat logic) from the button byte
-      └─ src/game/rand.js             Rand64 (26:97D7 table walk on $0E)
+      └─ (Rand64 26:97D7 lives in obj/util.js, s55)
 web/test/run.mjs                      Node harness (Ph7 web 3/8): --keys, --frames, --frame0, --dump-screen,
                                       --dump-ram/--dump-wram, --compare
 web/test/harness.mjs                  key-script parser, compare.py CSV row, PNG encoder (node:zlib)
@@ -83,6 +89,8 @@ web/test/world_check.mjs              (s53) world/area.js + bg.js + paletteBuild
                                       and 2 tools.emu frames (web/test/world_frames/ RAM/WRAM dumps)
 web/test/sprite_check.mjs             (s54) obj/sprites.js spriteDraw() vs RAM captured at 28:800E entry/exit
                                       (web/test/sprite_frames/, tools/emu/sprite_capture.py real + fuzz)
+web/test/obj_check.mjs                (s55) any object routine vs tools/emu/routine_capture.py fuzz cases: whole RAM +
+                                      WRAM + return kind (web/test/obj_frames/, 1000/1000 identical)
 web/catalog.html, catalog.js, apu_preview.js   existing asset catalog (session 27), kept separate from the port
 ```
 
@@ -178,7 +186,10 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 | generic enemy AIs + helpers (`DirToTarget`, `AiShootCheck`, `SteerToward`) | bank 27 | `ai/enemies.js` | `obj/ai/` |
 | `PlayerMove` / `PlayerUpdate` / `PlayerMagic` / `SpendMp` | `26:9D9A` / `26:9B45` / `27:A022` / – | `playerMove()`, `playerUpdate()`, `playerMagic()`, `spendMp()` | `obj/player.js` |
 | `ObjStepVector`, `ObjMoveStep`, `BgProbePoints` | `26:8480`, `26:9947`, `26:9907` | `stepVector()`, `moveStep()`, `BG_PROBE` (data) | `obj/move.js` |
-| `SpawnShot`, `ShotTable`, `ShotOffsets` | `26:972D`, `20:BC00`, `20:BD80` | `spawnShot(id, dir)` (`shots.json`) | `obj/objects.js` |
+| `SpawnShot`, `ShotTable`, `ShotOffsets` | `26:972D`, `20:BC00`, `20:BD80` | `spawnShot(m, x, id, dir)` (s55, done; reads `prg.bin` via `cpuRd`, not `shots.json`) | `obj/util.js` |
+| `ObjInit` + `FarCall_C25D`, `ObjStepVector`, `ObjBgProbe`, `DirToTarget`, `Rand64`, `ObjFindFree` | `30:C25D`, `31:FF80`, `26:8480`, `26:9A30`, `26:8409`, `26:97D7`, `26:98B9` | `objInit()`, `farObjInit()`, `objStepVector()`, `objBgProbe()`, `dirToTarget()`, `rand64()`, `objFindFree()` (s55, done) | `obj/objinit.js`, `obj/util.js` |
+| AIs `$10 $11 $2C $4C/$4D $4E`, `AiShootCheck` | `27:B0B5 B0A8 ACC0 B595 B5D9 B714` | `AI_HANDLERS` (s55, done: `obj_check.mjs`) | `obj/ai_static.js` |
+| `PlaySound` (queue side) | `30:C125` | `playSound(m, id, y)` (s55, done) | `playsound.js` |
 | `ObjCollideAll`, `CollPairTable`, `HitboxTable`, `HitHandlerTable` | `26:8F6E`, `26:96F1`, `26:9691`, `26:8FBB` | `collideAll()`, `HIT_HANDLERS[4]` | `obj/collide.js` |
 | `HitPlayer`, `EnemyKilled`, `AddXp` | `26:9357`, `26:9152`, `26:924B` | `hitPlayer()`, `enemyKilled()`, `addXp()` | `obj/collide.js` |
 | `PlayerStatusTick` | `31:EF55` | `playerStatusTick()` | `obj/status.js` |
@@ -254,6 +265,7 @@ port can refuse stale data. Binary blobs keep ROM byte order; JSON numbers are p
 | `objtypes.json` | per type 0-255: `snd`, column inits `{addr: value}`, AI id + handler address | `13:AC00`, `27:A314` | `objects.js` |
 | `metasprites.json` | per id 0-255: frames of `[dx, dy, tile, attr]` + mirror alias info (`meta_dump.meta_json`) | banks 28/29 | catalog only; the port reads `sprites_b28.bin` (s54) |
 | `sprites_b28.bin` | PRG banks 28-29 as `$8000-$BFFF` (index = cpu addr − `$8000`): draw orders, orbit/burst tables, meta ptr tables + records, read through CPU addresses like `($15),Y` | banks 28/29 | `sprites.js` |
+| `prg.bin` | all 32 PRG banks (s55); byte at bank:addr = `[bank·$2000 + (addr & $1FFF)]`; `prg.js` `cpuRd` maps `$8000`/`$A000` to `m.prgR6`/`m.prgR7` like MMC3 mode 0 | whole PRG | `prg.js` → `obj/*.js` (ObjTypeTable, ShotTable, bank 26/27 tables, BG collision pages) |
 | `shots.json` | ShotTable records `{first, end, type, count}` for ids `$00-$5F` + `ShotOffsets` | `20:BC00/BD00/BD80` | `objects.js` |
 | `tables.json` | named fixed-size tables (each `{bank, addr, fmt, values}`): level HP/MP/XP, jump heights, step speeds, probe points, hitboxes, collision pairs, draw orders, orbit/burst, pad dirs, Rand64 table, area-by-index, HUD elements, boss areas, sword attack, … | see file | many |
 | `text.json` | dictionary, code 05/06/07 tables, all messages (`text_dump.py --json`) | banks 20-23 | `text.js` |

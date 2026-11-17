@@ -60,6 +60,13 @@
    "size": 8192,
    "sha1": "730caf25d34d5cb006d22ececfc5eb9b44219c68"
   },
+  "prg.bin": {
+   "kind": "bin",
+   "source": "PRG ROM file 0x10-0x4000F (s55)",
+   "desc": "32 x 8KB PRG banks; byte at bank:addr = [bank*$2000 + (addr & $1FFF)] (web/src/game/prg.js). Used by the object code (ObjInit 13:AC00, ShotTable 20:BC00, banks 26/27 tables) so routines can read ROM tables by CPU address the way the 6502 does",
+   "size": 262144,
+   "sha1": "7044bd213f15a8dfb6bf7cad34b98ea89c46ad3c"
+  },
   "dmc.bin": {
    "kind": "bin",
    "source": "31:FA00",

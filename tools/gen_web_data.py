@@ -279,6 +279,10 @@ def build():
     add_bin('sound_b25.bin', PRG[25 * 0x2000:26 * 0x2000], 'PRG bank 25 at $A000', 'music stream data')
     add_bin('sound_b12.bin', PRG[12 * 0x2000:13 * 0x2000], 'PRG bank 12 at $A000 (SetR7(12))',
             'SfxPtrTable at $A000 + SFX streams')
+    add_bin('prg.bin', PRG, 'PRG ROM file 0x10-0x4000F (s55)',
+            '32 x 8KB PRG banks; byte at bank:addr = [bank*$2000 + (addr & $1FFF)] (web/src/game/prg.js). '
+            'Used by the object code (ObjInit 13:AC00, ShotTable 20:BC00, banks 26/27 tables) so routines '
+            'can read ROM tables by CPU address the way the 6502 does')
     daddr, dbytes = dmc_bytes()
     add_bin('dmc.bin', dbytes, f'31:{daddr:04X}', 'the single DMC sample (SndDmcTable 24:8BD8)')
     add_json('palettes.json', palettes_json(), 'banks 2/3', 'NES master palette + 256 palette slots')

@@ -64,6 +64,8 @@ export class Machine {
     this.pending = null;
     this.irqSplits = [];
     this.frame = 0;
+    this.prgR6 = 0x18;                               // MMC3 R6/R7 as left by reset's SwitchBank16($0C) (prg.js)
+    this.prgR7 = 0x19;
   }
 
   /** Map the split list from the last NMI-mode routine onto ppu.splits (an MMC3 IRQ with latch L

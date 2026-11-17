@@ -884,3 +884,7 @@ bank,addr,name,comment
 31,EB6D,PpuScrollWrite,s51: PPUSCROLL <- $07D8 then $07DA; ppuctrl_shadow b0-1 = ($07DB b0)<<1 | ($07D9 b0) -> PPUCTRL (web: mainloop.js ppuScrollWrite)
 31,F71B,NmiScrollSet,s51: PpuScrollWrite with $07DB temporarily = ($07DA >= $E8); called by NmiMode0 F6DF (web: nmiScrollSet)
 31,F705,NmiMode0HudIrq,s51: SetIrqHandler(1); latch = $BE - $57 (= $BE unless handler 0 was armed first); IRQ on. Reached when ppuctrl_shadow b1 set or $EF-$07DA >= $BC; else F6F5 arms handler 0 at latch $EF-$07DA
+26,9824,TempAddOffset,s55: add signed $30/$31 to $34-$37; y wraps at 240 testing the ADC carry first (SpawnShot offsets); TempAddStep 9861 ignores that carry (web: obj/util.js)
+27,B5CF,FanShotOfs,s55: s8[4] 00 FF 00 01 by ($0640&$18)>>3: fan shots at $0640=$08/$10/$18 = -1/0/+1 (16-dir units)
+27,B5D3,AiFanTurretIdle,s55: obj_anim--; JMP AiShootCheck: the tail JMP makes its PLA PLA pop ObjUpdateAll's return (slots after it skip their AI that frame)
+30,CD28,ObjUpdateAllCall,s55: JSR $0010 (JMP trampoline $10-$12 = 4C + ObjAiTable[id]); an AI that JMPs to AiShootCheck returns from ObjUpdateAll here
