@@ -1,0 +1,107 @@
+; ShotTable 20:BC00/BD00: id addr  slots  type count  <- types with obj_shot_id = id
+00 BC00  none (FF 42 01 01)  
+01 BC04  04-0B  type 10 x1  
+02 BC08  04-0B  type 11 x1  
+03 BC0C  04-07  type 12 x4  
+04 BC10  none (FF 43 01 01)  
+05 BC14  04-06  type 18 x1  
+06 BC18  04-04  type 19 x1  
+07 BC1C  04-04  type 1A x1  
+08 BC20  none (FF 44 01 01)  
+09 BC24  04-06  type 14 x1  
+0A BC28  04-0B  type 15 x1  
+0B BC2C  04-0B  type 16 x8  
+0C BC30  none (FF 45 01 01)  
+0D BC34  04-06  type 1D x3  
+0E BC38  04-0A  type 1E x7  
+0F BC3C  04-04  type 1F x1  
+10 BC40  0C-0C  type 20 x1  
+11 BC44  0C-0C  type 21 x1  
+12 BC48  0C-0C  type 22 x1  
+13 BC4C  04-04  type 33 x1  
+14 BC50  05-06  type 32 x1  
+15 BC54  00--1  type 00 x0  
+16 BC58  0D-1E  type E3 x1  
+17 BC5C  04-0B  type 17 x1  
+18 BC60  00--1  type 00 x0  
+19 BC64  02-02  type 08 x1  
+1A BC68  0B-0B  type 09 x1  
+1B BC6C  03-03  type 0A x1  
+1C BC70  05-0B  type 13 x1  19(ai15)
+1D BC74  05-0B  type 17 x1  
+1E BC78  05-0B  type 1B x1  
+1F BC7C  00--1  type 00 x0  
+20 BC80  0D-1E  type 0B x1  
+21 BC84  0D-1E  type 0B x1  5F(ai24) 69(ai24)
+22 BC88  0D-1E  type 0B x1  
+23 BC8C  0D-1E  type 0B x1  51(ai24)
+24 BC90  0D-1E  type 0B x1  
+25 BC94  0D-1E  type 0B x1  
+26 BC98  0D-1E  type 3F x1  87(ai4E)
+27 BC9C  0E-11  type BC x1  A5(ai60)
+28 BCA0  0D-1E  type B8 x1  
+29 BCA4  0D-1E  type B9 x1  
+2A BCA8  0D-1E  type BA x1  
+2B BCAC  0D-1E  type BB x1  
+2C BCB0  0D-1E  type 0B x1  
+2D BCB4  0D-1E  type BE x1  A0(ai2A)
+2E BCB8  1A-1E  type BF x1  
+2F BCBC  14-1E  type CE x1  
+30 BCC0  14-1E  type CD x1  9E(ai6B)
+31 BCC4  0E-1E  type CC x1  9B(ai6A)
+32 BCC8  0F-1E  type CB x1  9C(ai69) 9D(ai69)
+33 BCCC  0D-1E  type CA x1  
+34 BCD0  0D-1E  type C9 x1  90(ai66)
+35 BCD4  1B-1E  type C8 x1  
+36 BCD8  0D-1E  type C7 x1  
+37 BCDC  0D-1E  type C6 x1  7D(ai66)
+38 BCE0  0D-1E  type C5 x4  
+39 BCE4  14-14  type C4 x1  
+3A BCE8  15-1E  type C3 x1  5E(ai7F)
+3B BCEC  0E-0F  type C1 x1  57(ai60)
+3C BCF0  11-1E  type C0 x1  
+3D BCF4  0D-1E  type D7 x1  
+3E BCF8  0D-1E  type D5 x1  
+3F BCFC  0D-1E  type 0C x1  
+40 BD00  0D-1E  type E0 x1  63(ai24) 81(ai45)
+41 BD04  0D-1E  type E1 x1  72(ai24)
+42 BD08  0D-1E  type E2 x1  C4(ai45)
+43 BD0C  0D-1E  type E3 x1  4B(ai22) 4F(ai22) 74(ai27) 78(ai26) 7B(ai26) 8C(ai26)
+44 BD10  0D-1E  type E4 x1  6C(ai21) 85(ai21) 94(ai21) 99(ai27)
+45 BD14  0D-1E  type E5 x1  54(ai28)
+46 BD18  0D-1E  type E6 x1  9A(ai27)
+47 BD1C  0D-1E  type E7 x1  86(ai27) 91(ai27) C8(ai58)
+48 BD20  0D-1E  type E8 x1  75(ai27)
+49 BD24  0D-1E  type E9 x1  58(ai26)
+4A BD28  0D-1E  type EA x1  5D(ai4C)
+4B BD2C  0D-1E  type EB x1  5C(ai45) 7C(ai40)
+4C BD30  0D-1E  type EC x1  64(ai2A)
+4D BD34  0D-1E  type ED x1  67(ai28)
+4E BD38  0D-1E  type EE x1  6A(ai27)
+4F BD3C  0D-1E  type EF x1  77(ai4D)
+50 BD40  0D-1E  type F0 x1  80(ai2A)
+51 BD44  0D-1E  type F1 x1  
+52 BD48  0D-1E  type F2 x1  89(ai2A)
+53 BD4C  0D-1E  type F3 x1  4D(ai2C)
+54 BD50  0D-1E  type F4 x1  BE(ai1D)
+55 BD54  0D-1E  type F5 x1  A1(ai5E)
+56 BD58  0D-1E  type F6 x1  A2(ai5C)
+57 BD5C  0D-1E  type F7 x1  92(ai41)
+58 BD60  0D-1E  type F8 x1  98(ai29)
+59 BD64  0D-1E  type F9 x1  95(ai2E)
+5A BD68  0D-1E  type FA x1  84(ai2E)
+5B BD6C  0D-1E  type FB x1  
+5C BD70  0D-1E  type FC x1  
+5D BD74  0D-1E  type FD x1  8F(ai34)
+5E BD78  0D-1E  type FE x1  D3(ai07)
+5F BD7C  0D-1E  type FF x1  
+
+; spawn offsets 20:BD80[behav*16 + dir*2] (dx,dy) for dirs 0-7
+behav 0: +0,+0  +0,+0  +0,+0  +0,+0  +0,+0  +0,+0  +0,+0  +0,+0
+behav 1: +0,-16  +0,+8  +8,-3  +0,+8  +0,+8  +0,+8  -8,-3  +0,+8
+behav 2: +0,+4  +7,+1  -7,+1  +10,-8  -10,-8  +7,-17  -7,-17  +0,-20
+behav 3: +0,-24  +0,+8  +24,-3  +0,+8  +0,+24  +0,+8  -24,-3  +0,+8
+behav 4: +0,-17  +0,+8  +12,-3  +0,+8  +0,+12  +0,+8  -12,-3  +0,+8
+behav 5: +24,+26  +0,+40  -24,+26  -36,+0  -24,-22  +0,-36  +24,-22  +36,+0
+behav 6: +0,-20  +7,-17  +10,-4  +7,+1  +0,+4  -7,+1  -10,-4  -7,-17
+behav 7: +0,-56  +0,+8  +66,+0  +0,+8  +0,+70  +0,+8  -66,+0  +0,+8

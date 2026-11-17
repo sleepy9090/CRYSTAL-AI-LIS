@@ -774,7 +774,7 @@ bank,addr,name,comment
 26,9691,HitboxTable,s30: 24 x {dx w dy h} signed; index (obj_coll&$0F)*4 | (obj_hitflags&$40)
 26,96F1,CollPairTable,s30: 15 x {slot first last handler}: attacker slot vs targets first+1..last-1 ($0D-$1E); handler -> HitHandlerTable
 26,972D,SpawnShot,s30: A=shot id; Y=dir; record ShotTable 20:BC00[A*4] (ids >=$40 at $BD00) with bank 20 at $A000 via SetR7($14); C=0 = none spawned
-20,BC00,ShotTable,s30: 4-byte projectile records for SpawnShot 26:972D (bank 20 mapped at $A000); ids >=$40 continue at $BD00; fields not decoded
+20,BC00,ShotTable,s30/s47: 4-byte records for SpawnShot 26:972D: first slot (b7=none) / end slot / type / count; ids >=$40 at $BD00 (enemy shots = types $E0-$FF); docs/shots.txt
 10,8400,AreaHeaderTableHi,s32: .dw[128] area header ptrs for area ids $80-$FF (30:C7BB; C=1 after ASL area_id); 8 nulls
 12,9301,AreaPtrTableHi,s32: .dw area record ptrs for ids $80-$FF (31:E0EB / 31:E15F); second half of AreaPtrTable 12:9201
 13,AD00,ObjTypeTableHi,s32: .dw ObjType record ptrs for types $80-$FF (30:C27D); second half of ObjTypeTable 13:AC00
@@ -846,3 +846,34 @@ bank,addr,name,comment
 31,EA2F,CamStepClamp,s46: clamp signed step to -3..+3
 31,EF55,PlayerStatusTick,s46: per frame (SubstPlay): poison/damage floor/area $1A hazard -4 HP; status 1/2; MP/HP regen items; pit fall; invuln countdown
 30,CB84,PlayDeathMenuCheck,s46: SubstPlay body: player_hp=0 -> sub_state 3 (death); then START/SELECT menus
+26,8000,DirGrid,s47: 32x32 grid [dy cell+16][dx cell+16] -> hi=distance (16px cells) lo=dir 0-7; read by DirToTarget
+26,8409,DirToTarget,s47: X=self Y=target slot -> $20=dir 0-7 $21=distance in 16px cells (DirGrid 26:8000)
+26,98B9,ObjFindFree,s47: Y=first slot; $10=end slot (excl.); C=1 + Y=free slot (obj_active=0)
+27,A969,AiShooterWalk,s47: AI $21: AiWalkPause + AiShootCheck; countdown every other frame; shot at $0640=$0F
+27,A9B4,AiSpawnChildLunger,s47: AI $2E: once SpawnShot(shot id) and link child obj_param2; then AiLunger
+27,A9D2,AiChaseOnscreen,s47: AI $25: AiChase unless offscreen
+27,A9DB,AiShooterChaseOnscreen,s47: AI $27: AiShooterChase unless offscreen
+27,A9E4,AiShooterChase,s47: AI $26: attack countdown (meta base $06E0) else AiShootCheck + AiChase (meta base $06C0)
+27,AA57,AiChase,s47: AI $24: 4-dir chase of slot 0 every 16 steps; blocked -> 96-step wall-follow detour
+27,AAFA,AiTryMove,s47: trial ObjMoveSlide at speed $0A then restore position; C=1 blocked
+27,AB42,AiDormant,s47: AI $22: wait obj_anim onscreen then obj_active=obj_param2 meta=$06C0
+27,AB61,AiAimShooter,s47: AI $28: start delay then aimed shot (DirToTarget) at $0640=$0F; else AiChase
+27,AB9E,AiBurrower,s47: AI $29: coll $41 walking / $11 attacking; coll=0 while slot0 $0620 (player jump) != 0
+27,ABF8,AiLunger,s47: AI $2A: within 32px + Rand64=0 -> face player + melee shot at $0640=8; else AiChase
+27,AC40,AiLungeCheck,s47: distance < 2 cells and Rand64=0 -> $0640=$0F and skip caller
+27,ACC0,AiBurst,s47: AI $2C: 3 x SpawnShot random dir then despawn
+27,B0A8,AiDirShot,s47: AI $11: meta |= dir>>1 once then DEC obj_active -> AI $10 AiStraightMover
+27,B339,AiShellOnHit,s47: AI $41: hit -> 63 frames closed (no coll group) then AI $C1; else AiShooterChase
+27,B436,AiDasher,s47: AI $44: random 4-dir walk; 2/8 picks dash at speed 6 (meta $92)
+27,B4BA,AiHomingFlyer,s47: AI $45: SteerToward player every 16 steps; speed level 0-3; no BG test; random aimed shot
+27,B595,AiFanTurret,s47: AI $4C/$4D: static; 3-shot fan (16-dir aimed -1/0/+1) at $0640=$18/$10/$08
+27,B5D9,AiTurret,s47: AI $4E: static; aimed shot every 16 obj_anim steps
+27,B5F3,AiWaitClear,s47: AI $5E: wakes (AI $2A) when no spawn-param $50 object left on player's screen row
+27,B626,AiPatrolGunner,s47: AI $5C: horizontal patrol (elem $0F) / attack burst (elem 0) of aimed shots
+27,B690,AiDrifter,s47: AI $5D: re-aim every 64 steps; straight move no BG test
+27,B6AA,AiOrbiter,s47: AI $58: circles slot $0D (circle table 27:B6F4 r=24); random aimed shot
+27,B714,AiShootCheck,s47: onscreen; every 32 frames per slot; Rand64=0; player < 5 cells -> $0640=$1F and skip caller
+27,B73E,SteerToward,s47: A=target heading 0-15; heading += 27:B759[(heading-target)&F] (0/-1/+1)
+27,B769,AiOffscreenHalf,s47: offscreen and (X+$08) odd -> skip caller (half rate)
+27,B79F,ChestHop,s47: A=counter; dy from nibble table 27:B7C6 -> 27:B7E6; moves y only
+20,BD80,ShotOffsets,s47: (dx dy) spawn offset [shooter obj_behav*16 + (dir*2 & F)]
