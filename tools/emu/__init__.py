@@ -9,10 +9,17 @@ Modules:
   apu.py     - APU stub (register log, $4015 = 0, no IRQs)  [emu 3/6]
   pads.py    - $4016/$4017 controllers (strobe + shift), parse_buttons('A+RIGHT')  [emu 3/6]
   png.py     - zlib-only RGB PNG writer  [emu 3/6]
-  nes.py     - NES(): wiring + run_frame()/run_frames()/dump_screen()  [emu 3/6]
-  __main__.py - python3 -m tools.emu --frames N --dump-screen F.png [--scale S] [--log-apu [F]]
+  nes.py     - NES(): wiring + run_frame()/run_frames()/dump_screen()  [emu 3/6];
+               hooks on_exec(bank, addr, fn)/on_write/on_read/on_frame/set_tracer, Stop,
+               nes.keys pad script, nes.call(addr, bank, a, x, y) JSR-style  [emu 4/6]
+  state.py   - save/load states (gzip pickle of CPU/RAM/WRAM/mapper/PPU/APU/pads)  [emu 4/6]
+  debug.py   - Tracer, dump_state, peek, disasm, resolve(label|BB:AAAA), parse_keys  [emu 4/6]
+  __main__.py - python3 -m tools.emu --help (frames, keys, boot-test, trace, break, watch,
+               run-func, dump-regs/ram/wram/screen, save/load-state, log-apu, bench)  [emu 4/6]
   shots.py, padprobe.py - debug: screens at frames with scripted presses; pad-var write probe
-Tests: test_cpu.py [--rom], test_mapper.py, test_ppu.py [--rom] (ROM cases need rom/re-c.nes).
+Tests: test_cpu.py [--rom], test_mapper.py, test_ppu.py [--rom], test_cli.py
+(ROM cases need rom/re-c.nes). Import as `tools.emu` from the repo root (tools/ first on
+sys.path makes tools/dis.py shadow the stdlib `dis`).
 """
 import os
 import sys
