@@ -253,7 +253,9 @@ def w_areaload(nes, rep):
                 continue
             y, xx, h, p, b2 = e
             got = (r[0x70 + x] | r[0x90 + x] << 8, r[0xB0 + x] | r[0xD0 + x] << 8)
-            ey = y | (0x0E if h == 1 and area_dump.indirect_rec(p)[1][2] & 0x08 else 0)
+            rec = area_dump.indirect_rec(p)[1] if h == 1 else None
+            # y|=$0E (31:E323) only on the type-$30 path; rec[0]=$FF -> E363 -> E340 skips it (s42)
+            ey = y | (0x0E if rec and rec[0] != 0xFF and rec[2] & 0x08 else 0)
             if got != (xx, ey) or r[0x540 + x] != (b2 & 3) or r[0x560 + x] != p:
                 bad.append(f'slot {x:02X} h{h} p{p:02X} pos {got} exp {(xx, ey)} '
                            f'$0540={r[0x540 + x]:02X}/{b2 & 3:02X} $0560={r[0x560 + x]:02X}/{p:02X}')
@@ -287,11 +289,18 @@ def w_savegame(nes, rep):
     """SaveGame 23:BC09: check the $7D00 image against its source RAM at the return
     (REVERSE.md "Current save image" table; 257-byte flag copy quirk)."""
     def enter(nes):
-        return nes.ppu.frame_no
+        return nes.ppu.frame_no, bytes(nes.bus.wram[0x1D00:0x2000]), nes.bus.ram[0x6C]
 
-    def ret(nes, f):
+    def ret(nes, ctx):
+        f, before, area = ctx
         r, w = nes.bus.ram, nes.bus.wram
         img = bytes(w[0x1D00:0x2000])
+        if not rom(23, 0xBF00 + area) & 0x80:      # SaveAllowed C=0: image kept, only mirrored (s42)
+            for name, ok in (('not allowed: $7D00 image unchanged', img == before),
+                             ('not allowed: $6D00 mirror == $7D00', bytes(w[0xD00:0x1000]) == img)):
+                rep.call('struct: save image at SaveGame return', ok, f'f{f} area {area:02X}: {name}')
+            rep.saves_blocked = getattr(rep, 'saves_blocked', []) + [(f, area)]
+            return
         exp_pl = bytes([r[0x6C], r[0x70], r[0x90], r[0xB0], r[0xD0], r[0x3C0], r[0x3C1], r[0x421], r[0x620]])
         src80 = bytearray(r[0x702:0x71F])
         src80[0x710 - 0x702] &= 0xF0                       # obj1_flash: hi nibble only

@@ -186,6 +186,8 @@ bank,addr,name,comment
 31,E28E,SpawnCommonTail,$0540=b2&3 $0560=p; restore Y/$10/$11
 31,E2A3,SpawnH3,type=p+$D0
 31,E2B5,SpawnH1_Indirect,4-byte rec from banks 4/5 at $80F0+; type $30 or rec[1]
+31,E340,SpawnH1_Tail,$23=p; SwitchBank16(7)+JSR 14:80A0; $20!=0 -> obj_active=0; SpawnCommonTail
+31,E363,SpawnH1_TypeRec,rec[0]=$FF: ObjInit type rec[1] then JMP SpawnH1_Tail (no y|=$0E/meta/tile add; s42)
 31,E375,SpawnH2,type $0D (+bank14 $85BF) or $0E if p bit7
 31,E3C7,SpawnSetTileHi,$0380 |= (b2 bit7)>>2
 30,C000,BitMask,01 02 04 08 10 20 40 80
@@ -519,7 +521,7 @@ bank,addr,name,comment
 *,0001,tmp_01,zp scratch; auto (ram_map.py s29): r22 w16 banks 15;16;17;18;26;27;30;31
 *,0003,cam_x_hi,camera X hi: ObjSpriteDraw subtracts ($02,$03) from obj x (emu-verified s39); was tmp_03 (banks 17-19 reuse it as scratch); r3 w6
 *,0004,cam_y_lo,camera Y lo: ObjSpriteDraw subtracts ($04,$05) from obj y with 240-row wrap; $EC in the start rooms (emu s39); was tmp_04; r12 w10
-*,0005,cam_y_hi,camera Y hi (screen); was tmp_05 (banks 17-19 reuse it); r3 w8
+*,0005,cam_y_hi,camera Y hi (screen row: map y = s8($05)*240+$04 (s42)); was tmp_05 (banks 17-19 reuse it); r3 w8
 *,0008,tmp_08,zp scratch; auto (ram_map.py s29): r54 w5 banks 15;19;26;27;28;30;31
 *,000A,tmp_0A,zp scratch; auto (ram_map.py s29): r12 w4 banks 20;30;31
 *,000B,tmp_0B,zp scratch; auto (ram_map.py s29): r19 w11 banks 16;18;20;26;30;31
