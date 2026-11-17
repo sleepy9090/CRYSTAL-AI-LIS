@@ -14,7 +14,7 @@ bank,addr,name,comment
 31,F455,IrqHandler0,
 31,F1CD,ColdSaveInit,cold boot only: $700E/$700F=0; unconditionally re-inits the current save image $7D00-$7FFF + mirror $6D00 from template 23:BE00 (was ColdInitSub)
 31,FE80,ReadPads,per-frame gameplay pad read (pads X=1/0): $43 prev $4B new $49 dir $4D act (A/B hold counters $45/$47); was ColdInitSub2
-31,F0A4,BootSaveCheck,every boot: verify/repair save slots 0/1 (primary vs backup, checksum, AMI tag) and current image $7D00 vs mirror $6D00; bank 23 mapped at $A000 (was BootSub)
+31,F0A4,BootSaveCheck,every boot: verify/repair save slots 0/1 (primary vs backup; checksum; AMI tag) and current image $7D00 vs mirror $6D00; bank 23 mapped at $A000 (was BootSub)
 31,F11F,SaveSlot0Reset,slot 0 invalid: $7100/$7400 <- template 23:BE00 + 2 zero pages; $7001=$FF
 31,F140,BootCheckSlot1,slot 1 check (same as slot 0; primary-ok path falls into the backup check)
 31,F1A3,SaveSlot1Reset,slot 1 invalid: $7700/$7A00 <- template 23:BE00 + 2 zero pages; $7001=$FF
@@ -31,7 +31,7 @@ bank,addr,name,comment
 30,C427,SetR7,A=8KB bank for $A000 window; $6F=shadow; $50=7 (verified)
 30,C7A0,SwitchBank16_13,tail-call SwitchBank16(13) -> banks 26/27
 30,CADE,SubstateHandlerTable,ptr16[40?] state-1 handlers indexed by $41 (CAB6 dispatcher; JMP ($0010))
-30,CB2E,SubstateBankTable,u8[40?] SwitchBank16 n per substate $41 (3->9, 12/13->7, rest 0)
+30,CB2E,SubstateBankTable,u8[40?] SwitchBank16 n per substate $41 (3->9; 12/13->7; rest 0)
 31,E3D4,SwitchBank16_6,tail-call SwitchBank16(6) -> banks 12/13 (restores default after n=7 entity calls)
 *,0041,sub_state,state-1 substate index (SubstateHandlerTable/SubstateBankTable)
 30,C7D6,FadeSaveZpToWram,copy ZP $0A-$29 -> $6000; banks 26/27 $8C3D(A=4); wait 30 frames; $8C49; bank 16/17; restore (tentative fade)
@@ -41,23 +41,23 @@ bank,addr,name,comment
 31,FFA9,FarCall_B26_8E46,A->$10; push $6E/$6F; SetR6($1A); JSR 26:$8E46 with A; JMP RestoreBanks
 31,FFBE,FarCall_B26_8CC0,push $6E/$6F; SetR6($1A); JSR 26:$8CC0; JMP RestoreBanks
 31,FFCF,FarCall_D354,push $6E/$6F; JSR $D354; JMP RestoreBanks
-31,FFDB,RestoreBanks,PLA->SetR7; PLA->JMP SetR6 (pairs with push $6E,$6F)
+31,FFDB,RestoreBanks,PLA->SetR7; PLA->JMP SetR6 (pairs with push $6E;$6F)
 28,800E,ObjSpriteDraw,per-frame pass over 32 object slots -> OAM $0204+; order from ObjDrawOrderTable[$07FF&3]; then ObjHideUnusedOam + OrbitSprites
 28,808E,ObjSpriteDraw_Next,loop tail (INC $11 / DEC $1B count 32)
-28,809A,ObjSpriteDraw_Offscreen,sets $0380,X bit7 (offscreen) and skips
+28,809A,ObjSpriteDraw_Offscreen,sets $0380;X bit7 (offscreen) and skips
 28,80A5,ObjHideUnusedOam,Y=$F0 for OAM from $10 to $FF; if $0710 bit7 clears palette bits of obj1's 6 (4 if $0381 b6) sprites at $07EF
 28,80D6,OrbitSprites,8 sprites at OAM $E0-$FC around obj1 ($05C1/$05E1): $06C1!=0 burst (tile $29) else $06C0>>3 orbit (sine $81BA)
 28,81A5,BurstRadius,Y=ray*4(+2 for Y): radius $81FE[$81DE[Y]|$06C1] negated if $81DF[Y] bit7
 28,81BA,OrbitSineTable,32 x s8 sine (radius $21) for OrbitSprites
 28,81DA,OrbitTileTable,tile per $06C0>>3: 29 29 2A 32 20
-28,81DE,BurstDirTable,8 rays x (Xidx,Xsign,Yidx,Ysign): idx 00/10/20 selects radius row
+28,81DE,BurstDirTable,8 rays x (Xidx;Xsign;Yidx;Ysign): idx 00/10/20 selects radius row
 28,81FE,BurstRadiusTable,3 rows x 16 radii (row0 diagonal 05..60; row1 04..44; row2 zeros) indexed by $06C1
-28,822E,ObjDrawMeta,draw obj X metasprite: optional overlay $0580,X first if $0380 b1; $0380 b6 -> Y+3
-28,8268,ObjDrawMetaMain,id=$0300,X(+$0360,X unless $0380 b0) -> ObjMetaPtrLo/Hi; frame=($04E0,X>>3)&mask; emits OAM
-28,8331,MetaEmitNormal,4-byte entries dx,dy,attr,tile; dx=$80 ends; X wrap skips entry
-28,8380,MetaEmitHFlip,used after FF redirect: X=-dx-8, attr^=$40
+28,822E,ObjDrawMeta,draw obj X metasprite: optional overlay $0580;X first if $0380 b1; $0380 b6 -> Y+3
+28,8268,ObjDrawMetaMain,id=$0300;X(+$0360;X unless $0380 b0) -> ObjMetaPtrLo/Hi; frame=($04E0;X>>3)&mask; emits OAM
+28,8331,MetaEmitNormal,4-byte entries dx;dy;attr;tile; dx=$80 ends; X wrap skips entry
+28,8380,MetaEmitHFlip,used after FF redirect: X=-dx-8; attr^=$40
 28,83D8,ObjDrawOrderOfs,4 x u8 (00 20 40 60) offset into ObjDrawOrderTable
-28,83DC,ObjDrawOrderTable,4 x 32 slot permutations (flicker order); 0=04..1F,00; 3=02 01 1F..03 00
+28,83DC,ObjDrawOrderTable,4 x 32 slot permutations (flicker order); 0=04..1F;00; 3=02 01 1F..03 00
 28,845C,ObjMetaPtrTableA,ptr16[128] metasprite ids $00-$7F
 28,855C,ObjMetaPtrTableB,ptr16[128] metasprite ids $80-$FF (bank 29 $A000 range)
 *,04A0,obj_active,32 slots; 0 = slot empty (skipped by ObjSpriteDraw)
@@ -71,7 +71,7 @@ bank,addr,name,comment
 *,0360,obj_meta_dir,added to meta id unless $0380 b0
 *,0380,obj_flags,b0 no dir add; b1 draw overlay $0580; b2 half-rate flicker; b4 behind BG; b5 tile+$40; b6 sink 3px + hide attr-b2 parts; b7 offscreen (out)
 *,0580,obj_overlay_id,metasprite id drawn over obj when $0380 b1
-*,04E0,obj_anim,frame counter; frame = (v>>3) & meta mask; stepped by each AI handler (1-3x/frame), no global tick
+*,04E0,obj_anim,frame counter; frame = (v>>3) & meta mask; stepped by each AI handler (1-3x/frame); no global tick
 *,05C0,obj_screen_x,written by ObjSpriteDraw
 *,05E0,obj_screen_y,written by ObjSpriteDraw
 *,06C0,orbit_level,>>3 indexes OrbitTileTable; 0..7 = no orbit
@@ -130,7 +130,7 @@ bank,addr,name,comment
 31,F7FE,SoundUpdate,from NMI F4CF / IRQ F611 (+JMP F6DC F76B F77F); maps 24/25; drains 1 queued id -> SndCommand; R7=25; JSR SndTick; restore banks
 26,8C3D,Bank26_FadeA,A->$18; $11=0 $19=$10 (fade step +; tentative)
 26,8C49,Bank26_FadeB,A->$18; $11=$40 $19=$F0 (fade step -; tentative)
-26,8CC0,Bank26_8CC0,clears $6060-$6070 to $20; reads $03C0 (called via FarCall_B26_8CC0)
+26,8CC0,HudHpBar,s46: redraw HP bar ($6060-$6070 from player_hp_max/player_hp); was Bank26_8CC0 (called via FarCall_B26_8CC0)
 30,C900,MainLoop,wait $09 (NMI flag) then dispatch on state $40 via MainStateTable
 30,C91F,MainStateTable,ptr16[6]: C957 CAB6 C931 C939 C944 C94C
 *,0000,ppuctrl_shadow,
@@ -195,7 +195,7 @@ bank,addr,name,comment
 12,9201,AreaPtrTable,252 x ptr16 area records indexed by $6C
 *,006C,area_id,current area id (AreaPtrTable index)
 *,07E4,pal_id_spr0,sprite palette 0 id (player body): 0 or $4D when obj1_flash&$0F=2 (30:C05E)
-*,07E5,pal_id_spr1,sprite palette 1 id (weapon) = clamp(equip_sword,1..5); same value+$41 -> R3 (30:C0D0)
+*,07E5,pal_id_spr1,sprite palette 1 id (weapon) = clamp(equip_sword;1..5); same value+$41 -> R3 (30:C0D0)
 *,07E6,pal_id_spr2,sprite sub-palette 2 id (area record byte1); palette ids $07E0-$07E7
 *,07E7,pal_id_spr3,sprite sub-palette 3 id (area record byte2)
 *,07E0,pal_ids,8 palette ids (BG0-3 spr0-3) -> PaletteBuild 26:8C0E
@@ -206,7 +206,7 @@ bank,addr,name,comment
 26,8C6E,PaletteLoadOne,A=id (+$B0 sprite): 4 colours from bank 2/3 $A000+(id>>2&1F)*$100+$F0+(id&3)*4
 26,8C32,PaletteBlackFill,$6040-$605F <- $0F
 30,C7A5,AreaSubTable,A=k: SwitchBank16(5); ($10)=header(10:8300[$6C])[k]; Y=0. k0 map/music k1 gfx k2 entries k3 exits k4 screen flags k5 edge links
-31,EB09,ExitLookup,player 16px cell vs exit list (xc yc area entry)*,FF; sub_state 8 -> load area
+31,EB09,ExitLookup,player 16px cell vs exit list (xc yc area entry)*;FF; sub_state 8 -> load area
 13,AC00,ObjTypeTable,ptr16 per object type ($AD00 upper half) -> ObjInit records (snd + 4 bitmask groups)
 30,CBEC,AreaByIndexTable,16 area ids indexed by $0780&15 (warp/continue)
 *,0540,obj_spawn_b2,spawn entry b2&3
@@ -244,10 +244,10 @@ bank,addr,name,comment
 31,EB91,BgRowRender,row render entry: $C72B(A=0); INC pos_y_hi ($37) if $31>=0; -> ScreenRowRender
 31,EC87,BgColRender,column render entry: $C72B(A=$20); INC pos_x_hi ($35) if $30>=0; no $62FF bank-10 check
 31,EE31,MetatileAttrCol,column twin of MetatileAttr (step 8 into $6100)
-31,EECC,MetatileAttrBits,A = attr byte for metatile $6000,X: (tbl[M>>2]>>2*(M&3))&3 -> $EF17 replicate
+31,EECC,MetatileAttrBits,A = attr byte for metatile $6000;X: (tbl[M>>2]>>2*(M&3))&3 -> $EF17 replicate
 31,EF07,AttrRowOffset,16 bytes 00 00 08 08 .. 38 38: $6100 row offset for pos_y>>4
 31,EF17,AttrReplicate,00 55 AA FF: 2-bit pal into all 4 quadrants; $EF1B/$EF1D half masks 03 30 / 0C C0
-9,B000,MetatileAttrTables,12 x 64 B used (tileset ($67&$3C)>>2): 2-bit BG pal per metatile, 4/byte LSB first
+9,B000,MetatileAttrTables,12 x 64 B used (tileset ($67&$3C)>>2): 2-bit BG pal per metatile; 4/byte LSB first
 18,82BE,MenuPalLoad,A b7=0 BG/1 sprite half; A&15 -> 16-byte set 18:838B -> $06D0/$06E0; backdrop into spr slots
 18,838B,MenuPalSets,16 x 16-byte full palette sets for bank 18/19 screens (MenuPalLoad)
 4,8000,ScreenBlank80,screen page $80: 240 x metatile $80 = black; the grid 'no screen' id is a real page
@@ -324,7 +324,7 @@ bank,addr,name,comment
 30,D3DA,TrapChest,item $70: ObjInit chest slot as type $73 (chest monster AI $2B 27:AC60); sub_state=8
 30,D47C,GiveItemFull,GiveItem fail path: msg 32.15 too many items + SFX $29 if $08&$0F=0
 30,D497,ItemUseMenu,item menu use: $0715 checks ($08 teleport -> SaveGame) then ItemEventHook(1) -> EventActionDispatch
-30,D526,ItemUseFail,sub_state=$10; pending msg 32.19 Nothing happens, SFX $4E
+30,D526,ItemUseFail,sub_state=$10; pending msg 32.19 Nothing happens; SFX $4E
 30,D31C,NpcVanish,Y=$0623: obj_active=$53 $0660=1 SFX $6D (entry D31F with Y set)
 30,D1FF,SpawnFxAtSlot,X=src slot: ObjInit type $DF in slot $1E at slot X position; AreaLoadB
 30,D16D,TalkFullRestore,HP $03C1=$03C0; MP $0708=$0709; HUD redraw; NpcVanish
@@ -411,22 +411,22 @@ bank,addr,name,comment
 *,6428,inv_select,$6428-$642F per-category selection ($FF = none; static guess); $6428-$6477 = $FF on new game (30:C957)
 30,CCCC,ObjUpdateAll,banks 26/27; slots 0-30: $05A0 timer (hit-flag clear) then JSR ObjAiTable[obj_active&$7F]; ids $60-$6F map bank 15 at $A000; id $1A -> 30:CD7F
 27,A314,ObjAiTable,ptr16[128] object AI handlers indexed by obj_active&$7F (0 = none); ids $60-$6F run in bank 15 (SetR7($0F))
-26,9152,EnemyKilled,HP underflow: AddXp; $04C0=0 -> EnemyDeathFx else ObjInit(slot,$04C0); level-up check (XP $0704 >= $0706)
-26,91FA,EnemyDeathFx,obj Y -> AI $7D death puff (overlay $AB, anim $1F, $04C0=$0B)
-26,924B,AddXp,$0520,Y xp value: bit7 clear -> +value, set -> +(value&$7F)*16 (to $0704/$0705)
+26,9152,EnemyKilled,HP underflow: AddXp; $04C0=0 -> EnemyDeathFx else ObjInit(slot;$04C0); level-up check (XP $0704 >= $0706)
+26,91FA,EnemyDeathFx,obj Y -> AI $7D death puff (overlay $AB; anim $1F; $04C0=$0B)
+26,924B,AddXp,$0520;Y xp value: bit7 clear -> +value; set -> +(value&$7F)*16 (to $0704/$0705)
 26,8B7F,LevelHpTable,u8[16] max HP per level (index player_level)
 26,8B8F,LevelMpTable,u8[16] max MP per level
 26,8B9E,LevelXpTable,u16[16] XP needed for next level -> $0706/$0707
-26,98CD,ObjBecomeNext,ObjInit(slot X, type $04C0,X) (death-type chain)
+26,98CD,ObjBecomeNext,ObjInit(slot X; type $04C0;X) (death-type chain)
 *,0704,xp,player XP (16-bit) $0704/$0705
 *,0706,xp_next,XP needed for next level $0706/$0707 (26:8B9E[level])
 27,B83B,ObjAiExplode,AI $74 boss explosion (types $DC -> $DD -> $CF via ObjBecomeNext)
 15,B807,BossDefeated,AI $6F (type $CF): slot -> type $0F reward drop; BossAreaList[area] -> 21-byte BossRecs record
 15,B95D,BossAreaList,14 areas: 0A 1A 28 FF 6E F2 A9 AC B9 B6 9F A6 6C 5F
-15,B96B,BossRecPtrs,ptr16[14] -> 21-byte records (code ptr, ?, music, drop param, 8 pal ids, 6 CHR, $62FE, clear-enemies flag)
+15,B96B,BossRecPtrs,ptr16[14] -> 21-byte records (code ptr; ?; music; drop param; 8 pal ids; 6 CHR; $62FE; clear-enemies flag)
 15,B987,BossRecs,13 x 21 bytes (see REVERSE.md Boss defeat)
-15,BA98,BossFleeSpeech,record hook for areas 28/6E/F2: player reset, slot $1F type $2B, msg from BossFleeRecs, clear enemies
-15,BAFE,BossFleeRecPtrs,ptr16[14] by boss rec index ($0600) -> 5-byte recs (?, $031F, $033F, msg id, group)
+15,BA98,BossFleeSpeech,record hook for areas 28/6E/F2: player reset; slot $1F type $2B; msg from BossFleeRecs; clear enemies
+15,BAFE,BossFleeRecPtrs,ptr16[14] by boss rec index ($0600) -> 5-byte recs (?; $031F; $033F; msg id; group)
 15,BB29,ClearEnemySlots,obj_active=0 for slots $0D-$1E except X and AI $78/$7F/$30/$39; slots 4-11 cleared
 14,85E0,NpcPresenceLo,ptr16[128] NpcHidden lists for params 00-7F
 19,BC04,SwordRaisePose,event act 1 cutscene: player meta $B8 + CHR R2=$5C R3=$42; jingle $93; 127-frame hold; sub_state=8
@@ -497,7 +497,7 @@ bank,addr,name,comment
 11,BCFA,StaleFill11_BCFA,dead filler to BDFF: after last area sub-table record (= 9:BCFA)
 11,BF00,StaleFill11_BF00,dead filler to BFFF: copy of 9:BF00 subst tables (s32: BEE0-BEFF is read by the $6000 page copy)
 *,07D7,boss_cam_lock,1-7F: camera frozen N frames (no exits/teleport; bows usable); 80+: align camera to screen grid
-31,E8F6,CameraUpdate,$07D7 1-7F -> DEC + skip follow/ExitLookup; else follow + ExitLookup
+31,E8F6,CameraTick,s46 renamed (was a 2nd CameraUpdate): $07D7 1-7F -> DEC + skip follow/ExitLookup; else follow + ExitLookup
 14,8451,UseBowCheck,Bow of Moon/Sun use: target object in 0D-1F and $07D7 in 1..7F
 15,A477,BossAiE0,boss AI $E0 (types $57 $A5) phase base $00 x8
 15,A675,BossAiE2,boss AI $E2 phase base $08 x2
@@ -507,20 +507,20 @@ bank,addr,name,comment
 15,AF48,BossAiE8,boss AI $E8 (type $97) phase base $21 x3
 15,B0B6,BossAiE9,boss AI $E9 (statues $9C/$9D) phase base $24 x3
 15,B130,BossAiEA,boss AI $EA (type $9B) phase base $27 x4
-27,B0B5,AiStraightMover,AI $10: lifetime $0480, ObjStepVector, optional BG collision via $0460
+27,B0B5,AiStraightMover,AI $10: lifetime $0480; ObjStepVector; optional BG collision via $0460
 27,ACD9,AiNpcWander,AI $30: talkable NPC random 4-dir wander with pauses
-27,AD9C,NpcLookAhead,4 x (dx,dy) 16px look-ahead per dir
+27,AD9C,NpcLookAhead,4 x (dx;dy) 16px look-ahead per dir
 27,A915,AiWalkPause,AI $20: walk $0480 frames / pause $0600 frames
-27,A94A,AiWalkPick,random dir&6, walk (rand*4+$20), pause ($08&7)*8
-26,8480,ObjStepVector,A=dir: $31/$30 = dy/dx from speed tables 84BC/84CC/84DC, 8-frame patterns
+27,A94A,AiWalkPick,random dir&6; walk (rand*4+$20); pause ($08&7)*8
+26,8480,ObjStepVector,A=dir: $31/$30 = dy/dx from speed tables 84BC/84CC/84DC; 8-frame patterns
 26,9861,TempAddStep,add signed $30/$31 to $34-$37 with 240-line y wrap
 26,97D7,Rand64,A = 26:97E4[++$0E & $3F]
-26,98C7,ObjDespawn,obj_active,X = 0
+26,98C7,ObjDespawn,obj_active;X = 0
 26,98D7,ObjMoveSlide,move in obj_meta_dir via 26:9947; diagonals also try dir-1/dir+1; C=1 blocked
-26,9A30,ObjBgProbe,metatile attrs at $34-$37 -> $20
+26,9A30,ObjBgProbe,metatile collision attr at $34-$37 -> $20 (bank 9 page $69); A b7 = cached if same 16px cell; A b6 = update obj_flags b4/b6 (s46)
 *,0001,tmp_01,zp scratch; auto (ram_map.py s29): r22 w16 banks 15;16;17;18;26;27;30;31
-*,0003,cam_x_hi,camera X hi: ObjSpriteDraw subtracts ($02,$03) from obj x (emu-verified s39); was tmp_03 (banks 17-19 reuse it as scratch); r3 w6
-*,0004,cam_y_lo,camera Y lo: ObjSpriteDraw subtracts ($04,$05) from obj y with 240-row wrap; $EC in the start rooms (emu s39); was tmp_04; r12 w10
+*,0003,cam_x_hi,camera X hi: ObjSpriteDraw subtracts ($02;$03) from obj x (emu-verified s39); was tmp_03 (banks 17-19 reuse it as scratch); r3 w6
+*,0004,cam_y_lo,camera Y lo: ObjSpriteDraw subtracts ($04;$05) from obj y with 240-row wrap; $EC in the start rooms (emu s39); was tmp_04; r12 w10
 *,0005,cam_y_hi,camera Y hi (screen row: map y = s8($05)*240+$04 (s42)); was tmp_05 (banks 17-19 reuse it); r3 w8
 *,0008,tmp_08,zp scratch; auto (ram_map.py s29): r54 w5 banks 15;19;26;27;28;30;31
 *,000A,tmp_0A,zp scratch; auto (ram_map.py s29): r12 w4 banks 20;30;31
@@ -560,8 +560,8 @@ bank,addr,name,comment
 *,002F,tmp_2F,zp scratch; auto (ram_map.py s29): r34 w26 banks 14;15;16;19;20;26;27;30;31
 *,0030,tmp_30,zp scratch; auto (ram_map.py s29): r17 w39 banks 15;19;26;27;30;31
 *,0031,tmp_31,zp scratch; auto (ram_map.py s29): r10 w34 banks 15;19;26;27;30;31
-*,003A,zp_3A,auto (ram_map.py s29): r2 w5 banks 31
-*,003B,zp_3B,auto (ram_map.py s29): r1 w4 banks 31
+*,003A,cam_ofs_x,s46: horizontal view offset added to the drawn camera (-8..+1; -> $F8 while scrolling right)
+*,003B,cam_ofs_y,s46: vertical view offset added to the drawn camera (8; $FC one-row areas; 0 area $5F)
 *,003C,zp_3C,auto (ram_map.py s29): r11 w2 banks 27;30;31
 *,003D,zp_3D,auto (ram_map.py s29): r5 w0 banks 27;30;31
 *,003E,zp_3E,auto (ram_map.py s29): r6 w0 banks 27;30;31
@@ -599,7 +599,7 @@ bank,addr,name,comment
 *,00FC,snd_reg_dirty,sound: per-frame reg-dirty bits b0 vol b1 sweep b2 period lo b3 period hi (renamed s33 from snd_zpFC); r13 w13 banks 24
 *,00FD,snd_op_count,sound: ops read + vibrato ticks this frame; SFX skipped if >=20 (renamed s33 from snd_zpFD); r3 w3 banks 24
 *,00FE,snd_fade_timer,sound: fade timer ($BC on cmd $FF; DEC per channel tick) (renamed s33 from snd_zpFE); r5 w4 banks 24;31
-*,00FF,snd_dmc_drum,sound: $10|x = DMC drum x armed, 0 = off (renamed s33 from snd_zpFF); r4 w6 banks 24
+*,00FF,snd_dmc_drum,sound: $10|x = DMC drum x armed; 0 = off (renamed s33 from snd_zpFF); r4 w6 banks 24
 *,0114,snd_ch_flags,sound chn[6]: b0 active b4 rest/hold b5 vibrato b6 sw envelope b7 stolen by SFX (renamed s33); r19 w12 banks 24
 *,0115,snd_ch_flags_1,snd_ch_flags[1] (SQ2) fixed-index ref (renamed s33); r2 w3 banks 24
 *,0117,snd_ch_flags_3,snd_ch_flags[3] (NOISE) fixed-index ref (renamed s33); r2 w3 banks 24
@@ -626,7 +626,7 @@ bank,addr,name,comment
 *,033E,obj_tile_ofs_s1E,slot 0x1e of obj_tile_ofs; auto (ram_map.py s29): r0 w3 banks 30
 *,0381,obj_flags_s01,slot 0x01 of obj_flags; auto (ram_map.py s29): r15 w13 banks 19;26;28;30;31
 *,038E,obj_flags_s0E,slot 0x0e of obj_flags; auto (ram_map.py s29): r1 w2 banks 19;27
-*,03A0,obj_coll,32 slots; collision class: hi nibble = group mask (ObjOverlapScan 26:95F8 ANDs attacker/target), lo nibble = HitboxTable 26:9691 id (+16 if obj_hitflags b6); 0 hi = no collision; NpcVanish clears (s30)
+*,03A0,obj_coll,32 slots; collision class: hi nibble = group mask (ObjOverlapScan 26:95F8 ANDs attacker/target); lo nibble = HitboxTable 26:9691 id (+16 if obj_hitflags b6); 0 hi = no collision; NpcVanish clears (s30)
 *,03AD,obj_coll_s0D,slot 0x0d of obj_coll; auto (ram_map.py s29): r0 w5 banks 27;30
 *,03E0,obj_attack,32 slots; attack power: 26:910C sums player $03E1 + attacker $03E0;X
 *,0400,obj_defense,32 slots; defence: target $0400;Y subtracted from the attack sum at 26:911E
@@ -647,7 +647,7 @@ bank,addr,name,comment
 *,04F3,obj_anim_s13,slot 0x13 of obj_anim; auto (ram_map.py s29): r5 w1 banks 15
 *,0500,obj_elem_drop,32 slots; lo nibble = element bits (attacker&target&$0F !=0 -> no damage; 26:9111); hi nibble = gold-drop class (26:946D)
 *,0520,obj_xp_value,32 slots; XP on kill (AddXp 26:924B; b7 -> (v&$7F)*16)
-*,0541,obj_spawn_b2_s01,slot 0x01 of obj_spawn_b2; auto (ram_map.py s29): r2 w2 banks 26;27;31
+*,0541,ride_platform_slot,s46: slot of the platform (AI $38/$3C) the player stands on; cleared by ObjCollideAll each frame; blocks the pit fall (was obj_spawn_b2_s01)
 *,0561,obj_spawn_param_s01,slot 0x01 of obj_spawn_param; auto (ram_map.py s29): r4 w3 banks 26;27;30;31
 *,0581,obj_overlay_id_s01,slot 0x01 of obj_overlay_id; auto (ram_map.py s29): r1 w12 banks 19;27;30
 *,05A0,obj_freeze,32 slots; AI-freeze timer: ObjUpdateAll skips the AI while DEC leaves it !=0; $FF on hit (26:8FF1); bosses set $10 each frame; reaching 0 on b2=1 objects -> HitSetFlag clear (s30)
@@ -664,10 +664,10 @@ bank,addr,name,comment
 *,062D,obj_timer2_s0D,slot 0x0d of obj_timer2; auto (ram_map.py s29): r0 w3 banks 27;30
 *,062E,obj_timer2_s0E,slot 0x0e of obj_timer2; auto (ram_map.py s29): r0 w3 banks 27;30
 *,062F,ram_062F,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r1 w2 banks 19
-*,0640,obj_act_timer,32 slots; action/attack countdown: shooter AIs (27:A969/A9E4) DEC it, obj_anim = it>>1, fire SpawnShot at $0F; 0 = walk normally (s30)
-*,0641,obj_act_timer_s01,slot 0x01 of obj_act_timer; auto (ram_map.py s29): r5 w5 banks 26;27;30;31
+*,0640,obj_act_timer,32 slots; action/attack countdown: shooter AIs (27:A969/A9E4) DEC it; obj_anim = it>>1; fire SpawnShot at $0F; 0 = walk normally (s30)
+*,0641,player_bg_attr,s46: last ground BG attr of the player (PlayerMove); b0 pit; b5 conveyor; b7 damage floor (was obj_act_timer_s01)
 *,0643,obj_act_timer_s03,slot 0x03 of obj_act_timer; auto (ram_map.py s29): r1 w2 banks 14;26
-*,0660,obj_aux,32 slots; per-AI sub-step counter: vanish (type $53, 27:A7CD) counts 1..$40 with obj_flags b2 then despawns; 27:A969 halves obj_act_timer rate with it; scene AIs use it as a step/once flag (s30)
+*,0660,obj_aux,32 slots; per-AI sub-step counter: vanish (type $53; 27:A7CD) counts 1..$40 with obj_flags b2 then despawns; 27:A969 halves obj_act_timer rate with it; scene AIs use it as a step/once flag (s30)
 *,0661,obj_aux_s01,slot 0x01 of obj_aux; auto (ram_map.py s29): r2 w1 banks 26
 *,066D,obj_aux_s0D,slot 0x0d of obj_aux; auto (ram_map.py s29): r2 w1 banks 26
 *,0680,obj_param1,32 slots; type-$30 NPC param 1 (spawn rec byte 0; item given by talk act 3)
@@ -681,8 +681,8 @@ bank,addr,name,comment
 *,06CF,ram_06CF,auto (ram_map.py s29): r4 w4 banks 18
 *,06D0,ram_06D0,auto (ram_map.py s29): r4 w2 banks 18
 *,06E0,obj_behav,32 slots; type-$30 behaviour flags (b2 = AiNpcWander alt mode 27:AE16); menus reuse $06D0-$06EF as palette sets
-*,06F0,title_mode,State3SubTable index (s38 emu: 1 title, 2 intro story, 3 intro skip, 4 status/name-entry screen)
-*,06F1,title_step,step within a title_mode (mode 4: 5 = name entry 19:A3F6, 6 = start game 19:A57C)
+*,06F0,title_mode,State3SubTable index (s38 emu: 1 title; 2 intro story; 3 intro skip; 4 status/name-entry screen)
+*,06F1,title_step,step within a title_mode (mode 4: 5 = name entry 19:A3F6; 6 = start game 19:A57C)
 *,06F2,ram_06F2,auto (ram_map.py s29): r0 w3 banks 18;19
 *,06F3,state3_mode,State3ModeTable index (0 = State3SubDispatch; 1/2 = 18:8310/18:834A transition modes)
 *,06FC,ram_06FC,auto (ram_map.py s29): r0 w6 banks 19
@@ -693,10 +693,10 @@ bank,addr,name,comment
 *,0705,xp_hi,XP hi byte
 *,0707,xp_next_hi,XP-for-next-level hi byte
 *,0712,magic_sel,s44: selected magic 0-11 (Y for PlayerMagic 27:A022)
-*,0713,ram_0713,auto (ram_map.py s29): r4 w1 banks 26;30;31
-*,0714,ram_0714,auto (ram_map.py s29): r7 w1 banks 15;19;26;30
-*,0716,ram_0716,auto (ram_map.py s29): r8 w1 banks 26;27;30;31
-*,071A,ram_071A,auto (ram_map.py s29): r3 w5 banks 19;26;30;31
+*,0713,equip_armor,s46: armor id (R2 player CHR; defence table 30:8BC0; 7 = poison immune; 8 = HP regen standing still)
+*,0714,equip_shield,s46: shield id (3rd stat table 30:8BC9; 6/8 block paralysis shots; 4/8 block stone shots)
+*,0716,equip_accessory,s46: accessory item id ($0E/$10/$14 double a stat's level part; $11 MP regen; $12 magic 0 -> jump; $13 no damage floor; $0D no area $1A hazard)
+*,071A,invuln_timer,s46: player invulnerability frames (30 after a hit); obj_flags_s01 b2 set while nonzero
 *,0744,ram_0744,auto (ram_map.py s29): r1 w4 banks 30;31
 *,0780,ram_0780,auto (ram_map.py s29): r2 w1 banks 30
 *,07D5,ram_07D5,auto (ram_map.py s29): r5 w3 banks 15;27;31
@@ -773,13 +773,13 @@ bank,addr,name,comment
 26,95F8,ObjOverlapScan,s30: X=attacker; scan Y=$10+1..$11-1; skip obj_flags/obj_flags2 b7; group mask obj_coll&$F0; AABB from HitboxTable + $05C0/$05E0; C=1 hit (Y=target)
 26,9691,HitboxTable,s30: 24 x {dx w dy h} signed; index (obj_coll&$0F)*4 | (obj_hitflags&$40)
 26,96F1,CollPairTable,s30: 15 x {slot first last handler}: attacker slot vs targets first+1..last-1 ($0D-$1E); handler -> HitHandlerTable
-26,972D,SpawnShot,s30: A=shot id, Y=dir; record ShotTable 20:BC00[A*4] (ids >=$40 at $BD00) with bank 20 at $A000 via SetR7($14); C=0 = none spawned
+26,972D,SpawnShot,s30: A=shot id; Y=dir; record ShotTable 20:BC00[A*4] (ids >=$40 at $BD00) with bank 20 at $A000 via SetR7($14); C=0 = none spawned
 20,BC00,ShotTable,s30: 4-byte projectile records for SpawnShot 26:972D (bank 20 mapped at $A000); ids >=$40 continue at $BD00; fields not decoded
 10,8400,AreaHeaderTableHi,s32: .dw[128] area header ptrs for area ids $80-$FF (30:C7BB; C=1 after ASL area_id); 8 nulls
 12,9301,AreaPtrTableHi,s32: .dw area record ptrs for ids $80-$FF (31:E0EB / 31:E15F); second half of AreaPtrTable 12:9201
 13,AD00,ObjTypeTableHi,s32: .dw ObjType record ptrs for types $80-$FF (30:C27D); second half of ObjTypeTable 13:AC00
 14,9C82,ItemAuxPtrs,s32: .dw[item id $23] -> bank 15 $A106-$A178 records (14:85C8); follows ItemUseTable; count not bounded (<=114)
-15,BEB7,PtrTable15_BEB7,s32: .dw[4] read at 15:BE83 (tracer ctx 06/15 -> $80F0-$97F0); consumer code looks odd, unconfirmed
+15,BEB7,PtrTable15_BEB7,s32: .dw[4] read at 15:BE83 (tracer ctx 06/15 -> $80F0-$97F0); consumer code looks odd; unconfirmed
 16,8B1F,MenuPtrTable_8B1F,s32: .dw[$12] (16:86D7) -> $12/$13; 5 plausible entries
 18,8F3B,State3PtrTable_8F3B,s32: .dw[zp_72] (18:80F5) -> $86/$87; 11 entries $8F52-$901D
 20,9767,TextPtrTable_9767,s32: .dw[A] (20:973F) -> $26/$27; count unknown (scan overruns at 35)
@@ -787,35 +787,35 @@ bank,addr,name,comment
 17,A11A,JmpTable17_A11A,s32: untraced dispatch (17:A117 JMP ($008E)); <=4 entries
 19,A193,JmpTable19_A193,s32: untraced dispatch (19:A190 JMP ($06FC)); <=7 entries $A1A1-$A57C
 19,A6F3,JmpTable19_A6F3,s32: untraced dispatch (19:A6F0 JMP ($06FC)); <=3 entries
-19,A7BC,JmpTable19_A7BC,s32: dispatch (19:A7B9 JMP ($06FC)); <=25 entries, 8 already traced
-19,AC07,JmpTable19_AC07,s32: dispatch (19:AC04 JMP ($06FC)); <=28 entries, 9 already traced
-27,A072,JmpTable27_A072,s32: untraced dispatch (27:A06E JMP ($0010), A*2); <=16 entries
-27,BA40,JmpTable27_BA40,s32: untraced AI phase dispatch (27:BA3D, obj_phase*2); <=16 entries
+19,A7BC,JmpTable19_A7BC,s32: dispatch (19:A7B9 JMP ($06FC)); <=25 entries; 8 already traced
+19,AC07,JmpTable19_AC07,s32: dispatch (19:AC04 JMP ($06FC)); <=28 entries; 9 already traced
+27,A072,JmpTable27_A072,s32: untraced dispatch (27:A06E JMP ($0010); A*2); <=16 entries
+27,BA40,JmpTable27_BA40,s32: untraced AI phase dispatch (27:BA3D; obj_phase*2); <=16 entries
 30,DBDC,JmpTable30_DBDC,s32: untraced dispatch (30:DBD9) after SubstTeleportMenu; <=8 entries
 30,DDBD,JmpTable30_DDBD,s32: untraced dispatch (30:DDBA) after SubstTelepathySelect; <=8 entries
 30,DF0E,JmpTable30_DF0E,s32: untraced dispatch (30:DF0B) after SubstChangeForm; <=8 entries
-31,E3D9,JmpTable31_E3D9,s32: untraced dispatch (31:E419, index A>>4); <=8 entries
+31,E3D9,AreaEntryTable,s46: 8 entries by ($6D&$E0)>>5: E422 normal / E51C keep pos / E533 save+load / E544 pit fall / 0000 x3 / E41C no record (was JmpTable31_E3D9)
 31,F6C2,JmpTable31_F6C2,NMI-mode routine table [irq_mode] used by NmiModeDispatch 31:F6AD: F6D6 F731 F751 F771 F782 F7C5 F7DB F6D6 0000 F731 (s41; mode 8 null)
 31,F6AD,NmiModeDispatch,s41: $57=0; JMP (JmpTable31_F6C2[irq_mode]); called every NMI (F417) and from IRQ handler 1 when $07 (missed NMI) set
 31,F6D6,NmiMode0,s41: irq_mode 0/7 NMI routine; JMP SoundUpdate only when PPUMASK shadow $01&$18=0 (rendering off so no HUD IRQ)
 31,F488,IrqHandler1Hud,s41: gameplay HUD split (line 190 in tools.emu): sprites off; PPUADDR $2B00; scroll X 0; CHR R0=$3C R1=$38; SoundUpdate with $06=1
 31,F691,IrqHandler6,s41: title/intro IRQ handler (line 137 in tools.emu); set every frame by bank 18 intro (irq_mode 5)
-11,BE00,Wram6000InitTable,s32: 256 B copied to wram_buf $6000-$60FF by 30:CCA4 and 19:BE5E (SetR6($0B): bank 11 at $8000, read as $9E00); contents not decoded
+11,BE00,Wram6000InitTable,s32: 256 B copied to wram_buf $6000-$60FF by 30:CCA4 and 19:BE5E (SetR6($0B): bank 11 at $8000; read as $9E00); contents not decoded
 27,A8A2,AiDirTable_A8A2,s32: 4 bytes 08 08 09 07 = obj_meta_dir by Rand64&3 (27:A898); tracer decodes them as code because the BNE at A8A0 is always taken
 19,ABEA,TitleIntroStory,s38: title_mode 2 (intro story pages); START/SELECT ($4B&$30) -> 19:B15C skip -> title_mode 3
 19,A176,TitleStatusScreen,s38: title_mode 4 (green status screen + name entry); steps via JmpTable19_A193 by $06F1
-19,A3F6,NameEntryInput,s38: title_step 5; B=back cursor, START=finish (19:A4E3; all-blank name -> default from 19:A56C), A=type $06CC at $6420 (F0/F1/F2 = end/right/left)
-19,A585,NameEntryCursor,s38: pad_new bits 0-3 move grid cursor $8A (col 0-31 wrap) / $8B (row $10-$16 step 2), skipping $FF cells of 19:9EC2
-19,A57C,NameEntryDone,s38: title_step 6 -> 19:A6F9 starts the game (main_state 0 written at 19:A6FD, gameplay $40=1 two frames later)
+19,A3F6,NameEntryInput,s38: title_step 5; B=back cursor; START=finish (19:A4E3; all-blank name -> default from 19:A56C); A=type $06CC at $6420 (F0/F1/F2 = end/right/left)
+19,A585,NameEntryCursor,s38: pad_new bits 0-3 move grid cursor $8A (col 0-31 wrap) / $8B (row $10-$16 step 2); skipping $FF cells of 19:9EC2
+19,A57C,NameEntryDone,s38: title_step 6 -> 19:A6F9 starts the game (main_state 0 written at 19:A6FD; gameplay $40=1 two frames later)
 30,CA5F,SubstNewGameInit,s38: substate 0; sets substate $13 then falls into CAA2: if any button held that frame (pad_prev) -> substate 8 (skips the wake-up cut-scene)
-30,D9B6,SubstWakeCutscene,s38: substate $13 handler: SwitchBank16(10) + JSR 20:9400 (self-timed cut-scene loop), then JMP 30:D91F
+30,D9B6,SubstWakeCutscene,s38: substate $13 handler: SwitchBank16(10) + JSR 20:9400 (self-timed cut-scene loop); then JMP 30:D91F
 20,9400,WakeCutscene,s38: own frame loop (LSR frame_ready); ~504 frames (emu f2351-2855) then substate 8 at 20:948E
 16,9AEE,SaveLoadPage,s43: START in the SELECT menu (16:8149 when $07DD=0); clears $7000/$646A/$646B and prints GAME + slot rows
 16,9B3A,SaveLoadLoop,s43: per frame: SELECT/START exit; L/R toggle $646A b0 (save/load); B exit ($7000=$AB); A -> MenuSave or Load prompt
 16,9C7A,SaveLoadExit,s43: back to the SELECT menu (JMP 16:807E if $6424 else 16:807A)
 26,9D9A,PlayerMove,s44: AI $03 slot 0 (type $06) ground body: pad -> obj_behav; jump timer $0620; PlayerMagic; sword charge; ObjMoveSlide; BG probe; conveyor
 26,9D81,PlayerMoveLocked,s44: AI $02 = PlayerMove with pad vars zeroed (cutscenes); area $58 -> AI $03 + pad_dir 4
-26,9BF6,PlayerSetSpeed,s44: slot 0 obj_flags2 low nibble = move speed by obj1_flash status (4 -> 2, b6 -> 9, b7 -> 5)
+26,9BF6,PlayerSetSpeed,s44: slot 0 obj_flags2 low nibble = move speed by obj1_flash status (4 -> 2; b6 -> 9; b7 -> 5)
 26,9CEF,PlayerPlaceBody,s44: slot 1 = slot 0 pos + JumpHeightTable[$0620]; obj_coll $60 air / $50 ground
 26,9D4D,JumpHeightTable,s44: s8[49] slot 1 y offset per $0620 (idx $20 -> 0); verified s45
 26,9FD2,PlayerConveyor,s44: BG attr b5: move in obj_param1&$0F at speed obj_aux $0660 (ramps 0..9)
@@ -825,9 +825,24 @@ bank,addr,name,comment
 26,8BD8,SwordMpCost,s44: u8[6] 00 08 10 10 28 00 level-3 charge MP cost by equip_sword
 27,A022,PlayerMagic,s44: A button; Y=$0712 selected magic; dispatch JmpTable27_A072 (see REVERSE Player section)
 27,A017,DiagToCardinal,s44: u8[8] FF 02 02 02 FF 06 06 06 (forced move: up/down ignored)
-27,A092,MagicButtonSel,s44: u8[12] per magic: $08 = pad_new edge, $00 = pad_prev held (offset from $43)
-27,A112,MagicFlight,s44: magic 8: jump + hover at the peak while A held, SpendMp(1)/16 f
-27,A143,MagicJump,s44: magic 9: ground jump, $0620=$20, sound $30; verified s45
+27,A092,MagicButtonSel,s44: u8[12] per magic: $08 = pad_new edge; $00 = pad_prev held (offset from $43)
+27,A112,MagicFlight,s44: magic 8: jump + hover at the peak while A held; SpendMp(1)/16 f
+27,A143,MagicJump,s44: magic 9: ground jump; $0620=$20; sound $30; verified s45
 27,A1BB,MagicFailSound,s44: PlaySound($4E)
 27,A1C9,PlayerFacing,s44: slot 1 meta low 2 bits = facing; FacingKeep keeps facing within 45 deg
 27,A211,FacingKeep,s44: u8[8] 01 01 00 00 00 00 00 01 indexed (2*facing - dir)&7
+26,9907,BgProbePoints,s46: 8 dirs x 8 B: cumulative (dx dy) probe offsets from the candidate pos; 00 00 end; box (x-4;y-5)..(x+4;y+3); dir 5 quirk dy -6
+26,9947,ObjMoveStep,s46: ObjMoveSlide inner step: step vector + BgProbePoints; slot 0 mask $06 + ObjScreenEdge; others mask $27; success PLA PLA + commit; C=0
+26,99FF,ObjScreenEdge,s46: slot 0 only: blocked (attr 6; C=1) if screen x <$0A or >=$FC; or screen y <$18 or >=$D0
+26,9AE0,BitMask_9AE0,s46: u8[8] 01 02 04 08 10 20 40 80 (visited_map bit by x_hi)
+26,927E,PlayerPoisonRoll,s46: toucher obj_hitflags b7; armor !=7; Rand64<4 -> status 3 poison; msg $20/$19; SFX $36
+26,92BF,HitPlayerShot,s46: enemy shot (spawn_b2 $FF) by spawn_param: 0 damage; 1 paralysis; 2 stone; 3 -> type $0B; >=4 status 4
+26,9357,HitPlayer,s46: HitHandlerTable 2 (player touched): shots; poison; AI $0B hold; gold $7B; platforms $38/$3C; damage attack-defence; 30f invuln
+26,9431,PlayerInvuln,s46: invuln_timer $071A=$1E; obj_flags_s01 b2
+26,943F,RidePlatform,s46: platform AI $38/$3C: $0541=slot; move slot 0 one step in its dir at speed 2
+31,E40A,AreaEntryDispatch,s46: JMP (AreaEntryTable[($6D&$E0)>>4])
+31,E544,AreaPitFall,s46: area_entry $6x: slide slots 0/1 down 8 px/frame while probe b0; then AreaEdgeLink (k5)
+31,E9AD,CameraFollow,s46: camera step $30/$31: Y dead zone $68-$77; X dead zone $68-$9F while L/R held or knockback; else 1 px re-centre; max 3 px/frame
+31,EA2F,CamStepClamp,s46: clamp signed step to -3..+3
+31,EF55,PlayerStatusTick,s46: per frame (SubstPlay): poison/damage floor/area $1A hazard -4 HP; status 1/2; MP/HP regen items; pit fall; invuln countdown
+30,CB84,PlayDeathMenuCheck,s46: SubstPlay body: player_hp=0 -> sub_state 3 (death); then START/SELECT menus
