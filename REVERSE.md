@@ -875,6 +875,62 @@ Boss names come from the intro/flee messages; they are inferred, not confirmed.
   - The Ball of Water set-list sets F103, so `NpcHidden` (`$C3`: `area 43, !F103`) stops the spawn afterwards.
 - **Not covered:** the bank 15 boss AI state machines (`15:A477 A95D ABDA AC7B ADD4 AF48 B0B6 B130 B2DA`). Each shows its own intro (`pending_msg` writes at `15:A9A1 ACED AE2D AF91 B0EC B195`, music `$12`); that belongs to task "gameplay 3/3". The area `$43` boss (type `$70`, AI `$E5`) has no `BossRecs` entry, so how its reward is given is not traced.
 
+#### Player — movement, jump, sword, magic (session 44, `tools/player_dump.py` → `docs/player_tables.txt`)
+
+**The player is two objects.** Slot 0 (type `$06`, AI `$03` `PlayerMove` `26:9D9A`) is the **ground body**: it reads the pad, moves, does BG collision, holds the jump timer, and is the position that `ExitLookup`/edge links/camera use. Slot 1 (type `$04`, AI `$01` `PlayerUpdate` `26:9B45`) is the **drawn body**: each frame it is placed at slot 0's x/y plus the jump height, picks the facing and pose, and fires the sword. AI `$02` (`PlayerMoveLocked` `26:9D81`) is `PlayerMove` with all pad vars zeroed (cutscenes). In area `$58` it changes itself to AI `$03` and forces `pad_dir`=4 (walk down). Both AIs run every frame in slot order (0 then 1).
+
+`PlayerMove` `26:9D9A` (slot 0, X=0), in order:
+1. Unless status `obj1_flash` b7 or (`obj1_flash`&`$0F`)=4: `obj_behav`(`$06E0`) = `pad_dir` (slot 1 reads it for the facing). Meta id `$A7`, or `$4C` (empty) while in the air with `obj_flags` b6 (sinking).
+2. **Jump timer** `$0620` (slot 0 `obj_timer2`): if ≠0, DEC. At `$11` it plays sound `$31`. While ≥`$1E`, a held direction is latched into `$0640`, and while airborne `pad_dir` is replaced by that latched value (**the jump direction is locked for the whole jump**).
+3. `PlayerMagic` `27:A022` (A button, below).
+4. **Sword charge** (B held = `pad_prev` b6, sword equipped, `obj_phase` <`$0C` or =`$11`): `obj_phase`=`$12`. Every 4th frame (`$08`&3=0) `orbit_level` `$06C0`+1. At 8 `orbit_burst_timer`=`$0E`; every multiple of 8 plays sound `$26`. The cap is `SwordChargeCap` `26:9D7E` = `08 10 18`[`sword_power`]. So level 1/2/3 takes 32/64/96 frames.
+5. `obj_phase` (swing counter): `$12` while B is held → slot 1 meta 0 (stand). When B is released, slot 1 meta 4 (swing) with `obj_anim_s01`=phase, and phase DECs to 0 (18-frame swing). On the ground `obj_bg_mask`=`$32`. Walking with no swing: `obj_anim_s01` DEC (walk cycle).
+6. Status b6 (`obj1_flash`): `obj_bg_mask`=`$34`.
+7. **Move**: `obj_meta_dir`=`pad_dir`, `obj_timer` DEC (it is the 8-frame step phase), `ObjMoveSlide` `26:98D7`. Blocked → `obj_param2`=8 and keep trying the old direction for up to 8 frames (corner slide). If `obj_param1` b7 (forced move), the diagonal is reduced by `DiagToCardinal` `27:A017` (`FF 02 02 02 FF 06 06 06`: up/down are ignored).
+8. Every 4th frame `26:8D59`. Then `ObjBgProbe` at the new position (A=`$40` on the ground, 0 in the air) → `$20` = metatile attribute bits.
+9. Ground only: `$20` b1 or `obj_spawn_param_s01` b1 → `$0640`=`obj_behav`, and if `$0620`≠0 INC it (cancels the DEC: the timer is frozen). If MP≠0, every 16 frames `SpendMp(1)`. `$20` b6 → `obj_bg_mask` b6 → `obj_flags` b6 (**sink**: `ObjStepVector` then uses speed−2).
+10. `$20` b5 (**conveyor/current**) → `PlayerConveyor` `26:9FD2`: move in `obj_param1`&`$0F` at speed `obj_aux` `$0660` (it ramps up 0→9; on direction 4 it starts at 6), using `$08` as the step phase. Without b5, `obj_aux` decays every 4 frames, and the last `$20` is kept in `$0641`.
+
+`PlayerUpdate` `26:9B45` (slot 1, X=1), in order:
+1. B new + `use_item_sel`≠0 + `sub_state`=8 → `sub_state`=6 (`ItemUseMenu`).
+2. `PlayerSetSpeed` `26:9BF6` (A → slot 0 `obj_flags2` low nibble = **move speed**): normally slot 1's own speed (type init). Status 4 (`obj1_flash`&`$0F`=4) → speed 2 + meta `$53`. Status b6 → speed 9 + the `9B41` pose (`88 C2 8A EF` by facing; ends when `$0561`\|`$0641` & 6 = 0). Status b7 → speed 5 + meta += `2C/30/34/38`[`obj1_flash` b5-4].
+3. `PlayerPlaceBody` `26:9CEF`: height = `JumpHeightTable` `26:9D4D`[`$0620`]. In the air `obj_coll`=`$60` and `obj_flags` b6 cleared; on the ground `obj_coll`=`$50` and slot 1 copies slot 0's `obj_flags` b0-2. Height `$F9` (index `$21`) → sound `$56` + `boss_cam_lock`=`$07D6`=`$10`. Slot 1 = slot 0 pos + (0, height) via `26:9824` (signed add with the 240-line page wrap).
+4. `PlayerFacing` `27:A1C9`: slot 1 meta low 2 bits = facing (0 up, 1 right, 2 down, 3 left). If `obj_behav`≠`$FF` and `FacingKeep` `27:A211`[(2·facing − dir)&7] = 0 (the pad is more than 45° off the facing), facing = slot 0 `obj_meta_dir`>>1. So **diagonals keep the current facing**. In area `$5F` with `obj_phase`≠0, facing is forced to 0.
+5. Overlay (`obj_overlay_id`): `$0714`=0 → `08+facing` (`$4C` if meta b2); else `$0C`+meta&7.
+6. **Sword**: `obj_phase` in `$04-$0F` (and slot 0 AI `$0B` only at `$0F`): `SpawnShot($19)` (slash), slot 2 `$0502` = `SwordElemBit` `26:9C66`[`equip_sword`] (`00 01 02 04 08 00`), `$03E2` = `26:8BD2`[sword] (`00 01 02 04 08 10`). `obj_phase`=`$10` (release frame): **charged shot**. With no sword → nothing. With Crystalis (5), only in area `$5F` (`SpawnShot($13)`); the charge is otherwise ignored. That answers the session-20 question: Crystalis never reads its charge level outside area `$5F`. Otherwise level = `orbit_level`>>3 (+1 if 0 and `$0716`=`$0F` and status ≠1). Level 3 needs MP ≥ `SwordMpCost` `26:8BD8`[sword] (`00 08 10 10 28 00`), else it drops to 2. Shot id = (sword−1)·4 + level, Y=facing·2. A successful level-3 shot calls `SpendMp(cost)`. Then `orbit_level`=`orbit_burst_timer`=0.
+
+**`PlayerMagic` `27:A022`** — Y = `$0712` (selected magic 0-11; Y=9 if `$0712`=0 and `$0716`=`$12`). The button var is `$43`+`27:A092`[Y] (`$08` → `pad_new` edge, `$00` → `pad_prev` held); b7 (**A**) must be set. Blocked by status 4 (sound `$4E`), and while airborne except for Y=8/9. Status b7 → `sub_state`=`$19`. Dispatch `JmpTable27_A072`:
+
+| Y | handler | effect |
+|---|---|---|
+| 0, 10, 11 | `A0A2` | none |
+| 1 | `A0A3` | MP≥2: HP+1 twice per frame up to `player_hp_max`. Every 4 HP (or at max): `SpendMp(2)` + `SpawnShot($12)` |
+| 2 | `A0D7` | slot `$0C` free: `SpendMp(4)`, `SpawnShot($10)` |
+| 3 | `A18E` | not in areas `$58-$5F`, MP≥8 → `sub_state` `$15` `SubstTelepathySelect` |
+| 4 | `A1A1` | MP≥`$14` → `sub_state` `$14` `SubstTeleportMenu` |
+| 5 | `A17D` | status ≠0: `SpendMp($18)` → `sub_state` `$18` (`30:BB39`) |
+| 6 | `A0F4` | ground only (else sound `$4E`). Held: `SpendMp(1)` every 8 frames + `SpawnShot($11)` each frame |
+| 7 | `A161` | not in areas `$58-$5F`, MP≥`$14` → `sub_state` `$17` `SubstChangeForm` |
+| 8 | `A112` | held: `SpendMp(1)` every 16 frames. Starts a jump (`$0620`=`$20`, `obj_bg_mask`=`$34`, sound `$30`). It **re-INCs at `$12`, so it hovers at the peak (−21 px) while A is held** (flight) |
+| 9 | `A143` | on the ground: jump (`$0620`=`$20`, latch `pad_dir`, sound `$30`) |
+
+`SpendMp` `26:9AE8` (A=cost): if MP=0 or MP<cost → `sub_state`=`$1C` (`30:CC17`, out of MP) and return from the *caller*. Shared fail sound: `27:A1BB` = `PlaySound($4E)`.
+
+**Constants** (all from the ROM; full tables in `docs/player_tables.txt`):
+
+| what | where | value |
+|---|---|---|
+| step vector | `ObjStepVector` `26:8480`, ptr `84BC`/`84CC`, dx offset `84DC` | speed n, dir d: dy=T[d·8+(`obj_timer`&7)], dx=T[…+off]. Pixels per 8 frames along an axis: speed 0-10 = 4 6 8 10 12 14 16 20 40 52 64; 11-15 use off `$20` (rotated ¼ turn, used by spinning shots) |
+| sink | `26:848B` | `obj_flags` b6 → speed−2 (min 0) |
+| jump arc | `JumpHeightTable` `26:9D4D` | idx `$20`→0 (DEC/frame): 0 −3 −6 −8 −10 −12 −13 −15 −16 −18 −19 −20 −20 −21×6 −20 −20 −19 −18 −16 −15 −13 −12 −10 −8 −6 −3 0 0 0. Entries `$21-$30` = `F9 F0 … 92 76 84` (rising exit, `$21` triggers sound `$56`) |
+| jump length | `27:A14D` | 32 frames, sound `$30` start, `$31` at `$11` |
+| charge rate | `26:9E0D` | +1 per 4 frames, cap `08 10 18` |
+| swing | `26:9E08` | `obj_phase`=`$12`, slash shot spawned at phases `$04-$0F` |
+| corner slide | `26:9ED1` | 8 frames |
+| facing keep | `27:A211` | `01 01 00 00 00 00 00 01` |
+
+**Static quirks:** speed 4's DL and UL entries are not mirror images of DR/UR (DL sums to (−12,+9), UL to (−9,−12) per 8 frames), because the `$862C` table and its +16 dx offset overlap the next direction. Speed 9 has the same problem (DL −53/+37). Check whether any object actually uses speed 4/9 diagonally before copying this into the port.
+
 #### Story flags (session 14)
 
 `tools/flag_sites.py [--hook2] [--out f]` cross-references every data-driven flag site: NPC script conds + set-lists, event triggers (`15:A17A`) and telepathy hints. Run → `gfx/flag_sites.txt`. Code that touches `$6480+` directly is listed separately by `tools/flag_code_sites.py` (session 15, below). The NPC side also lists flags from bogus scripts (params without valid messages), so the count of 453 is too high. Names below are **inferred from the message text** at the set/test sites (static RE only):
