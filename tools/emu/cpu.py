@@ -62,6 +62,7 @@ class CPU:
         self.pc = 0
         self.cycles = 0
         self.stall = 0
+        self.op_cycles = 1
         self.nmi_pending = False
         self.irq_flags = 0
         self.trace = None            # optional callable(cpu) before each instruction
@@ -178,6 +179,9 @@ class CPU:
                     self._extra = 1
             else:  # ind (JMP only): 6502 bug - high byte read wraps within the page
                 addr = bus.read(base) | bus.read((base & 0xFF00) | ((base + 1) & 0xFF)) << 8
+        # cycles of this instruction known before it executes (branch penalty added by fn);
+        # the PPU uses cycles + op_cycles - 1 as the bus-access time of a register read/write
+        self.op_cycles = cyc + self._extra
         fn(addr, md)
         c = cyc + self._extra
         self.cycles += c
