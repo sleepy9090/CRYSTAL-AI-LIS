@@ -76,8 +76,9 @@ web/index.html
       ├─ src/game/palette.js          PaletteBuild, fades, PaletteUpload ($6140-$615F → ppu palette RAM)
       ├─ src/game/pads.js             ReadPads / ReadPadsMenu ($43-$4F hold/repeat logic) from the button byte
       └─ src/game/rand.js             Rand64 (26:97D7 table walk on $0E)
-web/test/run.mjs                      Node harness (Ph7 web 3/8): --keys, --frames, --dump-screen, --compare
-web/test/png.mjs                      minimal PNG encoder (zlib from node:zlib)
+web/test/run.mjs                      Node harness (Ph7 web 3/8): --keys, --frames, --frame0, --dump-screen,
+                                      --dump-ram/--dump-wram, --compare
+web/test/harness.mjs                  key-script parser, compare.py CSV row, PNG encoder (node:zlib)
 web/catalog.html, catalog.js, apu_preview.js   existing asset catalog (session 27), kept separate from the port
 ```
 
