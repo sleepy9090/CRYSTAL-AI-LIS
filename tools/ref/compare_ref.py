@@ -132,8 +132,10 @@ def ranges(idx):
 
 def pixel_diff(ref_img, emu_px):
     w, h, rp = ref_img
-    if (w, h) != (256, 240):
-        return None, f'reference image is {w}x{h}, expected 256x240'
+    if (w, h) == (256, 224):      # FCEUX crops overscan: compare tools.emu rows 8-231 (session 43)
+        emu_px = emu_px[8 * 256:232 * 256]
+    elif (w, h) != (256, 240):
+        return None, f'reference image is {w}x{h}, expected 256x240 or 256x224'
     votes = {}
     for e, r in zip(emu_px, rp):
         d = votes.setdefault(e, {})
@@ -141,8 +143,9 @@ def pixel_diff(ref_img, emu_px):
     cmap = {e: max(d, key=d.get) for e, d in votes.items()}
     bad = [i for i, (e, r) in enumerate(zip(emu_px, rp)) if cmap[e] != r]
     rows = {}
+    top = 8 if h == 224 else 0    # per tile row in screen coordinates
     for i in bad:
-        rows[i // 256 // 8] = rows.get(i // 256 // 8, 0) + 1
+        rows[(i // 256 + top) // 8] = rows.get((i // 256 + top) // 8, 0) + 1
     many = {}
     for e, r in cmap.items():
         many.setdefault(r, []).append(e)

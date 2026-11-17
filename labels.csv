@@ -810,3 +810,6 @@ bank,addr,name,comment
 30,CA5F,SubstNewGameInit,s38: substate 0; sets substate $13 then falls into CAA2: if any button held that frame (pad_prev) -> substate 8 (skips the wake-up cut-scene)
 30,D9B6,SubstWakeCutscene,s38: substate $13 handler: SwitchBank16(10) + JSR 20:9400 (self-timed cut-scene loop), then JMP 30:D91F
 20,9400,WakeCutscene,s38: own frame loop (LSR frame_ready); ~504 frames (emu f2351-2855) then substate 8 at 20:948E
+16,9AEE,SaveLoadPage,s43: START in the SELECT menu (16:8149 when $07DD=0); clears $7000/$646A/$646B and prints GAME + slot rows
+16,9B3A,SaveLoadLoop,s43: per frame: SELECT/START exit; L/R toggle $646A b0 (save/load); B exit ($7000=$AB); A -> MenuSave or Load prompt
+16,9C7A,SaveLoadExit,s43: back to the SELECT menu (JMP 16:807E if $6424 else 16:807A)
