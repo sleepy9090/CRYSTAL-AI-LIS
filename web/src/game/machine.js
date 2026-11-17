@@ -32,6 +32,10 @@ export class Machine {
     // hooks filled by later tasks (Ph7 web 4/8: ppuqueue.js, 7/8: sound/playsound.js)
     this.ppuQueueFlush = () => {};
     this.soundUpdate = () => {};
+    // world/area.js hooks (s53): PlaySound 30:C125 (7/8), AreaSpawnEntry 31:E1B6 + bank 26 $98A8 (5/8)
+    this.playSound = () => {};
+    this.spawnEntry = () => {};
+    this.entryFF = () => {};
     this.irqHandlers = IRQ_HANDLERS.map((addr) => (m) => {
       if (!m.unported.has(addr)) { m.unported.add(addr); m.log(`IRQ handler ${addr} not ported yet`); }
     });

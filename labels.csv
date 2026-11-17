@@ -572,7 +572,7 @@ bank,addr,name,comment
 *,005F,zp_5F,auto (ram_map.py s29): r2 w4 banks 16;31
 *,0066,zp_66,auto (ram_map.py s29): r2 w1 banks 31
 *,0067,zp_67,auto (ram_map.py s29): r8 w3 banks 31
-*,0068,zp_68,auto (ram_map.py s29): r3 w3 banks 26;31
+*,0068,zp_68,ptr lo: AreaLoadGfx 31:E6D9 = 0; ObjBgProbe 26:9A87/9AB1 reuses $68/$69 as BG collision page ptr (s53 emu: $68 = metatile id after area load)
 *,0069,zp_69,auto (ram_map.py s29): r2 w1 banks 26;31
 *,0071,obj_x_lo_s01,slot 0x01 (player) of obj_x_lo; auto (ram_map.py s29): r5 w4 banks 15;19;27;30
 *,0072,zp_72,auto (ram_map.py s29): r6 w6 banks 18;19

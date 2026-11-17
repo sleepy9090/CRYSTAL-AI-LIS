@@ -79,6 +79,8 @@ web/index.html
 web/test/run.mjs                      Node harness (Ph7 web 3/8): --keys, --frames, --frame0, --dump-screen,
                                       --dump-ram/--dump-wram, --compare
 web/test/harness.mjs                  key-script parser, compare.py CSV row, PNG encoder (node:zlib)
+web/test/world_check.mjs              (s53) world/area.js + bg.js + paletteBuild vs gfx/areas/ (render_level.py)
+                                      and 2 tools.emu frames (web/test/world_frames/ RAM/WRAM dumps)
 web/catalog.html, catalog.js, apu_preview.js   existing asset catalog (session 27), kept separate from the port
 ```
 
@@ -155,7 +157,8 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 | `AreaLoad`, `LoadAreaChrRecord` | `31:E14A`, `31:E16D` | `loadArea()`, `loadAreaChr()` | `world/area.js` |
 | `SpawnHandlerTable` handlers 0-4 | `31:E218` | `SPAWN_HANDLERS[5]` (handler 1 uses `areas.json.indirect`) | `world/area.js` |
 | `AreaSubTable` (k0-k5) | `30:C7A5` | `data.areas[id].k0..k5` (pre-decoded) | `world/area.js` |
-| `AreaLoadMap` / k1 / k2 / k4 | `31:E628` / `31:E6B9` / `31:E686` / `30:C765`, `31:E702` | `loadAreaMap()`, `loadAreaGfx()`, `placePlayer()`, `applyScreenFlags()` | `world/area.js` |
+| `AreaLoadMap` / k1 / k2 / k4 | `31:E628` / `31:E6B9` / `31:E686` / `30:C765`, `31:E702` | `loadAreaMap()`, `loadAreaGfx()`, `placePlayer()`, `restoreVisited()` (s53, done; `30:C765` visited marking still planned) | `world/area.js` |
+| `PaletteBuild` / `PaletteLoadOne` | `26:8C0E` / `26:8C6E` | `paletteBuild(m, fade)` (s53, done) | `game/palette.js` |
 | `AreaEntryTable` | `31:E3D9` | `AREA_ENTRY[($6D&$E0)>>5]` | `world/area.js` |
 | `ScreenPagePtr`, `ScreenTileSubst`, `MetatileExpand`, `MetatileAttr` | `31:EF36`, `31:ED99`, `31:EDBA`, `31:EDE5` | `screenPage()`, `tileSubst()`, `metatileTiles()`, `metatileAttr()` | `world/bg.js` |
 | `ScreenRowRender` / `BgRowRender` / `BgColRender` | `31:EBC1` / `31:EB91` / `31:EC87` | `renderRow()`, `renderCol()` → PPU queue | `world/bg.js` |
