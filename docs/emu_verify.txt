@@ -1,0 +1,63 @@
+verify.py: name_entry.state f2250 -> f2460, keys 2300:START 2340:DOWN:80
+
+(a) routine checks: calls / matching the REVERSE.md model
+  SwitchBank16    2390 / 2390  PASS
+  PlaySound          4 / 4     PASS
+  ObjSpriteDraw     65 / 65    PASS
+  PaletteBuild       3 / 3     PASS
+  ObjInit           11 / 11    PASS
+  AreaLoad           2 / 2     PASS
+  SndStartMusic      1 / 1     PASS
+  SwitchBank16 n values seen: 00 02 03 04 05 06 07 09 0D 0E
+  PlaySound ids: 00 16 2F 3C
+  ObjInit (frame, slot, type): [(2322, 3, 10), (2323, 0, 6), (2323, 2, 5), (2323, 1, 4), (2409, 13, 40), (2409, 14, 48), (2439, 13, 212), (2440, 15, 213), (2446, 16, 213), (2452, 17, 213), (2455, 18, 213)]
+  AreaLoad (frame, area): [(2340, 0), (2409, 1)]
+  SndStartMusic (frame, id, header, ptrs): [(2409, 22, '0xad3d', ['0xad46', '0xae15', '0xaee8', '0xb027'])]
+  last PaletteBuild: ids 7c 7d 7e 7f 00 01 20 20 fade 00 mask 00
+                     pal_buf 0f 20 21 11 0f 1b 01 3c 0f 17 07 27 0f 30 11 0f 0f 36 14 0f 0f 30 29 0a 0f 30 17 0f 0f 30 17 0f
+  per-frame order (ObjCollideAll=coll, ObjSpriteDraw=draw): [draw] x4 (f2324-2416); [draw coll] x61 (f2354-2459)
+
+(b) struct checks at the end of the run
+Area header (area $01, header 10:852F):
+  OK   k0 W H f62FE f62FF -> $62FC-$62FF: ram 00 00 00 00 rom 00 00 00 00
+  OK   k0 grid -> $6300 (stride 8): ram True rom True
+  OK   k0 snd -> snd_cur_music $0102: ram 16 rom 16
+  OK   k1 p0-p2 -> $07E0-$07E2, $07E3=$7F: ram 00 01 02 7f rom 00 01 02 7f
+  OK   k1 v67 -> $67&$FC (b0-1 = quadrant page, set by the metatile draw 31:EDD7): ram 80 rom 80
+  OK   k1 v69 -> $69: ram B3 rom B3
+  OK   k1 R0 R1 -> $07F0/$07F1: ram 00 0c rom 00 0c
+Object slots (active, end of run):
+  slot  ai  x     y     meta dir flags coll  hp  scr_x scr_y AI handler
+  00    03  00B0  0056  A7   04  01    00    30  B0    5A    27:9D9A
+  01    01  00B0  0056  02   04  03    50    30  B0    5A    27:9B45
+  03    05  00B0  005A  4C   00  05    80    00  B0    5E    27:A219
+  0D    08  00A8  004C  4C   00  05    00    00  A8    50    27:B7F6
+  0E    50  0078  007C  39   00  01    80    00  78    80    27:A660
+  0F    14  00AB  005C  EB   10  01    00    00  AB    60    27:B2C5
+  10    14  00C0  0051  EB   10  01    00    00  C0    55    27:B2C5
+  11    14  00AF  004E  EC   10  01    00    00  AF    52    27:B2C5
+  12    14  00A2  0048  EB   10  01    00    00  A2    4C    27:B2C5
+  player HP $03C1=30 max $03C0=30; slot 0 active=03 pos 00B0,0056; slot 1 pos 00B0,0056
+Sound channels (end of run):
+  ch flags ptr   wait len oct env vib reg0 period
+  0  61    AD50  06   0E  20  69  08  79   01AB
+  1  E1    AEC0  06   0E  30  90  10  B8   00D5
+  2  01    AFB2  14   2A  30  00  00  6A   00D5
+  3  90    B02A  01   01  00  D0  00  00   0000
+  4  01    A4D8  01   01  00  40  00  BA   059C
+  5  41    A4ED  02   02  00  01  00  3F   000E
+Save image $7DF0-$7DFF: 01 b0 00 56 00 30 30 01 00 00 00 00 00 41 4d 49  (template 00 88 00 78 00 30 30 01 30 00 00 00 00 41 4d 49)
+  SaveGame at f2348: +F0-F8 = 00 88 00 78 00 30 30 01 00; 9/9 field checks
+  SaveGame at f2433: +F0-F8 = 01 b0 00 56 00 30 30 01 00; 9/9 field checks
+Title state: $6480 page == $7D00 page: True; $6580 page == $7E00 page: True; $6480.. = 2d 2d 2d 2d 2d 2d 00 98
+
+  struct: save image at SaveGame return: 18/18 PASS
+  struct: area header: 7/7 PASS
+  struct: obj_active -> ObjAiTable non-null: 9/9 PASS
+  struct: slot 1 = player active: 1/1 PASS
+  struct: HP slot1 <= max slot0: 1/1 PASS
+  struct: active channel ptr in $8000-$BFFF, octave*16: 5/5 PASS
+  struct: music ptr >= stream start: 3/3 PASS
+  struct: save $7D00 == mirror $6D00: 1/1 PASS
+  struct: save tag AMI at $7DFD: 1/1 PASS
+  struct: title $6480==$7D00 and $6580==$7E00 (boot copy quirk): 1/1 PASS

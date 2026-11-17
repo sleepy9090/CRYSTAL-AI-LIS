@@ -1,4 +1,4 @@
-"""re-c emulator CLI (Ph5.5 emu 4/6).
+"""re-c emulator CLI (Ph5.5 emu 4/6; --compare emu 6/6).
 
 usage (repo root): python3 -m tools.emu [options]
 
@@ -30,6 +30,8 @@ Output
   --dump-screen FILE.png     last finished frame (--scale S)
   --save-state FILE          save state at the end
   --log-apu [FILE]           APU register writes (frame cycle addr value)
+  --compare FILE.csv         one row per frame: state, area, camera, scroll, music, channel periods,
+                             palette crc, 32 object slots (ai, x, y); columns in tools/emu/compare.py
   --bench                    print frames/second only
 """
 import argparse
@@ -38,7 +40,7 @@ import sys
 import time
 
 from .nes import NES, Stop
-from . import debug, state
+from . import debug, state, compare
 
 
 def _hex(s):
@@ -75,6 +77,7 @@ def build_parser():
     ap.add_argument('--save-state', metavar='FILE')
     ap.add_argument('--log-apu', nargs='?', const='-', metavar='FILE')
     ap.add_argument('--bench', action='store_true')
+    ap.add_argument('--compare', metavar='FILE.csv')
     return ap
 
 
@@ -109,6 +112,10 @@ def main(argv=None):
         nes.keys = debug.parse_keys(a.keys)
     if a.log_apu:
         nes.apu.log = []
+    cmp_out = None
+    if a.compare:
+        cmp_out = open(a.compare, 'w', newline='')
+        nes.on_frame(compare.CompareWriter(cmp_out))
 
     trace_out = None
     if a.trace:
@@ -164,6 +171,8 @@ def main(argv=None):
 
     if trace_out is not None and trace_out is not sys.stdout:
         trace_out.close()
+    if cmp_out is not None:
+        cmp_out.close()
     if stopped:
         print(f'STOP: {stopped}')
         print(debug.dump_state(nes))

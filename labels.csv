@@ -199,7 +199,7 @@ bank,addr,name,comment
 *,07E0,pal_ids,8 palette ids (BG0-3 spr0-3) -> PaletteBuild 26:8C0E
 *,07E8,pal_nofade_mask,bit i = palette i ignores fade step in PaletteBuild
 *,6140,pal_buf,32-byte palette buffer (WRAM) written by PaletteLoadOne
-*,006D,area_entry,entry index into area sub-table 2 (camera start $34-$37); $FF none; $2x keep camera
+*,006D,area_entry,entry index into area sub-table 2 (player start position -> $34-$37; emu s39); $FF none; $2x keep position
 26,8C0E,PaletteBuild,$11=0 (no fade) then builds $6140-$615F from ids $07E0-$07E7; 8C10 = entry with A=fade step
 26,8C6E,PaletteLoadOne,A=id (+$B0 sprite): 4 colours from bank 2/3 $A000+(id>>2&1F)*$100+$F0+(id&3)*4
 26,8C32,PaletteBlackFill,$6040-$605F <- $0F
@@ -215,11 +215,12 @@ bank,addr,name,comment
 31,E702,AreaRestoreVisited,area sub-table 4: screen visited bits $62F0 from WRAM flags $64C0
 31,E573,AreaEdgeLink,area sub-table 5 (10 areas): pit/edge link to another area
 30,C75C,MarkScreenVisited,set $62F0[y_hi] |= BitMask[x_hi]; sub-table 4 -> set $64C0 flag
-31,EA72,CameraClampX,clamp camera $34/$35 to 0..$62FC screens
-*,0034,cam_x_lo,camera X lo (area sub-table 2 entry bytes 0-3 -> $34-$37)
-*,0035,cam_x_hi,camera X hi (screen)
-*,0036,cam_y_lo,camera Y lo
-*,0037,cam_y_hi,camera Y hi (screen)
+31,EA72,CameraClampX,clamp camera candidate $34/$35 (pos_x) to 0..$62FC screens
+*,0034,pos_x_lo,shared position cursor X lo (was cam_x_lo; emu s39): k2 entry = player start pos -> $34-$37; ObjPosToTemp/TempAddStep scratch; camera candidate in 31:E90A (from $3C-$3F); BG render cursor
+*,0035,pos_x_hi,position cursor X hi (screen); see pos_x_lo
+*,0036,pos_y_lo,position cursor Y lo; see pos_x_lo
+*,0037,pos_y_hi,position cursor Y hi (screen); see pos_x_lo
+31,E90A,CameraUpdate,$3C-$3F -> $34-$37; 26:9824; CameraClampX; render BG column/row when the 8px cell changes (s39)
 *,62F0,visited_map,12 rows x 8 bits: visited screens of current area (automap)
 *,62FC,area_w,area width-1 in screens (sub-table 0)
 *,62FD,area_h,area height-1 in screens (sub-table 0)
@@ -227,7 +228,7 @@ bank,addr,name,comment
 *,62FF,area_f62FF,sub-table 0 byte 4; b7 -> SetR6($0A) for map reads at 31:EBE5
 *,6300,screen_grid,8x16 screen ids of current area ($80 = none)
 *,64C0,screen_flags,WRAM persistent screen flags (area sub-table 4)
-31,EF1F,ScreenAtCamera,A = $6300[(cam_y_hi<<3&$78)|(cam_x_hi&7)] screen id
+31,EF1F,ScreenAtCamera,A = $6300[(pos_y_hi<<3&$78)|(pos_x_hi&7)] screen id ($34-$37 cursor)
 31,EF33,ScreenPageAtCamera,ScreenAtCamera then ScreenPagePtr
 31,EF36,ScreenPagePtr,screen id S: SwitchBank16(S>>6) and $10/$11 = $8000+(S&$3F)*$100 (raw 16x15 metatile page)
 31,EBC1,ScreenRowRender,reads metatile ids from screen page(s) into $6000 buffer then expands + queues to PPU
@@ -238,11 +239,11 @@ bank,addr,name,comment
 31,EDBA,MetatileExpand,$6000 metatile ids -> tile ids via 4 pages at $67&$FC +0..3 (banks 8/9)
 31,EDE5,MetatileAttr,attribute pass; ptr table 31:EEEF[($67&$3C)>>1] in bank 9
 31,EEEF,MetatileAttrPtrTable,ptr16 per tileset (bank 9)
-31,EB91,BgRowRender,row render entry: $C72B(A=0); INC cam_y_hi if $31>=0; -> ScreenRowRender
-31,EC87,BgColRender,column render entry: $C72B(A=$20); INC cam_x_hi if $30>=0; no $62FF bank-10 check
+31,EB91,BgRowRender,row render entry: $C72B(A=0); INC pos_y_hi ($37) if $31>=0; -> ScreenRowRender
+31,EC87,BgColRender,column render entry: $C72B(A=$20); INC pos_x_hi ($35) if $30>=0; no $62FF bank-10 check
 31,EE31,MetatileAttrCol,column twin of MetatileAttr (step 8 into $6100)
 31,EECC,MetatileAttrBits,A = attr byte for metatile $6000,X: (tbl[M>>2]>>2*(M&3))&3 -> $EF17 replicate
-31,EF07,AttrRowOffset,16 bytes 00 00 08 08 .. 38 38: $6100 row offset for cam_y>>4
+31,EF07,AttrRowOffset,16 bytes 00 00 08 08 .. 38 38: $6100 row offset for pos_y>>4
 31,EF17,AttrReplicate,00 55 AA FF: 2-bit pal into all 4 quadrants; $EF1B/$EF1D half masks 03 30 / 0C C0
 9,B000,MetatileAttrTables,12 x 64 B used (tileset ($67&$3C)>>2): 2-bit BG pal per metatile, 4/byte LSB first
 18,82BE,MenuPalLoad,A b7=0 BG/1 sprite half; A&15 -> 16-byte set 18:838B -> $06D0/$06E0; backdrop into spr slots
@@ -516,9 +517,9 @@ bank,addr,name,comment
 26,98D7,ObjMoveSlide,move in obj_meta_dir via 26:9947; diagonals also try dir-1/dir+1; C=1 blocked
 26,9A30,ObjBgProbe,metatile attrs at $34-$37 -> $20
 *,0001,tmp_01,zp scratch; auto (ram_map.py s29): r22 w16 banks 15;16;17;18;26;27;30;31
-*,0003,tmp_03,zp scratch; auto (ram_map.py s29): r3 w6 banks 17;18;19;28;30;31
-*,0004,tmp_04,zp scratch; auto (ram_map.py s29): r12 w10 banks 17;18;19;26;28;30;31
-*,0005,tmp_05,zp scratch; auto (ram_map.py s29): r3 w8 banks 17;18;19;28;30;31
+*,0003,cam_x_hi,camera X hi: ObjSpriteDraw subtracts ($02,$03) from obj x (emu-verified s39); was tmp_03 (banks 17-19 reuse it as scratch); r3 w6
+*,0004,cam_y_lo,camera Y lo: ObjSpriteDraw subtracts ($04,$05) from obj y with 240-row wrap; $EC in the start rooms (emu s39); was tmp_04; r12 w10
+*,0005,cam_y_hi,camera Y hi (screen); was tmp_05 (banks 17-19 reuse it); r3 w8
 *,0008,tmp_08,zp scratch; auto (ram_map.py s29): r54 w5 banks 15;19;26;27;28;30;31
 *,000A,tmp_0A,zp scratch; auto (ram_map.py s29): r12 w4 banks 20;30;31
 *,000B,tmp_0B,zp scratch; auto (ram_map.py s29): r19 w11 banks 16;18;20;26;30;31

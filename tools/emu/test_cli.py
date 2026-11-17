@@ -144,6 +144,24 @@ def cli_dumps_and_state():
         assert 'prg=(4, 5, 30, 31)' in txt, txt
 
 
+@case
+def cli_compare_csv():
+    """emu 6/6 (c): --compare writes a header + one row per frame, player slot filled in gameplay."""
+    from tools.emu import compare
+    st = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'states', 'area1_enter.state')
+    with tempfile.TemporaryDirectory() as d:
+        out = os.path.join(d, 'c.csv')
+        rc = cli_main(['--load-state', st, '--frames', '5', '--compare', out])
+        rows = [ln.split(',') for ln in open(out).read().splitlines()]
+    assert rc == 0
+    assert rows[0] == compare.columns() and len(rows) == 6, (len(rows), rows[0][:5])
+    c = rows[0].index
+    first = [int(v) for v in rows[1]]
+    assert first[c('frame')] == 2450 and first[c('area')] == 1, first[:6]
+    assert first[c('o01_ai')] == 1 and first[c('o01_x')] > 0, first[c('o01_ai'):c('o01_ai') + 3]
+    assert [int(r[0]) for r in rows[1:]] == list(range(2450, 2455))
+
+
 if __name__ == '__main__':
     bad = 0
     for name, err in RESULTS:
