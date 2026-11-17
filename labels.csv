@@ -59,7 +59,7 @@ bank,addr,name,comment
 28,83D8,ObjDrawOrderOfs,4 x u8 (00 20 40 60) offset into ObjDrawOrderTable
 28,83DC,ObjDrawOrderTable,4 x 32 slot permutations (flicker order); 0=04..1F;00; 3=02 01 1F..03 00
 28,845C,ObjMetaPtrTableA,ptr16[128] metasprite ids $00-$7F
-28,855C,ObjMetaPtrTableB,ptr16[128] metasprite ids $80-$FF (bank 29 $A000 range)
+28,855C,ObjMetaPtrTableB,ptr16[128] metasprite ids $80-$FF (bank 29 $A000 range); id $9A = $0000 (reads zero page; s54 meta_ptr_check.py)
 *,04A0,obj_active,32 slots; 0 = slot empty (skipped by ObjSpriteDraw)
 *,0070,obj_x_lo,32 slots ($70-$8F) world X lo
 *,0090,obj_x_hi,32 slots ($90-$AF) world X hi (screen page)

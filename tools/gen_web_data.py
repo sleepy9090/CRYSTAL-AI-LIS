@@ -270,6 +270,10 @@ def build():
     add_bin('metatiles.bin', PRG[8 * 0x2000:10 * 0x2000], 'PRG banks 8-9 as $8000-$BFFF',
             'index = cpu_addr - $8000: quadrant pages ((v67&$FC)|q)<<8|M, attrs $B000+i*$40, '
             'BG collision ($69<<8)|M, visited subst $BE00+(v67&$3C)*8+M')
+    add_bin('sprites_b28.bin', PRG[28 * 0x2000:30 * 0x2000], 'PRG banks 28-29 as $8000-$BFFF',
+            'index = cpu_addr - $8000: sprite pass tables (ObjDrawOrderOfs $83D8, ObjDrawOrderTable $83DC, '
+            'OrbitSineTable $81BA, OrbitTileTable $81DA, Burst* $81DE/$81FE), ObjMetaPtrTableA/B $845C/$855C '
+            '+ metasprite records (ObjDrawMeta 28:822E reads them through ($15),Y)')
     add_bin('sound_b24.bin', PRG[24 * 0x2000:25 * 0x2000], 'PRG bank 24 at $8000',
             'sound driver tables + music streams (SndMusicTable $8C0C)')
     add_bin('sound_b25.bin', PRG[25 * 0x2000:26 * 0x2000], 'PRG bank 25 at $A000', 'music stream data')

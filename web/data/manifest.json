@@ -32,6 +32,13 @@
    "size": 16384,
    "sha1": "be3b1eb8e636aa9a12b8ea577facf0ee3c2f9878"
   },
+  "sprites_b28.bin": {
+   "kind": "bin",
+   "source": "PRG banks 28-29 as $8000-$BFFF",
+   "desc": "index = cpu_addr - $8000: sprite pass tables (ObjDrawOrderOfs $83D8, ObjDrawOrderTable $83DC, OrbitSineTable $81BA, OrbitTileTable $81DA, Burst* $81DE/$81FE), ObjMetaPtrTableA/B $845C/$855C + metasprite records (ObjDrawMeta 28:822E reads them through ($15),Y)",
+   "size": 16384,
+   "sha1": "959fad262b5cd105c84507476e154876ac16b2c1"
+  },
   "sound_b24.bin": {
    "kind": "bin",
    "source": "PRG bank 24 at $8000",

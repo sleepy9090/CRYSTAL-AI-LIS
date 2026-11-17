@@ -81,6 +81,8 @@ web/test/run.mjs                      Node harness (Ph7 web 3/8): --keys, --fram
 web/test/harness.mjs                  key-script parser, compare.py CSV row, PNG encoder (node:zlib)
 web/test/world_check.mjs              (s53) world/area.js + bg.js + paletteBuild vs gfx/areas/ (render_level.py)
                                       and 2 tools.emu frames (web/test/world_frames/ RAM/WRAM dumps)
+web/test/sprite_check.mjs             (s54) obj/sprites.js spriteDraw() vs RAM captured at 28:800E entry/exit
+                                      (web/test/sprite_frames/, tools/emu/sprite_capture.py real + fuzz)
 web/catalog.html, catalog.js, apu_preview.js   existing asset catalog (session 27), kept separate from the port
 ```
 
@@ -180,7 +182,7 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 | `ObjCollideAll`, `CollPairTable`, `HitboxTable`, `HitHandlerTable` | `26:8F6E`, `26:96F1`, `26:9691`, `26:8FBB` | `collideAll()`, `HIT_HANDLERS[4]` | `obj/collide.js` |
 | `HitPlayer`, `EnemyKilled`, `AddXp` | `26:9357`, `26:9152`, `26:924B` | `hitPlayer()`, `enemyKilled()`, `addXp()` | `obj/collide.js` |
 | `PlayerStatusTick` | `31:EF55` | `playerStatusTick()` | `obj/status.js` |
-| `ObjSpriteDraw`, `ObjDrawMeta`, `ObjDrawOrderTable`, orbit ring | `28:800E`, `28:822E`, `28:83DC`, `28:80D6` | `spriteDraw()`, `drawMeta()` | `obj/sprites.js` |
+| `ObjSpriteDraw`, `ObjDrawMeta`, `ObjDrawOrderTable`, orbit ring | `28:800E`, `28:822E`, `28:83DC`, `28:80D6` | `spriteDraw()`, `drawMeta()` (s54, done: 552/552 RAM-identical) | `obj/sprites.js` |
 
 ### 3.5 UI, text, sound, save
 
@@ -250,7 +252,8 @@ port can refuse stale data. Binary blobs keep ROM byte order; JSON numbers are p
 | `palettes.json` | `nesRgb[64]` (2C02 approximation), `slots[256][4]` (BG id p → slot p, sprite id p → slot (p+$B0)&$FF) | banks 2/3 page tails | `palette.js` |
 | `areas.json` | per area id: record (`e6 e7 r4 r5`, spawn entries per slot), header k0 (snd, W, H, `62FE`, `62FF`, grid), k1, k2 entries, k3 exits, k4 screen flags, k5 links (raw); `indirect` handler-1 records `p → 4 B` | banks 4/5, 10/11, 12/13 | `area.js`, `exits.js` |
 | `objtypes.json` | per type 0-255: `snd`, column inits `{addr: value}`, AI id + handler address | `13:AC00`, `27:A314` | `objects.js` |
-| `metasprites.json` | per id 0-255: frames of `[dx, dy, tile, attr]` + mirror alias info (`meta_dump.meta_json`) | banks 28/29 | `sprites.js` |
+| `metasprites.json` | per id 0-255: frames of `[dx, dy, tile, attr]` + mirror alias info (`meta_dump.meta_json`) | banks 28/29 | catalog only; the port reads `sprites_b28.bin` (s54) |
+| `sprites_b28.bin` | PRG banks 28-29 as `$8000-$BFFF` (index = cpu addr − `$8000`): draw orders, orbit/burst tables, meta ptr tables + records, read through CPU addresses like `($15),Y` | banks 28/29 | `sprites.js` |
 | `shots.json` | ShotTable records `{first, end, type, count}` for ids `$00-$5F` + `ShotOffsets` | `20:BC00/BD00/BD80` | `objects.js` |
 | `tables.json` | named fixed-size tables (each `{bank, addr, fmt, values}`): level HP/MP/XP, jump heights, step speeds, probe points, hitboxes, collision pairs, draw orders, orbit/burst, pad dirs, Rand64 table, area-by-index, HUD elements, boss areas, sword attack, … | see file | many |
 | `text.json` | dictionary, code 05/06/07 tables, all messages (`text_dump.py --json`) | banks 20-23 | `text.js` |
