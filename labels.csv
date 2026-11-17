@@ -877,3 +877,5 @@ bank,addr,name,comment
 27,B769,AiOffscreenHalf,s47: offscreen and (X+$08) odd -> skip caller (half rate)
 27,B79F,ChestHop,s47: A=counter; dy from nibble table 27:B7C6 -> 27:B7E6; moves y only
 20,BD80,ShotOffsets,s47: (dx dy) spawn offset [shooter obj_behav*16 + (dir*2 & F)]
+30,C67D,PpuQueueFlush,s48: NMI PPU queue flush: ring $6200 from $0A to $0B; record b6 -> PPUCTRL +32 increment; PPUADDR + data
+31,E0B8,SubstPlayTail,s48: SubstPlay JMP tail: skipped if boss_cam_lock; JSR E75E; every 16 frames slot $0D+($08>>4) if empty -> re-read area record (respawn tick; static RE only)
