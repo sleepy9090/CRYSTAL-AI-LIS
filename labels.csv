@@ -692,7 +692,7 @@ bank,addr,name,comment
 *,0703,gold_hi,gold hi byte
 *,0705,xp_hi,XP hi byte
 *,0707,xp_next_hi,XP-for-next-level hi byte
-*,0712,ram_0712,auto (ram_map.py s29): r2 w1 banks 27;30;31
+*,0712,magic_sel,s44: selected magic 0-11 (Y for PlayerMagic 27:A022)
 *,0713,ram_0713,auto (ram_map.py s29): r4 w1 banks 26;30;31
 *,0714,ram_0714,auto (ram_map.py s29): r7 w1 banks 15;19;26;30
 *,0716,ram_0716,auto (ram_map.py s29): r8 w1 banks 26;27;30;31
@@ -813,3 +813,21 @@ bank,addr,name,comment
 16,9AEE,SaveLoadPage,s43: START in the SELECT menu (16:8149 when $07DD=0); clears $7000/$646A/$646B and prints GAME + slot rows
 16,9B3A,SaveLoadLoop,s43: per frame: SELECT/START exit; L/R toggle $646A b0 (save/load); B exit ($7000=$AB); A -> MenuSave or Load prompt
 16,9C7A,SaveLoadExit,s43: back to the SELECT menu (JMP 16:807E if $6424 else 16:807A)
+26,9D9A,PlayerMove,s44: AI $03 slot 0 (type $06) ground body: pad -> obj_behav; jump timer $0620; PlayerMagic; sword charge; ObjMoveSlide; BG probe; conveyor
+26,9D81,PlayerMoveLocked,s44: AI $02 = PlayerMove with pad vars zeroed (cutscenes); area $58 -> AI $03 + pad_dir 4
+26,9BF6,PlayerSetSpeed,s44: slot 0 obj_flags2 low nibble = move speed by obj1_flash status (4 -> 2, b6 -> 9, b7 -> 5)
+26,9CEF,PlayerPlaceBody,s44: slot 1 = slot 0 pos + JumpHeightTable[$0620]; obj_coll $60 air / $50 ground
+26,9D4D,JumpHeightTable,s44: s8[49] slot 1 y offset per $0620 (idx $20 -> 0); verified s45
+26,9FD2,PlayerConveyor,s44: BG attr b5: move in obj_param1&$0F at speed obj_aux $0660 (ramps 0..9)
+26,9AE8,SpendMp,s44: A=cost; MP=0 or MP<cost -> sub_state $1C (out of MP) and return from the caller
+26,9C66,SwordElemBit,s44: u8[6] 00 01 02 04 08 00 by equip_sword -> slash shot $0502
+26,8BD2,SwordAttackTable,s44: u8[6] 00 01 02 04 08 10 by equip_sword -> slash shot $03E2
+26,8BD8,SwordMpCost,s44: u8[6] 00 08 10 10 28 00 level-3 charge MP cost by equip_sword
+27,A022,PlayerMagic,s44: A button; Y=$0712 selected magic; dispatch JmpTable27_A072 (see REVERSE Player section)
+27,A017,DiagToCardinal,s44: u8[8] FF 02 02 02 FF 06 06 06 (forced move: up/down ignored)
+27,A092,MagicButtonSel,s44: u8[12] per magic: $08 = pad_new edge, $00 = pad_prev held (offset from $43)
+27,A112,MagicFlight,s44: magic 8: jump + hover at the peak while A held, SpendMp(1)/16 f
+27,A143,MagicJump,s44: magic 9: ground jump, $0620=$20, sound $30; verified s45
+27,A1BB,MagicFailSound,s44: PlaySound($4E)
+27,A1C9,PlayerFacing,s44: slot 1 meta low 2 bits = facing; FacingKeep keeps facing within 45 deg
+27,A211,FacingKeep,s44: u8[8] 01 01 00 00 00 00 00 01 indexed (2*facing - dir)&7

@@ -21,7 +21,7 @@ DEF_STATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'states', '
 
 
 def main(argv):
-    st, segs, every = DEF_STATE, [], 1
+    st, segs, every, pokes = DEF_STATE, [], 1, []
     i = 0
     while i < len(argv):
         if argv[i] == '--seg':
@@ -30,6 +30,11 @@ def main(argv):
                 b, n = argv[i].rsplit(':', 1)
                 segs.append((b, 0 if b == 'NONE' else parse_buttons(b), int(n)))
                 i += 1
+            continue
+        if argv[i] == '--poke':          # --poke 0711=01 (hex RAM addr = hex value), repeatable
+            a, v = argv[i + 1].split('=')
+            pokes.append((int(a, 16), int(v, 16)))
+            i += 2
             continue
         if argv[i] == '--every':
             every = int(argv[i + 1])
@@ -43,6 +48,8 @@ def main(argv):
     nes.on_exec(26, 0x9D9A, lambda *a: order.append(f'0:X{nes.cpu.x}'))
     nes.on_exec(26, 0x9B45, lambda *a: order.append(f'1:X{nes.cpu.x}'))
     r = nes.bus.ram
+    for a, v in pokes:
+        r[a] = v
     print('seg       f  s0x  s0y  s1x  s1y sp tmr jmp ph orb m1  mp  ai-order')
     for name, mask, n in segs:
         x0 = r[0x90] * 256 + r[0x70]
