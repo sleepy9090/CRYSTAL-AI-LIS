@@ -1,0 +1,35 @@
+sweep.py: power-on -> f2460, keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80
+
+  OK   boot: SndInit 24:8020 ran exactly once, banks 24/25 mapped  ([(0, 24)])
+  OK   boot: $40 main_state = 2  (2)
+  OK   boot: first $51 irq_mode write = 3  ([(3, 62183, 31), (5, 32828, 18)])
+  OK   boot: first $0054/$0055 writes = $F421 (IrqDefault)  (([(33, 62204, 31), (145, 62509, 31), (145, 62509, 31)], [(244, 62210, 31), (246, 62514, 31), (246, 62514, 31)]))
+  OK   boot: first $6140 pal_buf write = $FF  ([(255, 62237, 31), (15, 33466, 18), (0, 33543, 18)])
+  OK   boot: $6200-$621F all $FF  (ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+  OK   boot: "USO" at $0182-$0184  (b'USO')
+  OK   boot: $07FE irq_delay = 9  (9)
+  OK   boot: $4017 <- $40  ([64])
+  OK   boot: PPUCTRL written $88 during boot, $88 at MainLoop  (['0x0', '0x8', '0x88', '0x8a'])
+  boot: first MainLoop at f214, $6140 then 0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f
+  boot: writes to $0051 before MainLoop (value pc bank xN): (03 F2E7 31 x1) (05 803C 18 x1)
+  boot: writes to $0054 before MainLoop (value pc bank xN): (21 F2FC 31 x1) (91 F42D 31 x212)
+  boot: writes to $0055 before MainLoop (value pc bank xN): (F4 F302 31 x1) (F6 F432 31 x212)
+
+  nmi                              2457 / 2457   PASS
+  SetIrqHandler                     316 / 316    PASS
+  IRQ dispatch target               315 / 315    PASS
+  boot                               10 / 10     PASS
+  mainloop dispatch                2156 / 2156   PASS
+  mainloop $09 cleared             2155 / 2155   PASS
+  SndVibratoTick                   2463 / 2463   PASS
+  ObjHideUnusedOam                   65 / 65     PASS
+  ObjSpriteDraw keeps sprite 0       65 / 65     PASS
+  far-call restore                    7 / 7      PASS
+
+main states dispatched (state: first frame, dispatches): 0: f2321 x1, 1: f2323 x65, 2: f214 x1, 3: f216 x2089
+NMI paths: {'disabled': 0, 'lag': 0, 'busy_frame': 14, 'full': 2443, 'mode79': 0}
+IRQ handler -> {scanline: count}: 1: {190: 103}; 6: {137: 212}
+far-call trampolines returned: {'0xff8c': 2, '0xff80': 5}
+SoundUpdate call sites (site, irq_mode): F4CF mode 0: 102, F4CF mode 128: 1, F6DC mode 0: 18, F6DC mode 128: 16, F77F mode 3: 2107
+SndCommand frames: 20, max per frame 1 PASS
+SndVibratoTick paths: {'calls': 2463, 'skip_b7': 56, 'wait_env': 1687, 'written': 689, 'hi_block': 31, 'depths': [3], 'octs': [1, 2, 3]}

@@ -793,7 +793,11 @@ bank,addr,name,comment
 30,DDBD,JmpTable30_DDBD,s32: untraced dispatch (30:DDBA) after SubstTelepathySelect; <=8 entries
 30,DF0E,JmpTable30_DF0E,s32: untraced dispatch (30:DF0B) after SubstChangeForm; <=8 entries
 31,E3D9,JmpTable31_E3D9,s32: untraced dispatch (31:E419, index A>>4); <=8 entries
-31,F6C2,JmpTable31_F6C2,s32: untraced dispatch (31:F6BF JMP ($0052), irq_mode*2); <=10 entries
+31,F6C2,JmpTable31_F6C2,NMI-mode routine table [irq_mode] used by NmiModeDispatch 31:F6AD: F6D6 F731 F751 F771 F782 F7C5 F7DB F6D6 0000 F731 (s41; mode 8 null)
+31,F6AD,NmiModeDispatch,s41: $57=0; JMP (JmpTable31_F6C2[irq_mode]); called every NMI (F417) and from IRQ handler 1 when $07 (missed NMI) set
+31,F6D6,NmiMode0,s41: irq_mode 0/7 NMI routine; JMP SoundUpdate only when PPUMASK shadow $01&$18=0 (rendering off so no HUD IRQ)
+31,F488,IrqHandler1Hud,s41: gameplay HUD split (line 190 in tools.emu): sprites off; PPUADDR $2B00; scroll X 0; CHR R0=$3C R1=$38; SoundUpdate with $06=1
+31,F691,IrqHandler6,s41: title/intro IRQ handler (line 137 in tools.emu); set every frame by bank 18 intro (irq_mode 5)
 11,BE00,Wram6000InitTable,s32: 256 B copied to wram_buf $6000-$60FF by 30:CCA4 and 19:BE5E (SetR6($0B): bank 11 at $8000, read as $9E00); contents not decoded
 27,A8A2,AiDirTable_A8A2,s32: 4 bytes 08 08 09 07 = obj_meta_dir by Rand64&3 (27:A898); tracer decodes them as code because the BNE at A8A0 is always taken
 19,ABEA,TitleIntroStory,s38: title_mode 2 (intro story pages); START/SELECT ($4B&$30) -> 19:B15C skip -> title_mode 3
