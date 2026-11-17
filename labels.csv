@@ -879,3 +879,5 @@ bank,addr,name,comment
 20,BD80,ShotOffsets,s47: (dx dy) spawn offset [shooter obj_behav*16 + (dir*2 & F)]
 30,C67D,PpuQueueFlush,s48: NMI PPU queue flush: ring $6200 from $0A to $0B; record b6 -> PPUCTRL +32 increment; PPUADDR + data
 31,E0B8,SubstPlayTail,s48: SubstPlay JMP tail: skipped if boss_cam_lock; JSR E75E; every 16 frames slot $0D+($08>>4) if empty -> re-read area record (respawn tick; static RE only)
+26,84BC,ObjStepSpeedTables,s49: u8[3x16] speed tables 84BC/84CC/84DC read by ObjStepVector 26:8480 (exported to web/data/tables.json)
+26,97E4,Rand64Table,s49: u8[64] read by Rand64 26:97D7 as [++$0E & $3F]

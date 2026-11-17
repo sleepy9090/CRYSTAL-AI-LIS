@@ -1,0 +1,127 @@
+{
+ "generator": "tools/gen_web_data.py (session 49)",
+ "rom": "rom/re-c.nes",
+ "rom_sha1": "fee4c6bf38e41515d61d2b649ac8f4f910495466",
+ "design": "docs/architecture_web.md section 5",
+ "files": {
+  "chr.bin": {
+   "kind": "bin",
+   "source": "CHR ROM file 0x40010-0x6000F",
+   "desc": "128 x 1KB CHR banks, NES 2bpp planar tiles (16 B/tile); R0-R5 index 1KB banks",
+   "size": 131072,
+   "sha1": "3c292d865c06a884609b1abe61cfdec8cb428b3d"
+  },
+  "screens.bin": {
+   "kind": "bin",
+   "source": "PRG banks 0-7",
+   "desc": "screen page S at S*256 (16x15 metatile ids + 16-byte tail); ScreenPagePtr 31:EF36",
+   "size": 65536,
+   "sha1": "edc0e199c5be243a592f7fd73cee751d70a8c92e"
+  },
+  "screens_b10.bin": {
+   "kind": "bin",
+   "source": "PRG bank 10",
+   "desc": "$62FF b7 areas: page S&$1F at (S&$1F)*256 when S&$3F < $20 (row render 31:EBEA only)",
+   "size": 8192,
+   "sha1": "224e1819ca0a1b3d7ed195012a1c09570b581368"
+  },
+  "metatiles.bin": {
+   "kind": "bin",
+   "source": "PRG banks 8-9 as $8000-$BFFF",
+   "desc": "index = cpu_addr - $8000: quadrant pages ((v67&$FC)|q)<<8|M, attrs $B000+i*$40, BG collision ($69<<8)|M, visited subst $BE00+(v67&$3C)*8+M",
+   "size": 16384,
+   "sha1": "be3b1eb8e636aa9a12b8ea577facf0ee3c2f9878"
+  },
+  "sound_b24.bin": {
+   "kind": "bin",
+   "source": "PRG bank 24 at $8000",
+   "desc": "sound driver tables + music streams (SndMusicTable $8C0C)",
+   "size": 8192,
+   "sha1": "402066cca4f6098255a82b89cbce7c32ebf56766"
+  },
+  "sound_b25.bin": {
+   "kind": "bin",
+   "source": "PRG bank 25 at $A000",
+   "desc": "music stream data",
+   "size": 8192,
+   "sha1": "e024c979bd52092e4ab7694b13f5e82201b5ab75"
+  },
+  "sound_b12.bin": {
+   "kind": "bin",
+   "source": "PRG bank 12 at $A000 (SetR7(12))",
+   "desc": "SfxPtrTable at $A000 + SFX streams",
+   "size": 8192,
+   "sha1": "730caf25d34d5cb006d22ececfc5eb9b44219c68"
+  },
+  "dmc.bin": {
+   "kind": "bin",
+   "source": "31:FA00",
+   "desc": "the single DMC sample (SndDmcTable 24:8BD8)",
+   "size": 993,
+   "sha1": "b6a7dd8284697f2075d9d1993b8d73996c9a9dae"
+  },
+  "palettes.json": {
+   "kind": "json",
+   "source": "banks 2/3",
+   "desc": "NES master palette + 256 palette slots",
+   "size": 4230,
+   "sha1": "9c55263b6832aff9521cd8089fadf0fe63ae05a7"
+  },
+  "areas.json": {
+   "kind": "json",
+   "source": "banks 4/5, 10/11, 12/13",
+   "desc": "area records, spawns, header k0-k5",
+   "size": 189235,
+   "sha1": "60dd3428e64e7b150351b577e61af8d23b810116"
+  },
+  "objtypes.json": {
+   "kind": "json",
+   "source": "13:AC00, 27:A314",
+   "desc": "ObjInit records per object type",
+   "size": 44187,
+   "sha1": "87376626f3ac5110da91b8ba196c1979a2fd695f"
+  },
+  "metasprites.json": {
+   "kind": "json",
+   "source": "banks 28/29",
+   "desc": "metasprite frames per id",
+   "size": 66559,
+   "sha1": "0cb29030b49bdfa5f66bb804808ac3c08077dba1"
+  },
+  "shots.json": {
+   "kind": "json",
+   "source": "20:BC00-BDFF",
+   "desc": "SpawnShot records + offsets",
+   "size": 6563,
+   "sha1": "a93dc007fa72157b04b9ca13b8a3fd910dc26135"
+  },
+  "tables.json": {
+   "kind": "json",
+   "source": "see each entry",
+   "desc": "named fixed-size gameplay tables",
+   "size": 10538,
+   "sha1": "cd18606ae2d6d8b489e093dc59311d516f366ceb"
+  },
+  "ram_labels.json": {
+   "kind": "json",
+   "source": "labels.csv bank *",
+   "desc": "RAM/WRAM name -> address",
+   "size": 6388,
+   "sha1": "f2a06f23684264ed27e292e19582f66852418bc6"
+  },
+  "text.json": {
+   "kind": "json",
+   "source": "banks 20-23 (tools/text_dump.py --json)",
+   "desc": "dictionary, code 05/06/07 tables, all messages",
+   "size": 101050,
+   "sha1": "b370fb1862a59d5f8ba07e8af06a60a842bbcc10"
+  },
+  "sound.json": {
+   "kind": "json",
+   "source": "banks 24/25, 12, 31 (tools/sound_export.py)",
+   "desc": "driver tables, DMC sample, decoded music/SFX streams",
+   "size": 2726931,
+   "sha1": "2005e7c219e3c8325936638af2c4b21a9bf87c02"
+  }
+ }
+}
