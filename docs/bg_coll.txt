@@ -2,14 +2,14 @@
 
 ## total bit counts over all pages b0..b7: 14 1743 1536 129 211 18 107 17
 ## bit meanings (from ObjBgProbe / 26:9947 / PlayerMove)
-  b0 (blocks non-player objects only, mask $27)
-  b1 low obstacle: blocks player on the ground (mask $32), jumpable
-  b2 wall: blocks player in the air too (mask $34)
+  b0 pit for the player (PlayerStatusTick 31:F068); blocks non-player objects (mask $27)
+  b1 low obstacle: blocks the player (mask $32) on the ground and in a normal jump (s77 emu); only flight / warp-exit (mask $34) cross it
+  b2 wall: blocks the player with either mask ($32/$34)
   b3 visited-substitutable metatile
   b4 -> obj_flags b4 (draw behind BG)
   b5 conveyor/current (PlayerConveyor); blocks non-player objects
   b6 -> obj_flags b6 (sink, speed-2)
-  b7 (not tested by the probe callers seen so far)
+  b7 damage floor: -4 HP every 32 $08 ticks on the ground (PlayerStatusTick; s77 emu)
 
 ## ($69, $67&$3C) -> areas
   $69=B3 tileset=00    6 areas: 01 03 19 47 78 96

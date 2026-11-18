@@ -16,14 +16,15 @@ import render_screen as rs  # noqa
 from nesrom import ROOT  # noqa
 
 BITS = {
-    0: 'b0 (blocks non-player objects only, mask $27)',
-    1: 'b1 low obstacle: blocks player on the ground (mask $32), jumpable',
-    2: 'b2 wall: blocks player in the air too (mask $34)',
+    0: 'b0 pit for the player (PlayerStatusTick 31:F068); blocks non-player objects (mask $27)',
+    1: 'b1 low obstacle: blocks the player (mask $32) on the ground and in a normal jump (s77 emu); '
+       'only flight / warp-exit (mask $34) cross it',
+    2: 'b2 wall: blocks the player with either mask ($32/$34)',
     3: 'b3 visited-substitutable metatile',
     4: 'b4 -> obj_flags b4 (draw behind BG)',
     5: 'b5 conveyor/current (PlayerConveyor); blocks non-player objects',
     6: 'b6 -> obj_flags b6 (sink, speed-2)',
-    7: 'b7 (not tested by the probe callers seen so far)',
+    7: 'b7 damage floor: -4 HP every 32 $08 ticks on the ground (PlayerStatusTick; s77 emu)',
 }
 
 

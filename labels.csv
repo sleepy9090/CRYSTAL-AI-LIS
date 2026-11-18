@@ -215,7 +215,7 @@ bank,addr,name,comment
 30,C7A5,AreaSubTable,A=k: SwitchBank16(5); ($10)=header(10:8300[$6C])[k]; Y=0. k0 map/music k1 gfx k2 entries k3 exits k4 screen flags k5 edge links
 31,EB09,ExitLookup,player 16px cell vs exit list (xc yc area entry)*;FF; sub_state 8 -> load area
 13,AC00,ObjTypeTable,ptr16 per object type ($AD00 upper half) -> ObjInit records (snd + 4 bitmask groups)
-30,CBEC,AreaByIndexTable,16 area ids indexed by $0780&15 (s60: debug area cycler: pad-1 A+B held + pad-2 A in play, 30:CBC7; INC $0780)
+30,CBEC,AreaByIndexTable,16 area ids indexed by $0780&15 (s60: debug area cycler: pad-1 A+B held + pad-2 A in play; 30:CBC7; INC $0780)
 *,0540,obj_spawn_b2,spawn entry b2&3
 *,0560,obj_spawn_param,spawn entry param byte
 10,8300,AreaHeaderTable,ptr16 per area ($8400 half) -> 5 (or 6) sub-table ptrs k0-k4(k5)
@@ -233,7 +233,7 @@ bank,addr,name,comment
 *,62F0,visited_map,12 rows x 8 bits: visited screens of current area (automap)
 *,62FC,area_w,area width-1 in screens (sub-table 0)
 *,62FD,area_h,area height-1 in screens (sub-table 0)
-*,62FE,area_f62FE,sub-table 0 byte 3 = BG CHR animation set 0-3 (0=off) for BgChrAnimTick 31:E75E; also boss rec +19 (15:B886), cleared by boss AI $E2 (15:A699)
+*,62FE,area_f62FE,sub-table 0 byte 3 = BG CHR animation set 0-3 (0=off) for BgChrAnimTick 31:E75E; also boss rec +19 (15:B886); cleared by boss AI $E2 (15:A699)
 *,62FF,area_f62FF,sub-table 0 byte 4; b7 -> SetR6($0A) for map reads at 31:EBE5
 *,6300,screen_grid,8x16 screen ids of current area ($80 = none)
 *,64C0,screen_flags,WRAM persistent screen flags (area sub-table 4)
@@ -406,7 +406,7 @@ bank,addr,name,comment
 26,9058,HitImmuneParams,20 params immune when obj_spawn_b2 == 1
 30,DD58,TestFlagF2F0,A+5 -> test flag F2F0+A+5
 31,E75E,BgChrAnimTick,s59: if $62FE!=0: chr_r1_play $07F1 = BgChrAnimTable[$62FE*8 + (($08>>3)&7)] (BG 2KB R1 swaps every 8 frames); called from SubstPlayTail
-31,E779,BgChrAnimTable,s59: 4x8 R1 values; set 1 = 0A 08 06 04 x2, set 2 = 26 26 24 24 22 22 20 20, set 3 = 20 22 24 26 x2 (set 0 unused)
+31,E779,BgChrAnimTable,s59: 4x8 R1 values; set 1 = 0A 08 06 04 x2; set 2 = 26 26 24 24 22 22 20 20; set 3 = 20 22 24 26 x2 (set 0 unused)
 31,E7C4,AreaFollowerHook,area $1C: F053 & !F045 -> set F045 + slot 14 follower $0C; else clr F053
 14,826F,ItemGetHook,hook 0: store item $23 via 14:9B00 record; then result + set-list; chain next item
 14,82A0,InvStoreItem,count bit7 = fixed equip slot else first $FF slot; Crystalis merge; bracelet unequips ball
@@ -772,7 +772,7 @@ bank,addr,name,comment
 16,9DA4,ShopArmorGoods,s71: 11 x 4 goods ids ($FF empty)
 16,9DD0,ShopArmorPrices,s71: 11 x 4 u16 prices
 16,9E28,ShopToolGoods,s71: 11 x 4 goods ids
-16,9E54,ShopToolPrices,s71: 11 x 4 u16 prices (shop 0 = 30 40 60 50, the same words as the 23:BE00 template)
+16,9E54,ShopToolPrices,s71: 11 x 4 u16 prices (shop 0 = 30 40 60 50; the same words as the 23:BE00 template)
 16,9F54,ShopAreaTable,s71: 33 area ids that have a shop
 16,9F75,ShopAreaIds,s71: 33 shop ids (0-10) parallel to ShopAreaTable
 19,A6F9,StartNewGame,s71: main_state=0 (NameEntryDone JMPs here) -> MainStateNewGame 30:C957
@@ -788,7 +788,7 @@ bank,addr,name,comment
 *,700E,wram_700E,written 0 by ColdSaveInit and by 17:A052; no reader found (static)
 *,700F,wram_700F,written 0 by ColdSaveInit only; no reader found (static)
 *,70F4,save_checksum_b,copy of save_checksum $70F5 (SaveChecksum 23:BD92); no reader
-*,000F,boot_ab_flag,cold boot: 1 if A+B held ($43==$C0) else 0; no reader found (static) - dead debug switch?
+*,000F,boot_ab_flag,cold boot: 1 if A+B held ($43==$C0) else 0; only reader DebugPauseCheat 15:BF47 - switched off by the RTS at 15:BF46 (s77)
 *,70F0,save_csum0_a,save slot 0 checksum byte A (MenuSave writes $70F5 here; also read/written by cold-init sub 31:F0A4 at F0EC-F116)
 *,70F1,save_csum0_b,save slot 0 checksum byte B
 *,70F2,save_csum1_a,save slot 1 checksum byte A
@@ -839,12 +839,12 @@ bank,addr,name,comment
 19,A064,TitleStepFadeOut,s67: TitleFadeOutStart; $06FE = $1E; INC title_step (step filler in the opening/story tables)
 19,A79F,TitleOpening,s67: title_mode 0: START/SELECT -> A7EE (A07C(0); TitleOpeningEnd) else JmpTable19_A7BC[title_step]
 19,ABAB,TitleOpeningEnd,s67: TitleFadeOutStart; title_mode = 5
-19,ABB4,TitleStoryInit,s67: title_mode 1: screen reset, irq_mode 3, CHR R2-R5 = $7E, title_mode = 2
-19,A0B5,TitleStatusInit,s67: title_mode 3: CHR $3C/$36/$C7/$C7, draws the status screen (-> title_mode 4)
+19,ABB4,TitleStoryInit,s67: title_mode 1: screen reset; irq_mode 3; CHR R2-R5 = $7E; title_mode = 2
+19,A0B5,TitleStatusInit,s67: title_mode 3: CHR $3C/$36/$C7/$C7; draws the status screen (-> title_mode 4)
 19,B15C,TitleStoryEnd,s67: title_mode = 3 (story end or START/SELECT skip)
-19,A653,TitleMenuInit,s67: title_mode 5: CHR $1C/$1E/$73/$7B, draws title screen (18:94BE ptr), $06B2 = $0B, INC title_mode -> 6, falls into TitleMenu
+19,A653,TitleMenuInit,s67: title_mode 5: CHR $1C/$1E/$73/$7B; draws title screen (18:94BE ptr); $06B2 = $0B; INC title_mode -> 6; falls into TitleMenu
 19,A6DF,TitleMenu,s67: title_mode 6: JmpTable19_A6F3[title_step]
-19,A796,TitleMenuRestart,s67: title-menu step 2: DEC main_state (3 -> 2, re-runs MainState2Init)
+19,A796,TitleMenuRestart,s67: title-menu step 2: DEC main_state (3 -> 2; re-runs MainState2Init)
 31,E3D9,AreaEntryTable,s46: 8 entries by ($6D&$E0)>>5: E422 normal / E51C keep pos / E533 save+load / E544 pit fall / 0000 x3 / E41C no record (was JmpTable31_E3D9)
 31,F6C2,JmpTable31_F6C2,NMI-mode routine table [irq_mode] used by NmiModeDispatch 31:F6AD: F6D6 F731 F751 F771 F782 F7C5 F7DB F6D6 0000 F731 (s41; mode 8 null)
 31,F6AD,NmiModeDispatch,s41: $57=0; JMP (JmpTable31_F6C2[irq_mode]); called every NMI (F417) and from IRQ handler 1 when $07 (missed NMI) set
@@ -889,7 +889,7 @@ bank,addr,name,comment
 26,9AE0,BitMask_9AE0,s46: u8[8] 01 02 04 08 10 20 40 80 (visited_map bit by x_hi)
 26,927E,PlayerPoisonRoll,s46: toucher obj_hitflags b7; armor !=7; Rand64<4 -> status 3 poison; msg $20/$19; SFX $36
 26,92BF,HitPlayerShot,s46: enemy shot (spawn_b2 $FF) by spawn_param: 0 damage; 1 paralysis; 2 stone; 3 -> type $0B; >=4 status 4
-26,9357,HitPlayer,s46: HitHandlerTable 2 (player touched): shots; poison; AI $0B hold; gold $7B; platforms $38/$3C; damage attack-defence; 30f invuln
+26,9357,HitPlayer,s46: HitHandlerTable 2 (player touched): shots; poison; AI $0B duel push (s77); gold $7B; platforms $38/$3C; damage attack-defence; 30f invuln
 26,9431,PlayerInvuln,s46: invuln_timer $071A=$1E; obj_flags_s01 b2
 26,943F,RidePlatform,s46: platform AI $38/$3C: $0541=slot; move slot 0 one step in its dir at speed 2
 31,E40A,AreaEntryDispatch,s46: JMP (AreaEntryTable[($6D&$E0)>>4])
@@ -1023,3 +1023,12 @@ bank,addr,name,comment
 30,DF2F,ChangeFormApply,s76: change-form menu A key: SFX $39; 31-frame R4=$4D effect; obj1_flash |= ($21<<4)|$80 (b7 changed form + b5-4 form 0-3); SpendMp($14)
 30,D280,EvActWarp,s76: event act 24: player slots 0/1 to slot $1E pos; obj1_flash |= $40 (warp exit: speed 9 spin until off b1/b2 tiles); $0561=$0641=2
 26,9B41,WarpSpinPoseTable,s76: 4 meta ids 88 C2 8A EF by facing while obj1_flash b6 (warp exit)
+15,BF46,DebugCheatStub,s77: lone RTS = target of PauseWait's JSR at 15:BDE4; switches off DebugPauseCheat (body starts 1 byte later)
+15,BF47,DebugPauseCheat,s77: dead debug cheat (never reached): boot_ab_flag + pad2 dir -> fill empty inventory from 15:BF7F; level $0F; MP $FF/$FF; pad2 A -> slots 0/1 speed 9
+27,A70E,AiDuelStart,s77: AI $0A (slot 0; set by AiPathWalk $FD): msg 3/3 + sub_state $10; walk slots 0/1 up to y $86; then slot $0D -> AI $52 coll $60; slot 0 -> AI $0B; R5=$4E; story_flags_F7F8+1
+27,A24A,AiPlayerDuel,s77: AI $0B: player in the sparring duel: no walking (dir 0; meta $A7); only B sword; HitPlayer pushes both 8 px per 4th touch; no damage
+27,A753,AiDuelOpponent,s77: AI $52: sparring opponent (slot $0D) set by AiDuelStart
+27,AFA9,AiPitShuttle,s77: AI $38 (types $7E/$7F): platform; moves while the probe point ahead (27:AFED) is a b0 pit cell; else reverse dir + obj_freeze $20
+27,AFED,PlatformProbeOfs,s77: 4 x (dx;dy) signed by dir&6: (0;-24) (12;0) (0;8) (-12;0)
+27,AFF5,AiCrumblePlatform,s77: AI $3C (type $9F): AiPitShuttle + once ridden then left: obj_coll 0; meta $B7; obj_anim countdown (SFX $64 at $1E); despawn at 0
+15,BF7F,DebugItemTable,s77: 24 item ids for DebugPauseCheat (00-03 15-18 0D-10 06 08 0A 0C 1D-24)
