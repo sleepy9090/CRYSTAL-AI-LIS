@@ -231,7 +231,7 @@ bank,addr,name,comment
 *,6300,screen_grid,8x16 screen ids of current area ($80 = none)
 *,64C0,screen_flags,WRAM persistent screen flags (area sub-table 4)
 31,EF1F,ScreenAtCamera,A = $6300[(pos_y_hi<<3&$78)|(pos_x_hi&7)] screen id ($34-$37 cursor)
-31,EF33,ScreenPageAtCamera,ScreenAtCamera then ScreenPagePtr
+31,EF33,ScreenPageAtCamera,ScreenAtCamera then ScreenPagePtr; no direct JSR/JMP xrefs (s61)
 31,EF36,ScreenPagePtr,screen id S: SwitchBank16(S>>6) and $10/$11 = $8000+(S&$3F)*$100 (raw 16x15 metatile page)
 31,EBC1,ScreenRowRender,reads metatile ids from screen page(s) into $6000 buffer then expands + queues to PPU
 31,EC6C,ScreenVisitedBit,A = visited bit of screen index Y in $62F0 bitmap
