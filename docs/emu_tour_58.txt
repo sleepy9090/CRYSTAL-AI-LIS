@@ -1,0 +1,61 @@
+tour.py: area1_enter.state -> f3755, 12 legs, settle 30, 65 s
+
+per area: area.entry method load-frames end-frame music MMC3 R0-R5 pal ids $07E0-7 shadows $07F0 $07F1 $07F4 $07F5, spawn-list slots active/expected, BG diff vs gfx/areas
+  01.00 start load     0 f2480   mus 16 chr 00 0C 40 42 4B 4E pal 0001027f0001ff0a sh 000c4b4e spawn 2/2  bg   3.1% diff of 45632 cam 0,-4 best +0,+0
+        slots(ai/meta) 00:03/A7 01:01/02 03:05/4C 0D:08/4C 0E:50/39 0F:14/EC 11:14/EC 12:14/EB 13:14/EB 14:14/EC 15:14/EC 16:14/EB 17:14/EB
+  A5.00 poke  load    44 f2554   mus 19 chr 1A 22 40 42 5F 62 pal 3c2c3e7f00012c30 sh 1a225f62 spawn 3/3  bg   0.4% diff of 45632 cam 257,159 best +0,+0
+        slots(ai/meta) 00:03/A7 01:01/02 03:05/4C 0D:3C/B6 0E:3C/B6 16:27/65 17:40/66 1A:78/AA
+  A6.00 exit  load    44 f2629   mus 19 chr 1A 22 40 42 79 7A pal 3c2c3e7f0001060c sh 1a22797a spawn 2/2  bg   1.0% diff of 45632 cam 0,288 best +0,+0
+        slots(ai/meta) 00:03/A7 01:01/02 03:05/4C 0D:EA/DB 14:7F/4C
+  A7.00 exit  load    42 f2702   mus 1B chr 1A 22 40 42 79 7A pal 3f40417f0001060c sh 1a22797a spawn 0/0  bg no png
+        slots(ai/meta) 00:03/A7 01:01/02 03:05/4C
+  58.00 exit  load    45 f2778   mus 15 chr 2A 22 40 42 FF FF pal 9091927f0001ffff sh 2a22ffff spawn 0/0  bg   7.7% diff of 45632 cam 0,-4 best +0,+0
+        slots(ai/meta) 00:03/A7 01:01/02 03:05/4C
+  59.00 exit  load    42 f2851   mus 15 chr 2A 22 40 42 57 56 pal 9091927f00013c3d sh 2a225756 spawn 11/11  bg   0.7% diff of 45632 cam 273,704 best +0,+0
+        slots(ai/meta) 00:03/A7 01:01/02 03:05/4C 0D:5E/4C 0E:5E/4C 0F:5E/4C 10:5E/4C 11:5E/4C 12:5E/4C 13:2A/4C 14:2A/4C 15:2A/4C 16:DC/64 18:5F/4C
+  5A.21 poke  load     5 f2890   mus 15 chr 2A 24 40 42 57 56 pal 9091927f00013c3d sh 2a245756 spawn 12/12  bg   0.4% diff of 45632 cam 273,617 best +0,+3
+        slots(ai/meta) 00:03/A7 01:01/02 03:05/4C 0D:5E/4C 0E:5E/4C 0F:5E/4C 10:5E/4C 11:5E/4C 12:5E/4C 13:2A/58 14:2A/58 15:2A/58 16:DC/64 18:5F/4C 19:78/4C
+  5B.20 poke  load     4 f2928   mus 15 chr 2A 24 40 42 57 56 pal 9091927f00013c3d sh 2a245756 spawn 12/12  bg   0.4% diff of 45632 cam 273,616 best +0,+0
+        slots(ai/meta) 00:03/A7 01:01/02 03:05/4C 0D:5E/4C 0E:5E/4C 0F:5E/4C 10:5E/4C 11:5E/4C 12:5E/4C 13:2A/58 14:2A/58 15:2A/58 16:DC/64 18:5F/4C 19:78/4C
+  5C.20 poke  load     4 f2966   mus 15 chr 2A 24 40 42 FF FF pal 9091927f0001ffff sh 2a24ffff spawn 0/1  bg   0.4% diff of 45632 cam 273,616 best +0,+0
+        slots(ai/meta) 00:03/A7 01:01/02 03:05/4C
+  5E.00 exit  load    44 f3041   mus 1B chr 2A 22 40 42 47 FF pal 9091927f0001061d sh 2a2247ff spawn 2/2  bg   2.3% diff of 45632 cam 0,-4 best +0,+0
+        slots(ai/meta) 00:03/A7 01:01/02 03:05/4C 0D:30/2E 0E:78/4C
+  5D.00 poke  load   314 f3423   mus 1B chr 2A 22 40 42 47 FF pal 9091927f0001061d sh 2a2247ff spawn 1/1  bg  58.1% diff of 45632 cam 0,-4 best +0,+0
+        slots(ai/meta) 00:03/A7 01:01/00 03:05/4C 0D:30/2E 0E:78/4C
+  5F.00 poke  load   298 f3755   mus 1B chr 2A 22 40 46 47 FF pal 9091927f0005061d sh 2a2247ff spawn 2/3  bg  65.0% diff of 45632 cam 0,0 best -1,-1
+        slots(ai/meta) 00:03/A7 01:01/02 03:05/4C 0D:30/2E 0E:78/4C
+stuck legs: 0 
+frames spent tapping A to close messages (sub_state != 8 between legs): 38
+
+main/sub states seen (frames): 1/1: 435, 1/8: 358, 1/9: 67, 1/26: 132, 1/27: 313
+
+  SwitchBank16                    12187 / 12187  PASS
+  ObjHideUnusedOam                  940 / 940    PASS
+  ObjSpriteDraw                     939 / 940    FAIL
+      ! f3423 slot 00 got (120, 108, 0) exp (128, 163, 0); slot 01 got (120, 108, 0) exp (128, 163, 0)
+  ObjSpriteDraw keeps sprite 0      940 / 940    PASS
+  mainloop $09 cleared              318 / 318    PASS
+  IRQ dispatch target              1934 / 1934   PASS
+  SndVibratoTick                   2131 / 2131   PASS
+  nmi                              1305 / 1305   PASS
+  SetIrqHandler                    1934 / 1934   PASS
+  mainloop dispatch                 318 / 318    PASS
+  ObjInit                            57 / 57     PASS
+  far-call restore                  656 / 656    PASS
+  PaletteBuild                       55 / 55     PASS
+  PlaySound                          21 / 21     PASS
+  AreaLoad                            9 / 9      PASS
+  SndStartMusic                       6 / 6      PASS
+  struct: save image at SaveGame return     33 / 33     PASS
+IRQ handler -> {scanline: count}: 0: {15: 49, 18: 2, 21: 1, 24: 1, 27: 1, 30: 1, 33: 1, 36: 1, 39: 1, 42: 1, 45: 2, 48: 1, 51: 1, 54: 1, 57: 1, 60: 1, 63: 1, 66: 1, 69: 1, 72: 1, 75: 1, 78: 1, 80: 48, 81: 1, 83: 17, 84: 1, 87: 1, 90: 1, 93: 2, 96: 1, 99: 1, 100: 17, 102: 1, 103: 64}; 1: {190: 1237}; 2: {10: 235}; 3: {85: 235}
+NMI paths: {'disabled': 0, 'lag': 1, 'busy_frame': 76, 'full': 1228, 'mode79': 0}
+SoundUpdate call sites (site, irq_mode): F4CF mode 0: 996, F4CF mode 1: 235, F4CF mode 128: 6, F6DC mode 0: 18, F6DC mode 128: 50
+SndCommand max per frame 1 PASS
+frames with >1 SndCommand: 0; SoundUpdate calls in them (site@line): 
+frames with >1 SoundUpdate call: 9 of 1296; first: f2497: ['F4CF@191', 'F6DC@251'], f2571: ['F4CF@191', 'F6DC@247'], f2646: ['F4CF@191', 'F6DC@247'], f2719: ['F4CF@191', 'F6DC@246']
+SndVibratoTick paths: {'calls': 2131, 'skip_b7': 129, 'wait_env': 1081, 'written': 921, 'hi_block': 0, 'depths': [1], 'octs': [2, 3]}
+SaveGame written (f, +F0-F8): [(2595, 'a6 80 00 df 01 30 30 01 00'), (2744, '58 80 00 60 00 30 30 01 00'), (3007, '5e 80 00 af 00 30 30 01 00')]
+SaveGame blocked by AreaSaveFlags b7=0 (f, area): [(2522, '0xa5'), (2670, '0xa7'), (2819, '0x59')]
+SwitchBank16 n values:00 01 02 03 04 05 06 07 09 0D 0E
+PlaySound ids: 15 19 1B 29 2F 3F 5D 93

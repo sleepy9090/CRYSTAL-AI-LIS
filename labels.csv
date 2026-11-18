@@ -1019,3 +1019,4 @@ bank,addr,name,comment
 19,A212,StatusAnimTick,s74: title_mode 4 per frame: 7-sprite strip at OAM $58 from 19:9908; every 8th pass (title_ctr & 7) DEC status_anim_ctr + next frame
 19,A34E,StatusTypeStep,s74: status step 3: types one text cell every 2nd pass (title_ctr b0) via PpuQueueDrainWait
 *,6423,name_entry_frames,s74: INC per NameEntryInput pass (19:A3F6); cleared at 19:A3F2; saved (mirrors $6D23/$7D23 -> save_checksum $70F4/$70F5)
+30,DC58,TeleportAreaTable,s75: 11 area ids (02 18 1C D5 50 1B 71 72 8C 8E 93) + FF; index = cursor row*3+col (30:DC79; 11 = cancel); flag test TestFlagF2F0 at DC82; same area -> no reload

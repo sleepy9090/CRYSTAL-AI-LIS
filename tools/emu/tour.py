@@ -55,7 +55,15 @@ def exits(area):
 
 
 def valid_area(a):
-    return a < area_dump.table_len() and area_dump.ptr(a) & 0x8000
+    """In the table and either has a spawn record or (s75) a valid AreaSubTable header: AreaLoad
+    31:E16B (BPL) just skips the spawn record when the AreaPtrTable ptr has b15 clear (area $A7,
+    the only way into $58-$5F, has no spawn record)."""
+    if a >= area_dump.table_len():
+        return False
+    if area_dump.ptr(a) & 0x8000:
+        return True
+    h, ps = area_dump.sub_header(a)
+    return bool(h & 0x8000) and 0x8000 <= ps[0] < 0xC000 and 0x8000 <= ps[3] < 0xC000
 
 
 def graph(start=0):
@@ -182,7 +190,8 @@ class Tour:
         nes = self.nes
         r = nes.bus.ram
         t0 = nes.ppu.frame_no
-        left = False
+        left = seen = False
+        self.bounce = None
         while nes.ppu.frame_no - t0 < limit:
             # dialogue boxes / cut-scenes: tap A after 150 frames
             f = nes.ppu.frame_no - t0
@@ -191,6 +200,12 @@ class Tour:
             if r[0x41] != 8:
                 left = True
             if left and r[0x41] == 8 and r[0x6C] == target:
+                return nes.ppu.frame_no - t0
+            seen |= left and r[0x6C] == target
+            if seen and r[0x6C] != target and r[0x41] == 8:
+                # s75: the area loaded but an entry event (e.g. $E0 act 7 message) ended on an exit
+                # cell, so ExitLookup took the player straight on; count it as loaded
+                self.bounce = r[0x6C]
                 return nes.ppu.frame_no - t0
         return None
 
@@ -230,7 +245,7 @@ class Tour:
             'shadow': bytes([r[0x7F0], r[0x7F1], r[0x7F4], r[0x7F5]]).hex(),
             'exp_slots': exp_slots, 'act': act,
             'spawned': sum(1 for s in exp_slots if s in act), 'cmp': cmp,
-            'state': (r[0x40], r[0x41]),
+            'state': (r[0x40], r[0x41]), 'now': r[0x6C],   # s75: real area_id at the end of the leg
         }
         if self.shots:
             nes.dump_screen(os.path.join(self.shots, f'area_{area:03d}.png'))
@@ -245,7 +260,8 @@ def fmt_row(w):
     act = ' '.join(f'{s:02X}:{ai:02X}/{mt:02X}' for s, (ai, mt) in sorted(w['act'].items()))
     return (f'  {w["area"]:02X}.{w["entry"]:02X} {w["method"]:5s} load {w["frames"] if w["frames"] is not None else "STUCK":>5} '
             f'f{w["f"]:<6d} mus {w["music"]:02X} chr {" ".join(f"{v:02X}" for v in w["chr"])} '
-            f'pal {w["pal"]} sh {w["shadow"]} spawn {w["spawned"]}/{len(w["exp_slots"])}  bg {cs}\n'
+            f'pal {w["pal"]} sh {w["shadow"]} spawn {w["spawned"]}/{len(w["exp_slots"])}  bg {cs}'
+            + (f'  NOW IN {w["now"]:02X}' if w.get('now', w['area']) != w['area'] else '') + '\n'
             f'        slots(ai/meta) {act}')
 
 
@@ -301,7 +317,7 @@ def cmd_run(a):
     while todo and len(tour.rows) <= a.max:
         cur = nes.bus.ram[0x6C]
         nxt = None
-        if only is None:
+        if True:                          # s75: --only legs also take real exits when they can
             for xc, yc, t, e in exits(cur):
                 if t in todo and valid_area(t):
                     nxt = (t, 'exit', xc, yc, e)
@@ -343,6 +359,8 @@ def cmd_run(a):
             state.restore(nes, good)
             continue
         visited.add(t)
+        if tour.bounce is not None:
+            method += f'>{tour.bounce:02X}'    # screen/slots below are of the area it bounced to
         w = tour.record(t, method, frames)
         print(fmt_row(w).split('\n')[0], flush=True)
         if tour.to_gameplay():
