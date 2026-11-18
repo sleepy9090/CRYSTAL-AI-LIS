@@ -11,7 +11,14 @@ bank,addr,name,comment
 31,F424,SetIrqHandler,A=index -> $56; $0054/$0055 = IrqHandlerTable[A]
 31,F433,IrqHandlerTable,ptr16[8] IRQ handlers: F455 F488 F4E5 F54B F5E1 F60E F691 F61A
 31,F451,DelayX,busy loop DEX/BPL
-31,F455,IrqHandler0,
+31,F455,IrqHandler0,s65: playfield vertical-wrap split: PPUADDR $2000+(scroll_x>>3) (NT0 row 0) + fine X; arms H1 HUD at $BC-$57
+31,F4E5,IrqMsgWindowTop,s65: IRQ handler 2 (irq_mode 1/9): PPUADDR $2800 (NT2 message window) + ApplyChrAlt; arms H3 after $48 lines; precomputes resume addr $5E/$5F
+31,F54B,IrqMsgWindowEnd,s65: IRQ handler 3 (chain from H2 only): PPUADDR $5E/$5F (NT0 playfield row) + fine X + ApplyChrPlay; arms H0 (wrap) or H1 (HUD)
+31,F58B,IrqMsgWindowEndHud,s65: H3 tail: arm H1 at $BE-$57
+31,F5A1,NtRowAddrTable,s65: 32 words $2000..$23E0 = NT0 row addresses (hi read at F5A2+Y; lo at F5A1+Y) by IRQ handlers 2 and 4
+31,F5E1,IrqRowStretch,s65: IRQ handler 4 (dead irq_mode 4): PPUADDR NtRowAddrTable[$5A++] every $58+1 lines; $59 rows then falls into F60E
+31,F60E,IrqOffSound,s65: IRQ handler 5: IRQ off + SoundUpdate; reached only from F5FE (H4 end) and never via SetIrqHandler
+31,F61A,IrqMenuChrSplit,s65: IRQ handler 7 (irq_mode 6 equipment menu; line 119): CHR R0/R1 <- $5E/$5F; arms H1 HUD at $BC-$57
 31,F1CD,ColdSaveInit,cold boot only: $700E/$700F=0; unconditionally re-inits the current save image $7D00-$7FFF + mirror $6D00 from template 23:BE00 (was ColdInitSub)
 31,FE80,ReadPads,per-frame gameplay pad read (pads X=1/0): $43 prev $4B new $49 dir $4D act (A/B hold counters $45/$47); was ColdInitSub2
 31,F0A4,BootSaveCheck,every boot: verify/repair save slots 0/1 (primary vs backup; checksum; AMI tag) and current image $7D00 vs mirror $6D00; bank 23 mapped at $A000 (was BootSub)
@@ -804,7 +811,7 @@ bank,addr,name,comment
 31,F6AD,NmiModeDispatch,s41: $57=0; JMP (JmpTable31_F6C2[irq_mode]); called every NMI (F417) and from IRQ handler 1 when $07 (missed NMI) set
 31,F6D6,NmiMode0,s41: irq_mode 0/7 NMI routine; JMP SoundUpdate only when PPUMASK shadow $01&$18=0 (rendering off so no HUD IRQ)
 31,F488,IrqHandler1Hud,s41: gameplay HUD split (line 190 in tools.emu): sprites off; PPUADDR $2B00; scroll X 0; CHR R0=$3C R1=$38; SoundUpdate with $06=1
-31,F691,IrqHandler6,s41: title/intro IRQ handler (line 137 in tools.emu); set every frame by bank 18 intro (irq_mode 5)
+31,F691,IrqHandler6,s41: title/intro IRQ handler (line 137 in tools.emu); set every frame by bank 18 intro (irq_mode 5); s65: PPUADDR <- $59:$5A (intro: $2800 at line $89=137)
 11,BE00,Wram6000InitTable,s32: 256 B copied to wram_buf $6000-$60FF by 30:CCA4 and 19:BE5E (SetR6($0B): bank 11 at $8000; read as $9E00); contents not decoded
 27,A8A2,AiDirTable_A8A2,s32: 4 bytes 08 08 09 07 = obj_meta_dir by Rand64&3 (27:A898); tracer decodes them as code because the BNE at A8A0 is always taken
 19,ABEA,TitleIntroStory,s38: title_mode 2 (intro story pages); START/SELECT ($4B&$30) -> 19:B15C skip -> title_mode 3
@@ -942,7 +949,7 @@ bank,addr,name,comment
 31,F731,NmiMode1,s64: irq_mode 1/9 NMI routine: NmiScrollSet + ApplyChrPlay; arm IRQ handler 2 at latch ((07DA&7)^7)+7
 31,F751,NmiMode2,s64: irq_mode 2 (pause/status): PPUCTRL NT2 ($2800); scroll 0;0; ApplyChrAlt; rendering on -> NmiMode0HudIrq else JMP SoundUpdate
 31,F782,NmiMode4,s64: irq_mode 4 (dead: shop-door effect stubbed out): R1 alt = F7B5[$58]; $58!=0 -> handler 4 at line 4 (+stray STA $F451); $58=0 -> BG off + IRQ off
-31,F7B5,NmiMode4R1Table,s64: 16 CHR R1 values indexed by $58 for irq_mode 4
+31,F7B5,NmiMode4R1Table,s64: 16 values indexed by $58 for irq_mode 4; s65: really the H4 row count ($59) not a CHR bank
 31,F7C5,NmiMode5,s64: irq_mode 5 (cold intro): PpuScrollWrite + ApplyChrPlay; arm IRQ handler 6 at latch $58
 31,F7DB,NmiMode6,s64: irq_mode 6 (equipment menu): PPUCTRL shadow; scroll 0;0; ApplyChrAlt; arm IRQ handler 7 at latch $77
 30,C6E7,PpuQueueAttrCopy,s64: PpuQueueFlush path for len b7 set: 64 bytes from attr_shadow $6100+src to PPUDATA; never chains
