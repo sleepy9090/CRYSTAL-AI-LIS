@@ -46,6 +46,10 @@ export function parseKeys(specs) {
 
 // ---------------------------------------------------------------- compare CSV (tools/emu/compare.py)
 export const SLOTS = 32;
+// s82: title / state-3 variables + OAM shadow crc (tools/emu/compare.py TTL_COLS / TTL_ADDRS)
+const TTL_COLS = ['ttl_mode', 'ttl_step', 'ttl_s3', 'ttl_wait', 'ttl_ctr', 'ttl_snd'];
+const TTL_ADDRS = [0x6F0, 0x6F1, 0x6F3, 0x6FE, 0x6FF, 0x6B2];
+
 export function compareColumns() {
   const cols = ['frame', 'state', 'sub', 'area', 'entry', 'pos_x', 'pos_y', 'cam_x', 'cam_y', 'music'];
   for (let c = 0; c < 4; c++) cols.push(`snd${c}_period`);
@@ -54,6 +58,7 @@ export function compareColumns() {
     const n = s.toString(16).toUpperCase().padStart(2, '0');
     cols.push(`o${n}_ai`, `o${n}_x`, `o${n}_y`);
   }
+  cols.push(...TTL_COLS, 'oam_crc');
   return cols;
 }
 
@@ -70,6 +75,8 @@ export function compareRow(m, frame) {
     if (ai) out.push(ai, r[0x70 + s] | r[0x90 + s] << 8, r[0xB0 + s] | r[0xD0 + s] << 8);
     else out.push(0, 0, 0);
   }
+  for (const a of TTL_ADDRS) out.push(r[a]);
+  out.push(crc32(r.subarray(0x200, 0x300)) >>> 0);
   return out;
 }
 

@@ -46,7 +46,7 @@ web/index.html
       ├─ src/nes/apu_core.js          2 pulse, triangle, noise, DMC; register writes $4000-$4017; sample generator
       ├─ src/game/ram.js              RAM/WRAM arrays + named address constants (generated, §5) + obj column helpers
       ├─ src/game/mainloop.js         MainLoop, MainStateTable, NMI work, IRQ split list, frame_ready/$09 handshake
-      ├─ src/game/states/             state0_newgame.js state1_gameplay.js state2_intro.js state3_title.js state45.js
+      ├─ src/game/states/             title.js (s82: states 2 + 3, bank 18/19 screen library); planned: state0_newgame.js state1_gameplay.js state45.js
       │   └─ substates.js             SubstateHandlerTable (40) → handler functions; substate banks are irrelevant
       ├─ src/game/world/
       │   ├─ area.js                  AreaLoad, LoadAreaChrRecord, spawn handlers 0-4, AreaLoadMap, k1-k5, AreaEntryTable
@@ -149,8 +149,9 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 |---|---|---|---|
 | state 0 new game | `30:C957` | `state0()` | `states/state0_newgame.js` |
 | state 1 gameplay dispatcher | `30:CAB6` | `state1()` → `SUBSTATES[$41]` | `states/state1_gameplay.js` |
-| state 2 / `MainState2Init` / intro | `30:C931`, `18:9FCC`, `18:8028` | `state2()`, `intro()` | `states/state2_intro.js` |
-| state 3 / `MainState3`, `State3ModeTable`, `State3SubTable` | `30:C939`, `19:A015`, `19:A038`, `19:A052` | `state3()` (title menu, story pages, status, name entry) | `states/state3_title.js` |
+| state 2 / `MainState2Init` | `30:C931`, `18:9FCC` → `19:A000` | `mainState2()` (generator; s82). The cold-boot intro `18:8028` is not run (port starts at f214) | `states/title.js` |
+| state 3 / `MainState3`, `State3ModeTable`, `State3SubTable` | `30:C939`, `19:A015`, `19:A038`, `19:A052` | `mainState3()`; modes in the `MODES` map, step tables in `STEPS` (ROM address → function). s82: fades `18:8310/834A`, opening `19:A79F` (25 steps), title menu `19:A653/A6DF`; story / status / name entry (modes 1-4) log "not ported" | `states/title.js` |
+| bank-18 screen library | `18:80E7` `SceneMetaDraw`, `8198` `WaitFrameReady`, `81A1` `NtFill`, `81D8` `OamHideAll18`, `81F0` `NtRectBlit`, `82B3-82FD` menu palettes | `sceneMetaDraw`, `waitFrameReady` (generator), `ntFill`, `oamHideAll`, `ntRectBlit` (direct `ppu.writeReg` 6/7), `palBlack/palLoad/palApply/palFadeIn`. A lag frame (the NMI firing at a `PpuNmiOn18` after line 241) is a bare `yield` at that point | `states/title.js` |
 | states 4/5 | `17:A000` / `17:A100` | `state4()` / `state5()` | `states/state45.js` |
 | `SubstateHandlerTable` | `30:CADE` | `SUBSTATES[40]` | `states/substates.js` |
 | `SubstNewGameInit`, area-load step | `30:CA5F`, `30:CA2E` | `substNewGameInit()`, `substAreaLoad()` | `states/substates.js` |

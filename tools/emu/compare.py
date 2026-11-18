@@ -15,6 +15,9 @@ All values are decimal integers read from RAM after the frame (= after its NMI):
   pal_crc      crc32 of pal_buf $6140-$615F (WRAM)
   o{NN}_ai o{NN}_x o{NN}_y  obj_active $04A0,s; x = $90,s<<8|$70,s; y = $D0,s<<8|$B0,s for slots 00-1F
                (x/y are written as 0 when the slot is free, so stale positions don't cause diffs)
+  ttl_mode ttl_step ttl_s3 ttl_wait ttl_ctr ttl_snd   title_mode $06F0, title_step $06F1, state3_mode $06F3,
+               $06FE (step wait), title_ctr $06FF, pending title sound $06B2 (s82)
+  oam_crc      crc32 of the OAM shadow $0200-$02FF (s82)
 """
 import csv
 import zlib
@@ -27,7 +30,13 @@ def columns():
     cols += [f'snd{c}_period' for c in range(4)] + ['pal_crc']
     for s in range(SLOTS):
         cols += [f'o{s:02X}_ai', f'o{s:02X}_x', f'o{s:02X}_y']
+    cols += TTL_COLS + ['oam_crc']
     return cols
+
+
+# s82: title / state-3 variables (main states 2/3, bank 18/19) + crc32 of the OAM shadow $0200-$02FF
+TTL_COLS = ['ttl_mode', 'ttl_step', 'ttl_s3', 'ttl_wait', 'ttl_ctr', 'ttl_snd']
+TTL_ADDRS = [0x6F0, 0x6F1, 0x6F3, 0x6FE, 0x6FF, 0x6B2]
 
 
 def row(nes):
@@ -43,6 +52,8 @@ def row(nes):
             out += [ai, r[0x70 + s] | r[0x90 + s] << 8, r[0xB0 + s] | r[0xD0 + s] << 8]
         else:
             out += [0, 0, 0]
+    out += [r[a] for a in TTL_ADDRS]
+    out.append(zlib.crc32(bytes(r[0x200:0x300])))
     return out
 
 

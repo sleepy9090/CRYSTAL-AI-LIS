@@ -1077,3 +1077,11 @@ bank,addr,name,comment
 30,C831,FullScreenDraw,s79: A=attr flag; pos_y_hi+1 then 30 x (WaitPpuQueue; 26:9824 with $31=-8; BgRowRender); banks restored; A!=0 -> PpuQueueAttrAll
 30,CD31,ObjKnockbackStep,s80: obj_flags2 += $10; slots != 1 with obj_active b7 clear: ObjMoveSlide in meta_dir>>4 at speed 8 (SetR6 $1A) + DEC obj_timer and skip the AI; wrap -> meta_dir &= $0F then AI runs
 30,CD7F,ObjUpdateAi1A,s80: AI $1A: JSR 30:CD8A (palette/IRQ sequence; waits on PPU queue + frames; obj_phase to $6A) then SwitchBank16($0D)
+18,8174,PpuNmiOff18,s82: PPUCTRL <- ppuctrl_shadow & $7F (NMI off around bank-18 PPU writes; a late NMI then fires when PpuNmiOn18 re-enables it inside vblank = title lag frames)
+18,817C,PpuNmiOn18,s82: PPUCTRL <- ppuctrl_shadow | $80
+18,8184,MaskOff18,s82: ppumask_shadow &= $E1 (BG + sprites off) and PPUMASK
+18,818E,MaskOn18,s82: ppumask_shadow |= $1E and PPUMASK
+19,A070,TitleStepBlack,s82: opening step 0: MenuPalBlack; $06FE = $3C; INC title_step
+19,A07C,TitleSound,s82: snd_queue $0103 = A, count 1 (lock 1/0); $06B2 = $FF (MainState3 calls it with A = $06B2 unless b7 set)
+19,A6FE,TitleMenuSprites,s82: title-menu step 0: $84 5-byte OAM records (index y tile attr x) from ($82) = 18:98C2; cursor sprite $02F0-$02F3
+19,A7EE,TitleOpeningSkip,s82: opening START/SELECT: TitleSound(0); JMP TitleOpeningEnd

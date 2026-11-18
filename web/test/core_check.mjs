@@ -115,7 +115,10 @@ for (const [name, fn] of [['ReadPads', readPads], ['ReadPadsMenu', readPadsMenu]
   if (m.rd(R.frame_ready) !== 1) errs.push(`frame_ready after a frame = ${m.rd(R.frame_ready)} (want 1)`);
   if (states[0] !== 2) errs.push(`frame 0 main_state ${states[0]} (want 2: first NMI sets frame_ready, no state ran yet)`);
   if (states[1] !== 3) errs.push(`frame 1 main_state ${states[1]} (want 3 after MainState2Init's INC)`);
-  if ((m.stubHits.state3_title || 0) !== 28) errs.push(`state 3 ran ${m.stubHits.state3_title} times (want 28)`);
+  // s82: states 2/3 are ported (states/title.js). MainState2Init clears title_ctr $06FF, MainState3 DECs it
+  // once per pass: 28 passes (frames 2-29) leave $100 - 28 = $E4; the opening is still in step 1 (wait $3C)
+  if (m.rd(0x06FF) !== 0xE4) errs.push(`title_ctr $06FF = $${m.rd(0x06FF).toString(16)} (want $e4: 28 state-3 passes)`);
+  if (m.rd(0x06F0) !== 0 || m.rd(0x06F1) !== 1) errs.push(`title_mode/step ${m.rd(0x06F0)}/${m.rd(0x06F1)} (want 0/1)`);
   if (m.ppu.fb.length !== 256 * 240) errs.push('framebuffer size');
   if (errs.length) { fails++; console.log('FAIL Machine smoke: ' + errs.join('; ')); } else {
     console.log(`ok   Machine smoke: 30 frames, main_state 2 -> 3, stubs ${JSON.stringify(m.stubHits)}; log: ${logs.join(' | ') || '-'}`);

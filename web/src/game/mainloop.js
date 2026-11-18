@@ -5,8 +5,8 @@
 // Multi-frame routines: a state handler may be a generator (function*). It `yield`s where the ROM waits
 // for the next NMI; step() resumes it on the next frame. A plain function = one frame of work.
 import { R } from './ram.js';
-import { readPadsMenu } from './pads.js';
 import { paletteUpload } from './palette.js';
+import { mainState2, mainState3 } from './states/title.js';
 
 // ---------------------------------------------------------------- main states (stubs)
 // Each entry: ROM address, name, handler(m). Stub bodies only do what REVERSE.md documents for the
@@ -16,10 +16,10 @@ const stub = (name) => (m) => { m.stubHits[name] = (m.stubHits[name] || 0) + 1; 
 export const MAIN_STATES = [
   { addr: '30:C957', name: 'state0_newgame', fn: stub('state0_newgame') },
   { addr: '30:CAB6', name: 'state1_gameplay', fn: stub('state1_gameplay') },   // -> SubstateHandlerTable[$41]
-  // state 2: MainState2Init (18:9FCC -> 19:A000) ends with INC main_state (REVERSE.md "State Machine")
-  { addr: '30:C931', name: 'state2_init', fn: (m) => { stub('state2_init')(m); m.wr(R.main_state, m.rd(R.main_state) + 1); } },
-  // state 3: ReadPadsMenu, then JMP MainState3 19:A015 (title / menus / name entry)
-  { addr: '30:C939', name: 'state3_title', fn: (m) => { readPadsMenu(m); stub('state3_title')(m); } },
+  // state 2: MainState2Init (18:9FCC -> 19:A000) ends with INC main_state (states/title.js, s82)
+  { addr: '30:C931', name: 'state2_init', fn: mainState2 },
+  // state 3: ReadPadsMenu, then JMP MainState3 19:A015 (title / menus / name entry; states/title.js, s82)
+  { addr: '30:C939', name: 'state3_title', fn: mainState3 },
   { addr: '30:C944', name: 'state4', fn: stub('state4') },                     // 17:A000, never reached in emu runs
   { addr: '30:C94C', name: 'state5', fn: stub('state5') },                     // 17:A100, never reached in emu runs
 ];

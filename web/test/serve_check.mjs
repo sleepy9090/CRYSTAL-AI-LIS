@@ -108,10 +108,12 @@ const m = globalThis.reC;
   const s = store.get(WRAM_KEY);
   const back = s ? new Uint8Array(Buffer.from(s, 'base64')) : null;
   const same = back && m && back.length === 0x2000 && back.every((v, i) => v === m.mem.wram[i]);
-  const ok = restored && same && back[0x1000] === 0x5A && back[0x0140] === 0xFF;
+  // pal_buf $6140: Reset fills $FF, then MainState2Init's MenuPalBlack 18:82B3 sets $0F (s82: state 2 ported);
+  // the opening's first 60 frames (step 0 wait $3C) leave it black
+  const ok = restored && same && back[0x1000] === 0x5A && back[0x0140] === 0x0F;
   if (!ok) bad++;
   console.log(`${ok ? 'ok  ' : 'FAIL'} save: WRAM restored from localStorage before Reset (${restored}), pagehide image = WRAM (${same}), ` +
-    `Reset's pal_buf $6140 = $FF in the stored image`);
+    `pal_buf $6140 = $0F (MenuPalBlack) in the stored image`);
 }
 const lit = lastImg ? lastImg.data.some((v, i) => (i & 3) !== 3 && v) : false;
 const okMain = m && m.frame >= 55 && blits > 0 && lastImg && !statusEl.textContent && Object.keys(BTN).length === 8;
