@@ -60,11 +60,12 @@ web/index.html
       │   ├─ util.js                  (s55, done) Rand64, ObjFindFree, ObjPosToTemp/TempToObjPos, TempAddOffset/Step,
       │   │                           DirToTarget, ObjStepVector, ObjDespawn, ObjBecomeNext, SpawnShot, ObjBgProbe
       │   ├─ ai_static.js             (s55, done) AIs $10 $11 $2C $4C/$4D $4E + AiShootCheck; AI_HANDLERS id → fn
-      │   ├─ objects.js               ObjUpdateAll (JSR $0010 dispatch; an AI returning true = "popped" → return), respawn tick
-      │   ├─ ai_table.js              ObjAiTable (128 ids) → JS functions; unported ids log once + despawn-safe no-op
+      │   ├─ objects.js               (s80, done) ObjUpdateAll generator (knockback, obj_freeze + HitSetFlag, JSR $0010
+      │   │                           dispatch; an AI returning true = "popped" → return) + AI_TABLE id → fn (unported
+      │   │                           ids log once and do nothing); AI $1A 30:CD8A still unported
       │   ├─ ai/*.js                  generic enemies, NPC/path, platforms, bosses (BossPhaseTable)
       │   ├─ player.js                PlayerMove (slot 0), PlayerUpdate (slot 1), sword/charge, PlayerMagic, SpendMp
-      │   ├─ move.js                  ObjStepVector, ObjMoveStep, BgProbePoints, ObjBgProbe, ObjScreenEdge
+      │   ├─ move.js                  (s80, done) ObjMoveSlide 26:98D7, ObjMoveStep (BgProbePoints), ObjScreenEdge
       │   ├─ collide.js               ObjCollideAll, HitboxTable, CollPairTable, HitPlayer, EnemyKilled, AddXp
       │   ├─ status.js                PlayerStatusTick (hazards, poison, regen, pit fall, invulnerability)
       │   └─ sprites.js               ObjSpriteDraw (4 draw orders), ObjDrawMeta, orbit ring/burst, OAM shadow $0200
@@ -183,7 +184,8 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 | ROM routine | Address | JS function | Module |
 |---|---|---|---|
 | `ObjInit` | `30:C25D` | `objInit(slot, type)` (applies `objtypes.json` column inits) | `obj/objects.js` |
-| `ObjUpdateAll`, `ObjAiTable` | `30:CCCC`, `27:A314` | `objUpdateAll()`, `AI[128]` | `obj/objects.js`, `obj/ai_table.js` |
+| `ObjUpdateAll`, `ObjAiTable`, `HitSetFlag` | `30:CCCC`, `27:A314`, `26:9011` | `objUpdateAll()`, `AI_TABLE`, `hitSetFlag()` (s80, done: fuzz 174/174 + gaps) | `obj/objects.js` |
+| `ObjMoveSlide`, `ObjMoveStep`, `ObjScreenEdge` | `26:98D7`, `26:9947`, `26:99FF` | `objMoveSlide()`, `objMoveStep()`, `objScreenEdge()` (s80, done: fuzz 200/200) | `obj/move.js` |
 | `BossPhaseDispatch`, `BossPhaseTable` | `15:A400`, `15:A413` | `bossPhase(slot)` | `obj/ai/boss.js` |
 | generic enemy AIs + helpers (`DirToTarget`, `AiShootCheck`, `SteerToward`) | bank 27 | `ai/enemies.js` | `obj/ai/` |
 | `PlayerMove` / `PlayerUpdate` / `PlayerMagic` / `SpendMp` | `26:9D9A` / `26:9B45` / `27:A022` / – | `playerMove()`, `playerUpdate()`, `playerMagic()`, `spendMp()` | `obj/player.js` |

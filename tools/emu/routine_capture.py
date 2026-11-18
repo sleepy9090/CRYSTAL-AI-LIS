@@ -136,7 +136,15 @@ ROUTINES = {
     'BgRowRender':    (None, 0xEB91, _poke_queue, None),
     'BgColRender':    (None, 0xEC87, _poke_queue, None),
     'FullScreenDraw': (None, 0xC831, _poke_queue, lambda r: {'a': r.choice([0, 1, r.randrange(256)])}),
+    # s80 (Ph7 web 5/8 (a)): the object loop + the slide/step mover it uses for knockback
+    'ObjMoveSlide':   (26, 0x98D7, _poke_bg, lambda r: {'x': r.choice([0, 0, 1, r.randrange(32)])}),
+    'ObjUpdateAll':   (None, 0xCCCC, _poke_bg, None),
 }
+# AI ids the port has (web/src/game/obj/ai_static.js) + ids whose ObjAiTable 27:A314 entry is 0
+PORTED_AIS = (0x10, 0x11, 0x2C, 0x4C, 0x4D, 0x4E)
+NULL_AIS = tuple(i for i in range(0x80) if i != 0x1A and not (_PRG[27 * 0x2000 + 0x314 + 2 * i] |
+                                                               _PRG[27 * 0x2000 + 0x315 + 2 * i]))
+HIT_FLAG_PARAMS = tuple(_PRG[26 * 0x2000 + 0x1045 + i] for i in range(10) if _PRG[26 * 0x2000 + 0x1045 + i])
 PPU_ROUTINES = ('PpuQueueFlush', 'BgRowRender', 'BgColRender', 'FullScreenDraw')
 
 
@@ -176,6 +184,29 @@ def _fix_case(name, ram, r, regs, wram=None):
     if name == 'FullScreenDraw':
         ram[0x0B] = ram[0x0A]                      # WaitPpuQueue: ring empty
         ram[0x01] &= ~0x18                         # rendering off: every row is flushed at once (else it waits for NMI)
+    if name == 'ObjMoveSlide':
+        ram[0x0360 + x] = r.choice([r.randrange(8), r.randrange(256)])
+        ram[0x0340 + x] = r.choice([8, r.randrange(16), r.randrange(256)])
+        ram[0x0460 + x] = r.choice([0, 6, 0x27, 0xFF, r.randrange(256)])
+        ram[0x0710] = r.choice([0, 0x40, r.randrange(256)])
+        if x == 0 and r.random() < 0.6:            # near the camera so ObjScreenEdge passes sometimes
+            ram[0x70] = (ram[0x02] + r.randrange(0x08, 0x100)) & 0xFF
+            ram[0xB0] = (ram[0x04] + r.randrange(0x10, 0xD8)) % 0xF0
+    if name == 'ObjUpdateAll':
+        for s in range(32):
+            ram[0x04A0 + s] = r.choice([0, 0, r.choice(PORTED_AIS), r.choice(NULL_AIS)]) | r.choice([0, 0, 0x80])
+            if r.random() < 0.3:
+                ram[0x0340 + s] = r.choice([0x80, 0xE0, 0xF0, r.randrange(256)])
+            elif r.random() < 0.8:
+                ram[0x0340 + s] &= 0x0F
+            ram[0x05A0 + s] = r.choice([0, 0, 0, 1, 2, r.randrange(256)])
+            ram[0x0540 + s] = r.choice([0, 1, 1, r.randrange(256)])
+            ram[0x0560 + s] = r.choice(HIT_FLAG_PARAMS + (r.randrange(256),))
+            if ram[0x04A0 + s] & 0x7F in (0x4C, 0x4D, 0x4E, 0x2C):
+                ram[0x0440 + s] = r.choice([0x40 + r.randrange(0x20), r.randrange(0x60)])
+            if ram[0x04A0 + s] & 0x7F in (0x10, 0x11) and r.random() < 0.5:
+                ram[0x0380 + s] &= 0x7F
+        ram[0x0710] = r.choice([0, 0x40, r.randrange(256)])
     if name in ('AiFanTurret', 'AiTurret', 'AiBurst', 'SpawnShot'):
         ram[0x0440 + x] = r.choice([0x40 + r.randrange(0x20), r.randrange(0x60)])
         if 'a' in regs:

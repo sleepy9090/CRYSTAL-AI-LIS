@@ -14,6 +14,13 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   `mirroring` and per case `ciram_after` + `ppu_ctrl`: the check compares the nametables and PPUCTRL too. They run
   with NMI/IRQ suppressed and the PPU's real mask = 0 (PPUDATA as in vblank), banks = the `$6E/$6F` shadows.
 
+- `fuzz_update.json` (s80): 200 cases each for `ObjMoveSlide` `26:98D7` (`obj/move.js`, slot 0 included for
+  `ObjScreenEdge`) and the whole object loop `ObjUpdateAll` `30:CCCC` (`obj/objects.js`; knockback, `obj_freeze`
+  + `HitSetFlag`, AI dispatch). Every slot gets AI 0, a ported id or an id with a null `ObjAiTable` entry (b7 random),
+  but objects spawned *during* the pass (shots, death types) can still run an unported AI: when the port logged
+  "AI $xx not ported" in a differing case, `obj_check.mjs` counts it as a gap, not a failure (`--verbose` lists them).
+  The gap count drops as AIs are ported; a gap case that still differs after its AI exists becomes a failure.
+
 Regenerate (about 10 s each):
 
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
@@ -21,5 +28,7 @@ Regenerate (about 10 s each):
         --out web/test/obj_frames/fuzz_static.json
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
         --routine PpuQueueFlush,BgRowRender,BgColRender,FullScreenDraw --out web/test/obj_frames/fuzz_bg.json
+    python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 \
+        --routine ObjMoveSlide,ObjUpdateAll --out web/test/obj_frames/fuzz_update.json
 
 `python3 -m tools.emu.routine_capture --list` shows the routines; `--routine A,B` captures a subset.

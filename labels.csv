@@ -1071,3 +1071,5 @@ bank,addr,name,comment
 30,C436,PpuNmiOn,s79: PPUCTRL <- ppuctrl_shadow | $80
 30,C43E,PpuNmiOff,s79: PPUCTRL <- ppuctrl_shadow & $7F
 30,C831,FullScreenDraw,s79: A=attr flag; pos_y_hi+1 then 30 x (WaitPpuQueue; 26:9824 with $31=-8; BgRowRender); banks restored; A!=0 -> PpuQueueAttrAll
+30,CD31,ObjKnockbackStep,s80: obj_flags2 += $10; slots != 1 with obj_active b7 clear: ObjMoveSlide in meta_dir>>4 at speed 8 (SetR6 $1A) + DEC obj_timer and skip the AI; wrap -> meta_dir &= $0F then AI runs
+30,CD7F,ObjUpdateAi1A,s80: AI $1A: JSR 30:CD8A (palette/IRQ sequence; waits on PPU queue + frames; obj_phase to $6A) then SwitchBank16($0D)
