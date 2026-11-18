@@ -843,6 +843,7 @@ bank,addr,name,comment
 16,9AEE,SaveLoadPage,s43: START in the SELECT menu (16:8149 when $07DD=0); clears $7000/$646A/$646B and prints GAME + slot rows
 16,9B3A,SaveLoadLoop,s43: per frame: SELECT/START exit; L/R toggle $646A b0 (save/load); B exit ($7000=$AB); A -> MenuSave or Load prompt
 16,9C7A,SaveLoadExit,s43: back to the SELECT menu (JMP 16:807E if $6424 else 16:807A)
+16,8232,MenuChrR1,s70: 4 bytes 3E 3A 3A 38 = chr_r1_alt per menu kind $6424 (R0 always $3C)
 26,9D9A,PlayerMove,s44: AI $03 slot 0 (type $06) ground body: pad -> obj_behav; jump timer $0620; PlayerMagic; sword charge; ObjMoveSlide; BG probe; conveyor
 26,9D81,PlayerMoveLocked,s44: AI $02 = PlayerMove with pad vars zeroed (cutscenes); area $58 -> AI $03 + pad_dir 4
 26,9BF6,PlayerSetSpeed,s44: slot 0 obj_flags2 low nibble = move speed by obj1_flash status (4 -> 2; b6 -> 9; b7 -> 5)
