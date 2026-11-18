@@ -226,7 +226,7 @@ bank,addr,name,comment
 *,62F0,visited_map,12 rows x 8 bits: visited screens of current area (automap)
 *,62FC,area_w,area width-1 in screens (sub-table 0)
 *,62FD,area_h,area height-1 in screens (sub-table 0)
-*,62FE,area_f62FE,sub-table 0 byte 3 (x8 at 31:E75E; TBD)
+*,62FE,area_f62FE,sub-table 0 byte 3 = BG CHR animation set 0-3 (0=off) for BgChrAnimTick 31:E75E; also boss rec +19 (15:B886), cleared by boss AI $E2 (15:A699)
 *,62FF,area_f62FF,sub-table 0 byte 4; b7 -> SetR6($0A) for map reads at 31:EBE5
 *,6300,screen_grid,8x16 screen ids of current area ($80 = none)
 *,64C0,screen_flags,WRAM persistent screen flags (area sub-table 4)
@@ -395,6 +395,8 @@ bank,addr,name,comment
 26,904F,HitFlagIds,flag ids (F0xx) for HitFlagParams
 26,9058,HitImmuneParams,20 params immune when obj_spawn_b2 == 1
 30,DD58,TestFlagF2F0,A+5 -> test flag F2F0+A+5
+31,E75E,BgChrAnimTick,s59: if $62FE!=0: chr_r1_play $07F1 = BgChrAnimTable[$62FE*8 + (($08>>3)&7)] (BG 2KB R1 swaps every 8 frames); called from SubstPlayTail
+31,E779,BgChrAnimTable,s59: 4x8 R1 values; set 1 = 0A 08 06 04 x2, set 2 = 26 26 24 24 22 22 20 20, set 3 = 20 22 24 26 x2 (set 0 unused)
 31,E7C4,AreaFollowerHook,area $1C: F053 & !F045 -> set F045 + slot 14 follower $0C; else clr F053
 14,826F,ItemGetHook,hook 0: store item $23 via 14:9B00 record; then result + set-list; chain next item
 14,82A0,InvStoreItem,count bit7 = fixed equip slot else first $FF slot; Crystalis merge; bracelet unequips ball
