@@ -103,13 +103,24 @@ local held = parse_keys(KEYS)
 local want, last = {}, 0
 for _, n in ipairs(CAPTURE) do want[n] = true; if n > last then last = n end end
 
+-- Per-frame trace (session 74, for tools/ref/drift_probe.py / tools/emu/lag_probe.py): one line per frame
+-- with the bytes that pin the frame phase: $40 $41 $06F0 $06F1 $06F3 $06FF $0617 $0008 $6423.
+-- A frame where $06FF did not change on the title = a lag frame.
+local TRACE = { 0x40, 0x41, 0x6F0, 0x6F1, 0x6F3, 0x6FF, 0x617, 0x08, 0x6423 }
+local tr = assert(io.open(OUTDIR .. "/trace.txt", "w"))
+tr:write("# frame $40 $41 $06F0 $06F1 $06F3 $06FF $0617 $0008 $6423\n")
+
 if emu_.speedmode then emu_.speedmode("maximum") end
 emu_.poweron()
 for n = 0, last do
   joypad.set(1, held[n] or {})
   emu_.frameadvance()
+  local t = { tostring(n) }
+  for _, ad in ipairs(TRACE) do t[#t + 1] = string.format("%02X", memory.readbyte(ad)) end
+  tr:write(table.concat(t, " ") .. "\n")
   if want[n] then capture(n, log) end
 end
+tr:close()
 log:close()
 print("re-c capture done: " .. OUTDIR)
 if emu_.exit then emu_.exit() end

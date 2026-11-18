@@ -670,13 +670,13 @@ bank,addr,name,comment
 *,0600,obj_phase,32 slots; AI phase/state (BossPhaseDispatch index); also speed bit pattern / pause count in walker AIs
 *,0603,obj_phase_s03,slot 0x03 of obj_phase; auto (ram_map.py s29): r4 w3 banks 26;27
 *,060D,obj_phase_s0D,slot 0x0d of obj_phase; auto (ram_map.py s29): r1 w3 banks 14;30
-*,0617,ram_0617,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r1 w2 banks 19
+*,0617,status_anim_ctr,s74: status-screen countdown (title_mode 4): DEC at 19:A259 when title_ctr & 7 = 0; step 1 waits for 5 / step 2 for 0
 *,0618,ram_0618,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r2 w3 banks 17;19
 *,061F,ram_061F,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r1 w2 banks 19
 *,0620,obj_timer2,32 slots; secondary AI timer (e.g. chest monster wander)
 *,0623,obj_timer2_s03,slot 0x03 of obj_timer2; auto (ram_map.py s29): r22 w10 banks 15;19;26;27;30
-*,0627,ram_0627,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r2 w3 banks 19
-*,0628,ram_0628,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r1 w3 banks 19
+*,0627,status_anim_frame,s74: status-screen 7-sprite strip frame index (19:A212; tiles 19:9908 + frame*8; $FF entry = loop target)
+*,0628,title_blink_timer,s74: per-slot countdown (19:A1EC DEC; reload from $06C2 at 19:A1E3; $0628-$062B used in name entry); frozen by START
 *,062D,obj_timer2_s0D,slot 0x0d of obj_timer2; auto (ram_map.py s29): r0 w3 banks 27;30
 *,062E,obj_timer2_s0E,slot 0x0e of obj_timer2; auto (ram_map.py s29): r0 w3 banks 27;30
 *,062F,ram_062F,title/menu/state-2-3 reuse of the object-column area; auto (ram_map.py s29): r1 w2 banks 19
@@ -704,7 +704,7 @@ bank,addr,name,comment
 *,06FC,ram_06FC,auto (ram_map.py s29): r0 w6 banks 19
 *,06FD,ram_06FD,auto (ram_map.py s29): r0 w6 banks 19
 *,06FE,ram_06FE,auto (ram_map.py s29): r2 w4 banks 18;19
-*,06FF,ram_06FF,auto (ram_map.py s29): r9 w6 banks 18;19
+*,06FF,title_ctr,s74: state-2/3 pass counter (DEC once per MainState3 pass from f3); a frame without its write = lag frame (tools/emu/lag_probe.py)
 *,0703,gold_hi,gold hi byte
 *,0705,xp_hi,XP hi byte
 *,0707,xp_next_hi,XP-for-next-level hi byte
@@ -1015,3 +1015,7 @@ bank,addr,name,comment
 19,AAF1,OpeningPage4,s69: opening step 20: page 19:AB1E (BG set 4) + fade-in
 19,AB81,OpeningPage4Anim,s69: opening step 21: sprite step every 4 frames until $06FE runs out
 19,B162,DateCardRectPtr,s69: ptr word -> 19:B164 NtRectBlit stream W=30 H=3 ('1997 October 1' / 'The END DAY'); ends at 19:B1C0
+19,A092,PpuQueueDrainWait,s74: spin until tmp_0A = tmp_0B (NMI drained the PPU queue) then reset both; at each text-line end of status step 3 this costs a 2-frame lag
+19,A212,StatusAnimTick,s74: title_mode 4 per frame: 7-sprite strip at OAM $58 from 19:9908; every 8th pass (title_ctr & 7) DEC status_anim_ctr + next frame
+19,A34E,StatusTypeStep,s74: status step 3: types one text cell every 2nd pass (title_ctr b0) via PpuQueueDrainWait
+*,6423,name_entry_frames,s74: INC per NameEntryInput pass (19:A3F6); cleared at 19:A3F2; saved (mirrors $6D23/$7D23 -> save_checksum $70F4/$70F5)

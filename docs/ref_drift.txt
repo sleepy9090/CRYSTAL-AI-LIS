@@ -1,0 +1,80 @@
+drift_probe.py: ref frame N <-> emu frame N+d, d in +-12; diffs exclude stack page, OAM page and sample-point bytes; RAM fill fceux, WRAM zero
+
+== ref 120: best d=-4 (0 diffs); top5 -4:0 -12:1 -11:1 -10:1 -9:1
+   ram_06FF             ref=4F moving; match d=[-4]
+== ref 600: best d=+3 (9 diffs); top5 +3:9 -3:10 -6:11 -4:11 -5:12
+   ram_06FF             ref=81 moving; match d=[-3]
+   ram_0628             ref=01 moving; match d=[-6, -3, 0, 3]
+== ref 1200: best d=-3 (0 diffs); top5 -3:0 -4:3 -5:4 -2:4 +0:8
+   ram_06FF             ref=2A moving; match d=[-3]
+== ref 1450: best d=+0 (3 diffs); top5 +0:3 -1:4 -3:5 -6:6 -5:7
+   ram_06FF             ref=33 moving; match d=[-3]
+   $06B4                ref=96 moving; match d=[-12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0]
+== ref 1500: best d=-3 (2 diffs); top5 -3:2 +0:3 +3:3 +6:3 -12:5
+   ram_06FF             ref=01 moving; match d=[-3]
+   $06B4                ref=67 moving; match d=[-3]
+== ref 2250: best d=+0 (7 diffs); top5 +0:7 +5:9 +7:10 +2:11 +3:11
+   ram_06FF             ref=1F moving; match d=[-3]
+   ram_0628             ref=0E moving; match d=[0]
+   name_frames $6423    ref=08 moving; match d=[5]
+== ref 2352: best d=+1 (17 diffs); top5 +1:17 +3:37 +2:39 +5:52 +4:54
+   tmp_08               ref=FE moving; match d=[0]
+== ref 2385: best d=+1 (17 diffs); top5 +1:17 -1:44 +0:46 -2:47 +5:47
+   tmp_08               ref=DD moving; match d=[0]
+== ref 2392: best d=+0 (16 diffs); top5 +0:16 +1:16 +3:17 +4:17 +2:20
+   tmp_08               ref=D7 moving; match d=[-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+== ref 2409: best d=+1 (46 diffs); top5 +1:46 +2:73 +0:78 +3:78 +4:85
+== ref 2450: best d=+1 (17 diffs); top5 +1:17 +3:42 +2:48 -3:53 -5:54
+   tmp_08               ref=C7 moving; match d=[0]
+== ref 2460: best d=+1 (22 diffs); top5 +1:22 -1:84 +3:89 +0:92 +2:96
+   tmp_08               ref=BD moving; match d=[0]
+
+tools.emu event log (frame end values):
+   f    0 main_state -- -> 02
+   f    0 sub_state  -- -> 00
+   f    0 $06F3      -- -> 00
+   f    0 $06F0      -- -> 00
+   f    0 area       -- -> FF
+   f    3 $06F3      00 -> 01
+   f   25 $06F3      01 -> 00
+   f  195 $06F3      00 -> 02
+   f  211 $06F3      02 -> 00
+   f  214 main_state 02 -> 03
+   f  276 $06F3      00 -> 01
+   f  302 $06F3      01 -> 00
+   f  423 $06F3      00 -> 02
+   f  442 $06F3      02 -> 00
+   f  473 $06F3      00 -> 01
+   f  502 $06F3      01 -> 00
+   f  808 $06F3      00 -> 02
+   f  826 $06F3      02 -> 00
+   f  858 $06F3      00 -> 01
+   f  887 $06F3      01 -> 00
+   f 1188 $06F3      00 -> 02
+   f 1207 $06F3      02 -> 00
+   f 1239 $06F3      00 -> 01
+   f 1264 $06F3      01 -> 00
+   f 1400 $06F3      00 -> 02
+   f 1400 $06F0      00 -> 05
+   f 1420 $06F3      02 -> 00
+   f 1423 $06F3      00 -> 01
+   f 1423 $06F0      05 -> 06
+   f 1450 $06F3      01 -> 00
+   f 1600 $06F0      06 -> 01
+   f 1602 $06F0      01 -> 02
+   f 1700 $06F0      02 -> 03
+   f 1703 $06F0      03 -> 04
+   f 1806 $06F3      00 -> 01
+   f 1840 $06F3      01 -> 00
+   f 2224 $06F3      00 -> 01
+   f 2246 $06F3      01 -> 00
+   f 2301 $06F3      00 -> 02
+   f 2318 $06F3      02 -> 00
+   f 2319 main_state 03 -> 00
+   f 2321 main_state 00 -> 01
+   f 2321 area       FF -> 00
+   f 2350 sub_state  00 -> 08
+   f 2391 sub_state  08 -> 01
+   f 2391 area       00 -> 01
+   f 2435 sub_state  01 -> 08
+   f 2445 $06F0      04 -> 00
