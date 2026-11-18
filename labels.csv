@@ -1032,3 +1032,37 @@ bank,addr,name,comment
 27,AFED,PlatformProbeOfs,s77: 4 x (dx;dy) signed by dir&6: (0;-24) (12;0) (0;8) (-12;0)
 27,AFF5,AiCrumblePlatform,s77: AI $3C (type $9F): AiPitShuttle + once ridden then left: obj_coll 0; meta $B7; obj_anim countdown (SFX $64 at $1E); despawn at 0
 15,BF7F,DebugItemTable,s77: 24 item ids for DebugPauseCheat (00-03 15-18 0D-10 06 08 0A 0C 1D-24)
+26,90AA,HitByPlayerShot,s78: HitHandlerTable 0: need player_level >= hitflags&$1F; dmg = $03E1 + shot atk - def; elem nibble overlap = immune; miss kills shot + SFX $3A
+26,9229,ThunderTransform,s78: equip_sword 4 + target spawn_b2 0 + param 0/3 -> ObjInit(target; obj_behav) and abort the hit
+26,9082,HitRevealA7,s78: target meta $A7 (type $7B): only shot hitflags 3 -> ObjInit(death type $4F)
+26,9094,HitElemWall,s78: target obj_active $87 (types D0-D3): elem passes + shot hitflags != 1 -> EnemyKilled
+26,906C,HitShotEater,s78: HitHandler3 with attacker phase 1: target enemy shot -> removed; SFX $3A
+26,907C,IsEnemyShot,s78: Z = (obj_spawn_b2;Y == $FF)
+26,94A2,TalkProbeItemUse,s78: target AI $78/$6E while sub_state 8 -> $0623 = target; sub_state 7
+26,94B0,TalkProbeHit,s78: HitHandlerTable 2 (slot 3 probe): item use on AI $78/$6E; talk to AI $30 NPCs (solid b2 push-back)
+26,9508,TalkStart,s78: obj_phase_s03 = $10; $0623 = NPC; sub_state $11; NPC faces player if obj_behav b1
+26,9535,NpcPushBack,s78: solid NPC (obj_behav b2): 4 passes push slots 3..0 opposite player facing while touching
+26,8BDE,GoldDropTable,s78: u16[16] gold by obj_elem_drop hi: 0 1 2 4 8 16 30 50 100 200 400 50 100 200 400 500
+26,8BFE,CoinMetaTable,s78: u8[16] coin meta by drop class: A8 x11; A9 x4; AA
+27,B9AA,DeathPuff,s78: AI $7D: 16f jitter then fade (meta $AC); drop class != 0 -> SpawnShot($3F) coin type $0C
+27,B778,AiCoin,s78: AI $7B coin: anim -= 2; obj_timer lifetime -> ObjBecomeNext
+15,A4FB,BossE0Spots,s78: u8[16] teleport cells (hi nibble x/16; lo nibble y/16) by $08&$0F
+15,A5A2,BossE0Fire,s78: when obj_aux&3=0: 2 x SpawnShot(obj_shot_id) with param1 dx +-2 and param2 dy +-4
+15,A5D5,BossSmokeRing,s78: 8 x SpawnShot($3C) (type $C0) with obj_freeze 8..1
+15,A5EE,BossHomingShot,s78: AI $61 (types $BC $C1): velocity param1/param2 +-1 per 8f toward player; clamp +-3; despawn offscreen
+15,A602,HomingMove,s78: AI $61 body (also used by boss $E8 toward a slot-$1F waypoint)
+15,A665,ClampVel3,s78: clamp signed A to -3..+3
+15,A73C,BossBuildParts,s78: Y = table index: place slots $0E+ from 15:A814 (x;y;meta) and ObjInit type $C2 until $FF
+15,A84D,BossE2Attack,s78: orbit_level countdown: every 8f SpawnShot($3A) down or (Rand64=0) minion $39
+15,A8FF,BossEBMove,s78: step self + slots $0E-$12 by ObjStepVector; slot $13 opposite; part anims from slot $13
+15,AA89,BossE3NewDir,s78: dir = 15:AA9F[Rand64] (3/4/5 downward); phase--
+15,AB25,TurnToward16,s78: obj_act_timer turns 1 step toward A (sign table 15:AD86)
+15,AB3E,BossRockShot,s78: AI $64 (type $C5): random offset from ROM bytes (SetR6(Rand64)); wait; rise 32f; then AI $10 aimed +-22.5 deg
+15,AEBA,BossE7Step,s78: ObjPosToTemp + ObjStepVector(dir) + TempAddStep + TempToObjPos (no BG test)
+15,AF28,BossE7BounceDirs,s78: u8[32] new 16-dir heading by edge*8 + Rand64 (top/right/bottom/left)
+15,B02B,BossE8Route,s78: (x cell; y byte) waypoint pairs; FF = leg end (attack); FE = restart
+15,B4C8,BossBgCycle,s78: BossBgStrip(obj_behav); obj_behav = (obj_behav+1) mod 10
+15,B618,BossEBSetElem,s78: A -> obj_elem_drop of slots $0D-$13 (0 = vulnerable in phase 5; $0F = immune)
+15,B623,BossEBFlame,s78: every 4f 2 x SpawnShot($2E zp) at x -+$12; dir obj_act_timer + wobble 15:B672
+15,B6A3,BossEBEdgeBounce,s78: mirror 16-dir heading (15:B50C) at x < $38 (moving left) or >= $D8 (moving right)
+15,B71D,BossEBHandsIdle,s78: slot $10/$11 meta = $E9/$E7
