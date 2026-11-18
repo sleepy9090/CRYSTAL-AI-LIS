@@ -36,6 +36,11 @@ export function setR7(m, v) {
   m.wr(0x6F, v); m.wr(0x50, 7); m.prgR7 = m.rd(0x6F);
 }
 
+/** SwitchBank16 30:C40E: $6E = 2n, SetR7(2n+1), SetR6(2n) ($50 ends as 6) */
+export function switchBank16(m, n) {
+  m.wr(0x6E, n << 1); setR7(m, (n << 1) | 1); setR6(m, n << 1);
+}
+
 export function farRestore(m, r6, r7) {
   setR7(m, r7); setR6(m, r6);
 }

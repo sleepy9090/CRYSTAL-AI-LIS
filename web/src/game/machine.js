@@ -13,6 +13,7 @@ import { Apu } from '../nes/apu.js';
 import { cpuRd } from './prg.js';
 import { sndInit } from './sound/driver.js';
 import { soundUpdate } from './sound/soundupdate.js';
+import { ppuQueueFlush } from './world/ppuqueue.js';
 
 export const FRAME_HZ = 60.0988;       // NTSC: 39375000/11/341/262*3 ≈ 60.0988 (odd-frame skip ignored)
 const FRAME_CYCLES3 = 341 * 262;       // CPU cycles per frame × 3 (= 29780.67 cycles)
@@ -34,8 +35,8 @@ export class Machine {
     this.irqSplits = [];
     this.pending = null;
     this.frame = 0;
-    // hooks filled by later tasks (Ph7 web 4/8: ppuqueue.js)
-    this.ppuQueueFlush = () => {};
+    // PpuQueueFlush 30:C67D (world/ppuqueue.js, s79), called by the NMI at F40A
+    this.ppuQueueFlush = ppuQueueFlush;
     // sound (7/8, s56-57): SoundUpdate 31:F7FE + the APU. Register writes take effect at once; the APU is
     // advanced one frame of CPU cycles at the end of runFrame (the driver writes once or twice per frame, so
     // only the phase within the frame differs from hardware).

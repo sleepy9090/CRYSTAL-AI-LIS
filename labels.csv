@@ -1066,3 +1066,8 @@ bank,addr,name,comment
 15,B623,BossEBFlame,s78: every 4f 2 x SpawnShot($2E zp) at x -+$12; dir obj_act_timer + wobble 15:B672
 15,B6A3,BossEBEdgeBounce,s78: mirror 16-dir heading (15:B50C) at x < $38 (moving left) or >= $D8 (moving right)
 15,B71D,BossEBHandsIdle,s78: slot $10/$11 meta = $E9/$E7
+30,C72B,PpuQueueWaitSrc,s79: spin while any $6200 ring record has src byte == A (A=0 row buffer $6000 / $20 column buffer $6020)
+30,C739,PpuQueueAttrAll,s79: INC nmi_disable; queue record $23C0 len $BF (attribute path) src 0; DEC nmi_disable
+30,C436,PpuNmiOn,s79: PPUCTRL <- ppuctrl_shadow | $80
+30,C43E,PpuNmiOff,s79: PPUCTRL <- ppuctrl_shadow & $7F
+30,C831,FullScreenDraw,s79: A=attr flag; pos_y_hi+1 then 30 x (WaitPpuQueue; 26:9824 with $31=-8; BgRowRender); banks restored; A!=0 -> PpuQueueAttrAll

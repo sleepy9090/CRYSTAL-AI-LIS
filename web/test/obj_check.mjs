@@ -12,6 +12,8 @@ import { objInit } from '../src/game/obj/objinit.js';
 import { playSound } from '../src/game/playsound.js';
 import { dirToTarget, spawnShot, objBgProbe } from '../src/game/obj/util.js';
 import { aiStraightMover, aiDirShot, aiBurst, aiFanTurret, aiTurret } from '../src/game/obj/ai_static.js';
+import { ppuQueueFlush } from '../src/game/world/ppuqueue.js';
+import { bgRowRender, bgColRender, fullScreenDraw, runNow } from '../src/game/world/bgstream.js';
 
 const WEB = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const verbose = process.argv.includes('--verbose');
@@ -31,6 +33,11 @@ const RUN = {
   AiBurst: (m, r) => { aiBurst(m, r.x); },
   AiFanTurret: (m, r) => aiFanTurret(m, r.x),
   AiTurret: (m, r) => { aiTurret(m, r.x); },
+  // s79 (Ph7 web 4/8 (a)): these cases also carry ciram_after / ppu_ctrl (nametables + PPUCTRL compared)
+  PpuQueueFlush: (m) => { ppuQueueFlush(m); },
+  BgRowRender: (m) => { runNow(bgRowRender(m)); },
+  BgColRender: (m) => { runNow(bgColRender(m)); },
+  FullScreenDraw: (m, r) => { runNow(fullScreenDraw(m, r.a)); },
 };
 
 const dir = path.join(WEB, 'test/obj_frames');
@@ -50,8 +57,22 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith('.json')).sort()) {
     m.prgR6 = ram[0x6E]; m.prgR7 = ram[0x6F];        // capture sets them = the mapping nes.call used (bank calls)
     const wantR = Uint8Array.from(ram), wantW = Uint8Array.from(wram);
     for (const [a, v] of c.after) { if (a < 0x800) wantR[a] = v; else wantW[a - 0x6000] = v; }
+    let wantC = null;
+    if (c.ciram_after) {                                // PPU routines: CIRAM from the base, ctrl = ppuctrl_shadow
+      m.ppu.vram.set(Buffer.from(j.ciram_base, 'hex'));
+      m.ppu.mirroring = j.mirroring;
+      m.ppu.ctrl = ram[0x00]; m.ppu.w = 0;
+      wantC = Uint8Array.from(m.ppu.vram);
+      for (const [i, v] of c.ciram_after) wantC[i] = v;
+    }
     let err = '', popped = false;
     try { popped = !!RUN[c.routine](m, c.regs); } catch (e) { err = e.message; }
+    if (wantC) {
+      let nc = 0, first = '';
+      for (let i = 0; i < 0x800; i++) if (m.ppu.vram[i] !== wantC[i]) { if (!nc++) first = ` first CIRAM $${hx(i, 3)} port ${hx(m.ppu.vram[i])} emu ${hx(wantC[i])}`; }
+      if (nc) err += `${nc} CIRAM byte(s) differ${first}; `;
+      if (m.ppu.ctrl !== c.ppu_ctrl) err += `PPUCTRL port ${hx(m.ppu.ctrl)} emu ${hx(c.ppu_ctrl)}; `;
+    }
     const lo = 0x100 + Math.max(0, c.sp - 15), hi = 0x100 + Math.min(0xFF, c.sp + 4), diffs = [];
     for (let a = 0; a < 0x800; a++) {
       if (a >= lo && a <= hi) continue;

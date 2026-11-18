@@ -88,6 +88,32 @@ def _poke_bg(ram, wram, r):
     ram[0x34] = r.randrange(256); ram[0x35] = r.randrange(8); ram[0x36] = r.randrange(0xF0); ram[0x37] = r.randrange(8)
 
 
+TILESETS = (0x80, 0x84, 0x88, 0x8C, 0x90, 0x94, 0x98, 0x9C, 0xA0, 0xA4, 0xA8, 0xAC)   # k1 $67 values in use
+
+
+def _poke_queue(ram, wram, r):
+    """s79: PPU queue ring $6200 ($0A/$0B, 8 records), BG buffers $6000/$6100, tileset $66/$67, flags"""
+    _poke_bg(ram, wram, r)
+    ram[0x00] = r.choice([0x88, 0x8C, 0x08, r.randrange(256)])
+    ram[0x01] = r.choice([0, 0x18, 0x1E, r.randrange(256)])
+    ram[0x0A], ram[0x0B] = r.randrange(8) * 4, r.randrange(8) * 4
+    for i in range(8):
+        wram[0x200 + 4 * i] = r.choice([0x20, 0x21, 0x22, 0x23, 0x60, r.randrange(256)]) | r.choice([0, 0, 0x80])
+        wram[0x201 + 4 * i] = r.randrange(256)
+        wram[0x202 + 4 * i] = r.choice([0x20, 0x1E, 0xBF, 0, r.randrange(256), r.randrange(256)])
+        wram[0x203 + 4 * i] = r.choice([0xFF, 0, 0x20, r.randrange(256)])
+    for i in range(0x40):
+        wram[i] = r.randrange(256)
+    for i in range(0x40):
+        wram[0x100 + i] = r.randrange(256)
+    wram[0x2FF] = r.choice([0, 0x80, r.randrange(256)])
+    ram[0x66] = r.choice([0, 0, 0, r.randrange(256)])
+    ram[0x67] = r.choice(TILESETS) | r.randrange(4)
+    ram[0x0744] = r.choice([0, 8, r.randrange(256)])
+    ram[0x2F] = r.choice([0, 0, r.randrange(256)])
+    ram[0x60] = 0
+
+
 def _slot(r):
     return r.randrange(0x0D, 0x1F)
 
@@ -105,10 +131,16 @@ ROUTINES = {
     'AiBurst':        (26, 0xACC0, _poke_obj, lambda r: {'x': _slot(r)}),
     'AiFanTurret':    (26, 0xB595, _poke_obj, lambda r: {'x': _slot(r)}),
     'AiTurret':       (26, 0xB5D9, _poke_obj, lambda r: {'x': _slot(r)}),
+    # s79 (Ph7 web 4/8 (a)): PPU queue + BG streaming; PPU_ROUTINES also record CIRAM and run without NMI/IRQ
+    'PpuQueueFlush':  (None, 0xC67D, _poke_queue, None),
+    'BgRowRender':    (None, 0xEB91, _poke_queue, None),
+    'BgColRender':    (None, 0xEC87, _poke_queue, None),
+    'FullScreenDraw': (None, 0xC831, _poke_queue, lambda r: {'a': r.choice([0, 1, r.randrange(256)])}),
 }
+PPU_ROUTINES = ('PpuQueueFlush', 'BgRowRender', 'BgColRender', 'FullScreenDraw')
 
 
-def _fix_case(name, ram, r, regs):
+def _fix_case(name, ram, r, regs, wram=None):
     """routine-specific pokes that keep a case on a meaningful path"""
     x = regs.get('x')
     if name == 'ObjInit':
@@ -135,6 +167,15 @@ def _fix_case(name, ram, r, regs):
         ram[0x0340 + x] = r.choice([r.randrange(16), r.randrange(256)])
     if name == 'AiTurret' and r.random() < 0.5:
         ram[0x04E0 + x] = r.choice([0x01, 0x11, 0x21])
+    if name in ('BgRowRender', 'BgColRender', 'FullScreenDraw'):
+        # no ring slot may hold the routine's src byte: 30:C72B scans all 8 slots (stale ones too) and would spin
+        src = 0x20 if name == 'BgColRender' else 0
+        for i in range(8):
+            if wram[0x203 + 4 * i] == src:
+                wram[0x203 + 4 * i] = 0xFF
+    if name == 'FullScreenDraw':
+        ram[0x0B] = ram[0x0A]                      # WaitPpuQueue: ring empty
+        ram[0x01] &= ~0x18                         # rendering off: every row is flushed at once (else it waits for NMI)
     if name in ('AiFanTurret', 'AiTurret', 'AiBurst', 'SpawnShot'):
         ram[0x0440 + x] = r.choice([0x40 + r.randrange(0x20), r.randrange(0x60)])
         if 'a' in regs:
@@ -182,6 +223,7 @@ def run(nes, a):
 
     def grab(n):
         base['ram'], base['wram'] = bytes(n.bus.ram), bytes(n.bus.wram)
+        base['ciram'] = bytes(n.ppu.ciram)
         raise Stop('base')
     nes.on_exec(None, OBJ_UPDATE_ALL, grab)
     try:
@@ -203,25 +245,43 @@ def run(nes, a):
             ram, wram = bytearray(base['ram']), bytearray(base['wram'])
             poke(ram, wram, r)
             regs = regf(r) if regf else {}
-            _fix_case(name, ram, r, regs)
+            _fix_case(name, ram, r, regs, wram)
             if bank is not None:                  # shadows as ObjUpdateAll's SwitchBank16($0D) leaves them
                 ram[0x6E], ram[0x6F], ram[0x50] = bank & ~1, bank | 1, 6
             nes.bus.ram[:] = ram
             nes.bus.wram[:] = wram
+            ppu_case = name in PPU_ROUTINES
+            if ppu_case:                          # s79: fresh CIRAM, PPU latch clear, banks = the RAM shadows,
+                nes.ppu.ciram[:] = base['ciram']  # no NMI (ppu.cpu unhooked) and no mapper IRQ during the call
+                nes.ppu.w = 0
+                nes.ppu.ctrl = ram[0x00]          # (the port starts from the same: ctrl = ppuctrl_shadow)
+                nes.ppu.mask = 0                  # PPUDATA as in vblank / rendering off (no mid-frame $2007 glitch)
+                nes.mapper.regs[6], nes.mapper.regs[7] = ram[0x6E], ram[0x6F]
+                nes.mapper._update_prg()
+                nes.mapper.irq_enabled = nes.mapper.irq_pending = False
+                nes.cpu.irq_flags = 0
+                ppu_cpu, nes.ppu.cpu = nes.ppu.cpu, None
             i0 = ints.n
             sp = (nes.cpu.s - 4) & 0xFF          # S at the first instruction (2 return addresses pushed)
             try:
-                how = call2(nes, addr, bank, regs)
+                how = call2(nes, addr, bank, regs, 400_000 if ppu_case else 200_000)
             except Stop:
                 continue
+            finally:
+                if ppu_case:
+                    nes.ppu.cpu = ppu_cpu
             if ints.n != i0:
                 continue
-            cases.append({'name': f'{name}#{seed - 1}', 'routine': name, 'regs': regs, 'sp': sp, 'ret': how,
-                          'ram': bytes(ram).hex(),
-                          'wram': [[0x6000 + i, v] for i, v in enumerate(wram) if v != base['wram'][i]],
-                          'after': _diff(bytes(ram) + bytes(wram), nes.bus.ram, nes.bus.wram, sp)})
+            case = {'name': f'{name}#{seed - 1}', 'routine': name, 'regs': regs, 'sp': sp, 'ret': how,
+                    'ram': bytes(ram).hex(),
+                    'wram': [[0x6000 + i, v] for i, v in enumerate(wram) if v != base['wram'][i]],
+                    'after': _diff(bytes(ram) + bytes(wram), nes.bus.ram, nes.bus.wram, sp)}
+            if ppu_case:
+                case['ciram_after'] = [[i, v] for i, v in enumerate(nes.ppu.ciram) if v != base['ciram'][i]]
+                case['ppu_ctrl'] = nes.ppu.ctrl
+            cases.append(case)
             got += 1
-    return cases, base['wram']
+    return cases, base
 
 
 def main(argv=None):
@@ -242,13 +302,17 @@ def main(argv=None):
         ap.error('--load-state and --out are required')
     nes = NES()
     state.load(nes, a.load_state)
-    cases, wram = run(nes, a)
+    cases, base = run(nes, a)
     d = os.path.dirname(a.out)
     if d:
         os.makedirs(d, exist_ok=True)
     src = f'fuzz {os.path.basename(a.load_state)} frames={a.frames} seed={a.seed}'
+    out = {'source': src, 'wram_base': base['wram'].hex(), 'cases': cases}
+    if any('ciram_after' in c for c in cases):
+        out['ciram_base'] = base['ciram'].hex()
+        out['mirroring'] = nes.mapper.mirroring
     with open(a.out, 'w') as f:
-        json.dump({'source': src, 'wram_base': bytes(wram).hex(), 'cases': cases}, f, separators=(',', ':'))
+        json.dump(out, f, separators=(',', ':'))
     print(f'{len(cases)} case(s), {sum(len(c["after"]) for c in cases)} changed bytes -> {a.out}')
 
 

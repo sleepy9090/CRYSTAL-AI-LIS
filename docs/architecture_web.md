@@ -50,8 +50,9 @@ web/index.html
       │   └─ substates.js             SubstateHandlerTable (40) → handler functions; substate banks are irrelevant
       ├─ src/game/world/
       │   ├─ area.js                  AreaLoad, LoadAreaChrRecord, spawn handlers 0-4, AreaLoadMap, k1-k5, AreaEntryTable
-      │   ├─ bg.js                    ScreenPagePtr, ScreenTileSubst, MetatileExpand, MetatileAttr, row/col render
-      │   ├─ ppuqueue.js              PPU queue ring $6200 (records as in the ROM) + PpuQueueFlush into ppu.js
+      │   ├─ bg.js                    ScreenPagePtr, ScreenTileSubst, MetatileExpand, MetatileAttr (static area render)
+      │   ├─ bgstream.js              BgRowRender, BgColRender, FullScreenDraw 30:C831 (generators; s79)
+      │   ├─ ppuqueue.js              PPU queue ring $6200 (records as in the ROM) + PpuQueueFlush into ppu.js (s79)
       │   ├─ camera.js                CameraUpdate, CameraFollow, CameraClampX, scroll copy $07D8-$07DB
       │   └─ exits.js                 ExitLookup (k3), AreaPitFall, AreaEdgeLink (k5), visited bitmap $62F0
       ├─ src/game/obj/
@@ -131,7 +132,8 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 | `NMI` | `31:F3B6` | `mainloop.nmiWork()` | `game/mainloop.js` |
 | `NmiModeDispatch` / `JmpTable31_F6C2` | `31:F6AD` / `31:F6C2` | `NMI_MODES[irq_mode]` | `game/mainloop.js` |
 | `IRQ`, `SetIrqHandler`, `IrqHandlerTable` | `31:F443`, `31:F424`, `31:F433` | `setIrqHandler(i)` → split list entries for `ppu.js` | `game/mainloop.js` |
-| `PpuQueueFlush` | `30:C67D` | `ppuqueue.flush(ppu)` | `game/world/ppuqueue.js` |
+| `PpuQueueFlush`, `PpuQueueWaitSrc`, `PpuQueueAttrAll` | `30:C67D`, `30:C72B`, `30:C739` | `ppuQueueFlush(m)` (= `Machine.ppuQueueFlush`), `queueHasSrc`, `queueAttrAll` | `game/world/ppuqueue.js` |
+| `BgRowRender`/`ScreenRowRender`, `BgColRender`, `FullScreenDraw` | `31:EB91`/`EBC1`, `31:EC87`, `30:C831` | `bgRowRender(m)`, `bgColRender(m)`, `fullScreenDraw(m, a)` (generators) | `game/world/bgstream.js` |
 | `PaletteUpload` | `31:F8CB` | `palette.upload(ppu)` | `game/palette.js` |
 | `PaletteBuild`, fades | `26:8C0E`, `26:8C3D/8C49` | `palette.build()`, `palette.fadeOut/In()` | `game/palette.js` |
 | `ApplyChrPlay` / `ApplyChrAlt` | `31:F883` / – | `ppu.setChr(R0..R5)` from `$07F0-$07F5` / `$58-$5D` | `game/mainloop.js` |
