@@ -975,3 +975,20 @@ bank,addr,name,comment
 31,FE01,ShopDoorOpen,s64: dead (no callers; stubbed by FE00 RTS): irq_mode=4; $58 = $0B down to 6; 4 frames per step
 31,FE17,ShopDoorCloseStub,s64: bare RTS called by ShopWalkOut 30:DA72; the real body FE18 (irq_mode 4; $58 6->1) is disabled
 31,FE18,ShopDoorClose,s64: dead (no callers; stubbed by FE17 RTS): irq_mode=4; $58 = 6 down to 1; 4 frames per step
+18,8198,WaitFrameReady,s69: spin until frame_ready $09 != 0; clear it (bank 18 screen-setup library)
+18,81D8,OamHideAll18,s69: oam_y = $F0 for every sprite from OAM 0 (from 4 when irq_mode is not 0/3)
+18,80E7,SceneMetaDraw,s69: cut-scene metasprite: $72 = id (State3PtrTable_8F3B[$72*2]) at x $88 / y $89; $06C5=4 $06C7=0; the intro tower etc.
+18,82B3,MenuPalBlack,s69: pal_buf $6140-$615F = $0F (all black)
+18,82F1,MenuPalApply,s69: copy $06D0-$06EF (MenuPalLoad result) -> pal_buf
+18,82FD,MenuPalFadeIn,s69: pal_buf = $06D0-$06EF & $0F (darkest step); state3_mode = 1 = fade-in
+19,A7F6,OpeningDateCard,s69: opening step 2: NtFill $2000; date-card text 30x3 (DateCardRect) at $21A0 bias 0; BG set 0; fade-in; wait $78
+19,A843,OpeningPage1,s69: opening step 6: R2-R5=$7C R1=$16; picture/text page drawn at 19:A859; BG set 0
+19,A8D2,OpeningPage1Anim,s69: opening step 7: SceneMetaDraw ($72/$73 from $0618/$0620; pos $80/$10) until done
+19,A92D,OpeningPage1Flash,s69: opening step 8: BG set + sprite set ($06FF>>1)&1 (flash every 2 frames) for $06FE frames
+19,A953,OpeningPage2,s69: opening step 11: draws $2000 (A95E) + $2800 (A9B3) pages; BG set 2 (AA05) + fade-in; $06FE=$F0
+19,AA16,OpeningPage2Flip,s69: opening steps 12+13: cam_y_hi = ($06FF>>4)&1 -> NT $2000/$2800 shown alternately every 16 frames
+19,AA30,OpeningPage3,s69: opening step 16: page 19:AA51 (BG set 3) + fade-in
+19,AAC2,OpeningPage3Anim,s69: opening step 17: SceneMetaDraw id 1 at x $0610 (+1 every 4 frames) y $0608 = the tower sprite; $06FE frames
+19,AAF1,OpeningPage4,s69: opening step 20: page 19:AB1E (BG set 4) + fade-in
+19,AB81,OpeningPage4Anim,s69: opening step 21: sprite step every 4 frames until $06FE runs out
+19,B162,DateCardRectPtr,s69: ptr word -> 19:B164 NtRectBlit stream W=30 H=3 ('1997 October 1' / 'The END DAY'); ends at 19:B1C0
