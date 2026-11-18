@@ -756,12 +756,24 @@ bank,addr,name,comment
 *,646A,wram_646A,auto (ram_map.py s29): r3 w2 banks 16
 *,646B,save_slot_sel,b0 = save slot picked by MenuSave (0 -> $7100; 1 -> $7700); r6 w2 banks 16
 *,646C,wram_646C,auto (ram_map.py s29): r3 w1 banks 16
-*,646D,wram_646D,auto (ram_map.py s29): r6 w2 banks 16
+*,646D,shop_id,s71: shop 0-10 from ShopIdForArea 16:9953 (ShopAreaTable 16:9F54 -> 16:9F75); 33 = no match
 *,646E,wram_646E,auto (ram_map.py s29): r0 w4 banks 16
-*,6470,wram_6470,auto (ram_map.py s29): r6 w2 banks 16
-*,6474,wram_6474,auto (ram_map.py s29): r5 w9 banks 16
-*,6475,wram_6475,auto (ram_map.py s29): r5 w9 banks 16
-*,6478,wram_6478,auto (ram_map.py s29): r1 w2 banks 16
+*,6470,shop_goods,s71: $6470-$6473 = 4 goods ids of the current shop ($FF empty; armor 16:9DA4 / tool 16:9E28)
+*,6474,shop_price_sel,s71: $6474/75 = price word of the cursor item (ShopPriceSel 16:9A37)
+*,6475,shop_price_sel_hi,s71: hi byte of shop_price_sel
+*,6478,shop_prices,s71: $6478-$647F = 4 price words (armor 16:9DD0 / tool 16:9E54); not initialised by new game
+*,6410,player_name_hi,s71: $6410-$6415 = name upper tile row (name entry 19:A3E4/A456/A562); drawn by PauseScreen 15:BD01 and the ending 17:A40C
+16,988A,ShopSetupArmor,s71: ShopIdForArea then goods 16:9DA4 -> $6470 and prices 16:9DD0 -> $6478 for shop_id
+16,98E3,ShopSetupTool,s71: ShopIdForArea then goods 16:9E28 -> $6470 and prices 16:9E54 -> $6478 for shop_id
+16,9953,ShopIdForArea,s71: area_id lookup in ShopAreaTable (33) -> shop_id $646D via 16:9F75
+16,9A37,ShopPriceSel,s71: $6474/75 = shop_prices[$6427] (0 if the shop_goods slot is $FF)
+16,9DA4,ShopArmorGoods,s71: 11 x 4 goods ids ($FF empty)
+16,9DD0,ShopArmorPrices,s71: 11 x 4 u16 prices
+16,9E28,ShopToolGoods,s71: 11 x 4 goods ids
+16,9E54,ShopToolPrices,s71: 11 x 4 u16 prices (shop 0 = 30 40 60 50, the same words as the 23:BE00 template)
+16,9F54,ShopAreaTable,s71: 33 area ids that have a shop
+16,9F75,ShopAreaIds,s71: 33 shop ids (0-10) parallel to ShopAreaTable
+19,A6F9,StartNewGame,s71: main_state=0 (NameEntryDone JMPs here) -> MainStateNewGame 30:C957
 *,6488,story_flags_F040,story_flags byte F040-F047 (area hook 31:E7C4: F045)
 *,648A,story_flags_F050,story_flags byte F050-F057 (area hook 31:E7C4: F053)
 *,657F,story_flags_F7F8,last story_flags byte F7F8-F7FF

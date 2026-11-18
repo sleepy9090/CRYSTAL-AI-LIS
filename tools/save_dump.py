@@ -48,14 +48,16 @@ def ram_name(labels, addr):
 # Field names for the $6400 page (template offsets) -- from REVERSE.md / labels.csv
 PAGE_6400 = [
     (0x00, 7, 'player_name', 'zero-terminated name used by dialogue code 04 ("------",0 in template)'),
-    (0x07, 0x11, '$6407-$6417', 'only static ref: $6410,X read in bank 15; purpose unknown'),
+    (0x07, 0x09, '$6407-$640F', 'no static refs'),
+    (0x10, 0x08, 'player_name_hi', '$6410-$6415 name upper tile row (name entry 19:A456; PauseScreen 15:BD01, ending 17:A40C)'),
     (0x18, 6, 'player_name6', '6-char name-entry buffer (menu FE escape reads slot+$18)'),
     (0x1E, 0x0A, '$641E-$6427', 'bank-16 menu vars ($6424/$6426/$6427 used by bank 16)'),
     (0x28, 8, 'inv_select', 'equipped/selected item row $6428-$642F (template FF)'),
     (0x30, 0x30, 'inventory', '$6430-$645F inventory (template FF = empty)'),
     (0x60, 0x0A, '$6460-$6469', 'template FF; no static refs'),
-    (0x6A, 0x0E, 'menu vars', '$646A-$6477 bank-16 menu vars incl. save_slot_sel $646B'),
-    (0x78, 8, 'wram_6478', '$6478-$647F: words 30,40,60,50 in template (bank-16 reads $6478,X)'),
+    (0x6A, 0x06, 'menu vars', '$646A-$646F bank-16 menu vars incl. save_slot_sel $646B, shop_id $646D'),
+    (0x70, 0x08, 'shop_goods', '$6470-$6473 goods ids, $6474/75 shop_price_sel (bank 16 shops, s71)'),
+    (0x78, 8, 'shop_prices', '$6478-$647F 4 price words; template 30,40,60,50 = tool shop 0 (16:9E54)'),
 ]
 
 PLAYER_STATE = [
