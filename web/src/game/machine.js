@@ -9,8 +9,13 @@
 import { Ram, R } from './ram.js';
 import { Ppu } from '../nes/ppu.js';
 import { mainStep, nmiWork } from './mainloop.js';
+import { Apu } from '../nes/apu.js';
+import { cpuRd } from './prg.js';
+import { sndInit } from './sound/driver.js';
+import { soundUpdate } from './sound/soundupdate.js';
 
 export const FRAME_HZ = 60.0988;       // NTSC: 39375000/11/341/262*3 ≈ 60.0988 (odd-frame skip ignored)
+const FRAME_CYCLES3 = 341 * 262;       // CPU cycles per frame × 3 (= 29780.67 cycles)
 
 // IRQ handlers (IrqHandlerTable 31:F433). Bodies arrive with the HUD / world tasks (4/8, 7/8);
 // until then a split only marks where it would fire.
@@ -29,9 +34,16 @@ export class Machine {
     this.irqSplits = [];
     this.pending = null;
     this.frame = 0;
-    // hooks filled by later tasks (Ph7 web 4/8: ppuqueue.js, 7/8: sound/playsound.js)
+    // hooks filled by later tasks (Ph7 web 4/8: ppuqueue.js)
     this.ppuQueueFlush = () => {};
-    this.soundUpdate = () => {};
+    // sound (7/8, s56-57): SoundUpdate 31:F7FE + the APU. Register writes take effect at once; the APU is
+    // advanced one frame of CPU cycles at the end of runFrame (the driver writes once or twice per frame, so
+    // only the phase within the frame differs from hardware).
+    this.soundUpdate = soundUpdate;
+    this.apu = new Apu((a) => cpuRd(this, a));
+    this.apuWrite = (a, v) => this.apu.write(a, v);
+    this.apuRead = (a) => this.apu.read(a);
+    this._cyc3 = 0;
     // world/area.js hooks (s53): PlaySound 30:C125 (7/8), AreaSpawnEntry 31:E1B6 + bank 26 $98A8 (5/8)
     this.playSound = () => {};
     this.spawnEntry = () => {};
@@ -66,6 +78,13 @@ export class Machine {
     this.frame = 0;
     this.prgR6 = 0x18;                               // MMC3 R6/R7 as left by reset's SwitchBank16($0C) (prg.js)
     this.prgR7 = 0x19;
+    const out = this.apu.out, rate = this.apu.sampleRate;
+    this.apu = new Apu((a) => cpuRd(this, a));
+    if (rate) this.apu.setOutput(rate, out);
+    this.apu.write(0x4010, 0);                       // 31:F2C9 DMC IRQ off
+    this.apu.write(0x4017, 0x40);                    // 31:F2CE APU frame IRQ off
+    sndInit(this);                                   // 31:F325 JSR $8020 with banks 24/25
+    this._cyc3 = 0;
   }
 
   /** Map the split list from the last NMI-mode routine onto ppu.splits (an MMC3 IRQ with latch L
@@ -86,6 +105,10 @@ export class Machine {
     this._installSplits();
     this.ppu.renderFrame();
     nmiWork(this);
+    this._cyc3 += FRAME_CYCLES3;
+    const n = Math.floor(this._cyc3 / 3);
+    this._cyc3 -= n * 3;
+    this.apu.run(n);
     this.frame++;
     return this.ppu.fb;
   }

@@ -108,12 +108,21 @@ function nmiMode0(m) {
   m.wr(R.zp_57, 0xBE);
 }
 
+/** NmiMode3 31:F771 (title / menus, no splits): PPUMASK <- $01, scroll, CHR R0-R5, MMC3 IRQ off, SoundUpdate */
+function nmiMode3(m) {
+  m.ppu.writeReg(1, m.rd(R.ppumask_shadow));        // F771
+  ppuScrollWrite(m);                                // F776
+  applyChrPlay(m);                                  // F779
+  m.irqSplits = [];                                 // F77C STA MMC3_IRQOFF
+  m.soundUpdate(m);                                 // F77F JMP SoundUpdate
+}
+
 /** JmpTable31_F6C2: irq_mode -> NMI routine. Unported modes log once and do nothing. */
 const unportedMode = (addr) => (m) => {
   if (!m.unported.has(addr)) { m.unported.add(addr); m.log(`NMI mode routine ${addr} not ported yet`); }
 };
 export const NMI_MODES = [
-  nmiMode0, unportedMode('31:F731'), unportedMode('31:F751'), unportedMode('31:F771'),
+  nmiMode0, unportedMode('31:F731'), unportedMode('31:F751'), nmiMode3,
   unportedMode('31:F782'), unportedMode('31:F7C5'), unportedMode('31:F7DB'), nmiMode0,
   null, unportedMode('31:F731'),
 ];

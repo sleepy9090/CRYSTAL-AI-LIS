@@ -888,3 +888,5 @@ bank,addr,name,comment
 27,B5CF,FanShotOfs,s55: s8[4] 00 FF 00 01 by ($0640&$18)>>3: fan shots at $0640=$08/$10/$18 = -1/0/+1 (16-dir units)
 27,B5D3,AiFanTurretIdle,s55: obj_anim--; JMP AiShootCheck: the tail JMP makes its PLA PLA pop ObjUpdateAll's return (slots after it skip their AI that frame)
 30,CD28,ObjUpdateAllCall,s55: JSR $0010 (JMP trampoline $10-$12 = 4C + ObjAiTable[id]); an AI that JMPs to AiShootCheck returns from ObjUpdateAll here
+31,F771,NmiMode3,s57: irq_mode 3 (title/menus): PPUMASK<-$01; PpuScrollWrite; ApplyChrPlay; MMC3 IRQ off; JMP SoundUpdate (web: mainloop.js nmiMode3)
+24,81F3,SndMusicTick,s57: music channels 0-3 tick; first reads $4015 and writes $4013=0 if the DMC is busy; then the $0113 next-music chain (web: driver.js musicTick)

@@ -3,6 +3,8 @@
 import { loadData } from './data.js';
 import { Machine, FRAME_HZ } from './game/machine.js';
 import { Input } from './input.js';
+import { AudioOut } from './audio.js';
+import { loadWram, saveWram, WramSaver } from './save.js';
 
 const $ = (id) => document.getElementById(id);
 const status = (s) => { $('status').textContent = s; };
@@ -14,8 +16,17 @@ async function start() {
     return r.arrayBuffer();
   }));
   const m = new Machine(data, { log: (s) => console.warn('[re-c]', s) });
+  // battery WRAM survives power-off: restore it before Reset, as the cartridge would (save.js)
+  const store = globalThis.localStorage;
+  if (store && loadWram(store, m.mem.wram)) console.info('[re-c] WRAM restored from localStorage');
   m.reset();
+  const saver = store ? new WramSaver(store, m.mem.wram) : null;
+  addEventListener('pagehide', () => store && saveWram(store, m.mem.wram));   // always, on leaving the page
   const input = new Input(window);
+  // audio starts on the first key / click / touch (autoplay policy); M = mute
+  const audio = new AudioOut(m);
+  for (const ev of ['keydown', 'pointerdown']) addEventListener(ev, () => audio.resume());
+  addEventListener('keydown', (e) => { if (e.code === 'KeyM') audio.setMuted(!audio.muted); });
 
   const canvas = $('screen');
   const ctx = canvas.getContext('2d');
@@ -40,8 +51,11 @@ async function start() {
     if (!paused) {
       acc += Math.min(now - last, 250);       // never run more than ~15 frames to catch up
       let ran = false;
-      while (acc >= step) { m.runFrame(input.read()); acc -= step; ran = true; }
-      if (ran) blit(m.ppu.fb);
+      while (acc >= step) {
+        m.runFrame(input.read()); acc -= step; ran = true;
+        if (saver && m.frame % 300 === 0) saver.poll();   // ~5 s
+      }
+      if (ran) { blit(m.ppu.fb); audio.flush(); }
     }
     last = now;
     requestAnimationFrame(tick);

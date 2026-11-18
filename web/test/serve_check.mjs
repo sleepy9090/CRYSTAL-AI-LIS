@@ -50,8 +50,34 @@ const el = () => ({
 });
 const realFetch = globalThis.fetch;
 const statusEl = el();
+// s57: window listeners are kept so the test can fire keydown / pagehide; localStorage is a Map seeded with a
+// WRAM image (marker bytes) that main.js must restore before Reset; AudioContext records the scheduled buffers.
+const listeners = {};
+const fire = (type, ev = {}) => (listeners[type] || []).forEach((f) => f(ev));
+const store = new Map();
+const { KEY: WRAM_KEY } = await import('../src/save.js');
+const seed = new Uint8Array(0x2000); seed[0x1DFD] = 0x41; seed[0x1DFE] = 0x4D; seed[0x1DFF] = 0x49; seed[0x1000] = 0x5A;
+store.set(WRAM_KEY, Buffer.from(seed).toString('base64'));
+const scheduled = [];
+class FakeAudioContext {
+  constructor() { this.sampleRate = 48000; this.currentTime = 0; this.state = 'running'; this.destination = {}; }
+  createGain() { return { gain: { value: 1 }, connect() {} }; }
+  createBuffer(ch, n, rate) {
+    const d = new Float32Array(n);
+    return { duration: n / rate, copyToChannel: (src) => d.set(src), data: d };
+  }
+  createBufferSource() {
+    return { connect() {}, start(t) { scheduled.push({ t, buf: this.buffer }); } };
+  }
+  resume() {}
+}
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true, value: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, String(v)) },
+});
 Object.assign(globalThis, {
-  window: globalThis, innerWidth: 800, innerHeight: 600, addEventListener() {},
+  window: globalThis, innerWidth: 800, innerHeight: 600,
+  addEventListener: (type, f) => (listeners[type] ||= []).push(f),
+  AudioContext: FakeAudioContext,
   requestAnimationFrame: (cb) => { rafCb = cb; },
   document: { getElementById: (id) => (id === 'status' ? statusEl : el()), addEventListener() {}, hidden: false },
   fetch: (u, o) => realFetch(new URL(u, base), o),
@@ -60,10 +86,33 @@ if (!globalThis.performance) globalThis.performance = { now: () => Date.now() };
 const { BTN } = await import('../src/input.js');
 await import('../src/main.js');
 for (let i = 0; i < 100 && !rafCb; i++) await new Promise((r) => setTimeout(r, 20));
+const restored = globalThis.reC && globalThis.reC.mem.wram[0x1000] === 0x5A && globalThis.reC.mem.wram[0x1DFD] === 0x41;
+fire('keydown', { code: 'KeyX', preventDefault() {} });                   // first gesture: AudioContext + APU synthesis on
 const t0 = performance.now();
 for (let i = 1; i <= 60 && rafCb; i++) { const cb = rafCb; rafCb = null; cb(t0 + i * (1000 / 60)); }
+fire('pagehide');
 server.close();
 const m = globalThis.reC;
+{ // audio: back-to-back buffers, ~1 s of samples at 48 kHz for ~60 frames, all finite
+  const n = scheduled.reduce((s, x) => s + x.buf.data.length, 0);
+  let gap = 0, finite = true;
+  for (let i = 1; i < scheduled.length; i++) gap = Math.max(gap, Math.abs(scheduled[i].t - (scheduled[i - 1].t + scheduled[i - 1].buf.duration)));
+  for (const x of scheduled) if (!x.buf.data.every(Number.isFinite)) finite = false;
+  const want = m ? (m.frame * 48000 / 60.0988) : 0;
+  const ok = scheduled.length > 1 && n >= want - 2048 && n <= want + 64 && gap < 1e-9 && finite;
+  if (!ok) bad++;
+  console.log(`${ok ? 'ok  ' : 'FAIL'} audio: ${scheduled.length} buffers, ${n} samples for ${m ? m.frame : 0} frames (expect ~${want.toFixed(0)}), ` +
+    `max gap ${gap.toExponential(1)} s, ${finite ? 'all finite' : 'NaN/Inf'}`);
+}
+{ // save: the seeded image was restored before Reset; pagehide wrote the current WRAM back byte for byte
+  const s = store.get(WRAM_KEY);
+  const back = s ? new Uint8Array(Buffer.from(s, 'base64')) : null;
+  const same = back && m && back.length === 0x2000 && back.every((v, i) => v === m.mem.wram[i]);
+  const ok = restored && same && back[0x1000] === 0x5A && back[0x0140] === 0xFF;
+  if (!ok) bad++;
+  console.log(`${ok ? 'ok  ' : 'FAIL'} save: WRAM restored from localStorage before Reset (${restored}), pagehide image = WRAM (${same}), ` +
+    `Reset's pal_buf $6140 = $FF in the stored image`);
+}
 const lit = lastImg ? lastImg.data.some((v, i) => (i & 3) !== 3 && v) : false;
 const okMain = m && m.frame >= 55 && blits > 0 && lastImg && !statusEl.textContent && Object.keys(BTN).length === 8;
 if (!okMain) bad++;
