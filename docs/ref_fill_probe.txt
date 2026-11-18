@@ -1,0 +1,233 @@
+fill_probe.py: unwritten = differs between fill $00 and $A5 runs; third run RAM fill=fceux WRAM fill=zero
+
+== ref 120 <-> emu 119 (-1): RAM unwritten 1426, real diffs 4
+   unwritten RAM matching fill fceux : 1425/1426
+   unwritten RAM matching fill zero  : 710/1426
+   unwritten RAM matching fill ff    : 715/1426
+   unwritten but != fceux fill: $06FF=4F
+   real $01F4 ref=96 emu=19 
+   real $01F5 ref=F6 emu=F4 
+   real $01F6 ref=00 emu=FF 
+   real $01F7 ref=FF emu=00 
+   with fill=fceux/zero (offset -1): 5 RAM diffs (OAM excluded), 0/64 OAM sprites: $01F4=96/19 $01F5=F6/F4 $01F6=00/FF $01F7=FF/00 $06FF=4F/4C
+   WRAM unwritten 6588 (fill hits fceux=3295 zero=6588 ff=0), real diffs 0
+   with fill=fceux/zero: 0 WRAM diffs
+== ref 600 <-> emu 597 (-3): RAM unwritten 1223, real diffs 6
+   unwritten RAM matching fill fceux : 1167/1223
+   unwritten RAM matching fill zero  : 587/1223
+   unwritten RAM matching fill ff    : 586/1223
+   unwritten but != fceux fill: $0045=01 $0073=09 $0086=52 $0087=90 $00F3=BD $00F5=25 $00FA=05 $00FB=08 $00FC=00 $00FD=01 $0103=49 $0104=00 $0105=00 $0106=00 $0107=00 $0115=71 $0116=01 $0118=10 $011A=99 $011B=4E $011C=F1 $011E=1C $011F=26 $014A=01 ...
+   real $0046 ref=02 emu=03 
+   real $0100 ref=01 emu=00 snd_queue_count
+   real $01F8 ref=20 emu=19 
+   real $01F9 ref=FF emu=F4 
+   real $0600 ref=01 emu=00 obj_phase
+   real $0628 ref=01 emu=FF ram_0628
+   with fill=fceux/zero (offset -3): 41 RAM diffs (OAM excluded), 0/64 OAM sprites: $00F0=00/01 $00F1=00/02 $00F2=00/01 $00F3=BD/0F $00F5=25/99 $00F6=A8/9C $00FA=05/00 $00FB=08/0A $00FC=00/0C $00FD=01/02 $0100=01/00 $0103=49/00 $0115=71/F1 $0118=10/01 $011A=99/9B $011E=1C/0A $011F=26/1C $014A=01/08 $0150=10/08 $0155=03/01 $015A=10/00 $015C=9F/91 $0162=1A/18 $016C=BA/00 $016D=3C/00 $0174=BE/B3 $0178=3A/00 $0179=01/00 $017E=02/00 $01EF=04/0F ...
+   WRAM unwritten 3004 (fill hits fceux=1503 zero=3004 ff=0), real diffs 0
+   with fill=fceux/zero: 0 WRAM diffs
+== ref 1200 <-> emu 1203 (+3): RAM unwritten 1196, real diffs 7
+   unwritten RAM matching fill fceux : 1165/1196
+   unwritten RAM matching fill zero  : 585/1196
+   unwritten RAM matching fill ff    : 585/1196
+   unwritten but != fceux fill: $0045=02 $00F3=E4 $00F5=3A $00FC=00 $00FD=02 $0104=00 $0105=00 $0106=00 $0107=00 $011C=3B $014A=19 $014B=19 $014C=09 $0158=20 $015E=F0 $0162=1A $0163=1A $0164=F8 $0166=F8 $0167=F8 $0176=E2 $01F0=F2 $01F2=12 $01F6=7E ...
+   real $0046 ref=03 emu=01 
+   real $01E9 ref=00 emu=0A 
+   real $01EA ref=00 emu=F2 
+   real $01EB ref=0A emu=82 
+   real $01EC ref=F2 emu=12 
+   real $01F8 ref=20 emu=19 
+   real $01F9 ref=FF emu=F4 
+   with fill=fceux/zero (offset -3): 15 RAM diffs (OAM excluded), 0/64 OAM sprites: $0009=00/01 $014A=19/18 $014B=19/18 $014C=09/08 $0162=1A/1B $0163=1A/1B $01E9=00/0A $01EA=00/F2 $01EB=0A/82 $01EC=F2/12 $01F8=20/19 $01F9=FF/F4 $01FA=E4/15 $01FB=FE/C4 $01FC=40/3D
+   WRAM unwritten 3007 (fill hits fceux=1503 zero=3004 ff=0), real diffs 2: $6142-$6143
+   wreal $6142 ref=07 emu=0F 
+   wreal $6143 ref=06 emu=0F 
+   with fill=fceux/zero: 0 WRAM diffs
+== ref 1450 <-> emu 1448 (-2): RAM unwritten 1177, real diffs 5
+   unwritten RAM matching fill fceux : 1156/1177
+   unwritten RAM matching fill zero  : 578/1177
+   unwritten RAM matching fill ff    : 582/1177
+   unwritten but != fceux fill: $0045=01 $00F3=04 $0104=00 $0105=00 $0106=00 $0107=00 $014A=0A $014B=0A $014C=0A $014D=0A $015E=F0 $015F=D3 $0164=F8 $0165=F8 $0166=F8 $0167=F8 $01EF=04 $0610=49 $06CF=1D $06F3=01 $06FF=33
+   real $0009 ref=00 emu=01 frame_ready
+   real $01E9 ref=00 emu=0E 
+   real $01EA ref=00 emu=F2 
+   real $01EB ref=0E emu=82 
+   real $01F8 ref=20 emu=19 
+   with fill=fceux/zero (offset +0): 8 RAM diffs (OAM excluded), 0/64 OAM sprites: $0009=00/01 $01E9=00/0E $01EA=00/F2 $01EB=0E/82 $01F8=20/19 $06CF=1D/20 $06F3=01/00 $06FF=33/30
+   WRAM unwritten 3004 (fill hits fceux=1503 zero=3004 ff=0), real diffs 0
+   with fill=fceux/zero: 0 WRAM diffs
+== ref 1500 <-> emu 1499 (-1): RAM unwritten 1182, real diffs 10
+   unwritten RAM matching fill fceux : 1158/1182
+   unwritten RAM matching fill zero  : 581/1182
+   unwritten RAM matching fill ff    : 582/1182
+   unwritten but != fceux fill: $0045=02 $0050=06 $0104=00 $0105=00 $0106=00 $0107=00 $014A=14 $014B=14 $014C=08 $014D=08 $015E=F0 $015F=D5 $0162=1B $0163=1B $0164=F8 $0165=F8 $0166=F8 $0167=F8 $01EF=00 $01F6=7E $01FE=18 $0610=49 $06B4=67 $06FF=01
+   real $0046 ref=03 emu=02 
+   real $01E9 ref=00 emu=0E 
+   real $01EA ref=00 emu=F2 
+   real $01EB ref=0E emu=82 
+   real $01F8 ref=20 emu=19 
+   real $01F9 ref=FF emu=F4 
+   real $01FA ref=E4 emu=FF 
+   real $01FB ref=FE emu=02 
+   real $01FC ref=40 emu=00 
+   real $01FD ref=C9 emu=22 
+   with fill=fceux/zero (offset +0): 14 RAM diffs (OAM excluded), 0/64 OAM sprites: $00F0=00/01 $01E9=00/0E $01EA=00/F2 $01EB=0E/82 $01F6=7E/72 $01F8=20/19 $01F9=FF/F4 $01FA=E4/FF $01FB=FE/02 $01FC=40/00 $01FD=C9/22 $01FE=18/00 $06B4=67/64 $06FF=01/FE
+   WRAM unwritten 3004 (fill hits fceux=1503 zero=3004 ff=0), real diffs 0
+   with fill=fceux/zero: 0 WRAM diffs
+== ref 2250 <-> emu 2250 (+0): RAM unwritten 1145, real diffs 10
+   unwritten RAM matching fill fceux : 1131/1145
+   unwritten RAM matching fill zero  : 567/1145
+   unwritten RAM matching fill ff    : 568/1145
+   unwritten but != fceux fill: $0045=02 $0104=00 $0105=00 $0106=00 $0107=00 $015E=F0 $0164=F8 $0165=F8 $0166=F8 $0167=F8 $060C=50 $0614=D0 $06B5=02 $06FF=1F
+   real $0009 ref=00 emu=01 frame_ready
+   real $01E9 ref=00 emu=0D 
+   real $01F8 ref=8F emu=20 
+   real $01F9 ref=51 emu=FF 
+   real $01FA ref=2D emu=E4 
+   real $01FB ref=A6 emu=FE 
+   real $01FC ref=16 emu=40 
+   real $01FD ref=A4 emu=C9 
+   real $0617 ref=D0 emu=D1 ram_0617
+   real $0627 ref=0D emu=18 ram_0627
+   with fill=fceux/zero (offset +0): 14 RAM diffs (OAM excluded), 5/64 OAM sprites: $0009=00/01 $0046=03/02 $01E9=00/0D $01F8=8F/20 $01F9=51/FF $01FA=2D/E4 $01FB=A6/FE $01FC=16/40 $01FD=A4/C9 $060C=50/4F $0614=D0/CF $0617=D0/D1 $0627=0D/18 $06FF=1F/1C
+   WRAM unwritten 2965 (fill hits fceux=1479 zero=2964 ff=0), real diffs 0
+   with fill=fceux/zero: 1 WRAM diffs in $6423-$6423
+== ref 2352 <-> emu 2355 (+3): RAM unwritten 1030, real diffs 7
+   unwritten RAM matching fill fceux : 897/1030
+   unwritten RAM matching fill zero  : 432/1030
+   unwritten RAM matching fill ff    : 480/1030
+   unwritten but != fceux fill: $0008=FE $0011=1F $0012=88 $0013=82 $0014=8E $0015=67 $0016=7B $0018=02 $001B=04 $001C=00 $001D=00 $001E=03 $001F=50 $0020=4C $0021=AA $0022=90 $0023=03 $0024=04 $0025=0F $0031=FC $0036=EC $0045=03 $0046=01 $0068=62 ...
+   real $0017 ref=0A emu=00 tmp_17
+   real $01FD ref=22 emu=CB 
+   real $01FE ref=00 emu=18 
+   real $0628 ref=1B emu=1A ram_0628
+   real $0629 ref=03 emu=02 
+   real $062A ref=05 emu=04 
+   real $062B ref=1B emu=1A 
+   with fill=fceux/zero (offset +1): 29 RAM diffs (OAM excluded), 10/64 OAM sprites: $0008=FE/FD $0009=00/01 $0010=00/62 $0011=1F/CB $0012=88/CA $0045=03/02 $0046=01/03 $006E=1A/00 $006F=1B/01 $01F4=C4/2C $01F5=58/F7 $01F6=7E/09 $01F7=F8/F7 $01F8=D1/20 $01F9=F4/FF $01FA=00/84 $01FB=04/FE $01FC=00/64 $01FD=22/CB $01FE=00/18 $060C=50/4F $0614=D0/CF $0617=CA/CB $0627=13/12 $0628=1B/1A $0629=03/02 $062A=05/04 $062B=1B/1A $06FF=DB/D7
+   WRAM unwritten 2601 (fill hits fceux=1285 zero=2584 ff=3), real diffs 0
+   with fill=fceux/zero: 5 WRAM diffs in $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+== ref 2385 <-> emu 2384 (-1): RAM unwritten 1009, real diffs 20
+   unwritten RAM matching fill fceux : 891/1009
+   unwritten RAM matching fill zero  : 427/1009
+   unwritten RAM matching fill ff    : 478/1009
+   unwritten but != fceux fill: $0008=DD $000A=10 $000B=10 $0013=82 $0015=A5 $0016=B9 $0017=00 $001B=09 $001E=00 $002F=07 $0045=03 $0046=01 $004F=04 $0068=8B $0074=00 $0075=00 $0076=00 $0077=00 $007C=00 $007D=00 $007E=00 $007F=00 $0085=20 $0086=51 ...
+   real $0009 ref=00 emu=01 frame_ready
+   real $0010 ref=00 emu=62 jmp_trampoline
+   real $0011 ref=1F emu=CB tmp_11
+   real $0012 ref=88 emu=CA tmp_12
+   real $006E ref=1A emu=00 cur_bank16_x2
+   real $006F ref=1B emu=01 r7_shadow
+   real $01F4 ref=C4 emu=2C 
+   real $01F5 ref=58 emu=F7 
+   real $01F6 ref=7E emu=09 
+   real $01F7 ref=F8 emu=F7 
+   real $01F9 ref=F4 emu=FF 
+   real $01FA ref=00 emu=84 
+   real $01FB ref=09 emu=FE 
+   real $01FC ref=00 emu=64 
+   real $01FD ref=22 emu=CB 
+   real $01FE ref=00 emu=18 
+   real $0628 ref=1B emu=1A ram_0628
+   real $0629 ref=03 emu=02 
+   real $062A ref=05 emu=04 
+   real $062B ref=1B emu=1A 
+   with fill=fceux/zero (offset +1): 29 RAM diffs (OAM excluded), 10/64 OAM sprites: $0008=DD/DC $0009=00/01 $0010=00/62 $0011=1F/CB $0012=88/CA $0045=03/02 $0046=01/03 $006E=1A/00 $006F=1B/01 $01F4=C4/2C $01F5=58/F7 $01F6=7E/09 $01F7=F8/F7 $01F8=D1/20 $01F9=F4/FF $01FA=00/84 $01FB=09/FE $01FC=00/64 $01FD=22/CB $01FE=00/18 $060C=50/4F $0614=D0/CF $0617=CA/CB $0627=13/12 $0628=1B/1A $0629=03/02 $062A=05/04 $062B=1B/1A $06FF=DB/D7
+   WRAM unwritten 2603 (fill hits fceux=1285 zero=2584 ff=3), real diffs 0
+   with fill=fceux/zero: 5 WRAM diffs in $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+== ref 2392 <-> emu 2393 (+1): RAM unwritten 1032, real diffs 4
+   unwritten RAM matching fill fceux : 895/1032
+   unwritten RAM matching fill zero  : 433/1032
+   unwritten RAM matching fill ff    : 478/1032
+   unwritten but != fceux fill: $0008=D7 $000A=18 $000B=18 $0010=22 $0012=88 $0013=C4 $0014=08 $0015=77 $0016=A8 $0017=05 $0019=10 $001A=F0 $001B=B4 $001C=D0 $001F=00 $002F=00 $0041=01 $0045=03 $0046=01 $0068=8F $006C=01 $006D=00 $006E=1A $0074=00 ...
+   real $0628 ref=1B emu=1A ram_0628
+   real $0629 ref=03 emu=02 
+   real $062A ref=05 emu=04 
+   real $062B ref=1B emu=1A 
+   with fill=fceux/zero (offset +0): 17 RAM diffs (OAM excluded), 10/64 OAM sprites: $0045=03/02 $0046=01/03 $01EA=7E/09 $01EB=F8/F7 $01EC=D1/19 $01EE=02/00 $01EF=00/03 $01F2=6D/6F $060C=50/4F $0614=D0/CF $0617=CA/CB $0627=13/12 $0628=1B/1A $0629=03/02 $062A=05/04 $062B=1B/1A $06FF=DB/D7
+   WRAM unwritten 2601 (fill hits fceux=1285 zero=2584 ff=3), real diffs 0
+   with fill=fceux/zero: 5 WRAM diffs in $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+== ref 2409 <-> emu 2410 (+1): RAM unwritten 1107, real diffs 4
+   unwritten RAM matching fill fceux : 850/1107
+   unwritten RAM matching fill zero  : 487/1107
+   unwritten RAM matching fill ff    : 425/1107
+   unwritten but != fceux fill: $0008=D7 $0009=01 $000A=04 $000B=04 $000C=22 $000D=20 $0011=B0 $0013=01 $0014=80 $0015=0C $0016=20 $0017=00 $001A=F0 $001B=B4 $001C=D0 $0020=FF $0021=27 $0022=D9 $0024=BE $0025=02 $0026=A0 $0027=14 $002C=07 $002D=07 ...
+   real $0628 ref=1B emu=1A ram_0628
+   real $0629 ref=03 emu=02 
+   real $062A ref=05 emu=04 
+   real $062B ref=1B emu=1A 
+   with fill=fceux/zero (offset +1): 35 RAM diffs (OAM excluded), 10/64 OAM sprites: $0009=01/02 $000A=04/08 $000B=04/08 $0010=00/40 $0011=B0/22 $0015=0C/00 $002E=13/12 $0036=90/88 $0045=03/02 $0046=01/03 $006E=08/1A $00F3=0D/0E $014A=0C/0B $014B=1A/19 $014C=1A/19 $015C=63/64 $01E1=00/0D $01E2=0D/0E $01ED=01/0C $01EE=01/C2 $01EF=15/12 $01F0=C4/20 $01F1=15/DE $01F2=C4/65 $01F3=29/95 $01F4=EC/EB $060C=50/4F $0614=D0/CF $0617=CA/CB $0627=13/12 ...
+   WRAM unwritten 2669 (fill hits fceux=1282 zero=2585 ff=0), real diffs 10: $6120-$6121 $6126-$612A $612D-$612F
+   wreal $6120 ref=5A emu=AA 
+   wreal $6121 ref=5A emu=AA 
+   wreal $6126 ref=59 emu=99 
+   wreal $6127 ref=5A emu=AA 
+   wreal $6128 ref=55 emu=82 
+   wreal $6129 ref=55 emu=AA 
+   wreal $612A ref=55 emu=A6 
+   wreal $612D ref=55 emu=95 
+   wreal $612E ref=55 emu=AA 
+   wreal $612F ref=55 emu=88 
+   with fill=fceux/zero: 29 WRAM diffs in $6009-$601F $6204-$6204 $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+== ref 2450 <-> emu 2452 (+2): RAM unwritten 891, real diffs 21
+   unwritten RAM matching fill fceux : 771/891
+   unwritten RAM matching fill zero  : 384/891
+   unwritten RAM matching fill ff    : 396/891
+   unwritten but != fceux fill: $0008=C7 $000A=14 $000B=14 $000C=23 $000D=BF $001B=09 $002F=07 $0030=07 $0031=02 $0034=AF $0036=4E $0045=03 $0046=01 $0074=00 $0075=00 $0076=00 $0077=00 $007C=00 $0081=AF $0085=20 $0086=51 $0088=D0 $008A=03 $008B=10 ...
+   real $0009 ref=00 emu=01 frame_ready
+   real $0010 ref=0C emu=62 jmp_trampoline
+   real $0011 ref=1F emu=CB tmp_11
+   real $0012 ref=B0 emu=CA tmp_12
+   real $006E ref=1A emu=00 cur_bank16_x2
+   real $006F ref=1B emu=01 r7_shadow
+   real $01F4 ref=EB emu=2C 
+   real $01F5 ref=81 emu=F7 
+   real $01F6 ref=7E emu=09 
+   real $01F7 ref=F8 emu=F7 
+   real $01F8 ref=D1 emu=20 
+   real $01F9 ref=F4 emu=FF 
+   real $01FA ref=00 emu=84 
+   real $01FB ref=09 emu=FE 
+   real $01FC ref=00 emu=64 
+   real $01FD ref=22 emu=CB 
+   real $01FE ref=02 emu=18 
+   real $0628 ref=1B emu=1A ram_0628
+   real $0629 ref=03 emu=02 
+   real $062A ref=05 emu=04 
+   real $062B ref=1B emu=1A 
+   with fill=fceux/zero (offset +1): 29 RAM diffs (OAM excluded), 0/64 OAM sprites: $0008=C7/C6 $0009=00/01 $0010=0C/62 $0011=1F/CB $0012=B0/CA $0045=03/02 $0046=01/03 $006E=1A/00 $006F=1B/01 $01F4=EB/2C $01F5=81/F7 $01F6=7E/09 $01F7=F8/F7 $01F8=D1/20 $01F9=F4/FF $01FA=00/84 $01FB=09/FE $01FC=00/64 $01FD=22/CB $01FE=02/18 $060C=50/4F $0614=D0/CF $0617=CA/CB $0627=13/12 $0628=1B/1A $0629=03/02 $062A=05/04 $062B=1B/1A $06FF=DB/D7
+   WRAM unwritten 2601 (fill hits fceux=1282 zero=2584 ff=0), real diffs 0
+   with fill=fceux/zero: 5 WRAM diffs in $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+== ref 2460 <-> emu 2462 (+2): RAM unwritten 833, real diffs 22
+   unwritten RAM matching fill fceux : 715/833
+   unwritten RAM matching fill zero  : 330/833
+   unwritten RAM matching fill ff    : 399/833
+   unwritten but != fceux fill: $0008=BD $000C=23 $000D=BF $001B=09 $002F=07 $0030=FF $0031=FF $0034=00 $0036=6C $0045=03 $0046=01 $004A=FF $0067=83 $0074=00 $0075=00 $0076=00 $0077=00 $007C=00 $0083=B1 $0085=20 $0086=51 $0088=D0 $008A=03 $008B=10 ...
+   real $0009 ref=00 emu=01 frame_ready
+   real $000A ref=14 emu=18 tmp_0A
+   real $0010 ref=0C emu=62 jmp_trampoline
+   real $0011 ref=1F emu=CB tmp_11
+   real $0012 ref=B0 emu=CA tmp_12
+   real $006E ref=1A emu=00 cur_bank16_x2
+   real $006F ref=1B emu=01 r7_shadow
+   real $01F4 ref=EB emu=2C 
+   real $01F5 ref=81 emu=F7 
+   real $01F6 ref=7E emu=09 
+   real $01F7 ref=F8 emu=F7 
+   real $01F8 ref=D1 emu=20 
+   real $01F9 ref=F4 emu=FF 
+   real $01FA ref=00 emu=84 
+   real $01FB ref=09 emu=FE 
+   real $01FC ref=00 emu=64 
+   real $01FD ref=22 emu=CB 
+   real $01FE ref=00 emu=18 
+   real $0628 ref=1B emu=1A ram_0628
+   real $0629 ref=03 emu=02 
+   real $062A ref=05 emu=04 
+   real $062B ref=1B emu=1A 
+   with fill=fceux/zero (offset +1): 33 RAM diffs (OAM excluded), 0/64 OAM sprites: $0008=BD/BC $0009=00/01 $000A=14/18 $000C=23/21 $000D=BF/20 $0010=0C/62 $0011=1F/CB $0012=B0/CA $0045=03/02 $0046=01/03 $004A=FF/00 $006E=1A/00 $006F=1B/01 $01F4=EB/2C $01F5=81/F7 $01F6=7E/09 $01F7=F8/F7 $01F8=D1/20 $01F9=F4/FF $01FA=00/84 $01FB=09/FE $01FC=00/64 $01FD=22/CB $01FE=00/18 $060C=50/4F $0614=D0/CF $0617=CA/CB $0627=13/12 $0628=1B/1A $0629=03/02 ...
+   WRAM unwritten 2634 (fill hits fceux=1282 zero=2584 ff=0), real diffs 1: $6217-$6217
+   wreal $6217 ref=00 emu=FF 
+   with fill=fceux/zero: 6 WRAM diffs in $6217-$6217 $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+
+total real RAM diffs over 12 frames: 120

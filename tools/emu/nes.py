@@ -29,17 +29,41 @@ from .apu import ApuStub
 from .pads import Pads
 
 
+RAM_FILLS = {
+    # FCEUX 2.6 "Default" RAM init: 4 bytes $00, 4 bytes $FF, repeating (session 73, tools/ref/fill_probe.py)
+    'fceux': lambda n: bytes(0xFF if i & 4 else 0x00 for i in range(n)),
+    'zero': lambda n: bytes(n),
+    'ff': lambda n: bytes([0xFF]) * n,
+}
+
+
+def make_fill(spec, n):
+    if isinstance(spec, int):
+        return bytes([spec & 0xFF]) * n
+    if isinstance(spec, str):
+        return RAM_FILLS[spec](n)
+    b = bytes(spec)
+    assert len(b) == n, f'fill is {len(b)} bytes, need {n}'
+    return b
+
+
 class Stop(Exception):
     """Raised by a hook to stop the current run (break point, run-func return, ...)."""
 
 
 class NES:
-    def __init__(self, path=None, power=True):
+    def __init__(self, path=None, power=True, ram_fill=None, wram_fill=None):
+        """ram_fill / wram_fill: power-on contents of $0000-$07FF / $6000-$7FFF (default all 0).
+        An int fills every byte; 'fceux' = FCEUX 2.6 default RAM init (see RAM_FILLS); bytes = as is."""
         self.cart = load(path) if path else load()
         self.ppu = PPU()
         self.apu = ApuStub()
         self.pads = Pads()
         self.bus = Bus(self.cart, ppu=self.ppu, apu=self.apu, pads=self.pads)
+        if ram_fill is not None:
+            self.bus.ram[:] = make_fill(ram_fill, 0x800)
+        if wram_fill is not None:
+            self.bus.wram[:] = make_fill(wram_fill, 0x2000)
         self.mapper = self.bus.mapper
         self.cpu = CPU(self.bus)
         self.ppu.attach(self.cpu, self.mapper)
