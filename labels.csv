@@ -476,6 +476,8 @@ bank,addr,name,comment
 15,A400,BossPhaseDispatch,A=boss base: JMP (15:A413[(A+$0600 X)*2]) per-boss phase handlers
 15,A413,BossPhaseTable,ptr16[] phase handlers for BossPhaseDispatch
 15,ADD4,AiBoss88,AI $E7 (type $88): $07D7=4 when phase!=0; 26:9B07 A=$C0; BossPhaseDispatch base $1B
+15,B6C1,BossBgStrip,s72: A=n 0-9 -> BossBgStripPtrs; SetR6(7); copy $C0 B of bank-7 $xxF0 rows (14 kept/page) to $6000; PpuQueueBlock($2F+n) (14x3 strip); callers 15:B377 15:B4CB (AI $EB phases)
+15,B709,BossBgStripPtrs,s72: .dw[10] bank-7 $80F0+n*$300; n 0-4 / 5-9 = two 14x15-tile BG pictures (5 strips each; blocks $2F-$33 / $34-$38)
 15,B2DA,AiBowOfTruth9E,AI $EB (type $9E): 26:9B07 A=$C7; $07D7=$10 + IRQ mode 7 when phase!=0; BossPhaseDispatch base $2B
 *,0743,opel_revive,$40 while the Opel Statue revive runs so sub_state 6 consumes the statue; 0 = manual use is refused
 20,8466,StaleText20_8466,dead filler to 84FF: copy of 22:A466 text (filler_scan.DEAD)
@@ -804,12 +806,19 @@ bank,addr,name,comment
 10,8400,AreaHeaderTableHi,s32: .dw[128] area header ptrs for area ids $80-$FF (30:C7BB; C=1 after ASL area_id); 8 nulls
 12,9301,AreaPtrTableHi,s32: .dw area record ptrs for ids $80-$FF (31:E0EB / 31:E15F); second half of AreaPtrTable 12:9201
 13,AD00,ObjTypeTableHi,s32: .dw ObjType record ptrs for types $80-$FF (30:C27D); second half of ObjTypeTable 13:AC00
-14,9C82,ItemAuxPtrs,s32: .dw[item id $23] -> bank 15 $A106-$A178 records (14:85C8); follows ItemUseTable; count not bounded (<=114)
-15,BEB7,PtrTable15_BEB7,s32: .dw[4] read at 15:BE83 (tracer ctx 06/15 -> $80F0-$97F0); consumer code looks odd; unconfirmed
-16,8B1F,MenuPtrTable_8B1F,s32: .dw[$12] (16:86D7) -> $12/$13; 5 plausible entries
-18,8F3B,State3PtrTable_8F3B,s32: .dw[zp_72] (18:80F5) -> $86/$87; 11 entries $8F52-$901D
-20,9767,TextPtrTable_9767,s32: .dw[A] (20:973F) -> $26/$27; count unknown (scan overruns at 35)
-20,9A6A,TextPtrTable_9A6A,s32: .dw[$20] (20:94CB) -> $26/$27; 12 entries $9A82-$9AF2
+14,9C82,ChestPresencePtrs,s72 (was ItemAuxPtrs): .dw[114] chest param $00-$71 -> 1-cond OR-lists 15:A106-A179 (!item-get flag); tools/chest_presence_dump.py
+14,85BF,ChestPresence,s72: $23=chest param; $20=1 if any cond of ChestPresencePtrs[p] true (NpcFlagTest; b7=last) else 0 -> SpawnH2 clears obj_active
+15,A106,ChestPresenceRecs,s72: 58 x 2-byte flag refs (all !Fxxx; b7 set); A110 = !F000 shared by unused params + TrapChest $70; ends at EventTriggerTable
+15,BEB7,EquipNameBase,s72 (was PtrTable15_BEB7): .dw[4] bank-6 bases $80F0 sword / $85F0 magic / $8EF0 armor / $97F0 shield; +id*$100 = 16-char name row (tools/equip_name_dump.py)
+15,BE7A,EquipNameRow,s72: SetR6(6); $18=slot 0-3; row = EquipNameBase[slot] + $0711[slot]*$100 (empty -> $80F0 blanks) -> $6010-$601F; SetR6($1A). Caller status screen 15:BD65
+06,80F0,EquipNameRows,s72: 16-byte status-screen name rows at $xxF0 of each page $80F0-$9FF0 (rest of each page is other data)
+16,8B1F,MenuSprShapes,s72 (was MenuPtrTable_8B1F): .dw[4] menu sprite shapes (count + n x y/tile/attr/x) 8B27-8B5E; 0=frame corners 1=arrow 2=2x2 icon 3=4-tile strip
+16,86D3,MenuSprDraw,s72: $12=shape (MenuSprShapes) $2E=OAM slot-1; offsets wram_60F8 y / 60F9 tile / 60FA attr OR / 60FB x
+18,8F3B,SceneMetaPtrs,s72 (was State3PtrTable_8F3B): .dw[11] SceneMetaDraw ids $72=0-10 -> $8F52-$901D; 18:8F51=$FF pad; first record follows
+20,9767,WakeSprFramePtrs,s72 (was TextPtrTable_9767): .dw[34] WakeCutscene metasprite frames $97AB-$9A51 (not text); WakeSprFrame 20:973D A=frame
+20,9A6A,WakePalPtrs,s72 (was TextPtrTable_9A6A): .dw[12] 16-byte BG palette sets $9A82-$9B01 -> pal_buf (20:94C9; X=$20 byte offset); fade cycle 0-3-0 / 7 / 8-11
+20,973D,WakeSprFrame,s72: A=frame -> WakeSprFramePtrs -> JMP WakeSprDraw 20:9500; 12 callers in WakeCutscene
+20,9500,WakeSprDraw,s72: ($26) = count + n x (dy tile attr dx); dy=$80 hides the sprite; base y wram_60FC / x wram_60FF (dx<0 / carry clip); OAM from $2A
 17,A11A,EndingModeTable,s63: ptr16[3] on $0602 (state 5): A14A scene / AA74 fade-in / AAAD fade-out
 19,A193,JmpTable19_A193,s67: title_mode 4 status-screen steps [title_step]: 7 entries A1A1 A26B A27C A34E A3DD A3F6(name entry) A57C(done) (JUMP_TABLES)
 19,A6F3,JmpTable19_A6F3,s67: title_mode 6 title-menu steps [title_step]: 3 entries A6FE / A749 TitleMenuInput / A796 TitleMenuRestart (JUMP_TABLES)
@@ -842,7 +851,7 @@ bank,addr,name,comment
 31,F6D6,NmiMode0,s41: irq_mode 0/7 NMI routine; JMP SoundUpdate only when PPUMASK shadow $01&$18=0 (rendering off so no HUD IRQ)
 31,F488,IrqHandler1Hud,s41: gameplay HUD split (line 190 in tools.emu): sprites off; PPUADDR $2B00; scroll X 0; CHR R0=$3C R1=$38; SoundUpdate with $06=1
 31,F691,IrqHandler6,s41: title/intro IRQ handler (line 137 in tools.emu); set every frame by bank 18 intro (irq_mode 5); s65: PPUADDR <- $59:$5A (intro: $2800 at line $89=137)
-11,BE00,Wram6000InitTable,s32: 256 B copied to wram_buf $6000-$60FF by 30:CCA4 and 19:BE5E (SetR6($0B): bank 11 at $8000; read as $9E00); contents not decoded
+11,BE00,Wram6000InitTable,s32/s72: 256 B copied to wram_buf by 30:CCA4 / 19:BE5E / 27:BD03 (SetR6($0B); read as $9E00); tile source of PpuQueueBlock $3E-$43 / $45 / $44 ($6000-$60DF); $60E0-$60FF copied but never read
 27,A8A2,AiDirTable_A8A2,s32: 4 bytes 08 08 09 07 = obj_meta_dir by Rand64&3 (27:A898); tracer decodes them as code because the BNE at A8A0 is always taken
 19,ABEA,TitleIntroStory,s38: title_mode 2 (intro story pages); START/SELECT ($4B&$30) -> 19:B15C skip -> title_mode 3
 19,A176,TitleStatusScreen,s38: title_mode 4 (green status screen + name entry); steps via JmpTable19_A193 by $06F1
@@ -940,6 +949,7 @@ bank,addr,name,comment
 30,CC2E,PlayPaletteRestore,s60: if slot 4 obj_active=$1A: clear it + PaletteBuild; irq_mode 2 -> 0 (run before state 1 unless substate 7/8)
 30,CC4D,SubstRestoreScreen,s60: substate 31: restore pos from $3C-$3F; HUD window rebuild 19:BA65; queue blocks 3 and $3E-$43; BG+spr on; sub_state=8
 30,C676,WaitPpuQueue,s60: spin until $0A=$0B (PPU queue drained)
+30,C518,PpuBlockTable,s72: 70 x 5-byte PpuQueueBlock records ($00-$45): ppu hi / ppu lo / len / src ofs in $6000 / rows-1 (b7 nowait); tools/ppu_block_dump.py
 30,C482,PpuQueueBlock,s60: A=block id (x5 record); WaitPpuQueue then queues the block
 30,D8C7,SubstEquipMenu,s60: substate 18 (SELECT): JSR 16:8000 menu; SelectedUseItem; SwordPowerLevel
 30,D985,SubstArmorShop,s60: substate 32 (AI $0F types $42 $48): ShopWalkIn + 16:9500 + ShopWalkOut
@@ -990,7 +1000,7 @@ bank,addr,name,comment
 31,FE18,ShopDoorClose,s64: dead (no callers; stubbed by FE17 RTS): irq_mode=4; $58 = 6 down to 1; 4 frames per step
 18,8198,WaitFrameReady,s69: spin until frame_ready $09 != 0; clear it (bank 18 screen-setup library)
 18,81D8,OamHideAll18,s69: oam_y = $F0 for every sprite from OAM 0 (from 4 when irq_mode is not 0/3)
-18,80E7,SceneMetaDraw,s69: cut-scene metasprite: $72 = id (State3PtrTable_8F3B[$72*2]) at x $88 / y $89; $06C5=4 $06C7=0; the intro tower etc.
+18,80E7,SceneMetaDraw,s69: cut-scene metasprite: $72 = id (SceneMetaPtrs[$72*2]) at x $88 / y $89; $06C5=4 $06C7=0; the intro tower etc.
 18,82B3,MenuPalBlack,s69: pal_buf $6140-$615F = $0F (all black)
 18,82F1,MenuPalApply,s69: copy $06D0-$06EF (MenuPalLoad result) -> pal_buf
 18,82FD,MenuPalFadeIn,s69: pal_buf = $06D0-$06EF & $0F (darkest step); state3_mode = 1 = fade-in

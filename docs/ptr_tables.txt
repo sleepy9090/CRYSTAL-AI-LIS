@@ -2,7 +2,7 @@
 
 kind  table          count  elem  code-hits  target range   nulls  label / consumers
 
-## pointer tables found from consumers (68)
+## pointer tables found from consumers (69)
 word  10:8300          128   data     0      $84F8-$BCDD     23   AreaHeaderTable  <- 30:C7AF  ctx=10/11
 word  10:8400          132   data     0      $8502-$FF00      8   AreaHeaderTableHi  <- 30:C7BB  ctx=10/11
 word  12:9201          128   data     0      $93F9-$BFF0     25   AreaPtrTable  <- 31:E0DF, 31:E153  ctx=12/13
@@ -17,18 +17,19 @@ word  14:8A5D           68   data     0      $8AE5-$98E5      0   NpcScriptPtrsH
 word  14:99F4           28   data     0      $9A4C-$9AF8      0   TelepathyHintLists  <- 14:81D9  ctx=14/15
 word  14:9B00          113   data     0      $9DE6-$A05E      0   ItemGetTable  <- 14:8278, 14:8358  ctx=14/15
 word  14:9BE2           80   data     0      $A065-$A100      0   ItemUseTable  <- 14:8322  ctx=14/15
-word  14:9C82          114   data     0      $A106-$A178      0   ItemAuxPtrs  <- 14:85C8  ctx=14/15
+word  14:9C82          114   data     0      $A106-$A178      0   ChestPresencePtrs  <- 14:85C8  ctx=14/15
 word  15:A17A           67   data     0      $A200-$A3BA      0   EventTriggerTable  <- 14:80F1  ctx=14/15
 word  15:A413           50   code    25      $A48B-$B67A      2   BossPhaseTable [JUMP_TABLES]  <- 15:A406  ctx=26/15
+word  15:B709           11   data     4      $80F0-$E9A9      0   BossBgStripPtrs  <- 15:B6CC  ctx=26/15
 word  15:B96B           14   data     0      $B987-$BA83      1   BossRecPtrs  <- 15:B82A  ctx=26/15
 word  15:BAFE           15   data     0      $BB1A-$D3D3     11   BossFleeRecPtrs  <- 15:BACD  ctx=26/15
-word  15:BEB7            4   data     0      $80F0-$97F0      0   PtrTable15_BEB7  <- 15:BE83  ctx=06/15
-word  16:8B1F            5   data     0      $8B27-$FF04      0   MenuPtrTable_8B1F  <- 16:86D7  ctx=16/17
-word  16:9086           74   data     0      $911A-$9468      0   MenuItemNames  <- 16:8A1A  ctx=16/17
+word  15:BEB7            4   data     0      $80F0-$97F0      0   EquipNameBase  <- 15:BE83  ctx=06/15
+word  16:8B1F            5   data     0      $8B27-$FF04      0   MenuSprShapes  <- 16:86D7  ctx=16/23
+word  16:9086           74   data     0      $911A-$9468      0   MenuItemNames  <- 16:8A1A  ctx=16/23
 word  17:A11A            3   code     3      $A14A-$AAAD      0   EndingModeTable [JUMP_TABLES]  <- 17:A10B  ctx=16/17
-word  17:A140            5   code     4      $A056-$A0BC      1   (unlabelled) [JUMP_TABLES]  <- 17:A131  ctx=16/17
+word  17:A140            5   code     4      $A056-$A0BC      1   EndingSubTable [JUMP_TABLES]  <- 17:A131  ctx=16/17
 word  17:A166           30   data     9      $A0EB-$A71B      0   EndingPhaseTable  <- 17:A157  ctx=16/17
-word  18:8F3B           11   data     0      $8F52-$901D      0   State3PtrTable_8F3B  <- 18:80F5  ctx=18/19
+word  18:8F3B           11   data     0      $8F52-$901D      0   SceneMetaPtrs  <- 18:80F5  ctx=18/19
 word  19:A038            3   code     3      $8310-$A03E      0   State3ModeTable [JUMP_TABLES]  <- 19:A029  ctx=18/19
 word  19:A052            7   code     7      $A0B5-$ABEA      0   State3SubTable [JUMP_TABLES]  <- 19:A043  ctx=18/19
 word  19:A193            7   code     7      $A1A1-$A57C      0   JmpTable19_A193 [JUMP_TABLES]  <- 19:A184  ctx=18/19
@@ -42,10 +43,10 @@ word  20:8900          128   data     0      $8AF0-$8D35      0   TextDictPtrs  
 word  20:8A00           10   data     0      $8D38-$8D77      0   TextStr05  <- 20:8689  ctx=20/21
 word  20:8A14           36   data     0      $8D8E-$8E7A      0   TextStr06  <- 20:86D4  ctx=20/21
 word  20:8A5C           74   data     0      $8E81-$922B      0   TextStr07  <- 20:86E8, 20:8788  ctx=20/21
-word  20:9767           35   data     1      $97AB-$F802      0   TextPtrTable_9767  <- 20:973F  ctx=20/21
-word  20:9A6A           12   data     0      $9A82-$9AF2      0   TextPtrTable_9A6A  <- 20:94CB  ctx=20/21
+word  20:9767           35   data     1      $97AB-$F802      0   WakeSprFramePtrs  <- 20:973F  ctx=20/21
+word  20:9A6A           12   data     0      $9A82-$9AF2      0   WakePalPtrs  <- 20:94CB  ctx=20/21
 word  24:8000           16   code    16      $8364-$8685      0   SndOpcodeTable [JUMP_TABLES]  <- 24:8357  ctx=24/--
-word  24:8C0C           32   data     0      $8C4C-$BF3A      3   SndMusicTable  <- 24:8179  ctx=24/--
+word  24:8C0C           32   data     1      $8C4C-$BF3A      3   SndMusicTable  <- 24:8179  ctx=24/--
 word  26:8FBB            4   code     4      $8FC4-$94B0      0   HitHandlerTable [JUMP_TABLES]  <- 26:8FA2  ctx=26/27
 word  27:A072           16   code    16      $A0A2-$A1A1      0   JmpTable27_A072 [JUMP_TABLES]  <- 27:A064  ctx=26/27
 word  27:A314          128   code    93      $9B45-$BA2E     27   ObjAiTable [JUMP_TABLES]  <- 30:CD0C  ctx=26/27
@@ -75,8 +76,8 @@ split 26:84BC/84CC      16   data     0      $84EC-$8ADC      0   ObjStepSpeedTa
 ## word/byte-pair reads that are NOT pointer tables (<2 pointer-like entries: records, coordinates, field pairs) (45)
   15:B7C2, 15:B7C3, 16:8B73, 16:8C1B MenuStrings, 16:8C1D, 16:9ADE, 16:9EAC, 16:9EC2, 19:A56C, 19:BD5B, 19:BD5C, 20:BC00 ShotTable, 20:BD00, 20:BD80 ShotOffsets, 24:8724 SndVibOffsetTable, 24:8BD8 SndDmcTable, 24:8BD9, 24:8BDA, 24:9FC0, 26:8B9E LevelXpTable, 26:8BDE, 26:8EC5 HudElemTable, 26:8EC7, 26:96F1 CollPairTable, 26:96F2, 26:96F3, 26:9907 BgProbePoints, 27:A242, 27:AD9C NpcLookAhead, 27:AFED, 27:B1F5, 27:B8E6, 27:B8E7, 27:BBCE, 27:BBD0, 30:CA26 GameStartObjTable, 30:CF48, 30:D047, 30:D048, 31:EF1B, 16:9D8D/9D92, 16:9D9E/9DA2, 16:9DA2/9DA0, 27:B1E9/B1ED, 31:EF1B/EF1D
 
-## orphan word runs (no traced consumer; >=4 words in one window, >=50% of targets on a label or traced insn, >=60% ascending) — 262 of 582 raw runs; top 60 by length
-20:8000  x511 asc 0.98  on-code/label 315  $A000-$BF66  
+## orphan word runs (no traced consumer; >=4 words in one window, >=50% of targets on a label or traced insn, >=60% ascending) — 263 of 581 raw runs; top 60 by length
+20:8000  x511 asc 0.98  on-code/label 317  $A000-$BF66  
 15:A105  x58  asc 0.77  on-code/label  47  $A000-$A0E7  
 11:A7BC  x34  asc 0.61  on-code/label  28  $8080-$9E9A  
 18:9D51  x33  asc 0.94  on-code/label  17  $E3E3-$F8F8  
@@ -104,7 +105,6 @@ split 26:84BC/84CC      16   data     0      $84EC-$8ADC      0   ObjStepSpeedTa
 25:B112  x11  asc 0.70  on-code/label   9  $D5DB-$DEDF  
 10:964E  x10  asc 0.67  on-code/label   7  $8000-$9C89  
 12:8006  x10  asc 1.00  on-code/label   9  $A0EA-$A28A  
-15:B708  x10  asc 1.00  on-code/label   6  $F060-$F099  
 17:B8D2  x10  asc 1.00  on-code/label   7  $B8D2-$BCF6  
 26:83B7  x10  asc 0.67  on-code/label   8  $8383-$9595  
 10:9CAF  x9   asc 0.62  on-code/label   9  $8000-$9683  
@@ -136,3 +136,4 @@ split 26:84BC/84CC      16   data     0      $84EC-$8ADC      0   ObjStepSpeedTa
 11:AD9F  x6   asc 1.00  on-code/label   3  $ADAB-$AE09  
 11:AF95  x6   asc 1.00  on-code/label   3  $AFA1-$B048  
 11:B2D3  x6   asc 0.80  on-code/label   3  $E0FF-$FF07  
+11:B8D3  x6   asc 0.80  on-code/label   3  $E0FF-$FF05  

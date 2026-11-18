@@ -2,14 +2,10 @@
 
 Traced code from tools/disasm_all.py; ctx = (8KB bank at $8000, bank at $A000), -- = unknown.
 
-## calls: 2057 — OK 2052, UNRESOLVED 1, UNTRACED 4
-  UNRESOLVED  15:AB84 JSR -> $9824  ctx=--/15
-  UNTRACED    16:9BC6 JSR -> 17:BC03 sub_17_BC03  ctx=16/17
-  UNTRACED    16:9BD6 JSR -> 17:BC03 sub_17_BC03  ctx=16/17
-  UNTRACED    16:9C4B JSR -> 17:BC00 sub_17_BC00  ctx=16/17
-  UNTRACED    16:9C64 JSR -> 17:BC00 sub_17_BC00  ctx=16/17
+## calls: 2383 — OK 2383
 
-## tables: 404 — NULL 39, OK 365
+## tables: 549 — NULL 48, OK 501
+  NULL        17:A140 .dw $0000
   NULL        19:A060 .dw $0000
   NULL        19:A062 .dw $0000
   NULL        27:A314 .dw $0000
@@ -39,6 +35,10 @@ Traced code from tools/disasm_all.py; ctx = (8KB bank at $8000, bank at $A000), 
   NULL        27:A3FE .dw $0000
   NULL        27:A408 .dw $0000
   NULL        27:A410 .dw $0000
+  NULL        27:BA4E .dw $0000
+  NULL        27:BA56 .dw $0000
+  NULL        30:C92B .dw $0000
+  NULL        30:C92D .dw $0000
   NULL        30:CAE2 .dw $0000
   NULL        30:CAE8 .dw $0000
   NULL        30:CAF0 .dw $0000
@@ -49,8 +49,12 @@ Traced code from tools/disasm_all.py; ctx = (8KB bank at $8000, bank at $A000), 
   NULL        30:CB28 .dw $0000
   NULL        30:CB2A .dw $0000
   NULL        30:CB2C .dw $0000
+  NULL        31:E3E1 .dw $0000
+  NULL        31:E3E3 .dw $0000
+  NULL        31:E3E5 .dw $0000
+  NULL        31:F6D2 .dw $0000
 
-## banks: 136 — DYNAMIC 24, OK 112
+## banks: 149 — DYNAMIC 24, OK 125
   DYNAMIC     15:AB51 SetR6        JSR Rand64 @15:AB4E
   DYNAMIC     15:AB70 SetR6        PLA  @15:AB6F
   DYNAMIC     26:8C2F SetR7        PLA  @26:8C2E
@@ -76,7 +80,7 @@ Traced code from tools/disasm_all.py; ctx = (8KB bank at $8000, bank at $A000), 
   DYNAMIC     31:FFDC SetR7        PLA  @31:FFDB
   DYNAMIC     31:FFE0 SetR6        PLA  @31:FFDF
 
-## data: 570 — CODE-READ 4, MAPPER 80, OK 474, OUTWIN 12
+## data: 706 — CODE-READ 3, MAPPER 101, OK 589, OUTWIN 13
   OUTWIN      19:BE5E LDA $9E00,Y    -> 11:9E00  ctx=11/19
   CODE-READ   24:8427 LDA $842D,Y    -> 24:842D SndOctaveTable  ctx=24/25
   OUTWIN      26:973E LDA $BC00,Y    -> 20:BC00 ShotTable  ctx=26/20
@@ -87,13 +91,14 @@ Traced code from tools/disasm_all.py; ctx = (8KB bank at $8000, bank at $A000), 
   OUTWIN      26:9759 LDA $BD01,Y    -> 20:BD01  ctx=26/20
   OUTWIN      26:975E LDA $BD02,Y    -> 20:BD02  ctx=26/20
   OUTWIN      26:9763 LDA $BD03,Y    -> 20:BD03  ctx=26/20
-  OUTWIN      26:97B5 LDA $BD80,Y    -> 20:BD80  ctx=26/20
+  OUTWIN      26:97B5 LDA $BD80,Y    -> 20:BD80 ShotOffsets  ctx=26/20
   OUTWIN      26:97BA LDA $BD81,Y    -> 20:BD81  ctx=26/20
-  CODE-READ   27:A898 LDA $A8A2,Y    -> 27:A8A2 AiDirTable_A8A2  ctx=26/27
   CODE-READ   27:B2E7 ADC $B2F1,X    -> 27:B2F1  ctx=26/27
+  OUTWIN      27:BD03 LDA $9E00,Y    -> 11:9E00  ctx=11/27
   OUTWIN      30:CCA4 LDA $9E00,Y    -> 11:9E00  ctx=11/19
   CODE-READ   30:D416 LDA $D40C,Y    -> 30:D40C ItemRemapTable  ctx=11/19
 
-## labels: 428 — OK 427, OUTWIN 1
+## labels: 647 — OK 645, OUTWIN 2
   OUTWIN      20:BC00 ShotTable — bank 20 sits at $8000; same 16KB pair: 21:BC00
+  OUTWIN      20:BD80 ShotOffsets — bank 20 sits at $8000; same 16KB pair: 21:BD80
 

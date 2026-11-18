@@ -33,7 +33,9 @@ MAX_CTX = 6           # contexts traced per location
 # Known pure-data areas (Data-Range Map): never traced as code.
 KNOWN_DATA = [(b, None, None, 'screen pages / metatiles') for b in range(0, 10)] + [
     (21, None, None, 'dialogue text'), (22, None, None, 'dialogue text'),
-    (23, 0xA000, 0xBBFF, 'dialogue text')]
+    (23, 0xA000, 0xBBFF, 'dialogue text'),
+    # s72: AiDirTable_A8A2 (08 08 09 07) after a BNE at 27:A8A0 that is always taken
+    (27, 0xA8A2, 0xA8A5, 'AiDirTable_A8A2')]
 
 # (bank, addr, count or None=auto, ctx(i) -> (r6, r7), note)
 JUMP_TABLES = [
@@ -74,12 +76,15 @@ DATA_NAME_RE = re.compile(
     r'AttrReplicate$|SwordElemBit$|SwordMpCost$|DiagToCardinal$|BgProbePoints$|ShotOffsets$)'
     r'|(Table\w*|Ptrs|PtrsLo|PtrsHi|PresenceLo|PresenceHi|PeriodLo|Strings|Names|Digits|Descs?|Flags|Ids|Params|'
     r'List|Lists|Recs|RecPtrs|Tiles|Index|Class|RandSeq|Gate|Cap|Grid|Str\d\d|Ofs|'
-    r'Value|Handlers)$')
+    r'Value|Handlers|Shapes|Base|Rows|Goods|Prices)$')
 CODE_NAMES = {'SaveJumpTable', 'AreaSubTable'}
 RESTORE_BANKS = 0xFFDB
 # Label seeds whose code runs with a non-default partner bank:
 # bank 15 AI/boss code is mapped at $A000 by ObjUpdateAll (SetR7($0F)) with bank 26 at $8000.
 LABEL_CTX = [(15, 0xA400, 0xBBFF, (26, 15))]
+# Per-bank default context (session 72): bank 16 (menus) is always entered with bank 23 at $A000
+# (SubstEquipMenu 30:D8C7: SetR6(16)/SetR7($17), JSR $8000), so its $BC00/$BC03 calls reach SaveJumpTable.
+BANK_CTX = {16: (16, 23)}
 FLAG_KEEP_ZN = {'STA', 'STX', 'STY', 'PHA', 'PHP', 'TXS', 'CLC', 'SEC', 'CLI', 'SEI', 'CLD',
                 'SED', 'CLV', 'NOP', 'JMP'}
 FLAG_KEEP_C = FLAG_KEEP_ZN | {'LDA', 'LDX', 'LDY', 'TAX', 'TAY', 'TXA', 'TYA', 'TSX', 'INX',
@@ -100,6 +105,8 @@ def default_ctx(bank, addr=None):
             return ctx
     if bank in (30, 31):
         return (None, None)
+    if bank in BANK_CTX:
+        return BANK_CTX[bank]
     if w == 0x8000:
         return (bank, bank + 1)
     return (bank - 1 if bank % 2 else None, bank)
@@ -278,7 +285,7 @@ class Dis:
                 self.code.add(l)
             if locs[-1][0] != bank:
                 self.straddle.add((bank, addr))
-            if key not in self.insn:
+            if key not in self.insn or ctx == BANK_CTX.get(bank):   # s72: the bank's real ctx wins
                 self.insn[key] = (sz, mn, md, val, ctx)
             here = (bank, addr)
             nxt = addr + sz
