@@ -55,7 +55,7 @@ JUMP_TABLES = [
 ]
 
 DATA_NAME_RE = re.compile(
-    r'^(Stale|BitMask$|Vectors$|IrqDefaultPtr$|TextWinParams|TextDict$|NameCharGrid$|'
+    r'^(Stale|BitMask$|Vectors$|IrqDefaultPtr$|TextWinParams|TextDict$|NameEntryRect$|'
     r'TextGroupBank$|EvType38Pos$)'
     r'|(Table\w*|Ptrs|PtrsLo|PtrsHi|PresenceLo|PresenceHi|PeriodLo|Strings|Names|Digits|Descs?|Flags|Ids|Params|'
     r'List|Lists|Recs|RecPtrs|Tiles|Index|Class|RandSeq|Gate|Cap|Grid|Str\d\d|Ofs|'

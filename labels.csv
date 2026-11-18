@@ -490,7 +490,9 @@ bank,addr,name,comment
 21,BF32,StaleSaveTbl21,dead filler to BFFF: copy of 23:BF32 save table
 27,BE40,StaleText27_BE40,dead filler to BFFF: copy of 21:BE40 text + 23 save table
 22,BF90,StaleFill22_BF90,dead filler to BFFF: copy of 18:9F90 after last bank 22 message
-18,9F05,NameCharGrid,char grid A-Z a-z 0-9 punct ($FF empty) to 9FC1; no reader found
+18,9DD4,NameEntryRect,s66: name-entry screen rect: ptr word $9DD6 then W=$1A H=$0A + tiles (blit by 19:A10E -> NT $2203); 10th row overlaps NameCellGrid 9EC2
+18,9EC2,NameCellGrid,s66: name-entry cell codes 4 rows x 32 (idx ($8B-$10)*16+$8A) to 9F41: $FF=not selectable $20=type glyph F0=END F1=right F2=left -> $06CC/$6410+X; read by NameEntryCursor 19:A5A9..A62E
+18,9F42,NameGlyphGrid,s66: name-entry glyph tiles 4x32 (A-Z a-z 0-9 punct; $20 space) to 9FC1 -> $06CD -> name $6418+X (+$32 if $05!=0 unless $10/$0C); read by 19:A634
 18,9FC2,Sub18_9FC2,DEC $06FE / INC $06F1 helper (same bytes as 19:ABA1); no caller found yet - NOT dead (session 22 correction)
 18,9FCC,MainState2Init,main state 2 (30:C931 SwitchBank16(9) JMP $9FCC): JSR 82B3/81D8/8198; irq_mode=3; clear zp $70-$98 + $0600-$0628 + $0680-$06FF; runs on into 19:A000; INC main_state -> 3
 19,A015,MainState3,main state 3 frame (30:C939 ReadPadsMenu then JMP $A015): $06FF--; dispatch $06F3 via State3ModeTable
