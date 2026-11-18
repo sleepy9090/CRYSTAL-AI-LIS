@@ -37,7 +37,7 @@ KNOWN_DATA = [(b, None, None, 'screen pages / metatiles') for b in range(0, 10)]
 
 # (bank, addr, count or None=auto, ctx(i) -> (r6, r7), note)
 JUMP_TABLES = [
-    (30, 0xC91F, 6, lambda i: (None, None), 'MainStateTable'),
+    (30, 0xC91F, 9, lambda i: (None, None), 'MainStateTable (6/7 null)'),
     (31, 0xF433, 8, lambda i: (None, None), 'IrqHandlerTable'),
     (30, 0xCADE, 40, None, 'SubstateHandlerTable (ctx from SubstateBankTable)'),
     (30, 0xD123, 32, lambda i: (14, 15), 'TalkActionTable'),
@@ -52,11 +52,26 @@ JUMP_TABLES = [
     (15, 0xA413, None, lambda i: (26, 15), 'BossPhaseTable'),
     (19, 0xA038, 3, lambda i: (18, 19), 'State3ModeTable ($06F3; JMP ($06FC) 19:A035)'),
     (19, 0xA052, 9, lambda i: (18, 19), 'State3SubTable ($06F0; JMP ($06FC) 19:A04F; 7-8 null)'),
+    # session 67: the 12 remaining dispatchers (counts from the index range, see REVERSE.md)
+    (17, 0xA11A, 3, lambda i: (16, 17), 'EndingModeTable ($0602; JMP ($008E) 17:A117)'),
+    (17, 0xA140, 5, lambda i: (16, 17), 'EndingSubTable ($060E; JMP ($008E) 17:A13D; 0 null)'),
+    (27, 0xA072, 16, lambda i: (26, 27), 'MagicCastTable ($10&$0F; JMP ($0010) 27:A06E)'),
+    (27, 0xBA40, 13, lambda i: (26, 27), 'Ai70PhaseTable (obj_phase; JMP ($0010) 27:BA3D; 7/11 null)'),
+    (30, 0xDBDC, 8, 'subst:20', 'TeleportMenuKeyTable (PadNewButtonIndex; JMP ($0010) 30:DBD9)'),
+    (30, 0xDDBD, 8, 'subst:21', 'TelepathyKeyTable (PadNewButtonIndex; JMP ($0010) 30:DDBA)'),
+    (30, 0xDF0E, 8, 'subst:23', 'ChangeFormKeyTable (PadNewButtonIndex; JMP ($0010) 30:DF0B)'),
+    (31, 0xE3D9, 8, lambda i: (12, 13), 'AreaEntryTable (($6D&$E0)>>4; JMP ($0010) 31:E419; 4-6 null)'),
+    (31, 0xF6C2, 10, lambda i: (None, None), 'NmiModeTable (irq_mode; JMP ($0052) 31:F6BF; 8 null)'),
+    (19, 0xA193, 7, lambda i: (18, 19), 'StatusStepTable (title_step; title_mode 4)'),
+    (19, 0xA6F3, 3, lambda i: (18, 19), 'TitleMenuStepTable (title_step; title_mode 6)'),
+    (19, 0xA7BC, 25, lambda i: (18, 19), 'OpeningStepTable (title_step; title_mode 0)'),
+    (19, 0xAC07, 28, lambda i: (18, 19), 'StoryStepTable (title_step; title_mode 2)'),
 ]
 
 DATA_NAME_RE = re.compile(
-    r'^(Stale|BitMask$|Vectors$|IrqDefaultPtr$|TextWinParams|TextDict$|NameEntryRect$|'
-    r'TextGroupBank$|EvType38Pos$)'
+    r'^(Stale|BitMask|Vectors$|IrqDefaultPtr$|TextWinParams|TextDict$|NameEntryRect$|'
+    r'TextGroupBank$|EvType38Pos$|SaveSumPages$|SlotCopyPages$|SndDmcSample$|AttrRowOffset$|'
+    r'AttrReplicate$|SwordElemBit$|SwordMpCost$|DiagToCardinal$|BgProbePoints$|ShotOffsets$)'
     r'|(Table\w*|Ptrs|PtrsLo|PtrsHi|PresenceLo|PresenceHi|PeriodLo|Strings|Names|Digits|Descs?|Flags|Ids|Params|'
     r'List|Lists|Recs|RecPtrs|Tiles|Index|Class|RandSeq|Gate|Cap|Grid|Str\d\d|Ofs|'
     r'Value|Handlers)$')
@@ -428,7 +443,10 @@ class Dis:
             for i in range(cnt):
                 ea = a + 2 * i
                 v = self.byte(b, ea) | self.byte(b, ea + 1) << 8
-                ctx = cfn(i) if cfn else self.substate_ctx(i)
+                if isinstance(cfn, str):          # 'subst:N' = the ctx of substate N
+                    ctx = self.substate_ctx(int(cfn.split(':')[1]))
+                else:
+                    ctx = cfn(i) if cfn else self.substate_ctx(i)
                 tb = self.resolve(v, ctx, (b, ea)) if v else None
                 self.tables[(b, ea)] = (tb, v)
                 if v:

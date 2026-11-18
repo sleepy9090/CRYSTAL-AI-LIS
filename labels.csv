@@ -493,7 +493,7 @@ bank,addr,name,comment
 18,9DD4,NameEntryRect,s66: name-entry screen rect: ptr word $9DD6 then W=$1A H=$0A + tiles (blit by 19:A10E -> NT $2203); 10th row overlaps NameCellGrid 9EC2
 18,9EC2,NameCellGrid,s66: name-entry cell codes 4 rows x 32 (idx ($8B-$10)*16+$8A) to 9F41: $FF=not selectable $20=type glyph F0=END F1=right F2=left -> $06CC/$6410+X; read by NameEntryCursor 19:A5A9..A62E
 18,9F42,NameGlyphGrid,s66: name-entry glyph tiles 4x32 (A-Z a-z 0-9 punct; $20 space) to 9FC1 -> $06CD -> name $6418+X (+$32 if $05!=0 unless $10/$0C); read by 19:A634
-18,9FC2,Sub18_9FC2,DEC $06FE / INC $06F1 helper (same bytes as 19:ABA1); no caller found yet - NOT dead (session 22 correction)
+18,9FC2,Sub18_9FC2,TitleStepWait: DEC $06FE; on 0 INC title_step (same bytes as 19:ABA1); s67: reached via the opening/story step tables JmpTable19_A7BC/AC07 (7+8 entries)
 18,9FCC,MainState2Init,main state 2 (30:C931 SwitchBank16(9) JMP $9FCC): JSR 82B3/81D8/8198; irq_mode=3; clear zp $70-$98 + $0600-$0628 + $0680-$06FF; runs on into 19:A000; INC main_state -> 3
 19,A015,MainState3,main state 3 frame (30:C939 ReadPadsMenu then JMP $A015): $06FF--; dispatch $06F3 via State3ModeTable
 19,A038,State3ModeTable,ptr16[3] by $06F3: A03E 18:8310 18:834A (JMP ($06FC) at 19:A035)
@@ -799,15 +799,31 @@ bank,addr,name,comment
 20,9767,TextPtrTable_9767,s32: .dw[A] (20:973F) -> $26/$27; count unknown (scan overruns at 35)
 20,9A6A,TextPtrTable_9A6A,s32: .dw[$20] (20:94CB) -> $26/$27; 12 entries $9A82-$9AF2
 17,A11A,EndingModeTable,s63: ptr16[3] on $0602 (state 5): A14A scene / AA74 fade-in / AAAD fade-out
-19,A193,JmpTable19_A193,s32: untraced dispatch (19:A190 JMP ($06FC)); <=7 entries $A1A1-$A57C
-19,A6F3,JmpTable19_A6F3,s32: untraced dispatch (19:A6F0 JMP ($06FC)); <=3 entries
-19,A7BC,JmpTable19_A7BC,s32: dispatch (19:A7B9 JMP ($06FC)); <=25 entries; 8 already traced
-19,AC07,JmpTable19_AC07,s32: dispatch (19:AC04 JMP ($06FC)); <=28 entries; 9 already traced
-27,A072,JmpTable27_A072,s32: untraced dispatch (27:A06E JMP ($0010); A*2); <=16 entries
-27,BA40,JmpTable27_BA40,s32: untraced AI phase dispatch (27:BA3D; obj_phase*2); <=16 entries
-30,DBDC,JmpTable30_DBDC,s32: untraced dispatch (30:DBD9) after SubstTeleportMenu; <=8 entries
-30,DDBD,JmpTable30_DDBD,s32: untraced dispatch (30:DDBA) after SubstTelepathySelect; <=8 entries
-30,DF0E,JmpTable30_DF0E,s32: untraced dispatch (30:DF0B) after SubstChangeForm; <=8 entries
+19,A193,JmpTable19_A193,s67: title_mode 4 status-screen steps [title_step]: 7 entries A1A1 A26B A27C A34E A3DD A3F6(name entry) A57C(done) (JUMP_TABLES)
+19,A6F3,JmpTable19_A6F3,s67: title_mode 6 title-menu steps [title_step]: 3 entries A6FE / A749 TitleMenuInput / A796 TitleMenuRestart (JUMP_TABLES)
+19,A7BC,JmpTable19_A7BC,s67: title_mode 0 opening steps [title_step]: exactly 25 entries (ends at code A7EE); 9FC2 = TitleStepWait / A064 = TitleStepFadeOut fillers; last = ABAB TitleOpeningEnd (JUMP_TABLES)
+19,AC07,JmpTable19_AC07,s67: title_mode 2 story steps [title_step]: exactly 28 entries (ends at code AC3F); 9FC2/A064 fillers; last = B15C TitleStoryEnd (JUMP_TABLES)
+27,A072,JmpTable27_A072,s67: magic cast handlers [$10&$0F = $0712 or 9 with accessory $12]: 16 entries A0A2 A0A3 A0D7 A18E A1A1 A17D A0F4 A161 MagicFlight MagicJump + 6x A0A2 (RTS) (JUMP_TABLES)
+27,BA40,JmpTable27_BA40,s67: AI $70 phase handlers [obj_phase]: exactly 13 entries (ends at code BA5A); 7 and 11 null; 10 = BD19 (-> SubstFinalSceneReset) (JUMP_TABLES)
+30,DBDC,JmpTable30_DBDC,s67: teleport-menu keys [PadNewButtonIndex 0-7 = A B SEL START U D L R]: DC70 / DC64 x3 / DBF4 DC0C DC26 DC3E (JUMP_TABLES)
+30,DDBD,JmpTable30_DDBD,s67: telepathy-select keys [PadNewButtonIndex]: SubstTelepathyReply / DE51 x3 / DD9A x2 (U/D ignored) / DDE5 DDE1 (JUMP_TABLES)
+30,DF0E,JmpTable30_DF0E,s67: change-form keys [PadNewButtonIndex]: DF2F / DE51 x3 / DEE4 x2 (U/D ignored) / DF22 DF1E (JUMP_TABLES)
+17,A140,EndingSubTable,s67: ptr16[5] on $060E (EndingScene): 0000 A056 A069 A0A2 A0BC (JUMP_TABLES)
+30,C210,PadNewButtonIndex,s67: C=1 + A=Y=index 0-7 of the single button in pad_new (A B SEL START U D L R; PadButtonMaskTable); C=0 + A=$FF if none / several
+30,C222,PadButtonMaskTable,s67: u8[8] 80 40 20 10 08 04 02 01
+27,BA2E,Ai70PhaseDispatch,s67: AI $70 (final scene): JMP (JmpTable27_BA40[obj_phase])
+18,8310,TitleFadeIn,s67: state3_mode 1: every 8th frame ($06FF&7) pal_buf[0-31] += $10 until = $06D0 target; all equal -> state3_mode 0
+18,8344,TitleFadeOutStart,s67: state3_mode = 2
+18,834A,TitleFadeOut,s67: state3_mode 2: fade-out stepped every 4th frame ($06FF&3)
+19,A064,TitleStepFadeOut,s67: TitleFadeOutStart; $06FE = $1E; INC title_step (step filler in the opening/story tables)
+19,A79F,TitleOpening,s67: title_mode 0: START/SELECT -> A7EE (A07C(0); TitleOpeningEnd) else JmpTable19_A7BC[title_step]
+19,ABAB,TitleOpeningEnd,s67: TitleFadeOutStart; title_mode = 5
+19,ABB4,TitleStoryInit,s67: title_mode 1: screen reset, irq_mode 3, CHR R2-R5 = $7E, title_mode = 2
+19,A0B5,TitleStatusInit,s67: title_mode 3: CHR $3C/$36/$C7/$C7, draws the status screen (-> title_mode 4)
+19,B15C,TitleStoryEnd,s67: title_mode = 3 (story end or START/SELECT skip)
+19,A653,TitleMenuInit,s67: title_mode 5: CHR $1C/$1E/$73/$7B, draws title screen (18:94BE ptr), $06B2 = $0B, INC title_mode -> 6, falls into TitleMenu
+19,A6DF,TitleMenu,s67: title_mode 6: JmpTable19_A6F3[title_step]
+19,A796,TitleMenuRestart,s67: title-menu step 2: DEC main_state (3 -> 2, re-runs MainState2Init)
 31,E3D9,AreaEntryTable,s46: 8 entries by ($6D&$E0)>>5: E422 normal / E51C keep pos / E533 save+load / E544 pit fall / 0000 x3 / E41C no record (was JmpTable31_E3D9)
 31,F6C2,JmpTable31_F6C2,NMI-mode routine table [irq_mode] used by NmiModeDispatch 31:F6AD: F6D6 F731 F751 F771 F782 F7C5 F7DB F6D6 0000 F731 (s41; mode 8 null)
 31,F6AD,NmiModeDispatch,s41: $57=0; JMP (JmpTable31_F6C2[irq_mode]); called every NMI (F417) and from IRQ handler 1 when $07 (missed NMI) set
