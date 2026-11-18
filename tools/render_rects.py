@@ -43,16 +43,22 @@ PATS = [
     ('r0', rb'\xA9(.)\x8D\xF0\x07'), ('r1', rb'\xA9(.)\x8D\xF1\x07'),
     ('bias', rb'\xA9(.)\x8D\xFE\x06'), ('pal', rb'\xA9(.)\x20\xBE\x82'),
     ('fill', rb'\xA9(.)\xA2(.)\xA0(.)\x20\xA1\x81'),
-    ('blit', rb'\xAD(..)\x85\x8E\xAD(..)\x85\x8F\xA9(.)\x85\x8C\xA9(.)\x85\x8D\x20\xF0\x81'),
+    # s68: up to 4 simple LDA #/STA zp/STA abs fillers may sit between the PPU-dest setup and the JSR
+    # (19:A80F, the opening date card: LDA #0 / STA $06FE / STA $04 / STA $05 before JSR at 19:A82A)
+    ('blit', rb'\xAD(..)\x85\x8E\xAD(..)\x85\x8F\xA9(.)\x85\x8C\xA9(.)\x85\x8D'
+             rb'(?:\xA9.|\x85.|\x8D..){0,4}\x20\xF0\x81'),
 ]
 
 
 def events():
+    """(sort addr, name, groups, shown addr). A blit sorts at its JSR, so fillers before it
+    (e.g. a $06FE bias store) apply first; it is still shown at its first LDA."""
     ev = []
     for name, p in PATS:
         for m in re.finditer(p, WIN, re.S):
             g = [x[0] if len(x) == 1 else x[0] | x[1] << 8 for x in m.groups()]
-            ev.append((cpu(m.start()), name, g))
+            at = cpu(m.end() - 3) if name == 'blit' else cpu(m.start())
+            ev.append((at, name, g, cpu(m.start())))
     ev.sort()
     return ev
 
@@ -71,12 +77,13 @@ def screens(ev):
 def build(scr, st):
     vram = bytearray(0x1000)  # $2000-$2FFF, 4 nametables (mirroring not modelled)
     log, used, snap = [], set(), dict(st)
-    for a, name, g in scr:
+    for _, name, g, a in scr:
         if name in ('r0', 'r1', 'bias'):
             st[name] = g[0]
         elif name == 'pal':
             if not g[0] & 0x80:
                 st['pal'] = g[0] & 15
+            log.append(f'  {bankaddr(a)} MenuPalLoad {g[0]:02X} ({"sprite" if g[0] & 0x80 else "BG"} set {g[0] & 15})')
         elif name == 'fill':
             hi, t, at = g
             if hi in (0x20, 0x24, 0x28, 0x2C):
@@ -139,14 +146,21 @@ def main(argv):
     idx = []
     st = {'r0': 0, 'r1': 2, 'bias': 0, 'pal': 0}
     n = 0
-    for s in scrs:
+    # s68: a page whose group has no BG MenuPalLoad is drawn by the same step as the next page and
+    # shown with that page's set (19:A95E: step A953 draws $2000 + $2800, then BG set 2 + fade-in)
+    bgpal = [next((e[2][0] & 15 for e in s if e[1] == 'pal' and not e[2][0] & 0x80), None) for s in scrs]
+    for i, s in enumerate(scrs):
         vram, log, used, snap = build(s, st)
         if not any(e[1] == 'blit' for e in s):
             continue
         n += 1
         # palette: the BG set loaded anywhere in the group (often after the blits); CHR/bias: at the last blit
         snap['pal'] = st['pal']
-        name = f'screen_{bankaddr(s[0][0]).replace(":", "_")}.png'
+        if bgpal[i] is None:
+            nxt = next((p for p in bgpal[i + 1:] if p is not None), None)
+            if nxt is not None:
+                snap['pal'] = nxt
+        name = f'screen_{bankaddr(s[0][3]).replace(":", "_")}.png'
         idx.append(f'{name}: {len(s)} events, R0={snap["r0"]:02X} R1={snap["r1"]:02X} pal set {snap["pal"]} '
                    f'nametables {" ".join("$%X" % (0x2000 + u * 0x400) for u in used)}')
         idx += log
