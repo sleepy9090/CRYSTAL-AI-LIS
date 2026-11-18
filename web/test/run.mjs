@@ -7,6 +7,7 @@
 //                         tools.emu runs the first MainLoop pass in, Verification Log row "Boot" s41;
 //                         the port skips the 212-frame cold-boot intro). 0 = count from the port's frame 0.
 //   --dump-screen F.png   last finished frame (--scale S)
+//   --shots F,F,... DIR   also write DIR/web_NNNN.png (1x) after each listed frame_no (Ph7 web 8/8)
 //   --dump-ram F / --dump-wram F   2KB RAM / 8KB WRAM, raw (same as tools.emu)
 //   --compare F.csv       one row per frame, tools/emu/compare.py columns (diff with tools/compare_frames.py)
 //   --quiet               no unported-routine log lines
@@ -29,6 +30,7 @@ function parseArgs(argv) {
       case '--frame0': a.frame0 = parseInt(v(), 10); break;
       case '--keys': while (i + 1 < argv.length && !argv[i + 1].startsWith('--')) a.keys.push(argv[++i]); break;
       case '--dump-screen': a.screen = v(); break;
+      case '--shots': a.shots = new Set(v().split(',').map((s) => parseInt(s, 10))); a.shotDir = v(); break;
       case '--scale': a.scale = parseInt(v(), 10); break;
       case '--dump-ram': a.ram = v(); break;
       case '--dump-wram': a.wram = v(); break;
@@ -55,6 +57,10 @@ for (let i = 0; i < a.frames; i++) {
   const f = a.frame0 + m.frame;
   m.runFrame(keys.get(f) || 0);
   if (rows) rows.push(compareRow(m, f).join(','));
+  if (a.shots && a.shots.has(f)) {
+    const { w, h, rgb } = fbToRgb(m.ppu.fb, data.palettes.nesRgb, 1);
+    writeFileSync(path.join(a.shotDir, `web_${String(f).padStart(4, '0')}.png`), encodePng(w, h, rgb));
+  }
 }
 const dt = (performance.now() - t0) / 1000;
 if (rows) writeFileSync(a.compare, rows.join('\n') + '\n');
