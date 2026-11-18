@@ -85,7 +85,7 @@ bank,addr,name,comment
 *,06C1,orbit_burst_timer,counts down; burst drawn while <$0E
 *,07EF,obj1_oam_ofs,OAM offset of obj 1's first sprite (for palette flash)
 *,07FF,obj_draw_rot,DEC each ObjSpriteDraw; &3 picks draw order; parity for half-rate flicker
-*,0710,obj1_flash,bit7: force obj1 sprites to palette 0
+*,0710,obj1_flash,player status: lo nibble 1 paralysis 2 stone 3 poison 4 transformed; b7 changed form (magic 7) + b5-4 form 0-3; b6 warp exit (s76); also forces obj1 sprites to palette 0
 24,8000,SndOpcodeTable,ptr16[16] stream opcode handlers indexed by byte>>4 (see REVERSE.md Sound data format)
 24,8132,SndInitChannel,X=chn: $011A/$0120=stream ptr; dur=1; octave=0; regs cleared; $0114=1 (active)
 24,8169,SndInitSfxChannel,like SndInitChannel but stream hi += $20 (bank 12 data assembled at $8xxx; played at $Axxx)
@@ -1020,3 +1020,6 @@ bank,addr,name,comment
 19,A34E,StatusTypeStep,s74: status step 3: types one text cell every 2nd pass (title_ctr b0) via PpuQueueDrainWait
 *,6423,name_entry_frames,s74: INC per NameEntryInput pass (19:A3F6); cleared at 19:A3F2; saved (mirrors $6D23/$7D23 -> save_checksum $70F4/$70F5)
 30,DC58,TeleportAreaTable,s75: 11 area ids (02 18 1C D5 50 1B 71 72 8C 8E 93) + FF; index = cursor row*3+col (30:DC79; 11 = cancel); flag test TestFlagF2F0 at DC82; same area -> no reload
+30,DF2F,ChangeFormApply,s76: change-form menu A key: SFX $39; 31-frame R4=$4D effect; obj1_flash |= ($21<<4)|$80 (b7 changed form + b5-4 form 0-3); SpendMp($14)
+30,D280,EvActWarp,s76: event act 24: player slots 0/1 to slot $1E pos; obj1_flash |= $40 (warp exit: speed 9 spin until off b1/b2 tiles); $0561=$0641=2
+26,9B41,WarpSpinPoseTable,s76: 4 meta ids 88 C2 8A EF by facing while obj1_flash b6 (warp exit)
