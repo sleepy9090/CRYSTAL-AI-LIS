@@ -251,6 +251,9 @@ bank,addr,name,comment
 18,82BE,MenuPalLoad,A b7=0 BG/1 sprite half; A&15 -> 16-byte set 18:838B -> $06D0/$06E0; backdrop into spr slots
 18,838B,MenuPalSets,16 x 16-byte full palette sets for bank 18/19 screens (MenuPalLoad)
 4,8000,ScreenBlank80,screen page $80: 240 x metatile $80 = black; the grid 'no screen' id is a real page
+18,8000,IntroRectPtr,s62: .dw $8002; read as LDA $8000/$8001 by IntroColdBoot 18:805F -> $8E/$8F (ROM read - not the MMC3 regs)
+18,8002,IntroRect,s62: NtRectBlit record W=$0C H=$03 + 36 tile bytes ($8004-$8027) drawn at PPU $21CA by the cold-boot intro
+18,8028,IntroColdBoot,s62: cold-boot intro entry; SwitchBank16(9) + JSR from 31:F39C only; runs ~212 frames (irq_mode 5) before JMP $C900
 18,81A1,NtFill,A=PPU hi; X=tile x$3C0; Y=attr x$40 (rendering off)
 18,81F0,NtRectBlit,stream ($8E): W H then H rows of W tiles (+$06FE) to PPU $8C/$8D stride $20
 18,824B,NtRectBlitQueued,same W H format; one row per frame through $6200 queue
