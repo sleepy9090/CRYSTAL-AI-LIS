@@ -939,3 +939,14 @@ bank,addr,name,comment
 19,A749,TitleMenuInput,s63: SELECT toggles $82 (cursor x 19:A77B); START -> 19:A77D; idle timer $06B4/$06B5
 19,A77D,TitleMenuStart,s63: $82=1 -> main_state=8 (continue) else title_mode=1 (new game)
 19,BFC4,FinalSceneToEnding,s63: end of SubstFinalSceneReset: main_state=4 (only writer)
+31,F731,NmiMode1,s64: irq_mode 1/9 NMI routine: NmiScrollSet + ApplyChrPlay; arm IRQ handler 2 at latch ((07DA&7)^7)+7
+31,F751,NmiMode2,s64: irq_mode 2 (pause/status): PPUCTRL NT2 ($2800); scroll 0;0; ApplyChrAlt; rendering on -> NmiMode0HudIrq else JMP SoundUpdate
+31,F782,NmiMode4,s64: irq_mode 4 (dead: shop-door effect stubbed out): R1 alt = F7B5[$58]; $58!=0 -> handler 4 at line 4 (+stray STA $F451); $58=0 -> BG off + IRQ off
+31,F7B5,NmiMode4R1Table,s64: 16 CHR R1 values indexed by $58 for irq_mode 4
+31,F7C5,NmiMode5,s64: irq_mode 5 (cold intro): PpuScrollWrite + ApplyChrPlay; arm IRQ handler 6 at latch $58
+31,F7DB,NmiMode6,s64: irq_mode 6 (equipment menu): PPUCTRL shadow; scroll 0;0; ApplyChrAlt; arm IRQ handler 7 at latch $77
+30,C6E7,PpuQueueAttrCopy,s64: PpuQueueFlush path for len b7 set: 64 bytes from attr_shadow $6100+src to PPUDATA; never chains
+31,FE00,ShopDoorOpenStub,s64: bare RTS called by ShopWalkIn 30:DA0C; the real body FE01 (irq_mode 4; $58 $0B->6) is disabled
+31,FE01,ShopDoorOpen,s64: dead (no callers; stubbed by FE00 RTS): irq_mode=4; $58 = $0B down to 6; 4 frames per step
+31,FE17,ShopDoorCloseStub,s64: bare RTS called by ShopWalkOut 30:DA72; the real body FE18 (irq_mode 4; $58 6->1) is disabled
+31,FE18,ShopDoorClose,s64: dead (no callers; stubbed by FE17 RTS): irq_mode=4; $58 = 6 down to 1; 4 frames per step
