@@ -90,9 +90,16 @@ MainLoop                  30:C900 (0x3C910)   VERIFIED
   state 3  30:C939 (0x3C949)  SwitchBank16(9); ReadPadsMenu; JMP MainState3 19:A015 (0x26025)
                               → State3ModeTable 19:A038[$06F3] → State3SubTable 19:A052[$06F0]
                                 (title menu, story pages, status screen, name entry → writes main_state 0)
-  state 4  30:C944 (0x3C954)  SwitchBank16(8); JMP 17:A000 (0x22010)   (not reached in any emulator run)
-  state 5  30:C94C (0x3C95C)  SwitchBank16(8); ReadPadsMenu; JMP 17:A100 (0x22110)
+  state 4  30:C944 (0x3C954)  ENDING INIT: SwitchBank16(8); JMP EndingInit 17:A000 (0x22010) → INC main_state
+                              (set only by 19:BFC4, end of the final cut-scene = substate 30; not reached in any emulator run)
+  state 5  30:C94C (0x3C95C)  ENDING: SwitchBank16(8); ReadPadsMenu; JMP EndingTick 17:A100 (0x22110)
+                              → EndingModeTable 17:A11A[$0602]: scene / fade-in / fade-out; never leaves state 5
+  state 6,7  null words (30:C92B/C92D)
+  state 8  30:C9DA (0x3C9EA)  CONTINUE: GameStartObjs; LoadGameAndInit 23:BC06; 19:BA65; main_state=1, sub_state=1
+                              (set by the title menu, START with $82=1, 19:A78D)
 ```
+Session 63: `MainStateTable` has 9 words, not 6. Flow: reset → 2 → 3 → (new game) 0 → 1, or (continue) 8 → 1;
+game over (`PlayerDeath` `19:B9AD`) → 2; final scene → 4 → 5 (end). Setter table: REVERSE.md "Main states (session 63)".
 
 **State 1 substates** (`$41`, `SubstateHandlerTable` `30:CADE`, 40 words, 10 null; bank pair from `SubstateBankTable` `30:CB2E` (40 bytes): n=9 for 3, 24-27, 30; n=7 for 12/13; n=0 otherwise).
 Full table with setters: REVERSE.md "State-1 substates (session 60)".

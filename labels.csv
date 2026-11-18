@@ -132,7 +132,7 @@ bank,addr,name,comment
 26,8C49,Bank26_FadeB,A->$18; $11=$40 $19=$F0 (fade step -; tentative)
 26,8CC0,HudHpBar,s46: redraw HP bar ($6060-$6070 from player_hp_max/player_hp); was Bank26_8CC0 (called via FarCall_B26_8CC0)
 30,C900,MainLoop,wait $09 (NMI flag) then dispatch on state $40 via MainStateTable
-30,C91F,MainStateTable,ptr16[6]: C957 CAB6 C931 C939 C944 C94C
+30,C91F,MainStateTable,s63: ptr16[9]: C957 CAB6 C931 C939 C944 C94C 0 0 C9DA
 *,0000,ppuctrl_shadow,
 *,0002,scroll_shadow0,copied to $07D8 in NMI
 *,0006,nmi_busy_flag,if !=0 NMI only sets $07 and returns
@@ -789,7 +789,7 @@ bank,addr,name,comment
 18,8F3B,State3PtrTable_8F3B,s32: .dw[zp_72] (18:80F5) -> $86/$87; 11 entries $8F52-$901D
 20,9767,TextPtrTable_9767,s32: .dw[A] (20:973F) -> $26/$27; count unknown (scan overruns at 35)
 20,9A6A,TextPtrTable_9A6A,s32: .dw[$20] (20:94CB) -> $26/$27; 12 entries $9A82-$9AF2
-17,A11A,JmpTable17_A11A,s32: untraced dispatch (17:A117 JMP ($008E)); <=4 entries
+17,A11A,EndingModeTable,s63: ptr16[3] on $0602 (state 5): A14A scene / AA74 fade-in / AAAD fade-out
 19,A193,JmpTable19_A193,s32: untraced dispatch (19:A190 JMP ($06FC)); <=7 entries $A1A1-$A57C
 19,A6F3,JmpTable19_A6F3,s32: untraced dispatch (19:A6F0 JMP ($06FC)); <=3 entries
 19,A7BC,JmpTable19_A7BC,s32: dispatch (19:A7B9 JMP ($06FC)); <=25 entries; 8 already traced
@@ -920,3 +920,22 @@ bank,addr,name,comment
 27,A5C0,AiShopEmpty,s60: AI $0E: sub_state=$24
 27,A5C5,AiSetSubstate,s60: AI $0F: sub_state=obj_timer2 ($0620; shop types $40-$48 -> $20-$23)
 16,9500,ShopEntryJumps,s60: JMP block armor 9558 / tool 957A / inn 959C / pawn 967A
+30,C957,MainStateNewGame,s63: state 0: new-game init (inventory/flags/stats) then main_state=1 sub_state=0 (30:C977)
+30,CAB6,MainStateGameplay,s63: state 1: gameplay; substate $41 dispatcher
+30,C931,MainStateTitleInit,s63: state 2: SwitchBank16(9) JMP 18:9FCC MainState2Init (reset / game over)
+30,C939,MainStateTitle,s63: state 3: ReadPadsMenu + JMP 19:A015 MainState3
+30,C944,MainStateEndingInit,s63: state 4: SwitchBank16(8) JMP 17:A000 EndingInit
+30,C94C,MainStateEnding,s63: state 5: ReadPadsMenu + JMP 17:A100 EndingTick
+30,C9DA,MainStateContinue,s63: state 8: GameStartObjs + LoadGameAndInit 23:BC06 + 19:BA65 then main_state=1 sub_state=1
+30,C9FF,GameStartObjs,s63: obj_active=0; PPU mask/irq_mode 0; WaitFrame; ObjInit fixed slots from 30:CA26 (3:$0A 0:$06 2:$05 1:$04)
+30,CA26,GameStartObjTable,s63: 4 x (slot type) pairs read backwards by GameStartObjs
+17,A000,EndingInit,s63: state 4: clear nametables; irq_mode=3; scroll 0; ending vars $0600-$0602/$060E; INC main_state -> 5
+17,A100,EndingTick,s63: state 5 frame: frame_ready=0; DEC $8C; dispatch $0602 via EndingModeTable
+17,A14A,EndingScene,s63: mode 0: $060E!=0 -> table 17:A140[1-4]; else EndingPhaseTable[obj_phase]
+17,A166,EndingPhaseTable,s63: ptr16[>=20] on $0600 (ending scene steps); A0EB = shared wait step
+17,A0EB,EndingWait,s63: DEC $0604 (reload $3B) x $0605 then INC $0600
+17,AA74,EndingFadeIn,s63: mode 1: every 8 frames pal_buf += $10 until == $0618-$0637 then mode 0
+17,AAAD,EndingFadeOut,s63: mode 2: every 4 frames pal_buf -= $10 (floor $0F)
+19,A749,TitleMenuInput,s63: SELECT toggles $82 (cursor x 19:A77B); START -> 19:A77D; idle timer $06B4/$06B5
+19,A77D,TitleMenuStart,s63: $82=1 -> main_state=8 (continue) else title_mode=1 (new game)
+19,BFC4,FinalSceneToEnding,s63: end of SubstFinalSceneReset: main_state=4 (only writer)
