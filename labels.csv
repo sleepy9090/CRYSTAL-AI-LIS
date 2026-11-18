@@ -984,7 +984,50 @@ bank,addr,name,comment
 17,A000,EndingInit,s63: state 4: clear nametables; irq_mode=3; scroll 0; ending vars $0600-$0602/$060E; INC main_state -> 5
 17,A100,EndingTick,s63: state 5 frame: frame_ready=0; DEC $8C; dispatch $0602 via EndingModeTable
 17,A14A,EndingScene,s63: mode 0: $060E!=0 -> table 17:A140[1-4]; else EndingPhaseTable[obj_phase]
-17,A166,EndingPhaseTable,s63: ptr16[>=20] on $0600 (ending scene steps); A0EB = shared wait step
+17,A166,EndingPhaseTable,s63/s83: ptr16[30] on $0600 (ends at code A1A2); A0EB = shared wait step; step 29 = RTS forever
+17,A1A2,EndingSilence,s83: EndingSnd(0) + EndingPalBlack
+17,A1AB,EndingSnd,s83: A -> snd_queue $0103 (count $0100=1 under lock $0101)
+17,A1BC,EndingStep0Setup,s83: picture ($ABD9) at $2000; scroll list ($B854); rows $20C0/$2800; fade in
+17,A209,EndingStep2Music,s83: EndingSnd($4A)
+17,A212,EndingStep3Scroll,s83: one tile-column row per frame + blank row; cam_y += 10 from row $14; 44 rows then flash + EndingSnd($5B)
+17,A38F,EndingStep5Sink,s83: hero sprite 8 moves down; fade out
+17,A3CB,EndingStep7Epilogue,s83: epilogue text page 1 (AB1D from ($BE37)) + player name $6410/$6418 x $6420 centred
+17,A47A,EndingStep8Music,s83: EndingSnd($1D)
+17,A483,EndingStep11Page2,s83: epilogue text page 2 (next AB1D block)
+17,A4A8,EndingStepFadeOut,s83: EndingFadeOutStart (steps 10/13)
+17,A4AF,EndingStep14StaffCard,s83: "STAFF" rect ($A4E3) at $21CE
+17,A58E,EndingStep15Music,s83: EndingSnd($1C)
+17,A4EC,EndingStep17FadeOut,s83: EndingFadeOutStart
+17,A4F3,EndingStep18RollFrame,s83: border box from ($AB95) x4; staff stream ($AC83); script index $8D=0
+17,A597,EndingScript,s83: step 19 interpreter on EndingScriptBytes ($8D): 0=portrait+sprite / 1-127=card+fade+wait / b7=end -> step 22
+17,A603,EndingScriptNext,s83: step 21: $060E = next script byte; obj_phase=$13
+17,A613,EndingStep22Thanks,s83: "special thanks" rect ($BD78) at $2128
+17,A657,EndingStep24FadeOut,s83: EndingFadeOutStart
+17,A65E,EndingScriptBytes,s83: 56-byte staff-roll script (docs/ending.txt)
+17,A696,EndingStep25Final,s83: final picture ($B304) + sprites 5/6 (abs) + 9 (rel)
+17,A6D8,EndingStep26Sink,s83: sprite 9 down 1 px / 4 frames to y $8C (clip y $78)
+17,A6FB,EndingStep28Last,s83: palette $0635-$0637 = 20 24 04; sprite 7
+17,A71B,EndingStep29End,s83: bare RTS: the ending stays here until reset
+17,A720,PpuNmiOff_b17,s83: PPUCTRL = shadow & $7F
+17,A728,PpuNmiOn_b17,s83: PPUCTRL = shadow | $80
+17,A730,PpuRenderOff_b17,s83: PPUMASK = shadow & $E1
+17,A73A,PpuRenderOn_b17,s83: PPUMASK = shadow | $1E
+17,A744,EndingWaitFrame,s83: spin until frame_ready != 0 (in-step frame wait)
+17,A788,OamHide_b17,s83: OAM y=$F0 (keeps sprite 0 unless irq_mode 0/3)
+17,A7A0,EndingRect,s83: W H + W*H tiles from ($88) -> queue rows/columns ($0639=$40) at $8A/$8B; 1 frame per line
+17,A81C,EndingPicture,s83: W H metatiles (B004/B0C4/B184/B244) + 64 attr + 32 pal -> $0618 + 6 CHR bytes -> $07F0-$07F5
+17,A94B,EndingSprRel,s83: metasprite A from EndingSprites relative to $71 x / $70 y; clip y >= $063D; OAM from $063E
+17,A9D7,EndingSprAbs,s83: metasprite A from EndingSprites at absolute dx/dy
+17,AA17,EndingPalBlack,s83: pal_buf x32 = $0F
+17,AA22,EndingPalLoad,s83: A b7 = sprite half; low nibble = palette n from EndingPalettes AAED -> target $0618
+17,AA55,EndingPalApply,s83: target $0618-$0637 -> pal_buf
+17,AA61,EndingFadeInStart,s83: pal_buf = target & $0F; $0602 = 1
+17,AAA7,EndingFadeOutStart,s83: $0602 = 2
+17,AAED,EndingPalettes,s83: 16-byte palettes for EndingPalLoad
+17,AB1D,EndingTextLines,s83: W H then H x (W tiles + address advance); 1 frame per line
+17,B45E,EndingSprites,s83: ptr16 table of ending metasprites (attr dx dy tile, $FF end)
+17,B004,EndingMetatiles,s83: 4 x 192-byte metatile tile tables (TL B004 / TR B0C4 / BL B184 / BR B244)
+17,B8D2,EndingCardTable,s83: ptr16 table of staff cards (16x8 rects), index = script byte 1-9
 17,A0EB,EndingWait,s63: DEC $0604 (reload $3B) x $0605 then INC $0600
 17,AA74,EndingFadeIn,s63: mode 1: every 8 frames pal_buf += $10 until == $0618-$0637 then mode 0
 17,AAAD,EndingFadeOut,s63: mode 2: every 4 frames pal_buf -= $10 (floor $0F)

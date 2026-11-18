@@ -57,6 +57,7 @@ JUMP_TABLES = [
     # session 67: the 12 remaining dispatchers (counts from the index range, see REVERSE.md)
     (17, 0xA11A, 3, lambda i: (16, 17), 'EndingModeTable ($0602; JMP ($008E) 17:A117)'),
     (17, 0xA140, 5, lambda i: (16, 17), 'EndingSubTable ($060E; JMP ($008E) 17:A13D; 0 null)'),
+    (17, 0xA166, 30, lambda i: (16, 17), 'EndingPhaseTable (obj_phase; JMP ($008E) 17:A163; s83: ends at code A1A2)'),
     (27, 0xA072, 16, lambda i: (26, 27), 'MagicCastTable ($10&$0F; JMP ($0010) 27:A06E)'),
     (27, 0xBA40, 13, lambda i: (26, 27), 'Ai70PhaseTable (obj_phase; JMP ($0010) 27:BA3D; 7/11 null)'),
     (30, 0xDBDC, 8, 'subst:20', 'TeleportMenuKeyTable (PadNewButtonIndex; JMP ($0010) 30:DBD9)'),

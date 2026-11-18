@@ -1,0 +1,221 @@
+# Ending data, bank 17 (tools/ending_dump.py, session 83)
+
+## EndingPhaseTable 17:A166 (30 entries, obj_phase $0600)
+   0  A1BC
+   1  A0EB
+   2  A209
+   3  A212
+   4  A0EB
+   5  A38F
+   6  A0EB
+   7  A3CB
+   8  A47A
+   9  A0EB
+  10  A4A8
+  11  A483
+  12  A0EB
+  13  A4A8
+  14  A4AF
+  15  A58E
+  16  A0EB
+  17  A4EC
+  18  A4F3
+  19  A597
+  20  A0EB
+  21  A603
+  22  A613
+  23  A0EB
+  24  A657
+  25  A696
+  26  A6D8
+  27  A0EB
+  28  A6FB
+  29  A71B
+
+## Text crawl, step 3: list at ($B854) = B856  (col, tiles.., 0)
+   0 col 15  FB
+   1 col 15  FB
+   2 col 15  F5
+   3 col 15  F4
+   4 col 15  F2
+   5 col 15  F3
+   6 col 15  FB
+   7 col 15  F5
+   8 col 15  F4
+   9 col 14  F0 F2
+  10 col 13  F5 FF F3
+  11 col 13  F4 FF FB
+  12 col 13  F2 FF F5
+  13 col 13  F3 FF F4
+  14 col 13  F0 FF F2
+  15 col 12  F5 F2 FF F3
+  16 col 12  F4 F3 FF F5
+  17 col 13  FB FF F4
+  18 col 13  F5 FF F2
+  19 col 15  F3
+  20 col 15  F5 F1
+  21 col 15  F4 FF F2
+  22 col 14  F5 FF FF F4
+  23 col 14  F3
+  24 col 15  FA
+  25 col 15  FA
+  26 col 15  F2
+  27 col 15  F3
+  28 col 15  F5
+  29 col 15  F4
+  30 col 15  F2
+  31 col 15  F4
+  (32 records, end at B8D1; step 3 re-reads the list until 44 lines are queued)
+
+## Line text step 7 (name page): AB1D block at BE39  W=24 H=9
+  |          NOW,          |  +40
+  |THIS LEGENDARY CONFLICT |  +40
+  |       ALONG WITH       |  +40
+  |  THE PEOPLE'S DESPAIR  |  +40
+  | HAVE ULTIMATELY ENDED_ |  +40
+  |                        |  +20
+  |           & MESIA      |  +40
+  |  TWO FEARLESS YOUTHS   |  +40
+  |  WE CAN NEVER FORGET_  |  +20
+
+## Line text step 11: AB1D block at BF1C  W=24 H=6
+  |                        |  +40
+  |  THIS WILL BE A LEGEND |  +40
+  |   FOREVER REMEMBERED   |  +40
+  |      TO MAINTAIN       |  +40
+  |    PEACE & HUMANITY_   |  +60
+  | AND PEACE WILL REMAIN_ |  +60
+
+## Rectangles (A7A0)
+  STAFF ($A4E3) -> A4E5  5x1
+     |STAFF|
+  frame ($AB95) -> AB97  30x1
+     |[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[|
+  blank ($A57A) -> A57C  2x8
+     |  |
+     |  |
+     |  |
+     |  |
+     |  |
+     |  |
+     |  |
+     |  |
+  step 22 ($BD78) -> BD7A  17x11
+     |SPECIAL THANKS TO|
+     |                 |
+     |   JEFF PETERS   |
+     |   M.TOKI        |
+     |   T.FUNAHASHI   |
+     |   K.MAEDA       |
+     |   T.NAKAI       |
+     |   T.AKIYAMA     |
+     |   A.OHTA        |
+     |   K.AKINO       |
+     |   M.SHIMINA     |
+
+## Pictures (A81C)
+  step 0 ($ABD9) -> ABDB  16x4 metatiles, end AC83, CHR 2C 34 10 11 12 13
+     pal 0F 20 10 00 0F 21 11 01 0F 0F 0F 0F 0F 0F 0F 0F 0F 0F 18 38 0F 0F 00 10 0F 0F 0F 0F 0F 0F 0F 0F
+  step 25 ($B304) -> B306  16x15 metatiles, end B45E, CHR 1C 54 2C 2D 7E 7F
+     pal 0F 3C 21 0C 0F 2A 19 08 0F 37 27 07 0F 37 27 08 0F 36 04 0F 0F 30 05 0F 0F 36 13 0F 0F 3C 21 0C
+
+## EndingScriptBytes 17:A65E (step 19; stream $88 starts at ($AC83) = AC85)
+  [00] 00 picture AC85 5x15 CHR 1C 2E 41 45 7A 7B + sprite 0
+  [02] page 0: rect 1 (B8E6 16x8) at $2250, $060E=1 wait 92/4 (333 frames), then $060E=3
+     |                |
+     |                |
+     |  DIRECTOR AND  |
+     |      PRODUCER  |
+     |                |
+     |   K.KOHNO      |
+     |                |
+     |                |
+  [07] 00 picture AD38 5x15 CHR 1C 54 2C 2D 7E 7F + sprite 1
+  [09] page 1: rect 2 (B968 16x8) at $2250, $060E=1 wait 95/4 (336 frames), then $060E=4
+     |                |
+     |  CHARACTER     |
+     |      DESIGNER  |
+     |                |
+     |   T.FURUTA     |
+     |   M.YAMASHITA  |
+     |                |
+     |                |
+  [0E] page 2: rect 3 (B9EA 16x8) at $2250, $060E=2 wait 91/4 (332 frames), then $060E=3
+     |                |
+     |  AND           |
+     |                |
+     |   Y.MAEDA      |
+     |   T.TOKYO      |
+     |                |
+     |                |
+     |                |
+  [13] 00 picture ADEB 5x15 CHR 1C 54 2C 2D 7E 7F + sprite 2
+  [15] page 3: rect 4 (BA6C 16x8) at $2250, $060E=1 wait 95/4 (336 frames), then $060E=4
+     |                |
+     | PROGRAMMER     |
+     |                |
+     |                |
+     |   YUKIO GU     |
+     |                |
+     |                |
+     |                |
+  [1A] page 4: rect 5 (BAEE 16x8) at $2250, $060E=2 wait 91/4 (332 frames), then $060E=3
+     |                |
+     |  AND           |
+     |                |
+     |    F.SASAMI    |
+     |                |
+     |    S.OKADA     |
+     |                |
+     |                |
+  [1F] 00 picture AE9E 5x15 CHR 1C 54 2C 2D 7E 7F + sprite 3
+  [21] page 5: rect 6 (BB70 16x8) at $2250, $060E=1 wait 96/4 (337 frames), then $060E=4
+     |                |
+     |  SCENARIO      |
+     |       ADVISER  |
+     |                |
+     |   J.SATOH      |
+     |                |
+     |                |
+     |                |
+  [26] page 6: rect 7 (BBF2 16x8) at $2250, $060E=2 wait 90/4 (331 frames), then $060E=3
+     |                |
+     |  SCENARIO      |
+     |     ASSISTANT  |
+     |                |
+     |   H.KINO       |
+     |   K.TOMITA     |
+     |                |
+     |                |
+  [2B] 00 picture AF51 5x15 CHR 1C 54 2C 2D 7E 7F + sprite 4
+  [2D] page 7: rect 8 (BC74 16x8) at $2250, $060E=1 wait 97/4 (338 frames), then $060E=4
+     |                |
+     |  S.E. AND      |
+     |     COMPOSER   |
+     |                |
+     |     YOKO.O     |
+     |                |
+     |                |
+     |                |
+  [32] page 8: rect 9 (BCF6 16x8) at $2250, $060E=2 wait 91/4 (332 frames), then $060E=3
+     |                |
+     |  SOUND         |
+     |    PROGRAMMER  |
+     |                |
+     |   S.OKADA      |
+     |   K.TANAKA     |
+     |                |
+     |                |
+  [37] FF end -> fade out, step 22
+
+## EndingSprites 17:B45E (attr dx dy tile)
+  0: B473 51 sprites  03 28 38 9C | 03 28 40 9D | 03 30 40 9E | 03 40 3F 81 ..
+  1: B540 28 sprites  00 28 30 5D | 00 30 30 5E | 00 38 30 5E | 00 40 30 5F ..
+  2: B5B1 20 sprites  01 60 50 D5 | 01 68 50 D6 | 01 60 58 D7 | 01 68 58 D8 ..
+  3: B602 15 sprites  00 20 10 5E | 00 28 10 5F | 00 50 40 5D | 00 58 40 5E ..
+  4: B472 0 sprites  
+  5: B63F 32 sprites  00 C0 90 E0 | 00 C8 90 E1 | 00 C0 98 E2 | 00 C8 98 E3 ..
+  6: B6C0 6 sprites  03 74 6F A5 | 03 7C 6F A6 | 03 84 6F A7 | 03 74 77 A8 ..
+  7: B6D9 27 sprites  03 20 20 60 | 03 28 20 61 | 03 30 20 62 | 03 20 28 63 ..
+  8: B746 58 sprites  00 10 00 69 | 00 18 00 4D | 00 20 00 4E | 40 28 00 69 ..
+  9: B82F 9 sprites  00 00 00 95 | 00 08 00 96 | 40 10 00 95 | 00 00 08 97 ..

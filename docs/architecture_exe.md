@@ -37,7 +37,7 @@ Single-window swaps use `SetR6` `30:C418` / `SetR7` `30:C427`. [Architecture →
 | 14 | `0x1C010` | 7 | `SwitchBank16(7)` | NPC scripts `NpcScript` `14:8000`, telepathy, `ItemGetTable`/`ItemUseTable`/`ItemUseHandlers` | 15 |
 | 15 | `0x1E010` | 7 | n=7; `SetR7($0F)` for AI `$60-$6F` | boss/event AI: `BossPhaseDispatch` `15:A400`, `BossPhaseTable` `15:A413`, `EventTriggerTable` `15:A17A` | 41 |
 | 16 | `0x20010` | 8 | `30:D8DD` (16 at `$8000` + 23 at `$A000`) | menus (inventory/save menu); calls `SaveJumpTable` `23:BC00` | 59 |
-| 17 | `0x22010` | 8 | `C944/C94C` | main states 4/5 entries `17:A000`/`A100`; `W H` rectangle data | 4 |
+| 17 | `0x22010` | 8 | `C944/C94C` | main states 4/5 entries `17:A000`/`A100`; ending steps, pictures, staff-roll text and metasprites (s83, `docs/ending.txt`) | 4 |
 | 18 | `0x24010` | 9 | `C931`, Reset cold path | intro (`18:8028`), `MainState2Init` `18:9FCC` (runs on into 19), state-3 modes 1/2; rectangles | 11 |
 | 19 | `0x26010` | 9 | `C939` | `MainState3` `19:A015`: title menu, story pages, status screen, name entry; common screen setup `19:BA65`; `PlayerDeath` `19:B900` | 29 |
 | 20 | `0x28010` | 10 | text printer; `SwitchBank16(10)`; `SetR7($14)` | `TextPrint` `20:853A`, message/dictionary ptr tables, `WakeCutscene` `20:9400`, `ShotTable` `20:BC00` | 19 |
@@ -91,9 +91,14 @@ MainLoop                  30:C900 (0x3C910)   VERIFIED
                               → State3ModeTable 19:A038[$06F3] → State3SubTable 19:A052[$06F0]
                                 (title menu, story pages, status screen, name entry → writes main_state 0)
   state 4  30:C944 (0x3C954)  ENDING INIT: SwitchBank16(8); JMP EndingInit 17:A000 (0x22010) → INC main_state
-                              (set only by 19:BFC4, end of the final cut-scene = substate 30; not reached in any emulator run)
+                              (set only by 19:BFC4, end of the final cut-scene = substate 30; s83: run in tools.emu
+                              by a $40=4 poke, tools/emu/ending_probe.py)
   state 5  30:C94C (0x3C95C)  ENDING: SwitchBank16(8); ReadPadsMenu; JMP EndingTick 17:A100 (0x22110)
                               → EndingModeTable 17:A11A[$0602]: scene / fade-in / fade-out; never leaves state 5
+                              → scene = EndingPhaseTable 17:A166[$0600] (30 steps: scroll, epilogue + player name,
+                                STAFF card, staff-roll script 17:A65E, thanks card, final picture; step 29 = RTS
+                                forever). Data formats + scene order: REVERSE.md "Ending sequence, bank 17",
+                                decoded by tools/ending_dump.py → docs/ending.txt
   state 6,7  null words (30:C92B/C92D)
   state 8  30:C9DA (0x3C9EA)  CONTINUE: GameStartObjs; LoadGameAndInit 23:BC06; 19:BA65; main_state=1, sub_state=1
                               (set by the title menu, START with $82=1, 19:A78D)
