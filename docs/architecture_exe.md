@@ -94,25 +94,27 @@ MainLoop                  30:C900 (0x3C910)   VERIFIED
   state 5  30:C94C (0x3C95C)  SwitchBank16(8); ReadPadsMenu; JMP 17:A100 (0x22110)
 ```
 
-**State 1 substates** (`$41`, `SubstateHandlerTable` `30:CADE`, 40 words, 10 null; bank pair from `SubstateBankTable`: 3→n=9, 12/13→n=7, else n=0):
+**State 1 substates** (`$41`, `SubstateHandlerTable` `30:CADE`, 40 words, 10 null; bank pair from `SubstateBankTable` `30:CB2E` (40 bytes): n=9 for 3, 24-27, 30; n=7 for 12/13; n=0 otherwise).
+Full table with setters: REVERSE.md "State-1 substates (session 60)".
 
 | $41 | Handler | Meaning | | $41 | Handler | Meaning |
 |---|---|---|---|---|---|---|
-| 0 | `30:CA5F` | `SubstNewGameInit` | | 20 | `30:DB28` | `SubstTeleportMenu` |
-| 1 | `30:CA2E` | (area-load step) | | 21 | `30:DD6B` | `SubstTelepathySelect` |
+| 0 | `30:CA5F` | `SubstNewGameInit` | | 20 | `30:DB28` | `SubstTeleportMenu` (magic 4) |
+| 1 | `30:CA2E` | `SubstAreaEnter` (every area change) | | 21 | `30:DD6B` | `SubstTelepathySelect` (magic 3) |
 | 3 | `19:B900` | `PlayerDeath` (n=9) | | 22 | `30:DE04` | `SubstTelepathyReply` |
-| 4 | `30:CBFC` | warp/continue (`AreaByIndexTable`) | | 23 | `30:DEC1` | `SubstChangeForm` |
-| 6 | `30:D497` | `ItemUseMenu` | | 24-27 | `19:BB39 BB9D BC04 BC6B` (n=9) | 26 = `SwordRaisePose` cut-scene |
-| 7 | `30:D3EB` | `GiveItem` | | 28 | `30:CC17` | |
-| **8** | **`30:CB62`** | **`SubstPlay` — the normal gameplay frame** | | 29 | `30:DB28` | `SubstTeleportMenu` (2nd entry) |
-| 12/13 | `15:BC40` / `15:BDDB` | (n=7: bank 15 scenes) | | 30-31 | `19:BDF2` (n=9), `30:CC4D` | |
-| 16 | `30:D085` | `ShowPendingMessage` | | 32-36 | `30:D985 D98E D997 D9AD D9C1` | |
-| 17 | `30:D0C8` | `NpcTalk` | | | | |
-| 18 | `30:D8C7` | | | | | |
-| 19 | `30:D9B6` | `SubstWakeCutscene` → `20:9400` | | | | |
+| 4 | `30:CBFC` | `SubstDebugPause` (pad 2 B; never stored) | | 23 | `30:DEC1` | `SubstChangeForm` (magic 7) |
+| 6 | `30:D497` | `ItemUseMenu` | | 24 | `19:BB39` | `SubstCureMagic` (magic 5) |
+| 7 | `30:D3EB` | `GiveItem` | | 25 | `19:BB9D` | `SubstFormRevert` |
+| **8** | **`30:CB62`** | **`SubstPlay` — the normal gameplay frame** | | 26 | `19:BC04` | `SwordRaisePose` cut-scene |
+| 12 | `15:BC40` | `PauseScreen` (START calls it directly; vestigial entry) | | 27 | `19:BC6B` | `SubstMesiaReunion` (event act 30) |
+| 13 | `15:BDDB` | `PauseWait` | | 28 | `30:CC17` | `SubstOutOfMp` |
+| 16 | `30:D085` | `ShowPendingMessage` | | 29 | `30:DB28` | `SubstTeleportMenu` (2nd entry, unused) |
+| 17 | `30:D0C8` | `NpcTalk` | | 30 | `19:BDF2` | `SubstFinalSceneReset` (AI `$70` phase 10) |
+| 18 | `30:D8C7` | `SubstEquipMenu` (SELECT → `16:8000`) | | 31 | `30:CC4D` | `SubstRestoreScreen` |
+| 19 | `30:D9B6` | `SubstWakeCutscene` → `20:9400` | | 32-35 | `30:D985 D98E D997 D9AD` | armor shop / tool shop / inn / pawn shop (AI `$0F` sets `$41` = `obj_timer2`) |
+| | | | | 36 | `30:D9C1` | `SubstShopEmpty` ("Nobody's here.") |
 
-`SubstateBankTable` `30:CB2E` (40 bytes): n=9 for 3, 24-27, 30; n=7 for 12/13; n=0 otherwise. Unnamed substates are
-still open (REVERSE.md task "decode `30:CADE`/`CB2E` substate tables").
+Null entries: 2, 5, 9-11, 14, 15, 37-39.
 
 ### 2.3 Gameplay frame (`SubstPlay` `30:CB62`, 0x3CB72)
 

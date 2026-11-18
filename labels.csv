@@ -30,8 +30,8 @@ bank,addr,name,comment
 30,C418,SetR6,A=8KB bank for $8000 window; $6E=shadow; $50=6 (also called directly e.g. A=$1A bank 26)
 30,C427,SetR7,A=8KB bank for $A000 window; $6F=shadow; $50=7 (verified)
 30,C7A0,SwitchBank16_13,tail-call SwitchBank16(13) -> banks 26/27
-30,CADE,SubstateHandlerTable,ptr16[40?] state-1 handlers indexed by $41 (CAB6 dispatcher; JMP ($0010))
-30,CB2E,SubstateBankTable,u8[40?] SwitchBank16 n per substate $41 (3->9; 12/13->7; rest 0)
+30,CADE,SubstateHandlerTable,ptr16[40] state-1 handlers indexed by $41 (CAB6 dispatcher; JMP ($0010)); s60: all named; 10 null
+30,CB2E,SubstateBankTable,u8[40] SwitchBank16 n per substate $41 (s60: 3 24-27 30 -> 9; 12/13 -> 7; rest 0)
 31,E3D4,SwitchBank16_6,tail-call SwitchBank16(6) -> banks 12/13 (restores default after n=7 entity calls)
 *,0041,sub_state,state-1 substate index (SubstateHandlerTable/SubstateBankTable)
 30,C7D6,FadeSaveZpToWram,copy ZP $0A-$29 -> $6000; banks 26/27 $8C3D(A=4); wait 30 frames; $8C49; bank 16/17; restore (tentative fade)
@@ -208,7 +208,7 @@ bank,addr,name,comment
 30,C7A5,AreaSubTable,A=k: SwitchBank16(5); ($10)=header(10:8300[$6C])[k]; Y=0. k0 map/music k1 gfx k2 entries k3 exits k4 screen flags k5 edge links
 31,EB09,ExitLookup,player 16px cell vs exit list (xc yc area entry)*;FF; sub_state 8 -> load area
 13,AC00,ObjTypeTable,ptr16 per object type ($AD00 upper half) -> ObjInit records (snd + 4 bitmask groups)
-30,CBEC,AreaByIndexTable,16 area ids indexed by $0780&15 (warp/continue)
+30,CBEC,AreaByIndexTable,16 area ids indexed by $0780&15 (s60: debug area cycler: pad-1 A+B held + pad-2 A in play, 30:CBC7; INC $0780)
 *,0540,obj_spawn_b2,spawn entry b2&3
 *,0560,obj_spawn_param,spawn entry param byte
 10,8300,AreaHeaderTable,ptr16 per area ($8400 half) -> 5 (or 6) sub-table ptrs k0-k4(k5)
@@ -892,3 +892,28 @@ bank,addr,name,comment
 30,CD28,ObjUpdateAllCall,s55: JSR $0010 (JMP trampoline $10-$12 = 4C + ObjAiTable[id]); an AI that JMPs to AiShootCheck returns from ObjUpdateAll here
 31,F771,NmiMode3,s57: irq_mode 3 (title/menus): PPUMASK<-$01; PpuScrollWrite; ApplyChrPlay; MMC3 IRQ off; JMP SoundUpdate (web: mainloop.js nmiMode3)
 24,81F3,SndMusicTick,s57: music channels 0-3 tick; first reads $4015 and writes $4013=0 if the DMC is busy; then the $0113 next-music chain (web: driver.js musicTick)
+30,CA2E,SubstAreaEnter,s60: substate 1: AreaEnter 31:E3E9 + ObjBgProbe slot 1; sub_state=8; area_entry&$E0=$40 -> re-dispatch at once
+31,E3E9,AreaEnter,s60: sprite pass + wait PPU queue + irq_mode/boss_cam_lock/$07D6=0 then the area load (substate 1)
+30,CBFC,SubstDebugPause,s60: substate 4 (never stored): pad-2 B freeze loop until pad-2 B again; entered by branch from PlayDeathMenuCheck
+30,CC17,SubstOutOfMp,s60: substate 28: SFX $4E + pending msg 32.14; sub_state=$10
+30,CC2E,PlayPaletteRestore,s60: if slot 4 obj_active=$1A: clear it + PaletteBuild; irq_mode 2 -> 0 (run before state 1 unless substate 7/8)
+30,CC4D,SubstRestoreScreen,s60: substate 31: restore pos from $3C-$3F; HUD window rebuild 19:BA65; queue blocks 3 and $3E-$43; BG+spr on; sub_state=8
+30,C676,WaitPpuQueue,s60: spin until $0A=$0B (PPU queue drained)
+30,C482,PpuQueueBlock,s60: A=block id (x5 record); WaitPpuQueue then queues the block
+30,D8C7,SubstEquipMenu,s60: substate 18 (SELECT): JSR 16:8000 menu; SelectedUseItem; SwordPowerLevel
+30,D985,SubstArmorShop,s60: substate 32 (AI $0F types $42 $48): ShopWalkIn + 16:9500 + ShopWalkOut
+30,D98E,SubstToolShop,s60: substate 33 (types $41 $44 $47): 16:9503
+30,D997,SubstInn,s60: substate 34 (types $40 $45 $46): 16:9506 then HP/MP HUD redraw
+30,D9AD,SubstPawnShop,s60: substate 35 (type $43): 16:9509
+30,D9C1,SubstShopEmpty,s60: substate 36 (AI $0E type $4E): msg 32.17 Nobody's here
+30,DA0C,ShopWalkIn,s60: PaletteBuild + scripted walk down to y=$98 / right to x=$78; SwitchBank16(8)
+30,DA72,ShopWalkOut,s60: walk left to x=$68 / up to y=$8F; ExitLookup -> area_id/entry; sub_state=1
+15,BC40,PauseScreen,s60: START (called directly from 30:CBA8); also substate 12 entry; builds window; INC $41; falls into PauseWait
+15,BDDB,PauseWait,s60: substate 13: loop until START; sub_state=8 at 15:BE07
+19,BB39,SubstCureMagic,s60: substate 24 (magic 5 / stone cure): status cleared; 63-frame anim; msg 32.2
+19,BB9D,SubstFormRevert,s60: substate 25: PlayerMagic with status b7 (changed form) -> human graphics back
+19,BC6B,SubstMesiaReunion,s60: substate 27 (event act 30 trigger $A4): scene then sub_state=7 GiveItem
+19,BDF2,SubstFinalSceneReset,s60: substate 30 (AI $70 phase 10): clear slots 4-$1E; screen rebuild
+27,A5C0,AiShopEmpty,s60: AI $0E: sub_state=$24
+27,A5C5,AiSetSubstate,s60: AI $0F: sub_state=obj_timer2 ($0620; shop types $40-$48 -> $20-$23)
+16,9500,ShopEntryJumps,s60: JMP block armor 9558 / tool 957A / inn 959C / pawn 967A
