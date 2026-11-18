@@ -16,6 +16,7 @@ import { ppuQueueFlush } from '../src/game/world/ppuqueue.js';
 import { bgRowRender, bgColRender, fullScreenDraw, runNow } from '../src/game/world/bgstream.js';
 import { objMoveSlide } from '../src/game/obj/move.js';
 import { objUpdateAll } from '../src/game/obj/objects.js';
+import * as W from '../src/game/obj/ai_walk.js';
 
 const WEB = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const verbose = process.argv.includes('--verbose');
@@ -43,6 +44,19 @@ const RUN = {
   // s80 (Ph7 web 5/8 (a)): the object loop (only ported / null AI ids in the cases) + the knockback mover
   ObjMoveSlide: (m, r) => { objMoveSlide(m, r.x); },
   ObjUpdateAll: (m) => { runNow(objUpdateAll(m)); },
+  // s81 (Ph7 web 6/8 (a)): the walker / chaser AIs (obj/ai_walk.js); none of them pops its caller
+  AiWalkPause: (m, r) => { W.aiWalkPause(m, r.x); },
+  AiShooterWalk: (m, r) => { W.aiShooterWalk(m, r.x); },
+  AiDormant: (m, r) => { W.aiDormant(m, r.x); },
+  AiChase: (m, r) => { W.aiChase(m, r.x); },
+  AiChaseOnscreen: (m, r) => { W.aiChaseOnscreen(m, r.x); },
+  AiShooterChase: (m, r) => { W.aiShooterChase(m, r.x); },
+  AiShooterChaseOn: (m, r) => { W.aiShooterChaseOnscreen(m, r.x); },
+  AiAimShooter: (m, r) => { W.aiAimShooter(m, r.x); },
+  AiBurrower: (m, r) => { W.aiBurrower(m, r.x); },
+  AiLunger: (m, r) => { W.aiLunger(m, r.x); },
+  AiSpawnChildLunger: (m, r) => { W.aiSpawnChildLunger(m, r.x); },
+  AiShellOnHit: (m, r) => { W.aiShellOnHit(m, r.x); },
 };
 
 const dir = path.join(WEB, 'test/obj_frames');

@@ -140,12 +140,93 @@ ROUTINES = {
     'ObjMoveSlide':   (26, 0x98D7, _poke_bg, lambda r: {'x': r.choice([0, 0, 1, r.randrange(32)])}),
     'ObjUpdateAll':   (None, 0xCCCC, _poke_bg, None),
 }
-# AI ids the port has (web/src/game/obj/ai_static.js) + ids whose ObjAiTable 27:A314 entry is 0
-PORTED_AIS = (0x10, 0x11, 0x2C, 0x4C, 0x4D, 0x4E)
+# s81 (Ph7 web 6/8 (a)): the walker / chaser AIs (web/src/game/obj/ai_walk.js), bank 27 entries
+WALK_AIS = {
+    'AiWalkPause': (0x20, 0xA915), 'AiShooterWalk': (0x21, 0xA969), 'AiDormant': (0x22, 0xAB42),
+    'AiChase': (0x24, 0xAA57), 'AiChaseOnscreen': (0x25, 0xA9D2), 'AiShooterChase': (0x26, 0xA9E4),
+    'AiShooterChaseOn': (0x27, 0xA9DB), 'AiAimShooter': (0x28, 0xAB61), 'AiBurrower': (0x29, 0xAB9E),
+    'AiLunger': (0x2A, 0xABF8), 'AiSpawnChildLunger': (0x2E, 0xA9B4), 'AiShellOnHit': (0x41, 0xB339),
+}
+for _n, (_id, _ad) in WALK_AIS.items():
+    ROUTINES[_n] = (26, _ad, _poke_bg, lambda r: {'x': _slot(r)})
+# AI ids the port has (web/src/game/obj/ai_static.js, ai_walk.js) + ids whose ObjAiTable 27:A314 entry is 0
+PORTED_AIS = (0x10, 0x11, 0x2C, 0x4C, 0x4D, 0x4E) + tuple(i for i, _ in WALK_AIS.values())
 NULL_AIS = tuple(i for i in range(0x80) if i != 0x1A and not (_PRG[27 * 0x2000 + 0x314 + 2 * i] |
                                                                _PRG[27 * 0x2000 + 0x315 + 2 * i]))
 HIT_FLAG_PARAMS = tuple(_PRG[26 * 0x2000 + 0x1045 + i] for i in range(10) if _PRG[26 * 0x2000 + 0x1045 + i])
 PPU_ROUTINES = ('PpuQueueFlush', 'BgRowRender', 'BgColRender', 'FullScreenDraw')
+
+
+def _steer_attack(ram, r, x, dist):
+    """onscreen, next Rand64 = 0, (X*16 + $08) & $1F = 0 (AiShootCheck's slot frame), slot near the player"""
+    ram[0x0380 + x] &= 0x7F
+    ram[0x08] = (-(x << 4)) & 0x1F | (r.randrange(8) << 5)
+    ram[0x0E] = (r.choice(RAND64_ZERO) - 1) & 0x3F
+    for c in POS_COLS:
+        ram[c + x] = ram[c + 1]
+    ram[0x70 + x] = (ram[0x71] + r.randrange(-dist, dist)) & 0xFF
+
+
+FIRE_AT = {'AiShooterWalk': 0x10, 'AiShooterChase': 0x10, 'AiShooterChaseOn': 0x10, 'AiAimShooter': 0x10,
+           'AiBurrower': 0x10, 'AiLunger': 9, 'AiSpawnChildLunger': 9, 'AiShellOnHit': 0x10}
+_BASE = {}                                         # run(): base wram (the real screen grid for the wall steer)
+
+
+def _fix_walk(name, ram, r, x, wram=None):
+    """s81: keep the walker / chaser AI cases on their rare paths (attacks, pauses, detours, timers at edges)"""
+    ram[0x0440 + x] = r.choice([0x40 + r.randrange(0x20), r.randrange(0x60), 0])
+    ram[0x0340 + x] = r.choice([r.randrange(16), r.randrange(16), r.randrange(256)])
+    ram[0x0460 + x] = r.choice([0, 6, 0x27, r.randrange(256)])
+    if r.random() < 0.6:
+        ram[0x0380 + x] &= 0x7F
+    if r.random() < 0.3:
+        ram[0x0380 + x] &= 0xF7                    # obj_flags b3 (fixed pose) clear
+    ram[0x0640 + x] = r.choice([0, 0, 0, 1, 2, 8, 9, 0x0F, 0x10, 0x11, 0x1F, r.randrange(256)])
+    ram[0x0660 + x] = r.randrange(256)
+    ram[0x0480 + x] = r.choice([0, 1, 0x10, 0x11, r.randrange(256)])
+    ram[0x04E0 + x] = r.choice([1, 2, 8, 0x0A, r.randrange(256)])
+    ram[0x0620 + x] = r.choice([0, 0, 1, 0x60, r.randrange(256)])
+    ram[0x0600 + x] = r.choice([0, 0, 1, r.randrange(256)])
+    ram[0x06A0 + x] = r.choice([0, 0, r.randrange(256)])
+    if name == 'AiShellOnHit':
+        ram[0x06A0 + x] = r.choice([0, 0, 1, 0x1E, 0x1F, 0x20, 0x21, 0x3F, r.randrange(256)])
+        ram[0x0340 + x] |= r.choice([0, 0x80])
+    if name == 'AiSpawnChildLunger' and r.random() < 0.6:
+        ram[0x06A0 + x] = 0
+    if name == 'AiBurrower':
+        ram[0x0620] = r.choice([0, 0, 1, r.randrange(256)])
+    if name == 'AiAimShooter':
+        ram[0x0660 + x] = r.choice([0, 0, 1, r.randrange(256)])
+    if r.random() < 0.35:                          # start an attack: AiShootCheck / AiLungeCheck succeed
+        ram[0x0640 + x] = 0
+        _steer_attack(ram, r, x, 24 if name in ('AiLunger', 'AiSpawnChildLunger') else 60)
+    elif r.random() < 0.3:                         # AiChase detour: blocked on its next move
+        ram[0x0620 + x] = r.choice([0, 1, 0x30])
+        ram[0x04E0 + x] = r.choice([2, 8, 0x0A])
+    if name in FIRE_AT and r.random() < 0.3:       # the shot frame: timer one step before it, aux parity right
+        ram[0x0640 + x] = FIRE_AT[name]
+        ram[0x0660 + x] = r.randrange(128) * 2
+        ram[0x0440 + x] = 0x40 + r.randrange(0x20)
+        ram[0x0380 + x] &= 0xF7 if r.random() < 0.5 else 0xFF
+        if name == 'AiShellOnHit':
+            ram[0x06A0 + x] = 0
+            ram[0x0340 + x] &= 0x7F
+        if name == 'AiAimShooter':
+            ram[0x0660 + x] = 1
+        for s in r.sample(range(0x0D, 0x1F), 4):
+            if s != x:
+                ram[0x04A0 + s] = 0
+    if wram is not None and 'wram' in _BASE and r.random() < 0.4:
+        # real map: the base state's screen grid + visited bits, the object on the player's screen, speed 1-4
+        wram[0x2F0:0x340] = _BASE['wram'][0x2F0:0x340]
+        ram[0x90 + x], ram[0xD0 + x] = ram[0x90], ram[0xD0]
+        ram[0x70 + x], ram[0xB0 + x] = r.randrange(256), r.randrange(0xF0)
+        ram[0x0340 + x] = r.randrange(1, 5)
+        ram[0x0360 + x] = r.randrange(8)
+        ram[0x0460 + x] = r.choice([6, 0x27])
+        if r.random() < 0.6:
+            ram[0x0620 + x] = 0
+            ram[0x0480 + x] = r.choice([5, 0x22, 0x37])  # keep obj_meta_dir (no re-aim this step)
 
 
 def _fix_case(name, ram, r, regs, wram=None):
@@ -202,11 +283,13 @@ def _fix_case(name, ram, r, regs, wram=None):
             ram[0x05A0 + s] = r.choice([0, 0, 0, 1, 2, r.randrange(256)])
             ram[0x0540 + s] = r.choice([0, 1, 1, r.randrange(256)])
             ram[0x0560 + s] = r.choice(HIT_FLAG_PARAMS + (r.randrange(256),))
-            if ram[0x04A0 + s] & 0x7F in (0x4C, 0x4D, 0x4E, 0x2C):
+            if ram[0x04A0 + s] & 0x7F in (0x4C, 0x4D, 0x4E, 0x2C, 0x21, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2E, 0x41):
                 ram[0x0440 + s] = r.choice([0x40 + r.randrange(0x20), r.randrange(0x60)])
             if ram[0x04A0 + s] & 0x7F in (0x10, 0x11) and r.random() < 0.5:
                 ram[0x0380 + s] &= 0x7F
         ram[0x0710] = r.choice([0, 0x40, r.randrange(256)])
+    if name in WALK_AIS:
+        _fix_walk(name, ram, r, x, wram)
     if name in ('AiFanTurret', 'AiTurret', 'AiBurst', 'SpawnShot'):
         ram[0x0440 + x] = r.choice([0x40 + r.randrange(0x20), r.randrange(0x60)])
         if 'a' in regs:
@@ -264,6 +347,7 @@ def run(nes, a):
     if 'ram' not in base:
         sys.exit('ObjUpdateAll 30:CCCC not reached within 600 frames of the start state')
     nes.clear_hooks()
+    _BASE['wram'] = base['wram']
     ints = Interrupts(nes)
     cases = []
     names = a.routine.split(',')

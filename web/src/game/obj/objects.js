@@ -13,12 +13,13 @@
 //   AI_TABLE          id -> handler(m, x); ids not in it log "AI $xx not ported" once and do nothing
 import { cpuRd, setR6, setR7, switchBank16 } from '../prg.js';
 import { AI_HANDLERS } from './ai_static.js';
+import { AI_WALK } from './ai_walk.js';
 import { objMoveSlide } from './move.js';
 
 const FLAGS2 = 0x0340, META_DIR = 0x0360, TIMER = 0x0480, ACTIVE = 0x04A0, SPAWN_B2 = 0x0540, SPAWN_PARAM = 0x0560;
 const FREEZE = 0x05A0;
 
-export const AI_TABLE = { ...AI_HANDLERS };
+export const AI_TABLE = { ...AI_HANDLERS, ...AI_WALK };
 
 export function hitSetFlag(m) {
   let y = 0;

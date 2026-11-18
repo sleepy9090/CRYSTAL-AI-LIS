@@ -21,6 +21,14 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   "AI $xx not ported" in a differing case, `obj_check.mjs` counts it as a gap, not a failure (`--verbose` lists them).
   The gap count drops as AIs are ported; a gap case that still differs after its AI exists becomes a failure.
 
+- `fuzz_walk.json` (s81): 100 cases each for the walker / chaser AIs in `obj/ai_walk.js` (`WALK_AIS` in
+  `routine_capture.py`: `AiWalkPause` `$20`, `AiShooterWalk` `$21`, `AiDormant` `$22`, `AiChase` `$24`,
+  `AiChaseOnscreen` `$25`, `AiShooterChase` `$26`, `AiShooterChaseOn` `$27`, `AiAimShooter` `$28`, `AiBurrower` `$29`,
+  `AiLunger` `$2A`, `AiSpawnChildLunger` `$2E`, `AiShellOnHit` `$41`). `_fix_walk` steers attack starts, the shot
+  frame (with free slots), the shell timers, and the base state's real screen grid (so `ObjMoveSlide` hits walls and
+  AiChase enters its detour). `python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_walk.json --col 0620=60`
+  shows how many cases take each path.
+
 Regenerate (about 10 s each):
 
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
@@ -30,5 +38,8 @@ Regenerate (about 10 s each):
         --routine PpuQueueFlush,BgRowRender,BgColRender,FullScreenDraw --out web/test/obj_frames/fuzz_bg.json
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 \
         --routine ObjMoveSlide,ObjUpdateAll --out web/test/obj_frames/fuzz_update.json
+    python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
+        --routine AiWalkPause,AiShooterWalk,AiDormant,AiChase,AiChaseOnscreen,AiShooterChase,AiShooterChaseOn,AiAimShooter,AiBurrower,AiLunger,AiSpawnChildLunger,AiShellOnHit \
+        --out web/test/obj_frames/fuzz_walk.json
 
 `python3 -m tools.emu.routine_capture --list` shows the routines; `--routine A,B` captures a subset.

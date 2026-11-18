@@ -60,6 +60,7 @@ web/index.html
       │   ├─ util.js                  (s55, done) Rand64, ObjFindFree, ObjPosToTemp/TempToObjPos, TempAddOffset/Step,
       │   │                           DirToTarget, ObjStepVector, ObjDespawn, ObjBecomeNext, SpawnShot, ObjBgProbe
       │   ├─ ai_static.js             (s55, done) AIs $10 $11 $2C $4C/$4D $4E + AiShootCheck; AI_HANDLERS id → fn
+      │   ├─ ai_walk.js               (s81, done) walker/chaser AIs $20-$2A $2E $41 (AiChase, AiWalkPause, …); AI_WALK
       │   ├─ objects.js               (s80, done) ObjUpdateAll generator (knockback, obj_freeze + HitSetFlag, JSR $0010
       │   │                           dispatch; an AI returning true = "popped" → return) + AI_TABLE id → fn (unported
       │   │                           ids log once and do nothing); AI $1A 30:CD8A still unported
@@ -193,6 +194,7 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 | `SpawnShot`, `ShotTable`, `ShotOffsets` | `26:972D`, `20:BC00`, `20:BD80` | `spawnShot(m, x, id, dir)` (s55, done; reads `prg.bin` via `cpuRd`, not `shots.json`) | `obj/util.js` |
 | `ObjInit` + `FarCall_C25D`, `ObjStepVector`, `ObjBgProbe`, `DirToTarget`, `Rand64`, `ObjFindFree` | `30:C25D`, `31:FF80`, `26:8480`, `26:9A30`, `26:8409`, `26:97D7`, `26:98B9` | `objInit()`, `farObjInit()`, `objStepVector()`, `objBgProbe()`, `dirToTarget()`, `rand64()`, `objFindFree()` (s55, done) | `obj/objinit.js`, `obj/util.js` |
 | AIs `$10 $11 $2C $4C/$4D $4E`, `AiShootCheck` | `27:B0B5 B0A8 ACC0 B595 B5D9 B714` | `AI_HANDLERS` (s55, done: `obj_check.mjs`) | `obj/ai_static.js` |
+| AIs `$20 $21 $22 $24 $25 $26 $27 $28 $29 $2A $2E $41`, `AiWalkPick`, `AiTryMove`, `AiLungeCheck` | `27:A915 A969 AB42 AA57 A9D2 A9E4 A9DB AB61 AB9E ABF8 A9B4 B339`, `A94A`, `AAFA`, `AC40` | `AI_WALK` (s81, done: `fuzz_walk.json` 1200/1200) | `obj/ai_walk.js` |
 | `PlaySound` (queue side) | `30:C125` | `playSound(m, id, y)` (s55, done) | `playsound.js` |
 | `ObjCollideAll`, `CollPairTable`, `HitboxTable`, `HitHandlerTable` | `26:8F6E`, `26:96F1`, `26:9691`, `26:8FBB` | `collideAll()`, `HIT_HANDLERS[4]` | `obj/collide.js` |
 | `HitPlayer`, `EnemyKilled`, `AddXp` | `26:9357`, `26:9152`, `26:924B` | `hitPlayer()`, `enemyKilled()`, `addXp()` | `obj/collide.js` |

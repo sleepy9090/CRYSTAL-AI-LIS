@@ -907,7 +907,11 @@ bank,addr,name,comment
 27,A9DB,AiShooterChaseOnscreen,s47: AI $27: AiShooterChase unless offscreen
 27,A9E4,AiShooterChase,s47: AI $26: attack countdown (meta base $06E0) else AiShootCheck + AiChase (meta base $06C0)
 27,AA57,AiChase,s47: AI $24: 4-dir chase of slot 0 every 16 steps; blocked -> 96-step wall-follow detour
+27,AAAB,ChaseTurnAway,s81: AiChase turn: obj_phase^1 b0 ? dir+1 : dir-1 (&7)
+27,AAB0,ChaseTurnBack,s81: AiChase turn with A=obj_phase: b0 ? dir+1 : dir-1 (&7)
 27,AAFA,AiTryMove,s47: trial ObjMoveSlide at speed $0A then restore position; C=1 blocked
+27,AB2D,ChasePose,s81: obj_flags b3 clear -> meta = (dir&6)>>1 | $06C0
+27,ABAC,BurrowerBody,s81: AiBurrower body (JSR'd: an AiShootCheck pop returns to AB9E)
 27,AB42,AiDormant,s47: AI $22: wait obj_anim onscreen then obj_active=obj_param2 meta=$06C0
 27,AB61,AiAimShooter,s47: AI $28: start delay then aimed shot (DirToTarget) at $0640=$0F; else AiChase
 27,AB9E,AiBurrower,s47: AI $29: coll $41 walking / $11 attacking; coll=0 while slot0 $0620 (player jump) != 0
