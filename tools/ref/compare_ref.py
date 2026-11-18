@@ -135,7 +135,7 @@ def pixel_diff(ref_img, emu_px):
     if (w, h) == (256, 224):      # FCEUX crops overscan: compare tools.emu rows 8-231 (session 43)
         emu_px = emu_px[8 * 256:232 * 256]
     elif (w, h) != (256, 240):
-        return None, f'reference image is {w}x{h}, expected 256x240 or 256x224'
+        return None, f'reference image is {w}x{h}, expected 256x240 or 256x224', []
     votes = {}
     for e, r in zip(emu_px, rp):
         d = votes.setdefault(e, {})
@@ -150,10 +150,34 @@ def pixel_diff(ref_img, emu_px):
     for e, r in cmap.items():
         many.setdefault(r, []).append(e)
     merged = sum(1 for v in many.values() if len(v) > 1)
+    folds = fold_check(votes, cmap, w * h)
     return bad, (f'{len(bad)} px ({100.0 * len(bad) / (w * h):.2f}%), colour map {len(cmap)} emu -> '
                  f'{len(many)} ref colours ({merged} ref colours hit by >1 emu colour)'
                  + (', per tile row ' + ' '.join(f'{k}:{v}' for k, v in sorted(rows.items()))
-                    if bad else ''))
+                    if bad else '')
+                 + (''.join(f'\n        FOLD ref colour {r} <- {k} emu colours covering {pct:.1f}% '
+                            '(the reference shows one flat colour where tools.emu draws a picture: '
+                            'the 0-px map hides it)' for r, k, pct in folds))), folds
+
+
+FOLD_MIN_COLOURS = 3       # emu colours folded onto one ref colour ...
+FOLD_MIN_SHARE = 0.005     # ... each covering at least 0.5% of the screen
+
+
+def fold_check(votes, cmap, npx):
+    """s74 (b): ref colours that absorb >= FOLD_MIN_COLOURS emu colours of real size.
+
+    The per-colour vote map makes a blank reference frame (ref f2409) match any tools.emu picture
+    with 0 bad pixels, because every emu colour maps onto the single ref colour.  A real palette
+    difference maps 1 emu colour -> 1 ref colour, so many sizeable emu colours on one ref colour
+    means the two screens show different content."""
+    out = {}
+    for e, r in cmap.items():
+        n = sum(votes[e].values())
+        if n >= FOLD_MIN_SHARE * npx:
+            k, c = out.get(r, (0, 0))
+            out[r] = (k + 1, c + n)
+    return [(r, k, 100.0 * c / npx) for r, (k, c) in sorted(out.items()) if k >= FOLD_MIN_COLOURS]
 
 
 def compare_frame(n, ref, snaps, search, lab, out):
@@ -190,9 +214,9 @@ def compare_frame(n, ref, snaps, search, lab, out):
             f'$3F{i:02X} ref={ref["pal"][i] & 0x3F:02X} emu={s["pal"][i]:02X}' for i in pd) if pd else ''))
         clean &= not pd
     if 'img' in ref:
-        bad, msg = pixel_diff(ref['img'], s['px'])
+        bad, msg, folds = pixel_diff(ref['img'], s['px'])
         out.append('  PIXELS ' + msg)
-        clean &= bad == []
+        clean &= bad == [] and not folds
     else:
         out.append('  PIXELS (no screenshot in capture)')
     return clean
@@ -219,6 +243,34 @@ def make_fake(dirpath, shift, keys, tamper=False):
     print(f'wrote {len(FAKE_FRAMES)} fake reference frames to {dirpath} (labels shifted by -{shift})')
 
 
+SCREENS_DIR = os.path.join(ROOT, 'gfx', 'compare', 'screens')
+
+
+def compare_screens(refdir, out):
+    """s84: ref/screen_NAME.png (fceux_capture.lua SCREENS) vs gfx/compare/screens/NAME.png
+    (tools/emu/probe_screens.py, COMPARISON.md section 4).  Pixels only (incl. the fold flag)."""
+    paths = sorted(glob.glob(os.path.join(refdir, 'screen_*.png')))
+    if not paths:
+        out.append(f'# no screen_*.png in {refdir}: rerun tools/ref/fceux_capture.lua (s84 version)')
+        return None
+    clean = 0
+    for p in paths:
+        name = os.path.basename(p)[len('screen_'):-len('.png')]
+        ep = os.path.join(SCREENS_DIR, name + '.png')
+        if not os.path.exists(ep):
+            out.append(f'== screen {name}: no tools.emu image {ep}')
+            continue
+        w, h, epx = read_png(ep)
+        if (w, h) != (256, 240):
+            out.append(f'== screen {name}: tools.emu image is {w}x{h}')
+            continue
+        bad, msg, folds = pixel_diff(read_png(p), [tuple(c) for c in epx])
+        out.append(f'== screen {name}\n  PIXELS {msg}')
+        clean += bad == [] and not folds
+    out.append(f'# screens: {clean}/{len(paths)} pixel-identical (colour-mapped)')
+    return clean == len(paths)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--ref', default=os.path.join(ROOT, 'ref'))
@@ -228,7 +280,27 @@ def main(argv=None):
     ap.add_argument('--make-fake', metavar='DIR')
     ap.add_argument('--shift', type=int, default=1)
     ap.add_argument('--tamper', action='store_true')
+    ap.add_argument('--screens', action='store_true',
+                    help='only compare ref/screen_*.png with gfx/compare/screens/ (menu/death/save)')
     a = ap.parse_args(argv)
+    if a.screens and a.tamper:     # self-test: each tools.emu screen vs itself (must be clean)
+        names = sorted(os.path.basename(p)[:-4] for p in glob.glob(os.path.join(SCREENS_DIR, '*.png')))
+        imgs = {n: read_png(os.path.join(SCREENS_DIR, n + '.png')) for n in names}
+        fails = 0
+        for i, n in enumerate(names):     # ... and vs the next one (must differ)
+            m = names[(i + 1) % len(names)]
+            same = pixel_diff(imgs[n], [tuple(c) for c in imgs[n][2]])
+            other = pixel_diff(imgs[m], [tuple(c) for c in imgs[n][2]])
+            ok = same[0] == [] and not same[2] and (other[0] or other[2])
+            fails += not ok
+            print(f'{"ok  " if ok else "FAIL"} {n:10s} self: {same[1].splitlines()[0][:40]} | vs {m}: '
+                  f'{"FOLD " if other[2] else ""}{other[1].splitlines()[0][:60]}')
+        return 1 if fails else 0
+    if a.screens:
+        out = [f'# compare_ref --screens: {a.ref} vs {SCREENS_DIR}']
+        ok = compare_screens(a.ref, out)
+        print('\n'.join(out))
+        return 2 if ok is None else (0 if ok else 1)
     if a.make_fake:
         make_fake(a.make_fake, a.shift, a.keys, a.tamper)
         return 0

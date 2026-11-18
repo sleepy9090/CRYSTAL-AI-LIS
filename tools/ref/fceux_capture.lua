@@ -73,7 +73,8 @@ local function ppu_range(addr, len)
 end
 
 local function capture(n, log)
-  local base = string.format("%s/frame_%04d", OUTDIR, n)
+  local base = type(n) == "number" and string.format("%s/frame_%04d", OUTDIR, n)
+               or string.format("%s/%s", OUTDIR, n)
   local files = {"ram", "wram"}
   write_file(base .. ".ram", cpu_range(0x0000, 0x800))
   write_file(base .. ".wram", cpu_range(0x6000, 0x2000))
@@ -91,7 +92,7 @@ local function capture(n, log)
     files[#files + 1] = "gd"
   end
   local fc = emu_.framecount and emu_.framecount() or (movie and movie.framecount()) or -1
-  log:write(string.format("%d %d %s\n", n, fc, table.concat(files, ",")))
+  log:write(string.format("%s %d %s\n", tostring(n), fc, table.concat(files, ",")))
   log:flush()
 end
 
@@ -110,8 +111,48 @@ local TRACE = { 0x40, 0x41, 0x6F0, 0x6F1, 0x6F3, 0x6FF, 0x617, 0x08, 0x6423 }
 local tr = assert(io.open(OUTDIR .. "/trace.txt", "w"))
 tr:write("# frame $40 $41 $06F0 $06F1 $06F3 $06FF $0617 $0008 $6423\n")
 
+-- Menu / death / save screens (session 84, COMPARISON.md section 4 = tools/emu/probe_screens.py).
+-- tools.emu runs them from tools/emu/states/area1_enter.state = the state after frame 2450 of the
+-- canonical script; here a savestate is taken after frame 2450 and each scenario starts from it.
+-- STEP = p:BUTTONS (held 2 frames) | w:N (N frames, no input) | s:ADDR=VAL (poke CPU RAM, hex).
+-- Output: OUTDIR/screen_NAME.{ram,wram,nt,pal,png}, compared against gfx/compare/screens/NAME.png
+-- by `python3 tools/ref/compare_ref.py --screens`.
+local SCREEN_STATE_FRAME = 2450
+local SCREENS = {
+  {"status",   "w:10 p:START w:40"},
+  {"equip",    "w:10 p:SELECT w:40"},
+  {"items",    "w:10 p:SELECT w:40 p:UP w:20"},
+  {"save",     "w:10 p:SELECT w:40 p:START w:40"},
+  {"save_ask", "w:10 p:SELECT w:40 p:START w:40 p:A w:40"},
+  {"load_ask", "w:10 p:SELECT w:40 p:START w:40 p:RIGHT w:20 p:A w:40"},
+  {"death",    "w:10 s:3C1=0 w:200"},
+  {"gameover", "w:10 s:3C1=0 w:500"},
+}
+
+local function pad_of(btns)
+  local p = {}
+  for b in string.gmatch(btns, "[^+]+") do p[BUTTON[b]] = true end
+  return p
+end
+
+local function run_screen(name, steps, log)
+  for st in string.gmatch(steps, "%S+") do
+    local kind, arg = string.match(st, "^(%a):(.+)$")
+    if kind == "p" then
+      for _ = 1, 2 do joypad.set(1, pad_of(arg)); emu_.frameadvance() end
+    elseif kind == "w" then
+      for _ = 1, tonumber(arg) do joypad.set(1, {}); emu_.frameadvance() end
+    elseif kind == "s" then
+      local a, v = string.match(arg, "^(%x+)=(%x+)$")
+      memory.writebyte(tonumber(a, 16), tonumber(v, 16))
+    end
+  end
+  capture("screen_" .. name, log)
+end
+
 if emu_.speedmode then emu_.speedmode("maximum") end
 emu_.poweron()
+local screen_ss
 for n = 0, last do
   joypad.set(1, held[n] or {})
   emu_.frameadvance()
@@ -119,8 +160,20 @@ for n = 0, last do
   for _, ad in ipairs(TRACE) do t[#t + 1] = string.format("%02X", memory.readbyte(ad)) end
   tr:write(table.concat(t, " ") .. "\n")
   if want[n] then capture(n, log) end
+  if n == SCREEN_STATE_FRAME and savestate then
+    screen_ss = (savestate.object or savestate.create)()
+    savestate.save(screen_ss)
+  end
 end
 tr:close()
+if screen_ss then
+  for _, sc in ipairs(SCREENS) do
+    savestate.load(screen_ss)
+    run_screen(sc[1], sc[2], log)
+  end
+else
+  log:write("# no savestate API: menu/death/save screens skipped\n")
+end
 log:close()
 print("re-c capture done: " .. OUTDIR)
 if emu_.exit then emu_.exit() end

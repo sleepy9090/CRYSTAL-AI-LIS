@@ -107,10 +107,11 @@ def sec_ref():
                 continue
             rgb = fb_rgb(fbs[n + d][0])
             px = [tuple(rgb[i:i + 3]) for i in range(0, len(rgb), 3)]
-            bad, msg = compare_ref.pixel_diff(img, px)
-            if bad is not None and (best is None or len(bad) < len(best[0])):
-                best = (bad, msg, d, rgb)
-        bad, msg, d, rgb = best
+            bad, msg, folds = compare_ref.pixel_diff(img, px)
+            # s84: a folded colour map (blank ref vs a picture) scores 0 px, so it ranks last
+            if bad is not None and (best is None or (bool(folds), len(bad)) < best[4]):
+                best = (bad, msg, d, rgb, (bool(folds), len(bad)))
+        bad, msg, d, rgb, _ = best
         fb, ms, ss, area = fbs[n + d]
         crop = rgb[8 * 256 * 3:232 * 256 * 3]
         path = os.path.join(OUT, f'ref_{n:04d}.png')
@@ -373,6 +374,10 @@ def ref_sev(r):
         return 'CRITICAL', ('reference frame is blank (1 colour) but tools.emu shows the faded room: the '
                             'palette-independent map hides this, so "0 px" is not a match. Frame timing around '
                             'the area load (triage task (c)/(g))')
+    if r['pct'] < 0.01 and m and m.group(1) == m.group(2) == '1':
+        return 'FIXED', ('both blank (1 colour): s43 paired a faded-room frame (offset -3) because the colour '
+                         'map folds any picture onto a blank ref; offsets with a FOLD now rank last (s84, '
+                         '"Reference-compare triage" (h))')
     if r['pct'] < 0.01:
         return 'FIXED', ('pixel compare never ran in s40 (224-row PNG); identical now'
                          + (' (blank-ish screen: offset ties, first one kept)' if m and int(m.group(2)) <= 4 else ''))
