@@ -9,6 +9,7 @@ import { paletteUpload } from './palette.js';
 import { mainState2, mainState3 } from './states/title.js';
 import { mainState1 } from './states/play.js';
 import { SPIN } from './states/death.js';
+import { mainState4, mainState5 } from './states/ending.js';
 
 // ---------------------------------------------------------------- main states (stubs)
 // Each entry: ROM address, name, handler(m). Stub bodies only do what REVERSE.md documents for the
@@ -23,8 +24,9 @@ export const MAIN_STATES = [
   { addr: '30:C931', name: 'state2_init', fn: mainState2 },
   // state 3: ReadPadsMenu, then JMP MainState3 19:A015 (title / menus / name entry; states/title.js, s82)
   { addr: '30:C939', name: 'state3_title', fn: mainState3 },
-  { addr: '30:C944', name: 'state4', fn: stub('state4') },                     // 17:A000, never reached in emu runs
-  { addr: '30:C94C', name: 'state5', fn: stub('state5') },                     // 17:A100, never reached in emu runs
+  // states 4 / 5: EndingInit 17:A000 / EndingTick 17:A100 (states/ending.js, s90)
+  { addr: '30:C944', name: 'state4_ending_init', fn: mainState4 },
+  { addr: '30:C94C', name: 'state5_ending', fn: mainState5 },
 ];
 
 /** MainLoop body for one frame: runs only when the NMI has set frame_ready ($09 != 0). */
