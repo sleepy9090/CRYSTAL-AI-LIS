@@ -98,6 +98,7 @@ web/test/sprite_check.mjs             (s54) obj/sprites.js spriteDraw() vs RAM c
 web/test/obj_check.mjs                (s55) any object routine vs tools/emu/routine_capture.py fuzz cases: whole RAM +
                                       WRAM + return kind (web/test/obj_frames/, 1000/1000 identical)
 web/catalog.html, catalog.js, apu_preview.js   existing asset catalog (session 27), kept separate from the port
+                                               (real-browser check: python3 tools/browser_check.py, s95)
 ```
 
 Dependency rule: `game/*` modules import `ram.js`, `data.js` and siblings, never `main.js`/DOM. `nes/ppu.js` and
