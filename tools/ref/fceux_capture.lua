@@ -150,7 +150,11 @@ local function run_screen(name, steps, log)
   capture("screen_" .. name, log)
 end
 
-if emu_.speedmode then emu_.speedmode("maximum") end
+-- s91: the s84 run used speedmode("maximum"), and every screen_*.png came out identical to
+-- frame_2450.png (also frame_2460.png): FCEUX skips rendering at max speed, so savescreenshotas wrote
+-- a stale picture (the .ram/.wram/.nt/.pal dumps were fine; tools/ref/screen_state_compare.py uses
+-- those). "normal" renders every frame (~45 s for the whole script).
+if emu_.speedmode then emu_.speedmode("normal") end
 emu_.poweron()
 local screen_ss
 for n = 0, last do

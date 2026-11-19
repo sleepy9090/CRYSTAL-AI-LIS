@@ -473,18 +473,34 @@ def report(data, out):
         L.append(f'| `${r["area"]:02X}.{r["entry"]:02X}` | {r["method"]} | `{r["music"]}` | {mm} | {off} | '
                  f'{pair} | {"static =" if web else ""} | {sev} | {note} |')
     # ---- screens
-    L += ['', '## 4. Menus, death, game over, save (tools.emu only)', '',
+    rsp = os.path.join(ROOT, 'gfx', 'compare', 'ref_screens.json')
+    rscr = json.load(open(rsp))['screens'] if os.path.exists(rsp) else {}
+    L += ['', '## 4. Menus, death, game over, save', '',
           'From `tools/emu/states/area1_enter.state`. These screens are built at run time (bank 16 menu '
-          'printer, bank 19 death), so there is no static-renderer image, and the FCEUX capture does not reach '
-          'them: severity is **CRITICAL (unpaired)** until a reference capture of the same steps exists. '
-          'REVERSE.md: "Text / dialogue" (menu strings `16:8C1B`), "Save / load module", `PlayerDeath` `19:B900`.', '',
-          '| Screen | How (steps) | main/sub, irq_mode | tools.emu | Reference | Web port | Severity |',
+          'printer, bank 19 death), so there is no static-renderer image. **Reference (s91):** the FCEUX run '
+          '(`fceux_capture.lua` `SCREENS`, from a savestate after f2450) saved stale screenshots (every '
+          '`ref/screen_*.png` = `frame_2450.png`, FCEUX skips rendering at max speed), so the pair is by machine '
+          'state instead: `python3 tools/ref/screen_state_compare.py` replays the same steps in tools.emu from a '
+          'fceux-fill canonical run to f2451 (the +1 gameplay offset) and diffs nametables, palette, OAM shadow, '
+          'RAM and WRAM (`docs/ref_screens.txt`). MATCH = nametables + palette + OAM identical; the RAM bytes '
+          'left are frozen title counters / pad / sample-point temps (REVERSE.md "Reference-compare triage" (b) '
+          '(d) (f) (k)). REVERSE.md: "Text / dialogue" (menu strings `16:8C1B`), "Save / load module", '
+          '`PlayerDeath` `19:B900`.', '',
+          '| Screen | How (steps) | main/sub, irq_mode | tools.emu | Reference (state) | Web port | Severity |',
           '|---|---|---|---|---|---|---|']
     for r in data.get('screens', []):
-        allsev.append('CRITICAL')
+        q = rscr.get(r['name'])
+        if q is None:
+            sev, refc = 'CRITICAL (unpaired)', '—'
+        else:
+            ok = not (q['nt'] or q['pal'] or q['oam'])
+            sev = 'MATCH' if ok else 'CRITICAL'
+            refc = (f'NT {q["nt"]}, PAL {q["pal"]}, OAM {q["oam"]}/64, RAM {len(q["ram_nonstack"])} '
+                    f'(non-stack), WRAM {q["wram"]} (d={q["offset"]:+d})')
+        allsev.append(sev.split()[0])
         L.append(f'| {r["name"]} — {r["desc"]} | `{r["steps"]}` | {r["main"]}/`${r["sub"]:02X}`, {r["irq"]} | '
-                 f'[{os.path.basename(r["img"])}]({r["img"]}) | — | {"not ported (7/8 leftovers (c)/(d))" if web else ""} '
-                 '| CRITICAL (unpaired) |')
+                 f'[{os.path.basename(r["img"])}]({r["img"]}) | {refc} | '
+                 f'{"not ported (7/8 leftovers (c)/(d))" if web else ""} | {sev} |')
     # ---- sprites
     sp = data.get('sprites', [])
     good = [r for r in sp if r.get('pct') is not None and r['pct'] >= 95 and r['n'] >= 20]

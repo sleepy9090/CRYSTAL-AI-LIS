@@ -1,0 +1,215 @@
+# screen_state_compare: /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/ref/screen_* vs tools.emu (state, not pixels)
+== screen status (w:10 p:START w:40): offset +0, 17 RAM diffs outside the stack page: $0010=1C/04 $0017=00/02 $0020=FF/00 $0045=02/01 $0046=03/02 $006E=1A/1C $006F=0F/1D $04BF=00/01 $060C=50/4F $0614=D0/CF $0617=CA/CB $0627=13/12 $0628=1B/1A $0629=03/02 $062A=05/04 $062B=1B/1A $06FF=DB/D7
+  RAM   28 byte diffs (OAM page excluded)
+        $0010 ref=1C emu=04 jmp_trampoline
+        $0017 ref=00 emu=02 tmp_17
+        $0020 ref=FF emu=00 tmp_20
+        $0045 ref=02 emu=01 pad_hold_a
+        $0046 ref=03 emu=02 
+        $006E ref=1A emu=1C cur_bank16_x2
+        $006F ref=0F emu=1D r7_shadow
+        $01ED ref=7E emu=09 
+        $01EE ref=F8 emu=58 
+        $01EF ref=D1 emu=82 
+        $01F0 ref=F4 emu=1F 
+        $01F1 ref=FF emu=0B 
+        $01F2 ref=FF emu=02 
+        $01F3 ref=00 emu=FB 
+        $01F4 ref=23 emu=C1 
+        $01F5 ref=6D emu=0F 
+        $01F6 ref=C1 emu=1A 
+        $01F7 ref=DD emu=E0 
+        $04BF ref=00 emu=01 obj_active_s1F
+        $060C ref=50 emu=4F 
+        $0614 ref=D0 emu=CF 
+        $0617 ref=CA emu=CB status_anim_ctr
+        $0627 ref=13 emu=12 status_anim_frame
+        $0628 ref=1B emu=1A title_blink_timer
+        $0629 ref=03 emu=02 
+        $062A ref=05 emu=04 
+        $062B ref=1B emu=1A 
+        $06FF ref=DB emu=D7 title_ctr
+  OAM   0/64 sprites differ
+  WRAM  5 byte diffs in $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+  NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
+  PAL   0 entries differ
+  PIXELS (no screenshot in capture)
+== screen equip (w:10 p:SELECT w:40): offset +0, 14 RAM diffs outside the stack page: $0045=02/03 $0046=03/01 $0054=88/1A $0055=F4/F6 $0056=01/07 $060C=50/4F $0614=D0/CF $0617=CA/CB $0627=13/12 $0628=1B/1A $0629=03/02 $062A=05/04 $062B=1B/1A $06FF=DB/D7
+  RAM   21 byte diffs (OAM page excluded)
+        $0045 ref=02 emu=03 pad_hold_a
+        $0046 ref=03 emu=01 
+        $0054 ref=88 emu=1A irq_vector
+        $0055 ref=F4 emu=F6 
+        $0056 ref=01 emu=07 irq_handler_idx
+        $01EE ref=7E emu=EF 
+        $01EF ref=F8 emu=F7 
+        $01F0 ref=D1 emu=19 
+        $01F4 ref=00 emu=20 
+        $01F5 ref=23 emu=FF 
+        $01F6 ref=6F emu=E4 
+        $01F7 ref=C1 emu=FE 
+        $060C ref=50 emu=4F 
+        $0614 ref=D0 emu=CF 
+        $0617 ref=CA emu=CB status_anim_ctr
+        $0627 ref=13 emu=12 status_anim_frame
+        $0628 ref=1B emu=1A title_blink_timer
+        $0629 ref=03 emu=02 
+        $062A ref=05 emu=04 
+        $062B ref=1B emu=1A 
+        $06FF ref=DB emu=D7 title_ctr
+  OAM   0/64 sprites differ
+  WRAM  5 byte diffs in $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+  NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
+  PAL   0 entries differ
+  PIXELS (no screenshot in capture)
+== screen items (w:10 p:SELECT w:40 p:UP w:20): offset +0, 13 RAM diffs outside the stack page: $0046=02/03 $0054=88/1A $0055=F4/F6 $0056=01/07 $060C=50/4F $0614=D0/CF $0617=CA/CB $0627=13/12 $0628=1B/1A $0629=03/02 $062A=05/04 $062B=1B/1A $06FF=DB/D7
+  RAM   20 byte diffs (OAM page excluded)
+        $0046 ref=02 emu=03 
+        $0054 ref=88 emu=1A irq_vector
+        $0055 ref=F4 emu=F6 
+        $0056 ref=01 emu=07 irq_handler_idx
+        $01EE ref=7E emu=EF 
+        $01EF ref=F8 emu=F7 
+        $01F0 ref=D1 emu=19 
+        $01F4 ref=00 emu=20 
+        $01F5 ref=23 emu=FF 
+        $01F6 ref=6D emu=E4 
+        $01F7 ref=C1 emu=FE 
+        $060C ref=50 emu=4F 
+        $0614 ref=D0 emu=CF 
+        $0617 ref=CA emu=CB status_anim_ctr
+        $0627 ref=13 emu=12 status_anim_frame
+        $0628 ref=1B emu=1A title_blink_timer
+        $0629 ref=03 emu=02 
+        $062A ref=05 emu=04 
+        $062B ref=1B emu=1A 
+        $06FF ref=DB emu=D7 title_ctr
+  OAM   0/64 sprites differ
+  WRAM  5 byte diffs in $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+  NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
+  PAL   0 entries differ
+  PIXELS (no screenshot in capture)
+== screen save (w:10 p:SELECT w:40 p:START w:40): offset +0, 14 RAM diffs outside the stack page: $0045=03/01 $0046=01/02 $0054=88/1A $0055=F4/F6 $0056=01/07 $060C=50/4F $0614=D0/CF $0617=CA/CB $0627=13/12 $0628=1B/1A $0629=03/02 $062A=05/04 $062B=1B/1A $06FF=DB/D7
+  RAM   21 byte diffs (OAM page excluded)
+        $0045 ref=03 emu=01 pad_hold_a
+        $0046 ref=01 emu=02 
+        $0054 ref=88 emu=1A irq_vector
+        $0055 ref=F4 emu=F6 
+        $0056 ref=01 emu=07 irq_handler_idx
+        $01EE ref=7E emu=EF 
+        $01EF ref=F8 emu=F7 
+        $01F0 ref=D1 emu=19 
+        $01F4 ref=00 emu=20 
+        $01F5 ref=23 emu=FF 
+        $01F6 ref=6D emu=E4 
+        $01F7 ref=C1 emu=FE 
+        $060C ref=50 emu=4F 
+        $0614 ref=D0 emu=CF 
+        $0617 ref=CA emu=CB status_anim_ctr
+        $0627 ref=13 emu=12 status_anim_frame
+        $0628 ref=1B emu=1A title_blink_timer
+        $0629 ref=03 emu=02 
+        $062A ref=05 emu=04 
+        $062B ref=1B emu=1A 
+        $06FF ref=DB emu=D7 title_ctr
+  OAM   0/64 sprites differ
+  WRAM  5 byte diffs in $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+  NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
+  PAL   0 entries differ
+  PIXELS (no screenshot in capture)
+== screen save_ask (w:10 p:SELECT w:40 p:START w:40 p:A w:40): offset +0, 14 RAM diffs outside the stack page: $0045=02/03 $0046=03/01 $0054=88/1A $0055=F4/F6 $0056=01/07 $060C=50/4F $0614=D0/CF $0617=CA/CB $0627=13/12 $0628=1B/1A $0629=03/02 $062A=05/04 $062B=1B/1A $06FF=DB/D7
+  RAM   21 byte diffs (OAM page excluded)
+        $0045 ref=02 emu=03 pad_hold_a
+        $0046 ref=03 emu=01 
+        $0054 ref=88 emu=1A irq_vector
+        $0055 ref=F4 emu=F6 
+        $0056 ref=01 emu=07 irq_handler_idx
+        $01F0 ref=7E emu=EF 
+        $01F1 ref=F8 emu=F7 
+        $01F2 ref=D1 emu=19 
+        $01F4 ref=0C emu=08 
+        $01F5 ref=07 emu=0C 
+        $01F8 ref=FF emu=01 
+        $01F9 ref=9B emu=9C 
+        $060C ref=50 emu=4F 
+        $0614 ref=D0 emu=CF 
+        $0617 ref=CA emu=CB status_anim_ctr
+        $0627 ref=13 emu=12 status_anim_frame
+        $0628 ref=1B emu=1A title_blink_timer
+        $0629 ref=03 emu=02 
+        $062A ref=05 emu=04 
+        $062B ref=1B emu=1A 
+        $06FF ref=DB emu=D7 title_ctr
+  OAM   0/64 sprites differ
+  WRAM  5 byte diffs in $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+  NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
+  PAL   0 entries differ
+  PIXELS (no screenshot in capture)
+== screen load_ask (w:10 p:SELECT w:40 p:START w:40 p:RIGHT w:20 p:A w:40): offset +0, 13 RAM diffs outside the stack page: $0046=01/02 $0054=88/1A $0055=F4/F6 $0056=01/07 $060C=50/4F $0614=D0/CF $0617=CA/CB $0627=13/12 $0628=1B/1A $0629=03/02 $062A=05/04 $062B=1B/1A $06FF=DB/D7
+  RAM   20 byte diffs (OAM page excluded)
+        $0046 ref=01 emu=02 
+        $0054 ref=88 emu=1A irq_vector
+        $0055 ref=F4 emu=F6 
+        $0056 ref=01 emu=07 irq_handler_idx
+        $01EC ref=7E emu=EF 
+        $01ED ref=F8 emu=F7 
+        $01EE ref=D1 emu=19 
+        $01F2 ref=00 emu=20 
+        $01F3 ref=23 emu=FF 
+        $01F4 ref=6D emu=E4 
+        $01F5 ref=C1 emu=FE 
+        $060C ref=50 emu=4F 
+        $0614 ref=D0 emu=CF 
+        $0617 ref=CA emu=CB status_anim_ctr
+        $0627 ref=13 emu=12 status_anim_frame
+        $0628 ref=1B emu=1A title_blink_timer
+        $0629 ref=03 emu=02 
+        $062A ref=05 emu=04 
+        $062B ref=1B emu=1A 
+        $06FF ref=DB emu=D7 title_ctr
+  OAM   0/64 sprites differ
+  WRAM  5 byte diffs in $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+  NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
+  PAL   0 entries differ
+  PIXELS (no screenshot in capture)
+== screen death (w:10 s:3C1=0 w:200): offset +0, 11 RAM diffs outside the stack page: $0045=03/02 $0046=01/03 $060C=50/4F $0614=D0/CF $0617=CA/CB $0627=13/12 $0628=1B/1A $0629=03/02 $062A=05/04 $062B=1B/1A $06FF=DB/D7
+  RAM   19 byte diffs (OAM page excluded)
+        $0045 ref=03 emu=02 pad_hold_a
+        $0046 ref=01 emu=03 
+        $01EC ref=EB emu=2C 
+        $01ED ref=81 emu=F7 
+        $01EE ref=7E emu=09 
+        $01EF ref=F8 emu=F7 
+        $01F0 ref=D1 emu=19 
+        $01F2 ref=07 emu=00 
+        $01F3 ref=00 emu=07 
+        $01F6 ref=6D emu=6F 
+        $060C ref=50 emu=4F 
+        $0614 ref=D0 emu=CF 
+        $0617 ref=CA emu=CB status_anim_ctr
+        $0627 ref=13 emu=12 status_anim_frame
+        $0628 ref=1B emu=1A title_blink_timer
+        $0629 ref=03 emu=02 
+        $062A ref=05 emu=04 
+        $062B ref=1B emu=1A 
+        $06FF ref=DB emu=D7 title_ctr
+  OAM   0/64 sprites differ
+  WRAM  5 byte diffs in $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+  NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
+  PAL   0 entries differ
+  PIXELS (no screenshot in capture)
+== screen gameover (w:10 s:3C1=0 w:500): offset -1, 6 RAM diffs outside the stack page: $0009=00/01 $0629=03/02 $062A=05/04 $062B=1B/1A $06FE=6B/6C $06FF=9B/9C
+  RAM   7 byte diffs (OAM page excluded)
+        $0009 ref=00 emu=01 frame_ready
+        $01F8 ref=20 emu=19 
+        $0629 ref=03 emu=02 
+        $062A ref=05 emu=04 
+        $062B ref=1B emu=1A 
+        $06FE ref=6B emu=6C ram_06FE
+        $06FF ref=9B emu=9C title_ctr
+  OAM   0/64 sprites differ
+  WRAM  5 byte diffs in $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
+  NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
+  PAL   0 entries differ
+  PIXELS (no screenshot in capture)
+# screens: 0/8 state-identical
