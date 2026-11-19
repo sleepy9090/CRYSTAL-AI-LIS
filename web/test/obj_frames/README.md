@@ -29,6 +29,12 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   AiChase enters its detour). `python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_walk.json --col 0620=60`
   shows how many cases take each path.
 
+- `fuzz_field.json` (s87): 100 cases each for the field AIs in `obj/ai_field.js` (`FIELD_AIS`: `AiTrapChest` `$2B`,
+  `AiDasher` `$44`, `AiHomingFlyer` `$45`, `AiHomingShooter` `$48`, `AiOrbiter` `$58`, `AiPatrolGunner` `$5C`,
+  `AiDrifter` `$5D`, `AiWaitClear` `$5E`, `AiCoin` `$7B`) and the shot / effect AIs in `obj/ai_shot.js`
+  (`AiCountdown` `$14`, `AiCurveShot` `$16`, `AiHoverShot` `$17`, `AiBounceShot` `$1B`, `AiDirFrameShot` `$1E`,
+  `AiShotAnimDec` `$1F`); steered by `_fix_field`.
+
 Regenerate (about 10 s each):
 
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
@@ -41,5 +47,8 @@ Regenerate (about 10 s each):
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
         --routine AiWalkPause,AiShooterWalk,AiDormant,AiChase,AiChaseOnscreen,AiShooterChase,AiShooterChaseOn,AiAimShooter,AiBurrower,AiLunger,AiSpawnChildLunger,AiShellOnHit \
         --out web/test/obj_frames/fuzz_walk.json
+    python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
+        --routine AiTrapChest,AiDasher,AiHomingFlyer,AiHomingShooter,AiOrbiter,AiPatrolGunner,AiDrifter,AiWaitClear,AiCoin,AiCountdown,AiCurveShot,AiHoverShot,AiBounceShot,AiDirFrameShot,AiShotAnimDec \
+        --out web/test/obj_frames/fuzz_field.json
 
 `python3 -m tools.emu.routine_capture --list` shows the routines; `--routine A,B` captures a subset.

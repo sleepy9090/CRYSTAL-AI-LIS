@@ -17,6 +17,8 @@ import { bgRowRender, bgColRender, fullScreenDraw, runNow } from '../src/game/wo
 import { objMoveSlide } from '../src/game/obj/move.js';
 import { objUpdateAll } from '../src/game/obj/objects.js';
 import * as W from '../src/game/obj/ai_walk.js';
+import * as F from '../src/game/obj/ai_field.js';
+import * as S from '../src/game/obj/ai_shot.js';
 
 const WEB = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const verbose = process.argv.includes('--verbose');
@@ -57,6 +59,23 @@ const RUN = {
   AiLunger: (m, r) => { W.aiLunger(m, r.x); },
   AiSpawnChildLunger: (m, r) => { W.aiSpawnChildLunger(m, r.x); },
   AiShellOnHit: (m, r) => { W.aiShellOnHit(m, r.x); },
+  // s87 (enemy port leftovers (b)): the remaining field AIs (obj/ai_field.js); none of them pops its caller
+  AiTrapChest: (m, r) => { F.aiTrapChest(m, r.x); },
+  AiDasher: (m, r) => { F.aiDasher(m, r.x); },
+  AiHomingFlyer: (m, r) => { F.aiHomingFlyer(m, r.x); },
+  AiHomingShooter: (m, r) => { F.aiHomingShooter(m, r.x); },
+  AiOrbiter: (m, r) => { F.aiOrbiter(m, r.x); },
+  AiPatrolGunner: (m, r) => { F.aiPatrolGunner(m, r.x); },
+  AiDrifter: (m, r) => { F.aiDrifter(m, r.x); },
+  AiWaitClear: (m, r) => { F.aiWaitClear(m, r.x); },
+  AiCoin: (m, r) => { F.aiCoin(m, r.x); },
+  // s87: the boss shot / effect AIs (obj/ai_shot.js)
+  AiCountdown: (m, r) => { S.aiCountdown(m, r.x); },
+  AiCurveShot: (m, r) => { S.aiCurveShot(m, r.x); },
+  AiHoverShot: (m, r) => { S.aiHoverShot(m, r.x); },
+  AiBounceShot: (m, r) => { S.aiBounceShot(m, r.x); },
+  AiDirFrameShot: (m, r) => { S.aiDirFrameShot(m, r.x); },
+  AiShotAnimDec: (m, r) => { S.aiShotAnimDec(m, r.x); },
 };
 
 const dir = path.join(WEB, 'test/obj_frames');

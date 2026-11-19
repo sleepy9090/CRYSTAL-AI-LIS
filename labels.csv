@@ -922,6 +922,10 @@ bank,addr,name,comment
 27,B339,AiShellOnHit,s47: AI $41: hit -> 63 frames closed (no coll group) then AI $C1; else AiShooterChase
 27,B436,AiDasher,s47: AI $44: random 4-dir walk; 2/8 picks dash at speed 6 (meta $92)
 27,B4BA,AiHomingFlyer,s47: AI $45: SteerToward player every 16 steps; speed level 0-3; no BG test; random aimed shot
+27,B4E5,HomingSteer,s87: AiHomingFlyer steer block: SteerToward player; speed level obj_phase +-1 (BIT $10 quirk) clamp B550 -> flags2 B54C
+27,B50E,HomingMove,s87: AiHomingFlyer move: anim -= B556[level]; timer--; free step; 1-in-64 aimed shot on ($08&7)=0
+27,B55A,AiHomingShooter,s87: AI $48 (no type uses it): attack shot at $0640=$18; else AiShootCheck + AI $45 + 2nd steer at timer 0
+27,B65F,PatrolStep,s87: AI $5C/$5D shared step: ObjStepVector(meta_dir) + TempAddStep, no BG test
 27,B595,AiFanTurret,s47: AI $4C/$4D: static; 3-shot fan (16-dir aimed -1/0/+1) at $0640=$18/$10/$08
 27,B5D9,AiTurret,s47: AI $4E: static; aimed shot every 16 obj_anim steps
 27,B5F3,AiWaitClear,s47: AI $5E: wakes (AI $2A) when no spawn-param $50 object left on player's screen row

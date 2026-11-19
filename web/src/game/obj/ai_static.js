@@ -72,6 +72,11 @@ export function aiDirShot(m, x) {
 /** AI $10: obj_anim -= 4; offscreen -> despawn; lifetime obj_timer -> death type; step; optional BG test */
 export function aiStraightMover(m, x) {
   m.wr(ANIM + x, m.rd(ANIM + x) - 4);
+  aiStraightMoverTail(m, x);
+}
+
+/** AiStraightMoverTail 27:B0BE (also the tail of AIs $16 $17 $1E $1F, obj/ai_shot.js) */
+export function aiStraightMoverTail(m, x) {
   if (m.rd(FLAGS + x) & 0x80) return objDespawn(m, x);
   m.wr(TIMER + x, m.rd(TIMER + x) - 1);
   if (m.rd(TIMER + x) === 0) return objBecomeNext(m, x);

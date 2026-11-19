@@ -149,8 +149,20 @@ WALK_AIS = {
 }
 for _n, (_id, _ad) in WALK_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r: {'x': _slot(r)})
-# AI ids the port has (web/src/game/obj/ai_static.js, ai_walk.js) + ids whose ObjAiTable 27:A314 entry is 0
-PORTED_AIS = (0x10, 0x11, 0x2C, 0x4C, 0x4D, 0x4E) + tuple(i for i, _ in WALK_AIS.values())
+# s87 (enemy port leftovers (b)): the remaining field AIs (web/src/game/obj/ai_field.js), bank 27 entries
+FIELD_AIS = {
+    'AiTrapChest': (0x2B, 0xAC60), 'AiDasher': (0x44, 0xB436), 'AiHomingFlyer': (0x45, 0xB4BA),
+    'AiHomingShooter': (0x48, 0xB55A), 'AiOrbiter': (0x58, 0xB6AA), 'AiPatrolGunner': (0x5C, 0xB626),
+    'AiDrifter': (0x5D, 0xB690), 'AiWaitClear': (0x5E, 0xB5F3), 'AiCoin': (0x7B, 0xB778),
+    # boss shot / effect AIs (web/src/game/obj/ai_shot.js)
+    'AiCountdown': (0x14, 0xB2C5), 'AiCurveShot': (0x16, 0xB0F6), 'AiHoverShot': (0x17, 0xB11B),
+    'AiBounceShot': (0x1B, 0xB12D), 'AiDirFrameShot': (0x1E, 0xB094), 'AiShotAnimDec': (0x1F, 0xB0A2),
+}
+for _n, (_id, _ad) in FIELD_AIS.items():
+    ROUTINES[_n] = (26, _ad, _poke_bg, lambda r: {'x': _slot(r)})
+# AI ids the port has (web/src/game/obj/ai_static.js, ai_walk.js, ai_field.js) + ids whose ObjAiTable 27:A314 entry is 0
+PORTED_AIS = (0x10, 0x11, 0x2C, 0x4C, 0x4D, 0x4E) + tuple(i for i, _ in WALK_AIS.values()) + \
+    tuple(i for i, _ in FIELD_AIS.values())
 NULL_AIS = tuple(i for i in range(0x80) if i != 0x1A and not (_PRG[27 * 0x2000 + 0x314 + 2 * i] |
                                                                _PRG[27 * 0x2000 + 0x315 + 2 * i]))
 HIT_FLAG_PARAMS = tuple(_PRG[26 * 0x2000 + 0x1045 + i] for i in range(10) if _PRG[26 * 0x2000 + 0x1045 + i])
@@ -229,6 +241,84 @@ def _fix_walk(name, ram, r, x, wram=None):
             ram[0x0480 + x] = r.choice([5, 0x22, 0x37])  # keep obj_meta_dir (no re-aim this step)
 
 
+def _rand_zero_next(ram, r):
+    ram[0x0E] = (r.choice(RAND64_ZERO) - 1) & 0x3F
+
+
+def _fix_field(name, ram, r, x, wram=None):
+    """s87: keep the field AI cases on their rare paths (pick / dash, steer levels, shot frames, wake-up, hops)"""
+    if r.random() < 0.6:
+        ram[0x0380 + x] &= 0x7F                    # onscreen most of the time
+    ram[0x0440 + x] = r.choice([0, 0x40 + r.randrange(0x20), r.randrange(0x60)])
+    if r.random() < 0.3:
+        for s in r.sample(range(0x0D, 0x1F), 5):   # free slots for the shot
+            if s != x:
+                ram[0x04A0 + s] = 0
+    if name == 'AiDasher':
+        ram[0x0340 + x] = r.choice([1, 6, 6, r.randrange(16), r.randrange(256)])
+        ram[0x0600 + x] = r.choice([0, 0, 0, 1, r.randrange(256)])
+        ram[0x0480 + x] = r.choice([0, 1, 2, r.randrange(256)])
+    if name in ('AiHomingFlyer', 'AiHomingShooter'):
+        if r.random() < 0.3:
+            ram[0x0560 + x] = 1
+            ram[0x04AD] = r.choice([0, 0x45, 0xC5])
+        ram[0x0480 + x] = r.choice([0, 1, 0x10, 0x11, r.randrange(256)])
+        ram[0x0600 + x] = r.choice([0, 1, 2, 3, 0xFF, r.randrange(256)])
+        ram[0x0360 + x] = r.choice([r.randrange(16), r.randrange(256)])
+        ram[0x0640 + x] = r.choice([0, 0, 0x19, 0x18, r.randrange(256)])
+        if r.random() < 0.4:                       # shot frame: $08 & 7 = 0 and Rand64 = 0 next
+            ram[0x08] &= 0xF8
+            _rand_zero_next(ram, r)
+            if ram[0x0440 + x] == 0:
+                ram[0x0440 + x] = 0x40 + r.randrange(0x20)
+        elif name == 'AiHomingShooter' and r.random() < 0.3:
+            ram[0x0640 + x] = 0
+            _steer_attack(ram, r, x, 60)
+    if name == 'AiWaitClear':
+        if r.random() < 0.7:
+            ram[0x08] = (-(x << 4)) & 0x3F | (r.randrange(4) << 6)
+        for s in range(0x0D, 0x1F):
+            if r.random() < 0.15:
+                ram[0x0560 + s] = 0x50
+                ram[0xD0 + s] = ram[0xD0] if r.random() < 0.6 else r.randrange(256)
+            elif r.random() < 0.5:
+                ram[0x0560 + s] = r.randrange(256)
+    if name == 'AiPatrolGunner':
+        ram[0x0620 + x] = r.choice([0, 0, 0, 1, 8, 9, 0x20, r.randrange(256)])
+        ram[0x70 + x] = r.choice([0x35, 0x36, 0xE7, 0xE8, r.randrange(256)])
+        ram[0x0480 + x] = r.choice([1, 0x21, r.randrange(256)])
+        ram[0x0360 + x] = r.choice([r.randrange(8), r.randrange(256)])
+    if name == 'AiDrifter':
+        ram[0x0480 + x] = r.choice([1, 0x41, r.randrange(256)])
+        ram[0x0360 + x] = r.choice([r.randrange(8), r.randrange(256)])
+    if name == 'AiOrbiter':
+        ram[0x04E0 + x] = r.choice([1, 0x41, r.randrange(256)])
+        if r.random() < 0.5:
+            _rand_zero_next(ram, r)
+    if name == 'AiTrapChest':
+        ram[0x0600 + x] = r.choice([0, 0, 1, r.randrange(256)])
+        ram[0x0620 + x] = r.choice([1, 0x41, 0x81, r.randrange(256)])
+        ram[0x0360 + x] = r.choice([r.randrange(8), r.randrange(256)])
+        if r.random() < 0.4:                       # the player in the chest's cell (DirToTarget distance 0)
+            for c in POS_COLS:
+                ram[c + x] = ram[c + 1]
+            ram[0x70 + x] = (ram[0x71] + r.randrange(-8, 8)) & 0xFF
+    if name == 'AiCoin':
+        ram[0x0480 + x] = r.choice([1, 2, 0x30, 0x31, 0xC0, 0xC1, 0xC2, r.randrange(256)])
+    if name in ('AiCountdown', 'AiCurveShot', 'AiHoverShot', 'AiBounceShot', 'AiDirFrameShot', 'AiShotAnimDec'):
+        ram[0x04E0 + x] = r.choice([0, 1, 2, 3, 0x80, 0x81, r.randrange(256)])
+        ram[0x0480 + x] = r.choice([1, 2, 0x10, 0x11, r.randrange(256)])
+        ram[0x0600 + x] = r.choice([0, 1, 4, r.randrange(256)])
+        ram[0x0460 + x] = r.choice([0, 0, 6, 0x27, r.randrange(256)])
+        ram[0x0360 + x] = r.choice([r.randrange(16), r.randrange(256)])
+    if wram is not None and 'wram' in _BASE and name in ('AiDasher', 'AiTrapChest', 'AiBounceShot') \
+            and r.random() < 0.4:
+        wram[0x2F0:0x340] = _BASE['wram'][0x2F0:0x340]   # the real map, the object on the player's screen
+        ram[0x90 + x], ram[0xD0 + x] = ram[0x90], ram[0xD0]
+        ram[0x70 + x], ram[0xB0 + x] = r.randrange(256), r.randrange(0xF0)
+        ram[0x0460 + x] = r.choice([6, 0x27])
+
+
 def _fix_case(name, ram, r, regs, wram=None):
     """routine-specific pokes that keep a case on a meaningful path"""
     x = regs.get('x')
@@ -290,6 +380,8 @@ def _fix_case(name, ram, r, regs, wram=None):
         ram[0x0710] = r.choice([0, 0x40, r.randrange(256)])
     if name in WALK_AIS:
         _fix_walk(name, ram, r, x, wram)
+    if name in FIELD_AIS:
+        _fix_field(name, ram, r, x, wram)
     if name in ('AiFanTurret', 'AiTurret', 'AiBurst', 'SpawnShot'):
         ram[0x0440 + x] = r.choice([0x40 + r.randrange(0x20), r.randrange(0x60)])
         if 'a' in regs:
