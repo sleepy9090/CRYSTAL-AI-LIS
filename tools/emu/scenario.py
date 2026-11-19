@@ -20,6 +20,7 @@ import sys
 
 from tools.emu.nes import NES
 from tools.emu import state
+from tools.emu.cpu import IllegalOpcode
 from tools.emu.pads import parse_buttons
 
 STATES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'states')
@@ -46,7 +47,40 @@ def follow_enemy(slot, dx):
     return f
 
 
-# name -> dict(state, area, pokes, keys, frames, note, each)
+def force(bank, pc, ad, val, once=True):
+    """exec hook: when bank:pc runs, write val to ad (first time only unless once=False)."""
+    done = [False]
+
+    def f(nes):
+        if not (once and done[0]):
+            done[0] = True
+            write_mem(nes, ad, val)
+    return (bank, pc, f)
+
+
+TALK_PC = 0xD10D     # 30:D10D LDA $22 (NpcTalk, after NpcScript, before the TalkActionTable jump)
+EVENT_PC = 0xD552     # 30:D552 EventActionDispatch LDA $22
+
+
+def talk_act(act, frames=400, extra=None):
+    """Area 01 start: A talks to the NPC next to the player; its action $22 is forced to `act`."""
+    return dict(note=f'area 01: A on the start NPC, TalkActionTable act {act} forced at 30:D10D',
+                exec=[force(30, TALK_PC, 0x22, act)], pokes=extra or {},
+                keys=['20:A', '120:A', '160:A', '200:B', '260:A', '320:B'], frames=frames,
+                watch=[0x0702, 0x03C1, 0x0708])
+
+
+def event_act(act, frames=400, area='03', extra=None):
+    """use_fail path (item $1D used in area 03 -> ItemUseHook -> EventActionDispatch), $22 forced."""
+    p = {0x0715: 0x01, 0x6440: 0x1D, 0x642C: 0}
+    p.update(extra or {})
+    return dict(note=f'area {area}: use item $1D (ItemUseHook) -> EventActionTable act {act} forced at 30:D552',
+                area=area, pokes=p, exec=[force(30, EVENT_PC, 0x22, act)],
+                keys=['20:B', '120:A', '160:A', '200:B', '260:A'], frames=frames, watch=[0x6C, 0x41])
+
+
+# name -> dict(state, area, pokes, keys, frames, note, each, exec)
+# exec: [(bank, pc, fn(nes))] exec hooks, e.g. force(...)
 # keys: 'OFF:BUTTONS[:LEN]' (pad 1), 'OFF:P2:BUTTONS[:LEN]' (pad 2), 'OFF:s:ADDR=VAL' (timed poke)
 SCENARIOS = {
     'pause': dict(note='START in play -> PauseScreen 15:BC40 (sub_state 9, NmiMode2), START again',
@@ -108,6 +142,14 @@ SCENARIOS = {
     'mp_flight': magic(8, keys=['20:A:80', '140:A+RIGHT:40'], note='held = hover'),
     'mp_jump': magic(0, {0x0716: 0x12}, keys=['20:A', '60:A+RIGHT', '100:A'], note='accessory $12 = jump'),
 }
+# s92: one scenario per distinct TalkActionTable / EventActionTable handler (REVERSE.md "Talk actions")
+for _a in (1, 2, 3, 5, 6, 8, 9, 10, 12, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27):
+    SCENARIOS[f'talk_{_a:02d}'] = talk_act(_a)
+for _a in (1, 2, 7, 8, 9, 10, 11, 12, 13, 14, 15, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29, 30, 31):
+    SCENARIOS[f'event_{_a:02d}'] = event_act(_a)
+# act 1: SwordRaisePose + msg 28.17 run to ~f263, so close the message later and wait for the $F2 load
+SCENARIOS['event_01']['keys'] += [f'{300 + 40 * i}:A' for i in range(8)]
+SCENARIOS['event_01']['frames'] = 700
 
 
 def parse_poke(s):
@@ -204,6 +246,8 @@ def run(sc, verbose=False):
         nes.pads.set(1, m2)
         return m1
     nes.keys = pad1
+    for bank, pc, fn in sc.get('exec', []):
+        nes.on_exec(bank, pc, fn)
     cov = set()
     bank_at = nes.mapper.prg_bank_at
     add = cov.add
@@ -219,8 +263,13 @@ def run(sc, verbose=False):
             log.append(f'    f{nes.ppu.frame_no - f0}: ${ad:04X} <- {val:02X}  pc '
                        f'{bank_at(pc) if pc >= 0x8000 else -1}:{pc:04X}')
         nes.on_write(ad, w)
+    crash = ''
     for _ in range(sc.get('frames', 300)):
-        nes.run_frame()
+        try:
+            nes.run_frame()
+        except IllegalOpcode as e:              # a forced act can send the CPU into data
+            crash = f'  CRASH f{nes.ppu.frame_no - f0}: {e}'
+            break
     nes.set_tracer(None)
     # collapse repeated identical writes
     seen, slog = set(), []
@@ -230,7 +279,7 @@ def run(sc, verbose=False):
             seen.add(k)
             slog.append(line)
     end = (f'end: $40/$41 {r[0x40]}/{r[0x41]:02X} area {r[0x6C]:02X} hp {r[0x3C1]} lv {r[0x421]} '
-           f'gold {r[0x702] | r[0x703] << 8} xp {r[0x704] | r[0x705] << 8} mp {r[0x708]}')
+           f'gold {r[0x702] | r[0x703] << 8} xp {r[0x704] | r[0x705] << 8} mp {r[0x708]}{crash}')
     return cov, slog, end
 
 

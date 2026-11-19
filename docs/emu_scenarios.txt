@@ -295,10 +295,391 @@ tools.emu scenarios vs the 178 labels the tour never ran (docs/emu_tour.txt)
   state writes ($40/$41), first of each:
   newly run (1): 27:A143:MagicJump
 
-union: 93 / 178 newly run; still never run (85):
+[talk_01] area 01: A on the start NPC, TalkActionTable act 1 forced at 30:D10D
+  end: $40/$41 1/08 area 00 hp 1 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $03C1 <- 01  pc 26:9413
+    f132: $0041 <- 01  pc 31:EB68
+    f176: $0041 <- 08  pc 30:CA53
+  newly run (2): 14:8000:NpcScript 30:D0C8:NpcTalk
+
+[talk_02] area 01: A on the start NPC, TalkActionTable act 2 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+  newly run (3): 14:8000:NpcScript 30:D0C8:NpcTalk 30:D31C:NpcVanish
+
+[talk_03] area 01: A on the start NPC, TalkActionTable act 3 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+    f129: $0041 <- 08  pc 30:D884
+    f169: $0041 <- 1A  pc 30:D790
+    f301: $0041 <- 08  pc 19:BC6A
+  newly run (3): 14:8000:NpcScript 30:D0C8:NpcTalk 30:D22B:GiveItemA
+
+[talk_05] area 01: A on the start NPC, TalkActionTable act 5 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+  newly run (2): 14:8000:NpcScript 30:D0C8:NpcTalk
+
+[talk_06] area 01: A on the start NPC, TalkActionTable act 6 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+  newly run (4): 14:8000:NpcScript 27:AE31:AiPathWalk 30:D0C8:NpcTalk 30:D23F:MakeFollower13
+
+[talk_08] area 01: A on the start NPC, TalkActionTable act 8 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+  newly run (2): 14:8000:NpcScript 30:D0C8:NpcTalk
+
+[talk_09] area 01: A on the start NPC, TalkActionTable act 9 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 100 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+    f129: $0702 <- 64  pc 30:D271
+  newly run (3): 14:8000:NpcScript 30:D0C8:NpcTalk 30:D263:TalkGiveGold100
+
+[talk_10] area 01: A on the start NPC, TalkActionTable act 10 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+  newly run (3): 14:8000:NpcScript 30:D0C8:NpcTalk 30:D31C:NpcVanish
+
+[talk_12] area 01: A on the start NPC, TalkActionTable act 12 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+  newly run (2): 14:8000:NpcScript 30:D0C8:NpcTalk
+
+[talk_16] area 01: A on the start NPC, TalkActionTable act 16 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+    f209: $0041 <- 08  pc 30:D884
+  newly run (4): 14:8000:NpcScript 30:D0C8:NpcTalk 30:D1FF:SpawnFxAtSlot 30:D22B:GiveItemA
+
+[talk_17] area 01: A on the start NPC, TalkActionTable act 17 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+    f129: $0041 <- 08  pc 30:D884
+    f169: $0041 <- 1A  pc 30:D790
+    f301: $0041 <- 08  pc 19:BC6A
+  newly run (3): 14:8000:NpcScript 30:D0C8:NpcTalk 30:D22B:GiveItemA
+
+[talk_19] area 01: A on the start NPC, TalkActionTable act 19 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+  newly run (4): 14:8000:NpcScript 30:D0C8:NpcTalk 30:D1FF:SpawnFxAtSlot 31:E144:AreaLoadA
+
+[talk_20] area 01: A on the start NPC, TalkActionTable act 20 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+    f129: $0041 <- 08  pc 30:D884
+    f169: $03C1 <- 30  pc 30:D178
+    f169: $0708 <- 22  pc 30:D17E
+  newly run (5): 14:8000:NpcScript 30:D0C8:NpcTalk 30:D16D:TalkFullRestore 30:D22B:GiveItemA 30:D31C:NpcVanish
+
+[talk_21] area 01: A on the start NPC, TalkActionTable act 21 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+  newly run (3): 14:8000:NpcScript 27:AE31:AiPathWalk 30:D0C8:NpcTalk
+
+[talk_22] area 01: A on the start NPC, TalkActionTable act 22 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+  newly run (4): 14:8000:NpcScript 30:D0C8:NpcTalk 30:D1FF:SpawnFxAtSlot 31:E144:AreaLoadA
+
+[talk_23] area 01: A on the start NPC, TalkActionTable act 23 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+    f129: $03C1 <- 30  pc 30:D178
+    f129: $0708 <- 22  pc 30:D17E
+  newly run (4): 14:8000:NpcScript 30:D0C8:NpcTalk 30:D16D:TalkFullRestore 30:D31C:NpcVanish
+
+[talk_24] area 01: A on the start NPC, TalkActionTable act 24 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+  newly run (2): 14:8000:NpcScript 30:D0C8:NpcTalk
+
+[talk_25] area 01: A on the start NPC, TalkActionTable act 25 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+    f129: $0041 <- 08  pc 30:D884
+  newly run (4): 14:8000:NpcScript 27:AE31:AiPathWalk 30:D0C8:NpcTalk 30:D22B:GiveItemA
+
+[talk_26] area 01: A on the start NPC, TalkActionTable act 26 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+    f129: $0041 <- 08  pc 30:D884
+  newly run (3): 14:8000:NpcScript 30:D0C8:NpcTalk 30:D22B:GiveItemA
+
+[talk_27] area 01: A on the start NPC, TalkActionTable act 27 forced at 30:D10D
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0702 $03C1 $0708), first of each:
+    f103: $0041 <- 11  pc 27:A695
+    f129: $0041 <- 08  pc 30:D3C1
+  newly run (2): 14:8000:NpcScript 30:D0C8:NpcTalk
+
+[event_01] area 03: use item $1D (ItemUseHook) -> EventActionTable act 1 forced at 30:D552
+  end: $40/$41 1/08 area F2 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+    f263: $0041 <- 08  pc 19:BC6A
+    f389: $006C <- F2  pc 30:D5CD
+    f389: $0041 <- 01  pc 30:D5D5
+    f463: $0041 <- 08  pc 30:CA53
+    f463: $0041 <- 07  pc 26:94AF
+    f463: $0041 <- 08  pc 30:D53B
+    f463: $0041 <- 09  pc 30:D53D
+    f463: $0041 <- 08  pc 30:D54F
+  newly run (5): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu 30:D5A4:EvActThunderWarp
+
+[event_02] area 03: use item $1D (ItemUseHook) -> EventActionTable act 2 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+    f169: $0041 <- 1A  pc 30:D790
+    f302: $0041 <- 08  pc 19:BC6A
+  newly run (7): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 27:AE31:AiPathWalk 30:D22B:GiveItemA 30:D23F:MakeFollower13 30:D497:ItemUseMenu
+
+[event_07] area 03: use item $1D (ItemUseHook) -> EventActionTable act 7 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (4): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu
+
+[event_08] area 03: use item $1D (ItemUseHook) -> EventActionTable act 8 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (5): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D22B:GiveItemA 30:D497:ItemUseMenu
+
+[event_09] area 03: use item $1D (ItemUseHook) -> EventActionTable act 9 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (6): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 27:AE31:AiPathWalk 30:D497:ItemUseMenu 30:D659:EvActSpawnType38
+
+[event_10] area 03: use item $1D (ItemUseHook) -> EventActionTable act 10 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (4): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu
+
+[event_11] area 03: use item $1D (ItemUseHook) -> EventActionTable act 11 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (5): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D22B:GiveItemA 30:D497:ItemUseMenu
+
+[event_12] area 03: use item $1D (ItemUseHook) -> EventActionTable act 12 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (5): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D22B:GiveItemA 30:D497:ItemUseMenu
+
+[event_13] area 03: use item $1D (ItemUseHook) -> EventActionTable act 13 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (5): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D22B:GiveItemA 30:D497:ItemUseMenu
+
+[event_14] area 03: use item $1D (ItemUseHook) -> EventActionTable act 14 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (5): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu 31:E144:AreaLoadA
+
+[event_15] area 03: use item $1D (ItemUseHook) -> EventActionTable act 15 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (4): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu
+
+[event_19] area 03: use item $1D (ItemUseHook) -> EventActionTable act 19 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (6): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu 30:D718:EvActClearSlot13 30:D88B:WaitSfxDone
+
+[event_20] area 03: use item $1D (ItemUseHook) -> EventActionTable act 20 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (6): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu 30:D71F:EvActClearSlot14 30:D88B:WaitSfxDone
+
+[event_21] area 03: use item $1D (ItemUseHook) -> EventActionTable act 21 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (9): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 15:B2DA:AiBowOfTruth9E 15:B6C1:BossBgStrip 30:C482:PpuQueueBlock 30:D497:ItemUseMenu 30:D746:EvActSpawn9E 30:D88B:WaitSfxDone
+
+[event_22] area 03: use item $1D (ItemUseHook) -> EventActionTable act 22 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+    f130: $0041 <- 1A  pc 30:D790
+    f264: $0041 <- 08  pc 19:BC6A
+  newly run (4): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu
+
+[event_23] area 03: use item $1D (ItemUseHook) -> EventActionTable act 23 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (5): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu 30:D791:EvActHistory
+
+[event_24] area 03: use item $1D (ItemUseHook) -> EventActionTable act 24 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (6): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 27:AE31:AiPathWalk 30:D497:ItemUseMenu 30:D75E:EvActTwoFollowers
+
+[event_25] area 03: use item $1D (ItemUseHook) -> EventActionTable act 25 forced at 30:D552
+  end: $40/$41 1/08 area 02 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+    f132: $006C <- 02  pc 31:EB5F
+    f132: $0041 <- 01  pc 31:EB68
+    f176: $0041 <- 08  pc 30:CA53
+  newly run (5): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu 30:D7B7:EvActPushBack
+
+[event_27] area 03: use item $1D (ItemUseHook) -> EventActionTable act 27 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (6): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 27:AE31:AiPathWalk 30:D497:ItemUseMenu 30:D7CE:EvActMakeFollowers
+
+[event_28] area 03: use item $1D (ItemUseHook) -> EventActionTable act 28 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (7): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 27:AE31:AiPathWalk 30:D22B:GiveItemA 30:D23F:MakeFollower13 30:D497:ItemUseMenu
+
+[event_29] area 03: use item $1D (ItemUseHook) -> EventActionTable act 29 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (5): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu 30:D805:EvActConsume
+
+[event_30] area 03: use item $1D (ItemUseHook) -> EventActionTable act 30 forced at 30:D552
+  end: $40/$41 1/1B area 03 hp 48 lv 1 gold 0 xp 0 mp 34  CRASH f130: opcode $2B at $000C
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+    f130: $0041 <- 1B  pc 30:D82B
+  newly run (4): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu
+
+[event_31] area 03: use item $1D (ItemUseHook) -> EventActionTable act 31 forced at 30:D552
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+  newly run (4): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu
+
+union: 114 / 178 newly run; still never run (64):
   bank  4: 8000:ScreenBlank80
   bank 14: 81D1:TelepathyHint 8451:UseBowCheck 8469:UseFindSlotObj
-  bank 15: A675:BossAiE2 B2DA:AiBowOfTruth9E B6C1:BossBgStrip B807:BossDefeated BA98:BossFleeSpeech
+  bank 15: A675:BossAiE2 B807:BossDefeated BA98:BossFleeSpeech
   bank 16: 8232:MenuChrR1 9A37:ShopPriceSel
   bank 17: A000:EndingInit A0EB:EndingWait A100:EndingTick A14A:EndingScene A751:NtFill_b17 AA74:EndingFadeIn AAAD:EndingFadeOut
   bank 18: 8000:IntroRectPtr 8002:IntroRect 824B:NtRectBlitQueued 838B:MenuPalSets
@@ -306,7 +687,7 @@ union: 93 / 178 newly run; still never run (85):
   bank 23: BE00:NewSaveTemplate
   bank 24: 8395:SndOpSweep 8609:SndFadeStep
   bank 26: 8C32:PaletteBlackFill 8FC4:HitHandler3 92BF:HitPlayerShot 943F:RidePlatform 9D81:PlayerMoveLocked 9FD2:PlayerConveyor
-  bank 27: A092:MagicButtonSel A1BB:MagicFailSound A211:FacingKeep A5C0:AiShopEmpty AC60:AI_TrapChest ACC0:AiBurst AD9C:NpcLookAhead AE31:AiPathWalk B436:AiDasher B595:AiFanTurret B5D3:AiFanTurretIdle B6AA:AiOrbiter B83B:ObjAiExplode
+  bank 27: A092:MagicButtonSel A1BB:MagicFailSound A211:FacingKeep A5C0:AiShopEmpty AC60:AI_TrapChest ACC0:AiBurst AD9C:NpcLookAhead B436:AiDasher B595:AiFanTurret B5D3:AiFanTurretIdle B6AA:AiOrbiter B83B:ObjAiExplode
   bank 28: 81A5:BurstRadius
-  bank 30: C7D6:FadeSaveZpToWram C944:MainStateEndingInit C94C:MainStateEnding CC4D:SubstRestoreScreen D16D:TalkFullRestore D1FF:SpawnFxAtSlot D22B:GiveItemA D23F:MakeFollower13 D263:TalkGiveGold100 D31C:NpcVanish D3DA:TrapChest D47C:GiveItemFull D5A4:EvActThunderWarp D659:EvActSpawnType38 D718:EvActClearSlot13 D71F:EvActClearSlot14 D746:EvActSpawn9E D75E:EvActTwoFollowers D791:EvActHistory D7B7:EvActPushBack D7CE:EvActMakeFollowers D805:EvActConsume D88B:WaitSfxDone D9C1:SubstShopEmpty
-  bank 31: E144:AreaLoadA E544:AreaPitFall E573:AreaEdgeLink EF33:ScreenPageAtCamera F23D:SaveSumSlot F273:SlotCopy F5E1:IrqRowStretch F60E:IrqOffSound F782:NmiMode4 FE01:ShopDoorOpen FE18:ShopDoorClose FFBE:FarCall_B26_8CC0 FFCF:FarCall_D354
+  bank 30: C7D6:FadeSaveZpToWram C944:MainStateEndingInit C94C:MainStateEnding CC4D:SubstRestoreScreen D3DA:TrapChest D47C:GiveItemFull D9C1:SubstShopEmpty
+  bank 31: E544:AreaPitFall E573:AreaEdgeLink EF33:ScreenPageAtCamera F23D:SaveSumSlot F273:SlotCopy F5E1:IrqRowStretch F60E:IrqOffSound F782:NmiMode4 FE01:ShopDoorOpen FE18:ShopDoorClose FFBE:FarCall_B26_8CC0 FFCF:FarCall_D354
