@@ -1,0 +1,312 @@
+tools.emu scenarios vs the 178 labels the tour never ran (docs/emu_tour.txt)
+
+[pause] START in play -> PauseScreen 15:BC40 (sub_state 9, NmiMode2), START again
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41), first of each:
+    f47: $0041 <- 09  pc 15:BD81
+    f142: $0041 <- 08  pc 15:BE0B
+  newly run (5): 15:BC40:PauseScreen 15:BDDB:PauseWait 15:BE7A:EquipNameRow 30:C482:PpuQueueBlock 31:F751:NmiMode2
+
+[items] SELECT -> SubstEquipMenu 30:D8C7, UP = Item/Magic grid, SELECT out
+  end: $40/$41 1/12 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41), first of each:
+    f20: $0041 <- 12  pc 30:CBBE
+    f144: $0041 <- 08  pc 30:D8C6
+  newly run (4): 30:D8C7:SubstEquipMenu 30:DB0E:SelectedUseItem 31:F61A:IrqMenuChrSplit 31:F7DB:NmiMode6
+
+[save_refused] area 01: SELECT, START = SaveLoadPage, A = MenuSave "Cannot save!", B
+  end: $40/$41 1/11 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41), first of each:
+    f20: $0041 <- 12  pc 30:CBBE
+    f246: $0041 <- 08  pc 30:D8C6
+    f383: $0041 <- 11  pc 27:A695
+  newly run (10): 14:8000:NpcScript 16:9AEE:SaveLoadPage 16:9B3A:SaveLoadLoop 16:9BE1:MenuSave 16:9C7A:SaveLoadExit 30:D0C8:NpcTalk 30:D8C7:SubstEquipMenu 30:DB0E:SelectedUseItem 31:F61A:IrqMenuChrSplit 31:F7DB:NmiMode6
+
+[save_ok] area 02 (AreaSaveFlags $81): SELECT, START, A, A = YES -> MenuSave + SaveSlotCopy
+  end: $40/$41 1/08 area 02 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $7000 $70F0 $70F5), first of each:
+    f0: $0041 <- 07  pc 26:94AF
+    f0: $0041 <- 08  pc 30:D53B
+    f0: $0041 <- 09  pc 30:D53D
+    f0: $0041 <- 08  pc 30:D884
+    f0: $0041 <- 08  pc 30:D54F
+    f20: $0041 <- 12  pc 30:CBBE
+    f22: $7000 <- 00  pc 16:800B
+    f71: $7000 <- 00  pc 16:9AF3
+    f89: $7000 <- 00  pc 16:9B3F
+    f120: $7000 <- FB  pc 16:9BE6
+    f203: $70F5 <- 00  pc 23:BD97
+    f203: $70F5 <- 53  pc 23:BDA5
+    f203: $70F5 <- 53  pc 23:BDAF
+    f203: $70F5 <- 53  pc 23:BDB9
+    f203: $70F5 <- 73  pc 23:BDA5
+    f203: $70F5 <- 73  pc 23:BDAF
+    f203: $70F5 <- 73  pc 23:BDB9
+    f203: $70F5 <- C1  pc 23:BDA5
+    f203: $70F5 <- C1  pc 23:BDAF
+    f203: $70F5 <- C1  pc 23:BDB9
+    f203: $70F5 <- E1  pc 23:BDA5
+    f203: $70F5 <- E1  pc 23:BDAF
+    f203: $70F5 <- E1  pc 23:BDB9
+    f203: $70F5 <- 2C  pc 23:BDA5
+    f203: $70F5 <- 2C  pc 23:BDAF
+    f203: $70F5 <- 2C  pc 23:BDB9
+    f203: $70F5 <- 4C  pc 23:BDA5
+    f203: $70F5 <- 4C  pc 23:BDAF
+    f203: $70F5 <- 4C  pc 23:BDB9
+    f203: $70F5 <- 6C  pc 23:BDA5
+    f203: $70F5 <- 6C  pc 23:BDAF
+    f203: $70F5 <- 6C  pc 23:BDB9
+    f203: $70F5 <- 8C  pc 23:BDA5
+    f203: $70F5 <- 8C  pc 23:BDAF
+    f203: $70F5 <- 8C  pc 23:BDB9
+    f203: $70F5 <- AC  pc 23:BDA5
+    f203: $70F5 <- AC  pc 23:BDAF
+    f203: $70F5 <- AC  pc 23:BDB9
+    f203: $70F5 <- CC  pc 23:BDA5
+    f203: $70F5 <- CC  pc 23:BDAF
+  newly run (9): 16:9AEE:SaveLoadPage 16:9B3A:SaveLoadLoop 16:9BE1:MenuSave 16:9C7A:SaveLoadExit 16:9CE0:SaveSlotCopy 30:D8C7:SubstEquipMenu 30:DB0E:SelectedUseItem 31:F61A:IrqMenuChrSplit 31:F7DB:NmiMode6
+
+[load_ok] area 02: save (YES; the menu closes), reopen, RIGHT (LOAD), A, LEFT, A = YES -> LoadGame 23:BC8E
+  end: $40/$41 1/08 area 02 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $7000 $006D), first of each:
+    f0: $0041 <- 07  pc 26:94AF
+    f0: $0041 <- 08  pc 30:D53B
+    f0: $0041 <- 09  pc 30:D53D
+    f0: $0041 <- 08  pc 30:D884
+    f0: $0041 <- 08  pc 30:D54F
+    f20: $0041 <- 12  pc 30:CBBE
+    f22: $7000 <- 00  pc 16:800B
+    f71: $7000 <- 00  pc 16:9AF3
+    f89: $7000 <- 00  pc 16:9B3F
+    f120: $7000 <- FB  pc 16:9BE6
+    f283: $0041 <- 08  pc 30:D8C6
+    f553: $7000 <- FA  pc 16:9BCE
+    f555: $7000 <- 00  pc 30:D935
+    f556: $006D <- FF  pc 30:D980
+    f556: $0041 <- 01  pc 30:D984
+    f584: $0041 <- 08  pc 30:CA53
+  newly run (12): 16:9AEE:SaveLoadPage 16:9B3A:SaveLoadLoop 16:9BE1:MenuSave 16:9C7A:SaveLoadExit 16:9CE0:SaveSlotCopy 23:BC8E:LoadGame 23:BD60:LoadPlayerState 30:C482:PpuQueueBlock 30:D8C7:SubstEquipMenu 30:DB0E:SelectedUseItem 31:F61A:IrqMenuChrSplit 31:F7DB:NmiMode6
+
+[death_new] HP 0 -> sub_state 3 PlayerDeath -> title; START every 100 f (new game chain)
+  end: $40/$41 1/08 area 00 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0082), first of each:
+    f5: $0082 <- A8  pc 26:989B
+    f5: $0082 <- A2  pc 26:989B
+    f10: $0041 <- 03  pc 30:CB8D
+    f406: $0040 <- 02  pc 19:B9AF
+    f408: $0082 <- 00  pc 18:9FDF
+    f408: $0040 <- 03  pc 19:A00F
+    f623: $0082 <- C2  pc 19:A6BF
+    f623: $0082 <- C7  pc 19:A722
+    f623: $0082 <- CC  pc 19:A722
+    f623: $0082 <- D1  pc 19:A722
+    f623: $0082 <- D6  pc 19:A722
+    f623: $0082 <- DB  pc 19:A722
+    f623: $0082 <- E0  pc 19:A722
+    f623: $0082 <- E5  pc 19:A722
+    f623: $0082 <- EA  pc 19:A722
+    f623: $0082 <- EF  pc 19:A722
+    f623: $0082 <- F4  pc 19:A722
+    f623: $0082 <- F9  pc 19:A722
+    f623: $0082 <- FE  pc 19:A722
+    f623: $0082 <- 03  pc 19:A722
+    f623: $0082 <- 08  pc 19:A722
+    f623: $0082 <- 00  pc 19:A733
+    f1419: $0040 <- 00  pc 19:A6FD
+    f1421: $0040 <- 01  pc 30:C979
+    f1421: $0041 <- 00  pc 30:C97D
+    f1450: $0041 <- 08  pc 30:CA53
+    f1450: $0041 <- 13  pc 30:CAA2
+    f1954: $0041 <- 08  pc 20:948E
+    f2309: $0041 <- 08  pc 30:D8C6
+    f2428: $0041 <- 09  pc 15:BD81
+    f2502: $0041 <- 08  pc 15:BE0B
+  newly run (29): 15:BC40:PauseScreen 15:BDDB:PauseWait 15:BE7A:EquipNameRow 19:A092:PpuQueueDrainWait 19:A0B5:TitleStatusInit 19:A176:TitleStatusScreen 19:A212:StatusAnimTick 19:A34E:StatusTypeStep 19:A3F6:NameEntryInput 19:A57C:NameEntryDone 19:A585:NameEntryCursor 19:A653:TitleMenuInit 19:A6DF:TitleMenu 19:A6F9:StartNewGame 19:A749:TitleMenuInput 19:A77D:TitleMenuStart 19:ABAB:TitleOpeningEnd 19:ABB4:TitleStoryInit 19:ABEA:TitleIntroStory 19:B15C:TitleStoryEnd 20:9400:WakeCutscene 20:9500:WakeSprDraw 20:973D:WakeSprFrame 30:C482:PpuQueueBlock 30:C957:MainStateNewGame 30:C9FF:GameStartObjs 30:CA5F:SubstNewGameInit 30:D9B6:SubstWakeCutscene 31:F751:NmiMode2
+
+[death_cont] as death_new, but SELECT ($82=1 continue) before each START
+  end: $40/$41 1/12 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0082), first of each:
+    f5: $0082 <- A8  pc 26:989B
+    f5: $0082 <- A2  pc 26:989B
+    f10: $0041 <- 03  pc 30:CB8D
+    f406: $0040 <- 02  pc 19:B9AF
+    f408: $0082 <- 00  pc 18:9FDF
+    f408: $0040 <- 03  pc 19:A00F
+    f623: $0082 <- C2  pc 19:A6BF
+    f623: $0082 <- C7  pc 19:A722
+    f623: $0082 <- CC  pc 19:A722
+    f623: $0082 <- D1  pc 19:A722
+    f623: $0082 <- D6  pc 19:A722
+    f623: $0082 <- DB  pc 19:A722
+    f623: $0082 <- E0  pc 19:A722
+    f623: $0082 <- E5  pc 19:A722
+    f623: $0082 <- EA  pc 19:A722
+    f623: $0082 <- EF  pc 19:A722
+    f623: $0082 <- F4  pc 19:A722
+    f623: $0082 <- F9  pc 19:A722
+    f623: $0082 <- FE  pc 19:A722
+    f623: $0082 <- 03  pc 19:A722
+    f623: $0082 <- 08  pc 19:A722
+    f623: $0082 <- 00  pc 19:A733
+    f700: $0082 <- 01  pc 19:A773
+    f800: $0040 <- 08  pc 19:A78F
+    f803: $0041 <- 01  pc 23:BCF6
+    f803: $0040 <- 01  pc 30:C9F7
+    f803: $0041 <- 01  pc 30:C9F9
+    f831: $0041 <- 08  pc 30:CA53
+    f887: $0082 <- B4  pc 26:989B
+    f901: $0041 <- 12  pc 30:CBBE
+  newly run (17): 16:9AEE:SaveLoadPage 16:9B3A:SaveLoadLoop 16:9C7A:SaveLoadExit 19:A653:TitleMenuInit 19:A6DF:TitleMenu 19:A749:TitleMenuInput 19:A77D:TitleMenuStart 19:ABAB:TitleOpeningEnd 23:BC8E:LoadGame 23:BCDA:LoadGameAndInit 23:BD60:LoadPlayerState 30:C482:PpuQueueBlock 30:C9DA:MainStateContinue 30:C9FF:GameStartObjs 30:D8C7:SubstEquipMenu 31:F61A:IrqMenuChrSplit 31:F7DB:NmiMode6
+
+[boot] power-on (WRAM 0) + the canonical keys to f2500 (the tour starts from a state)
+  end: $40/$41 1/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41), first of each:
+    f0: $0040 <- 02  pc 31:F335
+    f215: $0040 <- 03  pc 19:A00F
+    f2320: $0040 <- 00  pc 19:A6FD
+    f2322: $0040 <- 01  pc 30:C979
+    f2322: $0041 <- 00  pc 30:C97D
+    f2351: $0041 <- 08  pc 30:CA53
+    f2351: $0041 <- 13  pc 30:CAA2
+    f2351: $0041 <- 08  pc 30:CAB2
+    f2392: $0041 <- 01  pc 31:EB68
+  newly run (41): 18:8028:IntroColdBoot 19:A092:PpuQueueDrainWait 19:A0B5:TitleStatusInit 19:A176:TitleStatusScreen 19:A212:StatusAnimTick 19:A34E:StatusTypeStep 19:A3F6:NameEntryInput 19:A57C:NameEntryDone 19:A585:NameEntryCursor 19:A653:TitleMenuInit 19:A6DF:TitleMenu 19:A6F9:StartNewGame 19:A749:TitleMenuInput 19:A77D:TitleMenuStart 19:A953:OpeningPage2 19:AA16:OpeningPage2Flip 19:AA30:OpeningPage3 19:AAC2:OpeningPage3Anim 19:ABAB:TitleOpeningEnd 19:ABB4:TitleStoryInit 19:ABEA:TitleIntroStory 19:B15C:TitleStoryEnd 24:8020:SndInit 30:C482:PpuQueueBlock 30:C957:MainStateNewGame 30:C9FF:GameStartObjs 30:CA5F:SubstNewGameInit 31:F0A4:BootSaveCheck 31:F11F:SaveSlot0Reset 31:F140:BootCheckSlot1 31:F1A3:SaveSlot1Reset 31:F1C7:BootSaveRestoreR7 31:F1CD:ColdSaveInit 31:F1E2:BootCheckCurrent 31:F219:CurSaveReset 31:F2A4:Reset 31:F374:ColdBootInit 31:F39F:WarmBootContinue 31:F3A2:CopySramBlock 31:F691:IrqHandler6 31:F7C5:NmiMode5
+
+[attract] power-on, no input for 4000 frames (opening pages + attract loop)
+  end: $40/$41 3/00 area 00 hp 0 lv 0 gold 0 xp 0 mp 0
+  state writes ($40/$41), first of each:
+    f0: $0040 <- 02  pc 31:F335
+    f215: $0040 <- 03  pc 19:A00F
+    f2508: $0040 <- 02  pc 19:A798
+  newly run (27): 18:8028:IntroColdBoot 19:A653:TitleMenuInit 19:A6DF:TitleMenu 19:A749:TitleMenuInput 19:A796:TitleMenuRestart 19:A953:OpeningPage2 19:AA16:OpeningPage2Flip 19:AA30:OpeningPage3 19:AAC2:OpeningPage3Anim 19:AAF1:OpeningPage4 19:AB81:OpeningPage4Anim 19:ABAB:TitleOpeningEnd 24:8020:SndInit 31:F0A4:BootSaveCheck 31:F11F:SaveSlot0Reset 31:F140:BootCheckSlot1 31:F1A3:SaveSlot1Reset 31:F1C7:BootSaveRestoreR7 31:F1CD:ColdSaveInit 31:F1E2:BootCheckCurrent 31:F219:CurSaveReset 31:F2A4:Reset 31:F374:ColdBootInit 31:F39F:WarmBootContinue 31:F3A2:CopySramBlock 31:F691:IrqHandler6 31:F7C5:NmiMode5
+
+[warm_reset] area 01, then CPU reset at +20 (WRAM kept -> warm boot / save checks)
+  end: $40/$41 3/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 0
+  state writes ($40/$41), first of each:
+    f21: $0040 <- 02  pc 31:F335
+    f23: $0040 <- 03  pc 19:A00F
+  newly run (12): 19:A953:OpeningPage2 19:AA16:OpeningPage2Flip 19:AA30:OpeningPage3 19:AAC2:OpeningPage3Anim 24:8020:SndInit 31:F0A4:BootSaveCheck 31:F140:BootCheckSlot1 31:F1C7:BootSaveRestoreR7 31:F1E2:BootCheckCurrent 31:F2A4:Reset 31:F39F:WarmBootContinue 31:F3A2:CopySramBlock
+
+[use_herb] area 03: use_item_sel $0B (item $27) in slot $6440 + B -> ItemUseMenu 30:D497
+  end: $40/$41 1/08 area 03 hp 4 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f20: $0041 <- 08  pc 30:D884
+    f20: $0041 <- 10  pc 30:D52A
+    f129: $0041 <- 08  pc 30:D3C1
+  newly run (4): 14:831E:ItemUseHook 14:84DB:UseFail 30:D497:ItemUseMenu 30:D526:ItemUseFail
+
+[use_fail] area 03: use_item_sel $01 (item $1D) + B -> "Nothing happens." (ItemUseFail)
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+  newly run (4): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu
+
+[use_warp] area 03: Warp Boots ($0715 $08) + B -> SubstTeleportMenu, DOWN, A
+  end: $40/$41 1/06 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+  newly run (4): 30:C482:PpuQueueBlock 30:D497:ItemUseMenu 30:DB28:SubstTeleportMenu 30:DD58:TestFlagF2F0
+
+[opel] area 03: Opel Statue selected ($0715 $0A), HP 0 -> PlayerDeath -> OpelRevive 19:B9B0
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41), first of each:
+    f10: $0041 <- 03  pc 30:CB8D
+    f152: $0041 <- 06  pc 19:B9FA
+    f153: $0041 <- 08  pc 30:D51A
+    f153: $0041 <- 08  pc 30:D884
+  newly run (4): 14:831E:ItemUseHook 14:8354:InvRemoveItem 19:B9B0:OpelRevive 30:D497:ItemUseMenu
+
+[debug_pause] pad 2 in play (substate 4 = SubstDebugPause, 30:CBC7 area cycler)
+  end: $40/$41 1/11 area 01 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41), first of each:
+    f220: $0041 <- 08  pc 30:CC0F
+    f230: $0041 <- 11  pc 27:A695
+  newly run (3): 14:8000:NpcScript 30:CBFC:SubstDebugPause 30:D0C8:NpcTalk
+
+[kill] area 03: enemy slot $0E parked at the sword with 1 HP; level 16, Crystalis off; B/A swings
+  end: $40/$41 1/08 area 03 hp 38 lv 16 gold 2 xp 1 mp 34
+  state writes ($40/$41), first of each:
+  newly run (5): 26:9152:EnemyKilled 26:91FA:EnemyDeathFx 26:924B:AddXp 26:946D:PickupGold 27:B79F:ChestHop
+
+[mp_heal] magic 1 (A, PlayerMagic 27:A022) heal
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 74
+  state writes ($40/$41), first of each:
+  newly run (1): 26:9AE8:SpendMp
+
+[mp_shot] magic 2 (A, PlayerMagic 27:A022) 
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 84
+  state writes ($40/$41), first of each:
+  newly run (2): 26:9AE8:SpendMp 27:B0A8:AiDirShot
+
+[mp_out] magic 2 (A, PlayerMagic 27:A022) MP 0 -> SpendMp -> SubstOutOfMp 30:CC17
+  end: $40/$41 1/10 area 03 hp 48 lv 1 gold 0 xp 0 mp 0
+  state writes ($40/$41), first of each:
+    f20: $0041 <- 1C  pc 26:9AFB
+    f20: $0041 <- 10  pc 30:CC23
+    f129: $0041 <- 08  pc 30:D3C1
+  newly run (2): 26:9AE8:SpendMp 30:CC17:SubstOutOfMp
+
+[mp_telepathy] magic 3 (A, PlayerMagic 27:A022) -> SubstTelepathySelect
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 88
+  state writes ($40/$41), first of each:
+    f20: $0041 <- 15  pc 27:A1AF
+    f142: $0041 <- 08  pc 30:DE71
+  newly run (4): 14:816F:Telepathy 30:C482:PpuQueueBlock 30:DD6B:SubstTelepathySelect 30:DE04:SubstTelepathyReply
+
+[mp_teleport] magic 4 (A, PlayerMagic 27:A022) -> SubstTeleportMenu, pick row 2
+  end: $40/$41 1/14 area 03 hp 48 lv 1 gold 0 xp 0 mp 96
+  state writes ($40/$41), first of each:
+    f20: $0041 <- 14  pc 27:A1AF
+  newly run (3): 30:C482:PpuQueueBlock 30:DB28:SubstTeleportMenu 30:DD58:TestFlagF2F0
+
+[mp_cure] magic 5 (A, PlayerMagic 27:A022) poisoned -> 19:BB39 SubstCureMagic
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 72
+  state writes ($40/$41), first of each:
+    f20: $0041 <- 18  pc 27:A1AF
+    f87: $0041 <- 10  pc 19:BB90
+    f169: $0041 <- 08  pc 30:D3C1
+  newly run (3): 19:BB39:SubstCureMagic 26:9AE8:SpendMp 30:C482:PpuQueueBlock
+
+[mp_bridge] magic 6 (A, PlayerMagic 27:A022) held 60 frames
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 88
+  state writes ($40/$41), first of each:
+  newly run (1): 26:9AE8:SpendMp
+
+[mp_change] magic 7 (A, PlayerMagic 27:A022) -> SubstChangeForm 30:DEC1
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 76
+  state writes ($40/$41), first of each:
+    f20: $0041 <- 17  pc 27:A1AF
+    f148: $0041 <- 08  pc 30:DE71
+    f200: $0041 <- 19  pc 27:A1AF
+    f237: $0041 <- 08  pc 19:BC01
+  newly run (4): 19:BB9D:SubstFormRevert 26:9AE8:SpendMp 30:C482:PpuQueueBlock 30:DEC1:SubstChangeForm
+
+[mp_flight] magic 8 (A, PlayerMagic 27:A022) held = hover
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 89
+  state writes ($40/$41), first of each:
+  newly run (2): 26:9AE8:SpendMp 27:A112:MagicFlight
+
+[mp_jump] magic 0 (A, PlayerMagic 27:A022) accessory $12 = jump
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 96
+  state writes ($40/$41), first of each:
+  newly run (1): 27:A143:MagicJump
+
+union: 93 / 178 newly run; still never run (85):
+  bank  4: 8000:ScreenBlank80
+  bank 14: 81D1:TelepathyHint 8451:UseBowCheck 8469:UseFindSlotObj
+  bank 15: A675:BossAiE2 B2DA:AiBowOfTruth9E B6C1:BossBgStrip B807:BossDefeated BA98:BossFleeSpeech
+  bank 16: 8232:MenuChrR1 9A37:ShopPriceSel
+  bank 17: A000:EndingInit A0EB:EndingWait A100:EndingTick A14A:EndingScene A751:NtFill_b17 AA74:EndingFadeIn AAAD:EndingFadeOut
+  bank 18: 8000:IntroRectPtr 8002:IntroRect 824B:NtRectBlitQueued 838B:MenuPalSets
+  bank 19: B162:DateCardRectPtr BDF2:SubstFinalSceneReset BFC4:FinalSceneToEnding
+  bank 23: BE00:NewSaveTemplate
+  bank 24: 8395:SndOpSweep 8609:SndFadeStep
+  bank 26: 8C32:PaletteBlackFill 8FC4:HitHandler3 92BF:HitPlayerShot 943F:RidePlatform 9D81:PlayerMoveLocked 9FD2:PlayerConveyor
+  bank 27: A092:MagicButtonSel A1BB:MagicFailSound A211:FacingKeep A5C0:AiShopEmpty AC60:AI_TrapChest ACC0:AiBurst AD9C:NpcLookAhead AE31:AiPathWalk B436:AiDasher B595:AiFanTurret B5D3:AiFanTurretIdle B6AA:AiOrbiter B83B:ObjAiExplode
+  bank 28: 81A5:BurstRadius
+  bank 30: C7D6:FadeSaveZpToWram C944:MainStateEndingInit C94C:MainStateEnding CC4D:SubstRestoreScreen D16D:TalkFullRestore D1FF:SpawnFxAtSlot D22B:GiveItemA D23F:MakeFollower13 D263:TalkGiveGold100 D31C:NpcVanish D3DA:TrapChest D47C:GiveItemFull D5A4:EvActThunderWarp D659:EvActSpawnType38 D718:EvActClearSlot13 D71F:EvActClearSlot14 D746:EvActSpawn9E D75E:EvActTwoFollowers D791:EvActHistory D7B7:EvActPushBack D7CE:EvActMakeFollowers D805:EvActConsume D88B:WaitSfxDone D9C1:SubstShopEmpty
+  bank 31: E144:AreaLoadA E544:AreaPitFall E573:AreaEdgeLink EF33:ScreenPageAtCamera F23D:SaveSumSlot F273:SlotCopy F5E1:IrqRowStretch F60E:IrqOffSound F782:NmiMode4 FE01:ShopDoorOpen FE18:ShopDoorClose FFBE:FarCall_B26_8CC0 FFCF:FarCall_D354

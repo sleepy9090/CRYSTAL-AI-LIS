@@ -1128,3 +1128,6 @@ bank,addr,name,comment
 19,A07C,TitleSound,s82: snd_queue $0103 = A, count 1 (lock 1/0); $06B2 = $FF (MainState3 calls it with A = $06B2 unless b7 set)
 19,A6FE,TitleMenuSprites,s82: title-menu step 0: $84 5-byte OAM records (index y tile attr x) from ($82) = 18:98C2; cursor sprite $02F0-$02F3
 19,A7EE,TitleOpeningSkip,s82: opening START/SELECT: TitleSound(0); JMP TitleOpeningEnd
+16,84DA,MenuConfirmYesNo,s85: A=string id ($41->$49); $23=1 cursor on NO; d-pad edge INC $23 + SFX $4B; A/B exit: LSR $23 -> C=1 NO/cancel C=0 YES
+16,850D,MenuConfirmCursor,s85: draws the YES/NO cursor from $23 b0 (table 16:8532) into wram $60FB
+30,D942,EquipMenuLoadTail,s85: after a menu LOAD: keep HP/max HP/level over ObjInit(4)/(6); JSR 19:BA65; $6D=$FF; $41=1 (area reload)
