@@ -38,7 +38,9 @@ def speed_rows(speed):
     lo, hi, dxo = rd(0x84BC + speed), rd(0x84CC + speed), rd(0x84DC + speed)
     ptr = lo | hi << 8
     rows = []
-    for d in range(8):
+    # s86: dx offset $10 = 2 dirs ahead (8-dir table, speeds 0-10); $20 = 4 dirs ahead
+    # (16-dir table, speeds 11-15, used by AiHomingFlyer / bosses with 16-dir headings).
+    for d in range(16 if dxo == 0x20 else 8):
         pat = []
         for f in range(8):
             y = d * 8 + f
@@ -57,7 +59,8 @@ def dump_speed():
             sx = sum(p[0] for p in pat)
             sy = sum(p[1] for p in pat)
             steps = ' '.join(f'{x:+d},{y:+d}' for x, y in pat)
-            print(f'   {DIRS[d]:2s} sum/8f=({sx:+3d},{sy:+3d})  {steps}')
+            name = DIRS[d] if len(rows) == 8 else f'{d:X}'
+            print(f'   {name:2s} sum/8f=({sx:+3d},{sy:+3d})  {steps}')
 
 
 def dump_jump():

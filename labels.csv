@@ -1131,3 +1131,15 @@ bank,addr,name,comment
 16,84DA,MenuConfirmYesNo,s85: A=string id ($41->$49); $23=1 cursor on NO; d-pad edge INC $23 + SFX $4B; A/B exit: LSR $23 -> C=1 NO/cancel C=0 YES
 16,850D,MenuConfirmCursor,s85: draws the YES/NO cursor from $23 b0 (table 16:8532) into wram $60FB
 30,D942,EquipMenuLoadTail,s85: after a menu LOAD: keep HP/max HP/level over ObjInit(4)/(6); JSR 19:BA65; $6D=$FF; $41=1 (area reload)
+27,B094,AiDirFrameShot,s86: AI $1E (type $CD final-boss mouth shot): obj_anim=(dir&7)*8 then AiStraightMover tail B0BE
+27,B0A2,AiShotAnimDec,s86: AI $1F (types $EB $F3): DEC obj_anim then AiStraightMover tail B0BE
+27,B0BE,AiStraightMoverTail,s86: offscreen->ObjDespawn; timer-- 0->ObjBecomeNext; step; BG test if obj_bg_mask
+27,B0F6,AiCurveShot,s86: AI $16 (type $FC boss $E7): anim-=2; timer&$0F=0 -> 16-dir heading +1 even slot / -1 odd slot
+27,B11B,AiHoverShot,s86: AI $17 (type $FE): anim-=2 from $0F; negative -> meta++ obj_active=$10 (straight mover)
+27,B12D,AiBounceShot,s86: AI $1B (types $CA $BF): commit step then ObjBgProbe($40); blocked -> dir+=4 retry x5; anim 0 -> bg_mask=0
+27,A414,AiBodyPart,s86: AI $3F/$BF (type $C2): irq_mode=7; RTS (moved by BossEBMove 15:A8FF)
+27,A519,AiArenaLock,s86: AI $39 (type $29): slot X-1 gone -> despawn + boss_cam_lock=0; onscreen y<$C0 -> boss_cam_lock=$FF until $07D5 then $10
+27,A555,AiNpcBossReveal,s86: AI $3A (type $2A area $6E slot $0E): 3 hits -> msgs $10.$10-$12; then slots $0D/$0F off and ObjInit(self;$7D)
+27,AE16,AiNpcStill,s86: AI $31 / AiNpcWander with obj_behav b2: no move; b0 -> anim=$08>>3; $0603=0 -> meta=$06C0
+27,B40E,Wander16DirPerm,s86: 16 bytes permutation of 0-F: AiWander16 drift headings
+27,B41E,Wander16AimJitter,s86: FF 00 01 00: AiWander16 aim jitter (16-dir)
