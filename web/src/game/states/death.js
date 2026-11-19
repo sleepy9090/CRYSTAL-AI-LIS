@@ -65,7 +65,7 @@ export const fadeOut = (m, a) => fade(m, a, 0x00, 0x10);
 export const fadeIn = (m, a) => fade(m, a, 0x40, 0xF0);
 
 /** 30:C8B2: PpuQueueFlush right away (rendering off), with ppuctrl_shadow b7 clear meanwhile */
-function queueFlushNow(m) {
+export function queueFlushNow(m) {
   const s = m.rd(R.ppuctrl_shadow);
   m.wr(R.ppuctrl_shadow, s & 0x7F);
   ppuQueueFlush(m);

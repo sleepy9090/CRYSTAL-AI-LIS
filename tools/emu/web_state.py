@@ -21,7 +21,7 @@ import os
 import sys
 
 from tools.emu.nes import NES
-from tools.emu import state
+from tools.emu import state, debug
 
 
 class _Hit(Exception):
@@ -35,6 +35,9 @@ def main(argv=None):
     ap.add_argument('--frames', type=int, default=0, help='frames to run before the pokes')
     ap.add_argument('--poke', action='append', default=[], metavar='HHHH=VV')
     ap.add_argument('--until', default='19:B900', metavar='BB:AAAA')
+    ap.add_argument('--keys', nargs='+', default=[], metavar='F:BTN[:N]',
+                    help='s94: pad 1 keys (absolute frame_no, tools.emu syntax) during the --until search, '
+                         'e.g. 2470:START to stop at PauseScreen 15:BC40')
     ap.add_argument('--max-frames', type=int, default=600)
     ap.add_argument('--out', required=True)
     ap.add_argument('--save-state')
@@ -60,6 +63,8 @@ def main(argv=None):
     def hit(_n):
         raise _Hit()
     nes.on_exec(bank, addr, hit)
+    if a.keys:
+        nes.keys = debug.parse_keys(a.keys)
     try:
         for _ in range(a.max_frames):
             nes.run_frame()

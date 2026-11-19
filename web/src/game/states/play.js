@@ -5,10 +5,19 @@
 import { R } from '../ram.js';
 import { cpuRd, setR6, switchBank16 } from '../prg.js';
 import { playerDeath, paletteBuildRom } from './death.js';
+import { pauseScreen, pauseFromPlay } from './pause.js';
 
 const SUBSTATES = new Map([
   [3, playerDeath],                                   // 19:B900
+  [12, pauseScreen],                                  // 15:BC40 (vestigial entry; play calls it directly, s94)
 ]);
+
+/** Routines a tools/emu/web_state.py export may stop at that are NOT reached through the substate dispatch
+ *  (JSR from code the port does not run yet). Machine.loadState starts `ENTRY_POINTS[s.until](m)` as the
+ *  pending generator. */
+export const ENTRY_POINTS = {
+  '15:BC40': pauseFromPlay,                           // START in SubstPlay: 30:CBA8 JSR PauseScreen
+};
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */
 function playPaletteRestore(m) {

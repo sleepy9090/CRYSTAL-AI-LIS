@@ -84,8 +84,8 @@ function drawSlot(m, x) {
   drawMeta(m, x);
 }
 
-/** ObjDrawMeta 28:822E */
-function drawMeta(m, x) {
+/** ObjDrawMeta 28:822E (also reached through 28:8000 for slot $1F: states/pause.js objSlot1FDraw) */
+export function drawMeta(m, x) {
   const rd = (a) => m.rd(a), wr = (a, v) => m.wr(a, v);
   const t17 = rd(T17);
   if (t17 & 0x80) wr(T_SY, rd(T_SY) + 3);                   // 8230 ASL -> C = $0380 b6; ADC #$02 + C
@@ -170,7 +170,7 @@ function drawMetaMain(m, x) {
 }
 
 /** ObjHideUnusedOam 28:80A5 */
-function hideUnusedOam(m) {
+export function hideUnusedOam(m) {
   const rd = (a) => m.rd(a), wr = (a, v) => m.wr(a, v);
   let o = rd(T_OAM);
   if (o !== 0) for (; o < 0x100; o += 4) wr(OAM + o, 0xF0);

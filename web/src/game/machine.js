@@ -9,6 +9,7 @@
 import { Ram, R } from './ram.js';
 import { Ppu } from '../nes/ppu.js';
 import { mainStep, nmiWork } from './mainloop.js';
+import { ENTRY_POINTS } from './states/play.js';
 import { Apu } from '../nes/apu.js';
 import { cpuRd } from './prg.js';
 import { sndInit } from './sound/driver.js';
@@ -108,6 +109,8 @@ export class Machine {
     this.prgR7 = s.mapper.regs[7] & 0x3F;
     this.pending = null;
     this.irqSplits = [];
+    const entry = ENTRY_POINTS[s.until];             // s94: a routine reached by JSR from unported code
+    if (entry) this.pending = entry(this);
   }
 
   /** Map the split list from the last NMI-mode routine onto ppu.splits (an MMC3 IRQ with latch L

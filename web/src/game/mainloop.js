@@ -118,6 +118,24 @@ function nmiMode0(m) {
   m.wr(R.zp_57, 0xBE);
 }
 
+/** ApplyChrAlt 31:F64F: MMC3 R0-R5 <- $58-$5D */
+export function applyChrAlt(m) {
+  for (let r = 0; r < 6; r++) m.ppu.setChrReg(r, m.rd(R.chr_r0_alt + r));
+}
+
+/** NmiMode2 31:F751 (irq_mode 2, pause / status screen): PPUCTRL nametable 2 ($2800, the shadow is not
+ *  changed), scroll 0/0, ApplyChrAlt; rendering on -> NmiMode0HudIrq 31:F705 (handler 1 at $BE: the HUD
+ *  below the window), else SoundUpdate. Like mode 0 with rendering on, no SoundUpdate this frame. */
+function nmiMode2(m) {
+  m.ppu.writeReg(0, (m.rd(R.ppuctrl_shadow) & 0xFC) | 2);
+  m.ppu.writeReg(5, 0);
+  m.ppu.writeReg(5, 0);
+  applyChrAlt(m);
+  if ((m.rd(R.ppumask_shadow) & 0x18) === 0) { m.soundUpdate(m); return; }
+  setIrqHandler(m, 1, 0xBE);                        // F705: latch $BE - $57 ($57 = 0 here)
+  m.wr(R.zp_57, 0xBE);
+}
+
 /** NmiMode3 31:F771 (title / menus, no splits): PPUMASK <- $01, scroll, CHR R0-R5, MMC3 IRQ off, SoundUpdate */
 function nmiMode3(m) {
   m.ppu.writeReg(1, m.rd(R.ppumask_shadow));        // F771
@@ -132,16 +150,17 @@ const unportedMode = (addr) => (m) => {
   if (!m.unported.has(addr)) { m.unported.add(addr); m.log(`NMI mode routine ${addr} not ported yet`); }
 };
 export const NMI_MODES = [
-  nmiMode0, unportedMode('31:F731'), unportedMode('31:F751'), nmiMode3,
+  nmiMode0, unportedMode('31:F731'), nmiMode2, nmiMode3,
   unportedMode('31:F782'), unportedMode('31:F7C5'), unportedMode('31:F7DB'), nmiMode0,
   null, unportedMode('31:F731'),
 ];
 
-/** NmiModeDispatch 31:F6AD: $57 = 0, JMP (JmpTable31_F6C2[irq_mode]) */
+/** NmiModeDispatch 31:F6AD: $57 = 0, JMP (JmpTable31_F6C2[irq_mode]); ASL drops b7 (the "skip
+ *  PaletteUpload" flag set by PauseScreen / the bank 16 menus), so $82 runs mode 2 */
 export function nmiModeDispatch(m) {
   m.wr(R.zp_57, 0);
   m.irqSplits = [];
-  const fn = NMI_MODES[m.rd(R.irq_mode)];
+  const fn = NMI_MODES[m.rd(R.irq_mode) & 0x7F];
   if (!fn) throw new Error(`irq_mode ${m.rd(R.irq_mode)}: null NMI-mode entry`);
   fn(m);
 }

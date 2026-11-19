@@ -38,6 +38,8 @@ def main(argv=None):
     ap.add_argument('--out-dir', default='/tmp/web_state_compare')
     ap.add_argument('--diff', action='store_true', help='write emu|web|mask triples for differing shots')
     ap.add_argument('--frame0', type=int, help="port's first frame number (default: the JSON's `frame`)")
+    ap.add_argument('--keys', nargs='+', default=[], metavar='F:BTN[:N]',
+                    help='s94: pad 1 keys (absolute frame numbers) given to both runs (run.mjs --keys)')
     a = ap.parse_args(argv)
     os.makedirs(a.out_dir, exist_ok=True)
     js = json.load(open(a.web))
@@ -60,6 +62,9 @@ def main(argv=None):
         if f in shots:
             eshots[f] = b''.join(wc.LUT[i & 0x3F] for i in n.ppu.fb)
     nes.on_frame(hook)
+    if a.keys:
+        from tools.emu import debug
+        nes.keys = debug.parse_keys(a.keys)
     nes.run_frames(a.frames)
     # rows written at line 240 of frame f+1 hold frame f's work; also add the final frame from RAM now
     ecsv = os.path.join(a.out_dir, 'emu.csv')
@@ -68,6 +73,8 @@ def main(argv=None):
     wcsv = os.path.join(a.out_dir, 'web.csv')
     cmd = ['node', os.path.join(wc.ROOT, 'web', 'test', 'run.mjs'), '--load-state', a.web,
            '--frames', str(a.frames - (a.frame0 - f0)), '--frame0', str(a.frame0), '--quiet', '--compare', wcsv]
+    if a.keys:
+        cmd += ['--keys'] + a.keys
     if shots:
         cmd += ['--shots', ','.join(map(str, sorted(shots))), a.out_dir]
     p = subprocess.run(cmd, capture_output=True, text=True)

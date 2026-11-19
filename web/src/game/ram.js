@@ -21,7 +21,9 @@ export const R = Object.freeze({
   mmc3_banksel_shadow: 0x50,
   irq_mode: 0x51,
   zp_57: 0x57,
+  chr_r0_alt: 0x58,          // $58-$5D = alternate CHR R0-R5 (ApplyChrAlt 31:F64F; pause screen NmiMode2)
   nmi_disable: 0x60,
+  area_id: 0x6C,
   scroll_x_irq: 0x07D8,      // $07D8-$07DB = x lo, x hi, y lo, y hi used by the IRQ splits / NMI scroll
   chr_r0_play: 0x07F0,       // $07F0-$07F5 = gameplay CHR R0-R5 (ApplyChrPlay 31:F883)
   pal_buf: 0x6140,           // $6140-$615F palette buffer (PaletteUpload 31:F8CB)

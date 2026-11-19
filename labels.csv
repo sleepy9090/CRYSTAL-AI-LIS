@@ -1168,3 +1168,10 @@ bank,addr,name,comment
 27,B2FC,AiPlayerFollowC,s93: AI $04 (types $21/$22 magic in slot $0C): slot $0C <- player pos; slot $0C anim -= timer2 <0 -> off; returns X=$0C
 27,A4DC,AiMpDrain,s93: AI $76 (type $0B): overlay $A3 on player; every 16th frame SFX $31 + MP-1 + HudRedraw(4); anim -1/-3 (pad_new) borrow -> off
 27,A4E0,AiMpDrain99,s93: unreferenced second entry of AiMpDrain with overlay $99
+15,BE11,StatusCondText,s94: 11-char condition text 15:BE2A+(obj1_flash&$0F)*16 -> $601C (NORMAL/PARALYZED/STONE/POISONED/MUTATED); web states/pause.js
+15,BEBF,StatusPlayerSprite,s94: pause screen player figure: WaitPpuQueue; 8-byte sprite record at $6000 (normal: meta $0B at 48;54; changed form/stone: 15:BF1E) -> ObjSlot1FDraw
+15,BD84,StatusWindowText,s94: 256-byte status window text copied to $6000 by PauseScreen (CONDITION/LV/ATTACK/LIFE/DEFENSE)
+15,BDCB,StatusEquipIcons,s94: 4 x 4 equipment icon tiles -> $600C per EquipNameRow row
+15,BF1E,StatusSpriteAlt,s94: 8-byte StatusPlayerSprite records (changed forms by obj1_flash b4-6; stone = +$20)
+30,C1AE,ObjSlot1FDraw,s94: draw $20+1 8-byte records from $6000 (x y meta tile_ofs flags flags2 dir anim) via object slot $1F (28:8000) from OAM 4; then ObjHideUnusedOam
+28,8000,ObjDrawSlot1F,s94: LDX #$1F; $1B=1; JMP ObjDrawMeta (used by ObjSlot1FDraw)
