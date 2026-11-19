@@ -1165,3 +1165,6 @@ bank,addr,name,comment
 26,8F2B,HudToDecimal,s89: 16-bit $10/$11 -> 5 decimal digits $20-$24 (powers table 26:8F64)
 26,8F64,HudPow10Table,s89: 5 x u16 powers of ten for HudToDecimal
 26,8D49,HudHpPartialTiles,s89: 16 tiles for the partial HP-bar cell (index (hp-1) & $0F)
+27,B2FC,AiPlayerFollowC,s93: AI $04 (types $21/$22 magic in slot $0C): slot $0C <- player pos; slot $0C anim -= timer2 <0 -> off; returns X=$0C
+27,A4DC,AiMpDrain,s93: AI $76 (type $0B): overlay $A3 on player; every 16th frame SFX $31 + MP-1 + HudRedraw(4); anim -1/-3 (pad_new) borrow -> off
+27,A4E0,AiMpDrain99,s93: unreferenced second entry of AiMpDrain with overlay $99

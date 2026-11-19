@@ -160,9 +160,13 @@ FIELD_AIS = {
 }
 for _n, (_id, _ad) in FIELD_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r: {'x': _slot(r)})
+# s93 (boss / effect AI port (a)): web/src/game/obj/ai_effect.js; Y = id*2 as ObjUpdateAll's TAY 30:CD07 leaves it
+EFFECT_AIS = {'AiPlayerFollowC': (0x04, 0xB2FC), 'AiStraightMoverTl': (0x57, 0xB0BE), 'AiMpDrain': (0x76, 0xA4DC)}
+for _n, (_id, _ad) in EFFECT_AIS.items():
+    ROUTINES[_n] = (26, _ad, _poke_bg, lambda r, _i=_id: {'x': _slot(r), 'y': (_i << 1) & 0xFF})
 # AI ids the port has (web/src/game/obj/ai_static.js, ai_walk.js, ai_field.js) + ids whose ObjAiTable 27:A314 entry is 0
 PORTED_AIS = (0x10, 0x11, 0x2C, 0x4C, 0x4D, 0x4E) + tuple(i for i, _ in WALK_AIS.values()) + \
-    tuple(i for i, _ in FIELD_AIS.values())
+    tuple(i for i, _ in FIELD_AIS.values()) + tuple(i for i, _ in EFFECT_AIS.values())
 NULL_AIS = tuple(i for i in range(0x80) if i != 0x1A and not (_PRG[27 * 0x2000 + 0x314 + 2 * i] |
                                                                _PRG[27 * 0x2000 + 0x315 + 2 * i]))
 HIT_FLAG_PARAMS = tuple(_PRG[26 * 0x2000 + 0x1045 + i] for i in range(10) if _PRG[26 * 0x2000 + 0x1045 + i])
@@ -319,6 +323,25 @@ def _fix_field(name, ram, r, x, wram=None):
         ram[0x0460 + x] = r.choice([6, 0x27])
 
 
+def _fix_effect(name, ram, r, x, wram):
+    """s93: AI $76 sound / MP frame + button + borrow edges; AI $04 slot $0C timer edges; AI $57 = mover tail"""
+    if name == 'AiMpDrain':
+        if r.random() < 0.6:
+            ram[0x08] &= 0xF0                      # the every-16th-frame drain
+        ram[0x0708] = r.choice([0, 1, 2, r.randrange(256)])
+        ram[0x4B] = r.choice([0, 0, r.randrange(256)])
+        ram[0x04E0 + x] = r.choice([0, 1, 2, 3, 4, r.randrange(256)])
+        ram[0x01] = r.choice([ram[0x01], ram[0x01] & ~0x18])   # rendering off: HudRedraw flushes at once
+    if name == 'AiPlayerFollowC':
+        ram[0x04EC] = r.choice([0, 1, 2, 0x80, 0x81, r.randrange(256)])
+        ram[0x062C] = r.choice([0, 1, 2, r.randrange(256)])
+    if name == 'AiStraightMoverTl':
+        if r.random() < 0.7:
+            ram[0x0380 + x] &= 0x7F
+        ram[0x0480 + x] = r.choice([1, 2, r.randrange(256)])
+        ram[0x0460 + x] = r.choice([0, 0, 6, 0x27, r.randrange(256)])
+
+
 def _fix_case(name, ram, r, regs, wram=None):
     """routine-specific pokes that keep a case on a meaningful path"""
     x = regs.get('x')
@@ -382,6 +405,12 @@ def _fix_case(name, ram, r, regs, wram=None):
         _fix_walk(name, ram, r, x, wram)
     if name in FIELD_AIS:
         _fix_field(name, ram, r, x, wram)
+    if name in EFFECT_AIS:
+        _fix_effect(name, ram, r, x, wram)
+    if name in ('AiMpDrain', 'ObjUpdateAll'):
+        for i in range(8):                         # HudRedraw's PpuQueueWaitSrc($7B) would spin until an NMI
+            if wram[0x203 + 4 * i] == 0x7B:
+                wram[0x203 + 4 * i] = 0xFF
     if name in ('AiFanTurret', 'AiTurret', 'AiBurst', 'SpawnShot'):
         ram[0x0440 + x] = r.choice([0x40 + r.randrange(0x20), r.randrange(0x60)])
         if 'a' in regs:

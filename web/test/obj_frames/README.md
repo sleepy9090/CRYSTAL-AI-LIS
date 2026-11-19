@@ -35,6 +35,12 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   (`AiCountdown` `$14`, `AiCurveShot` `$16`, `AiHoverShot` `$17`, `AiBounceShot` `$1B`, `AiDirFrameShot` `$1E`,
   `AiShotAnimDec` `$1F`); steered by `_fix_field`.
 
+- `fuzz_effect.json` (s93): 100 cases each for `obj/ai_effect.js` (`EFFECT_AIS`: `AiPlayerFollowC` `$04`,
+  `AiStraightMoverTl` `$57` = `AiStraightMoverTail`, `AiMpDrain` `$76`, regs Y = id·2 as `ObjUpdateAll` leaves it);
+  steered by `_fix_effect`. `AiMpDrain` runs through `runNow` (its `HudRedraw` is a generator; the capture removes
+  queued `$7B` records so it never spins). `fuzz_update.json` was regenerated in s93 with these ids in the pool.
+  `python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_effect.json --abs 0708 --col 04A0=0` = path coverage.
+
 Regenerate (about 10 s each):
 
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
@@ -50,5 +56,7 @@ Regenerate (about 10 s each):
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
         --routine AiTrapChest,AiDasher,AiHomingFlyer,AiHomingShooter,AiOrbiter,AiPatrolGunner,AiDrifter,AiWaitClear,AiCoin,AiCountdown,AiCurveShot,AiHoverShot,AiBounceShot,AiDirFrameShot,AiShotAnimDec \
         --out web/test/obj_frames/fuzz_field.json
+    python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
+        --routine AiPlayerFollowC,AiStraightMoverTl,AiMpDrain --out web/test/obj_frames/fuzz_effect.json
 
 `python3 -m tools.emu.routine_capture --list` shows the routines; `--routine A,B` captures a subset.

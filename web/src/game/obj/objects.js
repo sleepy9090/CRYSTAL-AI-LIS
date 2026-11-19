@@ -16,12 +16,13 @@ import { AI_HANDLERS } from './ai_static.js';
 import { AI_WALK } from './ai_walk.js';
 import { AI_FIELD } from './ai_field.js';
 import { AI_SHOT } from './ai_shot.js';
+import { AI_EFFECT } from './ai_effect.js';
 import { objMoveSlide } from './move.js';
 
 const FLAGS2 = 0x0340, META_DIR = 0x0360, TIMER = 0x0480, ACTIVE = 0x04A0, SPAWN_B2 = 0x0540, SPAWN_PARAM = 0x0560;
 const FREEZE = 0x05A0;
 
-export const AI_TABLE = { ...AI_HANDLERS, ...AI_WALK, ...AI_FIELD, ...AI_SHOT };
+export const AI_TABLE = { ...AI_HANDLERS, ...AI_WALK, ...AI_FIELD, ...AI_SHOT, ...AI_EFFECT };
 
 export function hitSetFlag(m) {
   let y = 0;
@@ -90,6 +91,13 @@ export function* objUpdateAll(m) {
     if ((act & 0x70) === 0x60) setR7(m, 0x0F);
     const h = AI_TABLE[id];
     if (!h) { unported(m, `AI $${id.toString(16).toUpperCase().padStart(2, '0')}`); continue; }
-    if (h(m, x) === true) return;                           // popped ObjUpdateAll's return address
+    let r = h(m, x);
+    if (r && typeof r.next === 'function') r = yield* r;    // s93: generator AIs (HudRedraw's queue spin)
+    if (r === true) return;                                 // popped ObjUpdateAll's return address
+    if (typeof r === 'number') {                            // s93: the AI left X changed (AI $04: X = $0C)
+      if (r < x) {                                          // ROM: INX resumes at or before this slot -> endless loop
+        unported(m, `AI at slot $${x.toString(16)} leaving X = $${r.toString(16)} (the ROM loops forever)`);
+      } else x = r;
+    }
   }
 }

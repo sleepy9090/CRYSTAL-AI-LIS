@@ -19,6 +19,7 @@ import { objUpdateAll } from '../src/game/obj/objects.js';
 import * as W from '../src/game/obj/ai_walk.js';
 import * as F from '../src/game/obj/ai_field.js';
 import * as S from '../src/game/obj/ai_shot.js';
+import * as E from '../src/game/obj/ai_effect.js';
 
 const WEB = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const verbose = process.argv.includes('--verbose');
@@ -76,6 +77,10 @@ const RUN = {
   AiBounceShot: (m, r) => { S.aiBounceShot(m, r.x); },
   AiDirFrameShot: (m, r) => { S.aiDirFrameShot(m, r.x); },
   AiShotAnimDec: (m, r) => { S.aiShotAnimDec(m, r.x); },
+  // s93 (boss / effect AI port (a)): obj/ai_effect.js; AiMpDrain is a generator (HudRedraw's queue wait)
+  AiPlayerFollowC: (m) => { E.aiPlayerFollowC(m); },
+  AiStraightMoverTl: (m, r) => { E.AI_EFFECT[0x57](m, r.x); },
+  AiMpDrain: (m, r) => { runNow(E.aiMpDrain(m, r.x)); },
 };
 
 const dir = path.join(WEB, 'test/obj_frames');
