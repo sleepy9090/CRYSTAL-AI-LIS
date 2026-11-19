@@ -69,7 +69,10 @@ def main(argv=None):
         pass
     nes.clear_hooks()
     p, m = nes.ppu, nes.mapper
-    out = dict(frame=p.frame_no, line=p.line, until=a.until, src=os.path.basename(a.load_state),
+    # frame0 (s89): taken after the NMI (vblank, line > 240), the work runs mostly in frame_no + 1, and
+    # tools.emu's CSV row frame_no (sampled at line 0 of the next frame) only sees its vblank start
+    frame0 = p.frame_no + 1 if p.line > 240 else p.frame_no
+    out = dict(frame=p.frame_no, frame0=frame0, line=p.line, until=a.until, src=os.path.basename(a.load_state),
                ram=bytes(nes.bus.ram).hex(), wram=bytes(nes.bus.wram).hex(),
                ciram=bytes(p.ciram).hex(), pal=bytes(p.pal).hex(), oam=bytes(p.oam).hex(),
                ppu=dict(ctrl=p.ctrl, mask=p.mask, v=p.v, t=p.t, x=p.x, w=p.w),

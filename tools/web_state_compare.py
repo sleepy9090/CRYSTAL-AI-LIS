@@ -9,7 +9,11 @@ follow frame f's main-loop work, as in tools/web_compare.py), printing per-tile-
 
 usage (repo root):
   python3 tools/web_state_compare.py --state /tmp/death.state --web web/test/states/death.json \
-      --frames 560 --shots 2470,2600,2880 [--cols core,obj] [--out-dir /tmp/wsc] [--diff]
+      --frames 560 --shots 2470,2600-2610 [--frame0 N] [--cols core,obj] [--out-dir /tmp/wsc] [--diff]
+
+--frame0: defaults to the JSON's `frame0` (web_state.py, s89): a state taken in vblank after the NMI
+(line > 240) belongs to the NEXT frame's main-loop pass (death.json: frame 2460 line 254 -> 2461).
+Pipe the shot lines through tools/shot_filter.py --ignore 23-29 to skip the HUD (unported IRQ split).
 """
 import argparse
 import json
@@ -33,10 +37,17 @@ def main(argv=None):
     ap.add_argument('--cols', default='core,pal,obj,oam_crc')
     ap.add_argument('--out-dir', default='/tmp/web_state_compare')
     ap.add_argument('--diff', action='store_true', help='write emu|web|mask triples for differing shots')
+    ap.add_argument('--frame0', type=int, help="port's first frame number (default: the JSON's `frame`)")
     a = ap.parse_args(argv)
     os.makedirs(a.out_dir, exist_ok=True)
-    f0 = json.load(open(a.web))['frame']
-    shots = {int(s) for s in a.shots.split(',') if s}
+    js = json.load(open(a.web))
+    f0 = js['frame']
+    if a.frame0 is None:
+        a.frame0 = js.get('frame0', f0)
+    shots = set()                                    # F,F,.. and/or LO-HI ranges
+    for s in filter(None, a.shots.split(',')):
+        lo, _, hi = s.partition('-')
+        shots.update(range(int(lo), int(hi or lo) + 1))
 
     nes = NES()
     state.load(nes, a.state)
@@ -56,7 +67,7 @@ def main(argv=None):
 
     wcsv = os.path.join(a.out_dir, 'web.csv')
     cmd = ['node', os.path.join(wc.ROOT, 'web', 'test', 'run.mjs'), '--load-state', a.web,
-           '--frames', str(a.frames), '--quiet', '--compare', wcsv]
+           '--frames', str(a.frames - (a.frame0 - f0)), '--frame0', str(a.frame0), '--quiet', '--compare', wcsv]
     if shots:
         cmd += ['--shots', ','.join(map(str, sorted(shots))), a.out_dir]
     p = subprocess.run(cmd, capture_output=True, text=True)

@@ -11,7 +11,8 @@
 //   --dump-ram F / --dump-wram F   2KB RAM / 8KB WRAM, raw (same as tools.emu)
 //   --compare F.csv       one row per frame, tools/emu/compare.py columns (diff with tools/compare_frames.py)
 //   --load-state F.json   start from a tools/emu/web_state.py export instead of Reset (s88); --frame0
-//                         defaults to the state's tools.emu frame number
+//                         defaults to the state's `frame0` (s89: frame_no + 1 for a state taken in vblank
+//                         after the NMI, as death.json at f2460 line 254 -> 2461), else its `frame`
 //   --quiet               no unported-routine log lines
 // Button names: A B SELECT START UP DOWN LEFT RIGHT (input.js BTN, ROM order A=b7 ... RIGHT=b0).
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -56,7 +57,7 @@ m.reset();
 if (a.state) {
   const s = JSON.parse(readFileSync(a.state, 'utf8'));
   m.loadState(s);
-  if (!process.argv.includes('--frame0')) a.frame0 = s.frame;
+  if (!process.argv.includes('--frame0')) a.frame0 = s.frame0 ?? s.frame;
 }
 const keys = parseKeys(a.keys);
 const rows = a.compare ? [compareColumns().join(',')] : null;

@@ -135,8 +135,8 @@ bank,addr,name,comment
 24,8186,SndTick,per-frame playback; returns early if $F0 bit0 (command in progress)
 30,C125,PlaySound,A=sound id (Y kept in $010F); music <$20 deduped vs $0102; enqueue to $0103-$0108; 85 callers
 31,F7FE,SoundUpdate,from NMI F4CF / IRQ F611 (+JMP F6DC F76B F77F); maps 24/25; drains 1 queued id -> SndCommand; R7=25; JSR SndTick; restore banks
-26,8C3D,Bank26_FadeA,A->$18; $11=0 $19=$10 (fade step +; tentative)
-26,8C49,Bank26_FadeB,A->$18; $11=$40 $19=$F0 (fade step -; tentative)
+26,8C3D,FadeOut,s89 (was Bank26_FadeA): A->$18 = frames-1 per step; $11 0->$40 step $10; 5 PaletteBuild steps then WaitFrame (port: states/death.js fadeOut)
+26,8C49,FadeIn,s89 (was Bank26_FadeB): A->$18; $11 $40->0 step $F0; 5 PaletteBuild steps then WaitFrame (port: states/death.js fadeIn)
 26,8CC0,HudHpBar,s46: redraw HP bar ($6060-$6070 from player_hp_max/player_hp); was Bank26_8CC0 (called via FarCall_B26_8CC0)
 30,C900,MainLoop,wait $09 (NMI flag) then dispatch on state $40 via MainStateTable
 30,C91F,MainStateTable,s63: ptr16[9]: C957 CAB6 C931 C939 C944 C94C 0 0 C9DA
@@ -1147,3 +1147,12 @@ bank,addr,name,comment
 27,AE16,AiNpcStill,s86: AI $31 / AiNpcWander with obj_behav b2: no move; b0 -> anim=$08>>3; $0603=0 -> meta=$06C0
 27,B40E,Wander16DirPerm,s86: 16 bytes permutation of 0-F: AiWander16 drift headings
 27,B41E,Wander16AimJitter,s86: FF 00 01 00: AiWander16 aim jitter (16-dir)
+19,B9FB,DeathHpBarBank,s89: SetR6($1A) + HudHpBar (OpelRevive per-frame HUD)
+19,BA03,DeathPoseHold,s89: WaitFrame + sprite pass (FarCall_B14_800E) until obj_anim $04E1 counts to 0
+19,BA0F,GameOverScreen,s89: OamClip($F0); $07E4=$48; FadeIn(4); 8 sprites from 19:BA45; 80 frames or new press; FadeOut(2)
+19,BA45,GameOverSprites,s89: 32 bytes = 8 OAM entries (GAME OVER) copied to $0200
+30,C008,StatRecalc,s89: attack/defence from level + ring + equip tables 26:8BC0/8BC9/8BD2; player pose/CHR from $0710; PaletteBuild; HudRedraw(4) + HudHpBar; WaitPpuQueue
+30,C188,OamClipTail,s89: A=limit -> $10; sprites 1-63 with y <= A get y=$F0
+26,8F2B,HudToDecimal,s89: 16-bit $10/$11 -> 5 decimal digits $20-$24 (powers table 26:8F64)
+26,8F64,HudPow10Table,s89: 5 x u16 powers of ten for HudToDecimal
+26,8D49,HudHpPartialTiles,s89: 16 tiles for the partial HP-bar cell (index (hp-1) & $0F)

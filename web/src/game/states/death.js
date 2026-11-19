@@ -1,5 +1,6 @@
 // re-c web port — PlayerDeath 19:B900 (sub_state 3) + OpelRevive 19:B9B0, and the shared helpers they need
-// (session 88, "Ph7 menu / death screens" (d)). REVERSE.md "Death / game over (session 88)".
+// (session 88, "Ph7 menu / death screens" (d)). REVERSE.md "Death / game over sequence" (under "Opel Statue
+// auto-revive") + Verification Log row "Death / game over" (s89: 0/557 frames differ outside the HUD rows).
 //
 //   playerDeath(m)        generator: stat recalc, fade out, death pose, GAME OVER sprites, main_state = 2
 //   statRecalc(m)         30:C008 (attack / defence, player CHR + pose, HUD MP digits + HP bar)
