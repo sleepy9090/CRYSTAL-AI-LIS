@@ -88,6 +88,28 @@ export class Machine {
     this._cyc3 = 0;
   }
 
+  /**
+   * Start from a tools.emu state taken at the first instruction of a routine the port runs from its start
+   * (tools/emu/web_state.py, s88): RAM, WRAM, CIRAM, palette, OAM, PPU registers, MMC3 CHR/PRG registers and
+   * mirroring. The next runFrame() is tools.emu frame `s.frame`. The split list of the NMI that ran just
+   * before is not rebuilt (the first frame renders without IRQ splits).
+   */
+  loadState(s) {
+    const hex = (h) => Uint8Array.from(h.match(/../g), (b) => parseInt(b, 16));
+    this.mem.ram.set(hex(s.ram));
+    this.mem.wram.set(hex(s.wram));
+    const p = this.ppu;
+    p.vram.set(hex(s.ciram)); p.pal.set(hex(s.pal)); p.oam.set(hex(s.oam));
+    Object.assign(p, { ctrl: s.ppu.ctrl, mask: s.ppu.mask, v: s.ppu.v, t: s.ppu.t, x: s.ppu.x, w: s.ppu.w });
+    for (let r = 0; r < 6; r++) p.setChrReg(r, s.mapper.regs[r]);
+    p.mirroring = s.mapper.mirroring;
+    p.chrInv = s.mapper.chr_inv;
+    this.prgR6 = s.mapper.regs[6] & 0x3F;
+    this.prgR7 = s.mapper.regs[7] & 0x3F;
+    this.pending = null;
+    this.irqSplits = [];
+  }
+
   /** Map the split list from the last NMI-mode routine onto ppu.splits (an MMC3 IRQ with latch L
    *  fires at the end of line L, so its register changes show from line L+1). */
   _installSplits() {

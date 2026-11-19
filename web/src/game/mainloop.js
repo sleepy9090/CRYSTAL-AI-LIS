@@ -7,6 +7,8 @@
 import { R } from './ram.js';
 import { paletteUpload } from './palette.js';
 import { mainState2, mainState3 } from './states/title.js';
+import { mainState1 } from './states/play.js';
+import { SPIN } from './states/death.js';
 
 // ---------------------------------------------------------------- main states (stubs)
 // Each entry: ROM address, name, handler(m). Stub bodies only do what REVERSE.md documents for the
@@ -15,7 +17,8 @@ const stub = (name) => (m) => { m.stubHits[name] = (m.stubHits[name] || 0) + 1; 
 
 export const MAIN_STATES = [
   { addr: '30:C957', name: 'state0_newgame', fn: stub('state0_newgame') },
-  { addr: '30:CAB6', name: 'state1_gameplay', fn: stub('state1_gameplay') },   // -> SubstateHandlerTable[$41]
+  // state 1: MainStateGameplay -> SubstateHandlerTable[$41] (states/play.js, s88: only sub_state 3 PlayerDeath)
+  { addr: '30:CAB6', name: 'state1_gameplay', fn: mainState1 },
   // state 2: MainState2Init (18:9FCC -> 19:A000) ends with INC main_state (states/title.js, s82)
   { addr: '30:C931', name: 'state2_init', fn: mainState2 },
   // state 3: ReadPadsMenu, then JMP MainState3 19:A015 (title / menus / name entry; states/title.js, s82)
@@ -27,13 +30,18 @@ export const MAIN_STATES = [
 /** MainLoop body for one frame: runs only when the NMI has set frame_ready ($09 != 0). */
 export function mainStep(m) {
   if (m.rd(R.frame_ready) === 0) return false;
+  let r = null;
   if (m.pending) {                                  // resume a multi-frame routine
-    if (m.pending.next().done) m.pending = null;
+    r = m.pending.next();
   } else {
     const st = MAIN_STATES[m.rd(R.main_state)];
     if (!st) throw new Error(`main_state ${m.rd(R.main_state)} out of range`);
-    const r = st.fn(m);
-    if (r && typeof r.next === 'function' && !r.next().done) m.pending = r;
+    const g = st.fn(m);
+    if (g && typeof g.next === 'function') { m.pending = g; r = g.next(); }
+  }
+  if (r) {
+    if (r.done) m.pending = null;
+    else if (r.value === SPIN) return true;         // ROM spin loop (queue wait): frame_ready stays set
   }
   m.wr(R.frame_ready, 0);                           // 30:C919 (wait loops inside routines clear it too)
   return true;

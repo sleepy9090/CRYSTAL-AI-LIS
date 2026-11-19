@@ -10,6 +10,8 @@
 //   --shots F,F,... DIR   also write DIR/web_NNNN.png (1x) after each listed frame_no (Ph7 web 8/8)
 //   --dump-ram F / --dump-wram F   2KB RAM / 8KB WRAM, raw (same as tools.emu)
 //   --compare F.csv       one row per frame, tools/emu/compare.py columns (diff with tools/compare_frames.py)
+//   --load-state F.json   start from a tools/emu/web_state.py export instead of Reset (s88); --frame0
+//                         defaults to the state's tools.emu frame number
 //   --quiet               no unported-routine log lines
 // Button names: A B SELECT START UP DOWN LEFT RIGHT (input.js BTN, ROM order A=b7 ... RIGHT=b0).
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -36,6 +38,7 @@ function parseArgs(argv) {
       case '--dump-wram': a.wram = v(); break;
       case '--compare': a.compare = v(); break;
       case '--quiet': a.quiet = true; break;
+      case '--load-state': a.state = v(); break;
       case '-h': case '--help':
         console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\nimport')[0]); process.exit(0);
       // eslint-disable-next-line no-fallthrough
@@ -50,6 +53,11 @@ const data = await loadData((n) => readFileSync(path.join(WEB, 'data', n)));
 const logs = [];
 const m = new Machine(data, { log: (s) => { logs.push(s); if (!a.quiet) console.error(`[re-c] ${s}`); } });
 m.reset();
+if (a.state) {
+  const s = JSON.parse(readFileSync(a.state, 'utf8'));
+  m.loadState(s);
+  if (!process.argv.includes('--frame0')) a.frame0 = s.frame;
+}
 const keys = parseKeys(a.keys);
 const rows = a.compare ? [compareColumns().join(',')] : null;
 const t0 = performance.now();
