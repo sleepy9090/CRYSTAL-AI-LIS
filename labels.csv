@@ -1244,3 +1244,14 @@ bank,addr,name,comment
 15,AAE6,BossE3Sweep,s100: AI $E3 phase 4 ($8B): last $20 frames meta $D4; even timer: SpawnShot($36, act_timer); TurnToward16 when timer&6=0
 15,AB8A,RockSignByte,s100: A -> (A & $3F) | (b7 ? $C0 : 0); $10 = A
 15,ABD6,RockSpread,s100: s8[4] 00 FF 00 01 added to the 16-dir aim by (X+$08)&3
+16,88A8,MenuPicture3x3,s102: 3x3 picture at window col $26 / row $27 ($2800 + row*32 + col); tiles $29..$29+8 or ($29=$FF) blank 16:892A; 3 x MenuFlush
+16,892A,MenuPictureBlank,s102: 9 tiles of the blank 3x3 picture (16:88A8 with $29 = $FF)
+16,9C85,SaveModeCursor,s102: X = 0 SAVE / 1 LOAD: shape 3 at OAM slot $39 from 16:9D9C ($60FB) 9D9E ($60F8) 9DA2 ($60F9) 9DA0 ($60FA); MenuSfx $4B
+16,9CAE,SaveSlotCursor,s102: two arrows (tile $FE) OAM $027C/$0280 at y 16:9CDE[$646B&1] (57/6F) x $D0/$30 attr $40/$00; MenuSfx $4B
+16,9CDE,SaveSlotCursorY,s102: u8[2] 57 6F
+16,9D52,SaveLoadSetup,s102: MenuHideOam; strings $0F $13 $35; WaitFrame; CHR alt $3C/$38; 6 x MenuFrameRows(9) from $28C0 (len $40)
+16,9D8D,SavePictureCols,s102: u8[2] used (07 0A; 3 more unused 07 07 07); rows 16:9D92 (06 06), tiles 16:9D97 (E8 E8) for MenuPicture3x3
+26,8D59,HudChargeMeter,s102: $6060-$6070: 7 x $8F + orbit_level&7 x $8E; 9 tiles ChargeMeterTiles[ChargeMeterIndex[sword_power*8 | ($08&4)>>2 if orbit | (orbit&$18)>>2]] -> queue $2B46 len $10 src $60
+19,BA65,HudWindowSetup,s102: HUD window rebuild: $6000-$609F fill + PpuQueueBlock 0-3; 19:BAD9 $60 bytes -> block 4; SetR6($1A) HudHpBar + HudChargeMeter + HudRedraw 5..0
+30,C80C,MenuExitFade,s102: SELECT-menu exit for $7000 = $FB/$AB: SwitchBank16(13) FadeOut(3), 1 frame, irq_mode 0, 30 frames, FadeIn(3), SwitchBank16(8); RTS -> 30:D8E5
+30,D930,EquipMenuLoadHead,s102: $7000 = 0, BG+sprites off, WaitFrame, push level; falls into EquipMenuLoadTail

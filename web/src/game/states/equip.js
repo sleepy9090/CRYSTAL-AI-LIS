@@ -4,15 +4,15 @@
 // REVERSE.md "Equipment menu (web port, session 98)".
 //
 //   substEquipMenu(m)   generator = SubstEquipMenu 30:D8C7 (substate 18)
-//   equipMenu(m)        generator = 16:8000 (returns undefined on SELECT / the $7000 = $FA exit, or the name
-//                       of an unported exit: SaveLoadPage 16:9AEE, 30:C80C)
+//   equipMenu(m)        generator = 16:8000 (returns undefined on every exit; s102: START runs SaveLoadPage
+//                       16:9AEE and the $7000 = $FB/$AB exit runs 30:C80C, both in states/saveload.js)
 //
 // Ported: the window frame (16:881E), the Sword/Armor/Shield/Power grid and the Item/Magic grid (16:871F),
 // the cursor (16:8699), A = equip / unequip (16:82B7), B = drop with the YES/NO confirm (16:8342, 16:84DA),
 // the per-category inventory sort (16:8534) and the selection re-find (16:9A62 / 9A91 / 85AE), MenuPrint
-// 16:8933 with its FE/FD/FC escapes, MenuSprDraw 16:86D3. Not ported (logged once): START = SaveLoadPage
-// 16:9AEE, the $7000 = $FB/$AB exits (30:C80C), the shop / pawn variants ($07DD != 0: 16:8613 FarCall
-// HudRedraw, 16:8631 gold, 16:846C), the load tail 30:D930, SubstRestoreScreen 30:CC4D (area $5F).
+// 16:8933 with its FE/FD/FC escapes, MenuSprDraw 16:86D3; s102: SaveLoadPage, the 30:C80C exit and the load
+// tail 30:D930 (states/saveload.js). Not ported (logged once): the shop / pawn variants ($07DD != 0: 16:8613
+// FarCall HudRedraw, 16:8631 gold, 16:846C), SubstRestoreScreen 30:CC4D (area $5F).
 import { R } from '../ram.js';
 import { cpuRd, indY, setR6, setR7, switchBank16, farRestore } from '../prg.js';
 import { readPads, readPadsMenu } from '../pads.js';
@@ -20,6 +20,7 @@ import { queuePush, ppuQueueFlush, ppuCtrlNmiOff, ppuCtrlNmiOn } from '../world/
 import { spriteDraw } from '../obj/sprites.js';
 import { waitFrame, statRecalc, paletteBuildRom } from './death.js';
 import { waitPpuQueue } from './pause.js';
+import { saveLoadPage, menuExitFade, loadTail } from './saveload.js';
 
 const BUF = 0x6000;
 const KIND = 0x6424;          // 0 = Sword/Armor/Shield/Power grid, 1 = Item/Magic grid
@@ -34,12 +35,12 @@ function unported(m, key, what) {
 }
 
 /** 16:8A9F: A -> snd_queue $0103, count $0100 = 1 under the lock $0101 */
-function menuSnd(m, a) {
+export function menuSnd(m, a) {
   m.wr(0x0103, a); m.wr(0x0101, 1); m.wr(0x0100, 1); m.wr(0x0101, 0);
 }
 
 /** MenuFlush 16:8AB0: queue ($21 $20 $24 $25) with NMI off; PpuQueueFlush 30:C67D now if rendering is off */
-function menuFlush(m) {
+export function menuFlush(m) {
   ppuCtrlNmiOff(m);
   queuePush(m, m.rd(0x21), m.rd(0x20), m.rd(0x24), m.rd(0x25));
   if (!(m.rd(R.ppumask_shadow) & 0x18)) ppuQueueFlush(m);
@@ -110,7 +111,7 @@ export function* menuPrint(m, a) {
 }
 
 /** MenuSprDraw 16:86D3: shape $12 (MenuSprShapes 16:8B1F) at OAM slot $2E + 1, offsets $60F8-$60FB */
-function menuSprDraw(m) {
+export function menuSprDraw(m) {
   const s2 = (m.rd(0x12) << 1) & 0xFF;
   m.wr(0x12, cpuRd(m, 0x8B1F + s2)); m.wr(0x13, cpuRd(m, 0x8B20 + s2));
   m.wr(0x2F, indY(m, 0x12, 0));
@@ -128,7 +129,7 @@ function menuSprDraw(m) {
 }
 
 /** 16:8605: WaitFrame, then all of OAM y = $F0 */
-function* hideOam(m) {
+export function* hideOam(m) {
   yield* waitFrame(m);
   for (let x = 0; x < 0x100; x++) m.wr(0x0200 + x, 0xF0);
 }
@@ -181,7 +182,7 @@ function confirmCursor(m) {
 }
 
 /** MenuConfirmYesNo 16:84DA: returns C (true = NO / cancel) */
-function* confirm(m, a) {
+export function* confirm(m, a) {
   if (a === 0x41) a = 0x49;
   m.wr(0x22, a);
   m.wr(0x23, 1);
@@ -371,7 +372,7 @@ function* drawGrid(m) {
 }
 
 /** 16:8864: two 32-tile frame rows (FE, left, 29 x fill, right; 3 bytes of 16:8B0D each), $20 += $40 */
-function* frameRows(m, x) {
+export function* frameRows(m, x) {
   yield* waitPpuQueue(m);
   let y = 0;
   m.wr(0x2F, 2);
@@ -518,8 +519,8 @@ export function* equipMenu(m) {
       if (s === 0xFB || s === 0xAB) {
         menuSnd(m, s === 0xFB ? 0x55 : 0x4C);
         yield* hideOam(m);
-        unported(m, '30:C80C', 'menu exit');
-        return '30:C80C';
+        yield* menuExitFade(m);                         // JMP 30:C80C (its RTS returns to 30:D8E5)
+        return undefined;
       }
       m.wr(R.irq_mode, 0x86);
       const c2A = m.rd(0x2A), c2B = m.rd(0x2B), cur = m.rd(CUR);
@@ -573,8 +574,10 @@ export function* equipMenu(m) {
       if (p & 0x20) return undefined;                   // SELECT: 81EC RTS
       if ((p & 0x10) && !m.rd(SHOP)) {                  // START: 16:821F(0), JMP SaveLoadPage
         menuPalette(m, 0);
-        unported(m, '16:9AEE', 'SaveLoadPage');
-        return '16:9AEE';
+        yield* saveLoadPage(m);                         // s102 (states/saveload.js)
+        grid = m.rd(KIND);                              // SaveLoadExit: JMP 807E if $6424 else 807A
+        lbl = 'grid';
+        continue;
       }
       lbl = 'ab';
     } else if (lbl === 'ab') {                          // 815C
@@ -642,10 +645,7 @@ export function* substEquipMenu(m) {
     const t = m.rd(0x0300 + y);
     if ((t === 0xEB || t === 0xEC) && m.rd(0x0320 + y) === 0) m.wr(0x04A0 + y, 0);
   }
-  if (m.rd(0x7000) === 0xFA) {                          // D930: after a menu LOAD
-    unported(m, '30:D930', 'menu load tail');
-    for (;;) yield;
-  }
+  if (m.rd(0x7000) === 0xFA) { yield* loadTail(m); return; }   // D930: after a menu LOAD (s102)
   yield* statRecalc(m, xReg);
   const r6 = m.rd(0x6E), r7 = m.rd(0x6F);              // FarCall_B14_800E
   switchBank16(m, 0x0E);

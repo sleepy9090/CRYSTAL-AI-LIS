@@ -73,7 +73,7 @@ export function queueFlushNow(m) {
 }
 
 /** tail shared by the HUD writers: PpuNmiOff, queue record, flush now if rendering is off, PpuNmiOn */
-function hudQueue(m, hi, lo, len, src) {
+export function hudQueue(m, hi, lo, len, src) {
   ppuCtrlNmiOff(m);
   queuePush(m, hi, lo, len, src);
   if (!(m.rd(R.ppumask_shadow) & 0x18)) queueFlushNow(m);
