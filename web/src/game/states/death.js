@@ -188,7 +188,7 @@ export function* statRecalc(m, xReg = 0) {
 }
 
 /** 30:C188 (OamClipTop tail, A = limit): $10 = A; sprites 1-63 with y <= A -> y = $F0 */
-function oamClip(m, a) {
+export function oamClip(m, a) {
   m.wr(0x10, a);
   for (let x = 4; x < 0x100; x += 4) if (a >= m.rd(0x0200 + x)) m.wr(0x0200 + x, 0xF0);
 }

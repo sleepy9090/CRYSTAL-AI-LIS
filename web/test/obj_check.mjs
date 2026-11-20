@@ -13,6 +13,7 @@ import { playSound } from '../src/game/playsound.js';
 import { dirToTarget, spawnShot, objBgProbe } from '../src/game/obj/util.js';
 import { aiStraightMover, aiDirShot, aiBurst, aiFanTurret, aiTurret, aiS0DTransform } from '../src/game/obj/ai_static.js';
 import { areaSpawnEntry } from '../src/game/world/spawn.js';
+import { npcScript } from '../src/game/states/talk.js';
 import { ppuQueueFlush } from '../src/game/world/ppuqueue.js';
 import { bgRowRender, bgColRender, fullScreenDraw, runNow } from '../src/game/world/bgstream.js';
 import { objMoveSlide } from '../src/game/obj/move.js';
@@ -36,6 +37,7 @@ const hx = (v, n = 2) => v.toString(16).toUpperCase().padStart(n, '0');
 const RUN = {
   ObjInit: (m) => { objInit(m); },
   AreaSpawnEntry: (m, r) => { areaSpawnEntry(m, r.x, r.y); },              // s112 world/spawn.js
+  NpcScript: (m) => { npcScript(m); },                                       // s115 states/talk.js
   AiS0DTransform: (m, r) => { aiS0DTransform(m, r.x); },
   PlaySound: (m, r) => { playSound(m, r.a, r.y); },
   DirToTarget: (m, r) => { dirToTarget(m, r.x, r.y); },

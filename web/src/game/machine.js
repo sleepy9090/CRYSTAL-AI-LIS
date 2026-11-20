@@ -8,7 +8,8 @@
 // -> NMI work. The game only talks to the PPU through its registers (ppu.writeReg / oamDma / setChrReg).
 import { Ram, R } from './ram.js';
 import { Ppu } from '../nes/ppu.js';
-import { mainStep, nmiWork, irqMenuChrSplit, irqIntroSplit, irqWrapSplit, irqHud } from './mainloop.js';
+import { mainStep, nmiWork, irqMenuChrSplit, irqIntroSplit, irqWrapSplit, irqHud, irqMsgWindowTop,
+  irqMsgWindowEnd } from './mainloop.js';
 import { ENTRY_POINTS } from './states/play.js';
 import { Apu } from '../nes/apu.js';
 import { cpuRd } from './prg.js';
@@ -60,6 +61,8 @@ export class Machine {
     });
     this.irqHandlers[0] = irqWrapSplit;                // 31:F455 (s108)
     this.irqHandlers[1] = irqHud;                      // 31:F488 (s108)
+    this.irqHandlers[2] = irqMsgWindowTop;             // 31:F4E5 (s105 body, wired s115: message window)
+    this.irqHandlers[3] = irqMsgWindowEnd;             // 31:F54B (s105 body, wired s115)
     this.irqHandlers[6] = irqIntroSplit;               // 31:F691 (s106)
     this.irqHandlers[7] = irqMenuChrSplit;             // 31:F61A (s98)
   }

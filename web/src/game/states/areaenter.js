@@ -130,7 +130,7 @@ export function* substAreaEnter(m) {
 }
 
 /** FarCall_B14_800E 31:FF8C */
-function farSpriteDraw(m) {
+export function farSpriteDraw(m) {
   const r6 = m.rd(0x6E), r7 = m.rd(0x6F);
   switchBank16(m, 0x0E);
   spriteDraw(m);

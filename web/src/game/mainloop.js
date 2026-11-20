@@ -6,6 +6,7 @@
 // for the next NMI; step() resumes it on the next frame. A plain function = one frame of work.
 import { R } from './ram.js';
 import { paletteUpload } from './palette.js';
+import { cpuRd } from './prg.js';
 import { mainState2, mainState3 } from './states/title.js';
 import { mainState1 } from './states/play.js';
 import { SPIN, NO_NMI } from './states/death.js';
@@ -187,6 +188,13 @@ function nmiMode1(m) {
   setIrqHandler(m, 2, latch);
 }
 
+/** s115: handlers 2 / 3 write their MMC3 reload 2 lines later than handler 0 does, relative to their split line
+ *  (tools/emu/irq_split_probe.py at f2600: H2's split shows from line 11 but it writes $C000/$C001 at line 11
+ *  dot 273-285, after that line's counter clock, so the count starts at line 12; H3's split shows from line 86
+ *  (2nd PPUADDR write at line 85 dot 266) and it writes the reload at line 87 dot 4). So their chained split
+ *  lands N + 3 lines after their own split line, not N + 1. */
+const MSG_LATE = 2;
+
 /** A chained MMC3 IRQ: reload N written inside the handler of line `line` fires N + 1 lines later */
 function chainSplit(m, line, n, handler) {
   const at = line + n + 1;
@@ -201,7 +209,7 @@ export function irqMsgWindowTop(m, line) {
   p.readStatus();
   p.writeReg(6, 0x28); p.writeReg(6, 0x00); p.writeReg(5, 0x00);
   applyChrAlt(m);
-  chainSplit(m, line, 0x48, 3);
+  chainSplit(m, line, 0x48 + MSG_LATE, 3);
   let z = (m.rd(R.zp_57) + 0x46) & 0xFF;
   m.wr(R.zp_57, z);
   let a = m.rd(R.scroll_x_irq + 2) + 8;
@@ -224,11 +232,11 @@ export function irqMsgWindowEnd(m, line) {
   const a = (0xEF - m.rd(R.scroll_x_irq + 2)) & 0xFF;
   const z = m.rd(R.zp_57);
   if (a < 0xBC && a >= z) {
-    chainSplit(m, line, (a - z) & 0xFF, 0);
+    chainSplit(m, line, ((a - z) & 0xFF) + MSG_LATE, 0);
     m.wr(R.zp_57, a);
     m.wr(0x56, 0);
   } else {
-    chainSplit(m, line, (0xBE - z) & 0xFF, 1);
+    chainSplit(m, line, ((0xBE - z) & 0xFF) + MSG_LATE, 1);
     m.wr(0x56, 1);
   }
 }

@@ -20,6 +20,7 @@ import { objUpdateAll } from '../obj/objects.js';
 import { spriteDraw } from '../obj/sprites.js';
 import { objCollideAll } from '../obj/collide.js';
 import { cameraTick } from '../world/camera.js';
+import { npcTalk } from './talk.js';
 
 function unported(m, what) {
   if (!m.unported.has(what)) { m.unported.add(what); m.log(`${what} not ported yet`); }
@@ -198,6 +199,7 @@ const SUBSTATES = new Map([
   [3, playerDeath],                                   // 19:B900
   [8, substPlay],                                     // 30:CB62 (s110)
   [12, pauseScreen],                                  // 15:BC40 (vestigial entry; play calls it directly, s94)
+  [17, npcTalk],                                      // 30:D0C8 NpcTalk + ShowMessage (s115, states/talk.js)
   [18, substEquipMenu],                               // 30:D8C7 SELECT menu (s98)
 ]);
 

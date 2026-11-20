@@ -146,6 +146,35 @@ def _poke_spawn(ram, wram, r):
 
 _SPAWN = {}
 
+# s115: NpcScript 14:8000 params whose script pointer (14:895D / 14:8A5D) lies in $8000-$BFFF (banks 14/15)
+_NPC_PARAMS = []
+for _p in range(256):
+    _t = 0x095D if _p < 0x80 else 0x0A5D
+    _o = 14 * 0x2000 + _t + ((_p << 1) & 0xFF)
+    if 0x8000 <= (_PRG[_o] | _PRG[_o + 1] << 8) < 0xBF00:
+        _NPC_PARAMS.append(_p)
+
+
+def _poke_npc(ram, wram, r):
+    """s115: NpcScript 14:8000 (web/src/game/states/talk.js): $23 = a param with a ROM script, random story flags
+    $6480-$657F (often all clear / all set so long chains run to their end), NPC states $6580-$667F (mostly small,
+    so section B starts on an entry) and area id (sometimes one of the script's own list areas, found by scanning)"""
+    _poke_obj(ram, wram, r)
+    ram[0x6E], ram[0x6F] = 14, 15                 # SwitchBank16(7) shadows (an IRQ's SoundUpdate restores from them)
+    p = r.choice(_NPC_PARAMS)
+    ram[0x23] = p
+    mode = r.choice(['rand', 'rand', 'zero', 'ones'])
+    for i in range(0x100):
+        wram[0x480 + i] = {'rand': r.randrange(256), 'zero': 0, 'ones': 0xFF}[mode]
+    for i in range(0x100):
+        wram[0x580 + i] = r.choice([0, 0, r.randrange(0x20), r.randrange(256)])
+    ram[0x6C] = r.randrange(256)
+    if r.random() < 0.5:                          # an area from the script's (area, state) list
+        o = 14 * 0x2000 + (0x095D if p < 0x80 else 0x0A5D) + ((p << 1) & 0xFF)
+        base = (_PRG[o] | _PRG[o + 1] << 8) - 0x8000 + 14 * 0x2000
+        areas = [_PRG[base + i] for i in range(0, 0x60)]
+        ram[0x6C] = r.choice(areas)
+
 
 ROUTINES = {
     # name: (bank or None, addr, poke, regs(r) -> dict)
@@ -171,6 +200,8 @@ ROUTINES = {
     # s112 (gameplay task (e1)): spawn entries (web/src/game/world/spawn.js) + AI $50 (obj/ai_static.js)
     'AreaSpawnEntry': (None, 0xE1B6, _poke_spawn, lambda r: {'x': _slot(r), 'y': _SPAWN['y']}),
     'AiS0DTransform': (26, 0xA660, _poke_bg, lambda r: {'x': _slot(r)}),
+    # s115: the NPC script VM (states/talk.js npcScript), banks 14/15 mapped as NpcTalk's SwitchBank16(7)
+    'NpcScript':      (14, 0x8000, _poke_npc, None),
 }
 # s81 (Ph7 web 6/8 (a)): the walker / chaser AIs (web/src/game/obj/ai_walk.js), bank 27 entries
 WALK_AIS = {
@@ -281,7 +312,8 @@ HIT_HANDLERS = {'HitByPlayerShot': (0x90AA, (2, 4, 5, 6, 7, 8, 9, 10, 11)), 'Hit
 for _n, (_ad, _xs) in HIT_HANDLERS.items():
     ROUTINES[_n] = (26, _ad, _poke_coll, lambda r, _xs=_xs: {'x': r.choice(_xs), 'y': _coll_target(r)})
 PPU_ROUTINES = ('PpuQueueFlush', 'BgRowRender', 'BgColRender', 'FullScreenDraw',
-                'Ai70PhaseDispatch')          # s97: phases 0/2/9 flush PPU blocks (NMI would discard the case)
+                'Ai70PhaseDispatch',          # s97: phases 0/2/9 flush PPU blocks (NMI would discard the case)
+                'NpcScript')                  # s115: an IRQ inside the VM left $8000 mapped to another bank
 
 
 def _steer_attack(ram, r, x, dist):

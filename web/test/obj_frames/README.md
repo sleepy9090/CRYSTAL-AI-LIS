@@ -75,6 +75,9 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   (`obj/collide.js`; `_poke_coll`: screen positions clustered so hitboxes overlap, the handler-relevant AI ids /
   spawn params / equipment / level / XP, rendering off + empty PPU queue so the HUD writers flush at once).
   `node web/test/obj_check.mjs --dir D` replays the capture files in another directory (extra-seed runs).
+- `fuzz_npc.json` (s115): 600 cases of `NpcScript` `14:8000` (`states/talk.js` `npcScript`; `_poke_npc`: params whose
+  script pointer is in `$8000-$BEFF`, story flags random / all 0 / all 1, random NPC states `$6580+`, area id often
+  from the script's own list). Run without NMI/IRQ (it is in `PPU_ROUTINES`). Seed 115.
 
 Regenerate (about 10 s each):
 
@@ -105,5 +108,7 @@ Regenerate (about 10 s each):
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 150 \
         --routine ObjCollideAll,ObjOverlapScan,HitByPlayerShot,HitPlayer,TalkProbeHit,HitHandler3 \
         --out web/test/obj_frames/fuzz_collide.json
+    python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 600 --seed 115 \
+        --routine NpcScript --out web/test/obj_frames/fuzz_npc.json
 
 `python3 -m tools.emu.routine_capture --list` shows the routines; `--routine A,B` captures a subset.

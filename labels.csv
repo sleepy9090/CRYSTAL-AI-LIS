@@ -1344,3 +1344,14 @@ bank,addr,name,comment
 27,A1B0,MagicStatus4Check,s111: status 4 -> PLA PLA + MagicFailSound (returns from the magic handler)
 26,9BF2,StatusB7PoseTable,s111: u8[4] 2C 30 34 38 slot 1 meta base by obj1_flash b5-4 (status b7 = changed form)
 26,9C6C,PlayerChargedShot,s111: obj_phase $10 release shot; level 3 needs MP > cost (CMP cost / BCC); a failed SpendMp skips the orbit reset
+30,D896,MsgWindowBlink,s115: ShowMessage when sub_state 9: $10 x (irq_mode 0 + WaitFrame / irq_mode 1 + WaitFrame) = window blinks
+20,850F,TextQueueDrainClear,s115: spin until $0A=$0B then $6200-$621F=$FF (end of TextWindowOpen / TextPrintBox)
+20,85B6,TextCodeEnd,s115: code 00: PLA PLA then falls into TextFlush (returns from TextPrint)
+20,85F2,TextCodeClear,s115: code 01: TextClearBuf; $29=$20; wait queue; cursor $28=$23
+20,8607,TextCodeNewline,s115: code 02: $28=(($28+$40)&$E0)+4
+20,8682,TextCodeStr05,s115: code 05 n: 20:8A00[n] via 20:8710 + TextPrintStr
+20,86CD,TextCodeStr06,s115: code 06 n: 20:8A14[n]
+20,86E1,TextCodeStr07,s115: code 07 n: 20:8A5C[n]
+20,8710,TextArgPrep,s115: $2C/$2D=$2A/$2B; INY (INC $2D on wrap); $29=Y (the arg byte is then read through the OLD $2A/$2B)
+14,808E,NpcSkipEntryB,s115: section-B skip: Y+=3 (result+next) then 808F's set-list skip
+14,808F,NpcSkipEntryA,s115: section-A skip: Y+=2 (result) then skip set-list items until b6 when $26 b6
