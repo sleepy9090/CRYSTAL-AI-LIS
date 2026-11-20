@@ -166,14 +166,70 @@ export function irqMenuChrSplit(m) {
   if (line < 240 && !m.ppu.splits.has(line)) m.ppu.splits.set(line, () => m.irqHandlers[1](m));
 }
 
+/** NmiMode1 31:F731 (irq_mode 1 and 9, the message window / bank 16 shop text screens, s105): NmiScrollSet,
+ *  ApplyChrPlay, IRQ handler 2 at latch $57 = ((07DA & 7) ^ 7) + 7 (the first tile-row boundary >= line 7) */
+function nmiMode1(m) {
+  nmiScrollSet(m);
+  applyChrPlay(m);
+  const latch = (((m.rd(R.scroll_x_irq + 2) & 7) ^ 7) + 7) & 0xFF;
+  m.wr(R.zp_57, latch);
+  setIrqHandler(m, 2, latch);
+}
+
+/** A chained MMC3 IRQ: reload N written inside the handler of line `line` fires N + 1 lines later */
+function chainSplit(m, line, n, handler) {
+  const at = line + n + 1;
+  if (at < 240 && !m.ppu.splits.has(at)) m.ppu.splits.set(at, () => m.irqHandlers[handler](m, at));
+}
+
+/** IrqMsgWindowTop 31:F4E5 (IRQ handler 2, s105): PPUADDR $2800 + X 0 (nametable 2 = the window), ApplyChrAlt;
+ *  H3 after $48 lines, $57 += $46; resume row = (($07DA + 8 + $57) wrapped past 240 with +$11) >> 3 ->
+ *  $5E/$5F = NtRowAddrTable 31:F5A1[row] hi / lo | ($07D8 >> 3); then $57 += 8 */
+export function irqMsgWindowTop(m, line) {
+  const p = m.ppu;
+  p.readStatus();
+  p.writeReg(6, 0x28); p.writeReg(6, 0x00); p.writeReg(5, 0x00);
+  applyChrAlt(m);
+  chainSplit(m, line, 0x48, 3);
+  let z = (m.rd(R.zp_57) + 0x46) & 0xFF;
+  m.wr(R.zp_57, z);
+  let a = m.rd(R.scroll_x_irq + 2) + 8;
+  a = (a & 0xFF) + z;                               // CLC ADC #8 / CLC ADC $57 (carry of the 2nd add)
+  if (a > 0xFF || (a & 0xFF) >= 0xF0) a = (a & 0xFF) + 0x11;   // BCS / CMP #$F0: ADC #$10 with C = 1
+  const y = ((a & 0xF8) >> 2) & 0xFF;
+  m.wr(R.zp_57, (z + 8) & 0xFF);
+  m.wr(0x5E, cpuRd(m, 0xF5A2 + y));
+  m.wr(0x5F, (m.rd(R.scroll_x_irq) >> 3) | cpuRd(m, 0xF5A1 + y));
+}
+
+/** IrqMsgWindowEnd 31:F54B (IRQ handler 3, s105): PPUADDR $5E/$5F + X = $07D8 (back to the playfield row),
+ *  ApplyChrPlay; then H0 (wrap) at ($EF - $07DA) - $57 if that row is above the HUD and below $57, else H1
+ *  (IrqMsgWindowEndHud 31:F58B, the HUD) at $BE - $57. H0 / H1 are markers (unported). */
+export function irqMsgWindowEnd(m, line) {
+  const p = m.ppu;
+  p.readStatus();
+  p.writeReg(6, m.rd(0x5E)); p.writeReg(6, m.rd(0x5F)); p.writeReg(5, m.rd(R.scroll_x_irq));
+  applyChrPlay(m);
+  const a = (0xEF - m.rd(R.scroll_x_irq + 2)) & 0xFF;
+  const z = m.rd(R.zp_57);
+  if (a < 0xBC && a >= z) {
+    chainSplit(m, line, (a - z) & 0xFF, 0);
+    m.wr(R.zp_57, a);
+    m.wr(0x56, 0);
+  } else {
+    chainSplit(m, line, (0xBE - z) & 0xFF, 1);
+    m.wr(0x56, 1);
+  }
+}
+
 /** JmpTable31_F6C2: irq_mode -> NMI routine. Unported modes log once and do nothing. */
 const unportedMode = (addr) => (m) => {
   if (!m.unported.has(addr)) { m.unported.add(addr); m.log(`NMI mode routine ${addr} not ported yet`); }
 };
 export const NMI_MODES = [
-  nmiMode0, unportedMode('31:F731'), nmiMode2, nmiMode3,
+  nmiMode0, nmiMode1, nmiMode2, nmiMode3,
   unportedMode('31:F782'), unportedMode('31:F7C5'), nmiMode6, nmiMode0,
-  null, unportedMode('31:F731'),
+  null, nmiMode1,
 ];
 
 /** NmiModeDispatch 31:F6AD: $57 = 0, JMP (JmpTable31_F6C2[irq_mode]); ASL drops b7 (the "skip
