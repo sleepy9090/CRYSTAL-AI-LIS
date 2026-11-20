@@ -7,8 +7,11 @@ import { cpuRd, setR6, switchBank16 } from '../prg.js';
 import { playerDeath, paletteBuildRom } from './death.js';
 import { pauseScreen, pauseFromPlay } from './pause.js';
 import { substEquipMenu } from './equip.js';
+import { substNewGameInit, substAreaEnter } from './areaenter.js';
 
 const SUBSTATES = new Map([
+  [0, substNewGameInit],                              // 30:CA5F (s108)
+  [1, substAreaEnter],                                // 30:CA2E (s108)
   [3, playerDeath],                                   // 19:B900
   [12, pauseScreen],                                  // 15:BC40 (vestigial entry; play calls it directly, s94)
   [18, substEquipMenu],                               // 30:D8C7 SELECT menu (s98)

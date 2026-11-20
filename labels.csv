@@ -1303,3 +1303,19 @@ bank,addr,name,comment
 19,9908,StatusAnimFrames,s107: StatusAnimTick strip frames: 8 bytes each = 7 tiles + next-frame byte ($FF = frame + 1)
 19,B7C3,StatusLineCounts,s107: StatusLineSetup: characters - 1 per text line (4 lines)
 19,B7C7,StatusLinePtrs,s107: StatusLineSetup: 4 text pointers (2 bytes per character: upper tile then glyph)
+30,CAA2,NewGameSkipCheck,s108: pal_nofade_mask=0; ReadPads; pad_prev != 0 -> sub_state 8 + StatRecalc (skips the wake-up cut-scene)
+31,E41C,AreaEntryKeep,s108: AreaEntryTable[7] ($6D=$E0-$FF: continue / menu load): slots 4-$1E off -> AreaEnterCommon
+31,E422,AreaEntryNormal,s108: AreaEntryTable[0]: AreaFadeOutClear (fade out 2) + stone-status ($0710&F=4) clear + StatRecalc -> AreaEnterCommon
+31,E439,AreaEnterCommon,s108: AreaLoadMap; slots 0/1 pos; E799/AreaFollowerHook/E823; camera centre; PlayerPlaceBody; CameraTick; FullScreenDraw (~6 rows/frame with rendering off); 9 CameraTicks; fade in (2) + PlaySound($2F) unless pal_nofade_mask b7; SaveGame; obj_freeze=4
+31,E51C,AreaEntryMapOnly,s108: AreaEntryTable[1] ($6D=$2x): slots $0D-$1F off; AreaLoadMap; PaletteBuild; RTS (no redraw)
+31,E533,AreaEntrySave,s108: AreaEntryTable[2] ($6D=$4x): SaveGame + AreaAttrWipe + slots 4-$1E off -> AreaEnterCommon; SubstAreaEnter then re-dispatches state 1 at once
+31,E611,AreaFadeOutClear,s108: SetR6($1A); FadeOut(2); falls into AreaClearSlots
+31,E61B,AreaClearSlots,s108: obj_active slots 4-$1E = 0
+31,E799,AreaStoneKeep,s108: $0710 b6 kept only in areas $60/$64/$68 (slot $1E = $0C at the player's position); else cleared
+31,E823,AreaChrOverride8C,s108: area $8C with $6484 b7: CHR R4/R5 = $FF/$51, sprite palettes 2/3 = $06/$0A
+31,E845,AreaAttrWipe,s108: bg palette 3 = $AD; 16 steps OR-ing 31:E8B6 masks into attr shadow $6100 + PpuQueueAttrAll + 2 frames; FadeOut(2); palette 3 restored
+31,E8B6,AreaAttrWipeMasks,s108: 16 x 4 attribute OR masks for AreaAttrWipe
+31,E993,CameraScrollFromPos,s108: $30/$31 = cam_ofs_x/y; TempAddOffset; $02-$05 = $34-$37 (the drawn scroll)
+31,EA41,BossCamCenter,s108: boss_cam_lock b7, odd frames: step $3C/$3E 1 px toward 0; $07D5=1 once both 0
+31,EADF,CameraShake,s108: boss_cam_lock 1-$7F path: $07D6 frames, cam_ofs_x from 31:EB05 (0 -4 0 +4) by $08&3
+31,EB05,CameraShakeTable,s108: cam_ofs_x per $08&3 for CameraShake

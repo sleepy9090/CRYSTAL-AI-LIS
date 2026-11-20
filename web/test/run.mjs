@@ -9,6 +9,7 @@
 //   --dump-screen F.png   last finished frame (--scale S)
 //   --shots F,F,... DIR   also write DIR/web_NNNN.png (1x) after each listed frame_no (Ph7 web 8/8)
 //   --dump-ram F / --dump-wram F   2KB RAM / 8KB WRAM, raw (same as tools.emu)
+//   --dump-ciram F        2KB nametable RAM (ppu.vram), raw (s108; compare with web_state.py's `ciram`)
 //   --compare F.csv       one row per frame, tools/emu/compare.py columns (diff with tools/compare_frames.py)
 //   --load-state F.json   start from a tools/emu/web_state.py export instead of Reset (s88); --frame0
 //                         defaults to the state's `frame0` (s89: frame_no + 1 for a state taken in vblank
@@ -37,6 +38,7 @@ function parseArgs(argv) {
       case '--scale': a.scale = parseInt(v(), 10); break;
       case '--dump-ram': a.ram = v(); break;
       case '--dump-wram': a.wram = v(); break;
+      case '--dump-ciram': a.ciram = v(); break;
       case '--compare': a.compare = v(); break;
       case '--quiet': a.quiet = true; break;
       case '--load-state': a.state = v(); break;
@@ -76,5 +78,6 @@ if (rows) writeFileSync(a.compare, rows.join('\n') + '\n');
 if (a.screen) { const { w, h, rgb } = fbToRgb(m.ppu.fb, data.palettes.nesRgb, a.scale); writeFileSync(a.screen, encodePng(w, h, rgb)); }
 if (a.ram) writeFileSync(a.ram, m.mem.ram);
 if (a.wram) writeFileSync(a.wram, m.mem.wram);
+if (a.ciram) writeFileSync(a.ciram, m.ppu.vram);
 console.error(`frames=${a.frames} (last frame_no=${a.frame0 + m.frame - 1}) main_state=${m.rd(0x40)} sub_state=${m.rd(0x41)} ` +
   `unported=${m.unported.size} stubs=${JSON.stringify(m.stubHits)} ${dt ? (a.frames / dt).toFixed(0) : '-'} fps`);

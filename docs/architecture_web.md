@@ -47,9 +47,10 @@ web/index.html
       ├─ src/nes/apu_core.js          2 pulse, triangle, noise, DMC; register writes $4000-$4017; sample generator
       ├─ src/game/ram.js              RAM/WRAM arrays + named address constants (generated, §5) + obj column helpers
       ├─ src/game/mainloop.js         MainLoop, MainStateTable, NMI work, IRQ split list, frame_ready/$09 handshake
-      ├─ src/game/states/             title.js (s82: states 2 + 3, bank 18/19 screen library); play.js + death.js (s88/89); pause.js (s94: pause / status screen); equip.js (s98: SELECT equipment / item menu, bank 16); saveload.js (s102: save/load page, bank 23 save module, menu exit fade, load tail + HUD window rebuild); ending.js (s90: states 4 + 5, bank 17); planned: state0_newgame.js
+      ├─ src/game/states/             title.js (s82: states 2 + 3, bank 18/19 screen library); play.js + death.js (s88/89); pause.js (s94: pause / status screen); equip.js (s98: SELECT equipment / item menu, bank 16); saveload.js (s102: save/load page, bank 23 save module, menu exit fade, load tail + HUD window rebuild); ending.js (s90: states 4 + 5, bank 17); areaenter.js (s108: states 0 + 8, substates 0 + 1, AreaEnter)
       │   └─ substates.js             SubstateHandlerTable (40) → handler functions; substate banks are irrelevant
       ├─ src/game/world/
+      │   ├─ camera.js                (s108) CameraTick / CameraUpdate / CameraFollow / CameraClampX / shake, AreaSubTable, ExitLookup
       │   ├─ area.js                  AreaLoad, LoadAreaChrRecord, spawn handlers 0-4, AreaLoadMap, k1-k5, AreaEntryTable
       │   ├─ bg.js                    ScreenPagePtr, ScreenTileSubst, MetatileExpand, MetatileAttr (static area render)
       │   ├─ bgstream.js              BgRowRender, BgColRender, FullScreenDraw 30:C831 (generators; s79)
@@ -140,7 +141,7 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 |---|---|---|---|
 | `Reset` | `31:F2A4` | `Machine.reset()` (always the cold path: RAM is zeroed) → s106 `introLeftovers` (the RAM/PPU state the skipped bank-18 intro leaves at the first `30:C900`), `coldSaveInit` `31:F1CD`, `bootSaveCheck` `31:F0A4` (slot checks / resets / repair copies, `$16` seed kept live), `copySramBlock` `31:F3A2` | `game/machine.js`, `game/boot.js` |
 | `NmiMode5` / `IrqHandler6` | `31:F7C5` / `31:F691` | `nmiMode5` / `irqIntroSplit` (s106; only the f214 NMI uses irq_mode 5 in the port) | `game/mainloop.js` |
-| `MainLoop` / `MainStateTable` | `30:C900` / `30:C91F` | `mainloop.step()` / `MAIN_STATES[6]` | `game/mainloop.js` |
+| `MainLoop` / `MainStateTable` | `30:C900` / `30:C91F` | `mainStep()` / `MAIN_STATES[9]` (6/7 null; s108: all states ported) | `game/mainloop.js` |
 | `NMI` | `31:F3B6` | `mainloop.nmiWork()` | `game/mainloop.js` |
 | `NmiModeDispatch` / `JmpTable31_F6C2` | `31:F6AD` / `31:F6C2` | `NMI_MODES[irq_mode]` | `game/mainloop.js` |
 | `IRQ`, `SetIrqHandler`, `IrqHandlerTable` | `31:F443`, `31:F424`, `31:F433` | `setIrqHandler(i)` → split list entries for `ppu.js` | `game/mainloop.js` |
@@ -157,8 +158,11 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 
 | ROM routine | Address | JS function | Module |
 |---|---|---|---|
-| state 0 new game | `30:C957` | `state0()` | `states/state0_newgame.js` |
-| state 1 gameplay dispatcher | `30:CAB6` | `state1()` → `SUBSTATES[$41]` | `states/state1_gameplay.js` |
+| state 0 new game / state 8 continue, `GameStartObjs` | `30:C957` / `30:C9DA`, `30:C9FF` | `mainStateNewGame()` / `mainStateContinue()` (generators; s108; `LoadGameAndInit` runs through one NMI) | `states/areaenter.js` |
+| state 1 gameplay dispatcher | `30:CAB6` | `mainState1()` → `SUBSTATES[$41]` (ported: 0, 1, 3, 12, 18) | `states/play.js` |
+| `SubstNewGameInit` (+ `NewGameSkipCheck` `30:CAA2`), `SubstAreaEnter`, `AreaEnter` (`AreaEntryTable` `31:E3D9`: `E422`/`E41C`/`E51C`/`E533`; `E544` pit fall not ported), `AreaEnterCommon` `31:E439`, `PlayerPlaceBody` `26:9CEF` | `30:CA5F`, `30:CA2E`, `31:E3E9` | `substNewGameInit()`, `substAreaEnter()`, `areaEnter()` (generators; s108). Lag frames from a tools.emu trace: `fullScreenDraw(m, 1, FSD_LAG)` (rendering off: NMIs after rows 7/13/19/25/30), full `SaveGame` = 2 NMIs | `states/areaenter.js` |
+| `CameraTick`, `CameraUpdate`, `CameraFollow`, `CameraClampX`, `CameraShake` `31:EADF`, `ExitLookup`, `AreaSubTable` | `31:E8F6`, `31:E90A`, `31:E9AD`, `31:EA72`, `31:EB09`, `30:C7A5` | `cameraTick()` (generator; returns true when `ExitLookup` took an exit = the ROM's PLA×4, so the caller must return), `cameraUpdate()`, `cameraClampX()`, `exitLookup()`, `areaSubTable()` (s108) | `world/camera.js` |
+| IRQ handlers 0 (wrap) / 1 (HUD + gameplay `SoundUpdate`) | `31:F455` / `31:F488` | `irqWrapSplit(m, line)` / `irqHud(m)` (s108; split hooks get their line, handler 0 chains handler 1 with `chainSplit`). The NMI now starts with `LDA PPUSTATUS` (`31:F3B7`): `irqHud` leaves the `w` latch at 1 | `mainloop.js` |
 | state 2 / `MainState2Init` | `30:C931`, `18:9FCC` → `19:A000` | `mainState2()` (generator; s82). The cold-boot intro `18:8028` is not run (port starts at f214) | `states/title.js` |
 | state 3 / `MainState3`, `State3ModeTable`, `State3SubTable` | `30:C939`, `19:A015`, `19:A038`, `19:A052` | `mainState3()`; modes in the `MODES` map, step tables in `STEPS` (ROM address → function). s82: fades `18:8310/834A`, opening `19:A79F` (25 steps), title menu `19:A653/A6DF`; s107: story `19:ABB4/ABEA` (28 steps), status screen + name entry `19:A0B5/A176` (7 steps) → `main_state` 0 | `states/title.js` |
 | bank-18 screen library | `18:80E7` `SceneMetaDraw`, `8198` `WaitFrameReady`, `81A1` `NtFill`, `81D8` `OamHideAll18`, `81F0` `NtRectBlit`, `82B3-82FD` menu palettes | `sceneMetaDraw`, `waitFrameReady` (generator), `ntFill`, `oamHideAll`, `ntRectBlit` (direct `ppu.writeReg` 6/7), `palBlack/palLoad/palApply/palFadeIn`. A lag frame (the NMI firing at a `PpuNmiOn18` after line 241) is a bare `yield` at that point. s107: `18:80DF` `sceneMetaDrawClip`; `19:A092` `PpuQueueDrainWait` = `yield SPIN` loop; a **lost NMI** (the `PpuNmiOn18` comes after vblank ended, e.g. `TitleStatusInit` in f1702) is `yield NO_NMI`: `mainStep` sets `m.skipNmi` (so `Machine.runFrame` skips `nmiWork` once) and `m.noNmiResume` (so the next `mainStep` resumes with `frame_ready` = 0) | `states/title.js`, `mainloop.js`, `machine.js` |
@@ -167,7 +171,6 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 | save / load page (START in the SELECT menu) | `16:9AEE` `SaveLoadPage` + `9B3A` loop, `9BE1` `MenuSave`, `9CE0` `SaveSlotCopy`; bank 23 `BC09` `SaveGame` / `BC8E` `LoadGame` / `BCDA` `LoadGameAndInit`; `30:C80C` `MenuExitFade`; `30:D930` load tail + `19:BA65` `HudWindowSetup` + `26:8D59` `HudChargeMeter` | `states/saveload.js` `saveLoadPage()` / `menuExitFade()` / `loadTail()` / `hudWindowSetup()` (generators), `saveGame()` / `loadGame()` / `loadGameAndInit()` / `saveSlotCopy()`; called from `equip.js` (s102) |
 | equipment / item menu (SELECT) | `30:D8C7` `SubstEquipMenu` (substate `$12`) + bank 16 `16:8000` `EquipMenu` (window `881E`, grids `871F`, A `82B7`, B `8342` + `MenuConfirmYesNo` `84DA`, sort `8534`, `MenuPrint` `8933`, `MenuSprDraw` `86D3`), NMI mode 6 `31:F7DB` + IRQ handler 7 `31:F61A` | `substEquipMenu()` / `equipMenu()` / `menuPrint()` (generators; s98); `nmiMode6`/`irqMenuChrSplit` in `mainloop.js` (`machine.js` `irqHandlers[7]`). `SUBSTATES[18]` + `ENTRY_POINTS['30:D8C7']`. Unported exits (`SaveLoadPage` `16:9AEE`, `30:C80C`, load tail `30:D930`, shop variants) are logged and stop the generator | `states/equip.js` |
 | `SubstateHandlerTable` | `30:CADE` | `SUBSTATES[40]` | `states/substates.js` |
-| `SubstNewGameInit`, area-load step | `30:CA5F`, `30:CA2E` | `substNewGameInit()`, `substAreaLoad()` | `states/substates.js` |
 | `SubstPlay` | `30:CB62` | `substPlay()` | `states/state1_gameplay.js` |
 | `SubstPlayTail` (respawn tick) | `31:E0B8` | `substPlayTail()` | `obj/objects.js` |
 | `PlayerDeath` | `19:B900` | `playerDeath()` | `states/substates.js` |

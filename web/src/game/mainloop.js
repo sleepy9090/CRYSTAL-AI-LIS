@@ -10,14 +10,14 @@ import { mainState2, mainState3 } from './states/title.js';
 import { mainState1 } from './states/play.js';
 import { SPIN, NO_NMI } from './states/death.js';
 import { mainState4, mainState5 } from './states/ending.js';
+import { mainStateNewGame, mainStateContinue } from './states/areaenter.js';
 
-// ---------------------------------------------------------------- main states (stubs)
-// Each entry: ROM address, name, handler(m). Stub bodies only do what REVERSE.md documents for the
-// state's first instructions; everything else is TODO for Ph7 web 4/8-7/8.
-const stub = (name) => (m) => { m.stubHits[name] = (m.stubHits[name] || 0) + 1; };
+// ---------------------------------------------------------------- main states
+// Each entry: ROM address, name, handler(m) (MainStateTable 30:C91F, 9 entries; s108: all ported).
 
 export const MAIN_STATES = [
-  { addr: '30:C957', name: 'state0_newgame', fn: stub('state0_newgame') },
+  // state 0: MainStateNewGame -> main_state 1 / sub_state 0 (states/areaenter.js, s108)
+  { addr: '30:C957', name: 'state0_newgame', fn: mainStateNewGame },
   // state 1: MainStateGameplay -> SubstateHandlerTable[$41] (states/play.js, s88: only sub_state 3 PlayerDeath)
   { addr: '30:CAB6', name: 'state1_gameplay', fn: mainState1 },
   // state 2: MainState2Init (18:9FCC -> 19:A000) ends with INC main_state (states/title.js, s82)
@@ -27,6 +27,9 @@ export const MAIN_STATES = [
   // states 4 / 5: EndingInit 17:A000 / EndingTick 17:A100 (states/ending.js, s90)
   { addr: '30:C944', name: 'state4_ending_init', fn: mainState4 },
   { addr: '30:C94C', name: 'state5_ending', fn: mainState5 },
+  null, null,                                       // 6 / 7: $0000 in MainStateTable (30:C92B / C92D)
+  // state 8: MainStateContinue (title CONTINUE) -> main_state 1 / sub_state 1 (states/areaenter.js, s108)
+  { addr: '30:C9DA', name: 'state8_continue', fn: mainStateContinue },
 ];
 
 /** MainLoop body for one frame: runs only when the NMI has set frame_ready ($09 != 0). */
@@ -54,6 +57,7 @@ export function mainStep(m) {
 // ---------------------------------------------------------------- NMI
 /** NMI 31:F3B6 */
 export function nmiWork(m) {
+  m.ppu.readStatus();                               // F3B7 LDA PPUSTATUS: resets w (s108: IrqHandler1Hud leaves w = 1)
   if (m.rd(R.nmi_disable)) return;                  // F3BA
   if (m.rd(R.nmi_busy_flag)) { m.wr(R.nmi_missed_flag, 1); return; }   // F3BE
   if (m.rd(R.frame_ready) === 0) {                  // F3CC: main loop finished -> DMA + scroll copy
@@ -222,6 +226,36 @@ export function irqMsgWindowEnd(m, line) {
     chainSplit(m, line, (0xBE - z) & 0xFF, 1);
     m.wr(0x56, 1);
   }
+}
+
+/** IrqHandler0 31:F455 (s108, the playfield's 240-line wrap): PPUADDR $00:(07D8 >> 3) = nametable 0 row 0,
+ *  fine X = $07D8; then handler 1 (HUD) after $BC - $57 lines */
+export function irqWrapSplit(m, line) {
+  const p = m.ppu;
+  p.readStatus();
+  p.writeReg(6, 0x00);
+  p.writeReg(6, m.rd(R.scroll_x_irq) >> 3);
+  p.writeReg(5, m.rd(R.scroll_x_irq));
+  chainSplit(m, line, (0xBC - m.rd(R.zp_57)) & 0xFF, 1);
+  m.wr(0x56, 1);                                    // SetIrqHandler(1)
+}
+
+/** IrqHandler1Hud 31:F488 (s108): IRQ off, PPUMASK sprites off (BG kept), PPUADDR $2B00 + X 0 (the HUD rows of
+ *  nametable 2), CHR R0/R1 = $3C/$38, then the gameplay SoundUpdate under nmi_busy_flag (an NMI meanwhile only
+ *  sets nmi_missed_flag -> NmiModeDispatch here) */
+export function irqHud(m) {
+  const p = m.ppu;
+  p.readStatus();
+  p.writeReg(1, (m.rd(R.ppumask_shadow) & 0x0E) | 0x08);
+  p.readStatus();
+  p.writeReg(6, 0x2B); p.writeReg(6, 0x00); p.writeReg(5, 0x00);
+  p.setChrReg(0, 0x3C);
+  p.setChrReg(1, 0x38);
+  m.wr(R.nmi_busy_flag, 1);
+  m.soundUpdate(m);
+  m.wr(R.nmi_busy_flag, 0);
+  if (m.rd(R.nmi_missed_flag)) nmiModeDispatch(m);
+  m.wr(R.nmi_missed_flag, 0);
 }
 
 /** NmiMode5 31:F7C5 (irq_mode 5, the cold-boot intro; in the port only the f214 NMI, s106): PpuScrollWrite,

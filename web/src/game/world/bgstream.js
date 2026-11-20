@@ -15,6 +15,7 @@
 // an NMI drains it, so callers use `yield*` (mainloop.js resumes a pending generator on the next frame).
 import { cpuRd, indY, setR6, setR7, switchBank16 } from '../prg.js';
 import { tempAddOffset } from '../obj/util.js';
+import { SPIN } from '../states/death.js';
 import { queueHasSrc, queueEmpty, queueAttrAll, queuePush, ppuQueueFlush, ppuCtrlNmiOn, ppuCtrlNmiOff } from './ppuqueue.js';
 
 const BUF = 0x6000, ATTR = 0x6100, GRID = 0x6300, VISITED = 0x62F0;
@@ -239,10 +240,11 @@ export function* bgColRender(m) {
 }
 
 /** 30:C831: draw the 30 rows of the screen at $34-$37 (bottom-up), banks restored; A != 0 -> 30:C739 */
-export function* fullScreenDraw(m, a) {
+export function* fullScreenDraw(m, a, lagRows = null) {
   const r6 = m.rd(0x6E), r7 = m.rd(0x6F);
   m.wr(P_YH, m.rd(P_YH) + 1);
   m.wr(0x2E, 0x1E);
+  let row = 0;
   do {
     while (!queueEmpty(m)) yield;                // WaitPpuQueue 30:C676
     setR6(m, 0x1A);
@@ -251,6 +253,9 @@ export function* fullScreenDraw(m, a) {
     tempAddOffset(m);                            // 26:9824: one row (8 px) up
     yield* bgRowRender(m);
     m.wr(0x2E, m.rd(0x2E) - 1);
+    // s108: with rendering off one row costs ~43 scanlines of CPU, so the draw spans 5 NMIs; lagRows(n) says
+    // whether an NMI falls after row n (it finds frame_ready set: no DMA / scroll copy -> SPIN)
+    if (lagRows && lagRows(++row)) yield SPIN;
   } while (m.rd(0x2E));
   setR7(m, r7);
   setR6(m, r6);

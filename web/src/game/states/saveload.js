@@ -149,13 +149,14 @@ function saveChecksum(m) {
   m.wr(0x70F5, s); m.wr(0x70F4, s);
 }
 
-/** SaveGame 23:BC09 */
+/** SaveGame 23:BC09 -> true when the area allows saving (the full image rebuild, ~2 frames of CPU, s108) */
 export function saveGame(m) {
   const flash = m.rd(0x0710);
   m.wr(0x0710, flash & 0xF0);
   for (let x = 0; x < 0x20; x++) m.wr(0x6000 + x, m.rd(0x10 + x));
   let x = m.rd(R.area_id);                              // SaveAllowed: LDX $6C
-  if (cpuRd(m, 0xBF00 + x) & 0x80) {
+  const full = (cpuRd(m, 0xBF00 + x) & 0x80) !== 0;
+  if (full) {
     for (let i = 0; i < 0x100; i++) { m.wr(0x7D00 + i, 0); m.wr(0x7E00 + i, 0); m.wr(0x7F00 + i, 0); }
     for (const [src, dst] of PSTATE) m.wr(dst, m.rd(src));     // SavePlayerState 23:BD1F
     m.wr(0x7DFD, 0x41); m.wr(0x7DFE, 0x4D); m.wr(0x7DFF, 0x49);
@@ -168,6 +169,7 @@ export function saveGame(m) {
   }
   for (let i = 0; i < 0x20; i++) m.wr(0x10 + i, m.rd(0x6000 + i));
   m.wr(0x0710, flash);
+  return full;
 }
 
 /** LoadGame 23:BC8E */

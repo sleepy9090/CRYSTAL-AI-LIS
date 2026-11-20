@@ -8,13 +8,15 @@
 // -> NMI work. The game only talks to the PPU through its registers (ppu.writeReg / oamDma / setChrReg).
 import { Ram, R } from './ram.js';
 import { Ppu } from '../nes/ppu.js';
-import { mainStep, nmiWork, irqMenuChrSplit, irqIntroSplit } from './mainloop.js';
+import { mainStep, nmiWork, irqMenuChrSplit, irqIntroSplit, irqWrapSplit, irqHud } from './mainloop.js';
 import { ENTRY_POINTS } from './states/play.js';
 import { Apu } from '../nes/apu.js';
 import { cpuRd } from './prg.js';
 import { sndInit } from './sound/driver.js';
 import { soundUpdate } from './sound/soundupdate.js';
 import { ppuQueueFlush } from './world/ppuqueue.js';
+import { playSound } from './playsound.js';
+import { objPosToTemp } from './obj/util.js';
 import { introLeftovers, coldSaveInit, bootSaveCheck, copySramBlock } from './boot.js';
 
 export const FRAME_HZ = 60.0988;       // NTSC: 39375000/11/341/262*3 ≈ 60.0988 (odd-frame skip ignored)
@@ -48,12 +50,17 @@ export class Machine {
     this.apuRead = (a) => this.apu.read(a);
     this._cyc3 = 0;
     // world/area.js hooks (s53): PlaySound 30:C125 (7/8), AreaSpawnEntry 31:E1B6 + bank 26 $98A8 (5/8)
-    this.playSound = () => {};
-    this.spawnEntry = () => {};
-    this.entryFF = () => {};
+    // s108: PlaySound + the $6D = $FF entry are wired (AreaEnter runs in the port now); spawn handlers = (e1)
+    this.playSound = (id) => playSound(this, id, 0);   // AreaLoadMap 31:E634 (Y = 0)
+    this.spawnEntry = () => {
+      if (!this.unported.has('31:E1B6')) { this.unported.add('31:E1B6'); this.log('AreaSpawnEntry 31:E1B6 not ported yet'); }
+    };
+    this.entryFF = (x) => objPosToTemp(this, x);       // 26:98A8 ObjPosToTemp
     this.irqHandlers = IRQ_HANDLERS.map((addr) => (m) => {
       if (!m.unported.has(addr)) { m.unported.add(addr); m.log(`IRQ handler ${addr} not ported yet`); }
     });
+    this.irqHandlers[0] = irqWrapSplit;                // 31:F455 (s108)
+    this.irqHandlers[1] = irqHud;                      // 31:F488 (s108)
     this.irqHandlers[6] = irqIntroSplit;               // 31:F691 (s106)
     this.irqHandlers[7] = irqMenuChrSplit;             // 31:F61A (s98)
   }
@@ -129,7 +136,7 @@ export class Machine {
     s.clear();
     for (const { handler, latch } of this.irqSplits) {
       const line = latch + 1;
-      if (line < 240) s.set(line, () => this.irqHandlers[handler](this));
+      if (line < 240) s.set(line, () => this.irqHandlers[handler](this, line));
     }
   }
 
