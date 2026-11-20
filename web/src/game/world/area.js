@@ -8,8 +8,10 @@
 //
 // Hooks the later tasks fill (Machine fields, no-ops until then):
 //   m.playSound(id)             PlaySound 30:C125 (7/8)
-//   m.spawnEntry(slot, entry)   AreaSpawnEntry 31:E1B6 -> SpawnHandlerTable 31:E218 (5/8)
+//   m.spawnEntry(slot, y)       AreaSpawnEntry 31:E1B6 on ($10),Y -> world/spawn.js (s112), returns Y + 4
 //   m.entryFF(x)                bank 26 $98A8 (X=0), the $6D = $FF path (5/8: object-position code)
+
+import { cpuRd, indY, switchBank16 } from '../prg.js';
 
 export function areaInfo(m, id = m.rd(0x6C)) {
   const a = m.data.areas.areas[id.toString(16).toUpperCase().padStart(2, '0')];   // keys '%02X'
@@ -72,12 +74,22 @@ export function loadAreaGfx(m, a = areaInfo(m)) {
 /** AreaLoad 31:E14A: $18 = flag; AreaPtrTable 12:9201[$6C] (hi b7 clear = no record) -> LoadAreaChrRecord. */
 export function areaLoad(m, flag18, a = areaInfo(m)) {
   m.wr(0x18, flag18);
+  switchBank16(m, 6);                            // E14C SwitchBank16_6
+  const id = m.rd(0x6C), t = (id & 0x80) ? 0x9301 : 0x9201, yy = (id << 1) & 0xFF;
+  m.wr(0x10, cpuRd(m, t + yy));                  // ($10) = AreaPtrTable entry (s112: AreaSpawnEntry reads it)
+  m.wr(0x11, cpuRd(m, t + yy + 1));
   if (a.record && (a.record.ptr & 0x8000) && !('ignored' in a.record)) loadAreaChr(m, a);
 }
 
-/** LoadAreaChrRecord 31:E16D (record byte 0 != 0 -> RTS: areas.json marks those `ignored`). */
+/** LoadAreaChrRecord 31:E16D (record byte 0 != 0 -> RTS: areas.json marks those `ignored`). Spawn entries
+ *  from slot $0D at ($10)+5: $FF ends, $FE / b1 bit 7 (respawning, SubstPlayTail) skip, else AreaSpawnEntry. */
 export function loadAreaChr(m, a = areaInfo(m)) {
   const r = a.record;
   m.wr(0x07E6, r.e6); m.wr(0x07E7, r.e7); m.wr(0x07F4, r.r4); m.wr(0x07F5, r.r5);
-  for (const s of r.spawns) if (!s.skip) m.spawnEntry(s.slot, s);
+  for (let y = 5, x = 0x0D; ; x = (x + 1) & 0xFF) {
+    const b0 = indY(m, 0x10, y);
+    if (b0 === 0xFF) return;
+    if (b0 === 0xFE || (indY(m, 0x10, (y + 1) & 0xFF) & 0x80)) { y = (y + 4) & 0xFF; continue; }
+    y = m.spawnEntry(x, y);
+  }
 }

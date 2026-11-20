@@ -118,6 +118,35 @@ def _slot(r):
     return r.randrange(0x0D, 0x1F)
 
 
+def _poke_spawn(ram, wram, r):
+    """s112: AreaSpawnEntry 31:E1B6 on a random 4-byte entry in WRAM $7Fxx (($10) -> it, Y = regs y), random
+    area id + story flags $6480-$64FF; chest (h2) params kept inside ChestPresencePtrs ($00-$71 or b7), item
+    (h4) params steered onto $4x and the areas $C2-$C4 / $F5-$F7 that test a story flag."""
+    _poke_obj(ram, wram, r)
+    for i in range(0x80):
+        wram[0x480 + i] = r.randrange(256)
+    ram[0x6C] = r.choice([0xC2, 0xC3, 0xC4, 0xF5, 0xF6, 0xF7, r.randrange(256), r.randrange(256)])
+    h = r.choice([0, 1, 1, 2, 2, 3, 4, 4])
+    b2 = h | (r.randrange(32) << 3)
+    if h == 2:
+        p = r.choice([r.randrange(0x72), r.randrange(0x72), 0x80 | r.randrange(0x80), 0x25, 0x3C, 0x3B])
+    elif h == 1:                                   # NpcPresenceHi 14:86E0 has $50 entries (lists from $8780)
+        p = r.randrange(0xD0)
+    elif h == 4:
+        p = r.choice([0x40 | r.randrange(16), 0x40 | r.randrange(16), r.randrange(256)])
+    else:
+        p = r.randrange(256)
+    lo = r.randrange(0xF0)
+    ram[0x10], ram[0x11] = lo, 0x7F
+    _SPAWN['y'] = y = r.randrange(8)               # the Y register (regs lambda below)
+    e = [r.randrange(256), r.randrange(256), b2, p]
+    for i, v in enumerate(e):
+        wram[0x1F00 + lo + y + i] = v
+
+
+_SPAWN = {}
+
+
 ROUTINES = {
     # name: (bank or None, addr, poke, regs(r) -> dict)
     'ObjInit':        (None, 0xC25D, _poke_obj, None),
@@ -139,6 +168,9 @@ ROUTINES = {
     # s80 (Ph7 web 5/8 (a)): the object loop + the slide/step mover it uses for knockback
     'ObjMoveSlide':   (26, 0x98D7, _poke_bg, lambda r: {'x': r.choice([0, 0, 1, r.randrange(32)])}),
     'ObjUpdateAll':   (None, 0xCCCC, _poke_bg, None),
+    # s112 (gameplay task (e1)): spawn entries (web/src/game/world/spawn.js) + AI $50 (obj/ai_static.js)
+    'AreaSpawnEntry': (None, 0xE1B6, _poke_spawn, lambda r: {'x': _slot(r), 'y': _SPAWN['y']}),
+    'AiS0DTransform': (26, 0xA660, _poke_bg, lambda r: {'x': _slot(r)}),
 }
 # s81 (Ph7 web 6/8 (a)): the walker / chaser AIs (web/src/game/obj/ai_walk.js), bank 27 entries
 WALK_AIS = {
@@ -511,6 +543,12 @@ def _fix_case(name, ram, r, regs, wram=None):
     if name == 'ObjInit':
         ram[0x10] = _slot(r) if r.random() < 0.9 else r.randrange(32)
         ram[0x11] = r.choice([1, 0xFF, r.randrange(256), r.randrange(256), r.randrange(256)])
+    if name == 'AiS0DTransform':                   # s112: timer2 steps 0 / 1 / >= 2, act_timer 1 = the step 1 end
+        ram[0x0620 + x] = r.choice([0, 1, 1, 2, r.randrange(256)])
+        ram[0x0640 + x] = r.choice([1, 1, r.randrange(256)])
+        ram[0x04CD] = r.choice([8, r.randrange(256)])
+        if r.random() < 0.6:
+            ram[0x0380 + x] &= 0x7F
     if name in ('AiFanTurret',) and r.random() < 0.6:
         ram[0x0640 + x] = r.choice([0, 1, 0x08, 0x09, 0x10, 0x11, 0x18, 0x19, 0x1F])
     if name in ('AiFanTurret', 'AiTurret') and r.random() < 0.4:

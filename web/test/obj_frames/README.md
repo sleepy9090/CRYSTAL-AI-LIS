@@ -64,6 +64,11 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   `python3 -m tools.emu.case_trace --load-state tools/emu/states/gameplay_first.state --cases FILE --case NAME`
   (JSR/JMP/RTS flow with registers).
 
+- `fuzz_spawn.json` (s112): 400 cases each of `AreaSpawnEntry` `31:E1B6` (`world/spawn.js`; `_poke_spawn`: a random
+  4-byte entry in WRAM `$7Fxx` with `($10)` pointing at it and Y = 0-7, random area id + story flags `$6480-$64FF`,
+  chest params inside `ChestPresencePtrs`, item params `$4x`, NPC params `< $D0` = the real `NpcPresenceHi` range)
+  and AI `$50` `AiS0DTransform` `27:A660` (`obj/ai_static.js`; timer2 steps 0/1/≥2).
+
 Regenerate (about 10 s each):
 
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
@@ -88,5 +93,7 @@ Regenerate (about 10 s each):
         --out web/test/obj_frames/fuzz_boss.json
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 \
         --routine PlayerUpdate,PlayerMoveLocked,PlayerMove --out web/test/obj_frames/fuzz_player.json
+    python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 400 \
+        --routine AreaSpawnEntry,AiS0DTransform --out web/test/obj_frames/fuzz_spawn.json
 
 `python3 -m tools.emu.routine_capture --list` shows the routines; `--routine A,B` captures a subset.

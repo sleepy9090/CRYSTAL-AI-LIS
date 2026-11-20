@@ -444,7 +444,11 @@ bank,addr,name,comment
 14,85E0,NpcPresenceLo,ptr16[128] NpcHidden lists for params 00-7F
 19,BC04,SwordRaisePose,event act 1 cutscene: player meta $B8 + CHR R2=$5C R3=$42; jingle $93; 127-frame hold; sub_state=8
 27,AC60,AI_TrapChest,AI $2B (type $73): phase0 meta $AA wait; phase1 meta $90 wander with $0620 timer
-14,86E0,NpcPresenceHi,ptr16[128] NpcHidden lists for params 80-FF (bosses $C0-$CC: !F100-!F10C)
+14,86E0,NpcPresenceHi,ptr16[$50] NpcHidden lists for params 80-CF (bosses $C0-$CC: !F100-!F10C); s112: lists start at $8780 so params D0-FF read list bytes as pointers (unused)
+27,A660,AiS0DTransform,s112: AI $50: timer2 0 -> slot $0D = ObjInit(death type $04CD) via FarCall_C25D + act_timer $70; 1 -> freeze slot 0 until act_timer 0 then meta $C0 sub_state $11 $0623=X; >=2 on screen -> meta $3B + ObjMoveSlide dir 6 (web obj/ai_static.js)
+27,A419,AiNone7F,s112: AI $7F = RTS (dormant boss $5E)
+27,B7F6,AiScreenRedraw08,s112: AI $08 (slot $0D after AI $50): JSR B850; act_timer-- ; <$0A -> MarkScreenVisited + WaitPpuQueue + 98A8/9824 + FarCall_EB91 BG row + PpuQueueAttrAll on the last; not ported yet
+31,E35F,SpawnH1PhaseTable,s112: 4 bytes DA 22 4A AA: obj_phase by param&3 when behaviour bit 2 clear
 30,D9D8,SwordPowerLevel,Y=0/1/2 sword power from $0711 sword + $0718 ball/bracelet element match -> $0719
 30,C17D,OamClipTop,hide OAM sprites 1-63 with Y <= $58-($04&7) (Y=$F0) under the top window
 30,DB0E,SelectedUseItem,$0715 = selected consumable ($642C/$6440) or key item ($642E/$6450) id - $1C

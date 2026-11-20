@@ -51,7 +51,8 @@ web/index.html
       │   └─ substates.js             SubstateHandlerTable (40) → handler functions; substate banks are irrelevant
       ├─ src/game/world/
       │   ├─ camera.js                (s108) CameraTick / CameraUpdate / CameraFollow / CameraClampX / shake, AreaSubTable, ExitLookup
-      │   ├─ area.js                  AreaLoad, LoadAreaChrRecord, spawn handlers 0-4, AreaLoadMap, k1-k5, AreaEntryTable
+      │   ├─ area.js                  AreaLoad, LoadAreaChrRecord, AreaLoadMap, k1-k5, AreaEntryTable
+      │   ├─ spawn.js                 (s112) AreaSpawnEntry + spawn handlers 0-4, NpcHidden, ChestPresence, NpcFlagTest
       │   ├─ bg.js                    ScreenPagePtr, ScreenTileSubst, MetatileExpand, MetatileAttr (static area render)
       │   ├─ bgstream.js              BgRowRender, BgColRender, FullScreenDraw 30:C831 (generators; s79)
       │   ├─ ppuqueue.js              PPU queue ring $6200 (records as in the ROM) + PpuQueueFlush into ppu.js (s79)
@@ -61,7 +62,7 @@ web/index.html
       │   ├─ objinit.js               (s55, done) ObjInit 30:C25D (ObjTypeTable records via cpuRd) + FarCall_C25D
       │   ├─ util.js                  (s55, done) Rand64, ObjFindFree, ObjPosToTemp/TempToObjPos, TempAddOffset/Step,
       │   │                           DirToTarget, ObjStepVector, ObjDespawn, ObjBecomeNext, SpawnShot, ObjBgProbe
-      │   ├─ ai_static.js             (s55, done) AIs $10 $11 $2C $4C/$4D $4E + AiShootCheck; AI_HANDLERS id → fn
+      │   ├─ ai_static.js             (s55, done) AIs $10 $11 $2C $4C/$4D $4E + AiShootCheck, $50 $7F (s112); AI_HANDLERS id → fn
       │   ├─ ai_walk.js               (s81, done) walker/chaser AIs $20-$2A $2E $41 (AiChase, AiWalkPause, …); AI_WALK
       │   ├─ ai_effect.js             (s93, done) AIs $04 (slot $0C on the player; leaves X = $0C), $57, $76 MP drain
       │   ├─ ai_final.js              (s97, done) AI $70 final scene: 11 phases (window wipe, gather, fades, shots, follower) + HitFlashPal
@@ -186,8 +187,8 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 
 | ROM routine | Address | JS function | Module |
 |---|---|---|---|
-| `AreaLoad`, `LoadAreaChrRecord` | `31:E14A`, `31:E16D` | `loadArea()`, `loadAreaChr()` | `world/area.js` |
-| `SpawnHandlerTable` handlers 0-4 | `31:E218` | `SPAWN_HANDLERS[5]` (handler 1 uses `areas.json.indirect`) | `world/area.js` |
+| `AreaLoad`, `LoadAreaChrRecord` | `31:E14A`, `31:E16D` | `areaLoad()`, `loadAreaChr()` (raw record via `($10)`, s112) | `world/area.js` |
+| `AreaSpawnEntry` + `SpawnHandlerTable` handlers 0-4, `NpcHidden`, `ChestPresence`, `NpcFlagTest` | `31:E1B6`, `31:E218`, `14:80A0`, `14:85BF`, `14:8135` | `areaSpawnEntry(m, x, y)` (= `Machine.spawnEntry`), `npcHidden()`, `chestPresence()`, `npcFlagTest()` (s112, done: `fuzz_spawn.json`) | `world/spawn.js` |
 | `AreaSubTable` (k0-k5) | `30:C7A5` | `data.areas[id].k0..k5` (pre-decoded) | `world/area.js` |
 | `AreaLoadMap` / k1 / k2 / k4 | `31:E628` / `31:E6B9` / `31:E686` / `30:C765`, `31:E702` | `loadAreaMap()`, `loadAreaGfx()`, `placePlayer()`, `restoreVisited()` (s53, done; `30:C765` visited marking still planned) | `world/area.js` |
 | `PaletteBuild` / `PaletteLoadOne` | `26:8C0E` / `26:8C6E` | `paletteBuild(m, fade)` (s53, done) | `game/palette.js` |

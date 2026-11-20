@@ -169,9 +169,7 @@ function substPlayTail(m) {
     if (x !== slot) continue;
     const b1 = cpuRd(m, p + y + 1);
     if (!(b1 & 0x80)) return;                                              // not a respawning entry
-    const b2 = cpuRd(m, p + y + 2), b3 = cpuRd(m, p + y + 3);
-    m.spawnEntry(x, { slot: x, y: b0 * 16 + 12, x: (b1 & 0x7F) * 16 + 8 + (b2 & 0x40 ? 8 : 0),
-      handler: b2 & 7, param: b3, b2, respawn: true, recY: y });           // E110 AreaSpawnEntry
+    m.spawnEntry(x, y);                                                    // E110 AreaSpawnEntry (s112)
     if (!objOffscreen(m, x)) m.wr(0x04A0 + x, 0);                          // E113: on screen -> undo
     return;
   }
