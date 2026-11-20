@@ -8,7 +8,7 @@ import { R } from './ram.js';
 import { paletteUpload } from './palette.js';
 import { mainState2, mainState3 } from './states/title.js';
 import { mainState1 } from './states/play.js';
-import { SPIN } from './states/death.js';
+import { SPIN, NO_NMI } from './states/death.js';
 import { mainState4, mainState5 } from './states/ending.js';
 
 // ---------------------------------------------------------------- main states (stubs)
@@ -31,7 +31,8 @@ export const MAIN_STATES = [
 
 /** MainLoop body for one frame: runs only when the NMI has set frame_ready ($09 != 0). */
 export function mainStep(m) {
-  if (m.rd(R.frame_ready) === 0) return false;
+  if (m.noNmiResume) m.noNmiResume = false;         // s107: the last frame's NMI was lost (NO_NMI)
+  else if (m.rd(R.frame_ready) === 0) return false;
   let r = null;
   if (m.pending) {                                  // resume a multi-frame routine
     r = m.pending.next();
@@ -44,6 +45,7 @@ export function mainStep(m) {
   if (r) {
     if (r.done) m.pending = null;
     else if (r.value === SPIN) return true;         // ROM spin loop (queue wait): frame_ready stays set
+    else if (r.value === NO_NMI) { m.skipNmi = true; m.noNmiResume = true; return true; }
   }
   m.wr(R.frame_ready, 0);                           // 30:C919 (wait loops inside routines clear it too)
   return true;

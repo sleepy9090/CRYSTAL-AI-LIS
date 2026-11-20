@@ -21,6 +21,10 @@ import { readPads } from '../pads.js';
 import { queueHasSrc, queueEmpty, queuePush, ppuQueueFlush, ppuCtrlNmiOn, ppuCtrlNmiOff } from '../world/ppuqueue.js';
 
 export const SPIN = 'spin';
+// s107: `yield NO_NMI` = the frame's NMI is lost (a PpuNmiOff18 section ran through the whole vblank and
+// PpuNmiOn18 came after it). runFrame skips nmiWork once, and the next mainStep resumes the routine even
+// though frame_ready is 0 (the ROM just keeps running in the next frame).
+export const NO_NMI = 'no_nmi';
 
 const dec = (m, a) => { const v = (m.rd(a) - 1) & 0xFF; m.wr(a, v); return v; };
 

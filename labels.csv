@@ -1272,3 +1272,34 @@ bank,addr,name,comment
 15,B051,BossE8Attack,s104: AI $E8 phase 2: aux<2 -> one aimed SpawnShot($46) at act_timer $20; else SpawnShot($33) every 16 frames
 15,B077,BossE8LegEnd,s104: obj_timer2++ (past the FF); phase 1; dir 8; anim 0
 15,B0A5,BossE8AttackPose,s104: overlay $F1; meta $DE; obj_anim -= 2
+18,80DF,SceneMetaDrawClip,s107: SceneMetaDraw with $06C7=$FF (hide records with x outside $06C6..$06C4-1) from the current OAM index $06C5 (JMP 80F1)
+19,A0A5,NameCellIndex,s107: Y = $88 = ($8B - $10) * 16 + $8A (name-entry cell index into 18:9EC2 / 18:9F42)
+19,A1A1,StatusStepSound,s107: status step 0: $06B2 = $57; title_step++
+19,A26B,StatusStepWait5,s107: status step 1: at status_anim_ctr 5 -> $06B2 = $1F; step++
+19,A27C,StatusTextStart,s107: status step 2: at status_anim_ctr 0 -> MenuPalFadeIn; step++; $92 = 0; falls into StatusLineSetup
+19,A28C,StatusLineSetup,s107: text line $92 (count 19:B7C3; ptr 19:B7C7; pause 19:A349): cursor sprite $0220; blanks $2084/$20A4 + $2884/$28A4 from $6018 via 2 queue pairs with WaitFrameReady between (the 2-frame stall per line); also reached from StatusTypeStep 19:A3C9
+19,A3DD,NameEntryInit,s107: status step 4: $6410-$6415 / $6418-$641D = $10; $6420 (cursor) = 0; name_entry_frames = 0; step++
+19,A448,NameEntryType,s107: A on a letter cell: $06CC/$06CD -> $6002/$6003 + $6410/$6418 + X; X = $6420 + 1 (wrap 6); queues the 2 tiles vertically at $210D + X in NT $2000 and $2800
+19,A4B3,NameDeadToggle,s107: unreferenced 12 bytes (name_entry_frames = A; cam_y_hi ^= 1 = the alternate glyph set of 19:A63A); dead
+19,A4BF,NameCursorLeft,s107: B / left arrow: $6420 - 1 (wrap 5); name_entry_frames = 0
+19,A4D0,NameCursorRight,s107: right arrow: $6420 + 1 (wrap 0); name_entry_frames = 0
+19,A4E3,NameEntryFinish,s107: START / END: length = last non-$10 of $6418; all blank -> 19:A53B default name; builds player_name $6400 (upper code $76 -> glyph + $F8; $75 -> glyph | $80); 0-terminated; TitleFadeOutStart; step++
+19,A53B,NameDefaultFill,s107: copies the default name (ptr 19:A56C -> 19:A56E: glyphs / 0 / upper row / 0) into $6418 / $6410; then JMP NameEntryFinish
+19,AC3F,StoryScrollPage,s107: story step 0: CHR 3C 12 7C 7D 7C 7D; cam_y $1E8; NtFill $2000/$2800 tile $80; blits 8C7F -> $2814 and 8EAF -> $2BC0; sets 5/$89; 6 slots from 19:ACDA/ACDF/ACE4. Lag frame: NMI at the 2nd blit's PpuNmiOn18
+19,ACE9,StoryScrollUp,s107: story step 1: cam_y_lo -= 8 until $68
+19,ACF9,StoryScrollSprite,s107: story step 2: slot 0 metasprite; its y += 8 while cam_y_lo -= 8 to 0
+19,AD27,StoryBirdsInit,s107: story step 3: clip window $98-$EF; slot 0 y -= 8; $0609 = $68
+19,AD5E,StoryBirds,s107: story step 4: 5 clipped slots (18:80DF) animated and moving every 2nd frame by 19:ADF5/ADFA; x < $70 -> restart; 256 frames ($06FE)
+19,ADFF,StoryFadeOutA,s107: story step 5: TitleFadeOutStart; step++
+19,AE06,StoryTextPage1,s107: story step 6: NtFill $2800 tile $10; text blit B42F -> $29A0; BG set 0 fade-in
+19,AE3D,StoryPage2,s107: story step 10: NtFill $2000/$2800 tile $80; blits 8D73 -> $28C2 and 8EAF -> $2BC0; sets 7/$89; 8 slots from 19:AEC2-AEE2
+19,AEEA,StoryScrollDown,s107: story step 11: cam_y_lo += 8 to $F0; then cam_y_hi++; clip window $08-$5F; timer $06CC/$06CD = $80/2
+19,AF14,StoryPage2Anim,s107: story step 12: 8 clipped slots moving by 19:AFBB/AFC3; x < 8 or y < $20 -> restart; 384 frames
+19,AFCB,StoryFadeOutB,s107: story step 13: TitleFadeOutStart; step++
+19,AFD2,StoryTextPage2,s107: story step 14: as StoryTextPage1 with text B505
+19,B009,StoryPage3,s107: story step 18: NtFill $2000; CHR R1 $16; blits 8E67 -> $20CC / 8EF3 -> $23C0 / B5DB -> $21C0; sets 6/$86; metasprite 7; timers $06C8/$06C9/$06CA = 2/$A0/8
+19,B092,StoryPage3Anim,s107: story step 19: metasprite $0618 at (60;30); frame time $06CA -= 2 per animation loop (min 0); ends after $06C8 x $06C9 frames
+19,B0FB,StoryLastPage,s107: story step 22: NtFill $2000; blits 8E8B -> $20CC / 8F17 -> $23C0 / B6ED -> $2200; set 6; wait $B4
+19,9908,StatusAnimFrames,s107: StatusAnimTick strip frames: 8 bytes each = 7 tiles + next-frame byte ($FF = frame + 1)
+19,B7C3,StatusLineCounts,s107: StatusLineSetup: characters - 1 per text line (4 lines)
+19,B7C7,StatusLinePtrs,s107: StatusLineSetup: 4 text pointers (2 bytes per character: upper tile then glyph)

@@ -139,7 +139,8 @@ export class Machine {
     mainStep(this);
     this._installSplits();
     this.ppu.renderFrame();
-    nmiWork(this);
+    if (this.skipNmi) this.skipNmi = false;          // s107: NO_NMI (lost NMI, see states/death.js)
+    else nmiWork(this);
     this._cyc3 += FRAME_CYCLES3;
     const n = Math.floor(this._cyc3 / 3);
     this._cyc3 -= n * 3;
