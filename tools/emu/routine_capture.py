@@ -221,6 +221,65 @@ PORTED_AIS = (0x10, 0x11, 0x2C, 0x4C, 0x4D, 0x4E) + tuple(i for i, _ in WALK_AIS
 NULL_AIS = tuple(i for i in range(0x80) if i != 0x1A and not (_PRG[27 * 0x2000 + 0x314 + 2 * i] |
                                                                _PRG[27 * 0x2000 + 0x315 + 2 * i]))
 HIT_FLAG_PARAMS = tuple(_PRG[26 * 0x2000 + 0x1045 + i] for i in range(10) if _PRG[26 * 0x2000 + 0x1045 + i])
+IMMUNE_PARAMS = tuple(_PRG[26 * 0x2000 + 0x1058 + i] for i in range(20))   # HitImmuneParams 26:9058
+COLL_IDS = (0x52, 0x10, 0x87, 0x0B, 0x06, 0x07, 0x7B, 0x38, 0x3C, 0x78, 0x6E, 0x30, 0xB0)
+
+
+def _poke_coll(ram, wram, r):
+    """s113 (gameplay frames (e3)): ObjCollideAll 26:8F6E + its hit handlers (web/src/game/obj/collide.js).
+    Screen positions $05C0/$05E0 clustered so hitboxes overlap, collision groups / no-hit bits mostly open,
+    the handler-relevant ids / params / equipment, HUD queue empty with rendering off (HudRedraw / HudHpBar /
+    StatRecalc flush at once instead of waiting for an NMI)."""
+    _poke_bg(ram, wram, r)
+    cx, cy = r.randrange(0x20, 0xE0), r.randrange(0x20, 0xD0)
+    for s in range(32):
+        ram[0x05C0 + s] = (cx + r.randrange(-24, 24)) & 0xFF if r.random() < 0.85 else r.randrange(256)
+        ram[0x05E0 + s] = (cy + r.randrange(-24, 24)) & 0xFF if r.random() < 0.85 else r.randrange(256)
+        if r.random() < 0.8:
+            ram[0x0380 + s] &= 0x7F
+        if r.random() < 0.8:
+            ram[0x0340 + s] &= 0x7F
+        ram[0x03A0 + s] = r.choice([0xF0, 0x10, 0x20, 0x40, 0x80, r.randrange(256)]) & 0xF0 | r.randrange(16)
+        ram[0x0420 + s] = r.choice([0, 1, 3, 0x40, 0x80, 0x20, r.randrange(256)]) | r.choice([0, r.randrange(0x20)])
+        if s >= 0x0D:
+            ram[0x04A0 + s] = r.choice(COLL_IDS + (r.randrange(256), 0)) | r.choice([0, 0, 0x80])
+        ram[0x0540 + s] = r.choice([0, 0, 1, 1, 0xFF, 0xFF, r.randrange(256)])
+        ram[0x0560 + s] = r.choice(HIT_FLAG_PARAMS + IMMUNE_PARAMS[:4] + (0, 1, 2, 3, 4, r.randrange(256)))
+        ram[0x04C0 + s] = r.choice([0, 0, 0x0B, r.randrange(256)])
+        ram[0x0500 + s] = r.choice([0, 0x10, 0x01, 0x22, r.randrange(256)])
+        ram[0x05A0 + s] = r.choice([0, 0, 0, r.randrange(256)])
+        if r.random() < 0.1:
+            ram[0x0300 + s] = 0xA7
+    ram[0x0421] = r.choice([0, 1, 5, 0x0F, 0x10, 0x11, r.randrange(256)])
+    ram[0x0704], ram[0x0705] = r.randrange(256), r.choice([0, 0, 1, r.randrange(256)])
+    ram[0x0706], ram[0x0707] = r.randrange(256), r.choice([0, 1, r.randrange(256)])
+    ram[0x0711] = r.choice([0, 1, 4, 4, r.randrange(8)])
+    ram[0x0713] = r.choice([0, 7, 8, r.randrange(10)])
+    ram[0x0714] = r.choice([0, 4, 6, 8, r.randrange(10)])
+    ram[0x0716] = r.choice([0, 0x0E, 0x10, 0x14, r.randrange(256)])
+    ram[0x6C] = r.choice([0x5F, 0x1A, 0x1A, r.randrange(256), r.randrange(256)])
+    ram[0x07D7] = r.choice([0, 0x80, r.randrange(256)])
+    ram[0x07E8] = r.choice([0, 0x80])
+    ram[0x49] = r.choice([0, 2, 4, 0x80, r.randrange(256)])
+    ram[0x41] = r.choice([8, 8, r.randrange(0x28)])
+    ram[0x0620] = r.choice([0, 0, r.randrange(256)])
+    ram[0x0603] = r.choice([0, 0x10, r.randrange(256)])
+    ram[0x0623] = r.choice([r.randrange(0x0D, 0x1F), r.randrange(256)])
+    ram[0x01] &= ~0x18                             # rendering off: HUD records flush at once
+    ram[0x0B] = ram[0x0A]                          # PPU queue ring empty (WaitPpuQueue / PpuQueueWaitSrc)
+
+
+def _coll_target(r):
+    return r.randrange(0x0D, 0x1F)
+
+
+ROUTINES['ObjCollideAll'] = (26, 0x8F6E, _poke_coll, None)
+ROUTINES['ObjOverlapScan'] = (26, 0x95F8, _poke_coll, lambda r: {'x': r.choice([1, 2, 3, 0x0C, r.randrange(32)])})
+# HitHandlerTable 26:8FBB entries with the CollPairTable attacker slots (X) and a target Y in $0D-$1E
+HIT_HANDLERS = {'HitByPlayerShot': (0x90AA, (2, 4, 5, 6, 7, 8, 9, 10, 11)), 'HitPlayer': (0x9357, (1,)),
+                'TalkProbeHit': (0x94B0, (3,)), 'HitHandler3': (0x8FC4, (0x0C,))}
+for _n, (_ad, _xs) in HIT_HANDLERS.items():
+    ROUTINES[_n] = (26, _ad, _poke_coll, lambda r, _xs=_xs: {'x': r.choice(_xs), 'y': _coll_target(r)})
 PPU_ROUTINES = ('PpuQueueFlush', 'BgRowRender', 'BgColRender', 'FullScreenDraw',
                 'Ai70PhaseDispatch')          # s97: phases 0/2/9 flush PPU blocks (NMI would discard the case)
 
@@ -620,6 +679,10 @@ def _fix_case(name, ram, r, regs, wram=None):
     if name in ('AiMpDrain', 'ObjUpdateAll', 'Ai70PhaseDispatch'):
         for i in range(8):                         # HudRedraw's PpuQueueWaitSrc($7B) would spin until an NMI
             if wram[0x203 + 4 * i] == 0x7B:
+                wram[0x203 + 4 * i] = 0xFF
+    if name == 'ObjCollideAll' or name in HIT_HANDLERS:
+        for i in range(8):                         # s113: + HudHpBar's PpuQueueWaitSrc($60)
+            if wram[0x203 + 4 * i] in (0x7B, 0x60):
                 wram[0x203 + 4 * i] = 0xFF
     if name in ('AiFanTurret', 'AiTurret', 'AiBurst', 'SpawnShot'):
         ram[0x0440 + x] = r.choice([0x40 + r.randrange(0x20), r.randrange(0x60)])

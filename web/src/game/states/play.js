@@ -6,7 +6,7 @@
 // s110: SubstPlay 30:CB62 (sub_state 8) = one gameplay frame:
 //   ReadPads -> PlayDeathMenuCheck 30:CB84 (HP 0 -> sub 3; START -> PauseScreen 15:BC40; SELECT -> sub $12;
 //   pad-2 debug pause / area cycler) -> PlayerStatusTick 31:EF55 -> ObjUpdateAll -> CameraTick (exit -> the
-//   frame ends) -> sprite pass 28:800E -> ObjCollideAll 26:8F6E (not ported yet, logged) -> SubstPlayTail
+//   frame ends) -> sprite pass 28:800E -> ObjCollideAll 26:8F6E (s113, obj/collide.js) -> SubstPlayTail
 //   31:E0B8 (BgChrAnimTick 31:E75E + the 16-frame respawn tick). REVERSE.md "Rest of PlayerStatusTick".
 import { R } from '../ram.js';
 import { cpuRd, setR6, switchBank16 } from '../prg.js';
@@ -18,6 +18,7 @@ import { readPads, readPadsMenu } from '../pads.js';
 import { playSound } from '../playsound.js';
 import { objUpdateAll } from '../obj/objects.js';
 import { spriteDraw } from '../obj/sprites.js';
+import { objCollideAll } from '../obj/collide.js';
 import { cameraTick } from '../world/camera.js';
 
 function unported(m, what) {
@@ -40,7 +41,7 @@ function* substPlayBody(m, y) {
   switchBank16(m, 0x0E);                                // CB71
   spriteDraw(m);                                        // CB76 JSR 28:800E
   switchBank16(m, 0x0D);                                // CB79
-  unported(m, 'ObjCollideAll 26:8F6E');                 // CB7E
+  yield* objCollideAll(m);                              // CB7E JSR 26:8F6E (s113 obj/collide.js)
   substPlayTail(m);                                     // CB81 JMP 31:E0B8
 }
 

@@ -72,16 +72,18 @@ export const fadeIn = (m, a) => fade(m, a, 0x40, 0xF0);
 export function queueFlushNow(m) {
   const s = m.rd(R.ppuctrl_shadow);
   m.wr(R.ppuctrl_shadow, s & 0x7F);
-  ppuQueueFlush(m);
+  const y = ppuQueueFlush(m);
   m.wr(R.ppuctrl_shadow, s);
+  return y;                                           // s113: Y as PpuQueueFlush leaves it (undefined = untouched)
 }
 
 /** tail shared by the HUD writers: PpuNmiOff, queue record, flush now if rendering is off, PpuNmiOn */
 export function hudQueue(m, hi, lo, len, src) {
   ppuCtrlNmiOff(m);
   queuePush(m, hi, lo, len, src);
-  if (!(m.rd(R.ppumask_shadow) & 0x18)) queueFlushNow(m);
+  const y = (m.rd(R.ppumask_shadow) & 0x18) ? undefined : queueFlushNow(m);
   ppuCtrlNmiOn(m);
+  return y;
 }
 
 /** 26:8F2B: 16-bit $10/$11 -> 5 decimal digits $20 (10^4) .. $24 (10^0), table 26:8F64 */
@@ -119,7 +121,8 @@ export function* hudRedraw(m, e, xReg = 0) {
   toDecimal(m);
   const skip = cpuRd(m, 0x8EC9 + x);
   for (let y = 4, s = skip + 4; y >= 0; y--, s--) m.wr(0x607B + y, m.rd((0x20 + s) & 0xFF));
-  hudQueue(m, cpuRd(m, 0x8EC8 + x), cpuRd(m, 0x8EC7 + x), (5 - skip) & 0xFF, 0x7B);
+  const y = hudQueue(m, cpuRd(m, 0x8EC8 + x), cpuRd(m, 0x8EC7 + x), (5 - skip) & 0xFF, 0x7B);
+  return y ?? x;                                      // s113: the Y register (LDY $18, or the flush's Y)
 }
 
 /** HudHpBar 26:8CC0: 17 tiles at $2B26: $8C/$8D frame up to max HP, $88 full cells, partial cell 26:8D49 */

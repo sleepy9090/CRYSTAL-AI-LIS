@@ -25,9 +25,10 @@ export function queueHasSrc(m, a) {
 /** PpuQueueFlush 30:C67D: one record per call unless its hi byte has b7 (chain); the attribute path never chains */
 export function ppuQueueFlush(m) {
   const ppu = m.ppu;
+  let ry;                                          // s113: the Y register at exit (undefined = no record flushed)
   for (;;) {
     const x = m.rd(0x0A);
-    if (x === m.rd(0x0B)) return;
+    if (x === m.rd(0x0B)) return ry;
     const hi = m.rd(Q + x);
     m.wr(0x0C, hi);
     ppu.writeReg(0, (m.rd(0x00) & 0xFB) | (hi & 0x40 ? 4 : 0));
@@ -43,7 +44,7 @@ export function ppuQueueFlush(m) {
         y = (y + 8) & 0xFF;
       }
       m.wr(0x0A, (m.rd(0x0A) + 4) & 0x1F);
-      return;
+      return y;
     }
     let n = len;                                   // DEX / BNE: len 0 copies 256
     do {
@@ -52,7 +53,8 @@ export function ppuQueueFlush(m) {
       n = (n - 1) & 0xFF;
     } while (n !== 0);
     m.wr(0x0A, (m.rd(0x0A) + 4) & 0x1F);
-    if (!(m.rd(0x0C) & 0x80)) return;
+    ry = y;
+    if (!(m.rd(0x0C) & 0x80)) return y;
   }
 }
 

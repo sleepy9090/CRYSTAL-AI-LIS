@@ -24,6 +24,7 @@ import * as E from '../src/game/obj/ai_effect.js';
 import * as FA from '../src/game/obj/ai_final.js';
 import * as B from '../src/game/obj/ai_boss.js';
 import * as P from '../src/game/obj/player.js';
+import * as C from '../src/game/obj/collide.js';
 
 const WEB = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const verbose = process.argv.includes('--verbose');
@@ -102,9 +103,18 @@ const RUN = {
   PlayerUpdate: (m, r) => { runNow(P.playerUpdate(m, r.x)); },
   PlayerMoveLocked: (m, r) => { runNow(P.playerMoveLocked(m, r.x)); },
   PlayerMove: (m, r) => { runNow(P.playerMove(m, r.x)); },
+  // s113 (gameplay frames (e3)): obj/collide.js; handlers are generators (HudRedraw / HudHpBar / StatRecalc)
+  ObjCollideAll: (m) => { runNow(C.objCollideAll(m)); },
+  ObjOverlapScan: (m, r) => { C.objOverlapScan(m, r.x); },
+  HitByPlayerShot: (m, r) => { runNow(C.HIT_HANDLERS.hitByPlayerShot(m, r.x, r.y)); },
+  HitPlayer: (m, r) => { runNow(C.HIT_HANDLERS.hitPlayer(m, r.x, r.y)); },
+  TalkProbeHit: (m, r) => { runNow(C.HIT_HANDLERS.talkProbeHit(m, r.x, r.y)); },
+  HitHandler3: (m, r) => { runNow(C.HIT_HANDLERS.hitHandler3(m, r.x, r.y)); },
 };
 
-const dir = path.join(WEB, 'test/obj_frames');
+// s113: --dir D replays the capture files in D instead (extra-seed runs kept outside the repo)
+const di = process.argv.indexOf('--dir');
+const dir = di > 0 ? path.resolve(process.argv[di + 1]) : path.join(WEB, 'test/obj_frames');
 let fail = 0, total = 0, gaps = 0;
 for (const file of readdirSync(dir).filter((f) => f.endsWith('.json')).sort()) {
   const j = JSON.parse(readFileSync(path.join(dir, file), 'utf8'));

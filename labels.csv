@@ -894,6 +894,7 @@ bank,addr,name,comment
 26,9AE0,BitMask_9AE0,s46: u8[8] 01 02 04 08 10 20 40 80 (visited_map bit by x_hi)
 26,927E,PlayerPoisonRoll,s46: toucher obj_hitflags b7; armor !=7; Rand64<4 -> status 3 poison; msg $20/$19; SFX $36
 26,92BF,HitPlayerShot,s46: enemy shot (spawn_b2 $FF) by spawn_param: 0 damage; 1 paralysis; 2 stone; 3 -> type $0B; >=4 status 4
+26,92F5,HitShotDespawn,s113: obj_active;Y = 0 (the shot); after the stone path's PaletteBuild Y = 4 so it clears slot 4 instead (ROM quirk)
 26,9357,HitPlayer,s46: HitHandlerTable 2 (player touched): shots; poison; AI $0B duel push (s77); gold $7B; platforms $38/$3C; damage attack-defence; 30f invuln
 26,9431,PlayerInvuln,s46: invuln_timer $071A=$1E; obj_flags_s01 b2
 26,943F,RidePlatform,s46: platform AI $38/$3C: $0541=slot; move slot 0 one step in its dir at speed 2

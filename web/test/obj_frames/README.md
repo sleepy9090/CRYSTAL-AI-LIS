@@ -69,6 +69,13 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   chest params inside `ChestPresencePtrs`, item params `$4x`, NPC params `< $D0` = the real `NpcPresenceHi` range)
   and AI `$50` `AiS0DTransform` `27:A660` (`obj/ai_static.js`; timer2 steps 0/1/≥2).
 
+- `fuzz_collide.json` (s113): 150 cases each of `ObjCollideAll` `26:8F6E`, `ObjOverlapScan` `26:95F8` and the four
+  `HitHandlerTable` entries `HitByPlayerShot` `26:90AA` (X = a player shot slot 2/4-11), `HitPlayer` `26:9357`
+  (X=1), `TalkProbeHit` `26:94B0` (X=3), `HitHandler3` `26:8FC4` (X=`$0C`), Y = a target `$0D-$1E`
+  (`obj/collide.js`; `_poke_coll`: screen positions clustered so hitboxes overlap, the handler-relevant AI ids /
+  spawn params / equipment / level / XP, rendering off + empty PPU queue so the HUD writers flush at once).
+  `node web/test/obj_check.mjs --dir D` replays the capture files in another directory (extra-seed runs).
+
 Regenerate (about 10 s each):
 
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
@@ -95,5 +102,8 @@ Regenerate (about 10 s each):
         --routine PlayerUpdate,PlayerMoveLocked,PlayerMove --out web/test/obj_frames/fuzz_player.json
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 400 \
         --routine AreaSpawnEntry,AiS0DTransform --out web/test/obj_frames/fuzz_spawn.json
+    python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 150 \
+        --routine ObjCollideAll,ObjOverlapScan,HitByPlayerShot,HitPlayer,TalkProbeHit,HitHandler3 \
+        --out web/test/obj_frames/fuzz_collide.json
 
 `python3 -m tools.emu.routine_capture --list` shows the routines; `--routine A,B` captures a subset.
