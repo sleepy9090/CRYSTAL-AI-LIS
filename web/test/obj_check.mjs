@@ -1,7 +1,7 @@
 // node web/test/obj_check.mjs [--verbose] — Ph7 web 6/8 (s55): routine-level check of the object code vs tools.emu.
 // Every case in web/test/obj_frames/*.json (tools/emu/routine_capture.py, see README.md there) gives RAM + WRAM at
 // a routine's first instruction, its registers, and the bytes it changed. The port runs the same routine on the
-// same memory; the whole 2KB RAM + 8KB WRAM must then match (stack $0100+sp-15 .. sp+4 excluded), and so must
+// same memory; the whole 2KB RAM + 8KB WRAM must then match (stack $0100+sp-32 .. sp+4 excluded, s100), and so must
 // the way it returned ("popped" = AiShootCheck pulled the caller's return address). Exit 1 on any difference.
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -21,6 +21,7 @@ import * as F from '../src/game/obj/ai_field.js';
 import * as S from '../src/game/obj/ai_shot.js';
 import * as E from '../src/game/obj/ai_effect.js';
 import * as FA from '../src/game/obj/ai_final.js';
+import * as B from '../src/game/obj/ai_boss.js';
 
 const WEB = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const verbose = process.argv.includes('--verbose');
@@ -84,6 +85,11 @@ const RUN = {
   AiMpDrain: (m, r) => { runNow(E.aiMpDrain(m, r.x)); },
   // s97 (boss / final-scene AI port (a)): obj/ai_final.js, AI $70 phases (cases never reach an NMI wait)
   Ai70PhaseDispatch: (m, r) => { runNow(FA.ai70PhaseDispatch(m, r.x)); },
+  // s100 (boss AI port, rest (b)): obj/ai_boss.js, bank 15 bosses (cases run with R6 = $1A, R7 = $0F)
+  BossAiE0: (m, r) => { B.bossAiE0(m, r.x); },
+  BossHomingShot: (m, r) => { B.bossHomingShot(m, r.x); },
+  BossAiE3: (m, r) => { B.bossAiE3(m, r.x); },
+  BossRockShot: (m, r) => { B.bossRockShot(m, r.x); },
 };
 
 const dir = path.join(WEB, 'test/obj_frames');
@@ -120,7 +126,7 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith('.json')).sort()) {
       if (nc) err += `${nc} CIRAM byte(s) differ${first}; `;
       if (m.ppu.ctrl !== c.ppu_ctrl) err += `PPUCTRL port ${hx(m.ppu.ctrl)} emu ${hx(c.ppu_ctrl)}; `;
     }
-    const lo = 0x100 + Math.max(0, c.sp - 15), hi = 0x100 + Math.min(0xFF, c.sp + 4), diffs = [];
+    const lo = 0x100 + Math.max(0, c.sp - 32), hi = 0x100 + Math.min(0xFF, c.sp + 4), diffs = [];
     for (let a = 0; a < 0x800; a++) {
       if (a >= lo && a <= hi) continue;
       if (m.mem.ram[a] !== wantR[a]) diffs.push(`$${hx(a, 4)} port ${hx(m.mem.ram[a])} emu ${hx(wantR[a])}`);

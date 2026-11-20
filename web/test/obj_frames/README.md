@@ -47,6 +47,13 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   the block `$04`/`$44` flushes finish in one call. Coverage: `python3 tools/obj_case_stats.py
   web/test/obj_frames/fuzz_final.json --by 0600 --abs 62F0=FF`.
 
+- `fuzz_boss.json` (s100): 300 cases each of the bank 15 bosses `BossAiE0` `15:A477`, `BossHomingShot` `15:A5EE`,
+  `BossAiE3` `15:A95D`, `BossRockShot` `15:AB3E` (`obj/ai_boss.js`), called with R6 = `$1A`, R7 = `$0F` (`$50` = 7)
+  as `ObjUpdateAll` leaves them; one in-range phase per case (`_fix_boss`). The boss ids are also in the
+  `ObjUpdateAll` pool of `fuzz_update.json` (boss slots get an in-range phase). The stack window left out of the
+  compare is now `sp-32 .. sp+4` (was `sp-15`): the boss → `SpawnShot` → far `ObjInit` chain is deeper.
+  `python3 tools/case_slots.py FILE NAME` prints one case's sp and active slots.
+
 Regenerate (about 10 s each):
 
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
@@ -66,5 +73,7 @@ Regenerate (about 10 s each):
         --routine AiPlayerFollowC,AiStraightMoverTl,AiMpDrain --out web/test/obj_frames/fuzz_effect.json
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 \
         --routine Ai70PhaseDispatch --out web/test/obj_frames/fuzz_final.json
+    python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 \
+        --routine BossAiE0,BossHomingShot,BossAiE3,BossRockShot --out web/test/obj_frames/fuzz_boss.json
 
 `python3 -m tools.emu.routine_capture --list` shows the routines; `--routine A,B` captures a subset.

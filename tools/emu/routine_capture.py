@@ -14,7 +14,7 @@ handler that pops its caller (AiShootCheck PLA PLA after a tail JMP) is recorded
 
 JSON: {"source", "wram_base": hex(8KB), "cases": [{"name", "routine", "regs": {"a","x","y"}, "sp", "ret",
 "ram": hex(2KB), "wram": [[addr, val], ...] (vs wram_base), "after": [[addr, val], ...]}]} -- after: addr < $800 =
-RAM, $6000+ = WRAM; only changed bytes; the stack bytes $0100+sp-15 .. $0100+sp+4 are left out.
+RAM, $6000+ = WRAM; only changed bytes; the stack bytes $0100+sp-32 .. $0100+sp+4 are left out.
 web/test/obj_check.mjs replays them through the port.
 """
 import argparse
@@ -32,7 +32,7 @@ _PRG = load_rom()[1]
 RAND64_ZERO = [i for i in range(64) if _PRG[26 * 0x2000 + 0x17E4 + i] == 0]   # Rand64Table 26:97E4 zero entries
 
 OBJ_UPDATE_ALL = 0xCCCC
-STACK_SCRATCH = 15
+STACK_SCRATCH = 32       # s100: was 15; ObjUpdateAll -> boss -> BossSmokeRing -> SpawnShot -> far ObjInit is deeper
 OBJ_COLS = range(0x0300, 0x0700, 0x20)        # the 32 slot columns $0300-$06E0
 POS_COLS = (0x70, 0x90, 0xB0, 0xD0)
 
@@ -169,9 +169,16 @@ ROUTINES['Ai70PhaseDispatch'] = (26, 0xBA2E, _poke_bg, lambda r: {'x': _slot(r),
 # phases whose capture can finish without an NMI (3 = FadeIn's WaitFrame; 7 / 11 are null; 1's table end is
 # steered off ShowMessage)
 FINAL_PHASES = (0, 1, 1, 2, 4, 5, 5, 6, 6, 8, 8, 9, 10, 12, 12, 12)
+# s100 (boss AI port, rest (b)): bank 15 bosses (web/src/game/obj/ai_boss.js). The bank is (R6, R7) = ($1A, $0F):
+# ObjUpdateAll's SwitchBank16($0D) then SetR7($0F) for ids $6x. name: (id, entry, phases to pick from)
+BOSS_AIS = {'BossAiE0': (0x60, 0xA477, range(8)), 'BossHomingShot': (0x61, 0xA5EE, (0,)),
+            'BossAiE3': (0x63, 0xA95D, range(5)), 'BossRockShot': (0x64, 0xAB3E, (0, 0, 1, 2, 2))}
+for _n, (_id, _ad, _p) in BOSS_AIS.items():
+    ROUTINES[_n] = ((26, 15), _ad, _poke_bg, lambda r: {'x': _slot(r)})
 # AI ids the port has (web/src/game/obj/ai_static.js, ai_walk.js, ai_field.js) + ids whose ObjAiTable 27:A314 entry is 0
 PORTED_AIS = (0x10, 0x11, 0x2C, 0x4C, 0x4D, 0x4E) + tuple(i for i, _ in WALK_AIS.values()) + \
-    tuple(i for i, _ in FIELD_AIS.values()) + tuple(i for i, _ in EFFECT_AIS.values())
+    tuple(i for i, _ in FIELD_AIS.values()) + tuple(i for i, _ in EFFECT_AIS.values()) + \
+    tuple(i for i, _, _ in BOSS_AIS.values())
 NULL_AIS = tuple(i for i in range(0x80) if i != 0x1A and not (_PRG[27 * 0x2000 + 0x314 + 2 * i] |
                                                                _PRG[27 * 0x2000 + 0x315 + 2 * i]))
 HIT_FLAG_PARAMS = tuple(_PRG[26 * 0x2000 + 0x1045 + i] for i in range(10) if _PRG[26 * 0x2000 + 0x1045 + i])
@@ -388,6 +395,40 @@ def _fix_final(ram, r, x, wram):
         ram[0x0640 + ld] = r.choice([0, r.randrange(256)])
 
 
+def _fix_boss(name, ram, r, x, wram):
+    """s100: bank 15 boss cases, one phase each, steered onto their edges (camera aligned, Rand64 = 0, timers at
+    0/1/7/8/$20, the slam frame, offscreen, knockback, the arena edges $30/$48/$D0)"""
+    _id, _ad, phases = BOSS_AIS[name]
+    p = ram[0x0600 + x] = r.choice(tuple(phases))
+    ram[0x0340 + x] = r.choice([0, 0, 0x80, r.randrange(16), r.randrange(256)])
+    ram[0x0380 + x] = r.choice([0, 1, 9, 0x80, r.randrange(256)])
+    ram[0x07D5] = r.choice([0, 1, r.randrange(256)])
+    ram[0x08] = r.choice([0, 1, 7, 8, 0x9F, 0xA0, r.randrange(256)])
+    ram[0x0480 + x] = r.choice([0, 1, 2, 8, 9, 0x20, 0x21, 0x22, r.randrange(256)])
+    ram[0x04E0 + x] = r.choice([0, 1, 0x0F, 0x10, 0x7F, 0x80, 0x88, 0x8F, r.randrange(256)])
+    ram[0x0660 + x] = r.choice([0, 0x0A, 0x0B, 0x0C, r.randrange(256)])
+    ram[0x03C0 + x] = r.choice([0, 0x28, 0x3F, 0x50, r.randrange(256)])
+    ram[0x0640 + x] = r.choice([r.randrange(16), r.randrange(256)])
+    ram[0x0360 + x] = r.choice([r.randrange(8), r.randrange(16), r.randrange(256)])
+    ram[0x0680 + x] = r.choice([0, 1, 3, 0xFD, 0xFE, 0xFF, r.randrange(256)])
+    ram[0x06A0 + x] = r.choice([0, 2, 3, 0xFC, 0xFD, r.randrange(256)])
+    ram[0x6C] = r.choice([0x0A, 0x28, 0xA9, r.randrange(256)])
+    if r.random() < 0.4:
+        _rand_zero_next(ram, r)
+    if r.random() < 0.5:                           # the boss on the player's screen, near the arena edges
+        ram[0x90 + x], ram[0xD0 + x] = ram[0x90], ram[0xD0]
+        ram[0x70 + x] = r.choice([0x2F, 0x30, 0xCF, 0xD0, r.randrange(256)])
+        ram[0xB0 + x] = r.choice([0x47, 0x48, r.randrange(0xF0)])
+    if r.random() < 0.5:
+        for s in r.sample(range(0x0D, 0x1F), 9):   # free slots for the shots
+            if s != x:
+                ram[0x04A0 + s] = 0
+    if r.random() < 0.3:
+        for s in range(0x0D, 0x1F):                # ClearEnemySlots' keep list
+            if r.random() < 0.3:
+                ram[0x04A0 + s] = r.choice([0x78, 0x7F, 0x30, 0x39])
+
+
 def _fix_case(name, ram, r, regs, wram=None):
     """routine-specific pokes that keep a case on a meaningful path"""
     x = regs.get('x')
@@ -446,6 +487,9 @@ def _fix_case(name, ram, r, regs, wram=None):
                 ram[0x0440 + s] = r.choice([0x40 + r.randrange(0x20), r.randrange(0x60)])
             if ram[0x04A0 + s] & 0x7F in (0x10, 0x11) and r.random() < 0.5:
                 ram[0x0380 + s] &= 0x7F
+            for _bi, _ba, _bp in BOSS_AIS.values():    # s100: a boss phase past its run jumps through garbage
+                if ram[0x04A0 + s] & 0x7F == _bi:
+                    ram[0x0600 + s] = r.choice(tuple(_bp))
         ram[0x0710] = r.choice([0, 0x40, r.randrange(256)])
     if name in WALK_AIS:
         _fix_walk(name, ram, r, x, wram)
@@ -455,6 +499,8 @@ def _fix_case(name, ram, r, regs, wram=None):
         _fix_effect(name, ram, r, x, wram)
     if name == 'Ai70PhaseDispatch':
         _fix_final(ram, r, x, wram)
+    if name in BOSS_AIS:
+        _fix_boss(name, ram, r, x, wram)
     if name in ('AiMpDrain', 'ObjUpdateAll', 'Ai70PhaseDispatch'):
         for i in range(8):                         # HudRedraw's PpuQueueWaitSrc($7B) would spin until an NMI
             if wram[0x203 + 4 * i] == 0x7B:
@@ -474,7 +520,7 @@ def call2(nes, addr, bank, regs, max_instr=200_000):
     'popped' when it pulled its return address (AiShootCheck's PLA PLA) and returned to the caller's caller."""
     cpu, m = nes.cpu, nes.mapper
     if bank is not None and 0x8000 <= addr < 0xC000:
-        m.regs[6], m.regs[7] = bank & ~1, bank | 1
+        m.regs[6], m.regs[7] = bank if isinstance(bank, tuple) else (bank & ~1, bank | 1)
         m._update_prg()
     for r, v in regs.items():
         setattr(cpu, r, v & 0xFF)
@@ -530,7 +576,9 @@ def run(nes, a):
             poke(ram, wram, r)
             regs = regf(r) if regf else {}
             _fix_case(name, ram, r, regs, wram)
-            if bank is not None:                  # shadows as ObjUpdateAll's SwitchBank16($0D) leaves them
+            if isinstance(bank, tuple):           # s100: + SetR7($0F) for the bank 15 AIs ($50 ends as 7)
+                ram[0x6E], ram[0x6F], ram[0x50] = bank[0], bank[1], 7
+            elif bank is not None:                # shadows as ObjUpdateAll's SwitchBank16($0D) leaves them
                 ram[0x6E], ram[0x6F], ram[0x50] = bank & ~1, bank | 1, 6
             nes.bus.ram[:] = ram
             nes.bus.wram[:] = wram

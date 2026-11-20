@@ -1226,3 +1226,21 @@ bank,addr,name,comment
 16,9A91,InvIdsToSel,s98: inv_select = index of $6000+row in its category (4 or 8 slots) else $FF
 30,DADA,ClearMetaEBEC,s98: SubstEquipMenu: slots $0D-$1E with meta $EB/$EC and tile ofs 0 -> inactive
 30,DAFC,ClearOrbitSlots,s98: orbit_level $06C0 = 0; obj_active slots 4-11 = 0 (sword changed / ShopWalkIn)
+15,A48B,BossE0Intro,s100: AI $E0 phase 0: offscreen wait; ClearEnemySlots; spr pal 2/3 $21 CHR R4/R5 $6C; player freeze $10 until $07D5; music $12 (Y=$0C); phase += 2
+15,A4C3,BossE0Wait,s100: AI $E0 phase 1 (skipped): obj_timer-- -> phase+1
+15,A4CC,BossE0Smoke,s100: AI $E0 phase 2: BossSmokeRing; anim 0; phase+1
+15,A4D8,BossE0Vanish,s100: AI $E0 phase 3: 16 frames then coll &= $0F flags 1 meta $4C
+15,A50B,BossE0Teleport,s100: AI $E0 phase 4: aux=(aux+1)&$0F >= $0C or anim+1 = $80 -> BossE0Spots[$08&$0F] on the player's screen
+15,A54A,BossE0Appear,s100: AI $E0 phase 5: meta $65 coll |= $30; smoke ring; JMP BossE0Fire
+15,A565,BossE0Hold,s100: AI $E0 phase 6: 16 frames then anim = HP*4+$10
+15,A581,BossE0Linger,s100: AI $E0 phase 7: anim-- to 0 or knockback (flags2 b7) -> DirToTarget(Y=1) meta_dir; phase 2
+15,A971,BossE3Intro,s100: AI $E3 phase 0: CHR R4 $77 spr pal 3 $1C PaletteBuild ClearEnemySlots; once $07D5: music; msg 6.0/24.0 sub_state $10
+15,A9C6,BossE3Approach,s100: AI $E3 phase 1: attack roll (onscreen; $08&7=0; Rand64=0) else meta $D3 approach
+15,AA37,BossE3Move,s100: ObjStepVector(meta_dir) + 98A8 + 9824 + JMP 9897 (no BG test)
+15,AA46,BossE3BackOff,s100: AI $E3 phase 2: dir 15:AA97[(dir to player+4)&7]; arena edges -> BossE3NewDir
+15,AA97,BossE3AwayDirs,s100: u8[8] 00 01 01 01 00 07 07 07 (upward, away from the player)
+15,AA9F,BossE3DownDirs,s100: u8[8] 04 03 03 03 04 05 05 05 indexed by Rand64
+15,AAA7,BossE3Slam,s100: AI $E3 phase 3 ($68): meta $D5; at (anim^7)&$0F=0: shake $07D6=8 SFX $3D SpawnShot($38 Y=0)
+15,AAE6,BossE3Sweep,s100: AI $E3 phase 4 ($8B): last $20 frames meta $D4; even timer: SpawnShot($36, act_timer); TurnToward16 when timer&6=0
+15,AB8A,RockSignByte,s100: A -> (A & $3F) | (b7 ? $C0 : 0); $10 = A
+15,ABD6,RockSpread,s100: s8[4] 00 FF 00 01 added to the 16-dir aim by (X+$08)&3
