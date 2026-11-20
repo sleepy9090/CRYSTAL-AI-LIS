@@ -8,19 +8,19 @@
 //   areaEnter(m)          generator = AreaEnter 31:E3E9 (AreaEntryTable 31:E3D9 by area_entry b7-b5)
 //   playerPlaceBody(m, x) PlayerPlaceBody 26:9CEF
 import { R } from '../ram.js';
-import { cpuRd, setR6, setR7, switchBank16, farRestore } from '../prg.js';
+import { cpuRd, indY, setR6, setR7, switchBank16, farRestore } from '../prg.js';
 import { SPIN, waitFrame, statRecalc, paletteBuildRom, fadeOut, fadeIn, hudHpBar } from './death.js';
 import { waitPpuQueue } from './pause.js';
 import { hudWindowSetup, saveGame, loadGameAndInit } from './saveload.js';
 import { objInit } from '../obj/objinit.js';
-import { objPosToTemp, tempToObjPos, tempAddOffset, objBgProbe } from '../obj/util.js';
+import { objPosToTemp, tempToObjPos, tempAddOffset, tempAddStep, objBgProbe } from '../obj/util.js';
 import { spriteDraw } from '../obj/sprites.js';
 import { playSound } from '../playsound.js';
 import { readPads } from '../pads.js';
 import { loadAreaMap } from '../world/area.js';
 import { fullScreenDraw } from '../world/bgstream.js';
 import { queueAttrAll } from '../world/ppuqueue.js';
-import { cameraTick, cameraClampX } from '../world/camera.js';
+import { cameraTick, cameraClampX, areaSubTable } from '../world/camera.js';
 import { mainState1 } from './play.js';
 
 const NOFADE = 0x07E8, FLASH = 0x0710, ACTIVE = 0x04A0, FLAGS = 0x0380;
@@ -178,18 +178,100 @@ export function* areaEnter(m) {
       yield* attrWipe(m);
       clearSlots(m);
       break;
-    default:                                          // $6x AreaPitFall 31:E544 (k5) and the null entries
+    case 0xE544:                                      // $6x: pit fall -> AreaEdgeLink (k5)
+      if (!(yield* areaPitFall(m))) return;           // no k5 match: E603 tail-jumps out of AreaEnter
+      yield* areaEnterCommon(m, true);
+      return;
+    default:                                          // the null entries ($8x-$Dx)
       throw new Error(`AreaEnter: area_entry $${m.rd(0x6D).toString(16)} -> $${to.toString(16)} not ported`);
   }
   yield* areaEnterCommon(m);
 }
 
-/** 31:E439 (the common tail of AreaEnter) */
-function* areaEnterCommon(m) {
+/** AreaPitFall 31:E544 (s116): one frame per step, slots 1 and 0 drop 8 px while the cell 8 px below slot 1
+ *  has attr b0 (ObjBgProbe A=$40), with a sprite pass each step; then AreaEdgeLink. -> true on a k5 match */
+function* areaPitFall(m) {
+  for (;;) {
+    yield* waitFrame(m);
+    switchBank16(m, 0x0D);
+    objPosToTemp(m, 1);                               // 26:98A8 X=1
+    m.wr(0x31, 8);
+    m.wr(0x30, 0);
+    tempAddStep(m);                                   // 26:9861
+    objBgProbe(m, 1, 0x40);
+    if (!(m.rd(0x20) & 1)) break;
+    tempToObjPos(m, 1);
+    tempToObjPos(m, 0);
+    farSpriteDraw(m);
+  }
+  return yield* areaEdgeLink(m);
+}
+
+/** AreaEdgeLink 31:E573 (s116): AreaFadeOutClear, then 4-byte k5 records `area a21 a22 a23` (no terminator,
+ *  only Y wrapping to 0 ends the scan) matched on x hi = a21>>4 and y hi = (a22&$F0)|(a23>>4) against slot 0.
+ *  Match: slots 0/1 y lo += 16 (no carry), y hi = ((a22<<1)&$F0)|(a23&$0F), x hi = a21&$0F, stone status
+ *  cleared, area_id = a20, AreaLoadMap, slot 1 = slot 0, $0640 = $FF, jump timer $0620 = $30 (fall-in) -> true.
+ *  No match (E603): sub_state 8, SetR6($1A), JMP $8C49 -- but AreaSubTable left banks 10/11 at $8000, so that
+ *  jumps into bank-10 area data (10:8C49 = $5F $47 $14 ...), not the 26:8C49 fade-in. Not modelled. -> false */
+function* areaEdgeLink(m) {
+  setR6(m, 0x1A);                                     // AreaFadeOutClear 31:E611
+  yield* fadeOut(m, 2);
+  clearSlots(m);
+  areaSubTable(m, 5);
+  let y = 0, x;
+  for (;;) {
+    m.wr(0x12, 4);
+    for (x = 0; ; ) {
+      m.wr(0x20 + x, indY(m, 0x10, y));
+      x++;
+      y = (y + 1) & 0xFF;
+      if (y === 0) {                                  // 31:E603
+        m.wr(R.sub_state, 8);
+        setR6(m, 0x1A);
+        unported(m, 'AreaEdgeLink no-match JMP $8C49 with bank 10 mapped (31:E60E)');
+        return false;
+      }
+      m.wr(0x12, (m.rd(0x12) - 1) & 0xFF);
+      if (m.rd(0x12) === 0) break;
+    }
+    if (m.rd(0x21) >> 4 !== m.rd(0x90)) continue;
+    m.wr(0x13, m.rd(0x22) & 0xF0);
+    if ((m.rd(0x13) | (m.rd(0x23) >> 4)) === m.rd(0xD0)) break;
+  }
+  const yl = (m.rd(0xB0) + 0x10) & 0xFF;
+  m.wr(0xB0, yl); m.wr(0xB1, yl);
+  m.wr(0x10, (m.rd(0x22) << 1) & 0xF0);
+  const yh = (m.rd(0x23) & 0x0F) | m.rd(0x10);
+  m.wr(0xD0, yh); m.wr(0xD1, yh);
+  const xh = m.rd(0x21) & 0x0F;
+  m.wr(0x90, xh); m.wr(0x91, xh);
+  const area = m.rd(0x20);
+  if ((m.rd(FLASH) & 0x0F) === 4) {
+    m.wr(FLASH, m.rd(FLASH) & 0xF0);
+    yield* statRecalc(m, x);                          // X = 4 after the record read
+  }
+  m.wr(R.area_id, area);
   loadAreaMap(m);
   switchBank16(m, 0x0D);
-  tempToObjPos(m, 0);
+  objPosToTemp(m, 0);
   tempToObjPos(m, 1);
+  m.wr(0x0640, 0xFF);
+  m.wr(0x0620, 0x30);
+  return true;
+}
+
+function unported(m, what) {
+  if (!m.unported.has(what)) { m.unported.add(what); m.log(`${what} not ported yet`); }
+}
+
+/** 31:E439 (the common tail of AreaEnter); fromE44A = AreaEdgeLink's JMP $E44A (map + slots already set) */
+function* areaEnterCommon(m, fromE44A = false) {
+  if (!fromE44A) {
+    loadAreaMap(m);
+    switchBank16(m, 0x0D);
+    tempToObjPos(m, 0);
+    tempToObjPos(m, 1);
+  }
   flashAreaCheck(m);
   areaFollowerHook(m);
   areaChrOverride(m);

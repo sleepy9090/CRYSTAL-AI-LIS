@@ -222,7 +222,9 @@ bank,addr,name,comment
 31,E628,AreaLoadMap,area sub-table 0: PlaySound(music) + $62FC-$62FF + screen grid -> $6300
 31,E6B9,AreaLoadGfx,area sub-table 1: BG palette ids $07E0-$07E2 + $67/$69 + BG CHR R0/R1 then AreaLoadB
 31,E702,AreaRestoreVisited,area sub-table 4: screen visited bits $62F0 from WRAM flags $64C0
-31,E573,AreaEdgeLink,area sub-table 5 (10 areas): pit/edge link to another area
+31,E573,AreaEdgeLink,area sub-table 5 (10 areas): pit/edge link to another area; s116: ported (states/areaenter.js areaEdgeLink)
+31,E603,AreaEdgeLinkNoMatch,s116: no k5 match: sub_state 8; SetR6($1A); JMP $8C49 with banks 10/11 still mapped by AreaSubTable -> jumps into bank-10 data (not the 26:8C49 fade-in)
+31,E44A,AreaEnterCommonTail,s116: AreaEdgeLink k5-match entry into AreaEnterCommon (after AreaLoadMap + slot copies)
 30,C75C,MarkScreenVisited,set $62F0[y_hi] |= BitMask[x_hi]; sub-table 4 -> set $64C0 flag
 31,EA72,CameraClampX,clamp camera candidate $34/$35 (pos_x) to 0..$62FC screens
 *,0034,pos_x_lo,shared position cursor X lo (was cam_x_lo; emu s39): k2 entry = player start pos -> $34-$37; ObjPosToTemp/TempAddStep scratch; camera candidate in 31:E90A (from $3C-$3F); BG render cursor
