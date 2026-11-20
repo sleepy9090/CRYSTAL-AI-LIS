@@ -130,18 +130,47 @@ def ranges(idx):
     return out
 
 
+OSD_MIN_PX = 64           # s101: overlay-only colours needed to call it an FCEUX message box
+OSD_PAD = 2               # mask margin around their bounding box (the box edge blends with the picture)
+
+
+def osd_box(ref_img):
+    """s101: FCEUX's on-screen message ("Power on", "Snapshot Saved.") that gui.gdscreenshot keeps.
+
+    It is a translucent box with white text at the bottom left (seen at x1-78, y211-221 in ref/).
+    Returned as (x0, y0, x1, y1) inclusive when the bottom 40 lines hold >= OSD_MIN_PX pixels in
+    colours that occur nowhere above them and their bounding box is a small bottom-left box
+    (x1 < 128, <= 16 lines high); None otherwise, so a real picture difference is never masked."""
+    w, h, rp = ref_img
+    y0 = h - 40
+    above = {tuple(c) for c in rp[:y0 * w]}
+    idx = [i for i in range(y0 * w, w * h) if tuple(rp[i]) not in above]
+    if len(idx) < OSD_MIN_PX:
+        return None
+    xs = [i % w for i in idx]
+    ys = [i // w for i in idx]
+    if max(xs) >= 128 or max(ys) - min(ys) >= 16:
+        return None
+    return (max(0, min(xs) - OSD_PAD), max(0, min(ys) - OSD_PAD),
+            min(w - 1, max(xs) + OSD_PAD), min(h - 1, max(ys) + OSD_PAD))
+
+
 def pixel_diff(ref_img, emu_px):
     w, h, rp = ref_img
     if (w, h) == (256, 224):      # FCEUX crops overscan: compare tools.emu rows 8-231 (session 43)
         emu_px = emu_px[8 * 256:232 * 256]
     elif (w, h) != (256, 240):
         return None, f'reference image is {w}x{h}, expected 256x240 or 256x224', []
+    box = osd_box(ref_img)
+    keep = range(w * h) if box is None else [
+        i for i in range(w * h)
+        if not (box[0] <= i % w <= box[2] and box[1] <= i // w <= box[3])]
     votes = {}
-    for e, r in zip(emu_px, rp):
-        d = votes.setdefault(e, {})
-        d[r] = d.get(r, 0) + 1
+    for i in keep:
+        d = votes.setdefault(emu_px[i], {})
+        d[rp[i]] = d.get(rp[i], 0) + 1
     cmap = {e: max(d, key=d.get) for e, d in votes.items()}
-    bad = [i for i, (e, r) in enumerate(zip(emu_px, rp)) if cmap[e] != r]
+    bad = [i for i in keep if cmap[emu_px[i]] != rp[i]]
     rows = {}
     top = 8 if h == 224 else 0    # per tile row in screen coordinates
     for i in bad:
@@ -155,6 +184,8 @@ def pixel_diff(ref_img, emu_px):
                  f'{len(many)} ref colours ({merged} ref colours hit by >1 emu colour)'
                  + (', per tile row ' + ' '.join(f'{k}:{v}' for k, v in sorted(rows.items()))
                     if bad else '')
+                 + (f', FCEUX OSD masked x{box[0]}-{box[2]} y{box[1]}-{box[3]} '
+                    f'({(box[2] - box[0] + 1) * (box[3] - box[1] + 1)} px)' if box else '')
                  + (''.join(f'\n        FOLD ref colour {r} <- {k} emu colours covering {pct:.1f}% '
                             '(the reference shows one flat colour where tools.emu draws a picture: '
                             'the 0-px map hides it)' for r, k, pct in folds))), folds

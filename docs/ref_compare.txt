@@ -54,7 +54,7 @@
   WRAM  0 byte diffs
   NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
   PAL   0 entries differ
-  PIXELS 427 px (0.69%), colour map 2 emu -> 2 ref colours (0 ref colours hit by >1 emu colour), per tile row 26:207 27:220
+  PIXELS 0 px (0.00%), colour map 2 emu -> 2 ref colours (0 ref colours hit by >1 emu colour), FCEUX OSD masked x0-49 y209-223 (750 px)
 == ref frame 600  <->  tools.emu frame 597 (offset -3)
   RAM   609 byte diffs (OAM page excluded)
         $0009 ref=00 emu=01 frame_ready
@@ -278,7 +278,7 @@
   WRAM  0 byte diffs
   NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
   PAL   0 entries differ
-  PIXELS 704 px (1.15%), colour map 12 emu -> 12 ref colours (0 ref colours hit by >1 emu colour), per tile row 26:343 27:361
+  PIXELS 0 px (0.00%), colour map 12 emu -> 12 ref colours (0 ref colours hit by >1 emu colour), FCEUX OSD masked x0-80 y210-222 (1053 px)
 == ref frame 2250  <->  tools.emu frame 2250 (offset +0)
   RAM   585 byte diffs (OAM page excluded)
         $0009 ref=00 emu=01 frame_ready
@@ -390,7 +390,7 @@
   WRAM  8 byte diffs in $6017-$6017 $601C-$601D $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
   NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
   PAL   0 entries differ
-  PIXELS 786 px (1.28%), colour map 13 emu -> 12 ref colours (1 ref colours hit by >1 emu colour), per tile row 23:24 26:333 27:429
+  PIXELS 24 px (0.04%), colour map 13 emu -> 12 ref colours (1 ref colours hit by >1 emu colour), per tile row 23:24, FCEUX OSD masked x0-80 y210-222 (1053 px)
 == ref frame 2385  <->  tools.emu frame 2387 (offset +2)
   RAM   554 byte diffs (OAM page excluded)
         $0008 ref=DD emu=DC tmp_08
@@ -446,7 +446,7 @@
   WRAM  8 byte diffs in $6017-$6017 $601C-$601D $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
   NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
   PAL   0 entries differ
-  PIXELS 791 px (1.29%), colour map 13 emu -> 12 ref colours (1 ref colours hit by >1 emu colour), per tile row 23:29 26:333 27:429
+  PIXELS 29 px (0.05%), colour map 13 emu -> 12 ref colours (1 ref colours hit by >1 emu colour), per tile row 23:29, FCEUX OSD masked x0-80 y210-222 (1053 px)
 == ref frame 2392  <->  tools.emu frame 2394 (offset +2)
   RAM   541 byte diffs (OAM page excluded)
         $000E ref=FF emu=00 tmp_0E
@@ -502,7 +502,7 @@
   WRAM  8 byte diffs in $6017-$6017 $601C-$601D $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
   NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
   PAL   0 entries differ
-  PIXELS 779 px (1.27%), colour map 13 emu -> 12 ref colours (1 ref colours hit by >1 emu colour), per tile row 23:17 26:333 27:429
+  PIXELS 17 px (0.03%), colour map 13 emu -> 12 ref colours (1 ref colours hit by >1 emu colour), per tile row 23:17, FCEUX OSD masked x0-80 y210-222 (1053 px)
 == ref frame 2409  <->  tools.emu frame 2411 (offset +2)
   RAM   499 byte diffs (OAM page excluded)
         $0009 ref=01 emu=02 frame_ready
@@ -558,7 +558,7 @@
   WRAM  29 byte diffs in $6009-$601F $6204-$6204 $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
   NT    diffs per table $2000/$2400/$2800/$2C00: 32 32 0 0
   PAL   0 entries differ
-  PIXELS 689 px (1.12%), colour map 1 emu -> 1 ref colours (0 ref colours hit by >1 emu colour), per tile row 26:306 27:383
+  PIXELS 0 px (0.00%), colour map 1 emu -> 1 ref colours (0 ref colours hit by >1 emu colour), FCEUX OSD masked x0-80 y210-222 (1053 px)
 == ref frame 2450  <->  tools.emu frame 2452 (offset +2)
   RAM   463 byte diffs (OAM page excluded)
         $0008 ref=C7 emu=C6 tmp_08
@@ -614,7 +614,7 @@
   WRAM  5 byte diffs in $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
   NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
   PAL   0 entries differ
-  PIXELS 818 px (1.33%), colour map 11 emu -> 11 ref colours (0 ref colours hit by >1 emu colour), per tile row 23:37 26:342 27:439
+  PIXELS 37 px (0.06%), colour map 11 emu -> 11 ref colours (0 ref colours hit by >1 emu colour), per tile row 23:37, FCEUX OSD masked x0-80 y210-222 (1053 px)
 == ref frame 2460  <->  tools.emu frame 2462 (offset +2)
   RAM   467 byte diffs (OAM page excluded)
         $0008 ref=BD emu=BC tmp_08
@@ -670,5 +670,5 @@
   WRAM  6 byte diffs in $6217-$6217 $6423-$6423 $6D23-$6D23 $70F4-$70F5 $7D23-$7D23
   NT    diffs per table $2000/$2400/$2800/$2C00: 0 0 0 0
   PAL   0 entries differ
-  PIXELS 808 px (1.32%), colour map 11 emu -> 11 ref colours (0 ref colours hit by >1 emu colour), per tile row 23:27 26:342 27:439
+  PIXELS 27 px (0.04%), colour map 11 emu -> 11 ref colours (0 ref colours hit by >1 emu colour), per tile row 23:27, FCEUX OSD masked x0-80 y210-222 (1053 px)
 # 0/12 frames identical in every compared field
