@@ -9,12 +9,15 @@
 //   AI $61 BossHomingShot     15:A5EE  + HomingMove 15:A602 / ClampVel3 15:A665
 //   AI $63 (= $E3) BossAiE3  15:A95D  slam / flame-sweep boss (phases A971 A9C6 AA46 AAA7 AAE6)
 //   AI $64 BossRockShot       15:AB3E  rocks offset by ROM bytes from a random PRG bank
+//   AI $66 (= $E6) BossAiE6  15:AC7B  flyer with a fire fan (phases AC8F ACF5; 2/3 are null)       (session 104)
+//   AI $67 (= $E7) AiBoss88  15:ADD4  bouncer + curve-shot volley (phases ADE8 AE35 AE43 AE5A AEC9 AEEC)
+//   AI $68 (= $E8) BossAiE8  15:AF48  waypoint flyer (route 15:B02B in slot $1F, HomingMove) (phases AF5C AFAD B051)
 import { cpuRd, setR6 } from '../prg.js';
 import { playSound } from '../playsound.js';
 import { paletteBuildRom } from '../states/death.js';
 import { hitFlashPal } from './ai_final.js';
 import {
-  rand64, objPosToTemp, tempToObjPos, tempAddOffset, dirToTarget, objStepVector, spawnShot,
+  rand64, objPosToTemp, tempToObjPos, tempAddOffset, tempAddStep, dirToTarget, objStepVector, spawnShot,
 } from './util.js';
 
 const X_LO = 0x70, X_HI = 0x90, Y_LO = 0xB0, Y_HI = 0xD0;
@@ -338,12 +341,258 @@ export function bossRockShot(m, x) {
   m.wr(META_DIR + x, (cpuRd(m, 0xABD6 + ((x + m.rd(0x08)) & 3)) + m.rd(0x20)) & 0xFF);
 }
 
+// ---- shared by $E6 / $E7 / $E8 (session 104) -----------------------------------------------------------------
+
+const OVERLAY = 0x0580;
+
+/** the intro's "aligned" tail with a pending message: group/id, sub_state $10 (15:ACE6 / AE26 / AF8A) */
+function introMessage(m, group, id) {
+  m.wr(0x06E3, group);
+  m.wr(0x06C3, id);
+  m.wr(0x41, 0x10);
+}
+
+/** ObjPosToTemp + ObjStepVector(meta_dir) + TempAddStep + TempToObjPos (BossE7Step 15:AEBA, tail 15:AD73) */
+function stepMove16(m, x) {
+  objPosToTemp(m, x);
+  objStepVector(m, x, m.rd(META_DIR + x));
+  tempAddStep(m);
+  tempToObjPos(m, x);
+}
+
+// ---- AI $E6 BossAiE6 15:AC7B ---------------------------------------------------------------------------------
+
+function e6Intro(m, x) {                                     // AC8F
+  if (m.rd(FLAGS + x) & 0x80) return;
+  m.wr(CAM_LOCK, 0xFF);
+  m.wr(FREEZE, 0x10);
+  clearEnemySlots(m, x);
+  m.wr(0x07F4, 0x75);
+  if (!m.rd(0x07D5)) return;
+  introMusic(m);                                             // every frame until obj_timer2 reaches $40
+  inc(m, TIMER2 + x);
+  m.wr(FREEZE, 0);
+  if (m.rd(TIMER2 + x) !== 0x40) return;
+  inc(m, PHASE + x);
+  m.wr(FLAGS + x, 0x0B);
+  m.wr(COLL + x, 0x30);
+  m.wr(OVERLAY + x, 0x4C);
+  m.wr(META_DIR + x, 8);
+  m.wr(TIMER2 + x, 0x50);
+  if (m.rd(0x6C) === 0xAC) introMessage(m, 0x18, 0x02);
+}
+
+/** 15:AD96: the fire fan (meta $DC + overlay $DD), a shot every 8 obj_timer2 steps in (timer2>>4) - 2 + dir */
+function e6Fire(m, x) {
+  m.wr(OVERLAY + x, 0xDD);
+  m.wr(META + x, 0xDC);
+  if (!dec(m, TIMER2 + x)) { m.wr(META + x, 0xDB); m.wr(OVERLAY + x, 0x4C); }
+  inc(m, ANIM + x); inc(m, ANIM + x);
+  const t = m.rd(TIMER2 + x);
+  if (t & 7) return;
+  spawnShot(m, x, m.rd(SHOT_ID + x), ((t >> 4) - 2 + m.rd(META_DIR + x)) & 0x0F);
+}
+
+function e6Fight(m, x) {                                     // ACF5
+  if (!(m.rd(0x08) & 0x3F) && m.rd(0x6C) === 0xAC) spawnShot(m, x, 0x35, 0);
+  if (m.rd(TIMER2 + x)) { e6Fire(m, x); return; }
+  if (!(dec(m, ANIM + x) & 7)) {
+    const py = m.rd(Y_LO);                                   // a fake player y of $30 / $70
+    m.wr(Y_LO, ((m.rd(0x08) & 0x80) >> 1) | 0x30);
+    dirToTarget(m, x, 0);
+    m.wr(Y_LO, py);
+    const d = m.rd(META_DIR + x);
+    const y = ((((m.rd(0x20) << 1) & 0xFF) ^ 0xFF) + 1 + d) & 0x0F;
+    m.wr(META_DIR + x, (cpuRd(m, 0xAD86 + y) + d) & 0x0F);
+    if (rand64(m) === 0) {
+      dirToTarget(m, x, 1);
+      m.wr(TIMER2 + x, 0x50);
+      m.wr(META_DIR + x, (m.rd(0x20) << 1) & 0xFF);
+    }
+  }
+  const h = m.rd(HP + x) >> 4;                               // AD5E: speed $0E $0D $0F once HP < $30
+  if (h < 3) m.wr(FLAGS2 + x, cpuRd(m, 0xAD82 + h));
+  dec(m, TIMER + x);
+  stepMove16(m, x);
+}
+
+export function bossAiE6(m, x) {
+  if (m.rd(PHASE + x)) m.wr(CAM_LOCK, 4);
+  hitFlashPal(m, x, 0xC0);
+  return bossPhaseDispatch(m, x, 0x17);
+}
+
+// ---- AI $E7 AiBoss88 15:ADD4 ---------------------------------------------------------------------------------
+
+function e7Intro(m, x) {                                     // ADE8
+  if (m.rd(FLAGS + x) & 0x80) return;
+  clearEnemySlots(m, x);
+  m.wr(0x07F4, 0x76);
+  m.wr(0x07E6, 0x1E);
+  m.wr(FREEZE, 0x10);
+  m.wr(CAM_LOCK, 0xFF);
+  if (!m.rd(0x07D5)) return;
+  introMusic(m);
+  inc(m, PHASE + x);
+  m.wr(COLL + x, 0x30);
+  m.wr(FLAGS + x, 9);
+  if (m.rd(0x6C) === 0xB9) introMessage(m, 0x18, 0x04);
+}
+
+function e7Pose(m, x) {                                      // AE35
+  inc(m, PHASE + x);
+  m.wr(META + x, 0xD8);
+  m.wr(ANIM + x, 0x0F);
+}
+
+function e7Wait(m, x) {                                      // AE43
+  if (dec(m, ANIM + x)) return;
+  inc(m, PHASE + x);
+  m.wr(META + x, 0xD7);
+  m.wr(ACT_TIMER + x, (m.rd(HP + x) + 0x20) & 0xFF);
+}
+
+function e7Bounce(m, x) {                                    // AE5A
+  dec(m, TIMER + x);
+  dec(m, ANIM + x); dec(m, ANIM + x);
+  stepMove16(m, x);
+  const yl = m.rd(Y_LO + x), xl = m.rd(X_LO + x);
+  let edge = -1;
+  if (yl < 0x15) edge = 0;
+  else if (yl >= 0xD0) edge = 0x10;
+  else if (xl < 0x20) edge = 0x18;
+  else if (xl >= 0xE0) edge = 0x08;
+  if (edge >= 0) {                                           // AE82
+    m.wr(0x10, edge);
+    playSound(m, 0x3D, edge);
+    m.wr(0x07D6, 8);
+    const r = rand64(m);
+    m.wr(META_DIR + x, cpuRd(m, 0xAF28 + ((r + m.rd(0x10)) & 0xFF)));   // BossE7BounceDirs
+    stepMove16(m, x);
+  }
+  if (!(dec(m, TIMER2 + x) & 1)) return;                     // AE9E
+  if (dec(m, ACT_TIMER + x)) return;
+  inc(m, PHASE + x);
+  m.wr(META + x, 0xD8);
+  m.wr(ANIM + x, 0);
+}
+
+function e7Aim(m, x) {                                       // AEC9
+  if (inc(m, ANIM + x) !== 0x0F) return;
+  inc(m, PHASE + x);
+  m.wr(ANIM + x, 0x28);
+  dirToTarget(m, x, 1);
+  m.wr(ACT_TIMER + x, (m.rd(0x20) << 1) & 0xFF);
+  m.wr(META + x, 0xD9);
+}
+
+function e7Volley(m, x) {                                    // AEEC
+  if (!m.rd(ANIM + x)) { m.wr(PHASE + x, 1); return; }
+  const a = dec(m, ANIM + x);
+  if ((m.rd(0x6C) === 0xB9 ? 3 : 7) & a) return;
+  const d = (m.rd(ACT_TIMER + x) - 2) & 0x0F;               // the shifted masked value is always 0: aim - 2
+  m.wr(0x1F, d);
+  if (!spawnShot(m, x, 0x5C, d >> 1)) return;
+  m.wr(META_DIR + m.rd(0x10), m.rd(0x1F));
+}
+
+export function aiBoss88(m, x) {
+  if (m.rd(PHASE + x)) m.wr(CAM_LOCK, 4);
+  hitFlashPal(m, x, 0xC0);
+  return bossPhaseDispatch(m, x, 0x1B);
+}
+
+// ---- AI $E8 BossAiE8 15:AF48 ---------------------------------------------------------------------------------
+
+function e8Intro(m, x) {                                     // AF5C
+  if (m.rd(FLAGS + x) & 0x80) return;
+  m.wr(CAM_LOCK, 0xFF);
+  m.wr(0x07E7, 0x1F);
+  m.wr(0x07F4, 0x74);
+  m.wr(FREEZE, 0x10);
+  clearEnemySlots(m, x);
+  if (!m.rd(0x07D5)) return;
+  introMusic(m);
+  inc(m, PHASE + x);
+  introMessage(m, 0x18, 0x08);
+  m.wr(FLAGS2 + x, 0x0D);
+  m.wr(COLL + x, 0x30);
+  m.wr(FLAGS + x, 0x2B);
+  m.wr(OVERLAY + x, 0x4C);
+}
+
+function e8Route(m, x) {                                     // AFAD
+  m.wr(OVERLAY + x, 0x4C);
+  m.wr(META + x, 0xDB);
+  m.wr(META_DIR + x, (m.rd(0x0301) << 2) & 6);
+  let y = (m.rd(TIMER2 + x) << 1) & 0xFF;
+  let a = cpuRd(m, 0xB02B + y);                              // BossE8Route
+  if (a === 0xFF) {
+    inc(m, PHASE + x);
+    m.wr(ACT_TIMER + x, 0x50);
+    m.wr(AUX + x, rand64(m));
+    return;
+  }
+  if (a === 0xFE) {
+    m.wr(ANIM + x, 0); m.wr(TIMER2 + x, 0);
+    y = 0; a = cpuRd(m, 0xB02B);
+  }
+  const b = cpuRd(m, 0xB02C + y);
+  m.wr(0x34, (a << 4) & 0xFF); m.wr(0x35, 0);
+  m.wr(0x36, (b << 4) & 0xFF); m.wr(0x37, b >> 4);
+  m.wr(0x1F, x);
+  tempToObjPos(m, 0x1F);                                     // the waypoint as a dummy object in slot $1F
+  homingMove(m, x);
+  dirToTarget(m, x, 0x1F);
+  if (dec(m, ANIM + x) && m.rd(0x21)) return;
+  inc(m, TIMER2 + x);
+  m.wr(ANIM + x, 0);
+}
+
+/** 15:B0A5 */
+function e8AttackPose(m, x) {
+  m.wr(OVERLAY + x, 0xF1);
+  m.wr(META + x, 0xDE);
+  dec(m, ANIM + x); dec(m, ANIM + x);
+}
+
+/** 15:B077: past the FF, dir 8, phase 1 */
+function e8LegEnd(m, x) {
+  inc(m, TIMER2 + x);
+  m.wr(PHASE + x, 1);
+  m.wr(META_DIR + x, 8);
+  m.wr(ANIM + x, 0);
+}
+
+function e8Attack(m, x) {                                    // B051
+  e8AttackPose(m, x);
+  const t = dec(m, ACT_TIMER + x);
+  if (!t) { e8LegEnd(m, x); return; }
+  if (m.rd(AUX + x) < 2) {                                   // B08A: one aimed shot at act_timer $20
+    if (t !== 0x20) return;
+    dirToTarget(m, x, 1);
+    spawnShot(m, x, 0x46, m.rd(0x20));
+    return;
+  }
+  if (t & 0x0F) return;
+  spawnShot(m, x, 0x33, ((t >> 2) + 2) & 0x0F);
+}
+
+export function bossAiE8(m, x) {
+  if (m.rd(PHASE + x)) m.wr(CAM_LOCK, 4);
+  hitFlashPal(m, x, 0xC0);
+  return bossPhaseDispatch(m, x, 0x21);
+}
+
 // ---- BossPhaseDispatch 15:A400 -------------------------------------------------------------------------------
 
 const BOSS_PHASES = {
   0xA48B: e0Intro, 0xA4C3: e0Wait, 0xA4CC: e0Smoke, 0xA4D8: e0Vanish, 0xA50B: e0Teleport, 0xA54A: e0Appear,
   0xA565: e0Hold, 0xA581: e0Linger,
   0xA971: e3Intro, 0xA9C6: e3Approach, 0xAA46: e3BackOff, 0xAAA7: e3Slam, 0xAAE6: e3Sweep,
+  0xAC8F: e6Intro, 0xACF5: e6Fight,
+  0xADE8: e7Intro, 0xAE35: e7Pose, 0xAE43: e7Wait, 0xAE5A: e7Bounce, 0xAEC9: e7Aim, 0xAEEC: e7Volley,
+  0xAF5C: e8Intro, 0xAFAD: e8Route, 0xB051: e8Attack,
 };
 
 export function bossPhaseDispatch(m, x, base) {
@@ -356,4 +605,7 @@ export function bossPhaseDispatch(m, x, base) {
   return h(m, x);
 }
 
-export const AI_BOSS = { 0x60: bossAiE0, 0x61: bossHomingShot, 0x63: bossAiE3, 0x64: bossRockShot };
+export const AI_BOSS = {
+  0x60: bossAiE0, 0x61: bossHomingShot, 0x63: bossAiE3, 0x64: bossRockShot,
+  0x66: bossAiE6, 0x67: aiBoss88, 0x68: bossAiE8,
+};

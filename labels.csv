@@ -1256,3 +1256,19 @@ bank,addr,name,comment
 19,BA65,HudWindowSetup,s102: HUD window rebuild: $6000-$609F fill + PpuQueueBlock 0-3; 19:BAD9 $60 bytes -> block 4; SetR6($1A) HudHpBar + HudChargeMeter + HudRedraw 5..0
 30,C80C,MenuExitFade,s102: SELECT-menu exit for $7000 = $FB/$AB: SwitchBank16(13) FadeOut(3), 1 frame, irq_mode 0, 30 frames, FadeIn(3), SwitchBank16(8); RTS -> 30:D8E5
 30,D930,EquipMenuLoadHead,s102: $7000 = 0, BG+sprites off, WaitFrame, push level; falls into EquipMenuLoadTail
+15,AC8F,BossE6Intro,s104: AI $E6 phase 0; aligned -> boss music every frame until obj_timer2 = $40; area $AC msg 24.2 (web: obj/ai_boss.js e6Intro)
+15,ACF5,BossE6Fight,s104: AI $E6 phase 1 (whole fight): $C8 orbiters every 64 frames in $AC; fly-turn toward fake player y $30/$70; speed AD82[HP>>4]
+15,AD82,BossE6Speeds,s104: u8[3] $0E $0D $0F obj_flags2 speed by HP>>4 (only HP < $30)
+15,AD86,TurnSign16,s104: u8[16] 0 / FF x7 / 01 x8: one 16-dir step toward a target (BossE6Fight; TurnToward16 15:AB25)
+15,AD96,BossE6Fire,s104: fire fan meta $DC/overlay $DD; shot every 8 obj_timer2 steps in (timer2>>4)-2+dir; at 0 meta $DB
+15,ADE8,BossE7Intro,s104: AI $E7 phase 0 (CHR R4 $76; spr pal2 $1E; area $B9 msg 24.4)
+15,AE35,BossE7Pose,s104: AI $E7 phase 1: meta $D8; obj_anim $0F
+15,AE43,BossE7Wait,s104: AI $E7 phase 2: 15 frames; meta $D7; obj_act_timer = HP + $20
+15,AE5A,BossE7Bounce,s104: AI $E7 phase 3: BossE7Step; arena edge -> SFX $3D (Y = edge) + shake + BossE7BounceDirs; act_timer-- every 2nd frame
+15,AEC9,BossE7Aim,s104: AI $E7 phase 4: 15 frames; act_timer = DirToTarget*2; meta $D9; anim $28
+15,AEEC,BossE7Volley,s104: AI $E7 phase 5: SpawnShot($5C) every 4 ($B9) / 8 frames at aim-2 (masked-shift quirk); anim 0 -> phase 1
+15,AF5C,BossE8Intro,s104: AI $E8 phase 0 (spr pal3 $1F; CHR R4 $74; msg 24.8; speed $0D)
+15,AFAD,BossE8Fly,s104: AI $E8 phase 1: waypoint BossE8Route[timer2*2] -> slot $1F (STX $1F); HomingMove; DirToTarget($1F)
+15,B051,BossE8Attack,s104: AI $E8 phase 2: aux<2 -> one aimed SpawnShot($46) at act_timer $20; else SpawnShot($33) every 16 frames
+15,B077,BossE8LegEnd,s104: obj_timer2++ (past the FF); phase 1; dir 8; anim 0
+15,B0A5,BossE8AttackPose,s104: overlay $F1; meta $DE; obj_anim -= 2

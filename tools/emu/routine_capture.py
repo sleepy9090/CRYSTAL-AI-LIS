@@ -172,7 +172,10 @@ FINAL_PHASES = (0, 1, 1, 2, 4, 5, 5, 6, 6, 8, 8, 9, 10, 12, 12, 12)
 # s100 (boss AI port, rest (b)): bank 15 bosses (web/src/game/obj/ai_boss.js). The bank is (R6, R7) = ($1A, $0F):
 # ObjUpdateAll's SwitchBank16($0D) then SetR7($0F) for ids $6x. name: (id, entry, phases to pick from)
 BOSS_AIS = {'BossAiE0': (0x60, 0xA477, range(8)), 'BossHomingShot': (0x61, 0xA5EE, (0,)),
-            'BossAiE3': (0x63, 0xA95D, range(5)), 'BossRockShot': (0x64, 0xAB3E, (0, 0, 1, 2, 2))}
+            'BossAiE3': (0x63, 0xA95D, range(5)), 'BossRockShot': (0x64, 0xAB3E, (0, 0, 1, 2, 2)),
+            # s104: $E6 phases 2/3 are null (15:0000), $E8 phase 2 = 15:B051
+            'BossAiE6': (0x66, 0xAC7B, (0, 1, 1)), 'AiBoss88': (0x67, 0xADD4, range(6)),
+            'BossAiE8': (0x68, 0xAF48, (0, 1, 1, 2, 2))}
 for _n, (_id, _ad, _p) in BOSS_AIS.items():
     ROUTINES[_n] = ((26, 15), _ad, _poke_bg, lambda r: {'x': _slot(r)})
 # AI ids the port has (web/src/game/obj/ai_static.js, ai_walk.js, ai_field.js) + ids whose ObjAiTable 27:A314 entry is 0
@@ -412,7 +415,27 @@ def _fix_boss(name, ram, r, x, wram):
     ram[0x0360 + x] = r.choice([r.randrange(8), r.randrange(16), r.randrange(256)])
     ram[0x0680 + x] = r.choice([0, 1, 3, 0xFD, 0xFE, 0xFF, r.randrange(256)])
     ram[0x06A0 + x] = r.choice([0, 2, 3, 0xFC, 0xFD, r.randrange(256)])
-    ram[0x6C] = r.choice([0x0A, 0x28, 0xA9, r.randrange(256)])
+    ram[0x6C] = r.choice([0x0A, 0x28, 0xA9, 0xAC, 0xB9, 0xB6, r.randrange(256)])
+    if _id in (0x66, 0x67, 0x68):                  # s104: obj_timer2 / act_timer / aux edges, $08 & $3F = 0
+        ram[0x0620 + x] = r.choice([0, 0, 1, 2, 8, 9, 0x10, 0x3F, 0x40, 0x50, 0x0F, r.randrange(0x14),
+                                    r.randrange(256)])
+        ram[0x0640 + x] = r.choice([1, 2, 0x10, 0x11, 0x20, 0x21, 0x50, r.randrange(256)])
+        ram[0x0660 + x] = r.choice([0, 1, 2, 3, r.randrange(256)])
+        ram[0x04E0 + x] = r.choice([0, 1, 2, 3, 4, 8, 9, 0x0E, 0x0F, 0x28, r.randrange(256)])
+        if r.random() < 0.3:
+            ram[0x08] = r.choice([0, 0x40, 0x80, 0xC0])
+        if r.random() < 0.5:                       # $E7 arena edges
+            ram[0x90 + x], ram[0xD0 + x] = ram[0x90], ram[0xD0]
+            ram[0xB0 + x] = r.choice([0x14, 0x15, 0x16, 0xCF, 0xD0, r.randrange(0x18, 0xCE)])
+            ram[0x70 + x] = r.choice([0x1F, 0x20, 0x21, 0xDF, 0xE0, r.randrange(256)])
+        if _id == 0x66 and r.random() < 0.6:       # $E6: intro end (timer2 $3F) / fly turns (timer2 0, anim 8n+1)
+            ram[0x0380 + x] &= 0x7F
+            ram[0x07D5] = 1
+            ram[0x0620 + x] = 0x3F if p == 0 else r.choice([0, 0, 1, 8])
+            ram[0x04E0 + x] = r.choice([1, 9, 0x11, r.randrange(256)])
+        if _id == 0x67 and p == 3 and r.random() < 0.5:   # $E7: the bounce's act_timer end
+            ram[0x0620 + x] |= 1
+            ram[0x0640 + x] = 1
     if r.random() < 0.4:
         _rand_zero_next(ram, r)
     if r.random() < 0.5:                           # the boss on the player's screen, near the arena edges

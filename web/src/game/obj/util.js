@@ -31,12 +31,18 @@ export function objFindFree(m, y) {
   }
 }
 
+// zero-page,X: the slot position columns wrap inside page 0 (s104: a garbage SpawnShot record gave slot $42 and
+// STA $D0,X wrote $12)
+const zp = (a) => a & 0xFF;
+
 export function objPosToTemp(m, x) {
-  m.wr(P_XL, m.rd(X_LO + x)); m.wr(P_XH, m.rd(X_HI + x)); m.wr(P_YL, m.rd(Y_LO + x)); m.wr(P_YH, m.rd(Y_HI + x));
+  m.wr(P_XL, m.rd(zp(X_LO + x))); m.wr(P_XH, m.rd(zp(X_HI + x)));
+  m.wr(P_YL, m.rd(zp(Y_LO + x))); m.wr(P_YH, m.rd(zp(Y_HI + x)));
 }
 
 export function tempToObjPos(m, x) {
-  m.wr(X_LO + x, m.rd(P_XL)); m.wr(X_HI + x, m.rd(P_XH)); m.wr(Y_LO + x, m.rd(P_YL)); m.wr(Y_HI + x, m.rd(P_YH));
+  m.wr(zp(X_LO + x), m.rd(P_XL)); m.wr(zp(X_HI + x), m.rd(P_XH));
+  m.wr(zp(Y_LO + x), m.rd(P_YL)); m.wr(zp(Y_HI + x), m.rd(P_YH));
 }
 
 function addX(m) {                       // shared x part of 9824 / 9861: signed $30 to $34/$35

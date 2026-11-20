@@ -90,6 +90,10 @@ const RUN = {
   BossHomingShot: (m, r) => { B.bossHomingShot(m, r.x); },
   BossAiE3: (m, r) => { B.bossAiE3(m, r.x); },
   BossRockShot: (m, r) => { B.bossRockShot(m, r.x); },
+  // s104: bosses $E6 / $E7 / $E8
+  BossAiE6: (m, r) => { B.bossAiE6(m, r.x); },
+  AiBoss88: (m, r) => { B.aiBoss88(m, r.x); },
+  BossAiE8: (m, r) => { B.bossAiE8(m, r.x); },
 };
 
 const dir = path.join(WEB, 'test/obj_frames');

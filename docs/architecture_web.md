@@ -65,7 +65,8 @@ web/index.html
       │   ├─ ai_final.js              (s97, done) AI $70 final scene: 11 phases (window wipe, gather, fades, shots, follower) + HitFlashPal
       │   │                           (generator: yield* hudRedraw); AI_EFFECT
       │   ├─ ai_boss.js               (s100, partial) bank 15 bosses: BossPhaseDispatch (handlers keyed by address),
-      │   │                           ClearEnemySlots, AIs $60 (E0 teleporter) $61 (homing shot) $63 (E3) $64 (rock); AI_BOSS
+      │   │                           ClearEnemySlots, AIs $60 (E0 teleporter) $61 (homing shot) $63 (E3) $64 (rock);
+      │   │                           s104: $66 (E6 flyer) $67 (E7 bouncer) $68 (E8 waypoint flyer); AI_BOSS
       │   ├─ objects.js               (s80, done) ObjUpdateAll generator (knockback, obj_freeze + HitSetFlag, JSR $0010
       │   │                           dispatch; an AI returning true = "popped" → return, a number = new X (s93),
       │   │                           a generator is run with yield* (s93)) + AI_TABLE id → fn (unported
@@ -208,7 +209,7 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 | AIs `$20 $21 $22 $24 $25 $26 $27 $28 $29 $2A $2E $41`, `AiWalkPick`, `AiTryMove`, `AiLungeCheck` | `27:A915 A969 AB42 AA57 A9D2 A9E4 A9DB AB61 AB9E ABF8 A9B4 B339`, `A94A`, `AAFA`, `AC40` | `AI_WALK` (s81, done: `fuzz_walk.json` 1200/1200) | `obj/ai_walk.js` |
 | AIs `$04 $57 $76` (`AiPlayerFollowC`, `AiStraightMoverTail`, `AiMpDrain`) | `27:B2FC B0BE A4DC` | `AI_EFFECT` (s93, done: `fuzz_effect.json` 300/300) | `obj/ai_effect.js` |
 | AI `$70` `Ai70PhaseDispatch` (13 phases `JmpTable27_BA40`) + `HitFlashPal` | `27:BA2E`, `26:9B07` | `AI_FINAL` (s97, done: `fuzz_final.json` 200/200; `ShowMessage` path logged as unported) | `obj/ai_final.js` |
-| Bank 15 bosses `BossAiE0`/`BossAiE3` + `BossHomingShot`/`BossRockShot`, `BossPhaseDispatch`, `ClearEnemySlots` | `15:A477`, `15:A95D`, `15:A5EE`, `15:AB3E`, `15:A400`, `15:BB29` | `AI_BOSS` (s100, partial: `fuzz_boss.json` 1200/1200; other bosses `$62 $65-$6F` not yet) | `obj/ai_boss.js` |
+| Bank 15 bosses `BossAiE0`/`BossAiE3`/`BossAiE6`/`AiBoss88`/`BossAiE8` + `BossHomingShot`/`BossRockShot`, `BossPhaseDispatch`, `ClearEnemySlots` | `15:A477`, `15:A95D`, `15:AC7B`, `15:ADD4`, `15:AF48`, `15:A5EE`, `15:AB3E`, `15:A400`, `15:BB29` | `AI_BOSS` (s100/s104, partial: `fuzz_boss.json` 2100/2100; bosses `$62 $65 $69-$6F` not yet) | `obj/ai_boss.js` |
 | `PlaySound` (queue side) | `30:C125` | `playSound(m, id, y)` (s55, done) | `playsound.js` |
 | `ObjCollideAll`, `CollPairTable`, `HitboxTable`, `HitHandlerTable` | `26:8F6E`, `26:96F1`, `26:9691`, `26:8FBB` | `collideAll()`, `HIT_HANDLERS[4]` | `obj/collide.js` |
 | `HitPlayer`, `EnemyKilled`, `AddXp` | `26:9357`, `26:9152`, `26:924B` | `hitPlayer()`, `enemyKilled()`, `addXp()` | `obj/collide.js` |
