@@ -22,6 +22,7 @@ import * as S from '../src/game/obj/ai_shot.js';
 import * as E from '../src/game/obj/ai_effect.js';
 import * as FA from '../src/game/obj/ai_final.js';
 import * as B from '../src/game/obj/ai_boss.js';
+import * as P from '../src/game/obj/player.js';
 
 const WEB = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const verbose = process.argv.includes('--verbose');
@@ -94,6 +95,10 @@ const RUN = {
   BossAiE6: (m, r) => { B.bossAiE6(m, r.x); },
   AiBoss88: (m, r) => { B.aiBoss88(m, r.x); },
   BossAiE8: (m, r) => { B.bossAiE8(m, r.x); },
+  // s111 (gameplay frames (e2)): obj/player.js, generators (HudChargeMeter / HudRedraw / HudHpBar queue waits)
+  PlayerUpdate: (m, r) => { runNow(P.playerUpdate(m, r.x)); },
+  PlayerMoveLocked: (m, r) => { runNow(P.playerMoveLocked(m, r.x)); },
+  PlayerMove: (m, r) => { runNow(P.playerMove(m, r.x)); },
 };
 
 const dir = path.join(WEB, 'test/obj_frames');

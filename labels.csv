@@ -1322,3 +1322,18 @@ bank,addr,name,comment
 27,A219,AiFollowFacing,s110: AI $05: DEC $0603 (slot 3) while != 0; slot X = slot 0 pos + 4 px toward obj_meta_id_s01&3 (table 27:A242); web obj/ai_effect.js
 27,A242,FollowFacingOfs,s110: AI $05 dx/dy by facing 0-3: (0;-4) (4;0) (0;4) (-4;0)
 31,E12B,ObjOffscreenCheck,s110: C=1 if slot X x hi or y hi differs from the camera ($02-$05) = off screen; the respawn tick keeps the spawn only then
+27,A00F,ConveyorBlockDir,s111: u8[8] 04 04 04 05 04 06 04 04 -> obj_param1 when PlayerConveyor is blocked (index dir&7)
+27,A0A3,MagicHeal,s111: magic 1: status-4 check; MP<2 -> out of MP; 2 x MagicHealStep (web obj/player.js)
+27,A0B3,MagicHealStep,s111: HP+1 up to max; every 4 HP or at max: HudHpBar + SpendMp(2) + SpawnShot($12)
+27,A0D7,MagicShot10,s111: magic 2: slot $0C free -> SpendMp(4) + SpawnShot($10)
+27,A0E6,MagicCastShot,s111: SpawnShot(A; Y = slot 1 facing*2) by JMP
+27,A0F4,MagicShot11,s111: magic 6: ground only; SpendMp(1) every 8 frames; SpawnShot($11) each frame
+27,A14D,MagicJumpStart,s111: $0620=$20; obj_act_timer=pad_dir; PlaySound($30)
+27,A15C,MagicOutOfMp,s111: sub_state $1C
+27,A161,MagicChangeForm,s111: magic 7: not areas $58-$5F; MP>=$14 -> sub_state $17
+27,A17D,MagicCure,s111: magic 5: status != 0 -> SpendMp($18) + sub_state $18
+27,A18E,MagicTelepathy,s111: magic 3: not areas $58-$5F; MP>=8 -> sub_state $15
+27,A1A1,MagicTeleport,s111: magic 4: MP>=$14 -> sub_state $14
+27,A1B0,MagicStatus4Check,s111: status 4 -> PLA PLA + MagicFailSound (returns from the magic handler)
+26,9BF2,StatusB7PoseTable,s111: u8[4] 2C 30 34 38 slot 1 meta base by obj1_flash b5-4 (status b7 = changed form)
+26,9C6C,PlayerChargedShot,s111: obj_phase $10 release shot; level 3 needs MP > cost (CMP cost / BCC); a failed SpendMp skips the orbit reset

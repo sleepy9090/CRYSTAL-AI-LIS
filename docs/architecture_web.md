@@ -74,7 +74,8 @@ web/index.html
       │   │                           a generator is run with yield* (s93)) + AI_TABLE id → fn (unported
       │   │                           ids log once and do nothing); AI $1A 30:CD8A still unported
       │   ├─ ai/*.js                  generic enemies, NPC/path, platforms, bosses (BossPhaseTable)
-      │   ├─ player.js                PlayerMove (slot 0), PlayerUpdate (slot 1), sword/charge, PlayerMagic, SpendMp
+      │   ├─ player.js                (s111, done) AIs $03 PlayerMove (slot 0), $02 locked, $01 PlayerUpdate (slot 1),
+      │   │                           sword/charge, PlayerMagic, SpendMp, PlayerConveyor (fuzz_player.json 900/900)
       │   ├─ move.js                  (s80, done) ObjMoveSlide 26:98D7, ObjMoveStep (BgProbePoints), ObjScreenEdge
       │   ├─ collide.js               ObjCollideAll, HitboxTable, CollPairTable, HitPlayer, EnemyKilled, AddXp
       │   ├─ status.js                PlayerStatusTick (hazards, poison, regen, pit fall, invulnerability)
@@ -206,7 +207,7 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 | `ObjMoveSlide`, `ObjMoveStep`, `ObjScreenEdge` | `26:98D7`, `26:9947`, `26:99FF` | `objMoveSlide()`, `objMoveStep()`, `objScreenEdge()` (s80, done: fuzz 200/200) | `obj/move.js` |
 | `BossPhaseDispatch`, `BossPhaseTable` | `15:A400`, `15:A413` | `bossPhase(slot)` | `obj/ai/boss.js` |
 | generic enemy AIs + helpers (`DirToTarget`, `AiShootCheck`, `SteerToward`) | bank 27 | `ai/enemies.js` | `obj/ai/` |
-| `PlayerMove` / `PlayerUpdate` / `PlayerMagic` / `SpendMp` | `26:9D9A` / `26:9B45` / `27:A022` / – | `playerMove()`, `playerUpdate()`, `playerMagic()`, `spendMp()` | `obj/player.js` |
+| `PlayerMove` / `PlayerUpdate` / `PlayerMagic` / `SpendMp` | `26:9D9A` / `26:9B45` / `27:A022` / – | `playerMove()`, `playerUpdate()`, `playerMagic()`, `spendMp()` (s111, done: AIs `$01`-`$03` in `AI_PLAYER`) | `obj/player.js` |
 | `ObjStepVector`, `ObjMoveStep`, `BgProbePoints` | `26:8480`, `26:9947`, `26:9907` | `stepVector()`, `moveStep()`, `BG_PROBE` (data) | `obj/move.js` |
 | `SpawnShot`, `ShotTable`, `ShotOffsets` | `26:972D`, `20:BC00`, `20:BD80` | `spawnShot(m, x, id, dir)` (s55, done; reads `prg.bin` via `cpuRd`, not `shots.json`) | `obj/util.js` |
 | `ObjInit` + `FarCall_C25D`, `ObjStepVector`, `ObjBgProbe`, `DirToTarget`, `Rand64`, `ObjFindFree` | `30:C25D`, `31:FF80`, `26:8480`, `26:9A30`, `26:8409`, `26:97D7`, `26:98B9` | `objInit()`, `farObjInit()`, `objStepVector()`, `objBgProbe()`, `dirToTarget()`, `rand64()`, `objFindFree()` (s55, done) | `obj/objinit.js`, `obj/util.js` |

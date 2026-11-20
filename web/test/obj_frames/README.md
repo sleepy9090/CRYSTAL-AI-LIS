@@ -57,6 +57,13 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   `python3 tools/case_bytes.py FILE NAME ADDR col:COL ..` (before → after bytes) and
   `node web/test/case_trace.mjs FILE NAME ADDR ..` (replays an `ai_boss.js` case, JS stack per port write).
 
+- `fuzz_player.json` (s111): 300 cases each of the player AIs `PlayerUpdate` `26:9B45` (X=1, Y=2), `PlayerMoveLocked`
+  `26:9D81` (X=0, Y=4), `PlayerMove` `26:9D9A` (X=0, Y=6) (`obj/player.js`; `PLAYER_AIS` + `_fix_player`: status,
+  jump timer, swing phase, charge, magic id / MP, conveyor, pads; PPU-queue records with src `$60`/`$7B` removed so
+  the HUD writers never wait). The emulator side of a case:
+  `python3 -m tools.emu.case_trace --load-state tools/emu/states/gameplay_first.state --cases FILE --case NAME`
+  (JSR/JMP/RTS flow with registers).
+
 Regenerate (about 10 s each):
 
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
@@ -79,5 +86,7 @@ Regenerate (about 10 s each):
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 \
         --routine BossAiE0,BossHomingShot,BossAiE3,BossRockShot,BossAiE6,AiBoss88,BossAiE8 \
         --out web/test/obj_frames/fuzz_boss.json
+    python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 \
+        --routine PlayerUpdate,PlayerMoveLocked,PlayerMove --out web/test/obj_frames/fuzz_player.json
 
 `python3 -m tools.emu.routine_capture --list` shows the routines; `--routine A,B` captures a subset.

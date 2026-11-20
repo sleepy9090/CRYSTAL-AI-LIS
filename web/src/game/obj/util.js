@@ -9,7 +9,9 @@
 //   objStepVector(m, x, dir)  ObjStepVector 26:8480 -> $30 dx, $31 dy
 //   objDespawn / objBecomeNext (26:98C7 / 26:98CD)
 //   spawnShot(m, x, id, dir)  SpawnShot 26:972D -> true if at least one object spawned
-//   objBgProbe(m, x, a)       ObjBgProbe 26:9A30 -> C (true only for the A b7 same-cell cache hit)
+//   objBgProbe(m, x, a[, n])  ObjBgProbe 26:9A30 -> C (true only for the A b7 same-cell cache hit). s111: the cache
+//                             test is BPL right after STA $14, i.e. the caller's N flag; n = a & $80 unless given
+//                             (PlayerMove 26:9EFD: LDY obj_timer2 sets N, so a jump timer >= $80 probes cached)
 import { cpuRd, indY, setR7 } from '../prg.js';
 import { farObjInit } from './objinit.js';
 
@@ -162,9 +164,9 @@ export function spawnShot(m, x, id, dir) {
   return (t & 0x80) !== 0;
 }
 
-export function objBgProbe(m, x, a) {
-  m.wr(0x14, a);
-  if (a & 0x80 && !((m.rd(P_YL) ^ m.rd(Y_LO + x)) & 0xF0) && !((m.rd(P_XL) ^ m.rd(X_LO + x)) & 0xF0)) {
+export function objBgProbe(m, x, a, n = a & 0x80) {
+  m.wr(0x14, a);                                            // STA $14 keeps the flags: BPL tests the caller's N
+  if (n &&!((m.rd(P_YL) ^ m.rd(Y_LO + x)) & 0xF0) && !((m.rd(P_XL) ^ m.rd(X_LO + x)) & 0xF0)) {
     m.wr(0x20, m.rd(FLAGS + x) & 0x50);                     // 9A44 same 16 px cell: cached
     return true;
   }

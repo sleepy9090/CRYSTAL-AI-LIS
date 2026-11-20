@@ -166,6 +166,10 @@ for _n, (_id, _ad) in EFFECT_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r, _i=_id: {'x': _slot(r), 'y': (_i << 1) & 0xFF})
 # s97 (boss / final-scene AI port (a)): AI $70 (web/src/game/obj/ai_final.js); Y = $E0 as ObjUpdateAll leaves it
 ROUTINES['Ai70PhaseDispatch'] = (26, 0xBA2E, _poke_bg, lambda r: {'x': _slot(r), 'y': 0xE0})
+# s111 (gameplay frames (e2)): the player's two objects (web/src/game/obj/player.js); X = slot, Y = id*2
+PLAYER_AIS = {'PlayerUpdate': (0x01, 0x9B45, 1), 'PlayerMoveLocked': (0x02, 0x9D81, 0), 'PlayerMove': (0x03, 0x9D9A, 0)}
+for _n, (_id, _ad, _x) in PLAYER_AIS.items():
+    ROUTINES[_n] = (26, _ad, _poke_bg, lambda r, _i=_id, _s=_x: {'x': _s, 'y': (_i << 1) & 0xFF})
 # phases whose capture can finish without an NMI (3 = FadeIn's WaitFrame; 7 / 11 are null; 1's table end is
 # steered off ShowMessage)
 FINAL_PHASES = (0, 1, 1, 2, 4, 5, 5, 6, 6, 8, 8, 9, 10, 12, 12, 12)
@@ -358,6 +362,55 @@ def _fix_effect(name, ram, r, x, wram):
         ram[0x0460 + x] = r.choice([0, 0, 6, 0x27, r.randrange(256)])
 
 
+def _fix_player(name, ram, r, x, wram):
+    """s111: player AI cases on their edges: status / jump timer / swing phase / charge / magic / MP / conveyor"""
+    c = r.choice
+    ram[0x0710] = c([0, 0, 0, 1, 2, 3, 4, 0x40, 0x40, 0x80, 0x90, 0xA0, 0xB0, r.randrange(256)])
+    ram[0x0620] = c([0, 0, 0, 1, 2, 0x0F, 0x11, 0x12, 0x13, 0x1E, 0x1F, 0x20, 0x21, 0x22, r.randrange(0x31),
+                     r.randrange(256)])
+    ram[0x0621] = c([0, r.randrange(256)])
+    ram[0x43] = c([0, 0x40, 0x80, 0xC0, r.randrange(256)])
+    ram[0x4B] = c([0, 0, 0x40, 0x80, 0xC0, r.randrange(256)])
+    ram[0x49] = c([0, 1, 2, 3, 4, 4, 5, 6, 7, 0x80, 0xFF, 0xFF, r.randrange(256)])
+    ram[0x0712] = c([r.randrange(12), r.randrange(12), 0, 8, 9, r.randrange(256)])
+    ram[0x0716] = c([0, 0, 0x0F, 0x12, 0x13, r.randrange(256)])
+    ram[0x0708] = c([0, 1, 2, 3, 4, 8, 0x10, 0x14, 0x18, 0x28, 0x29, 0x40, r.randrange(256)])
+    ram[0x0711] = c([0, 1, 2, 3, 4, 5, r.randrange(256) & 7])
+    ram[0x0719] = r.randrange(3)
+    ram[0x06C0] = c([0, 3, 7, 8, 0x0F, 0x10, 0x17, 0x18, 0x19, 0x1F, r.randrange(256)])
+    ram[0x0600] = c([0, 0, 1, 3, 4, 0x0B, 0x0C, 0x0F, 0x10, 0x10, 0x11, 0x12, 0x12, 0x13, r.randrange(256)])
+    ram[0x0680] = c([0, 4, 0x84, 0x80, 0x83, r.randrange(256)])
+    ram[0x06A0] = c([0, 0, 1, 8, r.randrange(256)])
+    ram[0x0660] = c([0, 1, 5, 6, 7, 8, 9, r.randrange(256)])
+    ram[0x0641] = c([0, 0, 0x20, 0x02, 0x06, 0x80, r.randrange(256)])
+    ram[0x0561] = c([0, 0, 0x02, 0x06, 0x80, r.randrange(256)])
+    ram[0x6C] = c([0x58, 0x5F, 0x5A, 0x1A, 0, r.randrange(256)])
+    ram[0x41] = c([8, 8, 8, r.randrange(256)])
+    ram[0x0715] = c([0, r.randrange(256)])
+    ram[0x0714] = c([0, 0, 4, r.randrange(256)])
+    ram[0x04A0] = c([3, 3, 2, 0x0B])
+    ram[0x04A1] = 1
+    ram[0x04AC] = c([0, 0, r.randrange(256)])
+    ram[0x06E0] = c([0, 2, 4, 6, 0xFF, r.randrange(256)])
+    ram[0x08] = c([0, 4, 8, 0x10, 0x80, r.randrange(256)])
+    ram[0x0360] = c([r.randrange(8), r.randrange(256)])
+    ram[0x0340] = c([6, 0x06, 0x16, r.randrange(256)])
+    ram[0x0341] = c([6, r.randrange(256)])
+    ram[0x0380] = c([0, 0x40, r.randrange(256)])
+    ram[0x0460] = c([0x32, 0x34, 0x72, r.randrange(256)])
+    hm = ram[0x03C0] = c([0x30, 0x40, r.randrange(1, 256)])
+    ram[0x03C1] = c([hm, (hm - 1) & 0xFF, (hm - 2) & 0xFF, (hm - 4) & 0xFF, r.randrange(256)])
+    if r.random() < 0.7:                           # the ground body near the camera so ObjScreenEdge passes
+        ram[0x70] = (ram[0x02] + r.randrange(0x10, 0xF0)) & 0xFF
+        ram[0xB0] = (ram[0x04] + r.randrange(0x20, 0xC8)) % 0xF0
+    if r.random() < 0.5:
+        for s in r.sample(range(2, 0x1F), 12):     # free slots for the slash / charged / magic shots
+            ram[0x04A0 + s] = 0
+    for i in range(8):                             # PpuQueueWaitSrc $60 (HudChargeMeter / HudHpBar) / $7B (HudRedraw)
+        if wram[0x203 + 4 * i] in (0x60, 0x7B):
+            wram[0x203 + 4 * i] = 0xFF
+
+
 def _fix_final(ram, r, x, wram):
     """s97: AI $70 cases, one phase each, kept off the NMI waits (FadeIn, ShowMessage) and on each phase's edges"""
     p = r.choice(FINAL_PHASES)
@@ -524,6 +577,8 @@ def _fix_case(name, ram, r, regs, wram=None):
         _fix_final(ram, r, x, wram)
     if name in BOSS_AIS:
         _fix_boss(name, ram, r, x, wram)
+    if name in PLAYER_AIS:
+        _fix_player(name, ram, r, x, wram)
     if name in ('AiMpDrain', 'ObjUpdateAll', 'Ai70PhaseDispatch'):
         for i in range(8):                         # HudRedraw's PpuQueueWaitSrc($7B) would spin until an NMI
             if wram[0x203 + 4 * i] == 0x7B:
