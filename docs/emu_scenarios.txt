@@ -901,9 +901,83 @@ tools.emu scenarios vs the 178 labels the tour never ran (docs/emu_tour.txt)
     f240: $04AF <- 00  pc 26:98CC
   newly run (2): 15:B807:BossDefeated 27:B83B:ObjAiExplode
 
-union: 130 / 178 newly run; still never run (48):
+[boss_flee] area 28 (BossAreaList entry 2): ObjInit type $CF (AI $6F BossDefeated) in slot $0F at +10 -> record hook BossFleeSpeech 15:BA98
+  end: $40/$41 1/08 area 28 hp 96 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $04AF $060F $0102 $061F), first of each:
+    f10: $060F <- 00  pc 30:C2A3
+    f10: $04AF <- 00  pc 30:C29D
+    f10: $04AF <- 6F  pc 30:C34A
+    f10: $04AF <- 6E  pc 30:C34A
+    f10: $060F <- 02  pc 15:B828
+    f43: $061F <- 00  pc 30:C2A3
+    f209: $0041 <- 08  pc 30:D3C1
+    f258: $0102 <- 18  pc 15:B85D
+    f259: $0102 <- 00  pc 15:B778
+    f259: $0102 <- 18  pc 30:C13A
+    f259: $0041 <- 10  pc 15:B7B8
+  newly run (3): 15:B807:BossDefeated 15:BA98:BossFleeSpeech 31:FFCF:FarCall_D354
+
+[boss_e2] area 1A: ObjInit type $5E (dormant, AI $7F) in slot $0D at +10, Insect Flute ($0715 $0B, item $27) + B at +20 -> AI $E2 BossAiE2 15:A675
+  end: $40/$41 1/03 area 1A hp 0 lv 16 gold 0 xp 0 mp 34
+  state writes ($40/$41 $04AD $060D $0103), first of each:
+    f7: $0103 <- 36  pc 30:C157
+    f7: $0103 <- 00  pc 31:F85E
+    f10: $060D <- 00  pc 30:C2A3
+    f10: $04AD <- 00  pc 30:C29D
+    f10: $04AD <- 7F  pc 30:C34A
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0103 <- 48  pc 30:C157
+    f20: $0041 <- 08  pc 30:D51A
+    f20: $04AD <- E2  pc 14:84CF
+    f20: $0041 <- 08  pc 30:D884
+    f42: $0103 <- 12  pc 30:C157
+    f42: $060D <- 01  pc 15:A697
+    f404: $0103 <- 50  pc 30:C157
+    f600: $0041 <- 03  pc 30:CB8D
+    f602: $0103 <- 00  pc 30:C157
+    f658: $0103 <- 3E  pc 30:C157
+    f658: $04AD <- 00  pc 19:B941
+  newly run (6): 14:831E:ItemUseHook 14:8354:InvRemoveItem 15:A675:BossAiE2 27:B436:AiDasher 30:C482:PpuQueueBlock 30:D497:ItemUseMenu
+
+[shop_empty_ai] area 03: ObjInit type $4E (AI $0E AiShopEmpty) in slot $0F at +10
+  end: $40/$41 1/24 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $04AF), first of each:
+    f10: $04AF <- 00  pc 30:C29D
+    f10: $04AF <- 0E  pc 30:C34A
+    f10: $0041 <- 24  pc 27:A5C4
+  newly run (2): 27:A5C0:AiShopEmpty 30:D9C1:SubstShopEmpty
+
+[slot_repair_a] area 01: $7150 changed, warm reset: primary sum matches -> SlotCopy(0) primary->backup
+  end: $40/$41 3/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 0
+  state writes ($40/$41 $7001 $70F0 $70F1 $7150 $7450), first of each:
+    f10: $7150 <- A5  pc 31:FEB8
+    f11: $7450 <- 5A  pc 31:FEB8
+    f21: $0040 <- 02  pc 31:F335
+    f22: $7001 <- 00  pc 31:F0A9
+    f22: $70F0 <- DC  pc 31:F0EC
+    f22: $7450 <- A5  pc 31:F28B
+    f23: $70F0 <- DC  pc 31:F0FD
+    f23: $70F1 <- DC  pc 31:F100
+    f24: $0040 <- 03  pc 19:A00F
+  newly run (10): 24:8020:SndInit 31:F0A4:BootSaveCheck 31:F140:BootCheckSlot1 31:F1C7:BootSaveRestoreR7 31:F1E2:BootCheckCurrent 31:F23D:SaveSumSlot 31:F273:SlotCopy 31:F2A4:Reset 31:F39F:WarmBootContinue 31:F3A2:CopySramBlock
+
+[slot_repair_b] area 01: $7150 changed, warm reset: primary fails, backup sum matches -> SlotCopy(1)
+  end: $40/$41 3/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 0
+  state writes ($40/$41 $7001 $70F0 $70F1 $7150 $7450), first of each:
+    f10: $7150 <- A5  pc 31:FEB8
+    f11: $7450 <- 5A  pc 31:FEB8
+    f21: $0040 <- 02  pc 31:F335
+    f22: $7001 <- 00  pc 31:F0A9
+    f22: $70F0 <- 23  pc 31:F0EC
+    f23: $70F1 <- 14  pc 31:F108
+    f23: $7150 <- 5A  pc 31:F28B
+    f23: $70F0 <- 14  pc 31:F119
+    f23: $70F1 <- 14  pc 31:F11C
+    f24: $0040 <- 03  pc 19:A00F
+  newly run (10): 24:8020:SndInit 31:F0A4:BootSaveCheck 31:F140:BootCheckSlot1 31:F1C7:BootSaveRestoreR7 31:F1E2:BootCheckCurrent 31:F23D:SaveSumSlot 31:F273:SlotCopy 31:F2A4:Reset 31:F39F:WarmBootContinue 31:F3A2:CopySramBlock
+
+union: 136 / 178 newly run; still never run (42):
   bank  4: 8000:ScreenBlank80
-  bank 15: A675:BossAiE2 BA98:BossFleeSpeech
   bank 16: 8232:MenuChrR1
   bank 17: A000:EndingInit A0EB:EndingWait A100:EndingTick A14A:EndingScene A751:NtFill_b17 AA74:EndingFadeIn AAAD:EndingFadeOut
   bank 18: 8000:IntroRectPtr 8002:IntroRect 824B:NtRectBlitQueued 838B:MenuPalSets
@@ -911,7 +985,7 @@ union: 130 / 178 newly run; still never run (48):
   bank 23: BE00:NewSaveTemplate
   bank 24: 8395:SndOpSweep 8609:SndFadeStep
   bank 26: 8C32:PaletteBlackFill 8FC4:HitHandler3 943F:RidePlatform 9D81:PlayerMoveLocked 9FD2:PlayerConveyor
-  bank 27: A092:MagicButtonSel A1BB:MagicFailSound A211:FacingKeep A5C0:AiShopEmpty AD9C:NpcLookAhead
+  bank 27: A092:MagicButtonSel A1BB:MagicFailSound A211:FacingKeep AD9C:NpcLookAhead
   bank 28: 81A5:BurstRadius
   bank 30: C7D6:FadeSaveZpToWram C944:MainStateEndingInit C94C:MainStateEnding CC4D:SubstRestoreScreen
-  bank 31: E544:AreaPitFall E573:AreaEdgeLink EF33:ScreenPageAtCamera F23D:SaveSumSlot F273:SlotCopy F5E1:IrqRowStretch F60E:IrqOffSound F782:NmiMode4 FE01:ShopDoorOpen FE18:ShopDoorClose FFBE:FarCall_B26_8CC0 FFCF:FarCall_D354
+  bank 31: E544:AreaPitFall E573:AreaEdgeLink EF33:ScreenPageAtCamera F5E1:IrqRowStretch F60E:IrqOffSound F782:NmiMode4 FE01:ShopDoorOpen FE18:ShopDoorClose FFBE:FarCall_B26_8CC0

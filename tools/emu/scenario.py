@@ -195,6 +195,41 @@ SCENARIOS['obj_explode'].update(area='0A', note='area 0A (BossAreaList entry 0):
                                 '(ObjAiExplode -> $DD -> $CF BossDefeated) in slot $0F at +10',
                                 watch=[0x04AF, 0x060F, 0x0102, 0x07D7])
 
+# s103: BossAreaList entry 2 = area $28, whose record hook is BossFleeSpeech 15:BA98 -> spawn $CF directly
+SCENARIOS['boss_flee'] = dict(note='area 28 (BossAreaList entry 2): ObjInit type $CF (AI $6F BossDefeated) in slot '
+                                   '$0F at +10 -> record hook BossFleeSpeech 15:BA98', area='28',
+                              pokes={0x03C1: 0x60}, spawn=[(10, 0x0F, 0xCF, 48, 0)],
+                              keys=[f'{200 + 40 * i}:A' for i in range(8)], frames=700,
+                              watch=[0x04AF, 0x060F, 0x0102, 0x061F])
+# s103: the dormant area-$1A boss ($5E, AI $7F) wakes as AI $E2 when the Insect Flute (item $27) is used
+# Area 1A entrance 0 does not place it in this state (slot $0D empty -> UseFail), so spawn $5E into $0D first
+SCENARIOS['boss_e2'] = dict(note='area 1A: ObjInit type $5E (dormant, AI $7F) in slot $0D at +10, Insect Flute '
+                                 '($0715 $0B, item $27) + B at +20 -> AI $E2 BossAiE2 15:A675',
+                            area='1A', pokes={0x0715: 0x0B, 0x6440: 0x27, 0x642C: 0, 0x03C1: 0x60, 0x0421: 16},
+                            spawn=[(10, 0x0D, 0x5E, 48, -32)], keys=['20:B', '120:B'], frames=900,
+                            watch=[0x04AD, 0x060D, 0x0103])
+# s103: AI $0E AiShopEmpty 27:A5C0 (type $4E) is placed by no area. In a shop area the keeper's sub_state
+# stops object updates, so spawn it in area 03 (normal play)
+SCENARIOS['shop_empty_ai'] = dict(note='area 03: ObjInit type $4E (AI $0E AiShopEmpty) in slot $0F at +10',
+                                  area='03', spawn=[(10, 0x0F, 0x4E, 32, 0)],
+                                  keys=['100:B', '160:B', '220:B', '280:A'], frames=400, watch=[0x04AF])
+
+
+def set_from(dst, src):
+    """exec hook value: write RAM[src] to dst (e.g. make a save checksum match the running sum $16)."""
+    return lambda nes: write_mem(nes, dst, nes.bus.ram[src])
+
+
+# s103: BootSaveCheck 31:F0A4 repair paths. Slot 0 primary != backup (timed poke of $7150) + warm reset;
+# the checksum is forced equal to the computed sum $16 right after SaveSumSlot, so SlotCopy runs.
+for _n, _pc, _ck, _note in (('slot_repair_a', 0xF0EC, 0x70F0, 'primary sum matches -> SlotCopy(0) primary->backup'),
+                            ('slot_repair_b', 0xF108, 0x70F1, 'primary fails, backup sum matches -> SlotCopy(1)')):
+    SCENARIOS[_n] = dict(note=f'area 01: $7150 changed, warm reset: {_note}',
+                         keys=['10:s:7150=A5', '11:s:7450=5A', '20:s:FFFF=00'], frames=600,
+                         exec=[(31, _pc, set_from(_ck, 0x16))] + ([(31, 0xF0EC, lambda nes: write_mem(
+                             nes, 0x70F0, nes.bus.ram[0x16] ^ 0xFF))] if _ck == 0x70F1 else []),
+                         watch=[0x7001, 0x70F0, 0x70F1, 0x7150, 0x7450])
+
 
 def parse_poke(s):
     a, _, v = s.partition('=')

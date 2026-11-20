@@ -415,6 +415,7 @@ bank,addr,name,comment
 14,8399,ItemUseHandlers,80 words (items 00-4F); $84DB = cannot use
 14,8469,UseFindSlotObj,record param/b2 matches an object in slots 0D-1F
 14,8497,UseTouchMatch,record param/b2 == touched spawn ($0643); Z set = match
+14,84B3,UseInsectFlute,s103: ItemUseHandlers item $27 handler: area $1A + $038D b7 clear + slot $0D active + player x >= $0A -> obj_active_s0D = $E2 (wakes boss $5E); else UseFail
 14,84DB,UseFail,$23=$FF (item cannot be used here)
 14,9B00,ItemGetTable,113 words (items 00-70) -> start count r0 r1 set-list next
 14,9BE2,ItemUseTable,80 words (items 00-4F) -> use records
