@@ -1101,6 +1101,7 @@ bank,addr,name,comment
 27,AFA9,AiPitShuttle,s77: AI $38 (types $7E/$7F): platform; moves while the probe point ahead (27:AFED) is a b0 pit cell; else reverse dir + obj_freeze $20
 27,AFED,PlatformProbeOfs,s77: 4 x (dx;dy) signed by dir&6: (0;-24) (12;0) (0;8) (-12;0)
 27,AFF5,AiCrumblePlatform,s77: AI $3C (type $9F): AiPitShuttle + once ridden then left: obj_coll 0; meta $B7; obj_anim countdown (SFX $64 at $1E); despawn at 0
+27,AFFB,CrumbleRideCheck,s117: AI $3C prologue: X=ride_platform_slot -> obj_phase 1; else SFX $64 at obj_anim $1E; phase!=0 -> coll 0/meta $B7/DEC anim/despawn at 0 (web: aiCrumblePlatform)
 15,BF7F,DebugItemTable,s77: 24 item ids for DebugPauseCheat (00-03 15-18 0D-10 06 08 0A 0C 1D-24)
 26,90AA,HitByPlayerShot,s78: HitHandlerTable 0: need player_level >= hitflags&$1F; dmg = $03E1 + shot atk - def; elem nibble overlap = immune; miss kills shot + SFX $3A
 26,9229,ThunderTransform,s78: equip_sword 4 + target spawn_b2 0 + param 0/3 -> ObjInit(target; obj_behav) and abort the hit

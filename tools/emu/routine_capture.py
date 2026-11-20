@@ -227,6 +227,10 @@ for _n, (_id, _ad) in FIELD_AIS.items():
 EFFECT_AIS = {'AiPlayerFollowC': (0x04, 0xB2FC), 'AiStraightMoverTl': (0x57, 0xB0BE), 'AiMpDrain': (0x76, 0xA4DC)}
 for _n, (_id, _ad) in EFFECT_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r, _i=_id: {'x': _slot(r), 'y': (_i << 1) & 0xFF})
+# s117 (gameplay frames leftovers): the pit platforms (web/src/game/obj/ai_field.js); Y = id*2 (AI $3C's PlaySound)
+PLATFORM_AIS = {'AiPitShuttle': (0x38, 0xAFA9), 'AiCrumblePlatform': (0x3C, 0xAFF5)}
+for _n, (_id, _ad) in PLATFORM_AIS.items():
+    ROUTINES[_n] = (26, _ad, _poke_bg, lambda r, _i=_id: {'x': _slot(r), 'y': (_i << 1) & 0xFF})
 # s97 (boss / final-scene AI port (a)): AI $70 (web/src/game/obj/ai_final.js); Y = $E0 as ObjUpdateAll leaves it
 ROUTINES['Ai70PhaseDispatch'] = (26, 0xBA2E, _poke_bg, lambda r: {'x': _slot(r), 'y': 0xE0})
 # s111 (gameplay frames (e2)): the player's two objects (web/src/game/obj/player.js); X = slot, Y = id*2
@@ -248,6 +252,7 @@ for _n, (_id, _ad, _p) in BOSS_AIS.items():
 # AI ids the port has (web/src/game/obj/ai_static.js, ai_walk.js, ai_field.js) + ids whose ObjAiTable 27:A314 entry is 0
 PORTED_AIS = (0x10, 0x11, 0x2C, 0x4C, 0x4D, 0x4E) + tuple(i for i, _ in WALK_AIS.values()) + \
     tuple(i for i, _ in FIELD_AIS.values()) + tuple(i for i, _ in EFFECT_AIS.values()) + \
+    tuple(i for i, _ in PLATFORM_AIS.values()) + \
     tuple(i for i, _, _ in BOSS_AIS.values())
 NULL_AIS = tuple(i for i in range(0x80) if i != 0x1A and not (_PRG[27 * 0x2000 + 0x314 + 2 * i] |
                                                                _PRG[27 * 0x2000 + 0x315 + 2 * i]))
@@ -464,6 +469,20 @@ def _fix_field(name, ram, r, x, wram=None):
         ram[0x90 + x], ram[0xD0 + x] = ram[0x90], ram[0xD0]
         ram[0x70 + x], ram[0xB0 + x] = r.randrange(256), r.randrange(0xF0)
         ram[0x0460 + x] = r.choice([6, 0x27])
+
+
+def _fix_platform(ram, r, x, wram):
+    """s117: AI $38/$3C; ridden or not, obj_anim / obj_phase edges (sound at $1E, despawn at 1), and half the cases on
+    the real map near the player (load an area with pits, e.g. gfx/compare/s116_a6a.state) so the probe hits b0"""
+    ram[0x0541] = r.choice([x, x, 0, r.randrange(0x20)])
+    ram[0x04E0 + x] = r.choice([1, 2, 0x1E, 0x1F, r.randrange(256)])
+    ram[0x0600 + x] = r.choice([0, 0, 1, r.randrange(256)])
+    ram[0x0360 + x] = r.choice([r.randrange(8), r.randrange(256)])
+    ram[0x0340 + x] = r.choice([2, r.randrange(256)])
+    if wram is not None and 'wram' in _BASE and r.random() < 0.5:
+        wram[0x2F0:0x340] = _BASE['wram'][0x2F0:0x340]
+        ram[0x90 + x], ram[0xD0 + x] = ram[0x90], ram[0xD0]
+        ram[0x70 + x], ram[0xB0 + x] = r.randrange(256), r.randrange(0xF0)
 
 
 def _fix_effect(name, ram, r, x, wram):
@@ -702,6 +721,8 @@ def _fix_case(name, ram, r, regs, wram=None):
         _fix_field(name, ram, r, x, wram)
     if name in EFFECT_AIS:
         _fix_effect(name, ram, r, x, wram)
+    if name in PLATFORM_AIS:
+        _fix_platform(ram, r, x, wram)
     if name == 'Ai70PhaseDispatch':
         _fix_final(ram, r, x, wram)
     if name in BOSS_AIS:

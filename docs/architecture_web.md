@@ -64,6 +64,7 @@ web/index.html
       │   │                           DirToTarget, ObjStepVector, ObjDespawn, ObjBecomeNext, SpawnShot, ObjBgProbe
       │   ├─ ai_static.js             (s55, done) AIs $10 $11 $2C $4C/$4D $4E + AiShootCheck, $50 $7F (s112); AI_HANDLERS id → fn
       │   ├─ ai_walk.js               (s81, done) walker/chaser AIs $20-$2A $2E $41 (AiChase, AiWalkPause, …); AI_WALK
+      │   ├─ ai_field.js              (s87, done) field AIs $2B $44 $45 $48 $58 $5C-$5E $7B; (s117) pit platforms $38 $3C; AI_FIELD
       │   ├─ ai_effect.js             (s93, done) AIs $04 (slot $0C on the player; leaves X = $0C), $57, $76 MP drain;
       │   │                           (s114) $74 explosion, $08 screen redraw (+ MarkScreenVisited, m.overrun lag frames)
       │   ├─ ai_final.js              (s97, done) AI $70 final scene: 11 phases (window wipe, gather, fades, shots, follower) + HitFlashPal
@@ -216,6 +217,7 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 | `ObjInit` + `FarCall_C25D`, `ObjStepVector`, `ObjBgProbe`, `DirToTarget`, `Rand64`, `ObjFindFree` | `30:C25D`, `31:FF80`, `26:8480`, `26:9A30`, `26:8409`, `26:97D7`, `26:98B9` | `objInit()`, `farObjInit()`, `objStepVector()`, `objBgProbe()`, `dirToTarget()`, `rand64()`, `objFindFree()` (s55, done) | `obj/objinit.js`, `obj/util.js` |
 | AIs `$10 $11 $2C $4C/$4D $4E`, `AiShootCheck` | `27:B0B5 B0A8 ACC0 B595 B5D9 B714` | `AI_HANDLERS` (s55, done: `obj_check.mjs`) | `obj/ai_static.js` |
 | AIs `$20 $21 $22 $24 $25 $26 $27 $28 $29 $2A $2E $41`, `AiWalkPick`, `AiTryMove`, `AiLungeCheck` | `27:A915 A969 AB42 AA57 A9D2 A9E4 A9DB AB61 AB9E ABF8 A9B4 B339`, `A94A`, `AAFA`, `AC40` | `AI_WALK` (s81, done: `fuzz_walk.json` 1200/1200) | `obj/ai_walk.js` |
+| AIs `$38 $3C` (`AiPitShuttle`, `AiCrumblePlatform`) | `27:AFA9 AFF5` | `AI_FIELD` (s117, done: `fuzz_platform.json` 600/600; `pitfall.json` slot `$18` equal) | `obj/ai_field.js` |
 | AIs `$04 $57 $76` (`AiPlayerFollowC`, `AiStraightMoverTail`, `AiMpDrain`) | `27:B2FC B0BE A4DC` | `AI_EFFECT` (s93, done: `fuzz_effect.json` 300/300) | `obj/ai_effect.js` |
 | AIs `$74 $08` (`ObjAiExplode` + `ExplodeStep`, `AiScreenRedraw08`), `MarkScreenVisited` | `27:B83B B850 B7F6`, `30:C75C` | `AI_EFFECT` (s114: canonical `--cols core,obj` f2322-2700 equal; CPU-overrun lag frames via `m.overrun`, active-slot heuristic) | `obj/ai_effect.js`, `mainloop.js`, `machine.js` |
 | AI `$70` `Ai70PhaseDispatch` (13 phases `JmpTable27_BA40`) + `HitFlashPal` | `27:BA2E`, `26:9B07` | `AI_FINAL` (s97, done: `fuzz_final.json` 200/200; `ShowMessage` path logged as unported) | `obj/ai_final.js` |

@@ -35,6 +35,12 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   (`AiCountdown` `$14`, `AiCurveShot` `$16`, `AiHoverShot` `$17`, `AiBounceShot` `$1B`, `AiDirFrameShot` `$1E`,
   `AiShotAnimDec` `$1F`); steered by `_fix_field`.
 
+- `fuzz_platform.json` (s117): 300 cases each for the pit platforms in `obj/ai_field.js` (`PLATFORM_AIS`:
+  `AiPitShuttle` `$38`, `AiCrumblePlatform` `$3C`, Y = id·2), captured from `gfx/compare/s116_a6a.state` (area `$6A`,
+  which has pit cells) so that `_fix_platform` can put half the cases on the real map, where the probe finds b0:
+  `python3 -m tools.emu.routine_capture --load-state gfx/compare/s116_a6a.state --cases 300
+  --routine AiPitShuttle,AiCrumblePlatform --out web/test/obj_frames/fuzz_platform.json`.
+
 - `fuzz_effect.json` (s93): 100 cases each for `obj/ai_effect.js` (`EFFECT_AIS`: `AiPlayerFollowC` `$04`,
   `AiStraightMoverTl` `$57` = `AiStraightMoverTail`, `AiMpDrain` `$76`, regs Y = id·2 as `ObjUpdateAll` leaves it);
   steered by `_fix_effect`. `AiMpDrain` runs through `runNow` (its `HudRedraw` is a generator; the capture removes

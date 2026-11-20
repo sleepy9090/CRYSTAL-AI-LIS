@@ -79,6 +79,8 @@ const RUN = {
   AiDrifter: (m, r) => { F.aiDrifter(m, r.x); },
   AiWaitClear: (m, r) => { F.aiWaitClear(m, r.x); },
   AiCoin: (m, r) => { F.aiCoin(m, r.x); },
+  AiPitShuttle: (m, r) => { F.aiPitShuttle(m, r.x); },              // s117: the pit platforms AI $38 / $3C
+  AiCrumblePlatform: (m, r) => { F.aiCrumblePlatform(m, r.x); },
   // s87: the boss shot / effect AIs (obj/ai_shot.js)
   AiCountdown: (m, r) => { S.aiCountdown(m, r.x); },
   AiCurveShot: (m, r) => { S.aiCurveShot(m, r.x); },

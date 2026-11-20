@@ -6,7 +6,7 @@
 //   AI $44 AiDasher 27:B436          AI $45 AiHomingFlyer 27:B4BA (+ SteerToward 27:B73E, AiOffscreenHalf 27:B769)
 //   AI $48 AiHomingShooter 27:B55A   AI $58 AiOrbiter 27:B6AA     AI $5C AiPatrolGunner 27:B626
 //   AI $5D AiDrifter 27:B690         AI $5E AiWaitClear 27:B5F3   AI $2B AiTrapChest 27:AC60 (+ ChestHop 27:B79F)
-//   AI $7B AiCoin 27:B778
+//   AI $7B AiCoin 27:B778            AI $38 AiPitShuttle 27:AFA9      AI $3C AiCrumblePlatform 27:AFF5 (s117)
 import { cpuRd } from '../prg.js';
 import {
   rand64, dirToTarget, spawnShot, objPosToTemp, tempToObjPos, tempAddOffset, tempAddStep, objStepVector,
@@ -14,8 +14,9 @@ import {
 } from './util.js';
 import { objMoveSlide } from './move.js';
 import { aiShootCheck } from './ai_static.js';
+import { playSound } from '../playsound.js';
 
-const X_LO = 0x70, Y_HI = 0xD0;
+const X_LO = 0x70, Y_HI = 0xD0, FREEZE = 0x05A0, RIDE_SLOT = 0x0541;
 const META_ID = 0x0300, FLAGS2 = 0x0340, META_DIR = 0x0360, FLAGS = 0x0380, COLL = 0x03A0, SHOT_ID = 0x0440;
 const TIMER = 0x0480, ACTIVE = 0x04A0, ANIM = 0x04E0, ELEM = 0x0500, SPAWN_PARAM = 0x0560, PHASE = 0x0600;
 const TIMER2 = 0x0620, ACT_TIMER = 0x0640;
@@ -245,7 +246,40 @@ export function aiCoin(m, x) {
   if (m.rd(TIMER + x) >= 0xC0) chestHop(m, x, m.rd(TIMER + x));
 }
 
+/** AI $38 AiPitShuttle 27:AFA9 (types $7E/$7F, s117): DEC obj_timer; probe the point PlatformProbeOfs 27:AFED[dir&6]
+ *  ahead (26:9824, ObjBgProbe A = 0 -> no cache, no flag update); b0 (pit) set -> one free step in obj_meta_dir,
+ *  else dir + 4 and obj_freeze $20 */
+export function aiPitShuttle(m, x) {
+  dec(m, TIMER + x);
+  objPosToTemp(m, x);
+  const y = m.rd(META_DIR + x) & 6;
+  m.wr(0x30, cpuRd(m, 0xAFED + y));
+  m.wr(0x31, cpuRd(m, 0xAFEE + y));
+  tempAddOffset(m);
+  objBgProbe(m, x, 0);
+  if (m.rd(0x20) & 1) { stepFree(m, x); return; }
+  m.wr(META_DIR + x, (m.rd(META_DIR + x) + 4) & 7);
+  m.wr(FREEZE + x, 0x20);
+}
+
+/** AI $3C AiCrumblePlatform 27:AFF5 (type $9F, s117): 27:AFFB, then AiPitShuttle (also right after the despawn).
+ *  Ridden (ride_platform_slot = X) -> obj_phase 1; else obj_anim $1E -> sound $64 (Y = $78 from ObjUpdateAll's
+ *  TAY); phase != 0 -> obj_coll 0, meta $B7, DEC obj_anim, 0 -> obj_active 0 */
+export function aiCrumblePlatform(m, x) {
+  if (x === m.rd(RIDE_SLOT)) m.wr(PHASE + x, 1);
+  else {
+    if (m.rd(ANIM + x) === 0x1E) playSound(m, 0x64, 0x78);
+    if (m.rd(PHASE + x)) {
+      m.wr(COLL + x, 0);
+      m.wr(META_ID + x, 0xB7);
+      dec(m, ANIM + x);
+      if (m.rd(ANIM + x) === 0) m.wr(ACTIVE + x, 0);
+    }
+  }
+  aiPitShuttle(m, x);
+}
+
 export const AI_FIELD = {
   0x2B: aiTrapChest, 0x44: aiDasher, 0x45: aiHomingFlyer, 0x48: aiHomingShooter, 0x58: aiOrbiter,
-  0x5C: aiPatrolGunner, 0x5D: aiDrifter, 0x5E: aiWaitClear, 0x7B: aiCoin,
+  0x5C: aiPatrolGunner, 0x5D: aiDrifter, 0x5E: aiWaitClear, 0x7B: aiCoin, 0x38: aiPitShuttle, 0x3C: aiCrumblePlatform,
 };
