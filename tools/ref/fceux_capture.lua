@@ -154,9 +154,13 @@ end
 -- frame_2450.png (also frame_2460.png): FCEUX skips rendering at max speed, so savescreenshotas wrote
 -- a stale picture (the .ram/.wram/.nt/.pal dumps were fine; tools/ref/screen_state_compare.py uses
 -- those). "normal" renders every frame (~45 s for the whole script).
+-- Manual run after s95: even at "normal" speed the screen PNGs (and frame_2460.png) stayed identical
+-- to frame_2450.png. The cause is savestate.save(): once the script saves a savestate, FCEUX 2.6.5 stops
+-- updating the screenshot picture (a test run without savestates got a distinct frame_2460.png).
+-- So no savestates: each screen scenario powers on again and replays the canonical keys to
+-- SCREEN_STATE_FRAME (~8 x 42 s extra at normal speed).
 if emu_.speedmode then emu_.speedmode("normal") end
 emu_.poweron()
-local screen_ss
 for n = 0, last do
   joypad.set(1, held[n] or {})
   emu_.frameadvance()
@@ -164,19 +168,15 @@ for n = 0, last do
   for _, ad in ipairs(TRACE) do t[#t + 1] = string.format("%02X", memory.readbyte(ad)) end
   tr:write(table.concat(t, " ") .. "\n")
   if want[n] then capture(n, log) end
-  if n == SCREEN_STATE_FRAME and savestate then
-    screen_ss = (savestate.object or savestate.create)()
-    savestate.save(screen_ss)
-  end
 end
 tr:close()
-if screen_ss then
-  for _, sc in ipairs(SCREENS) do
-    savestate.load(screen_ss)
-    run_screen(sc[1], sc[2], log)
+for _, sc in ipairs(SCREENS) do
+  emu_.poweron()
+  for n = 0, SCREEN_STATE_FRAME do
+    joypad.set(1, held[n] or {})
+    emu_.frameadvance()
   end
-else
-  log:write("# no savestate API: menu/death/save screens skipped\n")
+  run_screen(sc[1], sc[2], log)
 end
 log:close()
 print("re-c capture done: " .. OUTDIR)

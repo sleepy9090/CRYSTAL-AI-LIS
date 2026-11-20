@@ -152,6 +152,37 @@ SCENARIOS['event_01']['keys'] += [f'{300 + 40 * i}:A' for i in range(8)]
 SCENARIOS['event_01']['frames'] = 700
 
 
+def spawn_param_at_give(val):
+    """exec hook at GiveItem 30:D3EB: obj_spawn_param[$0623] := val (the slot is only known at run time)."""
+    def f(nes):
+        nes.bus.ram[0x0560 + nes.bus.ram[0x0623]] = val
+    return (30, 0xD3EB, f)
+
+
+# s96: event act 15 (30:D70D) = trigger slot param $41 (Refresh, inv $6458+8) + GiveItem; magic $6458-5F
+# full -> GiveItemFull
+SCENARIOS['give_full'] = event_act(15, extra={0x6458 + i: 0x41 + i for i in range(8)})
+SCENARIOS['give_full']['note'] = 'event act 15 -> GiveItem $41 with magic $6458-5F full -> GiveItemFull 30:D47C'
+SCENARIOS['give_full']['watch'] += [0x23, 0x6458]
+SCENARIOS['trap_chest'] = event_act(15, frames=500)
+SCENARIOS['trap_chest']['exec'].append(spawn_param_at_give(0x70))
+SCENARIOS['trap_chest']['note'] = 'event act 15 -> GiveItem with param forced to $70 -> TrapChest 30:D3DA + AI $2B'
+SCENARIOS['mp_telepathy_hint'] = magic(3, {0x0421: 16}, keys=['20:A', '80:A', '140:A', '200:B', '260:A', '320:B'],
+                                       frames=400, note='level 16 > TelepathyLevelGate -> TelepathyHint 14:81D1')
+SCENARIOS['use_bow'] = dict(note='area 03: Bow of Moon ($3E, $0715 = id-$1C) as key item 0, $07D7=1 (cam lock) + B '
+                                 '-> UseBowCheck', area='03', pokes={0x0715: 0x22, 0x6450: 0x3E, 0x642E: 0, 0x07D7: 1},
+                            keys=['20:B', '120:A', '160:B'], frames=240, watch=[0x23, 0x6450])
+# s96: shops. Area $C4 = ShopAreaTable 16:9F54 entry 0: the player arrives on the keeper, whose AI $0F
+# AiSetSubstate 27:A5C5 sets sub_state = $0620 = $20 (SubstArmorShop) on the first frame. The tool shop
+# ($21) / SubstShopEmpty ($24) variants overwrite sub_state at its RTS 27:A5CA. Gold 9999 so a buy succeeds
+_SHOP_KEYS = ['200:RIGHT', '240:RIGHT', '280:DOWN', '320:A', '400:A', '460:B', '520:B', '580:B']
+for _n, _ss in (('shop_armor', None), ('shop_tool', 0x21), ('shop_empty', 0x24)):
+    SCENARIOS[_n] = dict(note=f'area C4: keeper AI $0F -> sub_state {_ss or 0x20:#04x}, cursor RIGHT/DOWN, A buy, B out',
+                         area='C4', pokes={0x0702: 0x0F, 0x0703: 0x27}, keys=_SHOP_KEYS, frames=900,
+                         exec=[force(27, 0xA5CA, 0x41, _ss)] if _ss else [],
+                         watch=[0x6427, 0x6474, 0x646D, 0x0702])
+
+
 def parse_poke(s):
     a, _, v = s.partition('=')
     return int(a, 16), int(v, 16)

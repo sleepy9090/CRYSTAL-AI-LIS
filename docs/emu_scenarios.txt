@@ -676,18 +676,115 @@ tools.emu scenarios vs the 178 labels the tour never ran (docs/emu_tour.txt)
     f130: $0041 <- 08  pc 30:D884
   newly run (4): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D497:ItemUseMenu
 
-union: 114 / 178 newly run; still never run (64):
+[give_full] event act 15 -> GiveItem $41 with magic $6458-5F full -> GiveItemFull 30:D47C
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041 $0023 $6458), first of each:
+    f0: $0023 <- 02  pc 26:98E0
+    f0: $0023 <- 02  pc 26:99FD
+    f1: $0023 <- 00  pc 26:98E0
+    f1: $0023 <- 00  pc 26:99FD
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f20: $0023 <- 1D  pc 30:D83D
+    f21: $0023 <- 00  pc 20:8507
+    f28: $0023 <- 00  pc 20:852F
+    f129: $0041 <- 08  pc 30:D3C1
+    f129: $0023 <- 00  pc 26:8F35
+    f129: $0023 <- 01  pc 26:8F5A
+    f129: $0023 <- 02  pc 26:8F5A
+    f129: $0023 <- 03  pc 26:8F5A
+    f130: $0023 <- 1D  pc 30:D87D
+    f130: $0041 <- 08  pc 30:D884
+    f130: $0023 <- 41  pc 30:D83D
+    f130: $0023 <- C1  pc 14:8276
+    f135: $0023 <- 06  pc 26:98E0
+    f135: $0023 <- 06  pc 26:99FD
+    f234: $0023 <- 04  pc 26:98E0
+    f234: $0023 <- 04  pc 26:99FD
+  newly run (5): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 30:D47C:GiveItemFull 30:D497:ItemUseMenu
+
+[trap_chest] event act 15 -> GiveItem with param forced to $70 -> TrapChest 30:D3DA + AI $2B
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $0041), first of each:
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f129: $0041 <- 08  pc 30:D3C1
+    f130: $0041 <- 08  pc 30:D884
+    f130: $0041 <- 08  pc 30:D3EA
+  newly run (7): 14:831E:ItemUseHook 14:8354:InvRemoveItem 14:8497:UseTouchMatch 27:AC60:AI_TrapChest 27:B79F:ChestHop 30:D3DA:TrapChest 30:D497:ItemUseMenu
+
+[mp_telepathy_hint] magic 3 (A, PlayerMagic 27:A022) level 16 > TelepathyLevelGate -> TelepathyHint 14:81D1
+  end: $40/$41 1/08 area 03 hp 48 lv 16 gold 0 xp 0 mp 88
+  state writes ($40/$41), first of each:
+    f20: $0041 <- 15  pc 27:A1AF
+    f142: $0041 <- 08  pc 30:DE71
+  newly run (5): 14:816F:Telepathy 14:81D1:TelepathyHint 30:C482:PpuQueueBlock 30:DD6B:SubstTelepathySelect 30:DE04:SubstTelepathyReply
+
+[use_bow] area 03: Bow of Moon ($3E, $0715 = id-$1C) as key item 0, $07D7=1 (cam lock) + B -> UseBowCheck
+  end: $40/$41 1/10 area 03 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0023 $6450), first of each:
+    f0: $0023 <- 02  pc 26:98E0
+    f0: $0023 <- 02  pc 26:99FD
+    f1: $0023 <- 00  pc 26:98E0
+    f1: $0023 <- 00  pc 26:99FD
+    f20: $0041 <- 06  pc 26:9B5A
+    f20: $0041 <- 08  pc 30:D51A
+    f20: $0023 <- 3E  pc 30:D83D
+    f20: $0023 <- FF  pc 14:84DF
+    f20: $0041 <- 08  pc 30:D884
+    f20: $0041 <- 10  pc 30:D52A
+    f53: $0023 <- 00  pc 20:8507
+    f61: $0023 <- 00  pc 20:852F
+    f129: $0041 <- 08  pc 30:D3C1
+    f132: $0023 <- 06  pc 26:98E0
+    f132: $0023 <- 06  pc 26:99FD
+  newly run (6): 14:831E:ItemUseHook 14:8451:UseBowCheck 14:8469:UseFindSlotObj 14:84DB:UseFail 30:D497:ItemUseMenu 30:D526:ItemUseFail
+
+[shop_armor] area C4: keeper AI $0F -> sub_state 0x20, cursor RIGHT/DOWN, A buy, B out
+  end: $40/$41 1/08 area 02 hp 48 lv 1 gold 9899 xp 0 mp 34
+  state writes ($40/$41 $6427 $6474 $646D $0702), first of each:
+    f0: $0041 <- 20  pc 27:A5CA
+    f27: $6427 <- 00  pc 16:9545
+    f30: $646D <- 00  pc 16:996B
+    f325: $6474 <- 64  pc 16:9A4D
+    f401: $0702 <- AB  pc 16:99E6
+    f607: $0041 <- 01  pc 30:DABE
+    f651: $0041 <- 08  pc 30:CA53
+  newly run (1): 16:9A37:ShopPriceSel
+
+[shop_tool] area C4: keeper AI $0F -> sub_state 0x21, cursor RIGHT/DOWN, A buy, B out
+  end: $40/$41 1/08 area 02 hp 48 lv 1 gold 9969 xp 0 mp 34
+  state writes ($40/$41 $6427 $6474 $646D $0702), first of each:
+    f0: $0041 <- 20  pc 27:A5CA
+    f27: $6427 <- 00  pc 16:9545
+    f30: $646D <- 00  pc 16:996B
+    f325: $6474 <- 1E  pc 16:9A4D
+    f401: $0702 <- F1  pc 16:99E6
+    f607: $0041 <- 01  pc 30:DABE
+    f651: $0041 <- 08  pc 30:CA53
+  newly run (1): 16:9A37:ShopPriceSel
+
+[shop_empty] area C4: keeper AI $0F -> sub_state 0x24, cursor RIGHT/DOWN, A buy, B out
+  end: $40/$41 1/08 area 02 hp 48 lv 1 gold 9999 xp 0 mp 34
+  state writes ($40/$41 $6427 $6474 $646D $0702), first of each:
+    f0: $0041 <- 20  pc 27:A5CA
+    f329: $0041 <- 08  pc 30:D3C1
+    f329: $0041 <- 24  pc 30:D9D5
+    f354: $0041 <- 01  pc 30:DABE
+    f398: $0041 <- 08  pc 30:CA53
+  newly run (1): 30:D9C1:SubstShopEmpty
+
+union: 122 / 178 newly run; still never run (56):
   bank  4: 8000:ScreenBlank80
-  bank 14: 81D1:TelepathyHint 8451:UseBowCheck 8469:UseFindSlotObj
   bank 15: A675:BossAiE2 B807:BossDefeated BA98:BossFleeSpeech
-  bank 16: 8232:MenuChrR1 9A37:ShopPriceSel
+  bank 16: 8232:MenuChrR1
   bank 17: A000:EndingInit A0EB:EndingWait A100:EndingTick A14A:EndingScene A751:NtFill_b17 AA74:EndingFadeIn AAAD:EndingFadeOut
   bank 18: 8000:IntroRectPtr 8002:IntroRect 824B:NtRectBlitQueued 838B:MenuPalSets
   bank 19: B162:DateCardRectPtr BDF2:SubstFinalSceneReset BFC4:FinalSceneToEnding
   bank 23: BE00:NewSaveTemplate
   bank 24: 8395:SndOpSweep 8609:SndFadeStep
   bank 26: 8C32:PaletteBlackFill 8FC4:HitHandler3 92BF:HitPlayerShot 943F:RidePlatform 9D81:PlayerMoveLocked 9FD2:PlayerConveyor
-  bank 27: A092:MagicButtonSel A1BB:MagicFailSound A211:FacingKeep A5C0:AiShopEmpty AC60:AI_TrapChest ACC0:AiBurst AD9C:NpcLookAhead B436:AiDasher B595:AiFanTurret B5D3:AiFanTurretIdle B6AA:AiOrbiter B83B:ObjAiExplode
+  bank 27: A092:MagicButtonSel A1BB:MagicFailSound A211:FacingKeep A5C0:AiShopEmpty ACC0:AiBurst AD9C:NpcLookAhead B436:AiDasher B595:AiFanTurret B5D3:AiFanTurretIdle B6AA:AiOrbiter B83B:ObjAiExplode
   bank 28: 81A5:BurstRadius
-  bank 30: C7D6:FadeSaveZpToWram C944:MainStateEndingInit C94C:MainStateEnding CC4D:SubstRestoreScreen D3DA:TrapChest D47C:GiveItemFull D9C1:SubstShopEmpty
+  bank 30: C7D6:FadeSaveZpToWram C944:MainStateEndingInit C94C:MainStateEnding CC4D:SubstRestoreScreen
   bank 31: E544:AreaPitFall E573:AreaEdgeLink EF33:ScreenPageAtCamera F23D:SaveSumSlot F273:SlotCopy F5E1:IrqRowStretch F60E:IrqOffSound F782:NmiMode4 FE01:ShopDoorOpen FE18:ShopDoorClose FFBE:FarCall_B26_8CC0 FFCF:FarCall_D354
