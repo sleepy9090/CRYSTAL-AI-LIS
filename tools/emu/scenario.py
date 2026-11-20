@@ -182,6 +182,19 @@ for _n, _ss in (('shop_armor', None), ('shop_tool', 0x21), ('shop_empty', 0x24))
                          exec=[force(27, 0xA5CA, 0x41, _ss)] if _ss else [],
                          watch=[0x6427, 0x6474, 0x646D, 0x0702])
 
+# s99: enemy types no area places directly (enemy_catalog.py: no areas) -> ObjInit at +10 into slot $0F
+# (area 03 skips it), 48 px right of the player. $DC = AI $74 ObjAiExplode -> $DD -> $CF (AI $6F BossDefeated)
+for _n, _t, _dx, _dy in (('obj_dasher', 0x5B, 48, 0), ('obj_fan', 0x5D, 48, -32), ('obj_fan77', 0x77, 48, -32),
+                         ('obj_orbiter', 0xC8, 48, 0), ('obj_burst', 0x4D, 48, 0), ('obj_explode', 0xDC, 48, 0)):
+    SCENARIOS[_n] = dict(note=f'area 03: ObjInit type ${_t:02X} in slot $0F at player+({_dx},{_dy}) at +10',
+                         area='03', pokes={0x03C1: 0x60, 0x0421: 16}, spawn=[(10, 0x0F, _t, _dx, _dy)],
+                         keys=['200:LEFT:20'], frames=500, watch=[0x04AF, 0x060F])
+# BossDefeated scans BossAreaList 15:B95D for $6C with no end mark: outside a boss area the index runs on
+# ($42 from area 03) and the record's code hook JSRs into RAM (crash at $1890). Area $0A = list entry 0.
+SCENARIOS['obj_explode'].update(area='0A', note='area 0A (BossAreaList entry 0): ObjInit type $DC '
+                                '(ObjAiExplode -> $DD -> $CF BossDefeated) in slot $0F at +10',
+                                watch=[0x04AF, 0x060F, 0x0102, 0x07D7])
+
 
 def parse_poke(s):
     a, _, v = s.partition('=')
@@ -219,6 +232,27 @@ def never_run():
                 ad, _, name = tok.partition(':')
                 out[(int(m[1]), int(ad, 16))] = name
     return out
+
+
+def spawn_obj(nes, slot, typ, dx, dy):
+    """s99: ObjInit 30:C25D (slot $10, type $11) between frames, then place the object dx/dy px from
+    the player (slot 1). CPU regs, mapper regs, $10-$13 and the bank shadows $50/$6F are restored."""
+    cpu, m, r = nes.cpu, nes.mapper, nes.bus.ram
+    regs = (cpu.a, cpu.x, cpu.y, cpu.p, cpu.pc)
+    mregs, msel = list(m.regs), m.bank_select
+    zp = {a: r[a] for a in (0x10, 0x11, 0x12, 0x13, 0x50, 0x6F)}
+    r[0x10], r[0x11] = slot, typ
+    nes.call(0xC25D)
+    for a, v in zp.items():
+        r[a] = v
+    m.regs[:] = mregs
+    m.bank_select = msel
+    m._update_prg()
+    cpu.a, cpu.x, cpu.y, cpu.p, cpu.pc = regs
+    x = (r[0x71] | r[0x91] << 8) + dx
+    y = (r[0xB1] | r[0xD1] << 8) + dy
+    r[0x70 + slot], r[0x90 + slot] = x & 0xFF, x >> 8 & 0xFF
+    r[0xB0 + slot], r[0xD0 + slot] = y & 0xFF, y >> 8 & 0xFF
 
 
 def write_mem(nes, ad, v):
@@ -264,6 +298,9 @@ def run(sc, verbose=False):
         m1 = m2 = 0
         if each:
             each(nes, o)
+        for off, slot, typ, dx, dy in sc.get('spawn', []):
+            if o == off:
+                spawn_obj(nes, slot, typ, dx, dy)
         for off, port, mask, ln in keys:
             if port == 's':
                 if o == off:

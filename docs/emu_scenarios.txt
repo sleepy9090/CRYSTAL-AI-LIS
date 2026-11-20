@@ -774,17 +774,144 @@ tools.emu scenarios vs the 178 labels the tour never ran (docs/emu_tour.txt)
     f398: $0041 <- 08  pc 30:CA53
   newly run (1): 30:D9C1:SubstShopEmpty
 
-union: 122 / 178 newly run; still never run (56):
+[obj_dasher] area 03: ObjInit type $5B in slot $0F at player+(48,0) at +10
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 34
+  state writes ($40/$41 $04AF $060F), first of each:
+    f10: $060F <- 00  pc 30:C2A3
+    f10: $04AF <- 00  pc 30:C29D
+    f10: $04AF <- 44  pc 30:C34A
+    f10: $060F <- 28  pc 27:B4A9
+    f11: $060F <- 27  pc 27:B448
+    f12: $060F <- 26  pc 27:B448
+    f13: $060F <- 25  pc 27:B448
+    f14: $060F <- 24  pc 27:B448
+    f15: $060F <- 23  pc 27:B448
+    f16: $060F <- 22  pc 27:B448
+    f17: $060F <- 21  pc 27:B448
+    f18: $060F <- 20  pc 27:B448
+    f19: $060F <- 1F  pc 27:B448
+    f20: $060F <- 1E  pc 27:B448
+    f21: $060F <- 1D  pc 27:B448
+    f22: $060F <- 1C  pc 27:B448
+    f23: $060F <- 1B  pc 27:B448
+    f24: $060F <- 1A  pc 27:B448
+    f25: $060F <- 19  pc 27:B448
+    f26: $060F <- 18  pc 27:B448
+    f27: $060F <- 17  pc 27:B448
+    f28: $060F <- 16  pc 27:B448
+    f29: $060F <- 15  pc 27:B448
+    f30: $060F <- 14  pc 27:B448
+    f31: $060F <- 13  pc 27:B448
+    f32: $060F <- 12  pc 27:B448
+    f33: $060F <- 11  pc 27:B448
+    f34: $060F <- 10  pc 27:B448
+    f35: $060F <- 0F  pc 27:B448
+    f36: $060F <- 0E  pc 27:B448
+    f37: $060F <- 0D  pc 27:B448
+    f38: $060F <- 0C  pc 27:B448
+    f39: $060F <- 0B  pc 27:B448
+    f40: $060F <- 0A  pc 27:B448
+    f41: $060F <- 09  pc 27:B448
+    f42: $060F <- 08  pc 27:B448
+    f43: $060F <- 07  pc 27:B448
+    f44: $060F <- 06  pc 27:B448
+    f45: $060F <- 05  pc 27:B448
+    f46: $060F <- 04  pc 27:B448
+  newly run (1): 27:B436:AiDasher
+
+[obj_fan] area 03: ObjInit type $5D in slot $0F at player+(48,-32) at +10
+  end: $40/$41 1/08 area 02 hp 59 lv 16 gold 0 xp 0 mp 34
+  state writes ($40/$41 $04AF $060F), first of each:
+    f10: $060F <- 00  pc 30:C2A3
+    f10: $04AF <- 00  pc 30:C29D
+    f10: $04AF <- CC  pc 30:C34A
+    f89: $0041 <- 01  pc 31:EB68
+    f105: $04AF <- 00  pc 31:E622
+    f106: $04AF <- 30  pc 30:C34A
+    f106: $060F <- 55  pc 30:C3C0
+    f106: $060F <- 4A  pc 31:E323
+    f133: $0041 <- 08  pc 30:CA53
+  newly run (3): 26:92BF:HitPlayerShot 27:B595:AiFanTurret 27:B5D3:AiFanTurretIdle
+
+[obj_fan77] area 03: ObjInit type $77 in slot $0F at player+(48,-32) at +10
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 34
+  state writes ($40/$41 $04AF $060F), first of each:
+    f10: $060F <- 00  pc 30:C2A3
+    f10: $04AF <- 00  pc 30:C29D
+    f10: $04AF <- CD  pc 30:C34A
+  newly run (2): 27:B595:AiFanTurret 27:B5D3:AiFanTurretIdle
+
+[obj_orbiter] area 03: ObjInit type $C8 in slot $0F at player+(48,0) at +10
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 34
+  state writes ($40/$41 $04AF $060F), first of each:
+    f10: $060F <- 00  pc 30:C2A3
+    f10: $04AF <- 00  pc 30:C29D
+    f10: $04AF <- D8  pc 30:C34A
+  newly run (1): 27:B6AA:AiOrbiter
+
+[obj_burst] area 03: ObjInit type $4D in slot $0F at player+(48,0) at +10
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 34
+  state writes ($40/$41 $04AF $060F), first of each:
+    f10: $060F <- 00  pc 30:C2A3
+    f10: $04AF <- 00  pc 30:C29D
+    f10: $04AF <- 2C  pc 30:C34A
+    f10: $04AF <- 00  pc 27:ACD7
+    f167: $04AF <- 24  pc 30:C34A
+  newly run (1): 27:ACC0:AiBurst
+
+[obj_explode] area 0A (BossAreaList entry 0): ObjInit type $DC (ObjAiExplode -> $DD -> $CF BossDefeated) in slot $0F at +10
+  end: $40/$41 1/08 area 0A hp 96 lv 16 gold 0 xp 0 mp 34
+  state writes ($40/$41 $04AF $060F $0102 $07D7), first of each:
+    f10: $060F <- 00  pc 30:C2A3
+    f10: $04AF <- 00  pc 30:C29D
+    f10: $04AF <- 74  pc 30:C34A
+    f10: $07D7 <- 10  pc 27:B855
+    f10: $060F <- FF  pc 27:B858
+    f10: $060F <- 05  pc 27:B8CA
+    f10: $07D7 <- 0F  pc 31:E900
+    f11: $060F <- 04  pc 27:B858
+    f12: $060F <- 03  pc 27:B858
+    f13: $060F <- 02  pc 27:B858
+    f14: $060F <- 01  pc 27:B858
+    f15: $060F <- 00  pc 27:B858
+    f22: $060F <- 02  pc 27:B8CA
+    f25: $060F <- 04  pc 27:B8CA
+    f61: $060F <- 03  pc 27:B8CA
+    f202: $04AF <- 6F  pc 30:C34A
+    f204: $04AF <- 6E  pc 30:C34A
+    f204: $060F <- 00  pc 15:B828
+    f204: $0102 <- 11  pc 15:B85D
+    f204: $04AF <- 14  pc 30:C34A
+    f204: $060F <- 02  pc 30:C3C0
+    f204: $07D7 <- 0E  pc 31:E900
+    f206: $07D7 <- 0D  pc 31:E900
+    f207: $07D7 <- 0C  pc 31:E900
+    f208: $07D7 <- 0B  pc 31:E900
+    f209: $07D7 <- 0A  pc 31:E900
+    f210: $07D7 <- 09  pc 31:E900
+    f211: $07D7 <- 08  pc 31:E900
+    f212: $07D7 <- 07  pc 31:E900
+    f213: $07D7 <- 06  pc 31:E900
+    f214: $07D7 <- 05  pc 31:E900
+    f215: $07D7 <- 04  pc 31:E900
+    f216: $07D7 <- 03  pc 31:E900
+    f217: $07D7 <- 02  pc 31:E900
+    f218: $07D7 <- 01  pc 31:E900
+    f219: $07D7 <- 00  pc 31:E900
+    f240: $04AF <- 00  pc 26:98CC
+  newly run (2): 15:B807:BossDefeated 27:B83B:ObjAiExplode
+
+union: 130 / 178 newly run; still never run (48):
   bank  4: 8000:ScreenBlank80
-  bank 15: A675:BossAiE2 B807:BossDefeated BA98:BossFleeSpeech
+  bank 15: A675:BossAiE2 BA98:BossFleeSpeech
   bank 16: 8232:MenuChrR1
   bank 17: A000:EndingInit A0EB:EndingWait A100:EndingTick A14A:EndingScene A751:NtFill_b17 AA74:EndingFadeIn AAAD:EndingFadeOut
   bank 18: 8000:IntroRectPtr 8002:IntroRect 824B:NtRectBlitQueued 838B:MenuPalSets
   bank 19: B162:DateCardRectPtr BDF2:SubstFinalSceneReset BFC4:FinalSceneToEnding
   bank 23: BE00:NewSaveTemplate
   bank 24: 8395:SndOpSweep 8609:SndFadeStep
-  bank 26: 8C32:PaletteBlackFill 8FC4:HitHandler3 92BF:HitPlayerShot 943F:RidePlatform 9D81:PlayerMoveLocked 9FD2:PlayerConveyor
-  bank 27: A092:MagicButtonSel A1BB:MagicFailSound A211:FacingKeep A5C0:AiShopEmpty ACC0:AiBurst AD9C:NpcLookAhead B436:AiDasher B595:AiFanTurret B5D3:AiFanTurretIdle B6AA:AiOrbiter B83B:ObjAiExplode
+  bank 26: 8C32:PaletteBlackFill 8FC4:HitHandler3 943F:RidePlatform 9D81:PlayerMoveLocked 9FD2:PlayerConveyor
+  bank 27: A092:MagicButtonSel A1BB:MagicFailSound A211:FacingKeep A5C0:AiShopEmpty AD9C:NpcLookAhead
   bank 28: 81A5:BurstRadius
   bank 30: C7D6:FadeSaveZpToWram C944:MainStateEndingInit C94C:MainStateEnding CC4D:SubstRestoreScreen
   bank 31: E544:AreaPitFall E573:AreaEdgeLink EF33:ScreenPageAtCamera F23D:SaveSumSlot F273:SlotCopy F5E1:IrqRowStretch F60E:IrqOffSound F782:NmiMode4 FE01:ShopDoorOpen FE18:ShopDoorClose FFBE:FarCall_B26_8CC0 FFCF:FarCall_D354

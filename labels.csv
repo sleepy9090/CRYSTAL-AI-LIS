@@ -434,7 +434,7 @@ bank,addr,name,comment
 *,0706,xp_next,XP needed for next level $0706/$0707 (26:8B9E[level])
 27,B83B,ObjAiExplode,AI $74 boss explosion (types $DC -> $DD -> $CF via ObjBecomeNext)
 15,B807,BossDefeated,AI $6F (type $CF): slot -> type $0F reward drop; BossAreaList[area] -> 21-byte BossRecs record
-15,B95D,BossAreaList,14 areas: 0A 1A 28 FF 6E F2 A9 AC B9 B6 9F A6 6C 5F
+15,B95D,BossAreaList,14 areas: 0A 1A 28 FF 6E F2 A9 AC B9 B6 9F A6 6C 5F; no end mark (s99: scan from a non-boss area runs past it -> garbage record hook)
 15,B96B,BossRecPtrs,ptr16[14] -> 21-byte records (code ptr; ?; music; drop param; 8 pal ids; 6 CHR; $62FE; clear-enemies flag)
 15,B987,BossRecs,13 x 21 bytes (see REVERSE.md Boss defeat)
 15,BA98,BossFleeSpeech,record hook for areas 28/6E/F2: player reset; slot $1F type $2B; msg from BossFleeRecs; clear enemies
