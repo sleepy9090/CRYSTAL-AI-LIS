@@ -447,7 +447,9 @@ bank,addr,name,comment
 14,86E0,NpcPresenceHi,ptr16[$50] NpcHidden lists for params 80-CF (bosses $C0-$CC: !F100-!F10C); s112: lists start at $8780 so params D0-FF read list bytes as pointers (unused)
 27,A660,AiS0DTransform,s112: AI $50: timer2 0 -> slot $0D = ObjInit(death type $04CD) via FarCall_C25D + act_timer $70; 1 -> freeze slot 0 until act_timer 0 then meta $C0 sub_state $11 $0623=X; >=2 on screen -> meta $3B + ObjMoveSlide dir 6 (web obj/ai_static.js)
 27,A419,AiNone7F,s112: AI $7F = RTS (dormant boss $5E)
-27,B7F6,AiScreenRedraw08,s112: AI $08 (slot $0D after AI $50): JSR B850; act_timer-- ; <$0A -> MarkScreenVisited + WaitPpuQueue + 98A8/9824 + FarCall_EB91 BG row + PpuQueueAttrAll on the last; not ported yet
+27,B7F6,AiScreenRedraw08,s112: AI $08 (slot $0D after AI $50): JSR B850; act_timer-- ; <$0A -> MarkScreenVisited + WaitPpuQueue + 98A8/9824 + FarCall_EB91 BG row (y + timer*8 - $28) + PpuQueueAttrAll on the last (s114 web obj/ai_effect.js aiScreenRedraw08)
+27,B850,ExplodeStep,s114: shared tail of AI $74/$08: boss_cam_lock $10; DEC obj_phase; borrow -> SpawnShot($3E dir=caller Y) unless area E4/73 or 28/7C+X=$0E; place from ExplodeStepRecs or phase only; end -> ObjBecomeNext
+27,B8E6,ExplodeStepRecs,s114: 4-byte recs by obj_timer2 (dx; dy; meta id; next phase); dx 0 / phase 0 = done
 31,E35F,SpawnH1PhaseTable,s112: 4 bytes DA 22 4A AA: obj_phase by param&3 when behaviour bit 2 clear
 30,D9D8,SwordPowerLevel,Y=0/1/2 sword power from $0711 sword + $0718 ball/bracelet element match -> $0719
 30,C17D,OamClipTop,hide OAM sprites 1-63 with Y <= $58-($04&7) (Y=$F0) under the top window

@@ -50,6 +50,11 @@ export function mainStep(m) {
     else if (r.value === SPIN) return true;         // ROM spin loop (queue wait): frame_ready stays set
     else if (r.value === NO_NMI) { m.skipNmi = true; m.noNmiResume = true; return true; }
   }
+  if (m.overrun) {                                  // s114: CPU overrun (lag frame), see Machine.runFrame
+    m.overrun = false;
+    m.overrunNmi = true;                            // the NMI comes while frame_ready is still set
+    return true;
+  }
   m.wr(R.frame_ready, 0);                           // 30:C919 (wait loops inside routines clear it too)
   return true;
 }

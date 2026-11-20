@@ -147,6 +147,9 @@ export class Machine {
     this.ppu.renderFrame();
     if (this.skipNmi) this.skipNmi = false;          // s107: NO_NMI (lost NMI, see states/death.js)
     else nmiWork(this);
+    // s114: CPU overrun. The ROM's frame ran past line 241, so its NMI found frame_ready != 0 (no OAM DMA, no
+    // scroll copy, frame_ready 2). Then MainLoop's 30:C919 clears it and waits a whole frame for the next NMI.
+    if (this.overrunNmi) { this.overrunNmi = false; this.wr(0x09, 0); }
     this._cyc3 += FRAME_CYCLES3;
     const n = Math.floor(this._cyc3 / 3);
     this._cyc3 -= n * 3;
