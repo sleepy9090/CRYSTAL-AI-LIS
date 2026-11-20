@@ -18,7 +18,7 @@ import { cpuRd, indY, setR6, setR7, switchBank16, farRestore } from '../prg.js';
 import { readPads, readPadsMenu } from '../pads.js';
 import { queuePush, ppuQueueFlush, ppuCtrlNmiOff, ppuCtrlNmiOn } from '../world/ppuqueue.js';
 import { spriteDraw } from '../obj/sprites.js';
-import { waitFrame, statRecalc, paletteBuildRom } from './death.js';
+import { waitFrame, statRecalc, paletteBuildRom, hudRedraw } from './death.js';
 import { waitPpuQueue } from './pause.js';
 import { saveLoadPage, menuExitFade, loadTail } from './saveload.js';
 
@@ -415,9 +415,62 @@ function* drawLabels(m) {
   for (const s of (m.rd(KIND) ? [4, 5] : [0, 1, 2, 3])) yield* menuPrint(m, s);
 }
 
+/** MenuFarHud 16:8613: $10-$2F saved to $60EC, FarCall_B26_8E46 (HudRedraw A, X = $20), restored */
+function* menuFarHud(m, a) {
+  for (let x = 0; x < 0x20; x++) m.wr(0x60EC + x, m.rd(0x10 + x));
+  m.wr(0x10, a);                                        // 31:FFA9 STA $10
+  const r6 = m.rd(0x6E), r7 = m.rd(0x6F);
+  setR6(m, 0x1A);
+  yield* hudRedraw(m, a, 0x20);
+  farRestore(m, r6, r7);                                // RestoreBanks 31:FFDB
+  for (let x = 0; x < 0x20; x++) m.wr(0x10 + x, m.rd(0x60EC + x));
+}
+
+/** MenuSellGold 16:8631: gold += price 16:9EC2[item] (through $6474, saturates at $FFFF) */
+function menuSellGold(m) {
+  const x = (curItem(m)[0] << 1) & 0xFF;
+  let v = cpuRd(m, 0x9EC2 + x) + m.rd(0x0702) + ((cpuRd(m, 0x9EC3 + x) + m.rd(0x0703)) << 8);
+  if (v > 0xFFFF) v = 0xFFFF;
+  m.wr(0x6474, v & 0xFF); m.wr(0x6475, v >> 8);
+  m.wr(0x0702, v & 0xFF); m.wr(0x0703, v >> 8);
+}
+
+/** 16:81BE / 16:84C4: shop price line: $6474 = 16:9EC2[item], "$" (string $33 / $34 by grid), digits = HUD
+ *  element $0D ($6474 at $2A99) */
+function* priceLine(m, lookupFirst) {
+  const lookup = () => {
+    const x = (curItem(m)[0] << 1) & 0xFF;
+    m.wr(0x6474, cpuRd(m, 0x9EC2 + x)); m.wr(0x6475, cpuRd(m, 0x9EC3 + x));
+  };
+  if (lookupFirst) lookup();                            // 81BE: price, then "$"
+  yield* menuPrint(m, m.rd(KIND) ? 0x34 : 0x33);
+  if (!lookupFirst) lookup();                           // 84B7: "$", then price
+  yield* menuFarHud(m, 0x0D);
+}
+
+/** 16:847B: "YES NO"; NO -> "Please come again.", wait for any key, PLA PLA RTS = leave EquipMenu
+ *  (returns 'exit'); YES -> the cursor item's name + price again */
+function* shopAgain(m) {
+  if (yield* confirm(m, 0xA0)) {
+    menuSnd(m, 0x4C);
+    yield* menuPrint(m, 0x0F);
+    yield* menuPrint(m, 0x2C);
+    do { yield* waitFrame(m); readPadsMenu(m); } while (!m.rd(R.pad_new));
+    return 'exit';
+  }
+  menuSnd(m, 0x4C);                                     // 849E
+  yield* menuPrint(m, 0x0F);
+  const [a] = curItem(m);
+  if (a === 0xFF) return undefined;
+  m.wr(0x19, a);
+  yield* menuPrint(m, 6);
+  yield* priceLine(m, false);
+  return undefined;
+}
+
 /** 16:82B7 (A): equip the cursor item in its row, or unequip it if it is the selected one */
 function* pressA(m) {
-  if (m.rd(SHOP)) { yield* pressB(m, true); return; }   // 82BC JMP 835E
+  if (m.rd(SHOP)) return yield* pressB(m, true);        // 82BC JMP 835E (shop: A = sell)
   const [a] = curItem(m);
   if (a === 0xFF) { menuSnd(m, 0x4E); yield* menuPrint(m, 0x0F); return; }
   const x = (rowBase(m) + m.rd(0x2B)) & 0xFF;
@@ -443,7 +496,13 @@ function* pressA(m) {
 
 /** 16:8342 (B): drop the cursor item after "YES/NO" (flag 16:8FF0 b6 = cannot drop) */
 function* pressB(m, fromA = false) {
-  if (!fromA && m.rd(SHOP)) { unported(m, '16:8347', 'menu shop variant (B)'); return; }
+  if (!fromA && m.rd(SHOP)) {                          // 8347: shop B = "Anything else?" -> 847B
+    menuSnd(m, 0x4C);
+    yield* menuPrint(m, 0x0F);
+    yield* menuPrint(m, 0x31);
+    yield* menuPrint(m, 0x0E);
+    return yield* shopAgain(m);
+  }
   const [a, xi] = curItem(m);                          // 835E
   if (a === 0xFF) { menuSnd(m, 0x4E); return; }
   m.wr(0x2C, xi); m.wr(0x19, a); m.wr(0x646E, a);
@@ -463,7 +522,7 @@ function* pressB(m, fromA = false) {
     return;
   }
   menuSnd(m, 0x4C);
-  if (m.rd(SHOP)) unported(m, '16:8631', 'menu shop variant (sell gold + 16:8613 HUD)');
+  if (m.rd(SHOP)) { menuSellGold(m); yield* menuFarHud(m, 1); }   // 83D3: gold digits (HUD element 1)
   const k = (rowBase(m) + m.rd(0x2B)) & 0xFF;          // 83DB
   m.wr(0x26, m.rd(INV + ((cpuRd(m, 0x85A6 + k) + m.rd(SEL + k)) & 0xFF)));
   if ((m.rd(SEL + k) & 7) === m.rd(0x2A)) {             // dropping the equipped item
@@ -489,7 +548,11 @@ function* pressB(m, fromA = false) {
   m.wr(CUR, cur);
   m.wr(0x2A, m.rd(0x14)); m.wr(0x2B, m.rd(0x15));
   yield* drawLabels(m);
-  if (m.rd(SHOP)) unported(m, '16:846C', 'menu shop variant (after drop)');
+  if (!m.rd(SHOP)) return undefined;
+  yield* menuPrint(m, 0x0F);                           // 846C: "Anything else?" YES NO
+  yield* menuPrint(m, 0x0C);
+  yield* menuPrint(m, 0x0E);
+  return yield* shopAgain(m);
 }
 
 /** bank 16 menu entry 16:8000 */
@@ -540,8 +603,11 @@ export function* equipMenu(m) {
       if (a === 0xFF) { yield* menuPrint(m, 0x0F); lbl = 'loop'; continue; }
       m.wr(0x19, a);
       yield* menuPrint(m, 0x0F);
-      if (m.rd(SHOP)) unported(m, '16:81B4', 'menu shop variant (price)');
-      else yield* menuPrint(m, 6);
+      if (m.rd(SHOP)) {                                 // 81B4: name + price
+        yield* menuPrint(m, 0x0F);
+        yield* menuPrint(m, 6);
+        yield* priceLine(m, true);
+      } else yield* menuPrint(m, 6);
       lbl = 'ab';
     } else if (lbl === 'loop') {                        // 80D1
       yield* waitFrame(m);
@@ -581,8 +647,8 @@ export function* equipMenu(m) {
       }
       lbl = 'ab';
     } else if (lbl === 'ab') {                          // 815C
-      if (m.rd(R.pad_new) & 0x80) yield* pressA(m);
-      if (m.rd(R.pad_new) & 0x40) yield* pressB(m);
+      if ((m.rd(R.pad_new) & 0x80) && (yield* pressA(m)) === 'exit') return undefined;   // shop PLA PLA RTS
+      if ((m.rd(R.pad_new) & 0x40) && (yield* pressB(m)) === 'exit') return undefined;
       lbl = 'loop';
     } else {                                            // 'flip' 81ED
       yield* menuPrint(m, 0x0F);
