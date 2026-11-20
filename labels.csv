@@ -939,7 +939,7 @@ bank,addr,name,comment
 27,B79F,ChestHop,s47: A=counter; dy from nibble table 27:B7C6 -> 27:B7E6; moves y only
 20,BD80,ShotOffsets,s47: (dx dy) spawn offset [shooter obj_behav*16 + (dir*2 & F)]
 30,C67D,PpuQueueFlush,s48: NMI PPU queue flush: ring $6200 from $0A to $0B; record b6 -> PPUCTRL +32 increment; PPUADDR + data
-31,E0B8,SubstPlayTail,s48: SubstPlay JMP tail: skipped if boss_cam_lock; JSR E75E; every 16 frames slot $0D+($08>>4) if empty -> re-read area record (respawn tick; static RE only)
+31,E0B8,SubstPlayTail,s48: SubstPlay JMP tail: skipped if boss_cam_lock; JSR E75E; every 16 frames slot $0D+($08>>4) if empty -> its record entry (scan ends at a $Fx byte 0) with b1 b7 -> AreaSpawnEntry; undone (obj_active=0) if on screen (s110 web port states/play.js)
 26,84BC,ObjStepSpeedTables,s49: u8[3x16] speed tables 84BC/84CC/84DC read by ObjStepVector 26:8480 (exported to web/data/tables.json)
 26,97E4,Rand64Table,s49: u8[64] read by Rand64 26:97D7 as [++$0E & $3F]
 31,EB6D,PpuScrollWrite,s51: PPUSCROLL <- $07D8 then $07DA; ppuctrl_shadow b0-1 = ($07DB b0)<<1 | ($07D9 b0) -> PPUCTRL (web: mainloop.js ppuScrollWrite)
@@ -1319,3 +1319,6 @@ bank,addr,name,comment
 31,EA41,BossCamCenter,s108: boss_cam_lock b7, odd frames: step $3C/$3E 1 px toward 0; $07D5=1 once both 0
 31,EADF,CameraShake,s108: boss_cam_lock 1-$7F path: $07D6 frames, cam_ofs_x from 31:EB05 (0 -4 0 +4) by $08&3
 31,EB05,CameraShakeTable,s108: cam_ofs_x per $08&3 for CameraShake
+27,A219,AiFollowFacing,s110: AI $05: DEC $0603 (slot 3) while != 0; slot X = slot 0 pos + 4 px toward obj_meta_id_s01&3 (table 27:A242); web obj/ai_effect.js
+27,A242,FollowFacingOfs,s110: AI $05 dx/dy by facing 0-3: (0;-4) (4;0) (0;4) (-4;0)
+31,E12B,ObjOffscreenCheck,s110: C=1 if slot X x hi or y hi differs from the camera ($02-$05) = off screen; the respawn tick keeps the spawn only then

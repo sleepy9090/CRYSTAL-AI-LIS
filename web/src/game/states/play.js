@@ -2,20 +2,212 @@
 // SubstateHandlerTable 30:CADE (ptr16 x 40) -> $10/$11, SubstateBankTable 30:CB2E -> SwitchBank16, JMP ($0010).
 // Only the ported substates are in SUBSTATES; the others log once and do nothing (gameplay = "Web fix:
 // gameplay frames"). REVERSE.md "State Machine" + "Death / game over (session 88)".
+//
+// s110: SubstPlay 30:CB62 (sub_state 8) = one gameplay frame:
+//   ReadPads -> PlayDeathMenuCheck 30:CB84 (HP 0 -> sub 3; START -> PauseScreen 15:BC40; SELECT -> sub $12;
+//   pad-2 debug pause / area cycler) -> PlayerStatusTick 31:EF55 -> ObjUpdateAll -> CameraTick (exit -> the
+//   frame ends) -> sprite pass 28:800E -> ObjCollideAll 26:8F6E (not ported yet, logged) -> SubstPlayTail
+//   31:E0B8 (BgChrAnimTick 31:E75E + the 16-frame respawn tick). REVERSE.md "Rest of PlayerStatusTick".
 import { R } from '../ram.js';
 import { cpuRd, setR6, switchBank16 } from '../prg.js';
-import { playerDeath, paletteBuildRom } from './death.js';
-import { pauseScreen, pauseFromPlay } from './pause.js';
+import { playerDeath, paletteBuildRom, waitFrame, waitFrames, hudRedraw, hudHpBar } from './death.js';
+import { pauseScreen } from './pause.js';
 import { substEquipMenu } from './equip.js';
 import { substNewGameInit, substAreaEnter } from './areaenter.js';
+import { readPads, readPadsMenu } from '../pads.js';
+import { playSound } from '../playsound.js';
+import { objUpdateAll } from '../obj/objects.js';
+import { spriteDraw } from '../obj/sprites.js';
+import { cameraTick } from '../world/camera.js';
+
+function unported(m, what) {
+  if (!m.unported.has(what)) { m.unported.add(what); m.log(`${what} not ported yet`); }
+}
+
+/** SubstPlay 30:CB62 */
+function* substPlay(m) {
+  const y = readPads(m);
+  const r = yield* playDeathMenuCheck(m, y);
+  if (r === true) return;                               // PLA PLA: the frame ends here
+  yield* substPlayBody(m, r);
+}
+
+/** 30:CB68-CB81: everything after PlayDeathMenuCheck; y = the Y register (PlaySound saves it in $010F) */
+function* substPlayBody(m, y) {
+  yield* playerStatusTick(m, y);                        // CB68
+  yield* objUpdateAll(m);                               // CB6B
+  if (yield* cameraTick(m)) return;                     // CB6E (ExitLookup PLAs CameraTick's caller)
+  switchBank16(m, 0x0E);                                // CB71
+  spriteDraw(m);                                        // CB76 JSR 28:800E
+  switchBank16(m, 0x0D);                                // CB79
+  unported(m, 'ObjCollideAll 26:8F6E');                 // CB7E
+  substPlayTail(m);                                     // CB81 JMP 31:E0B8
+}
+
+/** PlayDeathMenuCheck 30:CB84. Returns true when it PLAs SubstPlay's return address (the frame ends),
+ *  else the Y register SubstPlay goes on with. */
+function* playDeathMenuCheck(m, y0) {
+  let y = y0;
+  if (m.rd(0x03C1) === 0) { m.wr(R.sub_state, 3); return true; }             // player_hp = 0 -> death
+  if (m.rd(R.pad_act) & 0x10) {                                              // START
+    playPaletteRestore(m);
+    if (m.rd(R.area_id) === 0x5F) m.wr(R.irq_mode, 0);
+    switchBank16(m, 0x07);
+    y = yield* pauseScreen(m);                                               // CBA8 JSR 15:BC40
+    if (m.rd(R.area_id) === 0x5F) { unported(m, 'SubstRestoreScreen 30:CC4D'); return true; }
+    return y;
+  }
+  if (m.rd(R.pad_new) & 0x20) { m.wr(R.sub_state, 0x12); return true; }     // SELECT -> menu
+  if (m.rd(R.pad_new + 1) & 0x40) return yield* substDebugPause(m);         // pad 2 B
+  if (m.rd(R.pad_prev) === 0xC0 && (m.rd(R.pad_new + 1) & 0x80)) {          // pad 1 A+B held + pad 2 A
+    const i = m.rd(0x0780) & 0x0F;
+    m.wr(R.area_id, cpuRd(m, 0xCBEC + i));                                   // AreaByIndexTable (debug cycler)
+    m.wr(0x6D, 0);                                                           // area_entry
+    m.wr(0x0780, (m.rd(0x0780) + 1) & 0xFF);
+    m.wr(R.sub_state, 1);
+    return true;
+  }
+  return y;
+}
+
+/** SubstDebugPause 30:CBFC (pad 2 B freeze until pad 2 B again), then JMP ReadPads -> back into SubstPlay */
+function* substDebugPause(m) {
+  do {
+    yield* waitFrame(m);
+    switchBank16(m, 0x0E); spriteDraw(m); switchBank16(m, 0x0D);           // FarCall_B14_800E
+    readPadsMenu(m);
+  } while (!(m.rd(R.pad_new + 1) & 0x40));
+  m.wr(R.sub_state, 8);
+  yield* waitFrames(m, 8);
+  return readPads(m);
+}
+
+const OBJ1_FLASH = 0x0710, ACCESSORY = 0x0716, ARMOR = 0x0713, JUMP = 0x0620, HP = 0x03C1, HP_MAX = 0x03C0;
+const MP = 0x0708, MP_MAX = 0x0709, BG_ATTR = 0x0641, RIDE = 0x0541, INVULN = 0x071A, FLAGS_S01 = 0x0381;
+
+/** PlayerStatusTick 31:EF55-F0A3 (y = the Y register for PlaySound; X is $FF from ReadPads, 0 after damage) */
+function* playerStatusTick(m, y) {
+  const f = m.rd(0x08);
+  let x = 0xFF;
+  const status = () => m.rd(OBJ1_FLASH) & 0x0F;
+  let hit = false;
+  if (((f << 1) & 0xFF) === 0 && status() === 3) hit = (f & 0x1F) === 0;   // poison, every 128 frames
+  else if (m.rd(ACCESSORY) !== 0x13 && m.rd(JUMP) === 0 && ((m.rd(0x0561) | m.rd(BG_ATTR)) & 0x80)) {
+    hit = (f & 0x1F) === 0;                                                // damage floor
+  } else if (m.rd(R.area_id) === 0x1A && m.rd(ACCESSORY) !== 0x0D) hit = (f & 7) === 0;
+  if (hit) {                                                               // EF92
+    const hp = m.rd(HP) - 4;
+    m.wr(HP, hp < 0 ? 0 : hp);
+    playSound(m, 0x36, y);
+    for (x = 3; x > 0; x--) m.wr(0x6150 + x, 0x30);                        // white BG flash; X ends 0
+    yield* waitFrame(m);
+    setR6(m, 0x1A);
+    yield* hudHpBar(m);                                                    // 26:8CC0 (keeps X)
+    paletteBuildRom(m, 0);                                                 // 26:8C0E
+  }
+  setR6(m, 0x1A);                                                          // EFBC
+  if (status() === 1 && m.rd(0x06C0) === 4) {                              // paralysis: no sword charge
+    m.wr(0x06C0, 0);
+    playSound(m, 0x31, y);
+  }
+  if (status() === 2) {                                                    // EFDB stone
+    if (m.rd(0x05A0) === 0) {
+      m.wr(OBJ1_FLASH, m.rd(OBJ1_FLASH) & 0xF0);
+      m.wr(0x07E4, 0);
+      paletteBuildRom(m, 0);
+    } else if (m.rd(0x0712) === 5 && (m.rd(R.pad_new) & 0x80) && m.rd(R.sub_state) === 8) {
+      setR6(m, 0x1A);
+      // SpendMp 26:9AE8 ($18): MP 0 or short -> sub_state $1C and PLA PLA = return from PlayerStatusTick
+      m.wr(0x1F, 0x18);
+      const mp = m.rd(MP);
+      if (mp === 0 || mp < 0x18) { m.wr(R.sub_state, 0x1C); return; }
+      m.wr(MP, mp - 0x18);
+      yield* hudRedraw(m, 4, x);
+      m.wr(R.sub_state, 0x18);
+    }
+  }
+  if (m.rd(ACCESSORY) === 0x11 && (m.rd(R.pad_dir) & 0x80) && (f & 0x3F) === 0 && m.rd(MP) !== m.rd(MP_MAX)) {
+    m.wr(MP, (m.rd(MP) + 1) & 0xFF);                                       // F036 MP regen
+    yield* hudRedraw(m, 4, x);
+  }
+  if (m.rd(ARMOR) === 8 && (m.rd(R.pad_dir) & 0x80) && m.rd(HP_MAX) !== m.rd(HP) && (f & 0x0F) === 0) {
+    m.wr(HP, (m.rd(HP) + 1) & 0xFF);                                       // F057 HP regen
+    yield* hudHpBar(m);
+  }
+  if (m.rd(R.area_id) === 0x52) m.wr(0x04FE, (m.rd(0x04FE) - 1) & 0xFF);
+  if (m.rd(JUMP) === 0 && (m.rd(BG_ATTR) & 1) && m.rd(RIDE) === 0) {      // F068 pit fall
+    m.wr(R.sub_state, 1);
+    m.wr(0x6D, (m.rd(0x6D) & 0x1F) | 0x60);                                // area_entry -> pit-fall entry
+    m.wr(BG_ATTR, 0);
+  }
+  const t = m.rd(INVULN);                                                  // F089
+  if (t !== 0) {
+    m.wr(INVULN, t - 1);
+    m.wr(FLAGS_S01, m.rd(FLAGS_S01) | 0x04);
+  } else m.wr(FLAGS_S01, m.rd(FLAGS_S01) & 0xFB);
+}
+
+/** SubstPlayTail 31:E0B8: BgChrAnimTick + every 16 frames slot $0D + ($08 >> 4): if empty, look for its area
+ *  record entry with b1 b7 (respawning) -> AreaSpawnEntry, kept only when the new object is off screen. */
+function substPlayTail(m) {
+  if (m.rd(0x07D7) !== 0) return;                                          // boss_cam_lock
+  bgChrAnimTick(m);
+  const f = m.rd(0x08);
+  if (f & 0x0F) return;
+  const slot = (f >> 4) + 0x0D;
+  m.wr(0x13, slot);
+  if (m.rd(0x04A0 + slot) !== 0) return;
+  switchBank16(m, 6);                                                      // E0D8 SwitchBank16_6
+  const id = m.rd(R.area_id), t = (id & 0x80) ? 0x9301 : 0x9201, yy = (id << 1) & 0xFF;
+  m.wr(0x10, cpuRd(m, t + yy));
+  m.wr(0x11, cpuRd(m, t + yy + 1));
+  if (!(m.rd(0x11) & 0x80)) return;                                        // no area record
+  const p = m.rd(0x10) | m.rd(0x11) << 8;
+  for (let y = 5, x = 0x0D; x !== 0x1D; y += 4, x++) {
+    const b0 = cpuRd(m, p + y);
+    if ((b0 & 0xF0) === 0xF0) return;                                      // $Fx (FE/FF) ends the scan
+    if (x !== slot) continue;
+    const b1 = cpuRd(m, p + y + 1);
+    if (!(b1 & 0x80)) return;                                              // not a respawning entry
+    const b2 = cpuRd(m, p + y + 2), b3 = cpuRd(m, p + y + 3);
+    m.spawnEntry(x, { slot: x, y: b0 * 16 + 12, x: (b1 & 0x7F) * 16 + 8 + (b2 & 0x40 ? 8 : 0),
+      handler: b2 & 7, param: b3, b2, respawn: true, recY: y });           // E110 AreaSpawnEntry
+    if (!objOffscreen(m, x)) m.wr(0x04A0 + x, 0);                          // E113: on screen -> undo
+    return;
+  }
+}
+
+/** 31:E12B: carry = slot x not on the camera's screen (x hi / y hi differ) */
+function objOffscreen(m, x) {
+  const xb = m.rd(0x70 + x) < m.rd(0x02) ? 1 : 0;
+  if (((m.rd(0x90 + x) - m.rd(0x03) - xb) & 0xFF) !== 0) return true;
+  const yb = m.rd(0xB0 + x) < m.rd(0x04) ? 1 : 0;
+  return ((m.rd(0xD0 + x) - m.rd(0x05) - yb) & 0xFF) !== 0;
+}
+
+/** BgChrAnimTick 31:E75E: $62FE != 0 -> chr_r1_play = BgChrAnimTable 31:E779[$62FE*8 + (($08>>3)&7)] */
+function bgChrAnimTick(m) {
+  const b = (m.rd(0x62FE) << 3) & 0xFF;
+  m.wr(0x10, b);
+  if (b === 0) return;
+  m.wr(0x07F1, cpuRd(m, 0xE779 + (((m.rd(0x08) >> 3) & 7) | b)));
+}
 
 const SUBSTATES = new Map([
   [0, substNewGameInit],                              // 30:CA5F (s108)
   [1, substAreaEnter],                                // 30:CA2E (s108)
   [3, playerDeath],                                   // 19:B900
+  [8, substPlay],                                     // 30:CB62 (s110)
   [12, pauseScreen],                                  // 15:BC40 (vestigial entry; play calls it directly, s94)
   [18, substEquipMenu],                               // 30:D8C7 SELECT menu (s98)
 ]);
+
+/** state entry at 15:BC40 from SubstPlay (30:CBA8 JSR, after PlayPaletteRestore / area $5F irq_mode = 0) */
+function* pauseFromPlay(m) {
+  const y = yield* pauseScreen(m);
+  if (m.rd(R.area_id) === 0x5F) { unported(m, 'SubstRestoreScreen 30:CC4D'); return; }   // 30:CBB1
+  yield* substPlayBody(m, y);                         // 30:CBAF RTS -> SubstPlay goes on at CB68
+}
 
 /** Routines a tools/emu/web_state.py export may stop at that are NOT reached through the substate dispatch
  *  (JSR from code the port does not run yet). Machine.loadState starts `ENTRY_POINTS[s.until](m)` as the

@@ -2,12 +2,14 @@
 // REVERSE.md "Enemies — catalogue + generic enemy AIs" (ObjAiTable 27:A314) + "Boss / effect AIs (s93)".
 //
 //   AI $04 AiPlayerFollowC 27:B2FC  slot $0C <- player (slot 0) x/y; slot $0C obj_anim -= obj_timer2, <0 -> off
+//   AI $05 AiFollowFacing  27:A219  this slot <- slot 0 + 4 px in slot 1's facing; DEC $0603 (s110)
 //   AI $57 = AiStraightMoverTail 27:B0BE (no obj_anim step; obj/ai_static.js)
 //   AI $76 AiMpDrain       27:A4DC  overlay $A3 on the player, every 16th frame sound $31 + 1 MP + HUD MP digits;
 //                                   obj_anim -1 per frame (-3 while a button is newly pressed), borrow -> off
 //
 // AiMpDrain is a generator: HudRedraw 26:8E46 spins in PpuQueueWaitSrc($7B) while an MP / HUD record is queued.
-import { objPosToTemp, tempToObjPos } from './util.js';
+import { objPosToTemp, tempToObjPos, tempAddOffset } from './util.js';
+import { cpuRd } from '../prg.js';
 import { aiStraightMoverTail } from './ai_static.js';
 import { playSound } from '../playsound.js';
 import { hudRedraw } from '../states/death.js';
@@ -41,4 +43,17 @@ export function* aiMpDrain(m, x, overlay = 0xA3) {
   if (s < 0x100) m.wr(ACTIVE + x, 0);
 }
 
-export const AI_EFFECT = { 0x04: aiPlayerFollowC, 0x57: aiStraightMoverTail, 0x76: aiMpDrain };
+/** AI $05 27:A219 (s110; slot 3 in the start room): DEC obj_phase slot 3 $0603 while != 0 (slot 3 fixed, not X),
+ *  then this slot = player body (slot 0) + 4 px toward slot 1's facing (obj_meta_id_s01 & 3 -> 27:A242 dx/dy) */
+export function aiFollowFacing(m, x) {
+  if (m.rd(0x0603)) m.wr(0x0603, m.rd(0x0603) - 1);
+  m.wr(0x10, x);                                            // STX $10 (X saved around 26:98A8)
+  objPosToTemp(m, 0);
+  const y = (m.rd(0x0301) & 3) << 1;
+  m.wr(0x30, cpuRd(m, 0xA242 + y));
+  m.wr(0x31, cpuRd(m, 0xA243 + y));
+  tempAddOffset(m);                                         // 26:9824
+  tempToObjPos(m, x);                                       // JMP 26:9897
+}
+
+export const AI_EFFECT = { 0x04: aiPlayerFollowC, 0x05: aiFollowFacing, 0x57: aiStraightMoverTail, 0x76: aiMpDrain };

@@ -13,9 +13,11 @@ function readStable(m, x) {
   return raw;
 }
 
-/** ReadPads 31:FE80 — gameplay: pad_dir from PadDirTable, pad_new, A/B hold counters, pad_act */
+/** ReadPads 31:FE80 — gameplay: pad_dir from PadDirTable, pad_new, A/B hold counters, pad_act.
+ *  Returns the Y register it leaves (pad 1's B pulse: 0 or $80; s110, SubstPlay's PlaySound Y). X ends at $FF. */
 export function readPads(m) {
   const dirTable = m.padDirTable || (m.padDirTable = table(m.data, 'PadDirTable'));
+  let yOut = 0;
   for (let x = 1; x >= 0; x--) {
     const raw = readStable(m, x);
     m.wr(R.pad_dir + x, dirTable[raw & 0x0F]);
@@ -37,7 +39,9 @@ export function readPads(m) {
       if ((h & 0x1F) === 0) y = 0x80;
     }
     m.wr(R.pad_act + x, ((c << 7) | (y >> 1) | nw) & 0xFF);
+    yOut = y;
   }
+  return yOut;
 }
 
 /** ReadPadsMenu 31:FEE0 — menus: pad_new + d-pad auto-repeat via pad_hold_a ($0C delay, then every 3) */

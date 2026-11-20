@@ -3,9 +3,8 @@
 // StatusPlayerSprite 15:BEBF, ObjSlot1FDraw 30:C1AE, PpuQueueBlock 30:C482. NMI side: mainloop.js nmiMode2
 // (31:F751 + ApplyChrAlt 31:F64F). REVERSE.md "State-1 substates" rows 12/13 + "Pause / status screen (web port)".
 //
-//   pauseFromPlay(m)   generator for a state taken at 15:BC40 (START in SubstPlay, 30:CBA8 JSR): the screen,
-//                      then the 30:CBAB tail; the rest of SubstPlay (gameplay) is not ported yet
-//   pauseScreen(m)     generator = PauseScreen + PauseWait (sub_state 12 entry of SubstateHandlerTable too)
+//   pauseScreen(m)     generator = PauseScreen + PauseWait (sub_state 12 entry of SubstateHandlerTable too);
+//                      returns the Y register ReadPads leaves (SubstPlay goes on with it, states/play.js)
 //   ppuQueueBlock(m,a) generator = PpuQueueBlock 30:C482 (block table 30:C518, 5 bytes per id)
 import { R } from '../ram.js';
 import { cpuRd, indY, setR6, setR7, switchBank16 } from '../prg.js';
@@ -177,16 +176,6 @@ export function* pauseScreen(m) {
   m.wr(0x04BF, 0);
   m.wr(R.sub_state, 8);
   m.wr(R.irq_mode, savedIrq);                          // PLA
-  readPads(m);                                         // JMP ReadPads
+  return readPads(m);                                  // JMP ReadPads (returns its Y register)
 }
-
-/** state entry at 15:BC40 from SubstPlay (30:CBA8 JSR, after PlayPaletteRestore / area $5F irq_mode = 0) */
-export function* pauseFromPlay(m) {
-  yield* pauseScreen(m);
-  if (m.rd(R.area_id) === 0x5F) {              // 30:CBB1 JMP SubstRestoreScreen
-    if (!m.unported.has('30:CC4D')) { m.unported.add('30:CC4D'); m.log('SubstRestoreScreen 30:CC4D not ported yet'); }
-    return;
-  }
-  // 30:CBAF -> RTS: SubstPlay goes on with PlayerStatusTick / ObjUpdateAll / ... (not ported yet)
-  if (!m.unported.has('30:CB68')) { m.unported.add('30:CB68'); m.log('SubstPlay 30:CB68 (rest of the frame) not ported yet'); }
-}
+// s110: pauseFromPlay (the 15:BC40 state entry) moved to states/play.js, which now runs the rest of SubstPlay
