@@ -17,12 +17,13 @@ import { AI_WALK } from './ai_walk.js';
 import { AI_FIELD } from './ai_field.js';
 import { AI_SHOT } from './ai_shot.js';
 import { AI_EFFECT } from './ai_effect.js';
+import { AI_FINAL } from './ai_final.js';
 import { objMoveSlide } from './move.js';
 
 const FLAGS2 = 0x0340, META_DIR = 0x0360, TIMER = 0x0480, ACTIVE = 0x04A0, SPAWN_B2 = 0x0540, SPAWN_PARAM = 0x0560;
 const FREEZE = 0x05A0;
 
-export const AI_TABLE = { ...AI_HANDLERS, ...AI_WALK, ...AI_FIELD, ...AI_SHOT, ...AI_EFFECT };
+export const AI_TABLE = { ...AI_HANDLERS, ...AI_WALK, ...AI_FIELD, ...AI_SHOT, ...AI_EFFECT, ...AI_FINAL };
 
 export function hitSetFlag(m) {
   let y = 0;

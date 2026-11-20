@@ -1175,3 +1175,24 @@ bank,addr,name,comment
 15,BF1E,StatusSpriteAlt,s94: 8-byte StatusPlayerSprite records (changed forms by obj1_flash b4-6; stone = +$20)
 30,C1AE,ObjSlot1FDraw,s94: draw $20+1 8-byte records from $6000 (x y meta tile_ofs flags flags2 dir anim) via object slot $1F (28:8000) from OAM 4; then ObjHideUnusedOam
 28,8000,ObjDrawSlot1F,s94: LDX #$1F; $1B=1; JMP ObjDrawMeta (used by ObjSlot1FDraw)
+26,9B07,HitFlashPal,"s97: A=group mask; obj_flags2 b7 clear -> PaletteBuild, else odd frames pal_buf entries of masked groups = $30 (BG $0F kept) (web: obj/ai_final.js)"
+27,BA5A,Ai70Ph0Wipe,s97: AI $70 phase 0: wait slot $0D free; sound $6E; Ai70WindowWipe; visited_map=$FF; slot off
+27,BA71,Ai70WindowWipe,s97: window image then 8 passes (column starts BA9A) $7C->$7E + block $2E
+27,BA9A,Ai70WipeCols,s97: 8 column starts 00 04 02 06 01 05 03 07 (step 8 to $DC)
+27,BAB8,Ai70WindowImage,s97: $6000-$60DB = 10x$16 box ($7C fill; $6F/$72/$75 rows; $1A/$1B edges; $7F corners)
+27,BAF5,Ai70Ph1Gather,s97: AI $70 phase 1: boss_cam_lock=$7F; type-$31 objects from Ai70SpawnTable; at end messages $1B.05-07 + full HP/MP
+27,BBCE,Ai70SpawnTable,s97: 4-byte x y tile_ofs meta records read at obj_anim>>2; $FF ends
+27,BBE7,Ai70Ph2,s97: AI $70 phase 2: attr_shadow -> $6060 + block $04; sub_state $1F
+27,BC0C,Ai70Ph3Fade,s97: AI $70 phase 3: pal ids $07E0-2 = $A2-$A4 each FadeIn(9) with mask BC34; sound $14
+27,BC37,Ai70Ph4,s97: AI $70 phase 4: overlay $FC meta $FB; obj_behav = BC61[timer2&$0F]
+27,BC61,Ai70WaitTable,s97: 16 obj_behav countdowns for phase 4
+27,BC71,Ai70Ph5,s97: AI $70 phase 5: countdown then coll $34 + anim up to $1F -> phase 6
+27,BC94,Ai70Ph6,s97: AI $70 phase 6: shot $29 dir 4 (+4/+$12); countdown anim to 0 -> phase 4
+27,BCD7,Ai70FlashIrq,s97: HitFlashPal(7); irq_mode 0 or 2 with chr_r0_alt = chr_r0_play when $08 b2 clear
+27,BCF6,Ai70Ph9Copy,s97: AI $70 phase 9: bank 11 $9E00 -> $6000; block $44
+27,BD19,Ai70Ph10,s97: AI $70 phase 10: timer2 wrap -> sub_state $1E (SubstFinalSceneReset); slot off
+27,BD29,Ai70Ph8Shots,s97: AI $70 phase 8: shot $2A dirs BD58 / ($034D b7) shot $28 dirs BD89 by player x
+27,BD58,Ai70ShotDirs,s97: 16 shot dirs for phase 8 ($FF = none)
+27,BD89,Ai70AimDirs,s97: 2x16 shot dirs by slot parity and player x>>4
+27,BDA9,Ai70Ph12Follow,"s97: AI $70 phase 12: BC A0 06 = LDY obj_param2,X (leader must be AI $2E); offsets BE30"
+27,BE30,Ai70FollowOfs,"s97: signed x/y offset pairs for phase 12 (index meta&3 *2, +8 when leader act_timer!=0)"

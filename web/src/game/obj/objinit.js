@@ -24,6 +24,7 @@ export function objInit(m) {
     m.wr(0x0300 + c, 0); m.wr(0x0400 + c, 0); m.wr(0x0500 + c, 0); m.wr(0x0600 + c, 0);
   }
   if (m.rd(0x11) === 0xFF) return;                          // C2A9 (type re-read: PlaySound keeps $11)
+  const xs = x & 0x1F;                                      // s97: the clear loop's carry leaves X = $10 mod $20
   let y = 1;
   for (let g = 0; g < 4; g++) {
     m.wr(0x11, (indY(m, 0x12, y) << 1) & 0xFF);             // header ASL A -> $11, bit 7 in C
@@ -35,7 +36,7 @@ export function objInit(m) {
         c = v & 0x80; m.wr(0x11, (v << 1) & 0xFF);
       }
       if (c) {
-        m.wr(0x0300 + g * 0x100 + b * 0x20 + x, indY(m, 0x12, y));
+        m.wr(0x0300 + g * 0x100 + b * 0x20 + xs, indY(m, 0x12, y));
         y = (y + 1) & 0xFF;
       }
     }

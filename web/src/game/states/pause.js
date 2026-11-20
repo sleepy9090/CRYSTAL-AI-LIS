@@ -17,7 +17,7 @@ import { SPIN, waitFrame, statRecalc, hudRedraw, queueFlushNow } from './death.j
 const BUF = 0x6000;
 
 /** WaitPpuQueue 30:C676 (spin: frame_ready stays set) */
-function* waitPpuQueue(m) { while (!queueEmpty(m)) yield SPIN; }
+export function* waitPpuQueue(m) { while (!queueEmpty(m)) yield SPIN; }
 
 /** PpuQueueBlock 30:C482: A = block id; record (hi lo len src count) from 30:C518 + 5*id into $20-$24, then
  *  count&$7F + 1 records, each len bytes on (lo += max(len, $20), src += len); waits for the queue to drain

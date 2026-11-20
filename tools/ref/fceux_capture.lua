@@ -87,7 +87,10 @@ local function capture(n, log)
   if gui.savescreenshotas then
     gui.savescreenshotas(base .. ".png")
     files[#files + 1] = "png"
-  elseif gui.gdscreenshot then
+  end
+  -- gdscreenshot reads the emulator's frame buffer directly; savescreenshotas PNGs went stale after
+  -- f2450 under xvfb (see below). tools/ref/gd2png.py rewrites each .png from its .gd.
+  if gui.gdscreenshot then
     write_file(base .. ".gd", gui.gdscreenshot())
     files[#files + 1] = "gd"
   end

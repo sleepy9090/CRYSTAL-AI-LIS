@@ -39,6 +39,14 @@ def main():
                 p[n] += 1
     for r, p in per.items():
         print(f'{r:20} ' + ' '.join(f'{k}={v}' for k, v in p.items()))
+    if '--by' in argv[:-1]:                     # s97: --by COL = cases per input value of slot column COL (+ regs.x)
+        col, by = int(argv[argv.index('--by') + 1], 16), {}
+        for c in j['cases']:
+            v = bytes.fromhex(c['ram'])[col + c['regs'].get('x', 0)]
+            d = by.setdefault(v, [0, 0])
+            d[0] += 1
+            d[1] += bool(c['after'])
+        print(f'by ${col:04X}: ' + ' '.join(f'{v:02X}:{n}({ch} changed)' for v, (n, ch) in sorted(by.items())))
 
 
 if __name__ == '__main__':

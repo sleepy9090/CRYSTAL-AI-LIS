@@ -41,6 +41,12 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   queued `$7B` records so it never spins). `fuzz_update.json` was regenerated in s93 with these ids in the pool.
   `python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_effect.json --abs 0708 --col 04A0=0` = path coverage.
 
+- `fuzz_final.json` (s97): 200 cases of AI `$70` `Ai70PhaseDispatch` `27:BA2E` (`obj/ai_final.js`), regs Y = `$E0`,
+  one phase per case from `FINAL_PHASES` (`_fix_final`; phase 3's `FadeIn` and phase 1's `ShowMessage` path wait for
+  frames and are left out). Captured as a PPU routine (NMI unhooked, CIRAM compared) so the phase-0 window wipe and
+  the block `$04`/`$44` flushes finish in one call. Coverage: `python3 tools/obj_case_stats.py
+  web/test/obj_frames/fuzz_final.json --by 0600 --abs 62F0=FF`.
+
 Regenerate (about 10 s each):
 
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
@@ -58,5 +64,7 @@ Regenerate (about 10 s each):
         --out web/test/obj_frames/fuzz_field.json
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 \
         --routine AiPlayerFollowC,AiStraightMoverTl,AiMpDrain --out web/test/obj_frames/fuzz_effect.json
+    python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 \
+        --routine Ai70PhaseDispatch --out web/test/obj_frames/fuzz_final.json
 
 `python3 -m tools.emu.routine_capture --list` shows the routines; `--routine A,B` captures a subset.

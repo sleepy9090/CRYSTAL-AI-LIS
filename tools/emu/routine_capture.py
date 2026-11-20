@@ -164,13 +164,19 @@ for _n, (_id, _ad) in FIELD_AIS.items():
 EFFECT_AIS = {'AiPlayerFollowC': (0x04, 0xB2FC), 'AiStraightMoverTl': (0x57, 0xB0BE), 'AiMpDrain': (0x76, 0xA4DC)}
 for _n, (_id, _ad) in EFFECT_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r, _i=_id: {'x': _slot(r), 'y': (_i << 1) & 0xFF})
+# s97 (boss / final-scene AI port (a)): AI $70 (web/src/game/obj/ai_final.js); Y = $E0 as ObjUpdateAll leaves it
+ROUTINES['Ai70PhaseDispatch'] = (26, 0xBA2E, _poke_bg, lambda r: {'x': _slot(r), 'y': 0xE0})
+# phases whose capture can finish without an NMI (3 = FadeIn's WaitFrame; 7 / 11 are null; 1's table end is
+# steered off ShowMessage)
+FINAL_PHASES = (0, 1, 1, 2, 4, 5, 5, 6, 6, 8, 8, 9, 10, 12, 12, 12)
 # AI ids the port has (web/src/game/obj/ai_static.js, ai_walk.js, ai_field.js) + ids whose ObjAiTable 27:A314 entry is 0
 PORTED_AIS = (0x10, 0x11, 0x2C, 0x4C, 0x4D, 0x4E) + tuple(i for i, _ in WALK_AIS.values()) + \
     tuple(i for i, _ in FIELD_AIS.values()) + tuple(i for i, _ in EFFECT_AIS.values())
 NULL_AIS = tuple(i for i in range(0x80) if i != 0x1A and not (_PRG[27 * 0x2000 + 0x314 + 2 * i] |
                                                                _PRG[27 * 0x2000 + 0x315 + 2 * i]))
 HIT_FLAG_PARAMS = tuple(_PRG[26 * 0x2000 + 0x1045 + i] for i in range(10) if _PRG[26 * 0x2000 + 0x1045 + i])
-PPU_ROUTINES = ('PpuQueueFlush', 'BgRowRender', 'BgColRender', 'FullScreenDraw')
+PPU_ROUTINES = ('PpuQueueFlush', 'BgRowRender', 'BgColRender', 'FullScreenDraw',
+                'Ai70PhaseDispatch')          # s97: phases 0/2/9 flush PPU blocks (NMI would discard the case)
 
 
 def _steer_attack(ram, r, x, dist):
@@ -342,6 +348,46 @@ def _fix_effect(name, ram, r, x, wram):
         ram[0x0460 + x] = r.choice([0, 0, 6, 0x27, r.randrange(256)])
 
 
+def _fix_final(ram, r, x, wram):
+    """s97: AI $70 cases, one phase each, kept off the NMI waits (FadeIn, ShowMessage) and on each phase's edges"""
+    p = r.choice(FINAL_PHASES)
+    ram[0x0600 + x] = p
+    ram[0x0B] = ram[0x0A]                          # WaitPpuQueue: ring empty
+    ram[0x01] &= ~0x18                             # rendering off: PpuQueueBlock flushes each record at once
+    ram[0x0340 + x] = r.choice([0, 0x80, r.randrange(256)])     # hit flash (26:9B07) or PaletteBuild
+    ram[0x08] = r.choice([0, 1, 4, 5, 8, 9, r.randrange(256)])
+    if r.random() < 0.3:
+        for s in r.sample(range(0x0D, 0x1F), 4):   # free slots for the shots
+            if s != x:
+                ram[0x04A0 + s] = 0
+    if p == 0:
+        ram[0x04AD] = r.choice([0, 0, 0, r.randrange(256)])
+        if r.random() < 0.5:                       # BA9A column starts land on $7C cells
+            wram[0:0xDC] = bytes([0x7C]) * 0xDC
+    if p == 1:
+        ram[0x06E0 + x] = r.choice([0x80, 0x81, 0xFF, r.randrange(256)])
+        ram[0x04E0 + x] = r.choice([0x0F, 0x1F, 0x2F, 0x3F, 0x4F, 0x5F, 0x5F, r.randrange(256)])
+        ram[0x06C0 + x] = r.choice([0, 1, 0x7F, r.randrange(256)]) & 0x7F   # b7 set = ShowMessage (waits)
+    if p in (4, 5, 6):
+        ram[0x06E0 + x] = r.choice([1, 1, 2, 0x20, r.randrange(256)])
+        ram[0x04E0 + x] = r.choice([0, 1, 0x1E, 0x1F, r.randrange(256)])
+        ram[0x0620 + x] = r.choice([0, 0x0F, 0xFF, r.randrange(256)])
+        ram[0x064E] = r.choice([0, 1, 3, r.randrange(256)])
+    if p == 8:
+        ram[0x034D] = r.choice([0, 0x80, r.randrange(256)])
+        ram[0x0640 + x] = r.randrange(256)
+        ram[0x70] = r.randrange(256)
+    if p == 10:
+        ram[0x0620 + x] = r.choice([0xFF, 0xFF, r.randrange(256)])
+    if p == 12:
+        ld = ram[0x06A0 + x] = r.randrange(0x20)  # 27:BDA9 LDY obj_param2,X: the leader slot
+        ram[0x04A0 + ld] = r.choice([0x2E, 0x2E, 0x2E, r.randrange(256)])
+        ram[0x05A0 + ld] = r.choice([0, 0, 1, r.randrange(256)])
+        ram[0x04E0 + x] = r.choice([4, 0x84, 0x08, r.randrange(256)])
+        ram[0x0380 + x] = r.choice([0, 0x80, r.randrange(256)])
+        ram[0x0640 + ld] = r.choice([0, r.randrange(256)])
+
+
 def _fix_case(name, ram, r, regs, wram=None):
     """routine-specific pokes that keep a case on a meaningful path"""
     x = regs.get('x')
@@ -407,7 +453,9 @@ def _fix_case(name, ram, r, regs, wram=None):
         _fix_field(name, ram, r, x, wram)
     if name in EFFECT_AIS:
         _fix_effect(name, ram, r, x, wram)
-    if name in ('AiMpDrain', 'ObjUpdateAll'):
+    if name == 'Ai70PhaseDispatch':
+        _fix_final(ram, r, x, wram)
+    if name in ('AiMpDrain', 'ObjUpdateAll', 'Ai70PhaseDispatch'):
         for i in range(8):                         # HudRedraw's PpuQueueWaitSrc($7B) would spin until an NMI
             if wram[0x203 + 4 * i] == 0x7B:
                 wram[0x203 + 4 * i] = 0xFF

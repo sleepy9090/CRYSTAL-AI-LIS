@@ -20,6 +20,7 @@ import * as W from '../src/game/obj/ai_walk.js';
 import * as F from '../src/game/obj/ai_field.js';
 import * as S from '../src/game/obj/ai_shot.js';
 import * as E from '../src/game/obj/ai_effect.js';
+import * as FA from '../src/game/obj/ai_final.js';
 
 const WEB = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const verbose = process.argv.includes('--verbose');
@@ -81,6 +82,8 @@ const RUN = {
   AiPlayerFollowC: (m) => { E.aiPlayerFollowC(m); },
   AiStraightMoverTl: (m, r) => { E.AI_EFFECT[0x57](m, r.x); },
   AiMpDrain: (m, r) => { runNow(E.aiMpDrain(m, r.x)); },
+  // s97 (boss / final-scene AI port (a)): obj/ai_final.js, AI $70 phases (cases never reach an NMI wait)
+  Ai70PhaseDispatch: (m, r) => { runNow(FA.ai70PhaseDispatch(m, r.x)); },
 };
 
 const dir = path.join(WEB, 'test/obj_frames');

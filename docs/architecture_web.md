@@ -62,6 +62,7 @@ web/index.html
       │   ├─ ai_static.js             (s55, done) AIs $10 $11 $2C $4C/$4D $4E + AiShootCheck; AI_HANDLERS id → fn
       │   ├─ ai_walk.js               (s81, done) walker/chaser AIs $20-$2A $2E $41 (AiChase, AiWalkPause, …); AI_WALK
       │   ├─ ai_effect.js             (s93, done) AIs $04 (slot $0C on the player; leaves X = $0C), $57, $76 MP drain
+      │   ├─ ai_final.js              (s97, done) AI $70 final scene: 11 phases (window wipe, gather, fades, shots, follower) + HitFlashPal
       │   │                           (generator: yield* hudRedraw); AI_EFFECT
       │   ├─ objects.js               (s80, done) ObjUpdateAll generator (knockback, obj_freeze + HitSetFlag, JSR $0010
       │   │                           dispatch; an AI returning true = "popped" → return, a number = new X (s93),
@@ -202,6 +203,7 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 | AIs `$10 $11 $2C $4C/$4D $4E`, `AiShootCheck` | `27:B0B5 B0A8 ACC0 B595 B5D9 B714` | `AI_HANDLERS` (s55, done: `obj_check.mjs`) | `obj/ai_static.js` |
 | AIs `$20 $21 $22 $24 $25 $26 $27 $28 $29 $2A $2E $41`, `AiWalkPick`, `AiTryMove`, `AiLungeCheck` | `27:A915 A969 AB42 AA57 A9D2 A9E4 A9DB AB61 AB9E ABF8 A9B4 B339`, `A94A`, `AAFA`, `AC40` | `AI_WALK` (s81, done: `fuzz_walk.json` 1200/1200) | `obj/ai_walk.js` |
 | AIs `$04 $57 $76` (`AiPlayerFollowC`, `AiStraightMoverTail`, `AiMpDrain`) | `27:B2FC B0BE A4DC` | `AI_EFFECT` (s93, done: `fuzz_effect.json` 300/300) | `obj/ai_effect.js` |
+| AI `$70` `Ai70PhaseDispatch` (13 phases `JmpTable27_BA40`) + `HitFlashPal` | `27:BA2E`, `26:9B07` | `AI_FINAL` (s97, done: `fuzz_final.json` 200/200; `ShowMessage` path logged as unported) | `obj/ai_final.js` |
 | `PlaySound` (queue side) | `30:C125` | `playSound(m, id, y)` (s55, done) | `playsound.js` |
 | `ObjCollideAll`, `CollPairTable`, `HitboxTable`, `HitHandlerTable` | `26:8F6E`, `26:96F1`, `26:9691`, `26:8FBB` | `collideAll()`, `HIT_HANDLERS[4]` | `obj/collide.js` |
 | `HitPlayer`, `EnemyKilled`, `AddXp` | `26:9357`, `26:9152`, `26:924B` | `hitPlayer()`, `enemyKilled()`, `addXp()` | `obj/collide.js` |
