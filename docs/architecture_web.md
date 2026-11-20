@@ -41,6 +41,7 @@ web/index.html
    ├─ src/nes/apu_webaudio.js (AudioWorklet / ScriptProcessor sink for apu_core samples)
    └─ src/game/machine.js     (Machine: ram, wram, ppu, apu, data; runFrame(buttons))
       ├─ src/data.js                  loadData(fetchFn) → typed arrays + JSON from web/data/manifest.json
+      ├─ src/game/boot.js             (s106) Reset's cold path: intro end state, ColdSaveInit, BootSaveCheck, CopySramBlock
       ├─ src/nes/ppu.js               256×240 indexed framebuffer: 2 nametables (H mirroring), attrs, palette RAM,
       │                               OAM, CHR R0-R5 (mode 0), per-scanline scroll/CHR/mask split list, 8 spr/line
       ├─ src/nes/apu_core.js          2 pulse, triangle, noise, DMC; register writes $4000-$4017; sample generator
@@ -137,7 +138,8 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 
 | ROM routine | Address | JS function | Module |
 |---|---|---|---|
-| `Reset` | `31:F2A4` | `Machine.reset()` (cold/warm "USO" check, `BootSaveCheck`, WRAM `$7D00→$6480` boot copy) | `game/machine.js` |
+| `Reset` | `31:F2A4` | `Machine.reset()` (always the cold path: RAM is zeroed) → s106 `introLeftovers` (the RAM/PPU state the skipped bank-18 intro leaves at the first `30:C900`), `coldSaveInit` `31:F1CD`, `bootSaveCheck` `31:F0A4` (slot checks / resets / repair copies, `$16` seed kept live), `copySramBlock` `31:F3A2` | `game/machine.js`, `game/boot.js` |
+| `NmiMode5` / `IrqHandler6` | `31:F7C5` / `31:F691` | `nmiMode5` / `irqIntroSplit` (s106; only the f214 NMI uses irq_mode 5 in the port) | `game/mainloop.js` |
 | `MainLoop` / `MainStateTable` | `30:C900` / `30:C91F` | `mainloop.step()` / `MAIN_STATES[6]` | `game/mainloop.js` |
 | `NMI` | `31:F3B6` | `mainloop.nmiWork()` | `game/mainloop.js` |
 | `NmiModeDispatch` / `JmpTable31_F6C2` | `31:F6AD` / `31:F6C2` | `NMI_MODES[irq_mode]` | `game/mainloop.js` |

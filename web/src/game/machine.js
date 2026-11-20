@@ -8,13 +8,14 @@
 // -> NMI work. The game only talks to the PPU through its registers (ppu.writeReg / oamDma / setChrReg).
 import { Ram, R } from './ram.js';
 import { Ppu } from '../nes/ppu.js';
-import { mainStep, nmiWork, irqMenuChrSplit } from './mainloop.js';
+import { mainStep, nmiWork, irqMenuChrSplit, irqIntroSplit } from './mainloop.js';
 import { ENTRY_POINTS } from './states/play.js';
 import { Apu } from '../nes/apu.js';
 import { cpuRd } from './prg.js';
 import { sndInit } from './sound/driver.js';
 import { soundUpdate } from './sound/soundupdate.js';
 import { ppuQueueFlush } from './world/ppuqueue.js';
+import { introLeftovers, coldSaveInit, bootSaveCheck, copySramBlock } from './boot.js';
 
 export const FRAME_HZ = 60.0988;       // NTSC: 39375000/11/341/262*3 ≈ 60.0988 (odd-frame skip ignored)
 const FRAME_CYCLES3 = 341 * 262;       // CPU cycles per frame × 3 (= 29780.67 cycles)
@@ -53,6 +54,7 @@ export class Machine {
     this.irqHandlers = IRQ_HANDLERS.map((addr) => (m) => {
       if (!m.unported.has(addr)) { m.unported.add(addr); m.log(`IRQ handler ${addr} not ported yet`); }
     });
+    this.irqHandlers[6] = irqIntroSplit;               // 31:F691 (s106)
     this.irqHandlers[7] = irqMenuChrSplit;             // 31:F61A (s98)
   }
 
@@ -87,6 +89,12 @@ export class Machine {
     this.apu.write(0x4010, 0);                       // 31:F2C9 DMC IRQ off
     this.apu.write(0x4017, 0x40);                    // 31:F2CE APU frame IRQ off
     sndInit(this);                                   // 31:F325 JSR $8020 with banks 24/25
+    // s106: cold path (RAM is zeroed, so no "USO"): what the skipped intro leaves behind, then the save side of
+    // Reset (ColdSaveInit, BootSaveCheck on the battery WRAM loaded before reset(), CopySramBlock) -> MainLoop
+    introLeftovers(this);
+    coldSaveInit(this);
+    bootSaveCheck(this);
+    copySramBlock(this);
     this._cyc3 = 0;
   }
 

@@ -222,13 +222,29 @@ export function irqMsgWindowEnd(m, line) {
   }
 }
 
+/** NmiMode5 31:F7C5 (irq_mode 5, the cold-boot intro; in the port only the f214 NMI, s106): PpuScrollWrite,
+ *  ApplyChrPlay, IRQ handler 6 at latch $58 */
+function nmiMode5(m) {
+  ppuScrollWrite(m);
+  applyChrPlay(m);
+  setIrqHandler(m, 6, m.rd(R.chr_r0_alt));
+}
+
+/** IrqHandler6 31:F691 (s106): (DelayX $07FE) IRQ off, PPUADDR <- $59:$5A (the intro: $2800 at line 137) */
+export function irqIntroSplit(m) {
+  const p = m.ppu;
+  p.readStatus();
+  p.writeReg(6, m.rd(R.chr_r0_alt + 1));
+  p.writeReg(6, m.rd(R.chr_r0_alt + 2));
+}
+
 /** JmpTable31_F6C2: irq_mode -> NMI routine. Unported modes log once and do nothing. */
 const unportedMode = (addr) => (m) => {
   if (!m.unported.has(addr)) { m.unported.add(addr); m.log(`NMI mode routine ${addr} not ported yet`); }
 };
 export const NMI_MODES = [
   nmiMode0, nmiMode1, nmiMode2, nmiMode3,
-  unportedMode('31:F782'), unportedMode('31:F7C5'), nmiMode6, nmiMode0,
+  unportedMode('31:F782'), nmiMode5, nmiMode6, nmiMode0,
   null, nmiMode1,
 ];
 
