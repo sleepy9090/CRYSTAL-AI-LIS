@@ -145,13 +145,34 @@ function nmiMode3(m) {
   m.soundUpdate(m);                                 // F77F JMP SoundUpdate
 }
 
+/** NmiMode6 31:F7DB (irq_mode 6, the bank 16 equipment menu): PPUCTRL <- shadow, scroll 0/0, ApplyChrAlt,
+ *  IRQ handler 7 (IrqMenuChrSplit) at latch $77, $57 = $77 (s98) */
+function nmiMode6(m) {
+  m.ppu.writeReg(0, m.rd(R.ppuctrl_shadow));
+  m.ppu.writeReg(5, 0);
+  m.ppu.writeReg(5, 0);
+  applyChrAlt(m);
+  setIrqHandler(m, 7, 0x77);
+  m.wr(R.zp_57, 0x77);
+}
+
+/** IrqMenuChrSplit 31:F61A (IRQ handler 7, end of line $77): CHR R0/R1 <- $5E/$5F (the lower part of the
+ *  menu uses the font set), then handler 1 (HUD, unported: marker only) at $BC - $57 lines on (s98) */
+export function irqMenuChrSplit(m) {
+  m.ppu.setChrReg(0, m.rd(0x5E));
+  m.ppu.setChrReg(1, m.rd(0x5F));
+  m.wr(0x56, 1);                                    // SetIrqHandler(1)
+  const line = 0x78 + ((0xBC - m.rd(R.zp_57)) & 0xFF) + 1;
+  if (line < 240 && !m.ppu.splits.has(line)) m.ppu.splits.set(line, () => m.irqHandlers[1](m));
+}
+
 /** JmpTable31_F6C2: irq_mode -> NMI routine. Unported modes log once and do nothing. */
 const unportedMode = (addr) => (m) => {
   if (!m.unported.has(addr)) { m.unported.add(addr); m.log(`NMI mode routine ${addr} not ported yet`); }
 };
 export const NMI_MODES = [
   nmiMode0, unportedMode('31:F731'), nmiMode2, nmiMode3,
-  unportedMode('31:F782'), unportedMode('31:F7C5'), unportedMode('31:F7DB'), nmiMode0,
+  unportedMode('31:F782'), unportedMode('31:F7C5'), nmiMode6, nmiMode0,
   null, unportedMode('31:F731'),
 ];
 

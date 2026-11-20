@@ -6,10 +6,12 @@ import { R } from '../ram.js';
 import { cpuRd, setR6, switchBank16 } from '../prg.js';
 import { playerDeath, paletteBuildRom } from './death.js';
 import { pauseScreen, pauseFromPlay } from './pause.js';
+import { substEquipMenu } from './equip.js';
 
 const SUBSTATES = new Map([
   [3, playerDeath],                                   // 19:B900
   [12, pauseScreen],                                  // 15:BC40 (vestigial entry; play calls it directly, s94)
+  [18, substEquipMenu],                               // 30:D8C7 SELECT menu (s98)
 ]);
 
 /** Routines a tools/emu/web_state.py export may stop at that are NOT reached through the substate dispatch
@@ -17,6 +19,9 @@ const SUBSTATES = new Map([
  *  pending generator. */
 export const ENTRY_POINTS = {
   '15:BC40': pauseFromPlay,                           // START in SubstPlay: 30:CBA8 JSR PauseScreen
+  // s98: a state stopped at a substate's first instruction is already past this frame's dispatch
+  // (DEC $08, PlayPaletteRestore), so it starts the handler itself
+  '30:D8C7': substEquipMenu,
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */

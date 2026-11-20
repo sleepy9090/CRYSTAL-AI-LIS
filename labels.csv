@@ -1196,3 +1196,33 @@ bank,addr,name,comment
 27,BD89,Ai70AimDirs,s97: 2x16 shot dirs by slot parity and player x>>4
 27,BDA9,Ai70Ph12Follow,"s97: AI $70 phase 12: BC A0 06 = LDY obj_param2,X (leader must be AI $2E); offsets BE30"
 27,BE30,Ai70FollowOfs,"s97: signed x/y offset pairs for phase 12 (index meta&3 *2, +8 when leader act_timer!=0)"
+16,8000,EquipMenu,s98: bank 16 SELECT menu entry (16/23 mapped): window + grids; loop 80D1; SELECT = RTS; START = SaveLoadPage
+16,80D1,EquipMenuLoop,s98: WaitFrame + ReadPadsMenu; U/D rows (wrap flips grid via 81ED); L/R columns; A 82B7; B 8342
+16,8171,EquipMenuMoved,s98: cursor moved: $646E = item; SFX $4B; $6427 = row*4|8 + col; cursor; print $0F + 6 (name)
+16,81FD,EquipGridSetup,s98: menu palette 16:821F; $58=$5E=$3C; $59/$6426/$5F from 16:8232/8238/8234 by $6424; hide OAM; icons 826F
+16,821F,MenuPalette,s98: $6150-$615F <- 16:8BFB + 16:8236[X]
+16,823A,EquipRowLabels,s98: MenuPrint $11 $10 then 0-3 (grid 0) or 4-5 (grid 1)
+16,826F,EquipSelIcons,s98: icon of the selected item of each of the 4 rows (inv_select $6428 / $642C)
+16,82B7,EquipPressA,s98: A: equip cursor item (inv_select + $0711[16:833A] <- 16:903B[item]; msg 9/$0A by 16:8FF0 b5) or unequip it
+16,833A,EquipRowSlot,s98: 8 bytes: $0711 + n slot per row (00 02 03 07 04 05 04 01)
+16,8342,EquipPressB,s98: B: drop (16:8FF0 b6 = cannot) after MenuConfirmYesNo($A0); clear slot; re-sort 8534; regrid
+16,8534,InvSortAll,s98: bubble-sort each inventory category ascending via $60E0 (counts 16:859E offsets 16:85A6)
+16,85AE,InvReselect,s98: re-find $26 in row $2B's category after the sort -> inv_select (>= 8 -> $FF)
+16,85E6,EquipCurItem,s98: A = inventory[($6424 ? $10 : 0) + $6427]; X = its index
+16,85F6,EquipCurSlot,s98: A = 16:833A[($6424 ? 4 : 0) + $2B]
+16,8605,MenuHideOam,s98: WaitFrame then OAM y = $F0 x256
+16,8613,MenuFarHud,s98: save $10-$2F to $60EC; FarCall_B26_8E46 (HudRedraw A); restore (shop variants only)
+16,8631,MenuSellGold,s98: gold += 16:9EC2[item] word (saturate $FFFF) (shop variant of the drop)
+16,8660,EquipDrawIcon,s98: cursor item icon: tile 16:8FA5 + flags 16:8FF0 (b7 4-tile shape 3 else 2x2 shape 2; b0-1 palette) at OAM slot row*9+1
+16,8699,EquipDrawCursor,s98: cursor frame (shape 0 palette 3) at OAM slot $39
+16,86AF,EquipCellPos,s98: $60F8/$60FB = 16:8B73/8B74[2*cell] + $30/$38
+16,871F,EquipDrawGrid,s98: 4 bands of 3 tile rows from $28C0 (16:8AFD): picture 16:8F5A[item] 3x3 (87B8) or empty frame (87EA)
+16,8795,EquipGridBand,s98: flush $60 bytes with irq_mode b7; $20 += $60
+16,881E,EquipDrawWindow,s98: 24 frame rows at $2800 (16:8864 x 12; 16:8B0D) + attribute $2BC0 from $6001 (all $FF)
+16,8864,MenuFrameRows,s98: 2 rows FE + left + 29 fill + right (3 bytes of 16:8B0D from X); $20 += $40
+16,8A5A,EquipEraseIcon,s98: WaitFrame then 9 sprites of row $2B y=$F8 ($60F8/$60FB writes index 8B73 with the stale X)
+16,8A9F,MenuSfx,s98: A -> snd_queue $0103 count $0100 = 1 under lock $0101
+16,9A62,InvSelToIds,s98: $6000-$6007 = selected item id per row (16:9ADE category ptrs)
+16,9A91,InvIdsToSel,s98: inv_select = index of $6000+row in its category (4 or 8 slots) else $FF
+30,DADA,ClearMetaEBEC,s98: SubstEquipMenu: slots $0D-$1E with meta $EB/$EC and tile ofs 0 -> inactive
+30,DAFC,ClearOrbitSlots,s98: orbit_level $06C0 = 0; obj_active slots 4-11 = 0 (sword changed / ShopWalkIn)
