@@ -413,7 +413,15 @@ bank,addr,name,comment
 14,826F,ItemGetHook,hook 0: store item $23 via 14:9B00 record; then result + set-list; chain next item
 14,82A0,InvStoreItem,count bit7 = fixed equip slot else first $FF slot; Crystalis merge; bracelet unequips ball
 14,831E,ItemUseHook,hook 1: handler 14:8399[item] + record 14:9BE2[item]; then result + set-list; removes item unless $36
-14,8354,InvRemoveItem,remove item $23 from its inventory range (shift down + $FF); $642A+(X>>3)=$FF; $0715=0
+14,8354,InvRemoveItem,remove item $23 from its inventory range: slot = $FF (s141: the shift loop never INXes so later slots are NOT moved down); $642A+(X>>3)=$FF; $0715=0
+14,8491,UseTouchOrFail,s141: UseTouchMatch else UseFail (items $04 $33-$35 $3C $3D; also 8565 for $25)
+14,84E0,UseMedicalHerb,s141: item $1D: touch match -> RTS; else Y=6 HP+32 capped at max + SFX $25
+14,8507,UseMpPlus32,s141: item $21: mp_cur += $20 capped at mp_max
+14,851D,UseMpFull,s141: item $22: mp_cur = mp_max
+14,8553,UseStatusCure,s141: obj1_flash &= $F0 + SFX $25 (entered from 8524/852F/853A/854A = status 3/1/2/4 for items $1E/$1F/$20/$23; $20 also clears obj_freeze)
+14,856B,UseShellFlute,s141: item $36: area $60/$64/$68 and NpcFlagTest(record) else UseFail
+14,8585,UseGlowingLamp,s141: item $39: first $38 in $643F-$6457 -> $3A + SFX $68; else UseFail
+14,859E,UseTouchList4,s141: item $28: UseTouchMatch at Y=0/6/$0C/$12, else UseFail
 14,8399,ItemUseHandlers,80 words (items 00-4F); $84DB = cannot use
 14,8469,UseFindSlotObj,record param/b2 matches an object in slots 0D-1F
 14,8497,UseTouchMatch,record param/b2 == touched spawn ($0643); Z set = match
