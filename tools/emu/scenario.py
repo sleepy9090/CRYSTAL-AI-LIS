@@ -217,6 +217,12 @@ SCENARIOS['shop_empty_ai'] = dict(note='area 03: ObjInit type $4E (AI $0E AiShop
 SCENARIOS['mp_fail_area'] = magic(3, keys=['20:A'], frames=120, area='58', note='area $58 -> MagicFailSound')
 SCENARIOS['mp_fail_status'] = magic(7, {0x0710: 0x04}, keys=['20:A'], frames=120,
                                     note='status 4 ($0710) -> MagicStatus4Check -> MagicFailSound')
+# s127: BossRecs entry 12 (area $5F) has music byte $FF -> snd_cur_music; the reward AI 15:B770 replays it
+# (PlaySound($FF)) once slots $0D-$1E are clear -> SndCommand $FF -> snd_fade_timer $BC -> SndFadeStep 24:8609
+SCENARIOS['boss_fade'] = dict(note='area 5F (BossAreaList entry 13): ObjInit type $CF (AI $6F BossDefeated) in slot '
+                                   '$0F at +10 -> music $FF -> fade-out (SndFadeStep)', area='5F',
+                              pokes={0x03C1: 0x60}, spawn=[(10, 0x0F, 0xCF, 48, 0)], frames=2500,
+                              watch=[0x04AF, 0x060F, 0x0102, 0x0103, 0x00FE, 0x0110, 0x04B4])
 
 
 def set_from(dst, src):

@@ -17,7 +17,7 @@ bank,addr,name,comment
 31,F58B,IrqMsgWindowEndHud,s65: H3 tail: arm H1 at $BE-$57
 31,F5A1,NtRowAddrTable,s65: 32 words $2000..$23E0 = NT0 row addresses (hi read at F5A2+Y; lo at F5A1+Y) by IRQ handlers 2 and 4
 31,F5E1,IrqRowStretch,s65: IRQ handler 4 (dead irq_mode 4): PPUADDR NtRowAddrTable[$5A++] every $58+1 lines; $59 rows then falls into F60E
-31,F60E,IrqOffSound,s65: IRQ handler 5: IRQ off + SoundUpdate; reached only from F5FE (H4 end) and never via SetIrqHandler
+31,F60E,IrqOffSound,s65: IRQ handler 5: IRQ off + SoundUpdate; reached only from F5FE (H4 end) and never via SetIrqHandler; s127: dead (H4 = dead NmiMode4 path; IrqHandlerTable words at 31:F43B/F43D are the only pointers)
 31,F61A,IrqMenuChrSplit,s65: IRQ handler 7 (irq_mode 6 equipment menu; line 119): CHR R0/R1 <- $5E/$5F; arms H1 HUD at $BC-$57
 31,F1CD,ColdSaveInit,cold boot only: $700E/$700F=0; unconditionally re-inits the current save image $7D00-$7FFF + mirror $6D00 from template 23:BE00 (was ColdInitSub)
 31,FE80,ReadPads,per-frame gameplay pad read (pads X=1/0): $43 prev $4B new $49 dir $4D act (A/B hold counters $45/$47); was ColdInitSub2
@@ -93,7 +93,7 @@ bank,addr,name,comment
 24,8276,SndChannelTick,X=chn 0-5: dec duration; on 0 read ops until a frame-ending op; envelope/vibrato; write regs per $FC dirty bits
 24,8347,SndReadOp,read stream byte -> $F3; JMP (SndOpcodeTable + (byte>>4)*2)
 24,8364,SndOpEnd,op $0x/$1x: channel stops; music: $0113=byte&$1F = next music id (chain/loop); sfx: release channel
-24,8395,SndOpSweep,op $Cx: next byte = sweep reg; x bit0=1 -> sweep off else on; ends frame
+24,8395,SndOpSweep,op $Cx: next byte = sweep reg; x bit0=1 -> sweep off else on; ends frame; s127: no stream uses op $Cx (sound_op_count.py: 0 of 22028 ops; sweeps come from op $Bx) -> dead handler
 24,83C2,SndOpNoteDetune,op $Dx: note + octave-dependent detune ($83DA); noise chn -> DMC drum trigger ($863B)
 24,83E2,SndOpNoteSweep,op $Bx: sweep(next byte) + note
 24,83E5,SndOpNote,op $2x: note x (hex-letter pitch) in current octave; ends frame
@@ -122,7 +122,7 @@ bank,addr,name,comment
 24,83DA,SndDetuneTable,u8[8] per-octave period lo add for op $Dx notes
 24,84AF,SndEnvelopeTick,per-frame envelope step: vol = SndVolumeTable[base*16+env]; entry bit4 = end/hold (fade: back up 2 steps)
 24,8465,SndChannelOff,clear channel bit in $4015 (keeps DMC bit from $FF); skipped if chn stolen by SFX
-24,8609,SndFadeStep,fade step: TRI cut; other active music chn base vol -1
+24,8609,SndFadeStep,fade step: TRI cut; other active music chn base vol -1; s127: needs sound cmd $FF; only source = BossRecs[12] (area $5F) music byte $FF replayed by 15:B770, but that record's hook 15:B947 clears the reward slot first -> never runs (scenario boss_fade)
 24,863B,SndDrumSelect,op $Dx on music NOISE: x=0 drums off ($FF=0 $4013=0); else $FF=$10|x (arm DMC record x)
 24,8651,SndDrumTrigger,noise note: if drum armed ($FF&$0F) restart DMC with SndDmcTable[x]
 31,FA00,SndDmcSample,the only DMC sample: 993 bytes $FA00-$FDE0 ($4012=$E8 $4013=$3E); drum kit = this sample at different rates
@@ -439,7 +439,7 @@ bank,addr,name,comment
 15,B807,BossDefeated,AI $6F (type $CF): slot -> type $0F reward drop; BossAreaList[area] -> 21-byte BossRecs record
 15,B95D,BossAreaList,14 areas: 0A 1A 28 FF 6E F2 A9 AC B9 B6 9F A6 6C 5F; no end mark (s99: scan from a non-boss area runs past it -> garbage record hook)
 15,B96B,BossRecPtrs,ptr16[14] -> 21-byte records (code ptr; ?; music; drop param; 8 pal ids; 6 CHR; $62FE; clear-enemies flag)
-15,B987,BossRecs,13 x 21 bytes (see REVERSE.md Boss defeat)
+15,B987,BossRecs,13 x 21 bytes (see REVERSE.md Boss defeat); byte 3 -> snd_cur_music (15:B85A); entry 12 (area $5F) = $FF
 15,BA98,BossFleeSpeech,record hook for areas 28/6E/F2: player reset; slot $1F type $2B; msg from BossFleeRecs; clear enemies
 15,BAFE,BossFleeRecPtrs,ptr16[14] by boss rec index ($0600) -> 5-byte recs (?; $031F; $033F; msg id; group)
 15,BB29,ClearEnemySlots,obj_active=0 for slots $0D-$1E except X and AI $78/$7F/$30/$39; slots 4-11 cleared
