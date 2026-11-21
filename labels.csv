@@ -1401,3 +1401,16 @@ bank,addr,name,comment
 20,9706,WakeSprPalFade,s138: $6150-$6153 <- $972D + 0/4/8/C, 8 waits each
 20,974C,WakeWaitT22,s138: tmp_22 x (LSR frame_ready / BCC)
 20,9756,WakeSound,s138: snd_queue $0103 <- A, count 1 (raw queue write, not PlaySound)
+30,D539,GiveTrigger,s139: GiveItem id >= $80: sub_state += 2; $08++; ItemEventHook(2); act; sub_state 8; JMP MainStateGameplay
+30,D5A3,EvActNop,s139: EventActionTable 0/3/5/18/26 RTS
+30,D63A,EvActSfx6E,s139: act 10: PlaySound($6E)
+30,D654,EvActGiveParalysis,s139: act 8: GiveItemA($42)
+30,D6D8,EvActGiveBarrier,s139: act 11: GiveItemA($46)
+30,D6DD,EvActGiveChange,s139: act 12: GiveItemA($47) then NpcVanish slot $0E
+30,D6E7,EvActGiveBowMoon,s139: act 13: GiveItemA($3E)
+30,D70D,EvActGiveRefresh,s139: act 15: trigger slot param = $41; JMP GiveItem
+30,D78C,EvActSwordState,s139: act 22: sub_state = $1A
+30,D7FD,EvActGiveGasMask,s139: act 28: GiveItemA($29) + MakeFollower13
+30,D82E,EvActSlot13Type55,s139: act 31: obj_active slot $0D = $55
+30,D21D,TalkGiveParam2,s139: talk act 17: GiveItemA(obj_param2[$0623]) if nonzero else falls into D225
+30,D225,TalkGiveParam1,s139: talk act 3: GiveItemA(obj_param1[$0623])

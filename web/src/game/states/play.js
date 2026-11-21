@@ -24,6 +24,7 @@ import { objCollideAll } from '../obj/collide.js';
 import { cameraTick } from '../world/camera.js';
 import { npcTalk } from './talk.js';
 import { substWakeCutscene } from './wake.js';
+import { giveItem } from './giveitem.js';
 
 function unported(m, what) {
   if (!m.unported.has(what)) { m.unported.add(what); m.log(`${what} not ported yet`); }
@@ -200,6 +201,7 @@ const SUBSTATES = new Map([
   [0, substNewGameInit],                              // 30:CA5F (s108)
   [1, substAreaEnter],                                // 30:CA2E (s108)
   [3, playerDeath],                                   // 19:B900
+  [7, giveItem],                                      // 30:D3EB GiveItem + item hooks 0/2 (s139, states/giveitem.js)
   [8, substPlay],                                     // 30:CB62 (s110)
   [12, pauseScreen],                                  // 15:BC40 (vestigial entry; play calls it directly, s94)
   [17, npcTalk],                                      // 30:D0C8 NpcTalk + ShowMessage (s115, states/talk.js)
@@ -234,10 +236,11 @@ export const ENTRY_POINTS = {
   '30:D98E': substToolShop,                           // s122 (web/test/states/toolshop.json)
   '30:D997': substInn,                                // s123 (web/test/states/inn.json)
   '30:D9C1': substShopEmpty,                          // s124 (web/test/states/shopempty.json)
+  '30:D3EB': giveItem,                                // s139 (web/test/states/giveitem.json)
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */
-function playPaletteRestore(m) {
+export function playPaletteRestore(m) {
   if (m.rd(0x04A4) !== 0x1A) return;
   m.wr(0x04A4, 0);
   setR6(m, 0x1A);

@@ -357,7 +357,7 @@ function flagRef(m, y) {
 }
 
 /** NpcFlagTest 14:8135 -> [cond true, Y] */
-function flagTest(m, y) {
+export function flagTest(m, y) {
   const [x, y2] = flagRef(m, y);
   let v = m.rd(FLAGS + x);
   if (m.rd(0x26) & 0x20) v ^= 0xFF;
@@ -365,7 +365,7 @@ function flagTest(m, y) {
 }
 
 /** NpcFlagApply 14:8112: b7 = clear, else set; stops after the item with b6 */
-function flagApply(m, y) {
+export function flagApply(m, y) {
   do {
     const [x, y2] = flagRef(m, y);
     y = y2;
@@ -376,7 +376,7 @@ function flagApply(m, y) {
 }
 
 /** NpcResult 14:8078: $22 = r0 >> 3, $21 = r0 & 7, $20 = r1 */
-function npcResult(m, y) {
+export function npcResult(m, y) {
   const r0 = indY(m, 0x24, y);
   m.wr(0x22, r0 >> 3);
   m.wr(0x21, r0 & 7);
@@ -429,7 +429,7 @@ export function npcScript(m) {
 
 // ---------------------------------------------------------------- NpcTalk + TalkActionTable
 /** NpcVanish 30:D31C / D31F (Y given) */
-function npcVanish(m, y = m.rd(TALK_SLOT)) {
+export function npcVanish(m, y =m.rd(TALK_SLOT)) {
   m.wr(0x0660 + y, 1);
   m.wr(ACTIVE + y, 0x53);
   m.wr(FREEZE + y, 0);
@@ -439,7 +439,7 @@ function npcVanish(m, y = m.rd(TALK_SLOT)) {
 
 const nop = function* () {};
 /** TalkActionTable 30:D123 (ported entries; the rest log "not ported") */
-const TALK_ACTIONS = {
+export const TALK_ACTIONS = {
   0x00: nop, 0x04: nop, 0x07: nop, 0x0B: nop, 0x0E: nop, 0x0F: nop, 0x12: nop,
   0x1C: nop, 0x1D: nop, 0x1E: nop, 0x1F: nop,            // D163 RTS
   0x01: function* (m) {                                  // D19C type $64 into the slot pair s, s+1

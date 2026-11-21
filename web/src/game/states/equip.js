@@ -679,7 +679,7 @@ function selectedUseItem(m) {
 }
 
 /** SwordPowerLevel 30:D9D8: Y = 0/1/2 */
-function swordPowerLevel(m) {
+export function swordPowerLevel(m) {
   const sw = m.rd(0x0711);
   if (sw === 0) return 0;
   const ball = m.rd(0x0718);
