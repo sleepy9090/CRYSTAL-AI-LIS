@@ -8,15 +8,15 @@
 // The pawn screen reuses the bank 16 menu (states/equip.js equipMenu) with $07DD = $FF: its shop branches
 // (price line 16:81B4, A/B = sell 16:835E, "Anything else?" 16:846C) were ported in s109 and checked in s121.
 // s122: the armor / tool shops (sub_states 32 / 33, 16:9558 / 16:957A, buy loop ShopBuyLoop 16:96CF, ShopBuy
-// 16:9970; Verification Log row "Armor / tool shops"). Not ported yet: the inn 16:959C (sub_state 34) and
-// SubstShopEmpty 30:D9C1 (needs ShowMessage).
+// 16:9970; Verification Log row "Armor / tool shops"). s123: the inn (sub_state 34, SubstInn 30:D997 ->
+// 16:959C, FadeSaveZpToWram 30:C7D6; Verification Log row "Inn"). Not ported yet: SubstShopEmpty 30:D9C1.
 import { R } from '../ram.js';
 import { cpuRd, indY, setR6, switchBank16, farRestore } from '../prg.js';
 import { readPadsMenu } from '../pads.js';
 import { spriteDraw } from '../obj/sprites.js';
 import { playerUpdate } from '../obj/player.js';
 import { exitScan } from '../world/camera.js';
-import { waitFrame, paletteBuildRom } from './death.js';
+import { waitFrame, paletteBuildRom, fadeOut, fadeIn, hudRedraw, hudHpBar } from './death.js';
 import { waitPpuQueue } from './pause.js';
 import {
   equipMenu, menuPrint, menuSnd, menuFlush, confirm, hideOam, frameRows, selToIds, sortInventory, idsToSel,
@@ -335,5 +335,78 @@ export function* substArmorShop(m) {
 export function* substToolShop(m) {
   yield* shopWalkIn(m);
   yield* goodsShop(m, true);
+  yield* shopWalkOut(m);
+}
+
+// ---- inn (session 123): 16:959C via 16:9506 ----
+
+/** FadeSaveZpToWram 30:C7D6: ZP $0A-$29 -> $6000, banks 26/27, fade out (A = 4), 30 x (LSR frame_ready / BCC),
+ *  fade in (A = 4), banks 16/17, ZP restored from $6000 */
+function* fadeSaveZpToWram(m) {
+  for (let x = 0; x < 0x20; x++) m.wr(0x6000 + x, m.rd(0x0A + x));
+  switchBank16(m, 0x0D);
+  yield* fadeOut(m, 4);
+  for (let x = 0x1E; x > 0; x--) {
+    for (;;) {
+      const v = m.rd(R.frame_ready);
+      m.wr(R.frame_ready, v >> 1);
+      if (v & 1) break;
+      yield;
+    }
+  }
+  yield* fadeIn(m, 4);
+  switchBank16(m, 8);
+  for (let x = 0; x < 0x20; x++) m.wr(0x0A + x, m.rd(0x6000 + x));
+}
+
+/** 16:959C: "INN" / "Need to rest? Please stay." + cost (16:9EAC[shop_id], HUD element $0C) YES/NO.
+ *  YES: gold - cost -> $6474/75; borrow -> strings $2A $2B $2F ("not enough"); else MenuSfx($55),
+ *  FadeSaveZpToWram, strings $2A $2B $25 $26, HP = max, MP = max, $0710 &= $F0 (status cleared), gold = rest.
+ *  Both YES paths redraw the gold (HUD element 1). NO: MenuSfx($4C), strings $2B $2A $20. Then any key, 96C6. */
+function* innBody(m) {
+  const pr = function* (...s) { for (const a of s) yield* menuPrint(m, a); };
+  selToIds(m); sortInventory(m); idsToSel(m);
+  yield* shopSetup(m);
+  shopIdForArea(m);
+  m.wr(0x6474, 0); m.wr(0x6475, 0);
+  m.wr(0x59, 0x38);
+  yield* pr(0x1A, 0x23, 0x24, 0x29);
+  const x = (m.rd(0x646D) << 1) & 0xFF;
+  m.wr(0x6474, cpuRd(m, 0x9EAC + x)); m.wr(0x6475, cpuRd(m, 0x9EAD + x));
+  yield* menuFarHud(m, 0x0C);
+  if (yield* confirm(m, 0x41)) {                        // C set = NO
+    menuSnd(m, 0x4C);
+    yield* pr(0x2B, 0x2A, 0x20);                        // 9665
+  } else {                                              // 95F0
+    const g = m.rd(0x0702) | m.rd(0x0703) << 8;
+    const p = m.rd(0x6474) | m.rd(0x6475) << 8;
+    const d = (g - p) & 0xFFFF;
+    m.wr(0x6474, d & 0xFF); m.wr(0x6475, d >> 8);
+    if (g < p) {
+      yield* pr(0x2A, 0x2B, 0x2F);                      // 964E
+    } else {
+      menuSnd(m, 0x55);
+      yield* fadeSaveZpToWram(m);
+      yield* pr(0x2A, 0x2B, 0x25, 0x26);
+      m.wr(0x03C1, m.rd(0x03C0));                       // player_hp = player_hp_max
+      m.wr(0x0708, m.rd(0x0709));                       // mp_cur = mp_max
+      m.wr(0x0710, m.rd(0x0710) & 0xF0);
+      m.wr(0x0702, m.rd(0x6474)); m.wr(0x0703, m.rd(0x6475));
+    }
+    yield* menuFarHud(m, 1);
+  }
+  yield* waitAnyKey(m);                                 // 9674
+  yield* hideOam(m);                                    // 96C6 (leaves X = 0)
+  m.wr(0x07DD, 0);
+}
+
+/** SubstInn 30:D997 (sub_state $22, types $40 $45 $46): walk in, 16:9506, SetR6($1A), HudRedraw(4) (MP),
+ *  HudHpBar, walk out */
+export function* substInn(m) {
+  yield* shopWalkIn(m);
+  yield* innBody(m);
+  setR6(m, 0x1A);
+  yield* hudRedraw(m, 4, 0);
+  yield* hudHpBar(m);
   yield* shopWalkOut(m);
 }

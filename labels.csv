@@ -41,7 +41,7 @@ bank,addr,name,comment
 30,CB2E,SubstateBankTable,u8[40] SwitchBank16 n per substate $41 (s60: 3 24-27 30 -> 9; 12/13 -> 7; rest 0)
 31,E3D4,SwitchBank16_6,tail-call SwitchBank16(6) -> banks 12/13 (restores default after n=7 entity calls)
 *,0041,sub_state,state-1 substate index (SubstateHandlerTable/SubstateBankTable)
-30,C7D6,FadeSaveZpToWram,copy ZP $0A-$29 -> $6000; banks 26/27 $8C3D(A=4); wait 30 frames; $8C49; bank 16/17; restore (tentative fade)
+30,C7D6,FadeSaveZpToWram,copy ZP $0A-$29 -> $6000; banks 26/27 fade out $8C3D(A=4); wait 30 frames (LSR frame_ready); fade in $8C49(4); bank 16/17; restore (s123: inn rest fade; ported shop.js)
 31,FF80,FarCall_C25D,push $6E/$6F; JSR $C25D; JMP RestoreBanks
 31,FF8C,FarCall_B14_800E,push $6E/$6F; SwitchBank16(14); JSR 28:$800E; JMP RestoreBanks
 31,FF9D,FarCall_EB91,push $6E/$6F; JSR $EB91; JMP RestoreBanks
@@ -1375,3 +1375,6 @@ bank,addr,name,comment
 16,9874,ShopSlotX,s122: data 4 bytes $40 $68 $90 $B8 (sprite x of goods slots 0-3)
 16,9970,ShopBuy,s122: gold - shop_price_sel -> $6476/77; borrow -> A=1; no free inventory slot -> 2; else gold = result + inventory[$2E+$2F] = $646C -> 0 (armor: item>=$15 (BPL) row $6434 else $6438; tool: $29 -> $6448 (full -> X=7) else $6440)
 16,9F96,ShopPictureCols,s122: data 4 bytes $08 $0D $12 $17 (window column of goods pictures 0-3; row 3)
+16,959C,InnBody,s123: strings $1A $23 $24 $29 + cost InnPrices[shop_id] (HUD elem $0C) YES/NO; YES: gold-cost borrow -> $2A $2B $2F; else MenuSfx $55 + FadeSaveZpToWram + $2A $2B $25 $26 + HP/MP = max + $0710 &= $F0 + gold; NO -> $2B $2A $20; any key; 96C6
+16,9EAC,InnPrices,s123: data 16-bit inn cost per shop_id ($10 $14 $28 $50 $32 $64 $78 $96 ...)
+16,96C6,ShopBodyTail,s123: shared shop end: MenuHideOam (X=0) + $07DD=0

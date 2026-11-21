@@ -14,7 +14,7 @@ import { playerDeath, paletteBuildRom, waitFrame, waitFrames, hudRedraw, hudHpBa
 import { pauseScreen } from './pause.js';
 import { substEquipMenu } from './equip.js';
 import { substRestoreScreen } from './saveload.js';
-import { substPawnShop, substArmorShop, substToolShop } from './shop.js';
+import { substPawnShop, substArmorShop, substToolShop, substInn } from './shop.js';
 import { substNewGameInit, substAreaEnter } from './areaenter.js';
 import { readPads, readPadsMenu } from '../pads.js';
 import { playSound } from '../playsound.js';
@@ -206,7 +206,8 @@ const SUBSTATES = new Map([
   [31, substRestoreScreen],                           // 30:CC4D (s120; set by AI $70 phase 2)
   [32, substArmorShop],                               // 30:D985 (s122, states/shop.js; types $42 $48)
   [33, substToolShop],                                // 30:D98E (s122; types $41 $44 $47)
-  [35, substPawnShop],                                // 30:D9AD (s121, states/shop.js; keeper type $43)
+  [34, substInn],                                     // 30:D997 (s123, states/shop.js; types $40 $45 $46)
+  [35, substPawnShop],                               // 30:D9AD (s121, states/shop.js; keeper type $43)
 ]);
 
 /** state entry at 15:BC40 from SubstPlay (30:CBA8 JSR, after PlayPaletteRestore / area $5F irq_mode = 0) */
@@ -228,6 +229,7 @@ export const ENTRY_POINTS = {
   '30:D9AD': substPawnShop,                           // s121 (web/test/states/pawnshop.json)
   '30:D985': substArmorShop,                          // s122 (web/test/states/armorshop.json)
   '30:D98E': substToolShop,                           // s122 (web/test/states/toolshop.json)
+  '30:D997': substInn,                                // s123 (web/test/states/inn.json)
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */
