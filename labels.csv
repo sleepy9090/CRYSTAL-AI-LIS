@@ -875,11 +875,13 @@ bank,addr,name,comment
 16,9C7A,SaveLoadExit,s43: back to the SELECT menu (JMP 16:807E if $6424 else 16:807A)
 16,8232,MenuChrR1,s70: 4 bytes 3E 3A 3A 38 = chr_r1_alt per menu kind $6424 (R0 always $3C)
 26,9D9A,PlayerMove,s44: AI $03 slot 0 (type $06) ground body: pad -> obj_behav; jump timer $0620; PlayerMagic; sword charge; ObjMoveSlide; BG probe; conveyor
-26,9D81,PlayerMoveLocked,s44: AI $02 = PlayerMove with pad vars zeroed (cutscenes); area $58 -> AI $03 + pad_dir 4
+26,9D81,PlayerMoveLocked,s44: AI $02 = PlayerMove with pad vars zeroed (cutscenes); area $58 -> AI $03 + pad_dir 4; s128: only setter 27:BB70 (AI $70 phase 1 end, type $B3 from BossHookA6 15:B8FD); run by scenario final_locked
 26,9BF6,PlayerSetSpeed,s44: slot 0 obj_flags2 low nibble = move speed by obj1_flash status (4 -> 2; b6 -> 9; b7 -> 5)
 26,9CEF,PlayerPlaceBody,s44: slot 1 = slot 0 pos + JumpHeightTable[$0620]; obj_coll $60 air / $50 ground
 26,9D4D,JumpHeightTable,s44: s8[49] slot 1 y offset per $0620 (idx $20 -> 0); verified s45
-26,9FD2,PlayerConveyor,s44: BG attr b5: move in obj_param1&$0F at speed obj_aux $0660 (ramps 0..9)
+26,9FD2,PlayerConveyor,s44: BG attr b5: move in obj_param1&$0F at speed obj_aux $0660 (ramps 0..9); s128: run by scenario conveyor (area $20)
+15,B8FD,BossHookA6,s128: BossRecs area $A6 hook: irq_mode 0; clear slots $0D-$13; camera from $3C; slot $14 = type $04D4, slot $15 = type $B3 (AI $70 phase 1)
+15,B728,AiReward6C,s128: AI $6C-$6E reward entry: obj_spawn_param b7 -> becomes type $B3 (AI $70 phase 1) via FarCall_C25D
 26,9AE8,SpendMp,s44: A=cost; MP=0 or MP<cost -> sub_state $1C (out of MP) and return from the caller
 26,9C66,SwordElemBit,s44: u8[6] 00 01 02 04 08 00 by equip_sword -> slash shot $0502
 26,8BD2,SwordAttackTable,s44: u8[6] 00 01 02 04 08 10 by equip_sword -> slash shot $03E2

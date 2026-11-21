@@ -225,6 +225,41 @@ SCENARIOS['boss_fade'] = dict(note='area 5F (BossAreaList entry 13): ObjInit typ
                               watch=[0x04AF, 0x060F, 0x0102, 0x0103, 0x00FE, 0x0110, 0x04B4])
 
 
+def place_player(x, y, skip=10):
+    """exec hook at PlayerMove 26:9D9A (slot 0 ground body): on its `skip`-th run, put slots 0 and 1 at
+    x/y (16-bit: hi byte = screen). A pad-time `each` poke is too late (the move already copied the position)."""
+    n = [0]
+
+    def f(nes):
+        n[0] += 1
+        if n[0] == skip:
+            r = nes.bus.ram
+            for s in (0, 1):
+                r[0x70 + s], r[0x90 + s], r[0xB0 + s], r[0xD0 + s] = x & 0xFF, x >> 8, y & 0xFF, y >> 8
+    return (26, 0x9D9A, f)
+
+
+# s128: PlayerConveyor 26:9FD2 runs on BG attr b5 (gfx/areas/coll_index.txt: areas $20/$21/$28/$29/$40-$42/$60).
+# Area $20 screen (2,1) cells x 6-9, rows $B0-$E0 are 'c'; drop the player there and let it ride
+SCENARIOS['conveyor'] = dict(note='area 20: slots 0/1 placed on the conveyor strip (x $0280, y $01C8) at the '
+                                  '10th PlayerMove 26:9D9A, DOWN held -> PlayerConveyor 26:9FD2',
+                             area='20', pokes={0x03C1: 0x60}, exec=[place_player(0x0280, 0x01C8)],
+                             keys=['14:DOWN:30'], frames=200,
+                             watch=[0x0641, 0x0661, 0x0681, 0x0071, 0x0091, 0x00B1, 0x00D1])
+# s128: the only AI $02 setter is AI $70 phase 1's end 27:BB6E (after messages $1B.05-07): PlayerMoveLocked.
+# Phase 1 = type $B3 (objtype_dump: 0600=01), spawned only by BossRecs area $A6's hook 15:B8FD (slot $15) and the
+# reward AI 15:B728 (spawn param b7). Area $A6 = BossAreaList entry 11; area $5F's AI $70 starts at phase 2.
+SCENARIOS['final_locked'] = dict(note='area A6 (BossAreaList entry 11): ObjInit type $CF (AI $6F BossDefeated) at +10 '
+                                      '-> hook 15:B8FD -> type $B3 (AI $70 phase 1), A taps through messages '
+                                      '$1B.05-07 -> player obj_active 2 = PlayerMoveLocked 26:9D81',
+                                 area='A6', pokes={0x03C1: 0x60, 0x03C0: 0x60}, spawn=[(10, 0x0F, 0xCF, 48, 0)],
+                                 each=lambda nes, o: nes.bus.ram.__setitem__(0x03C1, 0x60),
+                                 keys=[f'{40 + 30 * i}:A' for i in range(40)], frames=1500,
+                                 watch=[0x04A0, 0x060F, 0x07DE, 0x0676, 0x006C],
+                                 pcs=[(15, 0xB8FD), (27, 0xBAF5), (27, 0xBB6E), (26, 0x9D81), (26, 0x9D91)],
+                                 peek=[0x04A0, 0x04A1, 0x0340, 0x0341, 0x05A0, 0x07D7, 0x0710])
+
+
 def set_from(dst, src):
     """exec hook value: write RAM[src] to dst (e.g. make a save checksum match the running sum $16)."""
     return lambda nes: write_mem(nes, dst, nes.bus.ram[src])
@@ -316,7 +351,15 @@ def run(sc, verbose=False):
     if st:                                          # '' = power-on
         state.load(nes, st)
     r = nes.bus.ram
-    while st and r[0x41] != 8:                      # reach gameplay first (tour.py style A taps)
+    pc_log, pc_seen = [], set()                     # s128: 'pcs' = [(bank, pc)] logged from the start
+    def pc_hit(nes, b, p):
+        k = (b, p, nes.bus.ram[0x04A0], nes.bus.ram[0x41])
+        if k not in pc_seen:                        # first hit per (pc, $04A0, $41)
+            pc_seen.add(k)
+            pc_log.append(f'    abs f{nes.ppu.frame_no}: {b}:{p:04X} $04A0={k[2]:02X} $41={k[3]:02X}')
+    for bank, pc in sc.get('pcs', []):
+        nes.on_exec(bank, pc, lambda nes, b=bank, p=pc: pc_hit(nes, b, p))
+    while st and r[0x41] != 8:                   # reach gameplay first (tour.py style A taps)
         nes.keys = {nes.ppu.frame_no: BTN_A} if nes.ppu.frame_no % 8 == 4 else {}
         nes.run_frame()
     if sc.get('area'):
@@ -386,13 +429,16 @@ def run(sc, verbose=False):
     nes.set_tracer(None)
     # collapse repeated identical writes
     seen, slog = set(), []
+    if pc_log:
+        log[:0] = [f'    scenario start: abs f{f0}'] + pc_log[:30]
     for line in log:
         k = line.split(': ', 1)[1]
         if k not in seen:
             seen.add(k)
             slog.append(line)
     end = (f'end: $40/$41 {r[0x40]}/{r[0x41]:02X} area {r[0x6C]:02X} hp {r[0x3C1]} lv {r[0x421]} '
-           f'gold {r[0x702] | r[0x703] << 8} xp {r[0x704] | r[0x705] << 8} mp {r[0x708]}{crash}')
+           f'gold {r[0x702] | r[0x703] << 8} xp {r[0x704] | r[0x705] << 8} mp {r[0x708]}{crash}'
+           + ''.join(f' ${a:04X}={r[a]:02X}' for a in sc.get('peek', [])))
     return cov, slog, end
 
 
