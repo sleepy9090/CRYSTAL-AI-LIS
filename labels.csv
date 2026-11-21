@@ -1380,3 +1380,5 @@ bank,addr,name,comment
 16,959C,InnBody,s123: strings $1A $23 $24 $29 + cost InnPrices[shop_id] (HUD elem $0C) YES/NO; YES: gold-cost borrow -> $2A $2B $2F; else MenuSfx $55 + FadeSaveZpToWram + $2A $2B $25 $26 + HP/MP = max + $0710 &= $F0 + gold; NO -> $2B $2A $20; any key; 96C6
 16,9EAC,InnPrices,s123: data 16-bit inn cost per shop_id ($10 $14 $28 $50 $32 $64 $78 $96 ...)
 16,96C6,ShopBodyTail,s123: shared shop end: MenuHideOam (X=0) + $07DD=0
+30,D19C,TalkSpawnGuardPair,s134: talk act 1: ObjInit type $64 (AI $2A AiLunger) into slots s/s+1 = ((Y-1)&$FE)+1; NPC $2D guards ($0F/$10 of areas $28/$73)
+30,D63F,TalkReinitSlot14,s134: talk act 8 (= event act 16): $04AE!=8 -> ObjInit slot $0E with type $04CE; D652 RTS

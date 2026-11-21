@@ -18,6 +18,7 @@ import { SPIN, waitFrame, oamClip, hudRedraw, hudHpBar } from './death.js';
 import { farSpriteDraw } from './areaenter.js';
 import { readPads } from '../pads.js';
 import { playSound } from '../playsound.js';
+import { objInit } from '../obj/objinit.js';
 import { queueEmpty, queuePush, ppuCtrlNmiOn, ppuCtrlNmiOff } from '../world/ppuqueue.js';
 
 const BUF = 0x6000, Q = 0x6200;
@@ -441,7 +442,19 @@ const nop = function* () {};
 const TALK_ACTIONS = {
   0x00: nop, 0x04: nop, 0x07: nop, 0x0B: nop, 0x0E: nop, 0x0F: nop, 0x12: nop,
   0x1C: nop, 0x1D: nop, 0x1E: nop, 0x1F: nop,            // D163 RTS
+  0x01: function* (m) {                                  // D19C type $64 into the slot pair s, s+1
+    m.wr(0x10, (((m.rd(TALK_SLOT) - 1) & 0xFE) + 1) & 0xFF);
+    m.wr(0x11, 0x64);
+    objInit(m);                                          // ObjInit restores $11 = $64
+    inc(m, 0x10);
+    objInit(m);
+  },
   0x02: function* (m) { npcVanish(m); },                 // D31C
+  0x08: function* (m) {                                  // D63F re-init slot 14 with $04CE unless active = 8
+    if (m.rd(ACTIVE + 0x0E) === 0x08) return;
+    m.wr(0x10, 0x0E); m.wr(0x11, m.rd(0x04CE));
+    objInit(m);
+  },
   0x05: function* (m) { m.wr(0x04AE, 0); m.wr(0x07D7, 0); },   // D164
   0x09: function* (m, y) {                               // D263 gold += 100 (INC low byte on carry: ROM quirk)
     playSound(m, 0x3F, y);

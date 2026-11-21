@@ -403,6 +403,27 @@ SCENARIOS['npc_reveal_flee'] = dict(SCENARIOS['npc_reveal'], frames=2400, each=_
                                          (26, 0x913B), (26, 0x9152), (15, 0xB807), (15, 0xBA98)])
 
 
+# s134: talk act 1 (30:D19C) for real. NPC param $2D = the two guards in slots $0F/$10 of areas $28/$73
+# ("You cannot pass here! Attack!"); act 1 = ObjInit type $64 (AI $2A AiLunger) into the slot pair
+# ((Y-1)&$FE)+1 = $0F/$10, i.e. both guards turn into fighters. Area $73 = script state 5: F02A set -> act 8
+# "On your way", else (F000 clear) act 1. Clear F000 ($6480 b0) + F02A ($6485 b2) at NpcScript entry.
+def _clr_guard_flags(nes):
+    b = nes.bus
+    b.write(0x6480, b.read(0x6480) & 0xFE)
+    b.write(0x6485, b.read(0x6485) & 0xFB)
+
+
+SCENARIOS['guard_attack'] = dict(note='area 73: player + camera put below guard slot $0F (x $0068, y $0090), UP into '
+                                      'it -> NpcTalk -> NPC $2D act 1 (30:D19C) -> slots $0F/$10 = type $64 (AI $2A)',
+                                 area='73', pokes={0x03C1: 0x60},
+                                 exec=[place_player(0x0068, 0x0090, cam=True), (14, 0x8000, _clr_guard_flags)],
+                                 each=lambda nes, o: nes.bus.ram.__setitem__(0x03C1, 0x60),
+                                 keys=['14:UP:20'] + [f'{60 + 30 * i}:A' for i in range(8)], frames=600,
+                                 watch=[0x04AF, 0x04B0, 0x0623, 0x07DE, 0x07DF],
+                                 pcs=[(30, 0xD0C8), (30, 0xD19C), (27, 0xABF8), (27, 0xAC40)],
+                                 peek=[0x04AF, 0x04B0, 0x060F, 0x0610, 0x03CF, 0x03D0, 0x0623, 0x03C1])
+
+
 def set_from(dst, src):
     """exec hook value: write RAM[src] to dst (e.g. make a save checksum match the running sum $16)."""
     return lambda nes: write_mem(nes, dst, nes.bus.ram[src])
