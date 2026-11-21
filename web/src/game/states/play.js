@@ -11,7 +11,7 @@
 import { R } from '../ram.js';
 import { cpuRd, setR6, switchBank16 } from '../prg.js';
 import { playerDeath, paletteBuildRom, waitFrame, waitFrames, hudRedraw, hudHpBar } from './death.js';
-import { pauseScreen } from './pause.js';
+import { pauseScreen, pauseWaitEntry } from './pause.js';
 import { substEquipMenu } from './equip.js';
 import { substRestoreScreen } from './saveload.js';
 import { substPawnShop, substArmorShop, substToolShop, substInn, substShopEmpty } from './shop.js';
@@ -206,6 +206,7 @@ const SUBSTATES = new Map([
   [8, substPlay],                                     // 30:CB62 (s110)
   [16, showPendingMessage],                           // 30:D085 (s141; ItemUseFail, entity messages)
   [12, pauseScreen],                                 // 15:BC40 (vestigial entry; play calls it directly, s94)
+  [13, pauseWaitEntry],                               // 15:BDDB (s142; unreachable, see states/pause.js)
   [17, npcTalk],                                      // 30:D0C8 NpcTalk + ShowMessage (s115, states/talk.js)
   [18, substEquipMenu],                               // 30:D8C7 SELECT menu (s98)
   [19, substWakeCutscene],                            // 30:D9B6 -> 20:9400 new-game wake-up (s138, states/wake.js)

@@ -168,7 +168,12 @@ export function* pauseScreen(m) {
   m.wr(R.irq_mode, 2);
   m.wr(R.ppumask_shadow, m.rd(R.ppumask_shadow) | 0x18);
   m.wr(R.sub_state, (m.rd(R.sub_state) + 1) & 0xFF);   // 15:BD7F INC $41 (8 -> 9 from play)
-  // PauseWait 15:BDDB
+  return yield* pauseWait(m, savedIrq);                // falls into PauseWait 15:BDDB
+}
+
+/** PauseWait 15:BDDB (the tail of PauseScreen). Ends with PLA -> irq_mode, so `savedIrq` is the byte
+ *  PauseScreen pushed. (JSR DebugCheatStub 15:BF46 at BDE4 = lone RTS, skipped.) */
+export function* pauseWait(m, savedIrq) {
   for (;;) {
     yield* waitFrame(m);
     yield* statusPlayerSprite(m);
@@ -183,5 +188,14 @@ export function* pauseScreen(m) {
   m.wr(R.sub_state, 8);
   m.wr(R.irq_mode, savedIrq);                          // PLA
   return readPads(m);                                  // JMP ReadPads (returns its Y register)
+}
+
+/** SubstateHandlerTable entry 13 = PauseWait entered from the dispatcher (s142). No ROM code stores 12 or 13
+ *  into sub_state (it is 13 only inside PauseScreen's own loop, which never returns to the dispatcher), so this
+ *  is unreachable. In the ROM its PLA would pop MainLoop's return-address low byte ($18, from JSR $0010 at
+ *  30:C916) into irq_mode and ReadPads' RTS would jump into garbage. The port keeps irq_mode instead of crashing. */
+export function* pauseWaitEntry(m) {
+  m.log('sub_state 13 (PauseWait 15:BDDB) dispatched: unreachable in the ROM (its PLA eats the return address)');
+  return yield* pauseWait(m, m.rd(R.irq_mode));
 }
 // s110: pauseFromPlay (the 15:BC40 state entry) moved to states/play.js, which now runs the rest of SubstPlay
