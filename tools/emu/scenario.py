@@ -326,6 +326,18 @@ SCENARIOS['thunder_transform'] = dict(note='area 06: thunder sword ($0711=4), le
                                       pcs=[(26, 0x90BB), (26, 0x923E), (26, 0x9125), (26, 0x913B), (26, 0x9152)],
                                       peek=[0x050D, 0x040D, 0x042D, 0x03E1, 0x0502, 0x03E2, 0x04AD, 0x03CD])
 
+# s131: sword charge (26:9DEF: B held, pad_prev b6) -> orbit_level $06C0 += 1 every 4 frames; at 8 the burst
+# timer $06C1 <- $0E (26:9E1F) -> OrbitSprites burst ring = BurstRadius 28:81A5. Release -> 26:9C91 charged shot
+# (level & $F8 = $18 also costs MP). sword_power $0719 caps the level (SwordChargeCap 08 10 18)
+for _n, _pw, _hold in (('sword_charge', 0, 80), ('sword_charge2', 2, 120)):
+    SCENARIOS[_n] = dict(note=f'area 03: sword 1, sword_power {_pw}, B held {_hold} frames at +20 -> orbit + burst '
+                              '(BurstRadius 28:81A5), release -> charged shot',
+                         area='03', pokes={0x0711: 1, 0x0719: _pw, 0x0708: 0x40}, keys=[f'20:B:{_hold}'],
+                         frames=240,
+                         watch=[0x06C0, 0x06C1, 0x0708],
+                         pcs=[(26, 0x9E13), (26, 0x9E1F), (28, 0x81A5), (26, 0x9C91), (26, 0x9CBA), (26, 0x9CCE)],
+                         peek=[0x06C0, 0x06C1, 0x0708, 0x0719])
+
 
 def set_from(dst, src):
     """exec hook value: write RAM[src] to dst (e.g. make a save checksum match the running sum $16)."""

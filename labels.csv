@@ -82,7 +82,7 @@ bank,addr,name,comment
 *,05C0,obj_screen_x,written by ObjSpriteDraw
 *,05E0,obj_screen_y,written by ObjSpriteDraw
 *,06C0,orbit_level,>>3 indexes OrbitTileTable; 0..7 = no orbit
-*,06C1,orbit_burst_timer,counts down; burst drawn while <$0E
+*,06C1,orbit_burst_timer,counts down; burst drawn while <$0E; set $0E at charge level 8 (26:9E1F); cleared on release 26:9CD6 (s131 scenario sword_charge)
 *,07EF,obj1_oam_ofs,OAM offset of obj 1's first sprite (for palette flash)
 *,07FF,obj_draw_rot,DEC each ObjSpriteDraw; &3 picks draw order; parity for half-rate flicker
 *,0710,obj1_flash,player status: lo nibble 1 paralysis 2 stone 3 poison 4 transformed; b7 changed form (magic 7) + b5-4 form 0-3; b6 warp exit (s76); also forces obj1 sprites to palette 0
