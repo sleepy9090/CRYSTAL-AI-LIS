@@ -47,7 +47,7 @@ web/index.html
       ├─ src/nes/apu_core.js          2 pulse, triangle, noise, DMC; register writes $4000-$4017; sample generator
       ├─ src/game/ram.js              RAM/WRAM arrays + named address constants (generated, §5) + obj column helpers
       ├─ src/game/mainloop.js         MainLoop, MainStateTable, NMI work, IRQ split list, frame_ready/$09 handshake
-      ├─ src/game/states/             title.js (s82: states 2 + 3, bank 18/19 screen library); play.js + death.js (s88/89); pause.js (s94: pause / status screen); equip.js (s98: SELECT equipment / item menu, bank 16); saveload.js (s102: save/load page, bank 23 save module, menu exit fade, load tail + HUD window rebuild); ending.js (s90: states 4 + 5, bank 17); areaenter.js (s108: states 0 + 8, substates 0 + 1, AreaEnter); talk.js (s115: substate $11 NpcTalk, NPC script VM, ShowMessage + bank 20 text printer)
+      ├─ src/game/states/             title.js (s82: states 2 + 3, bank 18/19 screen library); play.js + death.js (s88/89); pause.js (s94: pause / status screen); equip.js (s98: SELECT equipment / item menu, bank 16); saveload.js (s102: save/load page, bank 23 save module, menu exit fade, load tail + HUD window rebuild); ending.js (s90: states 4 + 5, bank 17); areaenter.js (s108: states 0 + 8, substates 0 + 1, AreaEnter); talk.js (s115: substate $11 NpcTalk, NPC script VM, ShowMessage + bank 20 text printer); wake.js (s138: substate $13 SubstWakeCutscene 30:D9B6 -> WakeCutscene 20:9400, new-game wake-up cut-scene)
       │   └─ substates.js             SubstateHandlerTable (40) → handler functions; substate banks are irrelevant
       ├─ src/game/world/
       │   ├─ camera.js                (s108) CameraTick / CameraUpdate / CameraFollow / CameraClampX / shake, AreaSubTable, ExitLookup

@@ -23,6 +23,7 @@ import { spriteDraw } from '../obj/sprites.js';
 import { objCollideAll } from '../obj/collide.js';
 import { cameraTick } from '../world/camera.js';
 import { npcTalk } from './talk.js';
+import { substWakeCutscene } from './wake.js';
 
 function unported(m, what) {
   if (!m.unported.has(what)) { m.unported.add(what); m.log(`${what} not ported yet`); }
@@ -203,6 +204,7 @@ const SUBSTATES = new Map([
   [12, pauseScreen],                                  // 15:BC40 (vestigial entry; play calls it directly, s94)
   [17, npcTalk],                                      // 30:D0C8 NpcTalk + ShowMessage (s115, states/talk.js)
   [18, substEquipMenu],                               // 30:D8C7 SELECT menu (s98)
+  [19, substWakeCutscene],                            // 30:D9B6 -> 20:9400 new-game wake-up (s138, states/wake.js)
   [31, substRestoreScreen],                           // 30:CC4D (s120; set by AI $70 phase 2)
   [32, substArmorShop],                               // 30:D985 (s122, states/shop.js; types $42 $48)
   [33, substToolShop],                                // 30:D98E (s122; types $41 $44 $47)

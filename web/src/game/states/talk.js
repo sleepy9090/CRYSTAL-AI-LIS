@@ -41,7 +41,7 @@ export function oamClipTop(m) {
 function* qWait(m) { while (!queueEmpty(m)) yield SPIN; }
 
 /** 30:D38A / 20:8641: LSR frame_ready / BCC (wait for the NMI without clearing frame_ready first) */
-function* lsrWait(m) {
+export function* lsrWait(m) {
   for (;;) {
     const v = m.rd(R.frame_ready);
     m.wr(R.frame_ready, v >> 1);
