@@ -435,6 +435,121 @@ SCENARIOS['guard_attack'] = dict(note='area 73: player + camera put below guard 
                                  peek=[0x04AF, 0x04B0, 0x060F, 0x0610, 0x03CF, 0x03D0, 0x0623, 0x03C1])
 
 
+# s136: hit rules of HitByPlayerShot 26:90AA, each forced on the `kill` setup (area 03, enemy slot $0E parked
+# 14 px right of the player). KILL_KEYS = RIGHT, then B/A swings every 20 frames.
+KILL_KEYS = [f'{10 + 20 * i}:{b}:4' for i, b in enumerate(['RIGHT', 'B', 'A', 'B', 'A', 'B', 'A', 'B', 'A', 'B', 'A'] * 2)]
+HIT_PCS = [(26, 0x90FA), (26, 0x9125), (26, 0x913B), (26, 0x9152), (26, 0x9094), (26, 0x9093), (26, 0x90A7),
+           (26, 0x946D)]
+
+
+def _hit_each(need=None, defense=None, drop=None, hp=1):
+    """kill-style each hook: park slot $0E; optionally force its obj_hitflags low bits (need level),
+    obj_defense, and obj_elem_drop hi nibble (gold class) while it is still the enemy (AI != coin)."""
+    park = follow_enemy(0x0E, 14, hp=hp)
+    dead = [False]
+
+    def f(nes, o):
+        r = nes.bus.ram
+        r[0x03C1] = 0x60
+        dead[0] |= r[0x04AE] == 0x7D                 # EnemyDeathFx puff: stop forcing (the coin keeps its own)
+        if not dead[0] and r[0x04AE] and r[0x41] == 8 and not r[0x04AE] & 0x80:
+            park(nes, o)
+            if need is not None:
+                r[0x042E] = r[0x042E] & 0xE0 | need
+            if defense is not None:
+                r[0x040E] = defense
+            if drop is not None:
+                r[0x050E] = r[0x050E] & 0x0F | drop << 4
+    return f
+
+
+SCENARIOS['hit_level_gate'] = dict(note='area 03: level 1, enemy $0E with need level 5 (obj_hitflags & $1F) -> miss '
+                                        '26:9125 (clink $3A); level <- 5 at +250 -> damage 26:913B / EnemyKilled',
+                                   area='03', pokes={0x0421: 1, 0x0711: 1}, each=_hit_each(need=5, hp=None),
+                                   keys=KILL_KEYS + ['250:s:0421=05'], frames=500,
+                                   watch=[0x0421, 0x04AE, 0x03CE, 0x04A2, 0x0702],
+                                   pcs=HIT_PCS, peek=[0x042E, 0x03CE, 0x04AE])
+SCENARIOS['hit_defense'] = dict(note='area 03: level 16, enemy $0E defence $FF -> borrow at 26:9123 -> miss 26:9125; '
+                                     'defence <- 0 at +250 (each hook stops forcing) -> damage',
+                                area='03', pokes={0x0421: 16, 0x0711: 1},
+                                each=lambda nes, o, _a=_hit_each(defense=0xFF, hp=None), _b=_hit_each(defense=0, hp=None):
+                                (_a if o < 250 else _b)(nes, o),
+                                keys=KILL_KEYS, frames=500, watch=[0x04AE, 0x03CE, 0x0702],
+                                pcs=HIT_PCS, peek=[0x040E, 0x03CE, 0x04AE])
+for _c in (0, 3, 6, 9, 15):
+    SCENARIOS[f'gold_class_{_c:X}'] = dict(note=f'area 03: kill (1 HP) with obj_elem_drop hi = {_c} -> PickupGold '
+                                                f'adds GoldDropTable[{_c}]',
+                                           area='03', pokes={0x0421: 16, 0x0711: 1, 0x0702: 0, 0x0703: 0},
+                                           each=_hit_each(drop=_c), keys=KILL_KEYS, frames=400,
+                                           watch=[0x0702, 0x0703, 0x04AE], pcs=HIT_PCS,
+                                           peek=[0x0702, 0x0703, 0x050E])
+# element walls: types $D0-$D3 (obj_active $87) spawned 14 px right of the player (facing right) in area 03.
+# Sword 1 = wind (SwordElemBit 1): tap at +30 (shot hitflags 1 -> nothing), charge B 50 f from +60 -> break $D0 only
+# HitHandler3 phase 0 = the magic-2 freeze shot (slot $0C, type $20): enemy $0E parked 40 px right of the player
+# (facing right) -> obj_freeze $05AE <- $FF (26:8FF1). Variant b5: target obj_hitflags b5 forced -> no freeze.
+def _freeze_each(b5):
+    park = follow_enemy(0x0E, 40, hp=None)
+
+    def f(nes, o):
+        r = nes.bus.ram
+        r[0x03C1] = 0x60
+        if r[0x04AE] and r[0x41] == 8:
+            park(nes, o)
+            if b5:
+                r[0x042E] |= 0x20
+    return f
+
+
+for _n, _b5 in (('freeze_shot', False), ('freeze_shot_b5', True)):
+    SCENARIOS[_n] = dict(note=f'area 03: magic 2 (freeze shot, slot $0C) at enemy $0E parked 40 px right'
+                              f'{" with obj_hitflags b5 forced" if _b5 else ""} -> HitHandler3 26:8FC4',
+                         area='03', pokes={0x0708: 0x60, 0x0709: 0x60, 0x0712: 2, 0x0421: 16},
+                         each=_freeze_each(_b5), keys=['4:RIGHT:2', '20:A', '200:A'], frames=400,
+                         watch=[0x05AE, 0x04AC], pcs=[(26, 0x8FC4), (26, 0x8FDF), (26, 0x8FE6), (26, 0x8FF1)],
+                         peek=[0x05AE, 0x042E, 0x054E, 0x056E])
+
+
+def hit_logger(tag, limit=12):
+    """exec hook fn: print frame, X (attacker), Y (target) and the hit fields of both on each call."""
+    n = [0]
+
+    def f(nes):
+        if n[0] < limit:
+            n[0] += 1
+            r, x, y = nes.bus.ram, nes.cpu.x, nes.cpu.y
+            print(f'    {tag} abs f{nes.ppu.frame_no}: X={x:02X} ai {r[0x04A0 + x]:02X} hitfl {r[0x0420 + x]:02X} '
+                  f'elem {r[0x0500 + x]:02X} atk {r[0x03E0 + x]:02X} | Y={y:02X} ai {r[0x04A0 + y]:02X} '
+                  f'hitfl {r[0x0420 + y]:02X} elem {r[0x0500 + y]:02X} hp {r[0x03C0 + y]:02X} def {r[0x0400 + y]:02X}')
+    return f
+
+
+def obj_logger(tag, other=0x0E, limit=12, every=4):
+    """exec hook fn (an AI entry, X = self): print X's pos/coll/hitflags/elem vs slot `other` every `every` calls."""
+    n = [0]
+
+    def f(nes):
+        n[0] += 1
+        if n[0] % every == 1 and n[0] // every < limit:
+            r, x, o = nes.bus.ram, nes.cpu.x, other
+            print(f'    {tag} abs f{nes.ppu.frame_no}: X={x:02X} type? ai {r[0x04A0 + x]:02X} coll {r[0x03A0 + x]:02X} '
+                  f'hitfl {r[0x0420 + x]:02X} elem {r[0x0500 + x]:02X} x {r[0x90 + x]:02X}{r[0x70 + x]:02X} '
+                  f'y {r[0xD0 + x]:02X}{r[0xB0 + x]:02X} fl {r[0x0380 + x]:02X}/{r[0x0340 + x]:02X} | '
+                  f'{o:02X}: coll {r[0x03A0 + o]:02X} x {r[0x90 + o]:02X}{r[0x70 + o]:02X} '
+                  f'y {r[0xD0 + o]:02X}{r[0xB0 + o]:02X} fl {r[0x0380 + o]:02X}/{r[0x0340 + o]:02X}')
+    return f
+
+
+for _t in (0xD0, 0xD1, 0xD2, 0xD3):
+    for _sw in (1, 4):
+        SCENARIOS[f'wall_{_t:02X}_s{_sw}'] = dict(
+            note=f'area 03: type ${_t:02X} element wall spawned at +10 (dx 40), sword {_sw}: tap +30, charged B +60..110',
+            area='03', pokes={0x0421: 16, 0x0711: _sw, 0x0719: 2, 0x0708: 0x60, 0x03C1: 0x60},
+            spawn=[(10, 0x0E, _t, 40, 0)], each=lambda nes, o: nes.bus.ram.__setitem__(0x03C1, 0x60),
+            keys=['4:RIGHT:2', '30:B:4', '60:B:40', '120:B:110'], frames=320,
+            watch=[0x04AE, 0x02EE], pcs=HIT_PCS, peek=[0x04AE, 0x050E, 0x030E, 0x06EE],
+            exec=[(26, 0x9094, hit_logger('wall')), (27, 0xB0A8, obj_logger('shot', every=1))])
+
+
 def set_from(dst, src):
     """exec hook value: write RAM[src] to dst (e.g. make a save checksum match the running sum $16)."""
     return lambda nes: write_mem(nes, dst, nes.bus.ram[src])
