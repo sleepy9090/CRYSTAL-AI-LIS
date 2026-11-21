@@ -260,6 +260,57 @@ SCENARIOS['final_locked'] = dict(note='area A6 (BossAreaList entry 11): ObjInit 
                                  peek=[0x04A0, 0x04A1, 0x0340, 0x0341, 0x05A0, 0x07D7, 0x0710])
 
 
+def place_on_slot(slot, skip=10, dy=0, hold=1, park=None, debug=False):
+    """exec hook at PlayerMove 26:9D9A: on runs skip..skip+hold-1, put slots 0/1 on object `slot`'s position (+dy).
+    park=(x, y, run): from run `run` until `skip`, hold the player at x/y instead (a non-pit cell next to the
+    platform), so the camera catches up first: ObjOverlapScan compares the sprite pass's screen coords
+    $05C0/$05E0 and skips off-screen objects (obj_flags b7), and a far teleport leaves both off-screen."""
+    n = [0]
+
+    def f(nes):
+        n[0] += 1
+        r = nes.bus.ram
+        if park and park[2] <= n[0] < skip:
+            if n[0] == park[2]:  # camera ($02-$05 and the CameraUpdate copy $3C-$3F) centred on the park spot
+                cx = park[0] - 0x80
+                cy = (park[1] >> 8) * 240 + (park[1] & 0xFF) - 0x70
+                cam = (cx & 0xFF, cx >> 8 & 0xFF, cy % 240, cy // 240)
+                for i, v in enumerate(cam):
+                    r[0x02 + i] = r[0x3C + i] = v
+            for s in (0, 1):
+                r[0x70 + s], r[0x90 + s], r[0xB0 + s], r[0xD0 + s] = (park[0] & 0xFF, park[0] >> 8,
+                                                                      park[1] & 0xFF, park[1] >> 8)
+        if skip <= n[0] < skip + hold:
+            if debug:
+                print(f'    place #{n[0]}: slot {slot:02X} act {r[0x04A0 + slot]:02X} coll {r[0x03A0 + slot]:02X} '
+                      f'fl {r[0x0380 + slot]:02X}/{r[0x0340 + slot]:02X} xy {r[0x90 + slot]:02X}{r[0x70 + slot]:02X},'
+                      f'{r[0xD0 + slot]:02X}{r[0xB0 + slot]:02X} scr {r[0x05C0 + slot]:02X},{r[0x05E0 + slot]:02X} | '
+                      f'p1 coll {r[0x03A1]:02X} fl {r[0x0381]:02X}/{r[0x0341]:02X} scr {r[0x05C1]:02X},{r[0x05E1]:02X} '
+                      f'$0641 {r[0x0641]:02X}')
+            y = (r[0xB0 + slot] | r[0xD0 + slot] << 8) + dy
+            for s in (0, 1):
+                r[0x70 + s], r[0x90 + s] = r[0x70 + slot], r[0x90 + slot]
+                r[0xB0 + s], r[0xD0 + s] = y & 0xFF, y >> 8 & 0xFF
+    return (26, 0x9D9A, f)
+
+
+# s129: AreaPitFall 31:E544 / AreaEdgeLink 31:E573 (k5) / RidePlatform 26:943F in the suite. Area $6A (k5) pit
+# column ($578,$168) = the s116 web_state.py spot; slot $18 there is the AI $38 pit shuttle (s117)
+SCENARIOS['pitfall'] = dict(note='area 6A: slots 0/1 placed on the pit column ($0578,$0168) at the 10th PlayerMove '
+                                 '-> AreaPitFall 31:E544 -> AreaEdgeLink k5 match -> area $69 fall-in',
+                            area='6A', pokes={0x03C1: 0x60}, exec=[place_player(0x0578, 0x0168)], frames=300,
+                            watch=[0x006C, 0x006D, 0x0041, 0x0620, 0x00D0],
+                            pcs=[(31, 0xE544), (31, 0xE573), (31, 0xE5E5), (31, 0xE600), (31, 0xE603)])
+SCENARIOS['ride_platform'] = dict(note='area 6A: player parked at ($0580,$0100) + camera set (10th PlayerMove), '
+                                       'then put on slot $18 (AI $38 AiPitShuttle over the pit strip) at the 400th '
+                                       '-> ObjCollideAll -> RidePlatform 26:943F, no pit fall',
+                                  area='6A', pokes={0x03C1: 0x60}, exec=[place_on_slot(0x18, skip=400, hold=3, park=(0x0580, 0x0100, 10))],
+                                  frames=600,
+                                  watch=[0x0541, 0x04B8, 0x0071, 0x00B1, 0x006D],
+                                  pcs=[(26, 0x943F), (31, 0xF073)],
+                                  peek=[0x04B8, 0x0088, 0x00A8, 0x00C8, 0x00E8, 0x0071, 0x0091, 0x00B1, 0x00D1, 0x006C])
+
+
 def set_from(dst, src):
     """exec hook value: write RAM[src] to dst (e.g. make a save checksum match the running sum $16)."""
     return lambda nes: write_mem(nes, dst, nes.bus.ram[src])
