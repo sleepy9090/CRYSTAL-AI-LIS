@@ -169,6 +169,18 @@ export function areaSubTable(m, k) {
 /** ExitLookup 31:EB09: $12 / $13 = the player's 16 px cell x / y; in SubstPlay a matching k3 record sets
  *  area_id / area_entry and sub_state 1 (SubstAreaEnter) -> true */
 export function exitLookup(m) {
+  const [hit, y] = exitScan(m);
+  if (!hit || m.rd(R.sub_state) !== 8) return false;
+  m.wr(R.area_id, indY(m, 0x10, y));
+  m.wr(0x6D, indY(m, 0x10, y + 1));
+  m.wr(R.sub_state, 1);
+  return true;
+}
+
+/** ExitLookup 31:EB09 up to its sub_state test: [matched, Y]. On a match Y indexes the record's area byte
+ *  at ($10); without one Y is past the $FF pair (or 0 after a wrap). s121: ShopWalkOut 30:DAA8 calls
+ *  ExitLookup outside sub_state 8 and reads ($10),Y itself. */
+export function exitScan(m) {
   m.wr(0x12, ((m.rd(0x70) >> 4) | (m.rd(0x90) << 4)) & 0xFF);
   m.wr(0x13, ((m.rd(0xB0) >> 4) | (m.rd(0xD0) << 4)) & 0xFF);
   areaSubTable(m, 3);
@@ -176,14 +188,9 @@ export function exitLookup(m) {
   for (;;) {
     m.wr(0x14, indY(m, 0x10, y)); y = (y + 1) & 0xFF;
     m.wr(0x15, indY(m, 0x10, y)); y = (y + 1) & 0xFF;
-    if (m.rd(0x14) === 0xFF) return false;
-    if (m.rd(0x15) === m.rd(0x13) && m.rd(0x14) === m.rd(0x12)) break;
+    if (m.rd(0x14) === 0xFF) return [false, y];
+    if (m.rd(0x15) === m.rd(0x13) && m.rd(0x14) === m.rd(0x12)) return [true, y];
     y = (y + 2) & 0xFF;
-    if (y === 0) return false;
+    if (y === 0) return [false, y];
   }
-  if (m.rd(R.sub_state) !== 8) return false;
-  m.wr(R.area_id, indY(m, 0x10, y));
-  m.wr(0x6D, indY(m, 0x10, y + 1));
-  m.wr(R.sub_state, 1);
-  return true;
 }

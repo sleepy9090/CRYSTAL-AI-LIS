@@ -1360,3 +1360,10 @@ bank,addr,name,comment
 14,808F,NpcSkipEntryA,s115: section-A skip: Y+=2 (result) then skip set-list items until b6 when $26 b6
 30,C89E,Area5FIrqOff,s120: area $5F -> irq_mode 0 (RTS shared with C8A9)
 30,C8A9,RestoreIfArea5F,s120: area $5F -> JMP SubstRestoreScreen 30:CC4D else RTS; from 30:D0C5 (pending message) and 30:D877; web saveload.js restoreIfArea5F
+30,DABF,ShopWalkStep,s121: one shop walk frame: WaitFrame + PlayerUpdate(X=1) + obj_anim_s01-- + obj_flags[1]&=$0B + FarCall SpriteDraw; web shop.js walkStep
+16,950C,ShopScreenSetup,s121: inv sort + CHR alt $58-$5B/$3C/$38 + ShopWindow + irq_mode 1 + $07DD=$FF + ShopSprPalette(0) + InvSortAll
+16,967A,PawnShopBody,s121: from 16:9509: strings $1B $27-$29 + YES/NO; YES -> EquipMenu 16:8000 (shop mode); NO -> $2B $2A $20 + MenuWaitAnyKey; $07DD=0; web shop.js pawnShop
+16,9878,MenuWaitAnyKey,s121: MenuWaitPad until pad_new != 0, then MenuSfx $4B
+16,9884,MenuWaitPad,s121: WaitFrame + JMP ReadPadsMenu
+16,9912,ShopWindow,s121: frame rows 6 / 9 x3 / $0C at $2800 + attribute bytes $2BC0 = $FF (MenuFlush)
+16,9A12,ShopSprPalette,s121: $6154-$6157 = 16:8BFB[A*4] (sub_state $21 tool shop: 16:8C0B[A*4])

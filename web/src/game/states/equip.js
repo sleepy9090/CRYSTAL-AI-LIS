@@ -11,8 +11,9 @@
 // the cursor (16:8699), A = equip / unequip (16:82B7), B = drop with the YES/NO confirm (16:8342, 16:84DA),
 // the per-category inventory sort (16:8534) and the selection re-find (16:9A62 / 9A91 / 85AE), MenuPrint
 // 16:8933 with its FE/FD/FC escapes, MenuSprDraw 16:86D3; s102: SaveLoadPage, the 30:C80C exit and the load
-// tail 30:D930 (states/saveload.js). Not ported (logged once): the shop / pawn variants ($07DD != 0: 16:8613
-// FarCall HudRedraw, 16:8631 gold, 16:846C). SubstRestoreScreen 30:CC4D (area $5F) = saveload.js (s120).
+// tail 30:D930 (states/saveload.js). Shop mode ($07DD != 0, s109; checked s121 from the pawn shop in
+// states/shop.js): price line 16:81B4 / MenuFarHud 16:8613, sell 16:835E + MenuSellGold 16:8631, 16:846C.
+// SubstRestoreScreen 30:CC4D (area $5F) = saveload.js (s120).
 import { R } from '../ram.js';
 import { cpuRd, indY, setR6, setR7, switchBank16, farRestore } from '../prg.js';
 import { readPads, readPadsMenu } from '../pads.js';
@@ -211,7 +212,7 @@ function* eraseRowIcon(m, xIn) {
 }
 
 /** 16:8534: sort each of the 8 inventory categories ascending (counts 16:859E, offsets 16:85A6) via $60E0 */
-function sortInventory(m) {
+export function sortInventory(m) {
   for (let c = 0; c < 8; c++) {
     m.wr(0x2E, c);
     const n = cpuRd(m, 0x859E + c), o = cpuRd(m, 0x85A6 + c);
@@ -258,7 +259,7 @@ const catPtr = (m, i) => {
 };
 
 /** 16:9A62: $6000-$6007 = the selected item id of each row ($FF = none) */
-function selToIds(m) {
+export function selToIds(m) {
   for (let i = 0; i < 8; i++) {
     const p = catPtr(m, i);
     const s = m.rd(SEL + i);
@@ -268,7 +269,7 @@ function selToIds(m) {
 }
 
 /** 16:9A91 + 9ABD: inv_select = position of $6000+row in its category after the sort ($FF = none) */
-function idsToSel(m) {
+export function idsToSel(m) {
   for (let i = 0; i < 8; i++) {
     const p = catPtr(m, i);
     let a = m.rd(BUF + i);
@@ -319,6 +320,13 @@ function* setupGrid(m) {
   m.wr(0x59, cpuRd(m, 0x8232 + k));
   m.wr(NCOL, cpuRd(m, 0x8238 + k));
   m.wr(0x5F, cpuRd(m, 0x8234 + k));
+  // s121: entered from a mode-1 screen (the pawn shop 16:950C), this frame's NMI still ran mode 1, and its
+  // IRQ handler 2 (line ~8, IrqMsgWindowTop) writes $5E/$5F. In the ROM it fires during the inventory sort,
+  // before these stores; the port renders after the main code, so re-apply them right after that IRQ.
+  if (m.irqSplits.some((s) => s.handler === 2)) {
+    const h = m.irqHandlers[2], e = m.rd(0x5E), f = m.rd(0x5F);
+    m.irqHandlers[2] = (mm, line) => { h(mm, line); mm.wr(0x5E, e); mm.wr(0x5F, f); mm.irqHandlers[2] = h; };
+  }
   yield* hideOam(m);
   drawSelIcons(m);
 }

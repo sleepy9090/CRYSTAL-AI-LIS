@@ -14,6 +14,7 @@ import { playerDeath, paletteBuildRom, waitFrame, waitFrames, hudRedraw, hudHpBa
 import { pauseScreen } from './pause.js';
 import { substEquipMenu } from './equip.js';
 import { substRestoreScreen } from './saveload.js';
+import { substPawnShop } from './shop.js';
 import { substNewGameInit, substAreaEnter } from './areaenter.js';
 import { readPads, readPadsMenu } from '../pads.js';
 import { playSound } from '../playsound.js';
@@ -203,6 +204,7 @@ const SUBSTATES = new Map([
   [17, npcTalk],                                      // 30:D0C8 NpcTalk + ShowMessage (s115, states/talk.js)
   [18, substEquipMenu],                               // 30:D8C7 SELECT menu (s98)
   [31, substRestoreScreen],                           // 30:CC4D (s120; set by AI $70 phase 2)
+  [35, substPawnShop],                                // 30:D9AD (s121, states/shop.js; keeper type $43)
 ]);
 
 /** state entry at 15:BC40 from SubstPlay (30:CBA8 JSR, after PlayPaletteRestore / area $5F irq_mode = 0) */
@@ -221,6 +223,7 @@ export const ENTRY_POINTS = {
   // (DEC $08, PlayPaletteRestore), so it starts the handler itself
   '30:D8C7': substEquipMenu,
   '30:CC4D': substRestoreScreen,                      // s120 (web/test/states/restore5f.json)
+  '30:D9AD': substPawnShop,                           // s121 (web/test/states/pawnshop.json)
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */
