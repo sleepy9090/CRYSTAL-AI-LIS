@@ -46,7 +46,7 @@ bank,addr,name,comment
 31,FF8C,FarCall_B14_800E,push $6E/$6F; SwitchBank16(14); JSR 28:$800E; JMP RestoreBanks
 31,FF9D,FarCall_EB91,push $6E/$6F; JSR $EB91; JMP RestoreBanks
 31,FFA9,FarCall_B26_8E46,A->$10; push $6E/$6F; SetR6($1A); JSR 26:$8E46 with A; JMP RestoreBanks
-31,FFBE,FarCall_B26_8CC0,push $6E/$6F; SetR6($1A); JSR 26:$8CC0; JMP RestoreBanks
+31,FFBE,FarCall_B26_8CC0,push $6E/$6F; SetR6($1A); JSR 26:$8CC0; JMP RestoreBanks; s126: dead - no JSR/JMP $FFBE anywhere (word hits 08:85BE 14:9E93 28:8637 31:FD1C are data); all 13 HudHpBar callers JSR 26:8CC0 directly
 31,FFCF,FarCall_D354,push $6E/$6F; JSR $D354; JMP RestoreBanks
 31,FFDB,RestoreBanks,PLA->SetR7; PLA->JMP SetR6 (pairs with push $6E;$6F)
 28,800E,ObjSpriteDraw,per-frame pass over 32 object slots -> OAM $0204+; order from ObjDrawOrderTable[$07FF&3]; then ObjHideUnusedOam + OrbitSprites
@@ -211,7 +211,7 @@ bank,addr,name,comment
 *,006D,area_entry,entry index into area sub-table 2 (player start position -> $34-$37; emu s39); $FF none; $2x keep position
 26,8C0E,PaletteBuild,$11=0 (no fade) then builds $6140-$615F from ids $07E0-$07E7; 8C10 = entry with A=fade step
 26,8C6E,PaletteLoadOne,A=id (+$B0 sprite): 4 colours from bank 2/3 $A000+(id>>2&1F)*$100+$F0+(id&3)*4
-26,8C32,PaletteBlackFill,$6040-$605F <- $0F
+26,8C32,PaletteBlackFill,$6040-$605F <- $0F; s126: dead - no code xref; only byte hit 32 8C is data at 20:898E
 30,C7A5,AreaSubTable,A=k: SwitchBank16(5); ($10)=header(10:8300[$6C])[k]; Y=0. k0 map/music k1 gfx k2 entries k3 exits k4 screen flags k5 edge links
 31,EB09,ExitLookup,player 16px cell vs exit list (xc yc area entry)*;FF; sub_state 8 -> load area
 13,AC00,ObjTypeTable,ptr16 per object type ($AD00 upper half) -> ObjInit records (snd + 4 bitmask groups)
@@ -265,7 +265,7 @@ bank,addr,name,comment
 18,8028,IntroColdBoot,s62: cold-boot intro entry; SwitchBank16(9) + JSR from 31:F39C only; runs ~212 frames (irq_mode 5) before JMP $C900
 18,81A1,NtFill,A=PPU hi; X=tile x$3C0; Y=attr x$40 (rendering off)
 18,81F0,NtRectBlit,stream ($8E): W H then H rows of W tiles (+$06FE) to PPU $8C/$8D stride $20
-18,824B,NtRectBlitQueued,same W H format; one row per frame through $6200 queue
+18,824B,NtRectBlitQueued,same W H format; one row per frame through $6200 queue; s126: dead - no JSR/JMP and no 4B 82 pointer bytes anywhere (only xref = a bank-28 BMI)
 17,A751,NtFill_b17,bank 17 duplicate of 18:81A1
 20,83FE,TextGroupBank,36 bytes: PRG bank (21/22/23) per text group $07DF
 20,8422,TextGroupPtrs,34 ptr16: per-group message ptr arrays (bank 20 $8000-$83FD)
@@ -889,7 +889,7 @@ bank,addr,name,comment
 27,A092,MagicButtonSel,s44: u8[12] per magic: $08 = pad_new edge; $00 = pad_prev held (offset from $43)
 27,A112,MagicFlight,s44: magic 8: jump + hover at the peak while A held; SpendMp(1)/16 f
 27,A143,MagicJump,s44: magic 9: ground jump; $0620=$20; sound $30; verified s45
-27,A1BB,MagicFailSound,s44: PlaySound($4E)
+27,A1BB,MagicFailSound,s44: PlaySound($4E); s126: run by scenarios mp_fail_area (magic 3 in area $58) + mp_fail_status ($0710=4 magic 7); port player.js
 27,A1C9,PlayerFacing,s44: slot 1 meta low 2 bits = facing; FacingKeep keeps facing within 45 deg
 27,A211,FacingKeep,s44: u8[8] 01 01 00 00 00 00 00 01 indexed (2*facing - dir)&7
 26,9907,BgProbePoints,s46: 8 dirs x 8 B: cumulative (dx dy) probe offsets from the candidate pos; 00 00 end; box (x-4;y-5)..(x+4;y+3); dir 5 quirk dy -6

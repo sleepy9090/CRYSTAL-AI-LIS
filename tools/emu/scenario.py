@@ -213,6 +213,10 @@ SCENARIOS['boss_e2'] = dict(note='area 1A: ObjInit type $5E (dormant, AI $7F) in
 SCENARIOS['shop_empty_ai'] = dict(note='area 03: ObjInit type $4E (AI $0E AiShopEmpty) in slot $0F at +10',
                                   area='03', spawn=[(10, 0x0F, 0x4E, 32, 0)],
                                   keys=['100:B', '160:B', '220:B', '280:A'], frames=400, watch=[0x04AF])
+# s126: MagicFailSound 27:A1BB = PlaySound($4E): telepathy/change in areas $58-$5F, or status 4 (MagicStatus4Check)
+SCENARIOS['mp_fail_area'] = magic(3, keys=['20:A'], frames=120, area='58', note='area $58 -> MagicFailSound')
+SCENARIOS['mp_fail_status'] = magic(7, {0x0710: 0x04}, keys=['20:A'], frames=120,
+                                    note='status 4 ($0710) -> MagicStatus4Check -> MagicFailSound')
 
 
 def set_from(dst, src):
