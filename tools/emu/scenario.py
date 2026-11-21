@@ -136,6 +136,17 @@ SCENARIOS = {
                           note='-> SubstTelepathySelect'),
     'mp_teleport': magic(4, keys=['20:A', '80:DOWN', '120:A', '200:A'], frames=500,
                          note='-> SubstTeleportMenu, pick row 2'),
+    # s135: a pick needs the town's warp flag F2F5+index ($64DE b5-7, $64DF b0-7; TestFlagF2F0 30:DD58),
+    # which a new game has none of, so the two scenarios above stay in the menu. These set all 11.
+    'warp_pick': dict(note='area 03: Warp Boots + all town flags F2F5-F2FF -> DOWN, A = index 3 (area $D5)',
+                      # item $24 is a consumable (ItemGetTable 14:9EDD = range $6440+, 8 slots), so it sits
+                      # in $6440, not $6450 as in use_warp; ItemUseHook then removes it after the warp.
+                      area='03', pokes={0x0715: 0x08, 0x6440: 0x24, 0x642C: 0,
+                                        0x64DE: 0xE0, 0x64DF: 0xFF},
+                      keys=['20:B', '100:DOWN', '140:A'], frames=500, watch=[0x6C, 0x6D, 0x6440, 0x0715],
+                      pcs=[(23, 0xBC00), (14, 0x8354), (14, 0x826F)]),
+    'mp_teleport_pick': magic(4, {0x64DE: 0xE0, 0x64DF: 0xFF}, keys=['20:A', '80:RIGHT', '120:A'],
+                              frames=500, note='+ all town flags -> RIGHT, A = index 1 (area $18)'),
     'mp_cure': magic(5, {0x0710: 0x03}, note='poisoned -> 19:BB39 SubstCureMagic'),
     'mp_bridge': magic(6, keys=['20:A:60'], note='held 60 frames'),
     'mp_change': magic(7, keys=['20:A', '80:A', '140:A', '200:A'], frames=400,

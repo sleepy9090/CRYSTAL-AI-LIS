@@ -1382,3 +1382,6 @@ bank,addr,name,comment
 16,96C6,ShopBodyTail,s123: shared shop end: MenuHideOam (X=0) + $07DD=0
 30,D19C,TalkSpawnGuardPair,s134: talk act 1: ObjInit type $64 (AI $2A AiLunger) into slots s/s+1 = ((Y-1)&$FE)+1; NPC $2D guards ($0F/$10 of areas $28/$73)
 30,D63F,TalkReinitSlot14,s134: talk act 8 (= event act 16): $04AE!=8 -> ObjInit slot $0E with type $04CE; D652 RTS
+30,DC64,TeleportMenuExit,s135: B/SELECT/START or same-area pick -> irq_mode 0 + sub_state 8
+30,DC70,TeleportMenuPick,s135: A: index row*3+col; 11 = cancel cell (ignored); needs town flag F2F5+index (TestFlagF2F0) else loop
+14,8564,UseWarpBoots,s135: ItemUseHandlers[$24] = RTS -> ItemUseHook removes the boots (consumable range $6440)
