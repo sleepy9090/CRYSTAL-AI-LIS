@@ -12,7 +12,7 @@
 // the per-category inventory sort (16:8534) and the selection re-find (16:9A62 / 9A91 / 85AE), MenuPrint
 // 16:8933 with its FE/FD/FC escapes, MenuSprDraw 16:86D3; s102: SaveLoadPage, the 30:C80C exit and the load
 // tail 30:D930 (states/saveload.js). Not ported (logged once): the shop / pawn variants ($07DD != 0: 16:8613
-// FarCall HudRedraw, 16:8631 gold, 16:846C), SubstRestoreScreen 30:CC4D (area $5F).
+// FarCall HudRedraw, 16:8631 gold, 16:846C). SubstRestoreScreen 30:CC4D (area $5F) = saveload.js (s120).
 import { R } from '../ram.js';
 import { cpuRd, indY, setR6, setR7, switchBank16, farRestore } from '../prg.js';
 import { readPads, readPadsMenu } from '../pads.js';
@@ -20,7 +20,7 @@ import { queuePush, ppuQueueFlush, ppuCtrlNmiOff, ppuCtrlNmiOn } from '../world/
 import { spriteDraw } from '../obj/sprites.js';
 import { waitFrame, statRecalc, paletteBuildRom, hudRedraw } from './death.js';
 import { waitPpuQueue } from './pause.js';
-import { saveLoadPage, menuExitFade, loadTail } from './saveload.js';
+import { saveLoadPage, menuExitFade, loadTail, substRestoreScreen } from './saveload.js';
 
 const BUF = 0x6000;
 const KIND = 0x6424;          // 0 = Sword/Armor/Shield/Power grid, 1 = Item/Magic grid
@@ -705,7 +705,7 @@ export function* substEquipMenu(m) {
     for (let x = 4; x < 0x0C; x++) m.wr(0x04A0 + x, 0);
     xReg = 0x0C;
   }
-  if (m.rd(R.area_id) === 0x5F) unported(m, '30:CC4D', 'SubstRestoreScreen');
+  if (m.rd(R.area_id) === 0x5F) yield* substRestoreScreen(m);   // D912 (s120)
   for (let y = 0x0D; y < 0x1F; y++) {                   // 30:DADA: drop the $EB/$EC objects with tile ofs 0
     if (!m.rd(0x04A0 + y)) continue;
     const t = m.rd(0x0300 + y);

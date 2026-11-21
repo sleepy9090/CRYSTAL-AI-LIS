@@ -20,7 +20,8 @@ export function* waitPpuQueue(m) { while (!queueEmpty(m)) yield SPIN; }
 
 /** PpuQueueBlock 30:C482: A = block id; record (hi lo len src count) from 30:C518 + 5*id into $20-$24, then
  *  count&$7F + 1 records, each len bytes on (lo += max(len, $20), src += len); waits for the queue to drain
- *  after each record unless hi b7 (chained records), and at the end unless count b7. */
+ *  after each record unless hi b7 (chained records), and at the end unless count b7.
+ *  Returns the Y register it leaves (5, or PpuQueueFlush's Y when rendering is off; s120). */
 export function* ppuQueueBlock(m, a) {
   m.wr(0x10, a);
   yield* waitPpuQueue(m);
@@ -28,12 +29,16 @@ export function* ppuQueueBlock(m, a) {
   m.wr(0x26, (p >> 8) & 0xFF);
   for (let y = 0; y < 5; y++) m.wr(0x20 + y, cpuRd(m, p + y));
   m.wr(0x25, m.rd(0x24) & 0x7F);
+  let yReg = 5;
   do {
     ppuCtrlNmiOff(m);                                  // C4BE
     const x = m.rd(0x0B);
     for (let i = 0; i < 4; i++) m.wr(0x6200 + x + i, m.rd(0x20 + i));
     m.wr(0x0B, (x + 4) & 0x1F);
-    if (!(m.rd(R.ppumask_shadow) & 0x18)) queueFlushNow(m);   // C4E5 JSR C8B2
+    if (!(m.rd(R.ppumask_shadow) & 0x18)) {                   // C4E5 JSR C8B2
+      const fy = queueFlushNow(m);
+      if (fy !== undefined) yReg = fy;
+    }
     ppuCtrlNmiOn(m);
     const len = m.rd(0x22);
     const lo = m.rd(0x21) + (len < 0x20 ? 0x20 : len);       // C4EB: next row (at least 32 bytes on)
@@ -44,6 +49,7 @@ export function* ppuQueueBlock(m, a) {
     m.wr(0x25, (m.rd(0x25) - 1) & 0xFF);
   } while (!(m.rd(0x25) & 0x80));
   if (!(m.rd(0x24) & 0x80)) yield* waitPpuQueue(m);          // C50E
+  return yReg;
 }
 
 /** 30:C1AE: $20+1 sprite records of 8 bytes at $6000 (x y meta tile_ofs flags flags2 dir anim) drawn one by

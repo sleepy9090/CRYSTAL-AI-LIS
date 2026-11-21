@@ -1358,3 +1358,5 @@ bank,addr,name,comment
 20,8710,TextArgPrep,s115: $2C/$2D=$2A/$2B; INY (INC $2D on wrap); $29=Y (the arg byte is then read through the OLD $2A/$2B)
 14,808E,NpcSkipEntryB,s115: section-B skip: Y+=3 (result+next) then 808F's set-list skip
 14,808F,NpcSkipEntryA,s115: section-A skip: Y+=2 (result) then skip set-list items until b6 when $26 b6
+30,C89E,Area5FIrqOff,s120: area $5F -> irq_mode 0 (RTS shared with C8A9)
+30,C8A9,RestoreIfArea5F,s120: area $5F -> JMP SubstRestoreScreen 30:CC4D else RTS; from 30:D0C5 (pending message) and 30:D877; web saveload.js restoreIfArea5F

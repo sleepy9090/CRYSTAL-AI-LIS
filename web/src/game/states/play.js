@@ -13,6 +13,7 @@ import { cpuRd, setR6, switchBank16 } from '../prg.js';
 import { playerDeath, paletteBuildRom, waitFrame, waitFrames, hudRedraw, hudHpBar } from './death.js';
 import { pauseScreen } from './pause.js';
 import { substEquipMenu } from './equip.js';
+import { substRestoreScreen } from './saveload.js';
 import { substNewGameInit, substAreaEnter } from './areaenter.js';
 import { readPads, readPadsMenu } from '../pads.js';
 import { playSound } from '../playsound.js';
@@ -56,7 +57,7 @@ function* playDeathMenuCheck(m, y0) {
     if (m.rd(R.area_id) === 0x5F) m.wr(R.irq_mode, 0);
     switchBank16(m, 0x07);
     y = yield* pauseScreen(m);                                               // CBA8 JSR 15:BC40
-    if (m.rd(R.area_id) === 0x5F) { unported(m, 'SubstRestoreScreen 30:CC4D'); return true; }
+    if (m.rd(R.area_id) === 0x5F) return yield* substRestoreScreen(m);       // CBB1 JMP (RTS -> CB68)
     return y;
   }
   if (m.rd(R.pad_new) & 0x20) { m.wr(R.sub_state, 0x12); return true; }     // SELECT -> menu
@@ -201,12 +202,13 @@ const SUBSTATES = new Map([
   [12, pauseScreen],                                  // 15:BC40 (vestigial entry; play calls it directly, s94)
   [17, npcTalk],                                      // 30:D0C8 NpcTalk + ShowMessage (s115, states/talk.js)
   [18, substEquipMenu],                               // 30:D8C7 SELECT menu (s98)
+  [31, substRestoreScreen],                           // 30:CC4D (s120; set by AI $70 phase 2)
 ]);
 
 /** state entry at 15:BC40 from SubstPlay (30:CBA8 JSR, after PlayPaletteRestore / area $5F irq_mode = 0) */
 function* pauseFromPlay(m) {
-  const y = yield* pauseScreen(m);
-  if (m.rd(R.area_id) === 0x5F) { unported(m, 'SubstRestoreScreen 30:CC4D'); return; }   // 30:CBB1
+  let y = yield* pauseScreen(m);
+  if (m.rd(R.area_id) === 0x5F) y = yield* substRestoreScreen(m);   // 30:CBB1 JMP; its RTS -> CB68
   yield* substPlayBody(m, y);                         // 30:CBAF RTS -> SubstPlay goes on at CB68
 }
 
@@ -218,6 +220,7 @@ export const ENTRY_POINTS = {
   // s98: a state stopped at a substate's first instruction is already past this frame's dispatch
   // (DEC $08, PlayPaletteRestore), so it starts the handler itself
   '30:D8C7': substEquipMenu,
+  '30:CC4D': substRestoreScreen,                      // s120 (web/test/states/restore5f.json)
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */

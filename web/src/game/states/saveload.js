@@ -6,6 +6,7 @@
 //   menuExitFade(m)    generator = 30:C80C (the $7000 = $FB / $AB exit: fade out, 30 frames, fade in)
 //   loadTail(m)        generator = 30:D930 + EquipMenuLoadTail 30:D942 (after a menu LOAD)
 //   hudWindowSetup(m)  generator = 19:BA65 (HUD window rebuild; also used by states 2/3/8 + SubstRestoreScreen)
+//   substRestoreScreen(m) generator = SubstRestoreScreen 30:CC4D (sub_state $1F; area $5F redraw, s120)
 //   saveGame / loadGame / loadGameAndInit   23:BC09 / 23:BC8E / 23:BCDA (bank 23 at $A000)
 //
 // Everything is literal, including the copy-length quirks: BlockCopy 23:BCF7 copies lo + 1 + hi bytes,
@@ -18,6 +19,7 @@ import { SPIN, waitFrame, statRecalc, fadeOut, fadeIn, hudRedraw, hudHpBar, hudQ
 import { queueHasSrc } from '../world/ppuqueue.js';
 import { waitPpuQueue, ppuQueueBlock } from './pause.js';
 import { objInit } from '../obj/objinit.js';
+import { fullScreenDraw } from '../world/bgstream.js';
 import { menuPrint, menuSnd, menuSprDraw, hideOam, frameRows, confirm, menuFlush } from './equip.js';
 
 const SAVE_STATE = 0x7000;    // menu_save_state: 0 / $AB (closed) / $FB (save tried) / $FA (loaded)
@@ -313,6 +315,46 @@ export function* hudWindowSetup(m) {
   yield* hudChargeMeter(m);
   for (let x = 5; x >= 0; x--) yield* hudRedraw(m, x, x);
   yield* waitPpuQueue(m);
+}
+
+/** SubstRestoreScreen 30:CC4D (s120; sub_state $1F after AI $70 phase 2, JMP from 30:C8AF / 30:CBB1, JSR from
+ *  30:D912): redraw the area-$5F screen after a window covered it. Rendering is off during FullScreenDraw and
+ *  every PpuQueueBlock flushes at once (mask off). Lag rows measured in tools.emu (s120 traces): the draw starts
+ *  right after a WaitFrame; AI $70 path (restore5f.json) NMIs after rows 6/12/18/24/30, pause path
+ *  (pause5f.json) after 6/12/18/23/29 (row cost depends on the tiles). Both = 5 NMIs, so only one mid-draw
+ *  frame's pos_y can be 8 px off; everything after the draw lines up. */
+const RESTORE_LAG = (n) => n % 6 === 0;
+export function* substRestoreScreen(m) {
+  yield* waitPpuQueue(m);
+  m.wr(R.ppumask_shadow, m.rd(R.ppumask_shadow) & 0xE7);
+  yield* waitFrame(m);
+  for (let i = 0; i < 4; i++) m.wr(0x34 + i, m.rd(0x3C + i));   // pos $34-$37 <- camera $3C-$3F
+  m.wr(0x0744, 8);                                               // nametable b3 for BgRowRender's queue hi
+  yield* fullScreenDraw(m, 1, RESTORE_LAG);                      // CC70
+  m.wr(0x0744, 0);
+  switchBank16(m, 9);
+  yield* hudWindowSetup(m);                                      // CC7D JSR 19:BA65
+  yield* waitFrame(m);
+  for (let y = 0x3F; y >= 0; y--) m.wr(0x6060 + y, 0xFF);
+  for (let y = 0x2F; y >= 0; y--) m.wr(0x6060 + y, m.rd(0x6100 + y));   // attr_shadow
+  yield* ppuQueueBlock(m, 3);
+  setR6(m, 0x0B);
+  for (let y = 0; y < 0x100; y++) m.wr(0x6000 + y, cpuRd(m, 0x9E00 + y)); // Wram6000InitTable 11:BE00
+  m.wr(0x2F, 0x3E);
+  let y;
+  do {                                                           // blocks $3E-$43 (window pieces)
+    y = yield* ppuQueueBlock(m, m.rd(0x2F));
+    m.wr(0x2F, (m.rd(0x2F) + 1) & 0xFF);
+  } while (m.rd(0x2F) !== 0x44);
+  m.wr(R.ppumask_shadow, m.rd(R.ppumask_shadow) | 0x18);
+  yield* waitFrame(m);
+  m.wr(R.sub_state, 8);
+  return y;                                                     // Y (SubstPlay goes on with it after 30:CBB1)
+}
+
+/** 30:C8A9: JMP SubstRestoreScreen in area $5F, else RTS (after NpcTalk's pending message 30:D0C5, 30:D877) */
+export function* restoreIfArea5F(m) {
+  if (m.rd(R.area_id) === 0x5F) yield* substRestoreScreen(m);
 }
 
 /** 30:D930 + EquipMenuLoadTail 30:D942: after a menu LOAD (keep level / HP / max HP over ObjInit) */
