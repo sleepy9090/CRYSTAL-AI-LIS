@@ -1109,7 +1109,7 @@ bank,addr,name,comment
 26,9229,ThunderTransform,s78: equip_sword 4 + target spawn_b2 0 + param 0/3 -> ObjInit(target; obj_behav) and abort the hit; s130 emu scenario thunder_transform: area 06 type $53 -> $69 (elem $4E: immune to the thunder sword; only sword 1 hurts it)
 26,9082,HitRevealA7,s78: target meta $A7 (type $7B): only shot hitflags 3 -> ObjInit(death type $4F)
 26,9094,HitElemWall,s78: target obj_active $87 (types D0-D3): elem passes + shot hitflags != 1 -> EnemyKilled
-26,906C,HitShotEater,s78: HitHandler3 with attacker phase 1: target enemy shot -> removed; SFX $3A
+26,906C,HitShotEater,s78: HitHandler3 with attacker phase 1: target enemy shot -> removed; SFX $3A. s132 run (scenario shot_eater: magic 6 held); HitPlayer (records 6/13) is scanned before it in the same frame
 26,907C,IsEnemyShot,s78: Z = (obj_spawn_b2;Y == $FF)
 26,94A2,TalkProbeItemUse,s78: target AI $78/$6E while sub_state 8 -> $0623 = target; sub_state 7
 26,94B0,TalkProbeHit,s78: HitHandlerTable 2 (slot 3 probe): item use on AI $78/$6E; talk to AI $30 NPCs (solid b2 push-back)

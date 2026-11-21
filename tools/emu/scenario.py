@@ -339,6 +339,21 @@ for _n, _pw, _hold in (('sword_charge', 0, 80), ('sword_charge2', 2, 120)):
                          peek=[0x06C0, 0x06C1, 0x0708, 0x0719])
 
 
+# s132: magic 6 held = SpawnShot($11) each frame -> slot $0C type $21 (AI $04, obj_phase 1) = shot eater.
+# HitHandler3 26:8FC4 with phase 1 -> HitShotEater 26:906C: an enemy shot target (obj_spawn_b2 $FF, e.g.
+# type $3F AI $10) is removed + SFX $3A. Spawn enemy shots onto the player while A is held
+SCENARIOS['shot_eater'] = dict(note='area 03: magic 6 held at +20 (slot $0C shot eater), enemy shot type $3F '
+                                    '(obj_spawn_b2 $FF) spawned on the player into slots $0F/$10/$11 -> HitShotEater 26:906C',
+                               area='03', pokes={0x0708: 0x60, 0x0709: 0x60, 0x0712: 6, 0x03C1: 0x60},
+                               spawn=[(40, 0x0F, 0x3F, 0, 0), (70, 0x10, 0x3F, 4, 0), (100, 0x11, 0x3F, -4, 0),
+                                      (200, 0x0F, 0x3F, 0, 0)],
+                               each=lambda nes, o: nes.bus.ram.__setitem__(0x03C1, 0x60),
+                               keys=['20:A:120'], frames=260,
+                               watch=[0x04AC, 0x060C, 0x04AF, 0x04B0, 0x04B1, 0x0708],
+                               pcs=[(26, 0x8FC4), (26, 0x906C), (26, 0x9071), (26, 0x92BF)],
+                               peek=[0x04AC, 0x04AF, 0x04B0, 0x04B1, 0x03C1])
+
+
 def set_from(dst, src):
     """exec hook value: write RAM[src] to dst (e.g. make a save checksum match the running sum $16)."""
     return lambda nes: write_mem(nes, dst, nes.bus.ram[src])
