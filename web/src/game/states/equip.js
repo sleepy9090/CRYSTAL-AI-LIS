@@ -424,7 +424,7 @@ function* drawLabels(m) {
 }
 
 /** MenuFarHud 16:8613: $10-$2F saved to $60EC, FarCall_B26_8E46 (HudRedraw A, X = $20), restored */
-function* menuFarHud(m, a) {
+export function* menuFarHud(m, a) {
   for (let x = 0; x < 0x20; x++) m.wr(0x60EC + x, m.rd(0x10 + x));
   m.wr(0x10, a);                                        // 31:FFA9 STA $10
   const r6 = m.rd(0x6E), r7 = m.rd(0x6F);

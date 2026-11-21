@@ -48,7 +48,7 @@ function* lsrWait(m) {
 function* wait48(m) { for (let x = 0x30; x > 0; x--) yield* lsrWait(m); }
 
 /** 16:88A8: 3x3 picture at column $26 / row $27 of the $2800 window, tiles $29.. ($FF = blank 16:892A) */
-function* slotPicture(m) {
+export function* slotPicture(m) {
   let c = (m.rd(0x26) << 3) & 0xFF, r = m.rd(0x27);
   for (let i = 0; i < 3; i++) { const cb = r & 1; r >>= 1; c = (c >> 1) | (cb << 7); }
   m.wr(0x26, c); m.wr(0x27, r);

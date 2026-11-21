@@ -1367,3 +1367,11 @@ bank,addr,name,comment
 16,9884,MenuWaitPad,s121: WaitFrame + JMP ReadPadsMenu
 16,9912,ShopWindow,s121: frame rows 6 / 9 x3 / $0C at $2800 + attribute bytes $2BC0 = $FF (MenuFlush)
 16,9A12,ShopSprPalette,s121: $6154-$6157 = 16:8BFB[A*4] (sub_state $21 tool shop: 16:8C0B[A*4])
+16,9558,ArmorShopBody,s122: ShopScreenSetup + chr_r1_alt $3E + strings $18 $1C $29 + ShopSetupArmor + ShopBuyLoop + 16:96C6 (MenuHideOam + $07DD=0)
+16,957A,ToolShopBody,s122: as ArmorShopBody with chr_r1_alt $3A / title string $19 / ShopSetupTool
+16,96CF,ShopBuyLoop,s122: YES/NO then LEFT/RIGHT cursor (16:97EF) / SELECT RTS / B "Anything else?" / A ShopBuy + message (1 = $22 no money / 2 = $21 full / 0 = $2E + HUD 1); NO -> string $26 + any key (16:97DD)
+16,9815,ShopCursorSpr,s122: MenuSprDraw shape 0 at OAM slot $3B+1 x = ShopSlotX[$6427] y $21
+16,9837,ShopItemSpr,s122: MenuSprDraw shape 2 tile 16:8FA5[item] slot $37+1 + ShopSprPalette(16:8FF0[item]&3); skipped for an empty ($FF) slot
+16,9874,ShopSlotX,s122: data 4 bytes $40 $68 $90 $B8 (sprite x of goods slots 0-3)
+16,9970,ShopBuy,s122: gold - shop_price_sel -> $6476/77; borrow -> A=1; no free inventory slot -> 2; else gold = result + inventory[$2E+$2F] = $646C -> 0 (armor: item>=$15 (BPL) row $6434 else $6438; tool: $29 -> $6448 (full -> X=7) else $6440)
+16,9F96,ShopPictureCols,s122: data 4 bytes $08 $0D $12 $17 (window column of goods pictures 0-3; row 3)
