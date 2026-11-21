@@ -9,7 +9,8 @@
 // (price line 16:81B4, A/B = sell 16:835E, "Anything else?" 16:846C) were ported in s109 and checked in s121.
 // s122: the armor / tool shops (sub_states 32 / 33, 16:9558 / 16:957A, buy loop ShopBuyLoop 16:96CF, ShopBuy
 // 16:9970; Verification Log row "Armor / tool shops"). s123: the inn (sub_state 34, SubstInn 30:D997 ->
-// 16:959C, FadeSaveZpToWram 30:C7D6; Verification Log row "Inn"). Not ported yet: SubstShopEmpty 30:D9C1.
+// 16:959C, FadeSaveZpToWram 30:C7D6; Verification Log row "Inn"). s124: SubstShopEmpty 30:D9C1 (sub_state 36,
+// ShowMessage from states/talk.js; Verification Log row "Empty shop").
 import { R } from '../ram.js';
 import { cpuRd, indY, setR6, switchBank16, farRestore } from '../prg.js';
 import { readPadsMenu } from '../pads.js';
@@ -23,6 +24,7 @@ import {
   menuSprDraw, menuFarHud,
 } from './equip.js';
 import { slotPicture } from './saveload.js';
+import { showMessage } from './talk.js';
 
 const inc = (m, a) => m.wr(a, (m.rd(a) + 1) & 0xFF);
 const dec = (m, a) => m.wr(a, (m.rd(a) - 1) & 0xFF);
@@ -408,5 +410,17 @@ export function* substInn(m) {
   setR6(m, 0x1A);
   yield* hudRedraw(m, 4, 0);
   yield* hudHpBar(m);
+  yield* shopWalkOut(m);
+}
+
+/** SubstShopEmpty 30:D9C1 (sub_state $24, AI $0E 27:A5C0 type $4E): walk in, message 32.17 "Nobody's here."
+ *  through ShowMessage 30:D354 (raw ids, no TextIdUnpack; it leaves sub_state 8), sub_state = $24, walk out
+ *  (whose final store makes it 1) */
+export function* substShopEmpty(m) {
+  yield* shopWalkIn(m);
+  m.wr(0x07DE, 0x11);                                   // text_msg_id
+  m.wr(0x07DF, 0x20);                                   // text_group
+  yield* showMessage(m);
+  m.wr(R.sub_state, 0x24);
   yield* shopWalkOut(m);
 }
