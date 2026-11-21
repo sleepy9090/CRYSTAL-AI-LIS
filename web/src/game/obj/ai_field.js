@@ -7,7 +7,7 @@
 //   AI $48 AiHomingShooter 27:B55A   AI $58 AiOrbiter 27:B6AA     AI $5C AiPatrolGunner 27:B626
 //   AI $5D AiDrifter 27:B690         AI $5E AiWaitClear 27:B5F3   AI $2B AiTrapChest 27:AC60 (+ ChestHop 27:B79F)
 //   AI $7B AiCoin 27:B778            AI $38 AiPitShuttle 27:AFA9      AI $3C AiCrumblePlatform 27:AFF5 (s117)
-//   AI $3A AiNpcBossReveal 27:A555 (s133)
+//   AI $3A AiNpcBossReveal 27:A555 (s133)   AI $30 AiNpcWander 27:ACD9 / $31 AiNpcStill 27:AE16 / $78 RTS (s140)
 import { cpuRd } from '../prg.js';
 import {
   rand64, dirToTarget, spawnShot, objPosToTemp, tempToObjPos, tempAddOffset, tempAddStep, objStepVector,
@@ -304,7 +304,89 @@ function aiNpcBossReveal(m, x) {
   m.wr(0x41, 0x10);                                                       // sub_state
 }
 
+/** 27:AE07: (Y:A) >> 4, low byte ($1F = scratch) */
+function cell16(m, lo, hi) {
+  let h = hi, a = lo;
+  for (let i = 0; i < 4; i++) { const c = h & 1; h >>= 1; a = (a >> 1) | (c << 7); }
+  m.wr(0x1F, h);
+  return a;
+}
+
+/** 27:ADC8: slots $12..$13-1 (minus X): one active in the 16 px cell $10/$11 -> $20 |= 6; true = found (RTS) */
+function npcCellScan(m, x) {
+  do {
+    const y = m.rd(0x12);
+    if (x !== y && m.rd(ACTIVE + y)) {
+      if (cell16(m, m.rd(X_LO + y), m.rd(0x90 + y)) === m.rd(0x10)
+        && cell16(m, m.rd(0xB0 + y), m.rd(Y_HI + y)) === m.rd(0x11)) {
+        m.wr(0x20, m.rd(0x20) | 6);
+        return true;
+      }
+    }
+    m.wr(0x12, m.rd(0x12) + 1);
+  } while (m.rd(0x12) !== m.rd(0x13));
+  return false;
+}
+
+/** 27:ADA4: the look-ahead cell is blocked by another object (slots $0D-$1E, then slot 0) */
+function npcCellBlocked(m, x) {
+  m.wr(0x10, cell16(m, m.rd(0x34), m.rd(0x35)));
+  m.wr(0x11, cell16(m, m.rd(0x36), m.rd(0x37)));
+  m.wr(0x12, 0x0D); m.wr(0x13, 0x1F);
+  npcCellScan(m, x);                                                      // ADBE (its RTS returns to ADC1)
+  m.wr(0x12, 0); m.wr(0x13, 1);
+  npcCellScan(m, x);                                                      // falls into ADC8
+}
+
+/** AiNpcStill 27:AE16 (AI $31, AiNpcWander with obj_behav b2): b0 -> obj_anim = $08>>3; $0603 = 0 -> meta = $06C0,X */
+function aiNpcStill(m, x) {
+  if (m.rd(0x06E0 + x) & 1) m.wr(ANIM + x, m.rd(0x08) >> 3);
+  if (m.rd(0x0603) === 0) m.wr(META_ID + x, m.rd(0x06C0 + x));
+}
+
+/** AI $30 AiNpcWander 27:ACD9 (s140; the town NPCs): pause timer $0440; obj_behav b2 -> AiNpcStill; moves on
+ *  BitMask[$08&7] & obj_phase frames; every 16 steps a Rand64 dir (bits 0/3 clear) with a 16 px look-ahead
+ *  (NpcLookAhead 27:AD9C, ObjBgProbe A=0 + the object cell scan 27:ADA4), blocked -> turn +2 (even slot) / -2 (odd),
+ *  4 tries; random 32-frame pause; step = 26:98A8 / 8480 / 9861 / 9A30($C0) / 9897, obj_anim-- */
+function aiNpcWander(m, x) {
+  if (m.rd(SHOT_ID + x)) { dec(m, SHOT_ID + x); return; }
+  if (m.rd(0x06E0 + x) & 4) { aiNpcStill(m, x); return; }
+  if (!(cpuRd(m, 0xC000 + (m.rd(0x08) & 7)) & m.rd(PHASE + x))) return;
+  if ((m.rd(ANIM + x) & 0x0F) === 0) {
+    m.wr(0x21, 4);
+    if (!(m.rd(ANIM + x) & 0x10)) {
+      const r = rand64(m);
+      m.wr(0x10, r);
+      if (!(r & 9)) m.wr(META_DIR + x, r & 6);
+    }
+    for (;;) {                                                            // AD1E
+      const d = m.rd(META_DIR + x) & 6;
+      m.wr(META_DIR + x, d);
+      m.wr(0x30, cpuRd(m, 0xAD9C + d));
+      m.wr(0x31, cpuRd(m, 0xAD9D + d));
+      objPosToTemp(m, x);
+      tempAddOffset(m);
+      objBgProbe(m, x, 0);
+      npcCellBlocked(m, x);
+      if (!(m.rd(0x20) & 6)) break;
+      m.wr(0x21, m.rd(0x21) - 1);
+      if (m.rd(0x21) === 0) return;
+      m.wr(META_DIR + x, (d + ((x & 1) ? -2 : 2)) & 6);                   // AD4A
+    }
+    m.wr(0x10, m.rd(META_DIR + x) >> 1);                                  // AD60
+    m.wr(META_ID + x, (m.rd(META_ID + x) & 0xFC) | m.rd(0x10));
+    if ((m.rd(0x08) & 0xD6) === 0 && (((x + m.rd(X_LO)) ^ m.rd(0xB0)) & 2) === 0) m.wr(SHOT_ID + x, 0x20);
+  }
+  objPosToTemp(m, x);                                                     // AD84
+  objStepVector(m, x, m.rd(META_DIR + x));
+  tempAddStep(m);
+  objBgProbe(m, x, 0xC0);
+  tempToObjPos(m, x);
+  dec(m, ANIM + x);
+}
+
 export const AI_FIELD = {
+  0x30: aiNpcWander, 0x31: aiNpcStill, 0x78: () => {},                    // $78 = 27:A914 RTS (event triggers)
   0x3A: aiNpcBossReveal, 0x2B: aiTrapChest, 0x44: aiDasher, 0x45: aiHomingFlyer, 0x48: aiHomingShooter, 0x58: aiOrbiter,
   0x5C: aiPatrolGunner, 0x5D: aiDrifter, 0x5E: aiWaitClear, 0x7B: aiCoin, 0x38: aiPitShuttle, 0x3C: aiCrumblePlatform,
 };

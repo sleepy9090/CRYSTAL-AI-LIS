@@ -82,6 +82,8 @@ const RUN = {
   AiPitShuttle: (m, r) => { F.aiPitShuttle(m, r.x); },              // s117: the pit platforms AI $38 / $3C
   AiCrumblePlatform: (m, r) => { F.aiCrumblePlatform(m, r.x); },
   AiNpcBossReveal: (m, r) => { F.AI_FIELD[0x3A](m, r.x); },          // s133: area $6E reveal AI $3A
+  AiNpcWander: (m, r) => { F.AI_FIELD[0x30](m, r.x); },              // s140: town NPCs AI $30 / $31
+  AiNpcStill: (m, r) => { F.AI_FIELD[0x31](m, r.x); },
   // s87: the boss shot / effect AIs (obj/ai_shot.js)
   AiCountdown: (m, r) => { S.aiCountdown(m, r.x); },
   AiCurveShot: (m, r) => { S.aiCurveShot(m, r.x); },

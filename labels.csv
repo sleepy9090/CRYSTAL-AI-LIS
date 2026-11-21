@@ -1414,3 +1414,7 @@ bank,addr,name,comment
 30,D82E,EvActSlot13Type55,s139: act 31: obj_active slot $0D = $55
 30,D21D,TalkGiveParam2,s139: talk act 17: GiveItemA(obj_param2[$0623]) if nonzero else falls into D225
 30,D225,TalkGiveParam1,s139: talk act 3: GiveItemA(obj_param1[$0623])
+27,A914,AiNullRts,s140: AI $78 (types $0D/$0E event triggers / item-use targets) = bare RTS
+27,ADA4,NpcCellBlocked,s140: AiNpcWander look-ahead cell ($34-$37 >> 4) held by an active slot $0D-$1E or slot 0 -> $20 |= 6
+27,ADC8,NpcCellScan,s140: slots $12..$13-1 except X: same 16px cell as $10/$11 -> $20 |= 6 + RTS
+27,AE07,PosToCell16,s140: (Y:A) >> 4 -> A ($1F scratch)

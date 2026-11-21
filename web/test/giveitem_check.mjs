@@ -7,7 +7,7 @@
 //    --until 30:D3EB, frame 2495): the same trigger slot holding item $1D (Medical Herb) -> ItemGetHook 14:826F,
 //    msg 32.12, A at 2600/2640 (port 2601/2641). Reference web/test/giveitem_ref.csv = tools.emu rows f2496-2694
 //    (tools/web_state_compare.py --frames 200 --keys 2600:A 2640:A --web-key-shift 1, then tools/csv_trim.py with
-//    core,pal and every object slot except the town NPCs $0D-$10, whose AI $30 is not ported). Rows must match
+//    core,pal,obj: every object slot; s140 added the town NPCs $0D-$10 once AI $30 was ported). Rows must match
 //    exactly; the herb must be in $6440.
 // Exit code 1 on any mismatch.
 import { readFileSync } from 'node:fs';

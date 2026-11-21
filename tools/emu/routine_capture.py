@@ -233,6 +233,9 @@ for _n, (_id, _ad) in PLATFORM_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r, _i=_id: {'x': _slot(r), 'y': (_i << 1) & 0xFF})
 # s133 (scenario npc_reveal): AI $3A AiNpcBossReveal 27:A555 (web/src/game/obj/ai_field.js); Y = id*2
 ROUTINES['AiNpcBossReveal'] = (26, 0xA555, _poke_bg, lambda r: {'x': _slot(r), 'y': 0x74})
+# s140 (town NPCs): AI $30 AiNpcWander 27:ACD9 / AI $31 AiNpcStill 27:AE16 (web/src/game/obj/ai_field.js)
+ROUTINES['AiNpcWander'] = (26, 0xACD9, _poke_bg, lambda r: {'x': _slot(r), 'y': 0x60})
+ROUTINES['AiNpcStill'] = (26, 0xAE16, _poke_bg, lambda r: {'x': _slot(r), 'y': 0x62})
 # s97 (boss / final-scene AI port (a)): AI $70 (web/src/game/obj/ai_final.js); Y = $E0 as ObjUpdateAll leaves it
 ROUTINES['Ai70PhaseDispatch'] = (26, 0xBA2E, _poke_bg, lambda r: {'x': _slot(r), 'y': 0xE0})
 # s111 (gameplay frames (e2)): the player's two objects (web/src/game/obj/player.js); X = slot, Y = id*2
@@ -670,6 +673,22 @@ def _fix_case(name, ram, r, regs, wram=None):
         ram[0xB1] = r.choice([0x27, 0x28, 0x60, 0xAF, 0xB0, r.randrange(256)])
         if ram[0x0600 + x] == 3 and r.random() < 0.7:
             ram[0x10] = x                          # the far call: keep ObjInit on its own slot most of the time
+    if name in ('AiNpcWander', 'AiNpcStill'):     # s140: pause 0, b2 still/b0 anim, step frames, 16-step edge, neighbours
+        ram[0x0440 + x] = r.choice([0, 0, 0, 0, 1, r.randrange(256)])
+        ram[0x06E0 + x] = r.choice([0, 0, 0, 1, 4, 5, r.randrange(256)])
+        ram[0x0600 + x] = r.choice([0xFF, 0xFF, 0x55, r.randrange(256)])
+        ram[0x04E0 + x] = r.choice([0x00, 0x10, 0x20, 0x30, 0x01, r.randrange(256)])
+        ram[0x0603] = r.choice([0, 0, r.randrange(256)])
+        if r.random() < 0.3:
+            ram[0x08] &= 0x29                      # the random-pause frame test ($08 & $D6 = 0)
+        for s in r.sample([0] + list(range(0x0D, 0x1F)), r.randrange(6)):
+            if s != x and r.random() < 0.8:        # an object in a neighbouring 16 px cell (look-ahead block)
+                dx, dy = r.choice([(0, -16), (16, 0), (0, 16), (-16, 0), (0, 0)])
+                for c, d in ((0x70, dx), (0xB0, dy)):
+                    v = ram[c + x] + d
+                    ram[c + s] = v & 0xFF
+                    ram[c + 0x20 + s] = (ram[c + 0x20 + x] + (v >> 8)) & 0xFF
+                ram[0x04A0 + s] = r.choice([0x30, 0x78, 0])
     if name in ('AiFanTurret',) and r.random() < 0.6:
         ram[0x0640 + x] = r.choice([0, 1, 0x08, 0x09, 0x10, 0x11, 0x18, 0x19, 0x1F])
     if name in ('AiFanTurret', 'AiTurret') and r.random() < 0.4:

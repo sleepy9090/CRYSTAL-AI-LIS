@@ -46,6 +46,15 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   edges `$27/$28/$AF/$B0`): `python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state
   --cases 300 --routine AiNpcBossReveal --out web/test/obj_frames/fuzz_reveal.json`.
 
+- `fuzz_wander.json` (s140): 300 cases each for the town NPC AIs `AiNpcWander` `$30` `27:ACD9` and `AiNpcStill`
+  `$31` `27:AE16` (`obj/ai_field.js`, Y = id·2), captured from `tools/emu/states/town02_enter.state` (a town map),
+  steered in `_fix_case` (pause timer 0, `obj_behav` b2/b0, step-frame bits, 16-step edges, the `$08` & `$D6` = 0
+  pause frame, other objects put in the look-ahead cells): `python3 -m tools.emu.routine_capture --load-state
+  tools/emu/states/town02_enter.state --cases 300 --routine AiNpcWander,AiNpcStill --out web/test/obj_frames/fuzz_wander.json`.
+- `real_npc.json` (s140): 200 real `AiNpcWander` calls (town `$02` entry, the 4 NPCs in slots `$0D-$10`):
+  `python3 -m tools.emu.routine_capture --load-state tools/emu/states/town02_enter.state --frames 40
+  --routine AiNpcWander --out web/test/obj_frames/real_npc.json`.
+
 - `fuzz_effect.json` (s93): 100 cases each for `obj/ai_effect.js` (`EFFECT_AIS`: `AiPlayerFollowC` `$04`,
   `AiStraightMoverTl` `$57` = `AiStraightMoverTail`, `AiMpDrain` `$76`, regs Y = id·2 as `ObjUpdateAll` leaves it);
   steered by `_fix_effect`. `AiMpDrain` runs through `runNow` (its `HudRedraw` is a generator; the capture removes
