@@ -7,6 +7,7 @@
 //   AI $48 AiHomingShooter 27:B55A   AI $58 AiOrbiter 27:B6AA     AI $5C AiPatrolGunner 27:B626
 //   AI $5D AiDrifter 27:B690         AI $5E AiWaitClear 27:B5F3   AI $2B AiTrapChest 27:AC60 (+ ChestHop 27:B79F)
 //   AI $7B AiCoin 27:B778            AI $38 AiPitShuttle 27:AFA9      AI $3C AiCrumblePlatform 27:AFF5 (s117)
+//   AI $3A AiNpcBossReveal 27:A555 (s133)
 import { cpuRd } from '../prg.js';
 import {
   rand64, dirToTarget, spawnShot, objPosToTemp, tempToObjPos, tempAddOffset, tempAddStep, objStepVector,
@@ -15,6 +16,7 @@ import {
 import { objMoveSlide } from './move.js';
 import { aiShootCheck } from './ai_static.js';
 import { playSound } from '../playsound.js';
+import { farObjInit } from './objinit.js';
 
 const X_LO = 0x70, Y_HI = 0xD0, FREEZE = 0x05A0, RIDE_SLOT = 0x0541;
 const META_ID = 0x0300, FLAGS2 = 0x0340, META_DIR = 0x0360, FLAGS = 0x0380, COLL = 0x03A0, SHOT_ID = 0x0440;
@@ -279,7 +281,30 @@ export function aiCrumblePlatform(m, x) {
   aiPitShuttle(m, x);
 }
 
+/** AI $3A AiNpcBossReveal 27:A555 (s133; type $2A, area $6E slot $0E, hidden on the slot-$0D NPC): 3 sword hits
+ *  -> messages $10.$10-$12, then slots X-1/X+1 off and ObjInit(X, $7D) (BossAiE6). Scenario `npc_reveal`. */
+function aiNpcBossReveal(m, x) {
+  if (m.rd(ACTIVE - 1 + x) === 0) { m.wr(ACTIVE + x, 0); return; }        // A555: the NPC in slot X-1 is gone
+  if (m.rd(PHASE + x) === 3) {                                            // A561
+    m.wr(ACTIVE - 1 + x, 0); m.wr(ACTIVE + 1 + x, 0);
+    m.wr(0x11, 0x7D); m.wr(0x10, x);
+    farObjInit(m);                                                         // A573 JMP FarCall_C25D
+    return;
+  }
+  m.wr(META_DIR + x, (((m.rd(0x0301) + 2) & 3) << 1) & 0xFF);            // A576: face the player
+  if (m.rd(TIMER2 + x)) { dec(m, TIMER2 + x); return; }
+  if (!(m.rd(FLAGS2 + x) & 0x80) || m.rd(0xD1) !== 1) return;            // A58B: hit, player on screen row 1
+  const yl = m.rd(0xB1);
+  if (yl >= 0xB0 || yl < 0x28) return;
+  m.wr(0x03C0 + x, 0xFF);                                                 // A5A0: HP back to $FF
+  m.wr(TIMER2 + x, 0x10);
+  m.wr(PHASE + x, (m.rd(PHASE + x) + 1) & 0xFF);
+  m.wr(0x06C3, (m.rd(PHASE + x) + 0x0F) & 0xFF);                          // pending_msg_id
+  m.wr(0x06E3, 0x10);                                                     // pending_msg_group
+  m.wr(0x41, 0x10);                                                       // sub_state
+}
+
 export const AI_FIELD = {
-  0x2B: aiTrapChest, 0x44: aiDasher, 0x45: aiHomingFlyer, 0x48: aiHomingShooter, 0x58: aiOrbiter,
+  0x3A: aiNpcBossReveal, 0x2B: aiTrapChest, 0x44: aiDasher, 0x45: aiHomingFlyer, 0x48: aiHomingShooter, 0x58: aiOrbiter,
   0x5C: aiPatrolGunner, 0x5D: aiDrifter, 0x5E: aiWaitClear, 0x7B: aiCoin, 0x38: aiPitShuttle, 0x3C: aiCrumblePlatform,
 };

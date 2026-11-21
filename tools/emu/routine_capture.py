@@ -231,6 +231,8 @@ for _n, (_id, _ad) in EFFECT_AIS.items():
 PLATFORM_AIS = {'AiPitShuttle': (0x38, 0xAFA9), 'AiCrumblePlatform': (0x3C, 0xAFF5)}
 for _n, (_id, _ad) in PLATFORM_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r, _i=_id: {'x': _slot(r), 'y': (_i << 1) & 0xFF})
+# s133 (scenario npc_reveal): AI $3A AiNpcBossReveal 27:A555 (web/src/game/obj/ai_field.js); Y = id*2
+ROUTINES['AiNpcBossReveal'] = (26, 0xA555, _poke_bg, lambda r: {'x': _slot(r), 'y': 0x74})
 # s97 (boss / final-scene AI port (a)): AI $70 (web/src/game/obj/ai_final.js); Y = $E0 as ObjUpdateAll leaves it
 ROUTINES['Ai70PhaseDispatch'] = (26, 0xBA2E, _poke_bg, lambda r: {'x': _slot(r), 'y': 0xE0})
 # s111 (gameplay frames (e2)): the player's two objects (web/src/game/obj/player.js); X = slot, Y = id*2
@@ -252,7 +254,7 @@ for _n, (_id, _ad, _p) in BOSS_AIS.items():
 # AI ids the port has (web/src/game/obj/ai_static.js, ai_walk.js, ai_field.js) + ids whose ObjAiTable 27:A314 entry is 0
 PORTED_AIS = (0x10, 0x11, 0x2C, 0x4C, 0x4D, 0x4E) + tuple(i for i, _ in WALK_AIS.values()) + \
     tuple(i for i, _ in FIELD_AIS.values()) + tuple(i for i, _ in EFFECT_AIS.values()) + \
-    tuple(i for i, _ in PLATFORM_AIS.values()) + \
+    tuple(i for i, _ in PLATFORM_AIS.values()) + (0x3A,) + \
     tuple(i for i, _, _ in BOSS_AIS.values())
 NULL_AIS = tuple(i for i in range(0x80) if i != 0x1A and not (_PRG[27 * 0x2000 + 0x314 + 2 * i] |
                                                                _PRG[27 * 0x2000 + 0x315 + 2 * i]))
@@ -659,6 +661,15 @@ def _fix_case(name, ram, r, regs, wram=None):
         ram[0x04CD] = r.choice([8, r.randrange(256)])
         if r.random() < 0.6:
             ram[0x0380 + x] &= 0x7F
+    if name == 'AiNpcBossReveal':                  # s133: NPC slot X-1 there, phase 3 edge, hit + row-1 y window edges
+        ram[0x049F + x] = r.choice([0, 3, 3, 3, r.randrange(256)])
+        ram[0x0600 + x] = r.choice([0, 1, 2, 3, 3, r.randrange(256)])
+        ram[0x0620 + x] = r.choice([0, 0, 0, 1, r.randrange(256)])
+        ram[0x0340 + x] = r.choice([0x80, 0x80, 0x00, r.randrange(256)])
+        ram[0xD1] = r.choice([1, 1, 1, 0, r.randrange(256)])
+        ram[0xB1] = r.choice([0x27, 0x28, 0x60, 0xAF, 0xB0, r.randrange(256)])
+        if ram[0x0600 + x] == 3 and r.random() < 0.7:
+            ram[0x10] = x                          # the far call: keep ObjInit on its own slot most of the time
     if name in ('AiFanTurret',) and r.random() < 0.6:
         ram[0x0640 + x] = r.choice([0, 1, 0x08, 0x09, 0x10, 0x11, 0x18, 0x19, 0x1F])
     if name in ('AiFanTurret', 'AiTurret') and r.random() < 0.4:

@@ -41,6 +41,11 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   `python3 -m tools.emu.routine_capture --load-state gfx/compare/s116_a6a.state --cases 300
   --routine AiPitShuttle,AiCrumblePlatform --out web/test/obj_frames/fuzz_platform.json`.
 
+- `fuzz_reveal.json` (s133): 300 cases for AI `$3A` `AiNpcBossReveal` `27:A555` (`obj/ai_field.js`, Y = `$74`),
+  steered in `_fix_case` (NPC slot X−1 on/off, phase 3 → `ObjInit(X, $7D)`, timer2 0/1, hit b7, the row-1 y window
+  edges `$27/$28/$AF/$B0`): `python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state
+  --cases 300 --routine AiNpcBossReveal --out web/test/obj_frames/fuzz_reveal.json`.
+
 - `fuzz_effect.json` (s93): 100 cases each for `obj/ai_effect.js` (`EFFECT_AIS`: `AiPlayerFollowC` `$04`,
   `AiStraightMoverTl` `$57` = `AiStraightMoverTail`, `AiMpDrain` `$76`, regs Y = id·2 as `ObjUpdateAll` leaves it);
   steered by `_fix_effect`. `AiMpDrain` runs through `runNow` (its `HudRedraw` is a generator; the capture removes

@@ -226,9 +226,11 @@ SCENARIOS['boss_fade'] = dict(note='area 5F (BossAreaList entry 13): ObjInit typ
                               watch=[0x04AF, 0x060F, 0x0102, 0x0103, 0x00FE, 0x0110, 0x04B4])
 
 
-def place_player(x, y, skip=10):
+def place_player(x, y, skip=10, cam=False):
     """exec hook at PlayerMove 26:9D9A (slot 0 ground body): on its `skip`-th run, put slots 0 and 1 at
-    x/y (16-bit: hi byte = screen). A pad-time `each` poke is too late (the move already copied the position)."""
+    x/y (16-bit: hi byte = screen). A pad-time `each` poke is too late (the move already copied the position).
+    cam=True (s133): also centre the camera ($02-$05 + the CameraUpdate copy $3C-$3F) there, else a jump to
+    another screen row leaves the camera behind and every object near the player flagged off-screen."""
     n = [0]
 
     def f(nes):
@@ -237,6 +239,11 @@ def place_player(x, y, skip=10):
             r = nes.bus.ram
             for s in (0, 1):
                 r[0x70 + s], r[0x90 + s], r[0xB0 + s], r[0xD0 + s] = x & 0xFF, x >> 8, y & 0xFF, y >> 8
+            if cam:
+                cx = max(x - 0x80, 0)
+                cy = max((y >> 8) * 240 + (y & 0xFF) - 0x70, 0)
+                for i, v in enumerate((cx & 0xFF, cx >> 8 & 0xFF, cy % 240, cy // 240)):
+                    r[0x02 + i] = r[0x3C + i] = v
     return (26, 0x9D9A, f)
 
 
@@ -352,6 +359,48 @@ SCENARIOS['shot_eater'] = dict(note='area 03: magic 6 held at +20 (slot $0C shot
                                watch=[0x04AC, 0x060C, 0x04AF, 0x04B0, 0x04B1, 0x0708],
                                pcs=[(26, 0x8FC4), (26, 0x906C), (26, 0x9071), (26, 0x92BF)],
                                peek=[0x04AC, 0x04AF, 0x04B0, 0x04B1, 0x03C1])
+
+
+# s133: area $6E reveal. Slot $0E = type $2A (AI $3A AiNpcBossReveal 27:A555, invisible, hittable) on the slot-$0D
+# NPC at (128, $016C). Each sword hit (obj_flags2 b7, player y hi 1 / lo $28-$AF) -> msg $10.$10+n, sub_state $10;
+# after the 3rd: slots $0D/$0F off, ObjInit(self, $7D) = BossAiE6 15:AC7B (death $CF -> flee)
+SCENARIOS['npc_reveal'] = dict(note='area 6E: player + camera put below the slot-$0D NPC (x $0080, y $0178), B swings '
+                                    '-> 3 hits on the hidden slot $0E (AI $3A) -> msgs $10.$10-$12 -> type $7D boss',
+                               area='6E', pokes={0x0711: 1, 0x03C1: 0x60, 0x0421: 16},
+                               exec=[place_player(0x0080, 0x0178, cam=True)],
+                               each=lambda nes, o: nes.bus.ram.__setitem__(0x03C1, 0x60),
+                               keys=[f'{24 + 24 * i}:B:4' for i in range(36)],
+                               frames=900,
+                               watch=[0x060E, 0x04AD, 0x04AE, 0x04AF, 0x06C3, 0x06E3, 0x00D1, 0x034E],
+                               pcs=[(26, 0x9CBA), (26, 0x90AA), (27, 0xA58B), (27, 0xA5A0), (27, 0xA56D), (15, 0xAC7B)],
+                               peek=[0x04AD, 0x04AE, 0x04AF, 0x060E, 0x03CE, 0x0071, 0x0091, 0x00B1, 0x00D1,
+                                     0x7D, 0x9D, 0xBD, 0xDD, 0x7E, 0x9E, 0xBE, 0xDE, 0x034E, 0x03AE,
+                                     0x038E, 0x05CE, 0x05EE, 0x0381, 0x05C1, 0x05E1, 0x02, 0x03, 0x04, 0x05, 0x0301])
+# s133: run the same fight on to the flee: sword hits on the type-$7D boss until it dies ($CF BossFleeSpeech)
+def _park_boss_7d(nes, o):
+    """npc_reveal_flee: hold player HP; once slot $0E is AI $E6 (the flyer), park it 12 px in front of the
+    player (facing = player meta $0301 & 3: 0 up, 1 right, 2 down, 3 left)."""
+    r = nes.bus.ram
+    r[0x03C1] = 0x60
+    r[0x03E1] = 0x20
+    if r[0x04AE] == 0xE6 and r[0x41] == 8:
+        dx, dy = ((0, -12), (12, 0), (0, 12), (-12, 0))[r[0x0301] & 3]
+        x = (r[0x71] | r[0x91] << 8) + dx
+        y = (r[0xB1] | r[0xD1] << 8) + dy
+        r[0x7E], r[0x9E], r[0xBE], r[0xDE] = x & 0xFF, x >> 8 & 0xFF, y & 0xFF, y >> 8 & 0xFF
+
+
+SCENARIOS['npc_reveal_flee'] = dict(SCENARIOS['npc_reveal'], frames=2400, each=_park_boss_7d,
+                                    exec=[place_player(0x0080, 0x0178, cam=True)],   # own hook (its run counter)
+                                    pokes={0x0711: 2, 0x03C1: 0x60, 0x0421: 16},
+                                    note='npc_reveal with sword 2 + $03E1 held at $20, boss $7D (BossAiE6) parked in '
+                                         'front of the player -> death type $CF (BossDefeated + BossFleeSpeech)',
+                                    keys=['16:UP:1'] + [f'{24 + 24 * i}:B:4' for i in range(98)],
+                                    watch=[0x060E, 0x04AE, 0x03CE, 0x06C3, 0x06E3, 0x0102],
+                                    peek=[0x04AE, 0x060E, 0x03CE, 0x050E, 0x040E, 0x042E, 0x0502, 0x03E2, 0x03E1,
+                                          0x0102, 0x006C],
+                                    pcs=[(27, 0xA5A0), (27, 0xA56D), (15, 0xAC7B), (26, 0x90AA), (26, 0x9125),
+                                         (26, 0x913B), (26, 0x9152), (15, 0xB807), (15, 0xBA98)])
 
 
 def set_from(dst, src):
