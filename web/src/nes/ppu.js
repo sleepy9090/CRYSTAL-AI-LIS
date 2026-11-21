@@ -3,7 +3,7 @@
 // Model: the game writes the same state the ROM writes ($2000-$2007 via writeReg, OAM via oamDma,
 // MMC3 CHR registers R0-R5 via setChrReg, nametable mirroring), and renderFrame() turns it into a
 // 256x240 framebuffer of NES colour indices ($00-$3F), one scanline at a time:
-//   pre-render: if rendering, v <- t (vertical + horizontal copy)
+//   pre-render: if rendering, v <- t (vertical bits from the t latched after the last NMI, s125; horizontal live)
 //   line L    : render BG from v/fine x (33 tiles) + the sprite line evaluated at the end of L-1
 //               then (if rendering) Y increment, horizontal copy t -> v, sprite evaluation for L+1,
 //               then the split hook for L+1 (IRQ handlers: scroll/CHR/mask changes take effect
@@ -45,7 +45,7 @@ export class Ppu {
 
   reset() {
     this.ctrl = 0; this.mask = 0; this.status = 0;
-    this.v = 0; this.t = 0; this.x = 0; this.w = 0;
+    this.v = 0; this.t = 0; this.x = 0; this.w = 0; this.tVert = undefined;
     this.oamAddr = 0;
     this.mirroring = 1;                   // re-c Reset writes $A000 = 1 (horizontal)
     this.chrInv = 0;                      // MMC3 $8000 b7 (re-c: always 0, CHR mode 0)
@@ -215,10 +215,19 @@ export class Ppu {
     }
   }
 
+  /** s125: the pre-render line's vertical copy (t -> v bits $7BE0) happens ~20 lines after the NMI, so main
+   *  code that writes PPUCTRL/$2005 after the NMI handler (e.g. PpuQueueBlock's PPUCTRL NMI-off/on with a new
+   *  nametable bit in the shadow) does not move the next frame vertically. Machine latches t here once its NMI
+   *  is done; renderFrame takes the vertical bits from the latch and the horizontal bits from the live t. */
+  latchVert() { this.tVert = this.t; }
+
   /** Render a whole frame. Split hooks (this.splits: line -> fn(ppu)) run before their line. */
   renderFrame() {
     this.status &= 0x1F;
-    if (this.rendering) this.v = this.t;
+    if (this.rendering) {
+      const tv = this.tVert === undefined ? this.t : this.tVert;
+      this.v = (tv & 0x7BE0) | (this.t & 0x041F);
+    }
     this.sprBuf.fill(0);                    // no sprites on line 0
     for (let line = 0; line < 240; line++) {
       const hook = this.splits.get(line);

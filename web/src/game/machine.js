@@ -120,6 +120,7 @@ export class Machine {
     const p = this.ppu;
     p.vram.set(hex(s.ciram)); p.pal.set(hex(s.pal)); p.oam.set(hex(s.oam));
     Object.assign(p, { ctrl: s.ppu.ctrl, mask: s.ppu.mask, v: s.ppu.v, t: s.ppu.t, x: s.ppu.x, w: s.ppu.w });
+    p.latchVert();
     for (let r = 0; r < 6; r++) p.setChrReg(r, s.mapper.regs[r]);
     p.mirroring = s.mapper.mirroring;
     p.chrInv = s.mapper.chr_inv;
@@ -153,6 +154,7 @@ export class Machine {
     // s114: CPU overrun. The ROM's frame ran past line 241, so its NMI found frame_ready != 0 (no OAM DMA, no
     // scroll copy, frame_ready 2). Then MainLoop's 30:C919 clears it and waits a whole frame for the next NMI.
     if (this.overrunNmi) { this.overrunNmi = false; this.wr(0x09, 0); }
+    this.ppu.latchVert();                            // s125: pre-render vertical copy (see Ppu.latchVert)
     this._cyc3 += FRAME_CYCLES3;
     const n = Math.floor(this._cyc3 / 3);
     this._cyc3 -= n * 3;
