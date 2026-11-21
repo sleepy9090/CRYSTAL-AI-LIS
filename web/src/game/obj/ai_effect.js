@@ -12,10 +12,10 @@ import { objPosToTemp, tempToObjPos, tempAddOffset, spawnShot, objBecomeNext } f
 import { cpuRd, indY, switchBank16, farRestore } from '../prg.js';
 import { aiStraightMoverTail } from './ai_static.js';
 import { playSound } from '../playsound.js';
-import { hudRedraw, paletteBuildRom } from '../states/death.js';
+import { hudRedraw, paletteBuildRom, waitFrame } from '../states/death.js';
 import { waitPpuQueue } from '../states/pause.js';
 import { areaSubTable } from '../world/camera.js';
-import { bgRowRender } from '../world/bgstream.js';
+import { bgRowRender, fullScreenDraw, FSD_LAG } from '../world/bgstream.js';
 import { queueAttrAll } from '../world/ppuqueue.js';
 
 const ANIM = 0x04E0, ACTIVE = 0x04A0, TIMER2 = 0x0620, PHASE = 0x0600, ACT_TIMER = 0x0640;
@@ -162,7 +162,50 @@ export function markScreenVisited(m, x) {
   switchBank16(m, 0x0D);
 }
 
+/** 27:A459, AI $5F's reveal tail: off, visited row 0, player pos <- camera, rendering off for a full redraw */
+function* floorRevealTail(m, x) {
+  m.wr(ACTIVE + x, 0);
+  m.wr(0x62F0, 0xFF);
+  for (let i = 0; i < 4; i++) m.wr(0x34 + i, m.rd(0x3C + i));
+  m.wr(0x01, m.rd(0x01) & 0xE7);                            // ppumask_shadow
+  yield* waitFrame(m);
+  yield* fullScreenDraw(m, 1, FSD_LAG);                     // 30:C831
+  m.wr(0x01, m.rd(0x01) | 0x18);
+}
+
+/** AI $5F AiFloorReveal 27:A41A (s118; type $DA in tower areas $59-$5C). Phase 0 (27:A48C): visited rows
+ *  ($5D - area [-1 if player y_lo < $10])..3 = $FF; area $5C instead: inventory[0] = 4 -> reveal tail; off.
+ *  Then every frame: no active slot $0D-$1E on the player's y_hi row with spawn param $50/$51 ->
+ *  visited rows 0-5 = $FF, sound $5D, reveal tail. */
+export function* aiFloorReveal(m, x) {
+  if (m.rd(PHASE + x) === 0) {
+    m.wr(PHASE + x, (m.rd(PHASE + x) + 1) & 0xFF);
+    const area = m.rd(0x6C);
+    let y = (0x5D - area) & 0xFF;
+    if (area === 0x5C) {
+      if (m.rd(0x6430) === 4) yield* floorRevealTail(m, x);
+      m.wr(ACTIVE + x, 0);
+      return;                                               // PLA PLA RTS
+    }
+    if (m.rd(0xB0) < 0x10) y = (y - 1) & 0xFF;
+    while (y !== 4) {                                       // A4B9: INY wrapping to 0 also ends it (BNE)
+      m.wr(0x62F0 + y, 0xFF);
+      y = (y + 1) & 0xFF;
+      if (y === 0) break;
+    }
+  }
+  const row = m.rd(0xD0);
+  for (let y = 0x0D; y < 0x1F; y++) {
+    if (m.rd(0xD0 + y) !== row || !m.rd(ACTIVE + y)) continue;
+    const p = m.rd(0x0560 + y);
+    if (p === 0x51 || p === 0x50) return;
+  }
+  for (let i = 0; i < 6; i++) m.wr(0x62F0 + i, 0xFF);
+  playSound(m, 0x5D, 0x1F);
+  yield* floorRevealTail(m, x);
+}
+
 export const AI_EFFECT = {
-  0x04: aiPlayerFollowC, 0x05: aiFollowFacing, 0x08: aiScreenRedraw08, 0x57: aiStraightMoverTail, 0x74: aiExplode,
-  0x76: aiMpDrain,
+  0x04: aiPlayerFollowC, 0x05: aiFollowFacing, 0x08: aiScreenRedraw08, 0x57: aiStraightMoverTail, 0x5F: aiFloorReveal,
+  0x74: aiExplode, 0x76: aiMpDrain,
 };

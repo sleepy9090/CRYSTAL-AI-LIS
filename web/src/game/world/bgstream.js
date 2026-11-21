@@ -239,6 +239,11 @@ export function* bgColRender(m) {
   ppuCtrlNmiOn(m);
 }
 
+/** FullScreenDraw with rendering off (AreaEnter): measured in tools.emu (s108, area 0, f2340-2345) the NMIs
+ *  fall after rows 7, 13, 19, 25 (~6 rows of ~43 scanlines per frame) and after the last row.
+ *  s118: also used for AI $5F's redraw (not measured there). */
+export const FSD_LAG = (n) => n === 30 || (n > 1 && n % 6 === 1);
+
 /** 30:C831: draw the 30 rows of the screen at $34-$37 (bottom-up), banks restored; A != 0 -> 30:C739 */
 export function* fullScreenDraw(m, a, lagRows = null) {
   const r6 = m.rd(0x6E), r7 = m.rd(0x6F);

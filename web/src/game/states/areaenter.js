@@ -18,16 +18,13 @@ import { spriteDraw } from '../obj/sprites.js';
 import { playSound } from '../playsound.js';
 import { readPads } from '../pads.js';
 import { loadAreaMap } from '../world/area.js';
-import { fullScreenDraw } from '../world/bgstream.js';
+import { fullScreenDraw, FSD_LAG } from '../world/bgstream.js';
 import { queueAttrAll } from '../world/ppuqueue.js';
 import { cameraTick, cameraClampX, areaSubTable } from '../world/camera.js';
 import { mainState1 } from './play.js';
 
 const NOFADE = 0x07E8, FLASH = 0x0710, ACTIVE = 0x04A0, FLAGS = 0x0380;
 
-/** FullScreenDraw from AreaEnter (rendering off): measured in tools.emu (s108, area 0, f2340-2345) the NMIs
- *  fall after rows 7, 13, 19, 25 (~6 rows of ~43 scanlines per frame) and after the last row */
-const FSD_LAG = (n) => n === 30 || (n > 1 && n % 6 === 1);
 
 /** GameStartObjs 30:C9FF: all slots off, rendering + irq_mode 0, WaitFrame, ObjInit 3:$0A 0:$06 2:$05 1:$04 */
 function* gameStartObjs(m) {
