@@ -122,7 +122,7 @@ bank,addr,name,comment
 24,83DA,SndDetuneTable,u8[8] per-octave period lo add for op $Dx notes
 24,84AF,SndEnvelopeTick,per-frame envelope step: vol = SndVolumeTable[base*16+env]; entry bit4 = end/hold (fade: back up 2 steps)
 24,8465,SndChannelOff,clear channel bit in $4015 (keeps DMC bit from $FF); skipped if chn stolen by SFX
-24,8609,SndFadeStep,fade step: TRI cut; other active music chn base vol -1; s127: needs sound cmd $FF; only source = BossRecs[12] (area $5F) music byte $FF replayed by 15:B770, but that record's hook 15:B947 clears the reward slot first -> never runs (scenario boss_fade)
+24,8609,SndFadeStep,fade step: TRI cut; other active music chn base vol -1; s127: needs sound cmd $FF; only source = BossRecs[12] (area $5F) music byte $FF replayed by 15:B770; but that record's hook 15:B947 clears the reward slot first -> never runs (scenario boss_fade)
 24,863B,SndDrumSelect,op $Dx on music NOISE: x=0 drums off ($FF=0 $4013=0); else $FF=$10|x (arm DMC record x)
 24,8651,SndDrumTrigger,noise note: if drum armed ($FF&$0F) restart DMC with SndDmcTable[x]
 31,FA00,SndDmcSample,the only DMC sample: 993 bytes $FA00-$FDE0 ($4012=$E8 $4013=$3E); drum kit = this sample at different rates
@@ -875,12 +875,12 @@ bank,addr,name,comment
 16,9C7A,SaveLoadExit,s43: back to the SELECT menu (JMP 16:807E if $6424 else 16:807A)
 16,8232,MenuChrR1,s70: 4 bytes 3E 3A 3A 38 = chr_r1_alt per menu kind $6424 (R0 always $3C)
 26,9D9A,PlayerMove,s44: AI $03 slot 0 (type $06) ground body: pad -> obj_behav; jump timer $0620; PlayerMagic; sword charge; ObjMoveSlide; BG probe; conveyor
-26,9D81,PlayerMoveLocked,s44: AI $02 = PlayerMove with pad vars zeroed (cutscenes); area $58 -> AI $03 + pad_dir 4; s128: only setter 27:BB70 (AI $70 phase 1 end, type $B3 from BossHookA6 15:B8FD); run by scenario final_locked
+26,9D81,PlayerMoveLocked,s44: AI $02 = PlayerMove with pad vars zeroed (cutscenes); area $58 -> AI $03 + pad_dir 4; s128: only setter 27:BB70 (AI $70 phase 1 end; type $B3 from BossHookA6 15:B8FD); run by scenario final_locked
 26,9BF6,PlayerSetSpeed,s44: slot 0 obj_flags2 low nibble = move speed by obj1_flash status (4 -> 2; b6 -> 9; b7 -> 5)
 26,9CEF,PlayerPlaceBody,s44: slot 1 = slot 0 pos + JumpHeightTable[$0620]; obj_coll $60 air / $50 ground
 26,9D4D,JumpHeightTable,s44: s8[49] slot 1 y offset per $0620 (idx $20 -> 0); verified s45
 26,9FD2,PlayerConveyor,s44: BG attr b5: move in obj_param1&$0F at speed obj_aux $0660 (ramps 0..9); s128: run by scenario conveyor (area $20)
-15,B8FD,BossHookA6,s128: BossRecs area $A6 hook: irq_mode 0; clear slots $0D-$13; camera from $3C; slot $14 = type $04D4, slot $15 = type $B3 (AI $70 phase 1)
+15,B8FD,BossHookA6,s128: BossRecs area $A6 hook: irq_mode 0; clear slots $0D-$13; camera from $3C; slot $14 = type $04D4; slot $15 = type $B3 (AI $70 phase 1)
 15,B728,AiReward6C,s128: AI $6C-$6E reward entry: obj_spawn_param b7 -> becomes type $B3 (AI $70 phase 1) via FarCall_C25D
 26,9AE8,SpendMp,s44: A=cost; MP=0 or MP<cost -> sub_state $1C (out of MP) and return from the caller
 26,9C66,SwordElemBit,s44: u8[6] 00 01 02 04 08 00 by equip_sword -> slash shot $0502
@@ -937,7 +937,7 @@ bank,addr,name,comment
 27,B4E5,HomingSteer,s87: AiHomingFlyer steer block: SteerToward player; speed level obj_phase +-1 (BIT $10 quirk) clamp B550 -> flags2 B54C
 27,B50E,HomingMove,s87: AiHomingFlyer move: anim -= B556[level]; timer--; free step; 1-in-64 aimed shot on ($08&7)=0
 27,B55A,AiHomingShooter,s87: AI $48 (no type uses it): attack shot at $0640=$18; else AiShootCheck + AI $45 + 2nd steer at timer 0
-27,B65F,PatrolStep,s87: AI $5C/$5D shared step: ObjStepVector(meta_dir) + TempAddStep, no BG test
+27,B65F,PatrolStep,s87: AI $5C/$5D shared step: ObjStepVector(meta_dir) + TempAddStep; no BG test
 27,B595,AiFanTurret,s47: AI $4C/$4D: static; 3-shot fan (16-dir aimed -1/0/+1) at $0640=$18/$10/$08
 27,B5D9,AiTurret,s47: AI $4E: static; aimed shot every 16 obj_anim steps
 27,B5F3,AiWaitClear,s47: AI $5E: wakes (AI $2A) when no spawn-param $50 object left on player's screen row
@@ -1048,9 +1048,9 @@ bank,addr,name,comment
 17,AAA7,EndingFadeOutStart,s83: $0602 = 2
 17,AAED,EndingPalettes,s83: 16-byte palettes for EndingPalLoad
 17,AB1D,EndingTextLines,s83: W H then H x (W tiles + address advance); 1 frame per line
-17,B45E,EndingSprites,s83: ptr16 table of ending metasprites (attr dx dy tile, $FF end)
+17,B45E,EndingSprites,s83: ptr16 table of ending metasprites (attr dx dy tile; $FF end)
 17,B004,EndingMetatiles,s83: 4 x 192-byte metatile tile tables (TL B004 / TR B0C4 / BL B184 / BR B244)
-17,B8D2,EndingCardTable,s83: ptr16 table of staff cards (16x8 rects), index = script byte 1-9
+17,B8D2,EndingCardTable,s83: ptr16 table of staff cards (16x8 rects); index = script byte 1-9
 17,A0EB,EndingWait,s63: DEC $0604 (reload $3B) x $0605 then INC $0600
 17,AA74,EndingFadeIn,s63: mode 1: every 8 frames pal_buf += $10 until == $0618-$0637 then mode 0
 17,AAAD,EndingFadeOut,s63: mode 2: every 4 frames pal_buf -= $10 (floor $0F)
@@ -1086,9 +1086,9 @@ bank,addr,name,comment
 19,AB81,OpeningPage4Anim,s69: opening step 21: sprite step every 4 frames until $06FE runs out
 19,B162,DateCardRectPtr,s69: ptr word -> 19:B164 NtRectBlit stream W=30 H=3 ('1997 October 1' / 'The END DAY'); ends at 19:B1C0
 19,A092,PpuQueueDrainWait,s74: spin until tmp_0A = tmp_0B (NMI drained the PPU queue) then reset both; at each text-line end of status step 3 this costs a 2-frame lag
-19,A212,StatusAnimTick,s74: title_mode 4 per frame: 7-sprite strip at OAM $58 from 19:9908; every 8th pass (title_ctr & 7) DEC status_anim_ctr + next frame. s91: the & 7 gate carries the boot frame offset, so FCEUX runs the status chain 5 frames sooner
-19,A1AA,StatusSlotAnim,s91: TitleStatusScreen (JSR 19:A17C) per pass: 4 slots X=$06C8 0-3; draw via 18:80DF from $0618/$0620/$0610/$0608,X; phase $0600,X=0 -> reload $0628,X from $06C2; else 19:A1EC countdown
-19,A1EC,StatusSlotCountdown,s91: StatusSlotAnim branch: DEC $0628,X; <0 -> phase 0 + INC $0620,X (wraps to $06C1 at $06C0); loop to 19:A1BE while $06C8 < 4
+19,A212,StatusAnimTick,s74: title_mode 4 per frame: 7-sprite strip at OAM $58 from 19:9908; every 8th pass (title_ctr & 7) DEC status_anim_ctr + next frame. s91: the & 7 gate carries the boot frame offset; so FCEUX runs the status chain 5 frames sooner
+19,A1AA,StatusSlotAnim,s91: TitleStatusScreen (JSR 19:A17C) per pass: 4 slots X=$06C8 0-3; draw via 18:80DF from $0618/$0620/$0610/$0608;X; phase $0600;X=0 -> reload $0628;X from $06C2; else 19:A1EC countdown
+19,A1EC,StatusSlotCountdown,s91: StatusSlotAnim branch: DEC $0628;X; <0 -> phase 0 + INC $0620;X (wraps to $06C1 at $06C0); loop to 19:A1BE while $06C8 < 4
 19,A34E,StatusTypeStep,s74: status step 3: types one text cell every 2nd pass (title_ctr b0) via PpuQueueDrainWait
 *,6423,name_entry_frames,s74: INC per NameEntryInput pass (19:A3F6); cleared at 19:A3F2; saved (mirrors $6D23/$7D23 -> save_checksum $70F4/$70F5)
 30,DC58,TeleportAreaTable,s75: 11 area ids (02 18 1C D5 50 1B 71 72 8C 8E 93) + FF; index = cursor row*3+col (30:DC79; 11 = cancel); flag test TestFlagF2F0 at DC82; same area -> no reload
@@ -1106,7 +1106,7 @@ bank,addr,name,comment
 27,AFFB,CrumbleRideCheck,s117: AI $3C prologue: X=ride_platform_slot -> obj_phase 1; else SFX $64 at obj_anim $1E; phase!=0 -> coll 0/meta $B7/DEC anim/despawn at 0 (web: aiCrumblePlatform)
 15,BF7F,DebugItemTable,s77: 24 item ids for DebugPauseCheat (00-03 15-18 0D-10 06 08 0A 0C 1D-24)
 26,90AA,HitByPlayerShot,s78: HitHandlerTable 0: need player_level >= hitflags&$1F; dmg = $03E1 + shot atk - def; elem nibble overlap = immune; miss kills shot + SFX $3A
-26,9229,ThunderTransform,s78: equip_sword 4 + target spawn_b2 0 + param 0/3 -> ObjInit(target; obj_behav) and abort the hit
+26,9229,ThunderTransform,s78: equip_sword 4 + target spawn_b2 0 + param 0/3 -> ObjInit(target; obj_behav) and abort the hit; s130 emu scenario thunder_transform: area 06 type $53 -> $69 (elem $4E: immune to the thunder sword; only sword 1 hurts it)
 26,9082,HitRevealA7,s78: target meta $A7 (type $7B): only shot hitflags 3 -> ObjInit(death type $4F)
 26,9094,HitElemWall,s78: target obj_active $87 (types D0-D3): elem passes + shot hitflags != 1 -> EnemyKilled
 26,906C,HitShotEater,s78: HitHandler3 with attacker phase 1: target enemy shot -> removed; SFX $3A
@@ -1151,7 +1151,7 @@ bank,addr,name,comment
 18,8184,MaskOff18,s82: ppumask_shadow &= $E1 (BG + sprites off) and PPUMASK
 18,818E,MaskOn18,s82: ppumask_shadow |= $1E and PPUMASK
 19,A070,TitleStepBlack,s82: opening step 0: MenuPalBlack; $06FE = $3C; INC title_step
-19,A07C,TitleSound,s82: snd_queue $0103 = A, count 1 (lock 1/0); $06B2 = $FF (MainState3 calls it with A = $06B2 unless b7 set)
+19,A07C,TitleSound,s82: snd_queue $0103 = A; count 1 (lock 1/0); $06B2 = $FF (MainState3 calls it with A = $06B2 unless b7 set)
 19,A6FE,TitleMenuSprites,s82: title-menu step 0: $84 5-byte OAM records (index y tile attr x) from ($82) = 18:98C2; cursor sprite $02F0-$02F3
 19,A7EE,TitleOpeningSkip,s82: opening START/SELECT: TitleSound(0); JMP TitleOpeningEnd
 16,84DA,MenuConfirmYesNo,s85: A=string id ($41->$49); $23=1 cursor on NO; d-pad edge INC $23 + SFX $4B; A/B exit: LSR $23 -> C=1 NO/cancel C=0 YES
@@ -1188,7 +1188,7 @@ bank,addr,name,comment
 15,BF1E,StatusSpriteAlt,s94: 8-byte StatusPlayerSprite records (changed forms by obj1_flash b4-6; stone = +$20)
 30,C1AE,ObjSlot1FDraw,s94: draw $20+1 8-byte records from $6000 (x y meta tile_ofs flags flags2 dir anim) via object slot $1F (28:8000) from OAM 4; then ObjHideUnusedOam
 28,8000,ObjDrawSlot1F,s94: LDX #$1F; $1B=1; JMP ObjDrawMeta (used by ObjSlot1FDraw)
-26,9B07,HitFlashPal,"s97: A=group mask; obj_flags2 b7 clear -> PaletteBuild, else odd frames pal_buf entries of masked groups = $30 (BG $0F kept) (web: obj/ai_final.js)"
+26,9B07,HitFlashPal,"s97: A=group mask; obj_flags2 b7 clear -> PaletteBuild; else odd frames pal_buf entries of masked groups = $30 (BG $0F kept) (web: obj/ai_final.js)"
 27,BA5A,Ai70Ph0Wipe,s97: AI $70 phase 0: wait slot $0D free; sound $6E; Ai70WindowWipe; visited_map=$FF; slot off
 27,BA71,Ai70WindowWipe,s97: window image then 8 passes (column starts BA9A) $7C->$7E + block $2E
 27,BA9A,Ai70WipeCols,s97: 8 column starts 00 04 02 06 01 05 03 07 (step 8 to $DC)
@@ -1207,8 +1207,8 @@ bank,addr,name,comment
 27,BD29,Ai70Ph8Shots,s97: AI $70 phase 8: shot $2A dirs BD58 / ($034D b7) shot $28 dirs BD89 by player x
 27,BD58,Ai70ShotDirs,s97: 16 shot dirs for phase 8 ($FF = none)
 27,BD89,Ai70AimDirs,s97: 2x16 shot dirs by slot parity and player x>>4
-27,BDA9,Ai70Ph12Follow,"s97: AI $70 phase 12: BC A0 06 = LDY obj_param2,X (leader must be AI $2E); offsets BE30"
-27,BE30,Ai70FollowOfs,"s97: signed x/y offset pairs for phase 12 (index meta&3 *2, +8 when leader act_timer!=0)"
+27,BDA9,Ai70Ph12Follow,"s97: AI $70 phase 12: BC A0 06 = LDY obj_param2;X (leader must be AI $2E); offsets BE30"
+27,BE30,Ai70FollowOfs,"s97: signed x/y offset pairs for phase 12 (index meta&3 *2; +8 when leader act_timer!=0)"
 16,8000,EquipMenu,s98: bank 16 SELECT menu entry (16/23 mapped): window + grids; loop 80D1; SELECT = RTS; START = SaveLoadPage
 16,80D1,EquipMenuLoop,s98: WaitFrame + ReadPadsMenu; U/D rows (wrap flips grid via 81ED); L/R columns; A 82B7; B 8342
 16,8171,EquipMenuMoved,s98: cursor moved: $646E = item; SFX $4B; $6427 = row*4|8 + col; cursor; print $0F + 6 (name)
@@ -1251,10 +1251,10 @@ bank,addr,name,comment
 15,A9C6,BossE3Approach,s100: AI $E3 phase 1: attack roll (onscreen; $08&7=0; Rand64=0) else meta $D3 approach
 15,AA37,BossE3Move,s100: ObjStepVector(meta_dir) + 98A8 + 9824 + JMP 9897 (no BG test)
 15,AA46,BossE3BackOff,s100: AI $E3 phase 2: dir 15:AA97[(dir to player+4)&7]; arena edges -> BossE3NewDir
-15,AA97,BossE3AwayDirs,s100: u8[8] 00 01 01 01 00 07 07 07 (upward, away from the player)
+15,AA97,BossE3AwayDirs,s100: u8[8] 00 01 01 01 00 07 07 07 (upward; away from the player)
 15,AA9F,BossE3DownDirs,s100: u8[8] 04 03 03 03 04 05 05 05 indexed by Rand64
 15,AAA7,BossE3Slam,s100: AI $E3 phase 3 ($68): meta $D5; at (anim^7)&$0F=0: shake $07D6=8 SFX $3D SpawnShot($38 Y=0)
-15,AAE6,BossE3Sweep,s100: AI $E3 phase 4 ($8B): last $20 frames meta $D4; even timer: SpawnShot($36, act_timer); TurnToward16 when timer&6=0
+15,AAE6,BossE3Sweep,s100: AI $E3 phase 4 ($8B): last $20 frames meta $D4; even timer: SpawnShot($36; act_timer); TurnToward16 when timer&6=0
 15,AB8A,RockSignByte,s100: A -> (A & $3F) | (b7 ? $C0 : 0); $10 = A
 15,ABD6,RockSpread,s100: s8[4] 00 FF 00 01 added to the 16-dir aim by (X+$08)&3
 16,88A8,MenuPicture3x3,s102: 3x3 picture at window col $26 / row $27 ($2800 + row*32 + col); tiles $29..$29+8 or ($29=$FF) blank 16:892A; 3 x MenuFlush
@@ -1263,11 +1263,11 @@ bank,addr,name,comment
 16,9CAE,SaveSlotCursor,s102: two arrows (tile $FE) OAM $027C/$0280 at y 16:9CDE[$646B&1] (57/6F) x $D0/$30 attr $40/$00; MenuSfx $4B
 16,9CDE,SaveSlotCursorY,s102: u8[2] 57 6F
 16,9D52,SaveLoadSetup,s102: MenuHideOam; strings $0F $13 $35; WaitFrame; CHR alt $3C/$38; 6 x MenuFrameRows(9) from $28C0 (len $40)
-16,9D8D,SavePictureCols,s102: u8[2] used (07 0A; 3 more unused 07 07 07); rows 16:9D92 (06 06), tiles 16:9D97 (E8 E8) for MenuPicture3x3
+16,9D8D,SavePictureCols,s102: u8[2] used (07 0A; 3 more unused 07 07 07); rows 16:9D92 (06 06); tiles 16:9D97 (E8 E8) for MenuPicture3x3
 26,8D59,HudChargeMeter,s102: $6060-$6070: 7 x $8F + orbit_level&7 x $8E; 9 tiles ChargeMeterTiles[ChargeMeterIndex[sword_power*8 | ($08&4)>>2 if orbit | (orbit&$18)>>2]] -> queue $2B46 len $10 src $60
 19,BA65,HudWindowSetup,s102: HUD window rebuild: $6000-$609F fill + PpuQueueBlock 0-3; 19:BAD9 $60 bytes -> block 4; SetR6($1A) HudHpBar + HudChargeMeter + HudRedraw 5..0
-30,C80C,MenuExitFade,s102: SELECT-menu exit for $7000 = $FB/$AB: SwitchBank16(13) FadeOut(3), 1 frame, irq_mode 0, 30 frames, FadeIn(3), SwitchBank16(8); RTS -> 30:D8E5
-30,D930,EquipMenuLoadHead,s102: $7000 = 0, BG+sprites off, WaitFrame, push level; falls into EquipMenuLoadTail
+30,C80C,MenuExitFade,s102: SELECT-menu exit for $7000 = $FB/$AB: SwitchBank16(13) FadeOut(3); 1 frame; irq_mode 0; 30 frames; FadeIn(3); SwitchBank16(8); RTS -> 30:D8E5
+30,D930,EquipMenuLoadHead,s102: $7000 = 0; BG+sprites off; WaitFrame; push level; falls into EquipMenuLoadTail
 15,AC8F,BossE6Intro,s104: AI $E6 phase 0; aligned -> boss music every frame until obj_timer2 = $40; area $AC msg 24.2 (web: obj/ai_boss.js e6Intro)
 15,ACF5,BossE6Fight,s104: AI $E6 phase 1 (whole fight): $C8 orbiters every 64 frames in $AC; fly-turn toward fake player y $30/$70; speed AD82[HP>>4]
 15,AD82,BossE6Speeds,s104: u8[3] $0E $0D $0F obj_flags2 speed by HP>>4 (only HP < $30)
@@ -1324,12 +1324,12 @@ bank,addr,name,comment
 31,E611,AreaFadeOutClear,s108: SetR6($1A); FadeOut(2); falls into AreaClearSlots
 31,E61B,AreaClearSlots,s108: obj_active slots 4-$1E = 0
 31,E799,AreaStoneKeep,s108: $0710 b6 kept only in areas $60/$64/$68 (slot $1E = $0C at the player's position); else cleared
-31,E823,AreaChrOverride8C,s108: area $8C with $6484 b7: CHR R4/R5 = $FF/$51, sprite palettes 2/3 = $06/$0A
+31,E823,AreaChrOverride8C,s108: area $8C with $6484 b7: CHR R4/R5 = $FF/$51; sprite palettes 2/3 = $06/$0A
 31,E845,AreaAttrWipe,s108: bg palette 3 = $AD; 16 steps OR-ing 31:E8B6 masks into attr shadow $6100 + PpuQueueAttrAll + 2 frames; FadeOut(2); palette 3 restored
 31,E8B6,AreaAttrWipeMasks,s108: 16 x 4 attribute OR masks for AreaAttrWipe
 31,E993,CameraScrollFromPos,s108: $30/$31 = cam_ofs_x/y; TempAddOffset; $02-$05 = $34-$37 (the drawn scroll)
-31,EA41,BossCamCenter,s108: boss_cam_lock b7, odd frames: step $3C/$3E 1 px toward 0; $07D5=1 once both 0
-31,EADF,CameraShake,s108: boss_cam_lock 1-$7F path: $07D6 frames, cam_ofs_x from 31:EB05 (0 -4 0 +4) by $08&3
+31,EA41,BossCamCenter,s108: boss_cam_lock b7; odd frames: step $3C/$3E 1 px toward 0; $07D5=1 once both 0
+31,EADF,CameraShake,s108: boss_cam_lock 1-$7F path: $07D6 frames; cam_ofs_x from 31:EB05 (0 -4 0 +4) by $08&3
 31,EB05,CameraShakeTable,s108: cam_ofs_x per $08&3 for CameraShake
 27,A219,AiFollowFacing,s110: AI $05: DEC $0603 (slot 3) while != 0; slot X = slot 0 pos + 4 px toward obj_meta_id_s01&3 (table 27:A242); web obj/ai_effect.js
 27,A242,FollowFacingOfs,s110: AI $05 dx/dy by facing 0-3: (0;-4) (4;0) (0;4) (-4;0)
@@ -1365,7 +1365,7 @@ bank,addr,name,comment
 30,DABF,ShopWalkStep,s121: one shop walk frame: WaitFrame + PlayerUpdate(X=1) + obj_anim_s01-- + obj_flags[1]&=$0B + FarCall SpriteDraw; web shop.js walkStep
 16,950C,ShopScreenSetup,s121: inv sort + CHR alt $58-$5B/$3C/$38 + ShopWindow + irq_mode 1 + $07DD=$FF + ShopSprPalette(0) + InvSortAll
 16,967A,PawnShopBody,s121: from 16:9509: strings $1B $27-$29 + YES/NO; YES -> EquipMenu 16:8000 (shop mode); NO -> $2B $2A $20 + MenuWaitAnyKey; $07DD=0; web shop.js pawnShop
-16,9878,MenuWaitAnyKey,s121: MenuWaitPad until pad_new != 0, then MenuSfx $4B
+16,9878,MenuWaitAnyKey,s121: MenuWaitPad until pad_new != 0; then MenuSfx $4B
 16,9884,MenuWaitPad,s121: WaitFrame + JMP ReadPadsMenu
 16,9912,ShopWindow,s121: frame rows 6 / 9 x3 / $0C at $2800 + attribute bytes $2BC0 = $FF (MenuFlush)
 16,9A12,ShopSprPalette,s121: $6154-$6157 = 16:8BFB[A*4] (sub_state $21 tool shop: 16:8C0B[A*4])

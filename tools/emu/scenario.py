@@ -35,15 +35,16 @@ def magic(sel, extra=None, keys=None, frames=240, area='03', note=''):
                 keys=keys or ['20:A:30', '120:A', '160:A', '200:B'], frames=frames)
 
 
-def follow_enemy(slot, dx):
-    """Each frame: park enemy `slot` dx px right of the player (slot 1) with 1 HP."""
+def follow_enemy(slot, dx, hp=1):
+    """Each frame: park enemy `slot` dx px right of the player (slot 1) with at most `hp` HP (None = keep)."""
     def f(nes, o):
         r = nes.bus.ram
         if r[0x04A0 + slot] and r[0x41] == 8:
             x = (r[0x71] | r[0x91] << 8) + dx
             r[0x70 + slot], r[0x90 + slot] = x & 0xFF, x >> 8 & 0xFF
             r[0xB0 + slot], r[0xD0 + slot] = r[0xB1], r[0xD1]
-            r[0x03C0 + slot] = min(r[0x03C0 + slot], 1)
+            if hp is not None:
+                r[0x03C0 + slot] = min(r[0x03C0 + slot], hp)
     return f
 
 
@@ -309,6 +310,21 @@ SCENARIOS['ride_platform'] = dict(note='area 6A: player parked at ($0580,$0100) 
                                   watch=[0x0541, 0x04B8, 0x0071, 0x00B1, 0x006D],
                                   pcs=[(26, 0x943F), (31, 0xF073)],
                                   peek=[0x04B8, 0x0088, 0x00A8, 0x00C8, 0x00E8, 0x0071, 0x0091, 0x00B1, 0x00D1, 0x006C])
+
+# s130: ThunderTransform 26:9229 (from HitByPlayerShot 26:90BB): thunder sword ($0711 = 4) hit on a spawn-h0 type
+# with param 0/3 -> ObjInit(obj_behav). Area $06 slots $0D/$0E = h0 p=$03 = type $53 (obj_behav $69)
+SCENARIOS['thunder_transform'] = dict(note='area 06: thunder sword ($0711=4), level 16; slot $0D (type $53) parked at '
+                                           'the sword, B/A swings -> ThunderTransform -> type $69',
+                                      area='06', pokes={0x0421: 16, 0x0711: 4, 0x03C1: 0x60},
+                                      each=lambda nes, o, _f=follow_enemy(0x0D, 14): (
+                                          _f(nes, o), nes.bus.ram.__setitem__(0x03C1, 0x60),
+                                          nes.bus.ram.__setitem__(0x071A, 0x1E), nes.bus.ram.__setitem__(0x03E1, 0x20)),
+                                      keys=[f'{10 + 20 * i}:{b}:4' for i, b in enumerate(
+                                          ['RIGHT', 'B', 'A', 'B', 'A', 'B', 'A', 'B', 'A', 'B', 'A'] * 2)]
+                                      + ['200:s:0711=01'],
+                                      frames=500, watch=[0x0711, 0x04AD, 0x03CD, 0x06ED, 0x056D, 0x054D, 0x0704],
+                                      pcs=[(26, 0x90BB), (26, 0x923E), (26, 0x9125), (26, 0x913B), (26, 0x9152)],
+                                      peek=[0x050D, 0x040D, 0x042D, 0x03E1, 0x0502, 0x03E2, 0x04AD, 0x03CD])
 
 
 def set_from(dst, src):
