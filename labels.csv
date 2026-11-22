@@ -1533,4 +1533,4 @@ bank,addr,name,comment
 27,A7CD,AiHideAfterEvent,s168: AI $53 (type $2B): aux 0 waits sub_state 8 -> $0575=$43 $0623=$15 sub_state 7; then flags b2 + aux++ to $40 -> obj_active=0
 27,A802,AiChasePlayer,s168: AI $54: idle while player flags2 b7 clear and pad_dir b7; every 4th frame DirToTarget(slot 0) flags b4 flags2 5/7/8 meta dir; timer-- anim-- 1 step (9824)
 30,D3AA,ShowMessageCloseLoop,s175: 8 x (WaitFrame; sprite pass 28:800E; OamClipTop) after the A/B close; the pass runs in vblank right after the NMI so a row sampled at L261 sees it part-done (kill_check PARTIAL oam)
-31,FE97,ReadPadsNew,s175: STA pad_new $4B in ReadPads; area 03 at L260-261 (port key = emu frame + 1); after the level-up msg (music $81 playing; cause not measured) L2-5 of the next frame (port key = emu frame)
+31,FE97,ReadPadsNew,s175: STA pad_new $4B in ReadPads; area 03 at L260-261 (port key = emu frame + 1); after the level-up msg (music $81 playing; cause not measured) L2-5 of the next frame (port key = emu frame); s179 area 08: moves between L2-6 of F and L261 of F-1 per press/release (port keys = pass frames of the pad_prev $43 writes)

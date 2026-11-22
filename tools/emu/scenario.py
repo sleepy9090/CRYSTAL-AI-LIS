@@ -626,6 +626,12 @@ SCENARIOS['final_boss_idle'] = dict(note='area A6: ObjInit type $9E (final boss)
                                     watch=[0x060D, 0x04AD, 0x0051],
                                     pcs=[(15, 0xB301), (15, 0xB3BC), (15, 0xB4DD), (15, 0xB524), (15, 0xB552),
                                          (15, 0xB587), (15, 0xB67A)])
+# s179: per-enemy-group runs, areas' own spawn lists (no ObjInit pokes), level 16 + full HP so nothing dies
+# group_08 = area 08 slot $0D type $54 (AI $28 27:AB61, shoots type $45); the keys walk the player about
+SCENARIOS['group_08'] = dict(note='area 08: natural spawns (type $54 AI $28 + NPC), level 16, walk about',
+                             area='08', pokes={0x0421: 16, 0x03C1: 0x60, 0x0708: 0x60},
+                             keys=['30:UP:85', '200:LEFT:16', '260:RIGHT:32', '330:DOWN:20'],
+                             frames=500, watch=[0x060D, 0x03C1, 0x04AD, 0x04AE, 0x04AF])
 
 
 def set_from(dst, src):
