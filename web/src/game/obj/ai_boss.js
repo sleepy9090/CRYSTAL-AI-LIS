@@ -7,6 +7,7 @@
 //   clearEnemySlots(m, x)          ClearEnemySlots 15:BB29
 //   AI $60 (= $E0) BossAiE0  15:A477  teleporter (phases A48B A4C3 A4CC A4D8 A50B A54A A565 A581)
 //   AI $61 BossHomingShot     15:A5EE  + HomingMove 15:A602 / ClampVel3 15:A665
+//   AI $62 (= $E2) BossAiE2  15:A675  area $1A walker (phases A684 intro + BG redraw, A87E walk / attack) (s163)
 //   AI $63 (= $E3) BossAiE3  15:A95D  slam / flame-sweep boss (phases A971 A9C6 AA46 AAA7 AAE6)
 //   AI $64 BossRockShot       15:AB3E  rocks offset by ROM bytes from a random PRG bank
 //   AI $65 (= $E5) AiTalkEventE5 15:ABDA  area $43 talk event (phases ABE4 ABFC AC0F AC1A AC1E AC31 AC41 AC5B) (s157)
@@ -17,7 +18,7 @@
 //   AI $6A (= $EA) BossAiEA  15:B130  patrol / dive / rise + fire fan 15:B278 (phases B14F B1A5 B215 B22C)
 import { cpuRd, indY, setR6, switchBank16, farRestore } from '../prg.js';
 import { playSound } from '../playsound.js';
-import { paletteBuildRom, waitFrame, waitFrames, statRecalc } from '../states/death.js';
+import { paletteBuildRom, waitFrame, waitFrames, statRecalc, fadeIn, fadeOut, SPIN } from '../states/death.js';
 import { showMessage } from '../states/talk.js';
 import { waitPpuQueue, ppuQueueBlock } from '../states/pause.js';
 import { fullScreenDraw, FSD_LAG_WF } from '../world/bgstream.js';
@@ -836,6 +837,141 @@ export function aiReward6C(m, x) {
   m.wr(CAM_LOCK, 0x10);                                       // B7BB
 }
 
+// ---- AI $62 (= $E2) BossAiE2 15:A675 (s163) -------------------------------------------------------------------
+
+/** BossBuildParts 15:A73C: Y = index into 15:A814 (x lo, y lo, meta; $FF ends): slots $0E+ become type $C2 at
+ *  slot $0D's hi bytes; then every later slot up to $1E is turned off unless its AI is $7F. */
+function bossBuildParts(m, y) {
+  let x = 0x0E;
+  for (;;) {
+    const a = cpuRd(m, 0xA814 + y);
+    if (a === 0xFF) break;
+    m.wr(zpX(X_LO, x), a);
+    m.wr(zpX(Y_LO, x), cpuRd(m, 0xA815 + y));
+    m.wr(zpX(X_HI, x), m.rd(0x9D));
+    m.wr(zpX(Y_HI, x), m.rd(0xDD));
+    objInitAt(m, x, 0xC2);
+    m.wr(META + x, cpuRd(m, 0xA816 + y));
+    y = (y + 3) & 0xFF;
+    x = (x + 1) & 0xFF;
+  }
+  do {                                                        // A76A
+    if (m.rd(ACTIVE + x) !== 0x7F) m.wr(ACTIVE + x, 0);
+    x = (x + 1) & 0xFF;
+  } while (x !== 0x1F);
+}
+const zpX = (base, x) => (base + x) & 0xFF;
+
+/** the leg animation tail shared by BossEBMove and BossE2Walk: slots $0E/$0F/$10/$11 from obj_anim_s13 */
+function partAnims(m) {
+  const a = m.rd(0x04F3);
+  m.wr(0x04EF, a);
+  m.wr(0x04EE, (a + 0x10) & 0xFF);
+  const b = ((a ^ 0xFF) + 9) & 0xFF;
+  m.wr(0x04F1, b);
+  m.wr(0x04F0, (b + 0x10) & 0xFF);
+}
+
+function stepSlot(m, x) { objPosToTemp(m, x); tempAddStep(m); tempToObjPos(m, x); }
+
+/** BossEBMove 15:A8FF: one ObjStepVector step (the boss's meta_dir / speed) for the boss and slots $0E-$12, the
+ *  negated step for slot $13, then the part animations */
+function bossEBMove(m, x) {
+  m.wr(0x2F, x);
+  objPosToTemp(m, x);
+  objStepVector(m, x, m.rd(META_DIR + x));
+  tempAddStep(m);
+  tempToObjPos(m, x);
+  for (let s = 0x0E; s !== 0x13; s++) stepSlot(m, s);
+  m.wr(0x30, (-m.rd(0x30)) & 0xFF);
+  m.wr(0x31, (-m.rd(0x31)) & 0xFF);
+  stepSlot(m, 0x13);
+  partAnims(m);
+}
+
+/** phase 0 15:A684: player freeze $10; once the camera is aligned: music $12 (Y = $10), phase 1, CHR / palettes,
+ *  body parts (15:A814 Y = 0), fade in + out ($10), the second part set (Y = $13), slot $0D meta $C8 at ($88, $60),
+ *  WRAM $6000-$608F = 15:A77C (+ attr_shadow from $6078), PPU blocks $2C/$2D, palettes $88-$8A, fade in ($20),
+ *  obj_coll $13 */
+function* e2Intro(m, x) {                                    // A684
+  m.wr(FREEZE, 0x10);
+  if (!m.rd(0x07D5)) return;
+  playSound(m, 0x12, 0x10);                                   // Y = BossPhaseDispatch's (8 + 0) * 2
+  inc(m, PHASE + x);
+  m.wr(0x62FE, 0);
+  m.wr(0x07F1, 0x2C); m.wr(0x07F4, 0x78); m.wr(0x07F5, 0x6F);
+  m.wr(0x07E0, 0xAF); m.wr(0x07E1, 0xAF); m.wr(0x07E2, 0xAF);
+  m.wr(0x07E6, 0x4F); m.wr(0x07E7, 0x4F);
+  paletteBuildRom(m, 0);                                      // A6C0 JSR 26:8C0E
+  bossBuildParts(m, 0);
+  m.wr(0x07E6, 0x16); m.wr(0x07E7, 0x17);
+  m.wr(0x07E8, 0x38);                                         // pal_nofade_mask
+  farSpritePass(m);
+  yield SPIN;                                                 // s163: CPU overrun, the NMI (frame_ready 1, no OAM
+                                                              // DMA) hits in this sprite pass (tools.emu f2535 L241)
+  yield* fadeIn(m, 0x10);                                     // A6DB JSR 26:8C49
+  yield* fadeOut(m, 0x10);                                    // A6E0 JSR 26:8C3D
+  bossBuildParts(m, 0x13);
+  m.wr(0x030D, 0xC8);
+  m.wr(0x7D, 0x88);
+  m.wr(0xBD, 0x60);
+  farSpritePass(m);
+  yield* waitPpuQueue(m);
+  for (let i = 0; i < 0x90; i++) m.wr(0x6000 + i, cpuRd(m, 0xA77C + i));
+  for (let i = 0x17; i >= 0; i--) m.wr(0x6100 + i, m.rd(0x6078 + i));
+  yield* ppuQueueBlock(m, 0x2C);
+  yield* ppuQueueBlock(m, 0x2D);
+  m.wr(0x07E0, 0x88); m.wr(0x07E1, 0x89); m.wr(0x07E2, 0x8A);
+  yield* fadeIn(m, 0x20);
+  m.wr(0x07E8, 0);
+  m.wr(COLL + x, 0x13);                                       // PLA TAX: the boss slot again
+}
+
+/** BossE2Attack 15:A84D (orbit_level != 0): anim 8, orbit_level--, every 8th frame a Rand64: != 0 -> SpawnShot($3A)
+ *  straight down, 0 -> SpawnShot($39, Y = $0E) = the minion, tile ofs $40 and one screen row up */
+function e2Attack(m, x) {
+  m.wr(ANIM + x, 8);
+  if (dec(m, 0x06C0 + x) & 7) return;
+  if (rand64(m)) { spawnShot(m, x, 0x3A, 4); return; }
+  if (!spawnShot(m, x, 0x39, m.rd(0x0E))) return;
+  m.wr(0x11, x);
+  const n = m.rd(0x10);
+  m.wr(0x0320 + n, 0x40);
+  m.wr(zpX(Y_HI, n), (m.rd(zpX(Y_HI, n)) - 1) & 0xFF);
+}
+
+/** phase 1 15:A87E: irq_mode 7; attack while orbit_level != 0; else obj_timer-- -> new timer ((Rand64 + C +
+ *  slot 0 x lo) & $0F) + $20 (C = BossPhaseDispatch's ASL carry), Rand64 >= 2 -> orbit_level $80, face the
+ *  player's x (slot 1: 6 / 2); turn at x lo < $30 / >= $D8; BossEBMove; legs from the step dx */
+function e2Walk(m, x, c) {                                   // A87E
+  m.wr(ANIM + x, 0);
+  m.wr(0x51, 7);
+  if (m.rd(0x06C0 + x)) return e2Attack(m, x);
+  if (!dec(m, TIMER + x)) {
+    m.wr(TIMER + x, (((rand64(m) + m.rd(0x70) + c) & 0x0F) + 0x20) & 0xFF);
+    if (rand64(m) >= 2) m.wr(0x06C0 + x, 0x80);
+    const lo = m.rd(X_LO + x) < m.rd(0x71) ? 1 : 0;           // CMP / SBC 16-bit vs slot 1
+    m.wr(META_DIR + x, ((m.rd(X_HI + x) - m.rd(0x91) - lo) >= 0) ? 6 : 2);
+  }
+  const xl = m.rd(X_LO + x);                                  // A8BC
+  let a = 0;
+  if (xl < 0x30) a = 2;
+  if (xl >= 0xD8) a = 6;
+  if (a) m.wr(META_DIR + x, a);
+  bossEBMove(m, x);
+  m.wr(0x04F3, (m.rd(0x04F3) - ((m.rd(0x30) << 1) & 0xFF)) & 0xFF);
+  partAnims(m);
+}
+
+/** AI $3F AiBodyPart 27:A414 (type $C2, the body parts BossBuildParts places): irq_mode = 7 (BossEBMove moves them) */
+export function aiBodyPart(m) { m.wr(0x51, 7); }
+
+export function bossAiE2(m, x) {
+  hitFlashPal(m, x, 0xC7);
+  m.wr(CAM_LOCK, 0xFF);
+  return bossPhaseDispatch(m, x, 0x08);
+}
+
 // ---- AI $6F BossDefeated 15:B807 (s159) ---------------------------------------------------------------------
 
 /** FarCall_B14_800E: one sprite pass with banks $0E mapped */
@@ -983,6 +1119,7 @@ export function* bossDefeated(m, x) {
 const BOSS_PHASES = {
   0xA48B: e0Intro, 0xA4C3: e0Wait, 0xA4CC: e0Smoke, 0xA4D8: e0Vanish, 0xA50B: e0Teleport, 0xA54A: e0Appear,
   0xA565: e0Hold, 0xA581: e0Linger,
+  0xA684: e2Intro, 0xA87E: e2Walk,
   0xA971: e3Intro, 0xA9C6: e3Approach, 0xAA46: e3BackOff, 0xAAA7: e3Slam, 0xAAE6: e3Sweep,
   0xABE4: e5Rise, 0xABFC: e5Settle, 0xAC0F: e5Talk, 0xAC1A: e5Wait, 0xAC1E: e5Leave, 0xAC31: e5Sink,
   0xAC41: e5ThrowStart, 0xAC5B: e5Throw,
@@ -994,17 +1131,19 @@ const BOSS_PHASES = {
 };
 
 export function bossPhaseDispatch(m, x, base) {
-  const y = ((base + m.rd(PHASE + x)) << 1) & 0xFF;
+  const i = (base + m.rd(PHASE + x)) & 0xFF;
+  const y = (i << 1) & 0xFF, c = i >> 7;                      // c = the ASL carry (BossE2Walk's ADC reads it)
   m.wr(0x10, cpuRd(m, 0xA413 + y));
   m.wr(0x11, cpuRd(m, 0xA414 + y));
   const a = m.rd(0x11) << 8 | m.rd(0x10);
   const h = BOSS_PHASES[a];
   if (!h) { unported(m, `AI boss phase handler 15:${a.toString(16).toUpperCase().padStart(4, '0')}`); return; }
-  return h(m, x);
+  return h(m, x, c);
 }
 
 export const AI_BOSS = {
-  0x60: bossAiE0, 0x61: bossHomingShot, 0x63: bossAiE3, 0x64: bossRockShot, 0x65: aiTalkEventE5,
+  0x60: bossAiE0, 0x61: bossHomingShot, 0x62: bossAiE2, 0x63: bossAiE3, 0x64: bossRockShot, 0x65: aiTalkEventE5,
   0x66: bossAiE6, 0x67: aiBoss88, 0x68: bossAiE8, 0x69: bossAiE9, 0x6A: bossAiEA,
   0x6C: aiReward6C, 0x6D: aiReward6C, 0x6E: aiReward6C, 0x6F: bossDefeated,
+  0x3F: aiBodyPart,                                           // s163 (bank 27, but only the bosses' parts use it)
 };

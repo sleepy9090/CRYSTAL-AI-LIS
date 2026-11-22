@@ -258,7 +258,9 @@ BOSS_AIS = {'BossAiE0': (0x60, 0xA477, range(8)), 'BossHomingShot': (0x61, 0xA5E
             # s157: $E5 area $43 talk event (phases 4 / 6 are set by talk acts 26 / 27)
             'AiTalkEventE5': (0x65, 0xABDA, (0, 1, 2, 3, 4, 5, 6, 7, 7, 7)),
             # s158: $6C-$6E reward drop (type $0F), phase = BossAreaList index 0-13 (RewardRecs 15:B7C1)
-            'AiReward6C': (0x6E, 0xB728, range(14))}
+            'AiReward6C': (0x6E, 0xB728, range(14)),
+            # s163: $E2 area $1A walker (phase 0's aligned path fades = NMI waits, so _fix_boss keeps $07D5 = 0)
+            'BossAiE2': (0x62, 0xA675, (0, 1, 1, 1, 1))}
 for _n, (_id, _ad, _p) in BOSS_AIS.items():
     ROUTINES[_n] = ((26, 15), _ad, _poke_bg, lambda r: {'x': _slot(r)})
 # s159: AI $6F BossDefeated 15:B807 (type $CF). Not in BOSS_AIS / PORTED_AIS: a random area_id in an ObjUpdateAll
@@ -670,6 +672,15 @@ def _fix_boss(name, ram, r, x, wram):
     if _id == 0x65:                                # s157: anim count edges ($1E -> $1F, 1 -> 0), throw y edges
         ram[0x04E0 + x] = r.choice([0, 1, 1, 2, 0x1E, 0x1E, 0x1F, r.randrange(256)])
         ram[0xB0] = r.choice([0xA7, 0xA8, 0xA9, 0xAF, 0xB0, 0xF8, r.randrange(256)])
+    if _id == 0x62:                                # s163: walk timer end, attack orbit_level & 7 = 0, x turn edges
+        if p == 0:
+            ram[0x07D5] = 0
+        ram[0x06C0 + x] = r.choice([0, 0, 0, 1, 8, 9, 0x80, 0x81, r.randrange(256)])
+        ram[0x0480 + x] = r.choice([1, 1, 2, r.randrange(256)])
+        ram[0x70 + x] = r.choice([0x2F, 0x30, 0xD7, 0xD8, r.randrange(256)])
+        if r.random() < 0.5:
+            ram[0x91] = ram[0x90 + x]
+            ram[0x71] = r.choice([ram[0x70 + x], (ram[0x70 + x] + 1) & 0xFF, r.randrange(256)])
     if _id == 0x6E:                                # s158: reward: spawn_param b7 path, timer2 0, real music ids
         ram[0x0560 + x] = r.choice([0, 0x05, 0x1E, 0x80, 0xC0, r.randrange(256)])
         ram[0x0620 + x] = r.choice([0, 0, 0, 1, r.randrange(256)])

@@ -1178,7 +1178,9 @@ bank,addr,name,comment
 15,A602,HomingMove,s78: AI $61 body (also used by boss $E8 toward a slot-$1F waypoint)
 15,A665,ClampVel3,s78: clamp signed A to -3..+3
 15,A73C,BossBuildParts,s78: Y = table index: place slots $0E+ from 15:A814 (x;y;meta) and ObjInit type $C2 until $FF
-15,A84D,BossE2Attack,s78: orbit_level countdown: every 8f SpawnShot($3A) down or (Rand64=0) minion $39
+15,A84D,BossE2Attack,s78: orbit_level countdown: every 8f SpawnShot($3A) down or (Rand64=0) minion $39 (dir Y = $0E); s163: ported (ai_boss.js e2Attack)
+15,A684,BossE2Intro,s163: AI $E2 phase 0: freeze player; camera aligned -> music $12 / CHR / pals / BossBuildParts x2 / fades / WRAM image + blocks $2C $2D / coll $13 (first frame overruns: NMI in its sprite pass)
+15,A87E,BossE2Walk,s163: AI $E2 phase 1: irq_mode 7; walk toward slot 1 x via BossEBMove (timer ADC uses BossPhaseDispatch's ASL carry); orbit_level != 0 -> BossE2Attack
 15,A8FF,BossEBMove,s78: step self + slots $0E-$12 by ObjStepVector; slot $13 opposite; part anims from slot $13
 15,AA89,BossE3NewDir,s78: dir = 15:AA9F[Rand64] (3/4/5 downward); phase--
 15,AB25,TurnToward16,s78: obj_act_timer turns 1 step toward A (sign table 15:AD86)

@@ -123,7 +123,7 @@ Regenerate (about 10 s each):
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 \
         --routine Ai70PhaseDispatch --out web/test/obj_frames/fuzz_final.json
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 \
-        --routine BossAiE0,BossHomingShot,BossAiE3,BossRockShot,BossAiE6,AiBoss88,BossAiE8,BossAiE9,BossAiEA,AiTalkEventE5,AiReward6C,BossDefeated \
+        --routine BossAiE0,BossHomingShot,BossAiE3,BossRockShot,BossAiE6,AiBoss88,BossAiE8,BossAiE9,BossAiEA,AiTalkEventE5,AiReward6C,BossDefeated,BossAiE2 \
         --out web/test/obj_frames/fuzz_boss.json
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 \
         --routine PlayerUpdate,PlayerMoveLocked,PlayerMove --out web/test/obj_frames/fuzz_player.json
