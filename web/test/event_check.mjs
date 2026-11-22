@@ -15,6 +15,10 @@
 //     (the area load's spawn pass), pos_y f2840-2843 (8 px: the entry slide is 1 step behind for 4 frames);
 //     `sub` from f2863: the player stands on area $F2's event trigger, so tools.emu's end-of-frame sample reads 8
 //     (after GiveTrigger) and the port 7 (the s139 trigger baseline, as in itemuse_check / group18_check).
+// s204: acts 8 (D654, NN 08), 21 (D746, NN 15), 23 (D791, NN 17) from the same recipe (eventDD.json, DD decimal),
+//   refs core,pal,obj,snd: 08 --frames 300 --keys 2620:A .. 2740:A (every 40) f2541-2839; 21 --frames 300 no keys
+//   f2541-2839 (listed cells in skip21); 23 --frames 560 --keys 2620:A .. 3060:A f2541-3099. Return frames of the
+//   act generators from web/test/pending_probe.mjs.
 // Exit code 1 on any mismatch.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -91,5 +95,37 @@ run('07', ['2621:A', '2661:A', '2701:A'], 2739, null, {
 run('01', [2700, 2740, 2780, 2820, 2860, 2900].map((f) => `${f + 1}:A`), 2999, skip01, {
   2600: (m) => want(m, 0x0301, 0xB8, 'f2600 slot 1 raise pose'),
   2999: (m) => { want(m, 0x6C, 0xF2, 'area_id'); want(m, 0x0600, 0, 'obj_phase'); want(m, 0x06C0, 0, 'orbit_level'); },
+});
+// s204: the frame-waiting acts (same base state, act forced at 30:D552, stopped at the act's entry f2540 L251)
+// run() starts the act as the ENTRY_POINTS generator; `ret(F)` checks it returned by frame F
+// (frames from web/test/pending_probe.mjs) and is still running the frame before
+let gen = null;
+const ret = (nn, f) => ({
+  2541: (m) => { gen = m.pending; },
+  [f - 1]: (m) => { if (m.pending !== gen) fail(`event${nn}: act returned before f${f}`); },
+  [f]: (m) => { if (m.pending === gen) fail(`event${nn}: act still running at f${f}`); want(m, 0x41, 8, `event${nn} sub_state`); },
+});
+// act 8: GiveItemA($42 Paralysis): msg 32.x closed by the first A, act returns f2629
+run('08', ['2621:A', '2661:A', '2701:A', '2741:A'], 2839, null, {
+  ...ret('08', 2629),
+  2839: (m) => want(m, 0x057F, 0x42, 'event08 GiveItem item'),
+});
+// act 21: SFX $6B, stop music, WaitSfxDone, ObjInit type $9E in slot 13 (f2595). Listed cells: LATE o0D_ai f2595
+// (the ObjInit after WaitSfxDone's last WaitFrame: tools.emu's L255 sample already holds it) and music f2682
+// (type $9E's music start); PARTIAL pal_crc every 17 frames f2630-2681 / f2736-2787 (type $9E's palette cycle
+// caught mid-write by tools.emu's sample, emu-odd: neither the previous nor the next port row)
+function skip21(f, c) {
+  if ((f === 2595 && c === 'o0D_ai') || (f === 2682 && c === 'music')) return 'late';
+  if (c === 'pal_crc' && [2630, 2647, 2664, 2681, 2736, 2753, 2770, 2787].includes(f)) return 'skip';
+  return undefined;
+}
+run('21', [], 2839, skip21, {
+  ...ret('21', 2596),
+  2839: (m) => { want(m, 0x04AD, 0xEB, 'event21 slot 13 AI (type $9E)'); },
+});
+// act 23: wise-men history, msgs 22.0/2/4/6 (11 pages, each closed by A; act returns f3029); $0381 b2 cleared
+run('23', [2620, 2660, 2700, 2740, 2780, 2820, 2860, 2900, 2940, 2980, 3020, 3060].map((f) => `${f + 1}:A`), 3099, null, {
+  ...ret('23', 3029),
+  3099: (m) => { if (m.rd(0x0381) & 4) fail('event23: $0381 b2 still set'); },
 });
 process.exit(fails ? 1 : 0);

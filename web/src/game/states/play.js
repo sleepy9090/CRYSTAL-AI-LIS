@@ -281,6 +281,10 @@ export const ENTRY_POINTS = {
   // s203: event acts reached by ItemUseRun's JMP 30:D523 (their RTS ends the substate handler); Y = $22 * 2
   '30:D5A4': (m) => EVENT_ACTIONS[1](m, 2),           // EvActThunderWarp (web/test/states/event01.json)
   '30:D5E6': (m) => EVENT_ACTIONS[7](m, 14),          // EvActMesiaMessage (web/test/states/event07.json)
+  // s204: frame-waiting acts (web/test/states/eventNN.json, NN = act in decimal)
+  '30:D654': (m) => EVENT_ACTIONS[8](m, 16),          // give item $42 Paralysis (event08.json)
+  '30:D746': (m) => EVENT_ACTIONS[21](m, 42),         // EvActSpawn9E (event21.json)
+  '30:D791': (m) => EVENT_ACTIONS[23](m, 46),         // EvActHistory (event23.json)
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */
