@@ -7,8 +7,8 @@
 //                  $7E per column group BA9A, block $2E each pass), visited_map $62F0 = $FF, slot off
 //   phase 1  BAF5  boss_cam_lock = $7F; obj_behav b7 gate; every 16th frame one type-$31 object from table BBCE
 //                  (x y tile_ofs meta, 4 bytes; $FF ends) into slot X + anim>>4, slot 0 parked at ($80,$A0)
-//                  frozen; at the table end orbit_level b7 gate, then messages $1B.05-07 (ShowMessage, NOT
-//                  ported), full HP / MP, player AI = 2, slot off
+//                  frozen; at the table end orbit_level b7 gate, then messages $1B.05-07 (sound $29 +
+//                  ShowMessage each; it leaves X = 0, Y = $0A, s173), full HP / MP, player AI = 2, slot off
 //   phase 2  BBE7  $6060-$609F = $FF, attr_shadow -> $6060-$608F, block $04, sub_state $1F, phase+1
 //   phase 3  BC0C  phase+1; pal ids $07E0-2 = $A2-$A4 one by one, each FadeIn(9) with $07E8 = BC34[i]; sound $14
 //   phase 4  BC37  hit flash, overlay $FC / meta $FB, anim 0, timer2+1 -> obj_behav = BC61[timer2 & $0F], phase+1
@@ -22,7 +22,8 @@
 //                  BE30 by the leader's meta & 3 and obj_act_timer; anim -4 per frame while the leader is not
 //                  frozen (sound $6F at anim & $7F = 0 when onscreen)
 //   phases 7, 11 (null) and >= 13 jump through garbage in the ROM: logged as unported here.
-import { cpuRd, setR6 } from '../prg.js';
+import { cpuRd, setR6, farRestore } from '../prg.js';
+import { showMessage } from '../states/talk.js';
 import { playSound } from '../playsound.js';
 import { paletteBuildRom, fadeIn, hudRedraw, hudHpBar } from '../states/death.js';
 import { ppuQueueBlock, waitPpuQueue } from '../states/pause.js';
@@ -118,16 +119,20 @@ function* phase1(m, x) {
   dec(m, ANIM + x);                                          // BB1A: table end
   if (!(m.rd(ORBIT + x) & 0x80)) { inc(m, ORBIT + x); return; }
   m.wr(0x07DF, 0x1B); m.wr(0x07DE, 5);
+  let sy = y;                                                // BB30 TXA PHA (the slot comes back at BB6C)
   do {
-    playSound(m, 0x29, y);
-    unported(m, 'AI $70 phase 1 ShowMessage 30:D354');   // BB37 JSR FarCall_D354: Y / X after it unknown
+    playSound(m, 0x29, sy);
+    const r6 = m.rd(0x6E), r7 = m.rd(0x6F);                  // BB37 JSR FarCall_D354
+    yield* showMessage(m);
+    farRestore(m, r6, r7);
+    sy = 0x0A;                                               // s173 probe: ShowMessage leaves X = 0, Y = $0A
   } while (inc(m, 0x07DE) !== 8);
   m.wr(0x0676, 1); m.wr(0x04B6, 0x53); m.wr(0x05B6, 0);
-  playSound(m, 0x25, y);
+  playSound(m, 0x25, sy);
   m.wr(0x03C1, m.rd(0x03C0));
   yield* hudHpBar(m);
   m.wr(0x0708, m.rd(0x0709));
-  yield* hudRedraw(m, 4, x);
+  yield* hudRedraw(m, 4, 0);                                 // X = 0 from ShowMessage ($14 = 0)
   m.wr(ACTIVE, 2);
   m.wr(ACTIVE + x, 0);
 }
