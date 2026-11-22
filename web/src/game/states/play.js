@@ -24,7 +24,7 @@ import { objCollideAll } from '../obj/collide.js';
 import { cameraTick } from '../world/camera.js';
 import { npcTalk } from './talk.js';
 import { substWakeCutscene } from './wake.js';
-import { giveItem, itemUseMenu, showPendingMessage } from './giveitem.js';
+import { giveItem, itemUseMenu, showPendingMessage, area5FIrqOff } from './giveitem.js';
 import { substTeleportMenu } from './teleport.js';
 import { substTelepathySelect } from './telepathy.js';
 import { substChangeForm } from './changeform.js';
@@ -204,6 +204,16 @@ function bgChrAnimTick(m) {
   m.wr(0x07F1, cpuRd(m, 0xE779 + (((m.rd(0x08) >> 3) & 7) | b)));
 }
 
+/** SubstOutOfMp 30:CC17 (sub_state 28, set by SpendMp 26:9AF7 / MagicOutOfMp 27:A15C): Area5FIrqOff,
+ *  SFX $4E, sub_state $10 with pending message 32.14 ($06C3 = $0E, $06E3 = $20), RTS (s151) */
+export function substOutOfMp(m, y = 0) {
+  area5FIrqOff(m);
+  playSound(m, 0x4E, y);                              // y = the Y register at the dispatch (as states/cure.js)
+  m.wr(R.sub_state, 0x10);
+  m.wr(0x06C3, 0x0E);
+  m.wr(0x06E3, 0x20);
+}
+
 const SUBSTATES = new Map([
   [0, substNewGameInit],                              // 30:CA5F (s108)
   [1, substAreaEnter],                                // 30:CA2E (s108)
@@ -224,7 +234,8 @@ const SUBSTATES = new Map([
   [25, substFormRevert],                              // 19:BB9D magic press in a changed form (s148, states/formrevert.js)
   [26, swordRaisePose],                               // 19:BC04 event act 22 (s149, states/swordraise.js)
   [27, substMesiaReunion],                            // 19:BC6B event act 30 (s150, states/mesia.js)
-  [29, substTeleportMenu],                          // 30:DB28 2nd entry (never stored)
+  [28, substOutOfMp],                                 // 30:CC17 SpendMp short of MP -> msg 32.14 (s151)
+  [29, substTeleportMenu],                         // 30:DB28 2nd entry (never stored)
   [31, substRestoreScreen],                           // 30:CC4D (s120; set by AI $70 phase 2)
   [32, substArmorShop],                               // 30:D985 (s122, states/shop.js; types $42 $48)
   [33, substToolShop],                                // 30:D98E (s122; types $41 $44 $47)
@@ -263,6 +274,7 @@ export const ENTRY_POINTS = {
   '19:BB9D': substFormRevert,                         // s148 (web/test/states/formrevert.json)
   '19:BC04': swordRaisePose,                          // s149 (web/test/states/swordraise.json)
   '19:BC6B': substMesiaReunion,                       // s150 (web/test/states/mesia.json)
+  '30:CC17': function* (m) { substOutOfMp(m); },      // s151 (web/test/states/outofmp.json; one pass, no wait)
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */

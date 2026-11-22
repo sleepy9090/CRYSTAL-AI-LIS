@@ -249,7 +249,7 @@ function itemUseHook(m) {
 const HOOKS = [itemGetHook, itemUseHook, itemHook2];
 
 /** Area5FIrqOff 30:C89E */
-function area5FIrqOff(m) { if (m.rd(R.area_id) === 0x5F) m.wr(R.irq_mode, 0); }
+export function area5FIrqOff(m) { if (m.rd(R.area_id) === 0x5F) m.wr(R.irq_mode, 0); }
 
 /** ItemEventHook 30:D834 (A = hook). Returns the Y register after it. */
 export function* itemEventHook(m, n) {

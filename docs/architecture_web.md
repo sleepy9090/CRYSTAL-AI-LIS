@@ -185,6 +185,7 @@ Every ROM routine the port reproduces, with its JS home. File offsets are in `do
 | `SubstTeleportMenu`, `SubstTelepathySelect/Reply`, `SubstChangeForm` | `30:DB28`, `30:DD6B/DE04`, `30:DEC1` | same names | `ui/menus.js`, `ui/npc.js` |
 | `SwordRaisePose` (substate 26) etc. | `19:BB39-BC6B` | `substCutscene24..27()` | `states/substates.js` |
 | `SubstMesiaReunion` (substate 27) + `MesiaScript` / `MesiaSpawnFly` / `MesiaPalFlash` | `19:BC6B`, `19:BCB0` / `BD91` / `BDDC` | `substMesiaReunion()` (s150) | `states/mesia.js` |
+| `SubstOutOfMp` (substate 28) + `Area5FIrqOff` | `30:CC17`, `30:C89E` | `substOutOfMp()` (s151), `area5FIrqOff()` | `states/play.js`, `states/giveitem.js` |
 | bank-15 scenes (substates 12/13) | `15:BC40/BDDB` | `substScene12/13()` | `states/substates.js` |
 
 ### 3.3 World
