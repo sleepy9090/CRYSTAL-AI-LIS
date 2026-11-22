@@ -506,7 +506,12 @@ bank,addr,name,comment
 *,004B,pad_new,u8[2] newly pressed buttons (A=b7 B=b6 Sel=b5 Start=b4 U D L R)
 *,004D,pad_act,u8[2] pad_new | b7 A held 31+ frames | b6 B-hold 32-frame pulse
 *,004F,pad_raw,u8 raw pad byte from ReadPadRaw
-27,AE31,AiPathWalk,AI $32 (type $38): walk path AiPathTable[$0680] step $0620 one dir byte per 16 steps; FC/FD/FE/FF terminators
+27,AE31,AiPathWalk,AI $32 (type $38): walk path AiPathTable[$0680] step $0620 one dir byte per 16 steps; FC = slots $0D/$0E restart path $0D; FD = player AI $0A + self AI $30; FE off; FF AI $30; area $D4 path $0D slot $0D carries the player (s171 web obj/ai_field.js)
+27,A85F,AiElementWall,s171: AI $07 (types $D0-$D3): areas $A8/$8F behav countdown -> SpawnShot(shot_id 0) at $30 (dir A8A2[Rand64&3]); visited screen -> off; meta=overlay; box A8FC-A90B[phase] -> coll|=$10 (web obj/ai_field.js)
+27,A8FC,ElementWallBox,s171: 4x4 bytes y_min/y_max/x_min/x_max by obj_phase for AiElementWall's coll b4 (screen coords)
+27,B174,AiWiggleShot,s171: AI $12 (type $12 wind level-$18 shot): init offset B1E9/B1ED[X]; anim-=2; timer 0 -> despawn; wiggle B1F5[timer2&$1F] (swapped if dir b1) + dir step (web obj/ai_field.js)
+27,B1F5,WiggleOffsets,s171: 32 x (dx,dy) wiggle offsets for AiWiggleShot, swapped when obj_meta_dir b1
+27,B235,AiSpiralShot,s171: AI $13 (type $16): timer|=$80; (++timer2 & act_timer)=0 -> orbit_level-- 0 despawn, dir=(X&7)*2+phase++, every 16 act_timer=act_timer<<1|1; free step (web obj/ai_field.js)
 27,AF04,AiPathTable,ptr16[16] direction-byte paths for AiPathWalk (data AF24-AFA5)
 27,B2C5,AiCountdown,AI $14: obj_anim -= $0600 per frame; borrow -> 27:98C7
 27,B39E,AiWander16,AI $40 (types $55 $7C): aim via DirToTarget(Y=1)+B41E jitter; phase>=$80 40 f flags2 $0E then 127 f B40E wander flags2 $0C. s170: ported obj/ai_field.js

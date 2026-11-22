@@ -234,9 +234,16 @@ FIELD_AIS = {
     'AiCarryLeft': (0x55, 0xA616),
     # s170: AIs $34 $39 $40
     'AiPeriodicShot': (0x34, 0xB318), 'AiArenaLock': (0x39, 0xA519), 'AiWander16': (0x40, 0xB39E),
+    # s171: AIs $07 $12 $13 $32
+    'AiElementWall': (0x07, 0xA85F), 'AiWiggleShot': (0x12, 0xB174), 'AiSpiralShot': (0x13, 0xB235),
+    'AiPathWalk': (0x32, 0xAE31),
 }
 for _n, (_id, _ad) in FIELD_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r: {'x': _slot(r)})
+# s171: the player-shot AIs index ROM tables by slot (the shot slots 4-6); AiPathWalk's carry path needs slot $0D
+for _n in ('AiWiggleShot', 'AiSpiralShot'):
+    ROUTINES[_n] = (26, FIELD_AIS[_n][1], _poke_bg, lambda r: {'x': r.choice([3, 4, 5, 6, 7, r.randrange(1, 0x1F)])})
+ROUTINES['AiPathWalk'] = (26, 0xAE31, _poke_bg, lambda r: {'x': r.choice([0x0D, 0x0D, 0x0E, _slot(r)])})
 # s93 (boss / effect AI port (a)): web/src/game/obj/ai_effect.js; Y = id*2 as ObjUpdateAll's TAY 30:CD07 leaves it
 EFFECT_AIS = {'AiPlayerFollowC': (0x04, 0xB2FC), 'AiStraightMoverTl': (0x57, 0xB0BE), 'AiMpDrain': (0x76, 0xA4DC),
               'AiMpDrain99': (0x77, 0xA4E0),
@@ -567,6 +574,43 @@ def _fix_field(name, ram, r, x, wram=None):
         ram[0x0480 + x] = r.choice([0, 1, r.randrange(256)])
         ram[0x08] = r.randrange(256)
         ram[0x0440 + x] = r.choice([0x17, 0x3E, r.randrange(0x80), r.randrange(256)])
+        if r.random() < 0.5:
+            for s in range(0x0D, 0x1F):
+                if s != x and r.random() < 0.6:
+                    ram[0x04A0 + s] = 0
+    if name in ('AiElementWall', 'AiWiggleShot', 'AiSpiralShot', 'AiPathWalk'):
+        # s171: phase 0 / init, timer / orbit_level 1 (despawn), act_timer masks, path terminators, wall areas + box
+        ram[0x0600 + x] = r.choice([0, 0, 1, 2, 3, 0x0F, 0xFF, r.randrange(256)])
+        ram[0x0480 + x] = r.choice([1, 2, r.randrange(256)])
+        ram[0x0620 + x] = r.choice([0, 1, 0x1F, r.randrange(0x20), r.randrange(256)])
+        ram[0x0640 + x] = r.choice([0, 1, 3, 7, 0xFF, r.randrange(256)])
+        ram[0x06C0 + x] = r.choice([1, 1, 2, r.randrange(256)])
+        ram[0x0360 + x] = r.choice([r.randrange(16), r.randrange(256)])
+        ram[0x04E0 + x] = r.choice([0, 1, 0x10, 0x11, r.randrange(256)])
+        ram[0x0680 + x] = r.choice([r.randrange(16), r.randrange(16), 0x0D, r.randrange(256)])
+        ram[0x6C] = r.choice([0xA8, 0x8F, 0xD4, 0xD4, r.randrange(256)])
+        ram[0x06E0 + x] = r.choice([0, 0, 1, 0x31, 0x32, r.randrange(256)])
+        ram[0x0440 + x] = r.choice([0, 0x17, 0x3E, r.randrange(0x80), r.randrange(256)])
+        ram[0x90 + x] = r.choice([r.randrange(8), r.randrange(256)])
+        ram[0xD0 + x] = r.choice([r.randrange(8), r.randrange(256)])
+        ram[0x05E0 + x] = r.choice([0x18, 0x30, 0xB8, 0xC8, r.randrange(256)])
+        ram[0x05C0 + x] = r.choice([0x18, 0x38, 0xD8, 0xE8, r.randrange(256)])
+        ram[0x08] = r.randrange(256)
+        if wram is not None and r.random() < 0.5:
+            wram[0x2F0 + (ram[0xD0 + x] & 0x3F)] = 0
+        if name == 'AiPathWalk' and r.random() < 0.4:   # land on a path terminator FC-FF this frame
+            p = r.randrange(16)
+            ptr = _PRG[27 * 0x2000 + 0xF04 + 2 * p] | _PRG[27 * 0x2000 + 0xF05 + 2 * p] << 8
+            ends = [i for i in range(64) if 0xA000 <= ptr + i < 0xC000 and _PRG[27 * 0x2000 + ptr + i - 0xA000] >= 0x80]
+            if ends:
+                ram[0x0680 + x], ram[0x0620 + x] = p, r.choice(ends)
+                ram[0x0600 + x], ram[0x04E0 + x] = 0xFF, r.choice([0x01, 0x11])
+        if name == 'AiElementWall' and r.random() < 0.3:   # the spawn frame: behav $31 -> $30, a real shot id
+            ram[0x6C], ram[0x06E0 + x] = r.choice([0xA8, 0x8F]), 0x31
+            ram[0x0440 + x] = r.choice([0x14, 0x17, 0x3E])
+            for s in range(0x0D, 0x1F):
+                if s != x:
+                    ram[0x04A0 + s] = 0
         if r.random() < 0.5:
             for s in range(0x0D, 0x1F):
                 if s != x and r.random() < 0.6:

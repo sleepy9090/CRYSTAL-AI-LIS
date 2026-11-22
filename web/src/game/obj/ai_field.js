@@ -9,10 +9,11 @@
 //   AI $7B AiCoin 27:B778            AI $38 AiPitShuttle 27:AFA9      AI $3C AiCrumblePlatform 27:AFF5 (s117)
 //   AI $3A AiNpcBossReveal 27:A555 (s133)   AI $30 AiNpcWander 27:ACD9 / $31 AiNpcStill 27:AE16 / $78 RTS (s140)
 //   s170: AI $34 AiPeriodicShot 27:B318, $39 AiArenaLock 27:A519, $40 AiWander16 27:B39E
+//   s171: AI $07 AiElementWall 27:A85F, $12 AiWiggleShot 27:B174, $13 AiSpiralShot 27:B235, $32 AiPathWalk 27:AE31
 import { cpuRd } from '../prg.js';
 import {
   rand64, dirToTarget, spawnShot, objPosToTemp, tempToObjPos, tempAddOffset, tempAddStep, objStepVector,
-  objBgProbe, objBecomeNext,
+  objBgProbe, objBecomeNext, objDespawn,
 } from './util.js';
 import { objMoveSlide } from './move.js';
 import { aiShootCheck } from './ai_static.js';
@@ -22,7 +23,7 @@ import { farObjInit } from './objinit.js';
 const X_LO = 0x70, Y_HI = 0xD0, FREEZE = 0x05A0, RIDE_SLOT = 0x0541;
 const META_ID = 0x0300, FLAGS2 = 0x0340, META_DIR = 0x0360, FLAGS = 0x0380, COLL = 0x03A0, SHOT_ID = 0x0440;
 const TIMER = 0x0480, ACTIVE = 0x04A0, ANIM = 0x04E0, ELEM = 0x0500, SPAWN_PARAM = 0x0560, PHASE = 0x0600;
-const TIMER2 = 0x0620, ACT_TIMER = 0x0640;
+const TIMER2 = 0x0620, ACT_TIMER = 0x0640, OVERLAY = 0x0580, PARAM1 = 0x0680, ORBIT = 0x06C0;
 
 const dec = (m, a) => m.wr(a, m.rd(a) - 1);
 
@@ -457,7 +458,133 @@ export function aiWander16(m, x) {
   tempToObjPos(m, x);                                                      // B40B JMP 26:9897
 }
 
+// ---- s171: AI $07 $12 $13 $32 (ai_missing.py) ----
+
+/** AI $12 27:B174 (type $12, the wind level-$18 shot): phase 0 -> phase 1, timer2 = B1E5[X], start offset
+ *  ($30, $31) = (B1E9[X], B1ED[X]) swapped when meta_dir b1, TempAddOffset. Then anim -= 2, timer-- 0 -> despawn;
+ *  wiggle (B1F5/B1F6[(timer2 & $1F) * 2], same swap) timer2++, TempAddStep, then the meta_dir step */
+export function aiWiggleShot(m, x) {
+  const swap = () => { const a = m.rd(0x30); m.wr(0x30, m.rd(0x31)); m.wr(0x31, a); };
+  if (m.rd(PHASE + x) === 0) {                                            // B1BC
+    m.wr(PHASE + x, 1);
+    m.wr(TIMER2 + x, cpuRd(m, 0xB1E5 + x));
+    m.wr(0x30, cpuRd(m, 0xB1E9 + x));
+    m.wr(0x31, cpuRd(m, 0xB1ED + x));
+    if (m.rd(META_DIR + x) & 2) swap();
+    objPosToTemp(m, x);
+    tempAddOffset(m);
+    tempToObjPos(m, x);
+    return;
+  }
+  m.wr(ANIM + x, m.rd(ANIM + x) - 2);
+  dec(m, TIMER + x);
+  if (m.rd(TIMER + x) === 0) return void objDespawn(m, x);               // B184 JMP 26:98C7
+  const y = (m.rd(TIMER2 + x) & 0x1F) << 1;
+  m.wr(0x30, cpuRd(m, 0xB1F5 + y));
+  m.wr(0x31, cpuRd(m, 0xB1F6 + y));
+  if (m.rd(META_DIR + x) & 2) swap();
+  m.wr(TIMER2 + x, m.rd(TIMER2 + x) + 1);
+  objPosToTemp(m, x);
+  tempAddStep(m);
+  objStepVector(m, x, m.rd(META_DIR + x));
+  tempAddStep(m);
+  tempToObjPos(m, x);                                                     // B1B9 JMP 26:9897
+}
+
+/** AI $13 27:B235 (type $16, a spiral shot): timer |= $80; timer2++; (timer2 & act_timer) = 0 -> orbit_level--
+ *  (0 -> despawn), meta_dir = ((X & 7) * 2 + phase) & $0F, phase++, every 16 turns act_timer = act_timer << 1 | 1;
+ *  then one free step */
+export function aiSpiralShot(m, x) {
+  m.wr(TIMER + x, m.rd(TIMER + x) | 0x80);
+  m.wr(TIMER2 + x, m.rd(TIMER2 + x) + 1);
+  if ((m.rd(TIMER2 + x) & m.rd(ACT_TIMER + x)) === 0) {
+    dec(m, ORBIT + x);
+    if (m.rd(ORBIT + x) === 0) return void objDespawn(m, x);              // B24D JMP 26:98C7
+    m.wr(META_DIR + x, (((x & 7) << 1) + m.rd(PHASE + x)) & 0x0F);
+    m.wr(PHASE + x, m.rd(PHASE + x) + 1);
+    if ((m.rd(PHASE + x) & 0x0F) === 0) m.wr(ACT_TIMER + x, (m.rd(ACT_TIMER + x) << 1) | 1);   // SEC ROL
+  }
+  stepFree(m, x);
+}
+
+/** AI $32 AiPathWalk 27:AE31 (type $38): slot 0 obj_freeze = 4; moves on BitMask[$08 & 7] & phase frames; anim--,
+ *  every 16 steps the next byte of path AiPathTable[obj_param1] at timer2: < $80 = new meta_dir (timer2++), $FC =
+ *  slots $0D/$0E restart on path $0D, $FD = player AI $0A + this slot AI $30 (behav 6, orbit $2E), $FE = off,
+ *  other = AI $30. meta_id low 2 bits = dir >> 1, one free step; area $D4 path $0D slot $0D carries the player */
+export function aiPathWalk(m, x) {
+  m.wr(FREEZE, 4);
+  if (!(cpuRd(m, 0xC000 + (m.rd(0x08) & 7)) & m.rd(PHASE + x))) return;
+  dec(m, ANIM + x);
+  if ((m.rd(ANIM + x) & 0x0F) === 0) {
+    const y = m.rd(PARAM1 + x) << 1 & 0xFF;
+    m.wr(0x10, cpuRd(m, 0xAF04 + y));
+    m.wr(0x11, cpuRd(m, 0xAF05 + y));
+    const b = cpuRd(m, ((m.rd(0x11) << 8 | m.rd(0x10)) + m.rd(TIMER2 + x)) & 0xFFFF);
+    if (b & 0x80) {
+      if (b === 0xFC) {                                                   // AE7B
+        m.wr(ACTIVE + 0x0D, 0x32); m.wr(ACTIVE + 0x0E, 0x32);
+        m.wr(PARAM1 + 0x0D, 0x0D); m.wr(PARAM1 + 0x0E, 0x0D);
+        m.wr(ANIM + 0x0D, 1); m.wr(ANIM + 0x0E, 1);
+        m.wr(TIMER2 + 0x0D, 0); m.wr(TIMER2 + 0x0E, 0);
+        return;
+      }
+      if (b === 0xFD) {                                                   // AE9C
+        m.wr(ACTIVE, 0x0A);
+        m.wr(ACTIVE + x, 0x30);
+        m.wr(0x06E0 + x, 6);
+        m.wr(ORBIT + x, 0x2E);
+        return;
+      }
+      m.wr(ACTIVE + x, b === 0xFE ? 0 : 0x30);
+      return;
+    }
+    m.wr(META_DIR + x, b);                                                // AEB1
+    m.wr(TIMER2 + x, m.rd(TIMER2 + x) + 1);
+  }
+  m.wr(0x10, m.rd(META_ID + x) & 0xFC);                                   // AEB7
+  m.wr(META_ID + x, ((m.rd(META_DIR + x) >> 1) & 3) | m.rd(0x10));
+  objStepVector(m, x, m.rd(META_DIR + x));
+  objPosToTemp(m, x);
+  tempAddStep(m);
+  tempToObjPos(m, x);
+  if (m.rd(0x6C) !== 0xD4 || m.rd(PARAM1 + x) !== 0x0D || x !== 0x0D) return;
+  const yl = m.rd(0xB0 + x);                                              // AEE9: the player rides slot $0D
+  m.wr(0xB1, yl); m.wr(0xB0, yl);
+  const xl = (m.rd(X_LO + x) + 0x10) & 0xFF;
+  m.wr(0x71, xl); m.wr(X_LO, xl);
+  m.wr(TIMER2, 0); m.wr(ACT_TIMER, 0); m.wr(ORBIT, 0);
+}
+
+/** AI $07 27:A85F (types $D0-$D3, the element walls): shot_id != 0 -> outside areas $A8/$8F overlay = $4C; inside,
+ *  behav != 0 -> behav--, anim = old behav >> 1, new behav $30 -> SpawnShot(shot_id, 0), spawned -> its meta_dir =
+ *  A8A2[Rand64 & 3]; behav 0 and onscreen -> behav $3E. Then: visited screen -> obj_active 0; meta_id = overlay;
+ *  onscreen inside the box A8FC-A90B[phase] -> obj_coll |= $10 */
+export function aiElementWall(m, x) {
+  if (m.rd(SHOT_ID + x)) {
+    const a = m.rd(0x6C);
+    if (a !== 0xA8 && a !== 0x8F) m.wr(OVERLAY + x, 0x4C);
+    else if (m.rd(0x06E0 + x)) {                                          // A87A
+      const b = m.rd(0x06E0 + x);
+      m.wr(0x06E0 + x, b - 1);
+      m.wr(ANIM + x, b >> 1);
+      if (m.rd(0x06E0 + x) === 0x30 && spawnShot(m, x, m.rd(SHOT_ID + x), 0)) {
+        const d = cpuRd(m, 0xA8A2 + (rand64(m) & 3));
+        m.wr(META_DIR + m.rd(0x10), d);
+      }
+    } else if (!(m.rd(FLAGS + x) & 0x80)) m.wr(0x06E0 + x, 0x3E);       // A8A6
+  }
+  m.wr(0x10, cpuRd(m, 0xC000 + m.rd(0x90 + x)));                         // A8B0
+  if (m.rd(0x62F0 + m.rd(Y_HI + x)) & m.rd(0x10)) m.wr(ACTIVE + x, 0);
+  m.wr(META_ID + x, m.rd(OVERLAY + x));                                   // A8C5
+  if (m.rd(FLAGS + x) & 0x80) return;
+  const p = m.rd(PHASE + x), sy = m.rd(0x05E0 + x), sx = m.rd(0x05C0 + x);
+  if (sy < cpuRd(m, 0xA8FC + p) || sy >= cpuRd(m, 0xA900 + p)) return;
+  if (sx < cpuRd(m, 0xA904 + p) || sx >= cpuRd(m, 0xA908 + p)) return;
+  m.wr(COLL + x, m.rd(COLL + x) | 0x10);
+}
+
 export const AI_FIELD = {
+  0x07: aiElementWall, 0x12: aiWiggleShot, 0x13: aiSpiralShot, 0x32: aiPathWalk,   // s171
   0x34: aiPeriodicShot, 0x39: aiArenaLock, 0x40: aiWander16,             // s170
   0x30: aiNpcWander, 0x31: aiNpcStill, 0x78: () => {},                    // $78 = 27:A914 RTS (event triggers)
   0x3A: aiNpcBossReveal, 0x2B: aiTrapChest, 0x44: aiDasher, 0x45: aiHomingFlyer, 0x48: aiHomingShooter, 0x58: aiOrbiter,

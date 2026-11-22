@@ -61,6 +61,11 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   (`obj/ai_field.js`, in `FIELD_AIS`, steered by `_fix_field`):
   `python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine
   AiPeriodicShot,AiArenaLock,AiWander16 --out web/test/obj_frames/fuzz_field2.json`.
+- `fuzz_field3.json` (s171): 300 cases each of AI `$07` `AiElementWall`, `$12` `AiWiggleShot`, `$13` `AiSpiralShot`
+  (X = the shot slots 3-7 mostly: both index ROM tables by slot) and `$32` `AiPathWalk` (X = `$0D` mostly; 40 % steered
+  onto a path terminator `$FC-$FF`), `FIELD_AIS`, steered by `_fix_field`:
+  `python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine
+  AiElementWall,AiWiggleShot,AiSpiralShot,AiPathWalk --out web/test/obj_frames/fuzz_field3.json`.
 
 - `fuzz_platform.json` (s117): 300 cases each for the pit platforms in `obj/ai_field.js` (`PLATFORM_AIS`:
   `AiPitShuttle` `$38`, `AiCrumblePlatform` `$3C`, Y = id·2), captured from `gfx/compare/s116_a6a.state` (area `$6A`,
