@@ -19,6 +19,8 @@
 //   refs core,pal,obj,snd: 08 --frames 300 --keys 2620:A .. 2740:A (every 40) f2541-2839; 21 --frames 300 no keys
 //   f2541-2839 (listed cells in skip21); 23 --frames 560 --keys 2620:A .. 3060:A f2541-3099. Return frames of the
 //   act generators from web/test/pending_probe.mjs.
+// s205: acts 2 (D5D6, NN 02), 15 (D70D, NN 0F), 28 (D7FD, NN 1C), refs core,pal,obj,snd,oam_crc --frames 300
+//   --keys 2620:A .. 2740:A f2541-2839 (act 2 lists LATE / PARTIAL pose cells in skip02; 15 and 28 every cell).
 // Exit code 1 on any mismatch.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -100,10 +102,10 @@ run('01', [2700, 2740, 2780, 2820, 2860, 2900].map((f) => `${f + 1}:A`), 2999, s
 // run() starts the act as the ENTRY_POINTS generator; `ret(F)` checks it returned by frame F
 // (frames from web/test/pending_probe.mjs) and is still running the frame before
 let gen = null;
-const ret = (nn, f) => ({
+const ret = (nn, f, sub = 8, at = () => {}) => ({
   2541: (m) => { gen = m.pending; },
   [f - 1]: (m) => { if (m.pending !== gen) fail(`event${nn}: act returned before f${f}`); },
-  [f]: (m) => { if (m.pending === gen) fail(`event${nn}: act still running at f${f}`); want(m, 0x41, 8, `event${nn} sub_state`); },
+  [f]: (m) => { if (m.pending === gen) fail(`event${nn}: act still running at f${f}`); want(m, 0x41, sub, `event${nn} sub_state`); at(m); },
 });
 // act 8: GiveItemA($42 Paralysis): msg 32.x closed by the first A, act returns f2629
 run('08', ['2621:A', '2661:A', '2701:A', '2741:A'], 2839, null, {
@@ -127,5 +129,29 @@ run('21', [], 2839, skip21, {
 run('23', [2620, 2660, 2700, 2740, 2780, 2820, 2860, 2900, 2940, 2980, 3020, 3060].map((f) => `${f + 1}:A`), 3099, null, {
   ...ret('23', 3029),
   3099: (m) => { if (m.rd(0x0381) & 4) fail('event23: $0381 b2 still set'); },
+});
+// s205: acts 2 (D5D6), 15 (D70D), 28 (D7FD), --frames 300 --keys 2620:A .. 2740:A (every 40), refs f2541-2839 incl. oam_crc
+const KEYS4 = ['2621:A', '2661:A', '2701:A', '2741:A'];
+const follower13 = (m, tag) => { want(m, 0x04AD, 0x32, `${tag} slot 13 follower AI`); want(m, 0x060D, 0xFF, `${tag} $060D`); };
+// act 2: slot 13's item via TalkGiveParam (GiveItem -> sub_state 26 SwordRaisePose), $030D = $88, MakeFollower13.
+// Listed LATE cells, as act 1 (the pose runs from ItemUseRun at L251; gap (c)): music f2630 (pose music |= $80 after
+// its first WaitFrame), the pose's oam_crc every 8th frame f2639-2751, sub f2762 (pose end); PARTIAL oam_crc f2631
+function skip02(f, c) {
+  if ((f === 2630 && c === 'music') || (f === 2762 && c === 'sub')) return 'late';
+  if (c === 'oam_crc' && f >= 2639 && f <= 2751 && (f - 2639) % 8 === 0) return 'late';
+  if (c === 'oam_crc' && f === 2631) return 'skip';
+  return undefined;
+}
+// (checks at the return frame f2629: the follower walks off and is cleared later, GiveItem clears the trigger slot)
+run('02', KEYS4, 2839, skip02, {
+  ...ret('02', 2629, 0x1A, (m) => { follower13(m, 'event02'); want(m, 0x030D, 0x88, 'event02 slot 13 meta'); }),
+});
+// act 15: trigger slot (3) param := $41 (Refresh), JMP GiveItem; every cell at shift 0
+run('15', KEYS4, 2839, null, {
+  ...ret('15', 2629, 8, (m) => { want(m, 0x0563, 0x41, 'event15 slot 3 param'); want(m, 0x04A3, 0, 'event15 trigger slot cleared'); }),
+});
+// act 28: GiveItemA($29 Gas Mask) + MakeFollower13; every cell at shift 0
+run('28', KEYS4, 2839, null, {
+  ...ret('28', 2629, 8, (m) => { want(m, 0x057F, 0x29, 'event28 GiveItem item'); follower13(m, 'event28'); }),
 });
 process.exit(fails ? 1 : 0);

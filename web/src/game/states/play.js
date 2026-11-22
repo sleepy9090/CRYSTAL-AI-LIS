@@ -285,6 +285,10 @@ export const ENTRY_POINTS = {
   '30:D654': (m) => EVENT_ACTIONS[8](m, 16),          // give item $42 Paralysis (event08.json)
   '30:D746': (m) => EVENT_ACTIONS[21](m, 42),         // EvActSpawn9E (event21.json)
   '30:D791': (m) => EVENT_ACTIONS[23](m, 46),         // EvActHistory (event23.json)
+  // s205
+  '30:D5D6': (m) => EVENT_ACTIONS[2](m, 4),           // slot 13 item + MakeFollower13 (event02.json)
+  '30:D70D': (m) => EVENT_ACTIONS[15](m, 30),         // Refresh via GiveItem (event15.json)
+  '30:D7FD': (m) => EVENT_ACTIONS[28](m, 56),         // Gas Mask + MakeFollower13 (event28.json)
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */
