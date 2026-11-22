@@ -85,6 +85,8 @@ export function* objUpdateAll(m) {
       }
     }
     const act = m.rd(ACTIVE + x), id = act & 0x7F;          // CCFA
+    // s212: per-dispatch bucket for web/test/pass_count.mjs (= tools.emu.pass_cost --slots spans, CCFA to CCFA)
+    m.passStage = act ? `s${x}:${id}` : 'upd';
     if (id === 0x1A) {                                      // CD03 JMP ObjUpdateAi1A 30:CD7F
       yield* thunderStep(m, x);                             // CD7F JSR 30:CD8A (waits on frames; s197)
       switchBank16(m, 0x0D);                                // CD82

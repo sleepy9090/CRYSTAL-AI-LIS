@@ -8,6 +8,8 @@ main_state handler (end)), the frame / line of that end, the active-slot count,
 and LAG when the NMI inside the pass found frame_ready != 0. Cycles include the NMI / IRQ time that fell into
 a stage. --slots adds the cycles of each slot's AI dispatch (30:CCFA X = slot, up to the next dispatch or
 CameraTick) as `SS:AI=cyc`.
+s212: `padretry N` = ReadPadStable 31:FF17 re-reads in the top stage (the two reads of a pad differed: tools.emu's
+key changed between them, ~+380 cycles; a key-timing artifact the port does not model).
 s211 --split-int: the NMI / IRQ cycles (entry to the RTI back to the interrupted PC / S) are taken out of the
 stage (and --slots) they fell into and shown as `int N` before `tot` (`tot` stays the wall-clock pass length).
 
@@ -103,6 +105,11 @@ def main(argv):
     nes.on_exec(26, 0x8F6E, mark('col'))
     nes.on_exec(30, 0xC919, mark('end'))   # MainLoop after the main_state handler: LDA #0 / STA frame_ready
     nes.on_exec(31, 0xF3B6, nmi)
+
+    def pad(n):   # s212: ReadPadStable 31:FF17 entries in the top stage; 2 = one per pad, more = a re-read
+        if cur and cur['stg'] == 'top':
+            cur['pad'] = cur.get('pad', 0) + 1
+    nes.on_exec(31, 0xFF17, pad)
     if slots:
         nes.on_exec(30, 0xCCFA, slot)
     nes.run_frames(frames)
@@ -119,7 +126,7 @@ def main(argv):
         tot = t['end'] - t['top'] if 'end' in t else -1
         wf = f"f{r['wff']}L{r['wfl']:3}" if 'wfl' in r else '-'
         s = (f"f{r['f']} L{r['l']:3} act {r['act']:2} " + ' '.join(seg) + f' tot {tot:6} end {wf}'
-             + (' LAG' if r['lag'] else ''))
+             + (' LAG' if r['lag'] else '') + (f" padretry {r['pad'] - 2}" if r.get('pad', 2) > 2 else ''))
         if slots:
             s += '  ' + ' '.join(r['sl'])
         lines.append(s)

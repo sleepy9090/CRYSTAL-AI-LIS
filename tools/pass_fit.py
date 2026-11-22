@@ -12,8 +12,13 @@ compared with `tot`. --coef FILE.txt applies the coefficients saved by an earlie
 COST / COUNTS may be comma lists (runs fitted together); --skip-lag leaves LAG passes out (hit-stop frames the
 port already models); --show STAGE|int lists every pass of one stage / the interrupt time with the pass end.
 
+s212: --ai fits ObjUpdateAll per AI dispatch (needs pass_cost --slots + pass_count.mjs slot tokens), see ai_mode;
+the top stage is fitted without the passes where pass_cost saw a ReadPadStable re-read (`padretry`), whose
+cost is a separate 'padretry' constant (tools.emu key-timing artifact); --sort orders --show by |residual|.
+All steps: sh tools/passfit_runs.sh.
+
 usage: python3 tools/pass_fit.py COST.txt COUNTS.txt [--worst N]
-       [--stages [--save F | --coef F] [--skip-lag] [--show S]]"""
+       [--stages [--ai] [--save F | --coef F] [--skip-lag] [--show S [--sort]]]"""
 import json
 import re
 import sys
@@ -51,6 +56,49 @@ def rms(res):
     return (sum(r * r for r in res) / len(res)) ** 0.5
 
 
+def ai_mode(pts, coef, pred, argv):
+    """s212 --ai: the upd stage as per-dispatch fits. pass_cost --slots gives cycles per active-slot dispatch
+    (30:CCFA to the next one, `XX:YY` slot:AI), pass_count.mjs the port's rd/wr/rom for the same span. Each AI id
+    with >= 6 joined dispatches gets cyc = a*rd + b*wr + c*rom + d, the rest share one 'ai*' fit; the loop
+    overhead (upd minus the dispatch spans: inactive slots, knockback / freeze paths) is fitted as 'updrest'."""
+    by_ai = {}
+    for i, (_, b, c) in enumerate(pts):
+        for k, cyc in c['sl'].items():
+            if k in b:
+                by_ai.setdefault(k[3:], []).append((i, (*b[k], 1), cyc))
+    allx = [s for v in by_ai.values() for s in v]
+    if 'ai*' not in coef:
+        coef['ai*'] = lstsq([s[1] for s in allx], [s[2] for s in allx])
+    for ai, v in sorted(by_ai.items()):
+        key = 'ai' + ai
+        if key not in coef and len(v) >= 6 and '--coef' not in argv:   # out of sample: unseen ids use ai*
+            coef[key] = lstsq([s[1] for s in v], [s[2] for s in v])
+        c = coef.get(key, coef['ai*'])
+        res = [s[2] - sum(a * b for a, b in zip(c, s[1])) for s in v]
+        for s, r in zip(v, res):
+            pred[s[0]] += s[2] - r
+        print(f'  AI ${ai}{"" if key in coef else " (ai*)"}: {len(v)} dispatches, cyc ={c[0]:.2f}*rd + {c[1]:.2f}*wr + '
+              f'{c[2]:.2f}*rom +{c[3]:.0f}; rms {rms(res):.0f}, max |res| {max(map(abs, res)):.0f}'
+              f' (mean {sum(s[2] for s in v) / len(v):.0f})')
+    xs, ys = [], []
+    for _, b, c in pts:
+        sb = [b[k] for k in c['sl'] if k in b]
+        xs.append((b['upd'][0] - sum(s[0] for s in sb), b['upd'][1] - sum(s[1] for s in sb),
+                   b['upd'][2] - sum(s[2] for s in sb), 1))
+        ys.append(c['st']['upd'] - sum(v for k, v in c['sl'].items() if k in b))
+    if 'updrest' not in coef:
+        coef['updrest'] = lstsq(xs, ys)
+    c = coef['updrest']
+    res = [y - sum(a * b for a, b in zip(c, x)) for x, y in zip(xs, ys)]
+    for i, (x, y) in enumerate(zip(xs, ys)):
+        pred[i] += y - res[i]
+    print(f'updrest: cyc ={c[0]:.2f}*rd + {c[1]:.2f}*wr + {c[2]:.2f}*rom +{c[3]:.0f}; rms {rms(res):.0f}, '
+          f'max |res| {max(map(abs, res)):.0f} (mean {sum(ys) / len(ys):.0f})')
+    miss = sum(1 for _, b, c in pts for k in c['sl'] if k not in b)
+    if miss:
+        print(f'  ({miss} tools.emu dispatches without a port bucket, left in updrest)')
+
+
 def stages_mode(argv, cost, worst):
     pts = []
     # comma lists COST1,COST2 COUNTS1,COUNTS2: several runs fitted together (each joined on its own)
@@ -68,17 +116,33 @@ def stages_mode(argv, cost, worst):
         raise SystemExit('too few joined passes')
     coef = json.load(open(argv[argv.index('--coef') + 1])) if '--coef' in argv else {}
     pred = [0.0] * len(pts)
+    if '--ai' in argv:
+        ai_mode(pts, coef, pred, argv)
     for s in STAGES:
+        if s == 'upd' and '--ai' in argv:
+            continue
         xs = [(*p[1][s], 1) for p in pts]
         ys = [p[2]['st'][s] for p in pts]
+        rt = [p[2]['retry'] if s == 'top' else 0 for p in pts]   # s212: ReadPadStable re-reads (pass_cost)
         if s not in coef:
-            coef[s] = lstsq(xs, ys)
+            ok = [(x, y) for x, y, r in zip(xs, ys, rt) if not r]
+            coef[s] = lstsq([t[0] for t in ok], [t[1] for t in ok])
         c = coef[s]
         res = [y - sum(a * b for a, b in zip(c, x)) for x, y in zip(xs, ys)]
+        if s == 'top':
+            if 'padretry' not in coef:
+                rr = [r / n for r, n in zip(res, rt) if n]
+                coef['padretry'] = sum(rr) / len(rr) if rr else 0.0
+            print(f'top: {sum(1 for n in rt if n)} passes with a pad re-read, {coef["padretry"]:.0f} cycles each '
+                  f'(a tools.emu key-timing artifact, not in the port model)')
+            res = [r - n * coef['padretry'] for r, n in zip(res, rt)]
         for i, (x, y) in enumerate(zip(xs, ys)):
             pred[i] += y - res[i]
         if '--show' in argv and argv[argv.index('--show') + 1] == s:
-            for p, x, y, r in zip(pts, xs, ys, res):
+            rows = list(zip(pts, xs, ys, res))
+            if '--sort' in argv:   # s212: largest |residual| first
+                rows.sort(key=lambda t: -abs(t[3]))
+            for p, x, y, r in rows:
                 print(f'  f{p[0]} {s} {y:6} rd/wr/rom {x[0]}/{x[1]}/{x[2]} residual {r:+.0f}  '
                       f'end f{p[2]["ef"]}L{p[2]["el"]}')
         print(f'{s}: cyc ={c[0]:.2f}*rd + {c[1]:.2f}*wr + {c[2]:.2f}*rom +{c[3]:.0f}; '

@@ -498,7 +498,7 @@ bank,addr,name,comment
 *,0719,sword_power,0/1/2 from SwordPowerLevel; caps orbit_level via SwordChargeCap
 31,FED0,PadDirTable,u8[16] d-pad nibble (U8 D4 L2 R1) -> direction 0-7 clockwise from up; FF = none/opposed
 31,FEE0,ReadPadsMenu,menu pad read: $4B new presses + d-pad auto-repeat (delay $0C then every 3 frames via $45)
-31,FF17,ReadPadStable,read pad X until two reads agree -> $4F
+31,FF17,ReadPadStable,read pad X until two reads agree -> $4F; s212: a re-read costs 381 cycles (tools.emu pass_cost padretry)
 31,FF28,ReadPadRaw,strobe $4016 and shift 8 bits of JOY1+X into $4F (A=b7 B=b6 Sel=b5 Start=b4 U D L R)
 26,9B45,PlayerUpdate,player AI (type $04 AI $01; slot X=1): B new press + use_item_sel!=0 + sub_state 8 -> sub_state 6 (use item); then 9BF6/9CEF/A1C9 + status anims
 30,CB62,SubstPlay,sub_state 8: normal gameplay frame (ReadPads + objects + sprite pass + HUD)

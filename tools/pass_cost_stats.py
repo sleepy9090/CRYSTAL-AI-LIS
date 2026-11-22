@@ -19,6 +19,8 @@ def parse(path):
         it = re.search(r'int\s+(\d+)', m.group(4))
         e = re.match(r'f(\d+)L\s*(\d+)', m.group(6))
         rows.append(dict(int=int(it.group(1)) if it else 0,          # s211 pass_cost --split-int
+                         retry=int((re.search(r'padretry (\d+)', line) or [0, 0])[1]),  # s212
+                         sl={k: int(v) for k, v in re.findall(r'\b([0-9A-F]{2}:[0-9A-F]{2})=(\d+)', line)},  # s212 --slots
 f=int(m.group(1)), l=int(m.group(2)), act=int(m.group(3)), st=st,
                          tot=int(m.group(5)), lag=bool(m.group(7)),
                          ef=int(e.group(1)) if e else -1, el=int(e.group(2)) if e else -1))

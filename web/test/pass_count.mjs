@@ -45,7 +45,15 @@ while (f0 + m.frame <= Number(last)) {
   m.runFrame(keys.get(f) || 0);
   flushRom();
   const tot = Object.values(cnt).reduce((s, b) => [s[0] + b[0], s[1] + b[1]], [0, 0]);
-  if (stages) out.push(`${f} ` + ST.map((s) => `${s}=${(cnt[s] || [0, 0, 0]).join('/')}`).join(' '));
+  // s212: objects.js sets passStage `sX:ID` (decimal) per active slot dispatch; `upd` sums them with the rest,
+  // and each dispatch is also listed as `XX:YY=rd/wr/rom` (hex, = pass_cost --slots tokens)
+  const sl = Object.keys(cnt).filter((k) => /^s\d/.test(k)).map((k) => {
+    const [x, id] = k.slice(1).split(':').map(Number), b = cnt[k];
+    const u = cnt.upd ??= [0, 0, 0];
+    for (let i = 0; i < 3; i++) u[i] += b[i];
+    return [x, `${x.toString(16).toUpperCase().padStart(2, '0')}:${id.toString(16).toUpperCase().padStart(2, '0')}=${b.join('/')}`];
+  }).sort((a, b) => a[0] - b[0]).map((t) => t[1]);
+  if (stages) out.push(`${f} ` + ST.map((s) => `${s}=${(cnt[s] || [0, 0, 0]).join('/')}`).join(' ') + (sl.length ? '  ' + sl.join(' ') : ''));
   else out.push(`${f} ${tot[0]} ${tot[1]}`);
 }
 if (outFile) writeFileSync(outFile, out.join('\n') + '\n');

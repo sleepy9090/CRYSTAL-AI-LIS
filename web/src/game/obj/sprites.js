@@ -35,6 +35,7 @@ function rom(m, a) {
   a &= 0xFFFF;
   if (a < 0x2000) return m.rd(a);
   if (a < 0x8000 || a >= 0xC000) throw new Error(`sprite pass: read $${a.toString(16)} outside banks 28/29 / RAM`);
+  m.romRd++;                                                // s212: counted like prg.js cpuRd (web/test/pass_count.mjs)
   return m.data.spritesB28[a - 0x8000];
 }
 
