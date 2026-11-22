@@ -721,6 +721,7 @@ bank,addr,name,comment
 *,03AD,obj_coll_s0D,slot 0x0d of obj_coll; auto (ram_map.py s29): r0 w5 banks 27;30
 *,03E0,obj_attack,32 slots; attack power: 26:910C sums player $03E1 + attacker $03E0;X
 *,0400,obj_defense,32 slots; defence: target $0400;Y subtracted from the attack sum at 26:911E
+*,0401,player_body_defense,s187: obj_defense slot 1 = StatRecalc level + armour table 26:8BC0 (x2 level with accessory $10); contact hits on the player use it (area 7C: $0400 alone left atk $44 contacts at $43)
 *,0420,obj_hitflags,32 slots; hit flags: b5 tested in the hit path 26:8FDF
 *,0440,obj_shot_id,32 slots; per-AI: shooter AIs pass it as A to SpawnShot 26:972D (ShotTable 20:BC00); AiWalkPause/AiNpcWander reuse it as stand-still timer (s30; was obj_pause_timer)
 *,0460,obj_bg_mask,32 slots; BG collision mask: 0 = flies through walls; & ObjBgProbe attr bits & 6 -> blocked

@@ -680,6 +680,16 @@ SCENARIOS['group_40'] = dict(note='area 40: natural spawns (type $6A AI $27 + h2
                              exec=[place_player(0x01E0, 0x02D0, cam=True)],
                              keys=['33:RIGHT:12', '45:DOWN:2'] + [f'{47 + 12 * i}:B:4' for i in range(26)],
                              frames=480, watch=[0x03C1, 0x03D2, 0x04B2, 0x0702])
+# s187: group_7C = area 7C slot $14 type $82 (p=$32 b2=$80, AI $29 27:AB9E AiBurrower, hp $2E def 8 atk $44,
+# elem 2 = immune to sword 2) + h4 flag item $0E, h3 $16/$17, h2 $18-$1B; level 16 + sword 1
+SCENARIOS['group_7C'] = dict(note='area 7C: natural spawns (type $82 AI $29 + h2/h3/h4), level 16, walk + B',
+                             area='7C', pokes={0x0421: 16, 0x0711: 1, 0x03E1: 16 + 1, 0x03C1: 0x60, 0x0708: 0x60,
+                                               0x0401: 0x40, 0x0400: 0x30},   # StatRecalc values for level 16 +
+                             # best armour/shield + accessory $10; at the level-1 values atk $44 hits for $43
+                             exec=[place_player(0x04C0, 0x0380, cam=True)],
+                             keys=['30:LEFT:14', '44:DOWN:8', '52:LEFT:2', '256:UP:9', '265:LEFT:26']
+                             + [f'{291 + 12 * i}:B:4' for i in range(13)],
+                             frames=480, watch=[0x03C1, 0x03B4, 0x03D4, 0x04B4, 0x0702])
 
 
 def set_from(dst, src):
