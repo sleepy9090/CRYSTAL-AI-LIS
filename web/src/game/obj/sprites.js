@@ -38,6 +38,13 @@ function rom(m, a) {
   return m.data.spritesB28[a - 0x8000];
 }
 
+// The 6502 Y register as the pass leaves it (s198). AreaEnter's PlaySound($2F) 31:E4EC stores it in
+// snd_saved_y $010F (nothing reads it back there). Set at every Y write of 28:800E's paths, see spriteDrawY().
+let regY = 0;
+/** Y at ObjSpriteDraw's last RTS: the last loop slot's Y (LDY $11 index, TAY screen x, or ObjDrawMetaMain's
+ *  record index), 0 after the obj1_flash loop, then OrbitSprites' TAYs (orbit: tile index; burst: BurstRadius). */
+export function spriteDrawY() { return regY; }
+
 /** ObjSpriteDraw 28:800E. Returns the X register at its RTS (s172, AI $0B uses it): 0 after a full OrbitSprites
  *  loop, else ObjHideUnusedOam's X (0, or obj1_oam_ofs + 4 * n when obj1_flash b7 is set) */
 export function spriteDraw(m) {
@@ -48,7 +55,8 @@ export function spriteDraw(m) {
   wr(T_LEFT, 0x20);
   wr(T_OAM, 4);
   do {
-    const x = rom(m, DRAW_ORDER + rd(T11));                 // 8030
+    regY = rd(T11);                                         // 8030 LDY $11
+    const x = rom(m, DRAW_ORDER + regY);
     drawSlot(m, x);
     wr(T11, rd(T11) + 1);                                   // 808E
     wr(T_LEFT, rd(T_LEFT) - 1);
@@ -65,6 +73,7 @@ function drawSlot(m, x) {
   if (rd(OBJ_ACTIVE + x) === 0) return setOffscreen(m, x);
   let d = rd(OBJ_X_LO + x) - rd(0x02);
   const sx = d & 0xFF;
+  regY = sx;                                                // 8040 TAY
   if (((rd(OBJ_X_HI + x) - rd(0x03) - (d < 0 ? 1 : 0)) & 0xFF) !== 0) return setOffscreen(m, x);
   wr(T_SX, sx);
   wr(OBJ_SCREEN_X + x, sx);
@@ -113,7 +122,7 @@ function drawMetaMain(m, x) {
   let n;
   for (;;) {                                                // 829D
     n = rom(m, ptr);
-    if (n === 0) { wr(T_PTR, ptr); wr(T_PTR + 1, ptr >> 8); return; }
+    if (n === 0) { wr(T_PTR, ptr); wr(T_PTR + 1, ptr >> 8); regY = 0; return; }   // 82B8 RTS, Y = 0
     if (n < 0x80) break;
     ptr = rom(m, ptr + 1) | rom(m, ptr + 2) << 8;           // FF lo hi: mirrored redirect
     wr(T_MIRROR, 0x80);
@@ -140,6 +149,8 @@ function drawMetaMain(m, x) {
   const mirror = rd(T_MIRROR) & 0x80;
   const sx = rd(T_SX), sy = rd(T_SY);
   let o = rd(T_OAM), y = 2, left = n;
+  // Y at the RTS = y: the $80 end marker's index, a skipped wrapped entry's index, or the next entry after a
+  // full write / full OAM; a sinking object's lower part ends at y + 3 (8379, after the attr INY)
   for (;;) {                                                // MetaEmitNormal 8331 / MetaEmitHFlip 8380
     const dx = rom(m, ptr + y);
     if (dx === 0x80) break;
@@ -158,7 +169,7 @@ function drawMetaMain(m, x) {
     let attr = rom(m, ptr + y + 2) | pri;
     if (mirror) attr ^= 0x40;
     wr(OAM + 2 + o, attr);
-    if ((attr & 4) && (t18f & 0x80)) break;                 // 8379 BIT $18: lower part of a sinking object
+    if ((attr & 4) && (t18f & 0x80)) { y += 3; break; }     // 8379 BIT $18: lower part of a sinking object
     wr(OAM + 1 + o, rom(m, ptr + y + 3) + tileAdd);
     y += 4;
     o = (o + 4) & 0xFF;
@@ -166,6 +177,7 @@ function drawMetaMain(m, x) {
     left = (left - 1) & 0xFF;
     if (left === 0) break;
   }
+  regY = y & 0xFF;
   wr(T17, left);
   wr(T_OAM, o);
 }
@@ -182,6 +194,7 @@ export function hideUnusedOam(m) {
     wr(OAM + 2 + x, rd(OAM + 2 + x) & 0xFC);
     x = (x + 4) & 0xFF;
   } while (--n);
+  regY = 0;                                                 // 80D2 DEY loop ends at 0
   return x;
 }
 
@@ -198,6 +211,7 @@ function orbitSprites(m) {
     for (let k = 7; k >= 0; k--) {
       wr(T_OAM, k);
       let yi = (((k & 6) << 2) + rd(0x08)) & 0x1F;
+      regY = yi;                                            // 80F3 TAY
       let s = rom(m, ORBIT_SINE + yi);
       if (!(k & 1)) s = ((s ^ 0xFF) + 1) & 0xFF;
       const v = (s - 4) & 0xFF;
@@ -207,7 +221,8 @@ function orbitSprites(m) {
         wr(OAM + 3 + o, v + cx);
         yi = (yi + 2) & 0x1F;
         wr(OAM + o, rom(m, ORBIT_SINE + yi) + cy - 0x0C);
-        wr(OAM + 1 + o, rom(m, ORBIT_TILE + (rd(ORBIT_LEVEL) >> 3)));
+        regY = rd(ORBIT_LEVEL) >> 3;                        // 8130 TAY
+        wr(OAM + 1 + o, rom(m, ORBIT_TILE + regY));
         wr(OAM + 2 + o, 1);
       }
       o += 4;
@@ -219,7 +234,8 @@ function orbitSprites(m) {
   if (burst >= 0x0E) return;
   burst = rd(ORBIT_BURST);
   const radius = (yi) => {                                  // BurstRadius 28:81A5
-    const r = rom(m, BURST_RADIUS + ((rom(m, BURST_DIR + yi) | burst) & 0xFF));
+    regY = (rom(m, BURST_DIR + yi) | burst) & 0xFF;         // 81AF TAY
+    const r = rom(m, BURST_RADIUS + regY);
     return (rom(m, BURST_DIR + 1 + yi) & 0x80) ? ((r ^ 0xFF) + 1) & 0xFF : r;
   };
   let o = 0xE0;

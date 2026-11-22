@@ -14,7 +14,7 @@ import { waitPpuQueue } from './pause.js';
 import { hudWindowSetup, saveGame, loadGameAndInit } from './saveload.js';
 import { objInit } from '../obj/objinit.js';
 import { objPosToTemp, tempToObjPos, tempAddOffset, tempAddStep, objBgProbe } from '../obj/util.js';
-import { spriteDraw } from '../obj/sprites.js';
+import { spriteDraw, spriteDrawY } from '../obj/sprites.js';
 import { playSound } from '../playsound.js';
 import { readPads } from '../pads.js';
 import { loadAreaMap } from '../world/area.js';
@@ -306,7 +306,7 @@ function* areaEnterCommon(m, fromE44A = false) {
   m.wr(R.irq_mode, 0);
   m.wr(R.ppumask_shadow, m.rd(R.ppumask_shadow) | 0x18);
   yield* waitFrame(m);
-  if (!(m.rd(NOFADE) & 0x80)) playSound(m, 0x2F);
+  if (!(m.rd(NOFADE) & 0x80)) playSound(m, 0x2F, spriteDrawY());   // Y = ObjSpriteDraw's (WaitFrame keeps Y)
   setR6(m, 0x1A);
   if (!(m.rd(NOFADE) & 0x80)) yield* fadeIn(m, 2);
   setR7(m, 0x17);
