@@ -28,6 +28,23 @@ const FRAME_CYCLES3 = 341 * 262;       // CPU cycles per frame × 3 (= 29780.67 
 // until then a split only marks where it would fire.
 const IRQ_HANDLERS = ['31:F455', '31:F488', '31:F4E5', '31:F54B', '31:F5E1', '31:F60E', '31:F691', '31:F61A'];
 
+/**
+ * s176: the IRQ split the NMI just before a loaded state scheduled (a state taken in vblank, line > 240).
+ * Without it the first frame ran no IRQ handler, so in gameplay (handler 1 IrqHandler1Hud 31:F488, whose
+ * SoundUpdate 31:F4CF is the gameplay sound tick) the port lost one sound tick for good: the open 1-frame
+ * `snd*_period` offset after every scenario_state / restore5f load (s173-175). Every NMI mode leaves its
+ * SetIrqHandler index in $56 and the latch in $57 (NmiModeDispatch 31:F6AD clears $57 first), except
+ * mode 5 (latch $58, $57 not written); modes 0/2/7 with rendering off and mode 3 schedule none.
+ */
+function loadSplits(m, s) {
+  if (!(s.line > 240)) return [];                    // mid-frame state: this frame's split is already past
+  const mode = m.rd(R.irq_mode) & 0x7F;
+  if (mode === 3 || mode === 4 || mode === 8) return [];
+  if ((mode === 0 || mode === 2 || mode === 7) && (m.rd(R.ppumask_shadow) & 0x18) === 0) return [];
+  if (mode === 5) return [{ handler: 6, latch: m.rd(R.chr_r0_alt) }];
+  return [{ handler: m.rd(0x56), latch: m.rd(R.zp_57) }];
+}
+
 export class Machine {
   constructor(data, { log = () => {} } = {}) {
     this.data = data;
@@ -110,8 +127,8 @@ export class Machine {
   /**
    * Start from a tools.emu state taken at the first instruction of a routine the port runs from its start
    * (tools/emu/web_state.py, s88): RAM, WRAM, CIRAM, palette, OAM, PPU registers, MMC3 CHR/PRG registers and
-   * mirroring. The next runFrame() is tools.emu frame `s.frame`. The split list of the NMI that ran just
-   * before is not rebuilt (the first frame renders without IRQ splits).
+   * mirroring. The next runFrame() is tools.emu frame `s.frame`. The split the NMI that ran just
+   * before scheduled is rebuilt from $56/$57 (loadSplits, s176).
    */
   loadState(s) {
     const hex = (h) => Uint8Array.from(h.match(/../g), (b) => parseInt(b, 16));
@@ -127,7 +144,7 @@ export class Machine {
     this.prgR6 = s.mapper.regs[6] & 0x3F;
     this.prgR7 = s.mapper.regs[7] & 0x3F;
     this.pending = null;
-    this.irqSplits = [];
+    this.irqSplits = loadSplits(this, s);
     const entry = ENTRY_POINTS[s.until];             // s94: a routine reached by JSR from unported code
     if (entry) this.pending = entry(this);
   }
