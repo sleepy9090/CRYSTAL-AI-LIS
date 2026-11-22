@@ -16,6 +16,7 @@
 //   AI $68 (= $E8) BossAiE8  15:AF48  waypoint flyer (route 15:B02B in slot $1F, HomingMove) (phases AF5C AFAD B051)
 //   AI $69 (= $E9) BossAiE9  15:B0B6  statues (phases B0C5 B0F4 B105)                                (session 156)
 //   AI $6A (= $EA) BossAiEA  15:B130  patrol / dive / rise + fire fan 15:B278 (phases B14F B1A5 B215 B22C)
+//   AI $6B (= $EB) AiBowOfTruth9E 15:B2DA  final boss, BG face (phases B301 B3BC B4DD B524 B552 B587 B67A) (s164)
 import { cpuRd, indY, setR6, switchBank16, farRestore } from '../prg.js';
 import { playSound } from '../playsound.js';
 import { paletteBuildRom, waitFrame, waitFrames, statRecalc, fadeIn, fadeOut, SPIN } from '../states/death.js';
@@ -972,6 +973,270 @@ export function bossAiE2(m, x) {
   return bossPhaseDispatch(m, x, 0x08);
 }
 
+// ---- AI $6B (= $EB) AiBowOfTruth9E 15:B2DA, the final boss (type $9E, area $A6) (s164) -----------------------
+// The face is BG: BossBgStrip redraws one of 10 strips (two 5-strip pictures) per call, BossBgCycle steps
+// obj_behav 0-9. Slots $0E-$13 are the type-$C2 parts (BossBuildParts Y = $26); $10/$11 = the hands.
+
+const BEHAV = 0x06E0;
+
+/** BossBgStrip 15:B6C1: A = strip n; WaitPpuQueue; SetR6(7); $C0 bytes from bank 7 BossBgStripPtrs[n] into $6000
+ *  (a pointer page wrap goes on at $xxF0 of the next page and X steps back 2: the byte read at $xxFF is
+ *  overwritten); SetR6($1A); PpuQueueBlock($2F + n). $2F = n, $2E = X, $10-$12 = the copy pointer / count. */
+function* bossBgStrip(m, x, n) {
+  m.wr(0x2F, n);
+  yield* waitPpuQueue(m);
+  m.wr(0x2E, x);
+  const y = (n << 1) & 0xFF;
+  m.wr(0x10, cpuRd(m, 0xB709 + y));
+  m.wr(0x11, cpuRd(m, 0xB70A + y));
+  m.wr(0x12, 0xC0);
+  setR6(m, 7);
+  let i = 0;
+  do {
+    m.wr(0x6000 + i, indY(m, 0x10, 0));
+    i = (i + 1) & 0xFF;
+    const lo = (m.rd(0x10) + 1) & 0xFF;
+    m.wr(0x10, lo);
+    if (lo === 0) {
+      m.wr(0x10, 0xF0);
+      m.wr(0x11, (m.rd(0x11) + 1) & 0xFF);
+      i = (i - 2) & 0xFF;
+    }
+  } while (dec(m, 0x12));
+  setR6(m, 0x1A);
+  yield* ppuQueueBlock(m, (m.rd(0x2F) + 0x2F) & 0xFF);
+}
+
+/** BossBgCycle 15:B4C8: BossBgStrip(obj_behav), obj_behav = (obj_behav + 1) mod 10 */
+function* bossBgCycle(m, x) {
+  yield* bossBgStrip(m, x, m.rd(BEHAV + x));
+  let y = (m.rd(BEHAV + x) + 1) & 0xFF;
+  if (y === 0x0A) y = 0;
+  m.wr(BEHAV + x, y);
+}
+
+/** BossEBHandsIdle 15:B71D */
+function ebHandsIdle(m) { m.wr(0x0310, 0xE9); m.wr(0x0311, 0xE7); }
+
+/** BossEBSetElem 15:B618: A -> obj_elem_drop of slots $13 ... $0D */
+function ebSetElem(m, a) { for (let y = 0x13; y !== 0x0C; y--) m.wr(0x0500 + y, a); }
+
+/** BossEBEdgeBounce 15:B6A3: heading left (dir b3) at x < $38 or right at x >= $D8 -> mirror via 15:B50C */
+function ebEdgeBounce(m, x) {
+  const d = m.rd(META_DIR + x), xl = m.rd(X_LO + x);
+  if (d & 8 ? xl >= 0x38 : xl < 0xD8) return;
+  m.wr(META_DIR + x, cpuRd(m, 0xB50C + d));
+}
+
+/** 15:B642: one flame, dir (15:B672[a & 7] + obj_act_timer) & $0F, SpawnShot($2E zp); x -$12 (+$24 when $2F b7),
+ *  y + $2D */
+function ebFlameOne(m, x, a) {
+  const dir = (cpuRd(m, 0xB672 + (a & 7)) + m.rd(ACT_TIMER + x)) & 0x0F;
+  if (!spawnShot(m, x, m.rd(0x2E), dir)) return;
+  const n = m.rd(0x10);
+  let v = (m.rd(X_LO + n) - 0x12) & 0xFF;
+  if (m.rd(0x2F) & 0x80) v = (v + 0x24) & 0xFF;
+  m.wr(X_LO + n, v);
+  m.wr(Y_LO + n, (m.rd(Y_LO + n) + m.rd(0x2D)) & 0xFF);
+}
+
+/** BossEBFlame 15:B623: every 4 frames two flames, wobble index $08 >> 5 and the same + 4 ($2F = 0, then $FF) */
+function ebFlame(m, x) {
+  if (m.rd(0x08) & 3) return;
+  m.wr(0x2F, 0);
+  const a = m.rd(0x08) >> 5;
+  ebFlameOne(m, x, a);
+  m.wr(0x2F, (m.rd(0x2F) - 1) & 0xFF);
+  ebFlameOne(m, x, (a + 4) & 0xFF);
+}
+
+/** phase 0 15:B301 (one call, no camera wait): sprite pass, fade out ($10), SFX $0C, CHR / palettes, $6000 = $FF,
+ *  blocks $39-$3B (frame_ready 0 after each), attr_shadow / $60C0 cleared, $44 at $60D3 / $6113, block $3C,
+ *  strips 4 ... 0, the parts, boss at ($78, $58) meta $4C dir 2, phase 1, sprite pass, hand collision, fade in */
+function* ebSetup(m, x) {                                    // B301
+  m.wr(0x1F, x);
+  farSpritePass(m);
+  m.wr(0x07E8, 0x38);
+  yield* fadeOut(m, 0x10);
+  playSound(m, 0x0C, 4);                                      // Y = 4, left by PaletteLoadOne's colour loop
+  m.wr(0x07F0, 0x2E); m.wr(0x07F1, 0x2E);
+  m.wr(0x07F4, 0x7A); m.wr(0x07F5, 0x75);
+  m.wr(0x07E0, 0xA0);
+  m.wr(0x07E1, 0xA1); m.wr(0x07E1, 0x07);
+  m.wr(0x07E6, 0x43); m.wr(0x07E7, 0x42);
+  yield* waitPpuQueue(m);
+  for (let i = 0; i < 0x100; i++) m.wr(0x6000 + i, 0xFF);    // 15:B2F8
+  for (let b = 0x39; b !== 0x3C; b++) {
+    yield* ppuQueueBlock(m, b);
+    m.wr(0x09, 0);
+  }
+  for (let i = 0x3F; i >= 0; i--) { m.wr(0x6100 + i, 0); m.wr(0x60C0 + i, 0); }
+  m.wr(0x60D3, 0x44); m.wr(0x6113, 0x44);
+  yield* ppuQueueBlock(m, 0x3C);
+  m.wr(0x1D, 4);
+  do yield* bossBgStrip(m, x, m.rd(0x1D)); while (!(dec(m, 0x1D) & 0x80));
+  bossBuildParts(m, 0x26);
+  x = m.rd(0x1F);
+  m.wr(X_LO + x, 0x78); m.wr(Y_LO + x, 0x58);
+  m.wr(META + x, 0x4C); m.wr(META_DIR + x, 2);
+  inc(m, PHASE + x);
+  farSpritePass(m);
+  m.wr(0x03B0, 0x62); m.wr(0x0430, 0x40);
+  m.wr(0x03B1, 0x63); m.wr(0x0431, 0x40);
+  yield* fadeIn(m, 0x10);
+  m.wr(0x07E8, 0);
+}
+
+/** 15:B541: phase 5 (mouth open) with obj_act_timer = DirToTarget(slot 1) * 2 */
+function ebMouthStart(m, x) {
+  m.wr(PHASE + x, 5);
+  dirToTarget(m, x, 1);
+  m.wr(ACT_TIMER + x, (m.rd(0x20) << 1) & 0xFF);
+}
+
+/** 15:B493 (hand attack over): hands idle; odd Rand64 -> phase 2, dir 15:B4BB[Rand64], speed 15:B4C4[((x + player
+ *  x) >> 1) & 3] */
+function ebHandsEnd(m, x) {
+  ebHandsIdle(m);
+  if (!(rand64(m) & 1)) return;
+  m.wr(PHASE + x, 2);
+  m.wr(META_DIR + x, cpuRd(m, 0xB4BB + rand64(m)));
+  const y = (((m.rd(X_LO + x) + m.rd(0x71)) & 0xFF) >> 1) & 3;
+  m.wr(FLAGS2 + x, cpuRd(m, 0xB4C4 + y));
+}
+
+/** 15:B425 hand attack (obj_timer2 != 0): BG cycle unless obj_behav 9; every 8 frames the hand poses (15:B48B),
+ *  every 16 a SpawnShot($2E) in dir Rand64 + 4 from the hand at x -$18 / +$18 (timer2 b4), y - $1C */
+function* ebHands(m, x) {
+  if (m.rd(BEHAV + x) !== 9) yield* bossBgCycle(m, x);
+  if (!dec(m, TIMER2 + x)) return ebHandsEnd(m, x);
+  const t = m.rd(TIMER2 + x);
+  if (t & 7) return;
+  const y = (t & 0x18) >> 2;
+  m.wr(0x0310, cpuRd(m, 0xB48B + y));
+  m.wr(0x0311, cpuRd(m, 0xB48C + y));
+  if (t & 8) return;
+  if (!spawnShot(m, x, 0x2E, (rand64(m) + 4) & 0x0F)) return;
+  const n = m.rd(0x10);
+  m.wr(Y_LO + n, (m.rd(Y_LO + n) - 0x1C) & 0xFF);
+  const xl = m.rd(X_LO + n);
+  let a = (xl - 0x18) & 0xFF;
+  const c = xl >= 0x18 ? 1 : 0;
+  const f = ((m.rd(TIMER2 + x) & 0x10) - 1) & 0xFF;          // STA $10 / DEC $10
+  m.wr(0x10, f);
+  if (!(f & 0x80)) a = (a + 0x30 + c) & 0xFF;                // ADC #$30 with SBC's carry
+  m.wr(X_LO + n, a);
+  dec(m, ANIM + x);
+}
+
+/** phase 1 15:B3BC sway: speed 1; hand attack while obj_timer2; every 32 anim steps an odd Rand64 -> timer2 $C0,
+ *  and with $08 b7 clear the player's (x ^ y) parity picks phase 6 (odd, timer2 $80) or 5; else turn at x < $40 /
+ *  >= $C0, BossEBMove, BG cycle when obj_behav != 0 */
+function* ebSway(m, x) {                                     // B3BC
+  m.wr(FLAGS2 + x, 1);
+  dec(m, TIMER + x);
+  if (m.rd(TIMER2 + x)) return yield* ebHands(m, x);
+  if (!(dec(m, ANIM + x) & 0x1F) && (rand64(m) & 1)) {
+    m.wr(TIMER2 + x, 0xC0);
+    if (!(m.rd(0x08) & 0x80)) {
+      if (!((m.rd(0x71) ^ m.rd(0xB1)) & 1)) return ebMouthStart(m, x);
+      m.wr(PHASE + x, 6);
+      m.wr(TIMER2 + x, 0x80);
+      return;
+    }
+  }
+  m.wr(0x04EE, 0);                                            // B3F7
+  ebHandsIdle(m);
+  let d = m.rd(META_DIR + x);
+  const xl = m.rd(X_LO + x);
+  if (xl < 0x40) d = 2;
+  if (xl >= 0xC0) d = 6;
+  m.wr(META_DIR + x, d);
+  dec(m, 0x04EF); dec(m, 0x04F2);
+  bossEBMove(m, x);
+  if (m.rd(BEHAV + x)) yield* bossBgCycle(m, x);
+}
+
+/** phases 2 15:B4DD dive (to y >= $C0 -> timer2 $20, dir 15:B51C[Rand64], phase 4) / 3 15:B524 rise (to y < $50 ->
+ *  obj_anim = y, phase 5): BG cycle while HP b7, edge bounce, BossEBMove */
+function* ebDive(m, x) {                                     // B4DD
+  dec(m, 0x04F2); dec(m, TIMER + x);
+  if (m.rd(HP + x) & 0x80) yield* bossBgCycle(m, x);
+  ebEdgeBounce(m, x);
+  if (m.rd(Y_LO + x) < 0xC0) return bossEBMove(m, x);
+  m.wr(TIMER2 + x, 0x20);
+  m.wr(META_DIR + x, cpuRd(m, 0xB51C + rand64(m)));
+  m.wr(PHASE + x, 4);
+}
+
+function* ebRise(m, x) {                                     // B524
+  dec(m, 0x04F2); dec(m, TIMER + x);
+  if (m.rd(HP + x) & 0x80) yield* bossBgCycle(m, x);
+  ebEdgeBounce(m, x);
+  const yl = m.rd(Y_LO + x);
+  if (yl >= 0x50) return bossEBMove(m, x);
+  m.wr(ANIM + x, yl);
+  ebMouthStart(m, x);
+}
+
+/** phase 4 15:B552 hold: BG cycle unless obj_behav 9; timer2 $10 -> aimed SpawnShot($46); 0 -> phase 3 */
+function* ebHold(m, x) {                                     // B552
+  if (m.rd(BEHAV + x) !== 9) yield* bossBgCycle(m, x);
+  if (dec(m, TIMER2 + x) === 0x10) {
+    dirToTarget(m, x, 1);
+    spawnShot(m, x, 0x46, m.rd(0x20));
+    return;
+  }
+  m.wr(0x04EE, 8);
+  if (m.rd(TIMER2 + x)) return;
+  m.wr(0x04EE, 0);
+  m.wr(PHASE + x, 3);
+}
+
+/** 15:B599: random dir 2 / 6, phase 1, elem $0F (immune again) */
+function ebBackToSway(m, x) {
+  m.wr(META_DIR + x, rand64(m) & 1 ? 6 : 2);
+  m.wr(PHASE + x, 1);
+  ebSetElem(m, 0x0F);
+}
+
+/** phase 5 15:B587 mouth open: elem 0 (hittable), BG cycle when obj_behav != 0, timer2 0 -> B599; flames
+ *  (SpawnShot($30), dy 8); every 16 timer2 steps block $3D = 4 mouth tiles 15:B60C[15:B5F9[t >> 4] * 4] (+ slot $0F
+ *  meta 15:B609[..]) */
+function* ebMouth(m, x) {                                    // B587
+  ebSetElem(m, 0);
+  if (m.rd(BEHAV + x)) yield* bossBgCycle(m, x);
+  if (!dec(m, TIMER2 + x)) return ebBackToSway(m, x);
+  m.wr(0x2E, 0x30); m.wr(0x2D, 8);
+  ebFlame(m, x);
+  if (m.rd(TIMER2 + x) & 0x0F) return;
+  yield* waitPpuQueue(m);
+  const y = cpuRd(m, 0xB5F9 + (m.rd(TIMER2 + x) >> 4));
+  m.wr(0x030F, cpuRd(m, 0xB609 + y));
+  const z = (y << 2) & 0xFF;
+  for (let i = 0; i < 4; i++) m.wr(0x6000 + i, cpuRd(m, 0xB60C + z + i));
+  yield* ppuQueueBlock(m, 0x3D);
+}
+
+/** phase 6 15:B67A rain: every 16 frames SpawnShot($2F) straight down, 16 px up; timer2 0 -> B599 */
+function ebRain(m, x) {                                      // B67A
+  m.wr(0x04EE, 8);
+  if (!dec(m, TIMER2 + x)) return ebBackToSway(m, x);
+  if (m.rd(TIMER2 + x) & 0x0F) return;
+  if (!spawnShot(m, x, 0x2F, 4)) return;
+  const n = m.rd(0x10);
+  m.wr(Y_LO + n, (m.rd(Y_LO + n) - 0x10) & 0xFF);
+}
+
+export function aiBowOfTruth9E(m, x) {
+  hitFlashPal(m, x, 0xC7);
+  if (m.rd(PHASE + x)) {
+    m.wr(CAM_LOCK, 0x10);
+    if (m.rd(0x51) !== 2) m.wr(0x51, 7);
+  }
+  return bossPhaseDispatch(m, x, 0x2B);
+}
+
 // ---- AI $6F BossDefeated 15:B807 (s159) ---------------------------------------------------------------------
 
 /** FarCall_B14_800E: one sprite pass with banks $0E mapped */
@@ -1128,6 +1393,7 @@ const BOSS_PHASES = {
   0xAF5C: e8Intro, 0xAFAD: e8Route, 0xB051: e8Attack,
   0xB0C5: e9Intro, 0xB0F4: e9Watch, 0xB105: e9Fire,
   0xB14F: eaIntro, 0xB1A5: eaPatrol, 0xB215: eaDive, 0xB22C: eaRise,
+  0xB301: ebSetup, 0xB3BC: ebSway, 0xB4DD: ebDive, 0xB524: ebRise, 0xB552: ebHold, 0xB587: ebMouth, 0xB67A: ebRain,
 };
 
 export function bossPhaseDispatch(m, x, base) {
@@ -1143,7 +1409,7 @@ export function bossPhaseDispatch(m, x, base) {
 
 export const AI_BOSS = {
   0x60: bossAiE0, 0x61: bossHomingShot, 0x62: bossAiE2, 0x63: bossAiE3, 0x64: bossRockShot, 0x65: aiTalkEventE5,
-  0x66: bossAiE6, 0x67: aiBoss88, 0x68: bossAiE8, 0x69: bossAiE9, 0x6A: bossAiEA,
+  0x66: bossAiE6, 0x67: aiBoss88, 0x68: bossAiE8, 0x69: bossAiE9, 0x6A: bossAiEA, 0x6B: aiBowOfTruth9E,
   0x6C: aiReward6C, 0x6D: aiReward6C, 0x6E: aiReward6C, 0x6F: bossDefeated,
   0x3F: aiBodyPart,                                           // s163 (bank 27, but only the bosses' parts use it)
 };

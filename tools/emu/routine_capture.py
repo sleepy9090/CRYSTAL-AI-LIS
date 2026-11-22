@@ -260,7 +260,9 @@ BOSS_AIS = {'BossAiE0': (0x60, 0xA477, range(8)), 'BossHomingShot': (0x61, 0xA5E
             # s158: $6C-$6E reward drop (type $0F), phase = BossAreaList index 0-13 (RewardRecs 15:B7C1)
             'AiReward6C': (0x6E, 0xB728, range(14)),
             # s163: $E2 area $1A walker (phase 0's aligned path fades = NMI waits, so _fix_boss keeps $07D5 = 0)
-            'BossAiE2': (0x62, 0xA675, (0, 1, 1, 1, 1))}
+            'BossAiE2': (0x62, 0xA675, (0, 1, 1, 1, 1)),
+            # s164: $EB final boss (phase 0 fades = NMI waits, not fuzzed; BG strips flushed with rendering off)
+            'BossAiEB': (0x6B, 0xB2DA, (1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 6, 6))}
 for _n, (_id, _ad, _p) in BOSS_AIS.items():
     ROUTINES[_n] = ((26, 15), _ad, _poke_bg, lambda r: {'x': _slot(r)})
 # s159: AI $6F BossDefeated 15:B807 (type $CF). Not in BOSS_AIS / PORTED_AIS: a random area_id in an ObjUpdateAll
@@ -338,7 +340,8 @@ for _n, (_ad, _xs) in HIT_HANDLERS.items():
 PPU_ROUTINES = ('PpuQueueFlush', 'BgRowRender', 'BgColRender', 'FullScreenDraw',
                 'Ai70PhaseDispatch',          # s97: phases 0/2/9 flush PPU blocks (NMI would discard the case)
                 'NpcScript',                  # s115: an IRQ inside the VM left $8000 mapped to another bank
-                'BossDefeated')               # s159: area $1A's hook flushes PpuQueueBlock($2C)
+                'BossDefeated',               # s159: area $1A's hook flushes PpuQueueBlock($2C)
+                'BossAiEB')                   # s164: BossBgStrip blocks $2F-$38 / mouth block $3D
 
 
 def _steer_attack(ram, r, x, dist):
@@ -681,6 +684,19 @@ def _fix_boss(name, ram, r, x, wram):
         if r.random() < 0.5:
             ram[0x91] = ram[0x90 + x]
             ram[0x71] = r.choice([ram[0x70 + x], (ram[0x70 + x] + 1) & 0xFF, r.randrange(256)])
+    if _id == 0x6B:                                # s164: final boss: ring empty + rendering off (BossBgStrip),
+        ram[0x0B] = ram[0x0A]                      # obj_behav 0 / 9, timer2 / anim / y / x edges, HP b7, irq_mode 2
+        ram[0x01] &= ~0x18
+        ram[0x06E0 + x] = r.choice([0, 0, 1, 4, 9, 9, r.randrange(10)])
+        ram[0x0620 + x] = r.choice([0, 0, 1, 2, 8, 0x10, 0x11, 0x18, 0x20, 0x21, 0x40, 0x41, 0x81, r.randrange(256)])
+        ram[0x04E0 + x] = r.choice([0x01, 0x20, 0x21, 0x41, r.randrange(256)])
+        ram[0x03C0 + x] = r.choice([0x7F, 0x80, 0xFF, r.randrange(256)])
+        ram[0xB0 + x] = r.choice([0x4F, 0x50, 0x51, 0xBF, 0xC0, r.randrange(256)])
+        ram[0x70 + x] = r.choice([0x37, 0x38, 0x3F, 0x40, 0xBF, 0xC0, 0xD7, 0xD8, r.randrange(256)])
+        ram[0x0360 + x] = r.choice([2, 6, r.randrange(16), r.randrange(256)])
+        ram[0x51] = r.choice([0, 2, 7, r.randrange(256)])
+        if r.random() < 0.3:
+            ram[0x08] &= 0x7F
     if _id == 0x6E:                                # s158: reward: spawn_param b7 path, timer2 0, real music ids
         ram[0x0560 + x] = r.choice([0, 0x05, 0x1E, 0x80, 0xC0, r.randrange(256)])
         ram[0x0620 + x] = r.choice([0, 0, 0, 1, r.randrange(256)])
