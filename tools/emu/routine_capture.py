@@ -221,6 +221,9 @@ FIELD_AIS = {
     # boss shot / effect AIs (web/src/game/obj/ai_shot.js)
     'AiCountdown': (0x14, 0xB2C5), 'AiCurveShot': (0x16, 0xB0F6), 'AiHoverShot': (0x17, 0xB11B),
     'AiBounceShot': (0x1B, 0xB12D), 'AiDirFrameShot': (0x1E, 0xB094), 'AiShotAnimDec': (0x1F, 0xB0A2),
+    # s166: the rest of the B27A-B2F4 block
+    'AiTrailShot': (0x15, 0xB27A), 'AiRingSpawner': (0x1C, 0xB2A4), 'AiShotTurnMeta': (0x18, 0xB2D5),
+    'AiShotTurn': (0x19, 0xB2E2),
 }
 for _n, (_id, _ad) in FIELD_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r: {'x': _slot(r)})
@@ -480,7 +483,14 @@ def _fix_field(name, ram, r, x, wram=None):
             ram[0x70 + x] = (ram[0x71] + r.randrange(-8, 8)) & 0xFF
     if name == 'AiCoin':
         ram[0x0480 + x] = r.choice([1, 2, 0x30, 0x31, 0xC0, 0xC1, 0xC2, r.randrange(256)])
-    if name in ('AiCountdown', 'AiCurveShot', 'AiHoverShot', 'AiBounceShot', 'AiDirFrameShot', 'AiShotAnimDec'):
+    if name in ('AiCountdown', 'AiCurveShot', 'AiHoverShot', 'AiBounceShot', 'AiDirFrameShot', 'AiShotAnimDec',
+                'AiTrailShot', 'AiRingSpawner', 'AiShotTurnMeta', 'AiShotTurn'):
+        if name == 'AiRingSpawner':                # obj_phase 7 (the last shot), timer2 parity
+            ram[0x0620 + x] = r.choice([0, 1, 2, 3, r.randrange(256)])
+            ram[0x0600 + x] = r.choice([0, 6, 7, 8, r.randrange(256)])
+            return
+        if name == 'AiTrailShot':                  # shot ids that spawn and ids with b7 set in the BC00 record
+            ram[0x0440 + x] = r.choice([0x17, 0x3E, r.randrange(0x80), r.randrange(256)])
         ram[0x04E0 + x] = r.choice([0, 1, 2, 3, 0x80, 0x81, r.randrange(256)])
         ram[0x0480 + x] = r.choice([1, 2, 0x10, 0x11, r.randrange(256)])
         ram[0x0600 + x] = r.choice([0, 1, 4, r.randrange(256)])

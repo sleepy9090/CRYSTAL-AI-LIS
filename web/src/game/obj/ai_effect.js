@@ -114,8 +114,8 @@ export function aiExplode(m, x) {
 /** AI $08 AiScreenRedraw08 27:B7F6 (Y = $10): explodeStep, then DEC obj_act_timer; below $0A each frame
  *  MarkScreenVisited + WaitPpuQueue + one BG row at the object's y + (timer*8 - $28) (x = camera $3C/$3D),
  *  and the attribute table on the frame the timer reaches 0 */
-export function* aiScreenRedraw08(m, x) {
-  const spawned = explodeStep(m, x, 0x10) === true;
+export function* aiScreenRedraw08(m, x, y = 0x10) {
+  const spawned = explodeStep(m, x, y) === true;
   const t = (m.rd(ACT_TIMER + x) - 1) & 0xFF;
   m.wr(ACT_TIMER + x, t);
   if (t >= 0x0A) return;
@@ -208,4 +208,5 @@ export function* aiFloorReveal(m, x) {
 export const AI_EFFECT = {
   0x04: aiPlayerFollowC, 0x05: aiFollowFacing, 0x08: aiScreenRedraw08, 0x57: aiStraightMoverTail, 0x5F: aiFloorReveal,
   0x74: aiExplode, 0x76: aiMpDrain,
+  0x7C: (m, x) => aiScreenRedraw08(m, x, 0xF8),             // s166: same entry 27:B7F6, Y = $7C*2 (obj_active b2 set)
 };

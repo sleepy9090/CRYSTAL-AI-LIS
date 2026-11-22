@@ -91,6 +91,11 @@ const RUN = {
   AiBounceShot: (m, r) => { S.aiBounceShot(m, r.x); },
   AiDirFrameShot: (m, r) => { S.aiDirFrameShot(m, r.x); },
   AiShotAnimDec: (m, r) => { S.aiShotAnimDec(m, r.x); },
+  // s166: AI $15 / $18 / $19 / $1C
+  AiTrailShot: (m, r) => { S.aiTrailShot(m, r.x); },
+  AiRingSpawner: (m, r) => { S.aiRingSpawner(m, r.x); },
+  AiShotTurnMeta: (m, r) => { S.aiShotTurnMeta(m, r.x); },
+  AiShotTurn: (m, r) => { S.aiShotTurn(m, r.x); },
   // s93 (boss / effect AI port (a)): obj/ai_effect.js; AiMpDrain is a generator (HudRedraw's queue wait)
   AiPlayerFollowC: (m) => { E.aiPlayerFollowC(m); },
   AiStraightMoverTl: (m, r) => { E.AI_EFFECT[0x57](m, r.x); },

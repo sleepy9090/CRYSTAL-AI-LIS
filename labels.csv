@@ -1501,3 +1501,8 @@ bank,addr,name,comment
 19,BD59,MesiaStepTable,s150: 5-byte records for MesiaScript (11 records + $81 end: up 16, left 48, 3x(hold+spawn, right 32), hold+spawn, left 48, still 1)
 19,BD91,MesiaSpawnFly,s150: 16 frames slots $15-$18 x +3/+1/-1/-3; clear $15-$17; slot $18 flags 9 + 8 white flashes (MesiaPalFlash $30) moving y+1; clear $18
 19,BDDC,MesiaPalFlash,s150: pal_buf = A; WaitFrame; SetR6($1A) PaletteBuild; WaitFrame
+27,B27A,AiTrailShot,s166: AI $15 (type $19): timer-- 0 -> despawn; even timer SpawnShot(shot_id dir); anim--; step without BG test (web obj/ai_shot.js)
+27,B2A4,AiRingSpawner,s166: AI $1C (type $1A): timer2-- even -> SpawnShot($17 dir=phase) phase++; phase 7 clears obj_active (8-way ring)
+27,B2D5,AiShotTurnMeta,s166: AI $18 (types $1C/$1D): timer2++; meta_id |= dir>>1; then AiShotTurn
+27,B2E2,AiShotTurn,s166: AI $19 (type $1E): dir = (dir*2 + ROM B2F1+X) & $0F (own code bytes indexed by slot); obj_active = $10
+27,B2F4,AiNull1A,s166: AI $1A table entry = RTS; dead (ObjUpdateAll 30:CD7F sends id $1A to 30:CD8A first)
