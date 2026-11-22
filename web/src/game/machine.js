@@ -9,7 +9,7 @@
 import { Ram, R } from './ram.js';
 import { Ppu } from '../nes/ppu.js';
 import { mainStep, nmiWork, nmiLostToHud, irqMenuChrSplit, irqIntroSplit, irqWrapSplit, irqHud, irqMsgWindowTop,
-  irqMsgWindowEnd } from './mainloop.js';
+  irqMsgWindowEnd, irqRowStretch, irqOffSound } from './mainloop.js';
 import { ENTRY_POINTS } from './states/play.js';
 import { Apu } from '../nes/apu.js';
 import { cpuRd } from './prg.js';
@@ -24,8 +24,8 @@ import { introLeftovers, coldSaveInit, bootSaveCheck, copySramBlock } from './bo
 export const FRAME_HZ = 60.0988;       // NTSC: 39375000/11/341/262*3 ≈ 60.0988 (odd-frame skip ignored)
 const FRAME_CYCLES3 = 341 * 262;       // CPU cycles per frame × 3 (= 29780.67 cycles)
 
-// IRQ handlers (IrqHandlerTable 31:F433). Bodies arrive with the HUD / world tasks (4/8, 7/8);
-// until then a split only marks where it would fire.
+// IRQ handlers (IrqHandlerTable 31:F433). All eight have bodies since s208 (4 / 5 = the dead NmiMode4 path);
+// the logging fallback below is only a guard.
 const IRQ_HANDLERS = ['31:F455', '31:F488', '31:F4E5', '31:F54B', '31:F5E1', '31:F60E', '31:F691', '31:F61A'];
 
 /**
@@ -39,9 +39,10 @@ const IRQ_HANDLERS = ['31:F455', '31:F488', '31:F4E5', '31:F54B', '31:F5E1', '31
 function loadSplits(m, s) {
   if (!(s.line > 240)) return [];                    // mid-frame state: this frame's split is already past
   const mode = m.rd(R.irq_mode) & 0x7F;
-  if (mode === 3 || mode === 4 || mode === 8) return [];
+  if (mode === 3 || mode === 8) return [];
   if ((mode === 0 || mode === 2 || mode === 7) && (m.rd(R.ppumask_shadow) & 0x18) === 0) return [];
   if (mode === 5) return [{ handler: 6, latch: m.rd(R.chr_r0_alt) }];
+  if (mode === 4) return m.rd(R.chr_r0_alt) ? [{ handler: 4, latch: 4 }] : [];   // s208: NmiMode4 31:F782
   return [{ handler: m.rd(0x56), latch: m.rd(R.zp_57) }];
 }
 
@@ -80,6 +81,8 @@ export class Machine {
     this.irqHandlers[1] = irqHud;                      // 31:F488 (s108)
     this.irqHandlers[2] = irqMsgWindowTop;             // 31:F4E5 (s105 body, wired s115: message window)
     this.irqHandlers[3] = irqMsgWindowEnd;             // 31:F54B (s105 body, wired s115)
+    this.irqHandlers[4] = irqRowStretch;               // 31:F5E1 (s208, dead NmiMode4 path)
+    this.irqHandlers[5] = irqOffSound;                 // 31:F60E (s208, only reached from F5FE)
     this.irqHandlers[6] = irqIntroSplit;               // 31:F691 (s106)
     this.irqHandlers[7] = irqMenuChrSplit;             // 31:F61A (s98)
   }

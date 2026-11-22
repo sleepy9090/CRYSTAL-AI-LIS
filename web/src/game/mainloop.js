@@ -84,8 +84,16 @@ export function nmiWork(m) {
 // ---------------------------------------------------------------- NMI-mode routines + IRQ split schedule
 /** SetIrqHandler 31:F424: $56 = index (IrqHandlerTable 31:F433). The port keeps a split list instead of $54/$55. */
 export function setIrqHandler(m, i, latch) {
-  m.wr(0x56, i);
+  irqIndex(m, i);
   m.irqSplits.push({ handler: i, latch });
+}
+
+/** SetIrqHandler 31:F424 RAM side: $56 = index, irq_vector $54/$55 = IrqHandlerTable 31:F433[index]
+ *  (s208: the port wrote only $56 before; the IRQ entry 31:F443 does JMP ($0054)) */
+export function irqIndex(m, i) {
+  m.wr(0x56, i);
+  m.wr(0x54, cpuRd(m, 0xF433 + i * 2));
+  m.wr(0x55, cpuRd(m, 0xF434 + i * 2));
 }
 
 /** 31:EB6D: PPUSCROLL <- $07D8, $07DA; ppuctrl_shadow nametable bits = ($07DB b0) << 1 | ($07D9 b0) */
@@ -94,6 +102,7 @@ export function ppuScrollWrite(m) {
   ppu.writeReg(5, m.rd(R.scroll_x_irq));
   ppu.writeReg(5, m.rd(R.scroll_x_irq + 2));
   const nt = (((m.rd(R.scroll_x_irq + 3) << 1) | (m.rd(R.scroll_x_irq + 1) & 1)) & 3);
+  m.wr(0x52, nt);                                   // EB83 STA $52 (temp; s208: was not written)
   const ctrl = (m.rd(R.ppuctrl_shadow) & 0xFC) | nt;
   m.wr(R.ppuctrl_shadow, ctrl);
   ppu.writeReg(0, ctrl);
@@ -173,7 +182,7 @@ function nmiMode6(m) {
 export function irqMenuChrSplit(m) {
   m.ppu.setChrReg(0, m.rd(0x5E));
   m.ppu.setChrReg(1, m.rd(0x5F));
-  m.wr(0x56, 1);                                    // SetIrqHandler(1)
+  irqIndex(m, 1);                                   // SetIrqHandler(1)
   const line = 0x78 + ((0xBC - m.rd(R.zp_57)) & 0xFF) + 1;
   if (line < 240 && !m.ppu.splits.has(line)) m.ppu.splits.set(line, () => m.irqHandlers[1](m));
 }
@@ -210,6 +219,7 @@ export function irqMsgWindowTop(m, line) {
   p.writeReg(6, 0x28); p.writeReg(6, 0x00); p.writeReg(5, 0x00);
   applyChrAlt(m);
   chainSplit(m, line, 0x48 + MSG_LATE, 3);
+  irqIndex(m, 3);                                   // F515 SetIrqHandler(3) (s208: $56 / $54-$55)
   let z = (m.rd(R.zp_57) + 0x46) & 0xFF;
   m.wr(R.zp_57, z);
   let a = m.rd(R.scroll_x_irq + 2) + 8;
@@ -234,10 +244,10 @@ export function irqMsgWindowEnd(m, line) {
   if (a < 0xBC && a >= z) {
     chainSplit(m, line, ((a - z) & 0xFF) + MSG_LATE, 0);
     m.wr(R.zp_57, a);
-    m.wr(0x56, 0);
+    irqIndex(m, 0);
   } else {
     chainSplit(m, line, ((0xBE - z) & 0xFF) + MSG_LATE, 1);
-    m.wr(0x56, 1);
+    irqIndex(m, 1);
   }
 }
 
@@ -250,7 +260,7 @@ export function irqWrapSplit(m, line) {
   p.writeReg(6, m.rd(R.scroll_x_irq) >> 3);
   p.writeReg(5, m.rd(R.scroll_x_irq));
   chainSplit(m, line, (0xBC - m.rd(R.zp_57)) & 0xFF, 1);
-  m.wr(0x56, 1);                                    // SetIrqHandler(1)
+  irqIndex(m, 1);                                   // SetIrqHandler(1)
 }
 
 /** IrqHandler1Hud 31:F488 (s108): IRQ off, PPUMASK sprites off (BG kept), PPUADDR $2B00 + X 0 (the HUD rows of
@@ -329,13 +339,55 @@ export function irqIntroSplit(m) {
   p.writeReg(6, m.rd(R.chr_r0_alt + 2));
 }
 
-/** JmpTable31_F6C2: irq_mode -> NMI routine. Unported modes log once and do nothing. */
-const unportedMode = (addr) => (m) => {
-  if (!m.unported.has(addr)) { m.unported.add(addr); m.log(`NMI mode routine ${addr} not ported yet`); }
-};
+/** NmiMode4 31:F782 (irq_mode 4, s208; dead in the ROM: only the RTS-stubbed shop-door routines 31:FE01/FE18
+ *  set it, see "IRQ handlers in full"): PpuScrollWrite, ApplyChrPlay; $58 = 0 -> ppumask_shadow BG bit 3 off
+ *  + IRQ off; else $59 = NmiMode4R1Table 31:F7B5[$58] (row count), $5A = 0 (first NT row), handler 4 at latch 4.
+ *  The STA $F451 at F79C is an MMC3 $E001 write (IRQ enable), which the following STA $E001 repeats. */
+function nmiMode4(m) {
+  ppuScrollWrite(m);                                // F782
+  applyChrPlay(m);                                  // F785
+  const n = m.rd(R.chr_r0_alt);                     // F788 LDA $58
+  if (n === 0) {
+    m.wr(R.ppumask_shadow, m.rd(R.ppumask_shadow) & 0xF7);   // F7AA-F7AE (STA $0001 absolute)
+    m.irqSplits = [];                               // F7B1 STA MMC3_IRQOFF
+    return;
+  }
+  m.wr(R.chr_r0_alt + 1, cpuRd(m, 0xF7B5 + n));     // F78E $59
+  m.wr(R.chr_r0_alt + 2, 0);                        // F795 $5A
+  setIrqHandler(m, 4, 4);                           // F797-F7A7: latch 4, IRQ on, SetIrqHandler(4)
+}
+
+/** IrqRowStretch 31:F5E1 (IRQ handler 4, s208, dead like NmiMode4): (DelayX $07FE) PPUADDR <-
+ *  NtRowAddrTable 31:F5A1[$5A] (hi at F5A2, lo at F5A1: nametable-0 row $5A, X 0), $5A++, $59--; $59 < 0 ->
+ *  falls into handler 5, else the same handler again (reload $58, IRQ stays on). s208 (irq_split_probe on a
+ *  state forced into mode 4 with $58 = 8): the IRQ comes at line 3 dot ~335, DelayX takes the rest of line 3,
+ *  the 2nd PPUADDR write lands at line 4 dot ~297 (new row from line 5) and the reload at line 5 dot ~25; the
+ *  next 2nd write is at line 14, so the rows change every $58 + 2 lines = chainSplit with N + 1 (ROW_LATE). */
+export function irqRowStretch(m, line) {
+  const p = m.ppu;
+  p.readStatus();                                   // F5E7
+  const row = m.rd(R.chr_r0_alt + 2);
+  const y = (row << 1) & 0xFF;                      // F5EA ASL TAY
+  p.writeReg(6, cpuRd(m, 0xF5A2 + y));
+  p.writeReg(6, cpuRd(m, 0xF5A1 + y));
+  m.wr(R.chr_r0_alt + 2, (row + 1) & 0xFF);         // F5FA INC $5A
+  const left = (m.rd(R.chr_r0_alt + 1) - 1) & 0xFF;
+  m.wr(R.chr_r0_alt + 1, left);                     // F5FC DEC $59
+  if (left & 0x80) { irqOffSound(m); return; }      // F5FE BMI IrqOffSound
+  chainSplit(m, line, m.rd(R.chr_r0_alt) + ROW_LATE, 4);   // F600-F605 latch $58 + reload
+}
+const ROW_LATE = 1;
+
+/** IrqOffSound 31:F60E (IRQ handler 5, s208; only reached from F5FE): MMC3 IRQ off, SoundUpdate. A split
+ *  already scheduled further down could only come from handler 4 itself, which does not chain on this path. */
+export function irqOffSound(m) {
+  m.soundUpdate(m);                                 // F611
+}
+
+/** JmpTable31_F6C2: irq_mode -> NMI routine (every non-null entry ported since s208) */
 export const NMI_MODES = [
   nmiMode0, nmiMode1, nmiMode2, nmiMode3,
-  unportedMode('31:F782'), nmiMode5, nmiMode6, nmiMode0,
+  nmiMode4, nmiMode5, nmiMode6, nmiMode0,
   null, nmiMode1,
 ];
 
@@ -344,7 +396,10 @@ export const NMI_MODES = [
 export function nmiModeDispatch(m) {
   m.wr(R.zp_57, 0);
   m.irqSplits = [];
-  const fn = NMI_MODES[m.rd(R.irq_mode) & 0x7F];
+  const mode = m.rd(R.irq_mode) & 0x7F;
+  m.wr(0x52, cpuRd(m, 0xF6C2 + mode * 2));          // F6B5-F6BD: $52/$53 = the JMP ($0052) vector (s208)
+  m.wr(0x53, cpuRd(m, 0xF6C3 + mode * 2));
+  const fn = NMI_MODES[mode];
   if (!fn) throw new Error(`irq_mode ${m.rd(R.irq_mode)}: null NMI-mode entry`);
   fn(m);
 }

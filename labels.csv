@@ -16,8 +16,8 @@ bank,addr,name,comment
 31,F54B,IrqMsgWindowEnd,s65: IRQ handler 3 (chain from H2 only): PPUADDR $5E/$5F (NT0 playfield row) + fine X + ApplyChrPlay; arms H0 (wrap) or H1 (HUD)
 31,F58B,IrqMsgWindowEndHud,s65: H3 tail: arm H1 at $BE-$57
 31,F5A1,NtRowAddrTable,s65: 32 words $2000..$23E0 = NT0 row addresses (hi read at F5A2+Y; lo at F5A1+Y) by IRQ handlers 2 and 4
-31,F5E1,IrqRowStretch,s65: IRQ handler 4 (dead irq_mode 4): PPUADDR NtRowAddrTable[$5A++] every $58+1 lines; $59 rows then falls into F60E
-31,F60E,IrqOffSound,s65: IRQ handler 5: IRQ off + SoundUpdate; reached only from F5FE (H4 end) and never via SetIrqHandler; s127: dead (H4 = dead NmiMode4 path; IrqHandlerTable words at 31:F43B/F43D are the only pointers)
+31,F5E1,IrqRowStretch,s65: IRQ handler 4 (dead irq_mode 4): PPUADDR NtRowAddrTable[$5A++]; $59+1 rows then falls into F60E; s208 measured: one row every $58+2 lines from line 5 (web: mainloop.js irqRowStretch)
+31,F60E,IrqOffSound,s65: IRQ handler 5: IRQ off + SoundUpdate; reached only from F5FE (H4 end) and never via SetIrqHandler; s127: dead (H4 = dead NmiMode4 path; IrqHandlerTable words at 31:F43B/F43D are the only pointers) (web s208: mainloop.js irqOffSound)
 31,F61A,IrqMenuChrSplit,s65: IRQ handler 7 (irq_mode 6 equipment menu; line 119): CHR R0/R1 <- $5E/$5F; arms H1 HUD at $BC-$57
 31,F1CD,ColdSaveInit,cold boot only: $700E/$700F=0; unconditionally re-inits the current save image $7D00-$7FFF + mirror $6D00 from template 23:BE00 (was ColdInitSub)
 31,FE80,ReadPads,per-frame gameplay pad read (pads X=1/0): $43 prev $4B new $49 dir $4D act (A/B hold counters $45/$47); was ColdInitSub2
@@ -149,7 +149,8 @@ bank,addr,name,comment
 *,0040,main_state,index into MainStateTable (reset sets 2)
 *,0050,mmc3_banksel_shadow,
 *,0051,irq_mode,checked in NMI (7/9 special)
-*,0054,irq_vector,ptr used by IRQ JMP ($0054)
+*,0052,nmi_mode_vector,s208: ptr16 JmpTable31_F6C2[irq_mode] for NmiModeDispatch JMP ($0052) (F6B5-F6BD); $52 then reused as PpuScrollWrite's nametable-bits temp (EB83)
+*,0054,irq_vector,ptr used by IRQ JMP ($0054); written by SetIrqHandler 31:F424 = IrqHandlerTable[A]
 *,0056,irq_handler_idx,
 *,0060,nmi_disable,NMI returns immediately if !=0
 *,006E,cur_bank16_x2,R6 shadow = 8KB bank at $8000 (=2n after SwitchBank16)
@@ -1135,7 +1136,7 @@ bank,addr,name,comment
 19,BFC9,FinalSceneMsg,s153: message EventMsgTable19[$2E] + SFX $29 + FarCall ShowMessage; $2E+1 (5 calls)
 31,F731,NmiMode1,s64: irq_mode 1/9 NMI routine: NmiScrollSet + ApplyChrPlay; arm IRQ handler 2 at latch ((07DA&7)^7)+7
 31,F751,NmiMode2,s64: irq_mode 2 (pause/status): PPUCTRL NT2 ($2800); scroll 0;0; ApplyChrAlt; rendering on -> NmiMode0HudIrq else JMP SoundUpdate
-31,F782,NmiMode4,s64: irq_mode 4 (dead: shop-door effect stubbed out): R1 alt = F7B5[$58]; $58!=0 -> handler 4 at line 4 (+stray STA $F451); $58=0 -> BG off + IRQ off
+31,F782,NmiMode4,s64: irq_mode 4 (dead: shop-door effect stubbed out): R1 alt = F7B5[$58]; $58!=0 -> handler 4 at line 4 (+stray STA $F451); $58=0 -> BG off + IRQ off (web s208: mainloop.js nmiMode4; nmimode4_check.mjs)
 31,F7B5,NmiMode4R1Table,s64: 16 values indexed by $58 for irq_mode 4; s65: really the H4 row count ($59) not a CHR bank
 31,F7C5,NmiMode5,s64: irq_mode 5 (cold intro): PpuScrollWrite + ApplyChrPlay; arm IRQ handler 6 at latch $58
 31,F7DB,NmiMode6,s64: irq_mode 6 (equipment menu): PPUCTRL shadow; scroll 0;0; ApplyChrAlt; arm IRQ handler 7 at latch $77
