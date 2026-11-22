@@ -761,6 +761,23 @@ SCENARIOS['group_B2'] = dict(note='area B2: type $92 AI $41 in slot $0D (+ type 
                                                0x0401: 0x40, 0x0400: 0x30},
                              keys=[],   # state taken at +12; the run's keys are in web/test/groupb2_check.mjs
                              frames=480, watch=[0x03C1, 0x03CD, 0x04AD, 0x0702])
+# s195: group_59 = area 59 slot $16 type $A2 (h0 p=$52 b2=$00, AI $5C 27:B626 AiPatrolGunner, hp $50 atk 0 def 0,
+# elem $0F while patrolling) + type $A0 (p=$50, AI $2A) x3 in $13-$15 and six b2=$C0 p=$51 records $0D-$12;
+# level 16, sword 4, max defences
+SCENARIOS['group_59'] = dict(note='area 59: type $A2 AI $5C in slot $16 (+ type $A0 AI $2A x3), level 16, sword 4, walk + B',
+                             area='59', pokes={0x0421: 16, 0x0711: 4, 0x03E1: 16 + 8, 0x03C1: 0xC0, 0x0708: 0xC0,
+                                               0x0401: 0x40, 0x0400: 0x30},
+                             exec=[place_player(0x0370, 0x037E, cam=True)],
+                             keys=[],   # state taken at +12; the run's keys are in web/test/group59_check.mjs
+                             frames=480, watch=[0x03C1, 0x03D6, 0x04B6, 0x0702])
+# s195: area 59's run overruns 11/480 frames in tools.emu (gap (c), as group_81); area 5A has the same group with
+# the lungers $13/$14 far from the gunner's patrol (x 585-737, y 540): player placed on the walkway below it
+# (y px 598 = row 2 + $76; place_player's y is screen row:lo, 240 lines per row, not pixels)
+SCENARIOS['group_5A'] = dict(note='area 5A: type $A2 AI $5C in slot $16 (+ type $A0 AI $2A x3), placed player, sword 4',
+                             area='5A', pokes=SCENARIOS['group_59']['pokes'],
+                             exec=[place_player(0x02D0, 0x0276, cam=True)],
+                             keys=[],   # state taken at +12; the run's keys are in web/test/group5a_check.mjs
+                             frames=480, watch=[0x03C1, 0x03D6, 0x04B6, 0x0702])
 
 
 def set_from(dst, src):
