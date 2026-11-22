@@ -353,7 +353,7 @@ bank,addr,name,comment
 *,03C0,player_hp_max,slot 0 of $03C0 array used as max HP
 30,D834,ItemEventHook,A=hook 0-2 -> bank14 word 30:D885[A] (826F/831E/80E3); shows $21:$20 msg
 30,D885,ItemEventHookTable,3 words: 14:826F 14:831E 14:80E3
-30,DB28,SubstTeleportMenu,substate 20: msg 33.0 town list
+30,DB28,SubstTeleportMenu,substate 20 (and 29; Warp Boots JSR from 30:D4DC): refusals HP 0 / $07D7 / area $58-$5F / status 4 (SFX $4E); msg 33.0 town list; web states/teleport.js (s143)
 30,DD6B,SubstTelepathySelect,substate 21: msg 33.2 pick sage
 30,DE04,SubstTelepathyReply,substate 22: 14:816F -> message
 30,DEC1,SubstChangeForm,substate 23: msg 33.1 What form will you take?
@@ -1392,6 +1392,11 @@ bank,addr,name,comment
 30,D63F,TalkReinitSlot14,s134: talk act 8 (= event act 16): $04AE!=8 -> ObjInit slot $0E with type $04CE; D652 RTS
 30,DC64,TeleportMenuExit,s135: B/SELECT/START or same-area pick -> irq_mode 0 + sub_state 8
 30,DC70,TeleportMenuPick,s135: A: index row*3+col; 11 = cancel cell (ignored); needs town flag F2F5+index (TestFlagF2F0) else loop
+30,C19F,HideOam0,s143: OAM entry 0 ($0200-$0203) = $F0
+30,DD36,TeleportMenuLocks,s143: $6000-$6012 = $10; PpuQueueBlock($20+i) blanks each town i=10..0 whose flag F2F5+i is clear
+30,DBAC,TeleportMenuLoop,s143: cursor tile $3F/$3C by $07FF b3; ReadPadsMenu; sprite pass; OamClipTop; WaitFrame; PadNewButtonIndex -> JmpTable30_DBDC
+30,DCA9,TeleportHudWait,s143: LDY $56 / DEY / BNE: spin until the IRQ chain reaches handler 1 (warp starts the frame after the A press)
+30,DCAE,TeleportWarp,s143: OAM0 off; player meta $CE/overlay $4C; slots 4-$1F off; SFX $23; 64-frame warp-out (DCE8); SubstAreaEnter (entry $40); SFX $66; 64-frame warp-in (DD1D); StatRecalc; sprite pass
 14,8564,UseWarpBoots,s135: ItemUseHandlers[$24] = RTS -> ItemUseHook removes the boots (consumable range $6440)
 26,9093,HitNoEffect,s136: RTS shared by HitElemWall (elem blocked or shot hitflags 1) and HitRevealA7 (not a full charge)
 26,9125,HitMiss,s136: level gate / immunity / defence borrow -> shot slot X cleared + knockback (target obj_active b7 clear) + SFX $3A clink; emu hit_level_gate/hit_defense
