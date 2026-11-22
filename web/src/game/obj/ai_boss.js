@@ -17,7 +17,8 @@
 //   AI $6A (= $EA) BossAiEA  15:B130  patrol / dive / rise + fire fan 15:B278 (phases B14F B1A5 B215 B22C)
 import { cpuRd, indY, setR6, switchBank16, farRestore } from '../prg.js';
 import { playSound } from '../playsound.js';
-import { paletteBuildRom, waitFrame } from '../states/death.js';
+import { paletteBuildRom, waitFrame, waitFrames, statRecalc } from '../states/death.js';
+import { showMessage } from '../states/talk.js';
 import { waitPpuQueue, ppuQueueBlock } from '../states/pause.js';
 import { fullScreenDraw, FSD_LAG } from '../world/bgstream.js';
 import { spriteDraw } from './sprites.js';
@@ -877,7 +878,48 @@ function hookB947(m) {
   m.wr(0x04AD, 0); m.wr(0x04AE, 0); m.wr(0x04AF, 0);
   objInitAt(m, 0x14, 0xB5);
 }
-const BOSS_REC_HOOKS = { 0xB8CF: hookB8CF, 0xB8EE: hookB8EE, 0xB8FD: bossHookA6, 0xB947: hookB947 };
+/** BossFleeSpeech 15:BA98 (s160; indices 2/4/5 = areas $28/$6E/$F2): WaitFrames($20), player flash / phase /
+ *  timer2 / orbit_level 0, StatRecalc, PlaySound($80); slot $1F = type $2B at the drop's position, its meta /
+ *  tile ofs and the message from BossFleeRecPtrs 15:BAFE[obj_phase] (5-byte recs, byte 0 unused); ClearEnemySlots,
+ *  PlaySound($29), FarCall_D354 ShowMessage; then BossFleeWalkOff 15:BB5B: slot $1F (active $FF) steps dy -3 and
+ *  dx = 15:BB8F[--anim & $1F] per frame (TempAddStep, WaitFrame, sprite pass) until its y lo >= $C0 (the wrap
+ *  above the screen top), then slot $1F off. X stays the drop slot through StatRecalc (s160 probe). */
+function* bossFleeSpeech(m, x) {
+  yield* waitFrames(m, 0x20);
+  for (const a of [0x0710, 0x0600, 0x0620, 0x06C0]) m.wr(a, 0);
+  yield* statRecalc(m, x);
+  playSound(m, 0x80, 5);                                      // BAB0: Y = 5 after StatRecalc (tools.emu)
+  m.wr(0x1F, x);
+  objPosToTemp(m, x);                                         // BAB5 JSR 26:98A8
+  objInitAt(m, 0x1F, 0x2B);
+  tempToObjPos(m, 0x1F);                                      // BAC3 JSR 26:9897 (X = $1F)
+  const yy = (m.rd(PHASE + m.rd(0x1F)) << 1) & 0xFF;
+  m.wr(0x10, cpuRd(m, 0xBAFE + yy));
+  m.wr(0x11, cpuRd(m, 0xBAFF + yy));
+  m.wr(0x031F, indY(m, 0x10, 1));                             // obj_meta_id_s1F
+  m.wr(0x033F, indY(m, 0x10, 2));                             // obj_tile_ofs_s1F
+  m.wr(0x07DE, indY(m, 0x10, 3));
+  m.wr(0x07DF, indY(m, 0x10, 4));
+  clearEnemySlots(m, m.rd(0x1F));
+  playSound(m, 0x29, 0x0C);                                   // Y = $0C after ClearEnemySlots
+  const r6 = m.rd(0x6E), r7 = m.rd(0x6F);                     // FarCall_D354
+  yield* showMessage(m);
+  farRestore(m, r6, r7);
+  do {                                                        // BossFleeWalkOff 15:BB5B
+    objPosToTemp(m, 0x1F);
+    m.wr(0x31, 0xFD);
+    m.wr(ACTIVE + 0x1F, 0xFF);
+    m.wr(0x30, cpuRd(m, 0xBB8F + (dec(m, ANIM + 0x1F) & 0x1F)));
+    tempAddStep(m);
+    tempToObjPos(m, 0x1F);
+    yield* waitFrame(m);
+    farSpritePass(m);
+  } while (m.rd(Y_LO + 0x1F) < 0xC0);
+  m.wr(ACTIVE + 0x1F, 0);
+}
+const BOSS_REC_HOOKS = {
+  0xB8CF: hookB8CF, 0xB8EE: hookB8EE, 0xB8FD: bossHookA6, 0xB947: hookB947, 0xBA98: bossFleeSpeech,
+};
 const D5_KEEP = new Set([0, 0x78, 0x7F, 0x30, 0x39, 0x70]);
 
 /** AI $6F BossDefeated 15:B807 (type $CF, the end of the boss death chain): the slot becomes type $0F (the reward
@@ -909,8 +951,7 @@ export function* bossDefeated(m, x) {
     if (h) {
       const r = h(m, x);
       if (r && typeof r.next === 'function') yield* r;
-    } else unported(m, `BossDefeated hook 15:${hook.toString(16).toUpperCase().padStart(4, '0')}` +
-                        (hook === 0xBA98 ? ' (BossFleeSpeech: WaitFrames + ShowMessage)' : ''));
+    } else unported(m, `BossDefeated hook 15:${hook.toString(16).toUpperCase().padStart(4, '0')}`);
   }
   m.wr(0x19, r19); m.wr(0x18, r18);                           // B84E
   m.wr(0x0102, indY(m, 0x18, 3));

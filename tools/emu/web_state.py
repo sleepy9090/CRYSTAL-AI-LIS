@@ -73,21 +73,26 @@ def main(argv=None):
     except _Hit:
         pass
     nes.clear_hooks()
+    export(nes, a.until, os.path.basename(a.load_state), a.out, a.save_state)
+
+
+def export(nes, until, src, out_path, save_state=None):
+    """s160: write the port JSON (+ optional tools.emu .state) for the instant `nes` is stopped at"""
     p, m = nes.ppu, nes.mapper
     # frame0 (s89): taken after the NMI (vblank, line > 240), the work runs mostly in frame_no + 1, and
     # tools.emu's CSV row frame_no (sampled at line 0 of the next frame) only sees its vblank start
     frame0 = p.frame_no + 1 if p.line > 240 else p.frame_no
-    out = dict(frame=p.frame_no, frame0=frame0, line=p.line, until=a.until, src=os.path.basename(a.load_state),
+    out = dict(frame=p.frame_no, frame0=frame0, line=p.line, until=until, src=src,
                ram=bytes(nes.bus.ram).hex(), wram=bytes(nes.bus.wram).hex(),
                ciram=bytes(p.ciram).hex(), pal=bytes(p.pal).hex(), oam=bytes(p.oam).hex(),
                ppu=dict(ctrl=p.ctrl, mask=p.mask, v=p.v, t=p.t, x=p.x, w=p.w),
                mapper=dict(regs=list(m.regs), mirroring=m.mirroring, chr_inv=1 if m.chr_inv else 0))
-    os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
-    with open(a.out, 'w') as f:
+    os.makedirs(os.path.dirname(out_path) or '.', exist_ok=True)
+    with open(out_path, 'w') as f:
         json.dump(out, f)
-    if a.save_state:
-        state.save(nes, a.save_state)
-    print(f'{a.until} at frame {p.frame_no} line {p.line} -> {a.out}')
+    if save_state:
+        state.save(nes, save_state)
+    print(f'{until} at frame {p.frame_no} line {p.line} -> {out_path}')
 
 
 if __name__ == '__main__':

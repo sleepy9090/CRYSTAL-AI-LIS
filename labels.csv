@@ -466,8 +466,10 @@ bank,addr,name,comment
 15,B95D,BossAreaList,14 areas: 0A 1A 28 FF 6E F2 A9 AC B9 B6 9F A6 6C 5F; no end mark (s99: scan from a non-boss area runs past it -> garbage record hook)
 15,B96B,BossRecPtrs,ptr16[14] -> 21-byte records (code ptr; ?; music; drop param; 8 pal ids; 6 CHR; $62FE; clear-enemies flag)
 15,B987,BossRecs,13 x 21 bytes (see REVERSE.md Boss defeat); byte 3 -> snd_cur_music (15:B85A); entry 12 (area $5F) = $FF
-15,BA98,BossFleeSpeech,record hook for areas 28/6E/F2: player reset; slot $1F type $2B; msg from BossFleeRecs; clear enemies
-15,BAFE,BossFleeRecPtrs,ptr16[14] by boss rec index ($0600) -> 5-byte recs (?; $031F; $033F; msg id; group)
+15,BA98,BossFleeSpeech,record hook for areas 28/6E/F2: WaitFrames($20); player reset; StatRecalc (X kept); slot $1F type $2B on the drop; msg from BossFleeRecs; clear enemies; ShowMessage; walk-off (s160 web: obj/ai_boss.js bossFleeSpeech)
+15,BAFE,BossFleeRecPtrs,ptr16[14] by boss rec index ($0600) -> 5-byte recs (byte 0 unread; $031F; $033F; msg id; group); only indexes 2/4/5 set
+15,BB1A,BossFleeRecs,s160: 3 x 5 bytes: area $28 D3 D3 00 01 06 (msg 6.1); $6E DB D1 00 13 10 (16.19); $F2 D9 D9 00 05 19 (25.5)
+15,BB8F,BossFleeWobble,s160: 32 signed dx (+8..-8..+8 triangle) per BossFleeWalkOff step, index --obj_anim_s1F & $1F
 15,BB29,ClearEnemySlots,obj_active=0 for slots $0D-$1E except X and AI $78/$7F/$30/$39; slots 4-11 cleared
 14,85E0,NpcPresenceLo,ptr16[128] NpcHidden lists for params 00-7F
 19,BC04,SwordRaisePose,event act 1 cutscene: player meta $B8 + CHR R2=$5C R3=$42; jingle $93; 127-frame hold; sub_state=8
