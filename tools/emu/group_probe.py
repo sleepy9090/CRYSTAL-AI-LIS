@@ -4,7 +4,7 @@
 usage: python3 tools/emu/group_probe.py STATE --slots 0D,13 [--seg BUTTONS:FRAMES ...] [--every N | --changes]
 
 From a save state (e.g. scenario_state group_05 12 --save-state ...) play the button segments in order
-(NONE:10 LEFT:40 B:4 ...) and print every N frames (and on any HP / active change): player x,y (16-bit world,
+(NONE:10 LEFT:40 B:4 ...; 'B:4,NONE:8*30' repeats a comma group) and print every N frames (and on any HP / active change): player x,y (16-bit world,
 y = page*240 + lo) and HP, then per listed slot: active AI id $04A0, x,y, HP $03C0, phase $0600.
 """
 import os
@@ -32,8 +32,12 @@ def main(argv):
         if a == '--seg':
             i += 1
             while i < len(argv) and not argv[i].startswith('--'):
-                b, n = argv[i].rsplit(':', 1)
-                segs.append((b, 0 if b == 'NONE' else parse_buttons(b), int(n)))
+                # s190: 'B:4,NONE:8*30' = that comma group repeated 30 times
+                grp, _, k = argv[i].partition('*')
+                for _ in range(int(k or 1)):
+                    for item in grp.split(','):
+                        b, n = item.rsplit(':', 1)
+                        segs.append((b, 0 if b == 'NONE' else parse_buttons(b), int(n)))
                 i += 1
             continue
         if a == '--changes':     # s188: print only HP / active changes (long swing sequences)

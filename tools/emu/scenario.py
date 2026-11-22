@@ -708,6 +708,13 @@ SCENARIOS['group_7F'] = dict(note='area 7F: natural spawns (type $84 AI $2E x2 +
                                                0x0401: 0x40, 0x0400: 0x30},
                              keys=[],   # state taken at +12; the run's keys are in web/test/group7f_check.mjs
                              frames=480, watch=[0x03C1, 0x03CE, 0x03CF, 0x03D0, 0x04AE, 0x04AF, 0x04B0, 0x0702])
+# s190: group_84 = area 84 slots $12/$13/$15 type $55 (h0 p=$05 b2=$80, AI $40 27:B39E AiWander16, hp 2 def 0
+# atk 6, elem 0; flies over walls) + slot $11 type $85 (p=$35, AI $21, hp $4A atk $52) + h3 $16. (Area $2B's
+# single type $55 floats over the solid block between its corridors, out of sword reach.) Level 16, sword 1
+SCENARIOS['group_84'] = dict(note='area 84: natural spawns (type $55 AI $40 x3 + type $85 AI $21), level 16, walk + B',
+                             area='84', pokes={0x0421: 16, 0x0711: 1, 0x03E1: 16 + 1, 0x03C1: 0x60, 0x0708: 0x60},
+                             keys=[],   # state taken at +12; the run's keys are in web/test/group84_check.mjs
+                             frames=480, watch=[0x03C1, 0x03D2, 0x03D3, 0x03D5, 0x04B2, 0x04B3, 0x04B5, 0x0702])
 
 
 def set_from(dst, src):
