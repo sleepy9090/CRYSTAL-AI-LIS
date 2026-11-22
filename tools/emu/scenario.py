@@ -645,6 +645,12 @@ SCENARIOS['group_05'] = dict(note='area 05: natural spawns (type $52 x2, AI $20)
                              keys=['32:UP:25', '57:LEFT:34'] + [f'{91 + 14 * i}:B:4' for i in range(6)]
                              + ['205:LEFT:20', '270:LEFT:30', '310:B:4', '330:B:4', '350:B:4'],
                              frames=480, watch=[0x03C1, 0x03CD, 0x04AD, 0x04AE, 0x04AF, 0x04B0, 0x0702])
+# s182: group_11 = area 11 slot $0D type $61 (p=$11, AI $20, hp $0C def 0) + slot $11 type $63 (p=$13, b2=$80,
+# AI $24 AiChase, hp $12 def 3, atk $25); level 16 + sword 1 so swings damage
+SCENARIOS['group_11'] = dict(note='area 11: natural spawns (type $61 AI $20, type $63 AI $24), level 16, walk + B',
+                             area='11', pokes={0x0421: 16, 0x0711: 1, 0x03E1: 16 + 1, 0x03C1: 0x60, 0x0708: 0x60},
+                             keys=['31:DOWN:50', '81:LEFT:70', '301:A:4', '345:B:4', '369:UP:30'],
+                             frames=480, watch=[0x03C1, 0x03CD, 0x03D1, 0x04AD, 0x04B1, 0x0702, 0x0041])
 
 
 def set_from(dst, src):
