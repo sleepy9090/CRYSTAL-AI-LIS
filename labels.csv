@@ -515,7 +515,19 @@ bank,addr,name,comment
 15,ADD4,AiBoss88,AI $E7 (type $88): $07D7=4 when phase!=0; 26:9B07 A=$C0; BossPhaseDispatch base $1B
 15,B6C1,BossBgStrip,s72: A=n 0-9 -> BossBgStripPtrs; SetR6(7); copy $C0 B of bank-7 $xxF0 rows (14 kept/page) to $6000; PpuQueueBlock($2F+n) (14x3 strip); callers 15:B377 15:B4CB (AI $EB phases)
 15,B709,BossBgStripPtrs,s72: .dw[10] bank-7 $80F0+n*$300; n 0-4 / 5-9 = two 14x15-tile BG pictures (5 strips each; blocks $2F-$33 / $34-$38)
-15,B2DA,AiBowOfTruth9E,AI $EB (type $9E): 26:9B07 A=$C7; $07D7=$10 + IRQ mode 7 when phase!=0; BossPhaseDispatch base $2B
+15,B2DA,AiBowOfTruth9E,AI $EB (type $9E): 26:9B07 A=$C7; $07D7=$10 + IRQ mode 7 when phase!=0; BossPhaseDispatch base $2B (s165: web obj/ai_boss.js aiBowOfTruth9E; finalboss_check.mjs)
+15,B301,BossEBSetup,s165: phase 0: sprite pass; FadeOut($10); SFX $0C; CHR/pal ids; blocks $39-$3C; strips 4..0; BossBuildParts($26); boss ($78,$58); phase 1; FadeIn($10); RTS with X=0 -> ObjUpdateAll re-runs slots 1-$1E
+15,B3BC,BossEBSway,s165: phase 1: speed 1; hand attack while timer2; every 32 anim steps odd Rand64 -> timer2 $C0 + phase 5/6 by player x^y parity; x edges $40/$C0; BossEBMove; BG cycle
+15,B425,BossEBHands,s165: phase 1 with timer2: BG cycle unless behav 9; hand poses 15:B48B every 8; SpawnShot($2E) every 16
+15,B493,BossEBHandsEnd,s165: hands idle; odd Rand64 -> phase 2 dir 15:B4BB speed 15:B4C4
+15,B4DD,BossEBDive,s165: phase 2: BG cycle while HP b7; edge bounce; y >= $C0 -> timer2 $20 dir 15:B51C phase 4
+15,B524,BossEBRise,s165: phase 3: y < $50 -> obj_anim = y + BossEBMouthStart
+15,B541,BossEBMouthStart,s165: phase 5; obj_act_timer = DirToTarget(slot 1)*2
+15,B552,BossEBHold,s165: phase 4: timer2 $10 -> aimed SpawnShot($46); 0 -> phase 3
+15,B587,BossEBMouth,s165: phase 5: elem 0; flames; block $3D mouth tiles 15:B60C every 16 timer2 steps; timer2 0 -> BossEBBackToSway
+15,B599,BossEBBackToSway,s165: dir 2/6 by Rand64; phase 1; elem $0F
+15,B642,BossEBFlameOne,s165: one flame dir (15:B672[a&7]+act_timer)&$0F; x -$12 (+$24 2nd); y + $2D
+15,B67A,BossEBRain,s165: phase 6: SpawnShot($2F) dir 4 every 16 frames, 16 px up; timer2 0 -> BossEBBackToSway
 *,0743,opel_revive,$40 while the Opel Statue revive runs so sub_state 6 consumes the statue; 0 = manual use is refused
 20,8466,StaleText20_8466,dead filler to 84FF: copy of 22:A466 text (filler_scan.DEAD)
 20,88A5,StaleText20_88A5,dead filler to 88FF: copy of 22:A8A5 text

@@ -77,7 +77,8 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   `15:B0B6`, `BossAiEA` `15:B130` (2700 cases). s157: + `AiTalkEventE5` `15:ABDA` (3000 cases); cases whose ROM
   run hits an illegal opcode are now skipped like `Stop` cases. s158: + `AiReward6C` `15:B728` (AI `$6C-$6E`,
   3300 cases; path counts with `python3 tools/case_paths.py FILE AiReward6C 0041 07E7 col:04A0 ..`). s159: + `BossDefeated` `15:B807` (AI `$6F`, 3600 cases; its own
-  `ROUTINES` entry, in `PPU_ROUTINES`; only areas without NMI waits; not in the `ObjUpdateAll` pool). Debugging a failing case:
+  `ROUTINES` entry, in `PPU_ROUTINES`; only areas without NMI waits; not in the `ObjUpdateAll` pool). s163: + `BossAiE2`
+  `15:A675`. s165: + `BossAiEB` `15:B2DA` (final boss, phases 1-6, in `PPU_ROUTINES`; 4200 cases). Debugging a failing case:
   `python3 tools/case_bytes.py FILE NAME ADDR col:COL ..` (before → after bytes) and
   `node web/test/case_trace.mjs FILE NAME ADDR ..` (replays an `ai_boss.js` case, JS stack per port write).
 
@@ -123,7 +124,7 @@ Regenerate (about 10 s each):
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 \
         --routine Ai70PhaseDispatch --out web/test/obj_frames/fuzz_final.json
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 \
-        --routine BossAiE0,BossHomingShot,BossAiE3,BossRockShot,BossAiE6,AiBoss88,BossAiE8,BossAiE9,BossAiEA,AiTalkEventE5,AiReward6C,BossDefeated,BossAiE2 \
+        --routine BossAiE0,BossHomingShot,BossAiE3,BossRockShot,BossAiE6,AiBoss88,BossAiE8,BossAiE9,BossAiEA,AiTalkEventE5,AiReward6C,BossDefeated,BossAiE2,BossAiEB \
         --out web/test/obj_frames/fuzz_boss.json
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 \
         --routine PlayerUpdate,PlayerMoveLocked,PlayerMove --out web/test/obj_frames/fuzz_player.json

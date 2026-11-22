@@ -70,6 +70,7 @@ function knockback(m, x) {
 
 export function* objUpdateAll(m) {
   m.wr(0x04BF, 0);                                          // CCCE STX obj_active slot $1F (X = 0)
+  let rewinds = 0;
   for (let x = 0; x < 0x1F; x++) {
     switchBank16(m, 0x0D);                                  // CCD1
     if ((m.rd(FLAGS2 + x) & 0xF0) && knockback(m, x)) continue;
@@ -98,9 +99,12 @@ export function* objUpdateAll(m) {
     if (r && typeof r.next === 'function') r = yield* r;    // s93: generator AIs (HudRedraw's queue spin)
     if (r === true) return;                                 // popped ObjUpdateAll's return address
     if (typeof r === 'number') {                            // s93: the AI left X changed (AI $04: X = $0C)
-      if (r < x) {                                          // ROM: INX resumes at or before this slot -> endless loop
+      // s165: X below the slot re-runs the slots after X in this pass (final boss setup 15:B301 returns X = 0)
+      if (r < x && ++rewinds > 0x40) {                       // ROM: an AI that always does it loops forever
         unported(m, `AI at slot $${x.toString(16)} leaving X = $${r.toString(16)} (the ROM loops forever)`);
-      } else x = r;
+        return;
+      }
+      x = r;
     }
   }
 }

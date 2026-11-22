@@ -604,6 +604,14 @@ for _n, _sw, _atk in (('final_boss', 1, 16 + 1), ('final_boss_s4', 4, 32 + 8), (
                          pcs=[(15, 0xB301), (15, 0xB3BC), (15, 0xB4DD), (15, 0xB524), (15, 0xB552), (15, 0xB587),
                               (15, 0xB67A), (15, 0xB6C1)],
                          peek=[0x04AD, 0x060D, 0x03CD, 0x050D])
+# s165: the same spawn with no per-frame pokes / keys, for a port state (web/test/finalboss_check.mjs)
+SCENARIOS['final_boss_idle'] = dict(note='area A6: ObjInit type $9E (final boss) in slot $0D at +10, level 16, no '
+                                         'keys -> AI $6B phase 0 setup (fades, BG strips) then sway / dive / mouth',
+                                    area='A6', pokes={0x0421: 16, 0x0711: 1, 0x03C1: 0x60, 0x0708: 0x60},
+                                    spawn=[(10, 0x0D, 0x9E, 0, -48)], frames=1500,
+                                    watch=[0x060D, 0x04AD, 0x0051],
+                                    pcs=[(15, 0xB301), (15, 0xB3BC), (15, 0xB4DD), (15, 0xB524), (15, 0xB552),
+                                         (15, 0xB587), (15, 0xB67A)])
 
 
 def set_from(dst, src):

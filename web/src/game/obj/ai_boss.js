@@ -1085,6 +1085,7 @@ function* ebSetup(m, x) {                                    // B301
   m.wr(0x03B1, 0x63); m.wr(0x0431, 0x40);
   yield* fadeIn(m, 0x10);
   m.wr(0x07E8, 0);
+  return 0;    // s165: RTS with X = 0 (left by the sprite pass): ObjUpdateAll's INX re-runs slots 1-$1E this pass
 }
 
 /** 15:B541: phase 5 (mouth open) with obj_act_timer = DirToTarget(slot 1) * 2 */
