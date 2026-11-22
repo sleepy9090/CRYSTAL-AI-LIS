@@ -9,6 +9,7 @@
 //   AI $61 BossHomingShot     15:A5EE  + HomingMove 15:A602 / ClampVel3 15:A665
 //   AI $63 (= $E3) BossAiE3  15:A95D  slam / flame-sweep boss (phases A971 A9C6 AA46 AAA7 AAE6)
 //   AI $64 BossRockShot       15:AB3E  rocks offset by ROM bytes from a random PRG bank
+//   AI $65 (= $E5) AiTalkEventE5 15:ABDA  area $43 talk event (phases ABE4 ABFC AC0F AC1A AC1E AC31 AC41 AC5B) (s157)
 //   AI $66 (= $E6) BossAiE6  15:AC7B  flyer with a fire fan (phases AC8F ACF5; 2/3 are null)       (session 104)
 //   AI $67 (= $E7) AiBoss88  15:ADD4  bouncer + curve-shot volley (phases ADE8 AE35 AE43 AE5A AEC9 AEEC)
 //   AI $68 (= $E8) BossAiE8  15:AF48  waypoint flyer (route 15:B02B in slot $1F, HomingMove) (phases AF5C AFAD B051)
@@ -360,6 +361,67 @@ function stepMove16(m, x) {
   objStepVector(m, x, m.rd(META_DIR + x));
   tempAddStep(m);
   tempToObjPos(m, x);
+}
+
+// ---- AI $E5 AiTalkEventE5 15:ABDA (area $43 talk event, session 157) -----------------------------------------
+// phases 4 / 6 are set by talk acts 26 / 27 ($060D = 4 / 6); phase 3 waits for them.
+
+function e5Rise(m, x) {                                      // ABE4
+  m.wr(OVERLAY + x, 0xBA);
+  if (inc(m, ANIM + x) !== 0x1F) return;
+  m.wr(META + x, 0xBB);
+  inc(m, PHASE + x);
+}
+
+function e5Settle(m, x) {                                    // ABFC
+  if (dec(m, ANIM + x)) return;
+  inc(m, PHASE + x);
+  m.wr(META + x, 0xB0);
+  m.wr(OVERLAY + x, 0x4C);
+}
+
+function e5Talk(m, x) {                                      // AC0F: NpcTalk with obj_timer2_s03 = this slot
+  m.wr(0x41, 0x11);
+  m.wr(0x0623, x);
+  inc(m, PHASE + x);
+}
+
+function e5Wait(m, x) { dec(m, ANIM + x); }                  // AC1A
+
+function e5Leave(m, x) {                                     // AC1E
+  m.wr(META + x, 0xBB);
+  m.wr(OVERLAY + x, 0xBA);
+  m.wr(ANIM + x, 0);
+  inc(m, PHASE + x);
+}
+
+function e5Sink(m, x) {                                      // AC31
+  if (inc(m, ANIM + x) !== 0x1F) return;
+  m.wr(ACTIVE + x, 0);
+}
+
+function e5ThrowStart(m, x) {                                // AC41: SpawnShot($0E, dir 4), 8-frame wait
+  m.wr(META + x, 0xB1);
+  m.wr(OVERLAY + x, 0x4C);
+  spawnShot(m, x, 0x0E, 4);
+  m.wr(ANIM + x, 8);
+  inc(m, PHASE + x);
+}
+
+/** AC5B: after the wait, slot 0's y + 8 -> slots 0 and 1 every frame until >= $B0; then $0640 = $FF, phase 4 */
+function e5Throw(m, x) {
+  if (dec(m, ANIM + x)) return;
+  const y = (m.rd(Y_LO) + 8) & 0xFF;
+  m.wr(Y_LO, y); m.wr(Y_LO + 1, y);
+  inc(m, ANIM + x);
+  if (y < 0xB0) return;
+  m.wr(ACT_TIMER, 0xFF);
+  m.wr(PHASE + x, 4);
+}
+
+export function aiTalkEventE5(m, x) {
+  m.wr(FREEZE, 0x10);
+  return bossPhaseDispatch(m, x, 0x0F);
 }
 
 // ---- AI $E6 BossAiE6 15:AC7B ---------------------------------------------------------------------------------
@@ -729,6 +791,8 @@ const BOSS_PHASES = {
   0xA48B: e0Intro, 0xA4C3: e0Wait, 0xA4CC: e0Smoke, 0xA4D8: e0Vanish, 0xA50B: e0Teleport, 0xA54A: e0Appear,
   0xA565: e0Hold, 0xA581: e0Linger,
   0xA971: e3Intro, 0xA9C6: e3Approach, 0xAA46: e3BackOff, 0xAAA7: e3Slam, 0xAAE6: e3Sweep,
+  0xABE4: e5Rise, 0xABFC: e5Settle, 0xAC0F: e5Talk, 0xAC1A: e5Wait, 0xAC1E: e5Leave, 0xAC31: e5Sink,
+  0xAC41: e5ThrowStart, 0xAC5B: e5Throw,
   0xAC8F: e6Intro, 0xACF5: e6Fight,
   0xADE8: e7Intro, 0xAE35: e7Pose, 0xAE43: e7Wait, 0xAE5A: e7Bounce, 0xAEC9: e7Aim, 0xAEEC: e7Volley,
   0xAF5C: e8Intro, 0xAFAD: e8Route, 0xB051: e8Attack,
@@ -747,6 +811,6 @@ export function bossPhaseDispatch(m, x, base) {
 }
 
 export const AI_BOSS = {
-  0x60: bossAiE0, 0x61: bossHomingShot, 0x63: bossAiE3, 0x64: bossRockShot,
+  0x60: bossAiE0, 0x61: bossHomingShot, 0x63: bossAiE3, 0x64: bossRockShot, 0x65: aiTalkEventE5,
   0x66: bossAiE6, 0x67: aiBoss88, 0x68: bossAiE8, 0x69: bossAiE9, 0x6A: bossAiEA,
 };

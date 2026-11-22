@@ -24,6 +24,7 @@ import random
 import sys
 
 from .nes import NES, Stop
+from .cpu import IllegalOpcode
 from . import state
 from .sprite_capture import Interrupts
 from ..nesrom import load_rom
@@ -253,7 +254,9 @@ BOSS_AIS = {'BossAiE0': (0x60, 0xA477, range(8)), 'BossHomingShot': (0x61, 0xA5E
             'BossAiE6': (0x66, 0xAC7B, (0, 1, 1)), 'AiBoss88': (0x67, 0xADD4, range(6)),
             'BossAiE8': (0x68, 0xAF48, (0, 1, 1, 2, 2)),
             # s156: $E9 statues (phase 2 = the shared fire entry B105), $EA patrol / dive / rise
-            'BossAiE9': (0x69, 0xB0B6, (0, 1, 1, 2)), 'BossAiEA': (0x6A, 0xB130, (0, 1, 1, 2, 3, 3))}
+            'BossAiE9': (0x69, 0xB0B6, (0, 1, 1, 2)), 'BossAiEA': (0x6A, 0xB130, (0, 1, 1, 2, 3, 3)),
+            # s157: $E5 area $43 talk event (phases 4 / 6 are set by talk acts 26 / 27)
+            'AiTalkEventE5': (0x65, 0xABDA, (0, 1, 2, 3, 4, 5, 6, 7, 7, 7))}
 for _n, (_id, _ad, _p) in BOSS_AIS.items():
     ROUTINES[_n] = ((26, 15), _ad, _poke_bg, lambda r: {'x': _slot(r)})
 # AI ids the port has (web/src/game/obj/ai_static.js, ai_walk.js, ai_field.js) + ids whose ObjAiTable 27:A314 entry is 0
@@ -656,6 +659,9 @@ def _fix_boss(name, ram, r, x, wram):
             ram[0x04E0 + x] = 0x24
             ram[0x0620 + x] = r.choice([1, 0x10, 0x20, 0x21])
             ram[0x08] &= 0xF8
+    if _id == 0x65:                                # s157: anim count edges ($1E -> $1F, 1 -> 0), throw y edges
+        ram[0x04E0 + x] = r.choice([0, 1, 1, 2, 0x1E, 0x1E, 0x1F, r.randrange(256)])
+        ram[0xB0] = r.choice([0xA7, 0xA8, 0xA9, 0xAF, 0xB0, 0xF8, r.randrange(256)])
     if r.random() < 0.4:
         _rand_zero_next(ram, r)
     if r.random() < 0.5:                           # the boss on the player's screen, near the arena edges
@@ -879,7 +885,7 @@ def run(nes, a):
             sp = (nes.cpu.s - 4) & 0xFF          # S at the first instruction (2 return addresses pushed)
             try:
                 how = call2(nes, addr, bank, regs, 400_000 if ppu_case else 200_000)
-            except Stop:
+            except (Stop, IllegalOpcode):         # s157: a random state that sends the ROM into data is no case
                 continue
             finally:
                 if ppu_case:

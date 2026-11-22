@@ -550,6 +550,14 @@ bank,addr,name,comment
 15,A675,BossAiE2,boss AI $E2 phase base $08 x2
 15,A95D,BossAiE3,boss AI $E3 (types $68 $8B) phase base $0A x5
 15,ABDA,AiTalkEventE5,area $43 type $70: talk event (NpcTalk p $C3; act 26 Ball of Water / act 27 throw out)
+15,ABE4,E5Rise,s157: AI $E5 phase 0: overlay $BA; obj_anim++ to $1F -> meta $BB; phase 1 (web: obj/ai_boss.js e5Rise)
+15,ABFC,E5Settle,s157: AI $E5 phase 1: obj_anim-- to 0 -> meta $B0 overlay $4C; phase 2
+15,AC0F,E5Talk,s157: AI $E5 phase 2: sub_state $11 (NpcTalk) + $0623 = X; phase 3
+15,AC1A,E5Wait,s157: AI $E5 phase 3: obj_anim-- (talk acts 26/27 set phase 4/6)
+15,AC1E,E5Leave,s157: AI $E5 phase 4: meta $BB overlay $BA anim 0; phase 5
+15,AC31,E5Sink,s157: AI $E5 phase 5: obj_anim++ to $1F -> obj_active 0
+15,AC41,E5ThrowStart,s157: AI $E5 phase 6: meta $B1 overlay $4C; SpawnShot($0E dir 4); anim 8; phase 7
+15,AC5B,E5Throw,s157: AI $E5 phase 7: after anim 0 each frame $B0/$B1 = $B0+8 until >= $B0; $0640=$FF; phase 4
 15,AC7B,BossAiE6,boss AI $E6 (type $90) phase base $17 x2
 15,AF48,BossAiE8,boss AI $E8 (type $97) phase base $21 x3
 15,B0B6,BossAiE9,boss AI $E9 (statues $9C/$9D) phase base $24 x3
