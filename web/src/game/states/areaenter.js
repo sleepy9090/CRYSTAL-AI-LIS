@@ -171,7 +171,9 @@ export function* areaEnter(m) {
       return;
     case 0xE533:                                      // $4x: save + attribute wipe
       setR7(m, 0x17);
-      saveGame(m);
+      // s143 (teleport, tools.emu pass_probe): the full save runs through 2 NMIs here too (frame_ready 1 -> 2,
+      // cleared at L140 two frames later), as at the area-tail save below
+      if (saveGame(m)) { yield; yield SPIN; }
       yield* attrWipe(m);
       clearSlots(m);
       break;

@@ -37,7 +37,7 @@ const inc = (m, a) => m.wr(a, (m.rd(a) + 1) & 0xFF);
 const status = (m) => m.rd(FLASH) & 0x0F;
 
 /** SpendMp 26:9AE8 (A = cost); HudRedraw(4) keeps the caller's X */
-function* spendMp(m, cost, x) {
+export function* spendMp(m, cost, x) {
   m.wr(0x1F, cost);
   const mp = m.rd(MP);
   if (mp === 0 || mp < cost) { m.wr(SUB_STATE, 0x1C); return false; }

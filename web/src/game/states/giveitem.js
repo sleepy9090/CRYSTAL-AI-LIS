@@ -9,14 +9,14 @@
 //                            else      -> ItemEventHook(0) (ItemGetHook 14:826F); full -> GiveItemFull 30:D47C;
 //                                         else remap $50-$6F, SFX $3F / $93, msg 32.12, slot off, EventActionDispatch
 //   itemEventHook(m, n)    ItemEventHook 30:D834 (hooks 0-2; hook 1 = ItemUseHook 14:831E + handlers, s141)
-//   itemUseMenu(m)         ItemUseMenu 30:D497 (sub_state 6, s141; the Warp Boots' SubstTeleportMenu not ported)
+//   itemUseMenu(m)         ItemUseMenu 30:D497 (sub_state 6, s141; the Warp Boots' SubstTeleportMenu = states/teleport.js, s143)
 //   showPendingMessage(m)  ShowPendingMessage 30:D085 (sub_state $10, s141; ItemUseFail "Nothing happens.")
 //   eventActionDispatch(m) 30:D552 through EventActionTable 30:D563[$22] (ported entries; the rest log "not ported")
 //
 // The SwordPowerLevel 30:D9D8 call after a pickup (30:D408) discards its Y result: $0719 is only written by the
 // equip menu (30:D8FD). Its one lasting effect is $10 = sword - 1 (when a sword and a ball are equipped).
 import { R } from '../ram.js';
-import { cpuRd, indY, switchBank16 } from '../prg.js';
+import { cpuRd, indY, setR7, switchBank16 } from '../prg.js';
 import { playSound } from '../playsound.js';
 import { objInit, farObjInit } from '../obj/objinit.js';
 import { SPIN, statRecalc, waitFrames } from './death.js';
@@ -24,6 +24,7 @@ import { showMessage, showMessagePacked, npcResult, flagTest, flagApply, npcVani
 import { restoreIfArea5F, saveGame } from './saveload.js';
 import { swordPowerLevel } from './equip.js';
 import { mainState1, playPaletteRestore } from './play.js';
+import { substTeleportMenu } from './teleport.js';
 
 const TALK_SLOT = 0x0623, SPAWN_P = 0x0560, ACTIVE = 0x04A0, CUR_ITEM = 0x07DC, MSG = 0x07DE, GROUP = 0x07DF;
 const INV = 0x6430;
@@ -361,11 +362,10 @@ export function* itemUseMenu(m, yIn = m.rd(0x010F)) {
   if (sel !== 0x08) { yield* itemUseRun(m, yIn); return; }
   if (flash & 0x80) { m.wr(R.sub_state, 8); return; }   // Warp Boots blocked
   const area = m.rd(R.area_id);
-  // SubstTeleportMenu 30:DB28 (sub_state 20/29) is not ported: behave as a cancel (same area -> 30:D45B RTS)
-  unported(m, 'SubstTeleportMenu 30:DB28 (Warp Boots)');
-  m.wr(R.sub_state, 8);
-  if (area === m.rd(R.area_id)) return;
-  yield* itemUseRun(m, yIn);                            // 30:D4E7, then SetR7($17) + JMP 23:BC00 SaveGame
+  yield* substTeleportMenu(m, yIn);                     // 30:D4DC (s143; sub_state 6 -> no SpendMp)
+  if (area === m.rd(R.area_id)) return;                 // refused / cancelled / same town -> 30:D45B RTS
+  yield* itemUseRun(m, yIn);                            // 30:D4E7
+  setR7(m, 0x17);                                       // D4EA SetR7($17) (SaveAllowed reads 23:BF00), JMP 23:BC00
   if (saveGame(m)) { yield; yield SPIN; }
 }
 

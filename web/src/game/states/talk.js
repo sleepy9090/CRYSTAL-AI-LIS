@@ -93,14 +93,14 @@ function* qWaitClear(m) {
 }
 
 /** TextWindowOpen 20:8500 */
-function* textWindowOpen(m) {
+export function* textWindowOpen(m) {
   for (let x = 0; x < 0x10; x++) m.wr(0x20 + x, cpuRd(m, 0x8879 + x));
   yield* textDrawFrame(m);
   yield* qWaitClear(m);
 }
 
 /** TextPrintBox 20:8528 */
-function* textPrintBox(m) {
+export function* textPrintBox(m) {
   for (let x = 0; x < 0x10; x++) m.wr(0x20 + x, cpuRd(m, 0x8889 + x));
   yield* textPrint(m);
   yield* qWaitClear(m);                                  // JMP $850F
