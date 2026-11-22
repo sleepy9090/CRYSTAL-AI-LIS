@@ -1,32 +1,41 @@
 #!/usr/bin/env python3
-"""s163: print columns of two frame CSVs (tools.emu / web port) side by side for a frame range; '*' marks rows
-that differ.
+"""s175: print chosen columns of two frame CSVs (tools.emu / web port) side by side, one line per frame.
 
-usage: python3 tools/csv_cols.py A.csv B.csv COL[,COL..] LO-HI"""
+usage: python3 tools/csv_cols.py A.csv B.csv COLS [LO-HI]
+COLS = comma list; a column given as a prefix (e.g. o0E) expands to every column starting with it.
+Cells that differ print as A|B*. (No argparse: on Python 3.14 it imports inspect -> dis, which tools/dis.py
+shadows when run as a script.)"""
 import csv
 import sys
 
 
-def load(path):
-    with open(path) as f:
-        rows = list(csv.DictReader(f))
-    key = next(iter(rows[0]))
-    return {int(r[key]): r for r in rows}
+def load(p):
+    with open(p) as f:
+        rows = list(csv.reader(f))
+    head = rows[0]
+    return head, {int(r[0]): dict(zip(head, r)) for r in rows[1:]}
 
 
-def main():
-    if len(sys.argv) < 5:
+def main(argv):
+    if len(argv) < 3:
         raise SystemExit(__doc__)
-    a, b = load(sys.argv[1]), load(sys.argv[2])
-    cols = sys.argv[3].split(',')
-    lo, hi = (int(v) for v in sys.argv[4].split('-'))
-    print('frame  ' + '  '.join(f'{c:>23}' for c in cols))
+    ha, ra = load(argv[0])
+    _, rb = load(argv[1])
+    cols = []
+    for c in argv[2].split(','):
+        cols += [h for h in ha if h == c] or [h for h in ha if h.startswith(c)]
+    lo, hi = (map(int, argv[3].split('-')) if len(argv) > 3 else (min(ra), max(ra)))
+    print('frame  ' + '  '.join(cols))
     for f in range(lo, hi + 1):
-        ra, rb = a.get(f, {}), b.get(f, {})
-        cells = [f'{ra.get(c, "-"):>11}|{rb.get(c, "-"):<11}' for c in cols]
-        mark = '*' if any(ra.get(c) != rb.get(c) for c in cols) else ' '
-        print(f'{f:5}{mark} ' + '  '.join(cells))
+        x, y = ra.get(f), rb.get(f)
+        if not x or not y:
+            continue
+        cells = []
+        for c in cols:
+            u, v = x.get(c, '?'), y.get(c, '?')
+            cells.append(u if u == v else f'{u}|{v}*')
+        print(f'{f:5d}  ' + '  '.join(cells))
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])

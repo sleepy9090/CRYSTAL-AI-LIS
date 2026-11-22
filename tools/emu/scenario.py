@@ -489,6 +489,13 @@ for _c in (0, 3, 6, 9, 15):
                                            each=_hit_each(drop=_c), keys=KILL_KEYS, frames=400,
                                            watch=[0x0702, 0x0703, 0x04AE], pcs=HIT_PCS,
                                            peek=[0x0702, 0x0703, 0x050E])
+# s175: the kill at level 1 with XP next = 1 -> EnemyKilled level-up branch 26:9188 (HudHpBar, HudRedraw 0/3/4/5,
+# sub_state $10, msg 32.13, StatRecalc); the B/A swings then page the message
+SCENARIOS['kill_levelup'] = dict(note='area 03: kill (1 HP) at level 1 with XP next = 1 -> level up 26:9188, msg 32.13',
+                                 area='03', pokes={0x0421: 1, 0x0711: 1, 0x0704: 0, 0x0705: 0, 0x0706: 1, 0x0707: 0},
+                                 each=_hit_each(), keys=KILL_KEYS, frames=400,
+                                 watch=[0x0421, 0x04AE, 0x0706, 0x0707, 0x03C1, 0x0709], pcs=HIT_PCS,
+                                 peek=[0x0421, 0x0704, 0x0706, 0x03C0, 0x03C1, 0x0708, 0x0709])
 # element walls: types $D0-$D3 (obj_active $87) spawned 14 px right of the player (facing right) in area 03.
 # Sword 1 = wind (SwordElemBit 1): tap at +30 (shot hitflags 1 -> nothing), charge B 50 f from +60 -> break $D0 only
 # HitHandler3 phase 0 = the magic-2 freeze shot (slot $0C, type $20): enemy $0E parked 40 px right of the player
