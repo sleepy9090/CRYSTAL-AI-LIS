@@ -38,6 +38,9 @@ def main(argv=None):
     ap.add_argument('--keys', nargs='+', default=[], metavar='F:BTN[:N]',
                     help='s94: pad 1 keys (absolute frame_no, tools.emu syntax) during the --until search, '
                          'e.g. 2470:START to stop at PauseScreen 15:BC40')
+    ap.add_argument('--force', action='append', default=[], metavar='BB:AAAA:HHHH=VV',
+                    help='s203: when bank BB (decimal) PC AAAA first runs during the --until search, write VV to '
+                         'HHHH (RAM only), e.g. 30:D552:0022=01 forces the EventActionTable act')
     ap.add_argument('--max-frames', type=int, default=600)
     ap.add_argument('--out', required=True)
     ap.add_argument('--save-state')
@@ -62,6 +65,16 @@ def main(argv=None):
 
     def hit(_n):
         raise _Hit()
+    for fs in a.force:                              # s203: one-shot RAM write at an exec hook
+        fb, fpc, fw = fs.split(':')
+        fad, fv = (int(s, 16) for s in fw.split('='))
+        done = []
+
+        def fhook(_n, fad=fad, fv=fv, done=done):
+            if not done:
+                done.append(1)
+                r[fad] = fv
+        nes.on_exec(int(fb, 10), int(fpc, 16), fhook)
     nes.on_exec(bank, addr, hit)
     if a.keys:
         nes.keys = debug.parse_keys(a.keys)

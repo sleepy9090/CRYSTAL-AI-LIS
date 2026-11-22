@@ -11,7 +11,7 @@
 //   itemEventHook(m, n)    ItemEventHook 30:D834 (hooks 0-2; hook 1 = ItemUseHook 14:831E + handlers, s141)
 //   itemUseMenu(m)         ItemUseMenu 30:D497 (sub_state 6, s141; the Warp Boots' SubstTeleportMenu = states/teleport.js, s143)
 //   showPendingMessage(m)  ShowPendingMessage 30:D085 (sub_state $10, s141; ItemUseFail "Nothing happens.")
-//   eventActionDispatch(m) 30:D552 through EventActionTable 30:D563[$22] (ported entries; the rest log "not ported")
+//   eventActionDispatch(m) 30:D552 through EventActionTable 30:D563[$22] (all 32 entries ported since s203)
 //
 // The SwordPowerLevel 30:D9D8 call after a pickup (30:D408) discards its Y result: $0719 is only written by the
 // equip menu (30:D8FD). Its one lasting effect is $10 = sword - 1 (when a sword and a ball are equipped).
@@ -28,6 +28,8 @@ import { restoreIfArea5F, saveGame } from './saveload.js';
 import { swordPowerLevel } from './equip.js';
 import { mainState1, playPaletteRestore } from './play.js';
 import { substTeleportMenu } from './teleport.js';
+import { swordRaisePose } from './swordraise.js';
+import { farSpriteDraw } from './formrevert.js';
 
 const TALK_SLOT = 0x0623, SPAWN_P = 0x0560, ACTIVE = 0x04A0, CUR_ITEM = 0x07DC, MSG = 0x07DE, GROUP = 0x07DF;
 const INV = 0x6430;
@@ -280,7 +282,7 @@ export function* itemEventHook(m, n) {
 }
 
 // ---------------------------------------------------------------- EventActionTable 30:D563
-// Not ported (log "not ported"): acts 1 (Sword of Thunder warp), 7 (Mesia). s202: 6/17 (AreaLoadB), 14 (AreaLoadA).
+// Every act is ported (s203: 1 Sword of Thunder warp, 7 Mesia message). s202: 6/17 (AreaLoadB), 14 (AreaLoadA).
 /** GiveItemA 30:D22B: A -> $057F, GiveItem with $0623 = $1F (restored after) */
 function* giveItemA(m, a) {
   m.wr(0x057F, a);
@@ -336,6 +338,37 @@ function* evActClearSlot(m, slot, y) {
 
 const nop = function* () {};
 export const EVENT_ACTIONS = {
+  1: function* (m, y) {                                  // D5A4 EvActThunderWarp (s203)
+    m.wr(0x0600, 0); m.wr(0x0620, 0); m.wr(0x06C0, 0);   // obj_phase / obj_timer2 / orbit_level
+    switchBank16(m, 0x09);
+    yield* swordRaisePose(m, y);                         // JSR 19:BC04 (SwitchBank16 keeps Y; ends with sub_state 8)
+    m.wr(MSG, 0x11); m.wr(GROUP, 0x1C);                  // msg 28.17
+    yield* showMessage(m);
+    playSound(m, 0x23, 0x0A);                            // ShowMessage leaves Y = $0A (s173 probe)
+    m.wr(R.area_id, 0xF2);
+    m.wr(0x6D, 0x41);                                    // area_entry
+    m.wr(R.sub_state, 0x01);                             // the caller's D54B stores 8 over it
+  },
+  7: function* (m) {                                     // D5E6 EvActMesiaMessage (s203)
+    m.wr(ACTIVE + m.rd(TALK_SLOT), 0);
+    m.wr(0x03AD, 0);                                     // obj_coll_s0D
+    m.wr(0x030D, 0xD2);                                  // obj_meta_id_s0D
+    m.wr(0x04ED, 0x20);                                  // obj_anim_s0D
+    do {                                                 // D62E: 32 x (WaitFrame + sprite pass)
+      yield* waitFrame(m);
+      farSpriteDraw(m);
+      m.wr(0x04ED, (m.rd(0x04ED) - 1) & 0xFF);
+    } while (m.rd(0x04ED));
+    m.wr(0x030D, 0x2E); m.wr(0x06CD, 0x2E);              // meta + orbit_level_s0D
+    farSpriteDraw(m);                                    // D606 FarCall_B14_800E
+    setR6(m, 0x1A);
+    objPosToTemp(m, 0x0D);                               // 26:98A8 X = $0D
+    m.wr(0x10, 0x1E); m.wr(0x11, 0xDE);
+    farObjInit(m);                                       // FarCall_C25D (ObjInit keeps X = $1E)
+    tempToObjPos(m, 0x1E);                               // 26:9897
+    m.wr(MSG, 0x05); m.wr(GROUP, 0x0E);                  // msg 14.5, JMP ShowMessage
+    yield* showMessage(m);
+  },
   9: function* (m) {                                     // D659 EvActSpawnType38 (s200)
     if (m.rd(0x0710) & 0x40 || m.rd(ACTIVE + 0x1E)) return;
     const area = m.rd(R.area_id);

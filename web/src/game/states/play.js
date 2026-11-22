@@ -24,7 +24,7 @@ import { objCollideAll } from '../obj/collide.js';
 import { cameraTick } from '../world/camera.js';
 import { npcTalk } from './talk.js';
 import { substWakeCutscene } from './wake.js';
-import { giveItem, itemUseMenu, showPendingMessage, area5FIrqOff } from './giveitem.js';
+import { giveItem, itemUseMenu, showPendingMessage, area5FIrqOff, EVENT_ACTIONS } from './giveitem.js';
 import { substTeleportMenu } from './teleport.js';
 import { substTelepathySelect } from './telepathy.js';
 import { substChangeForm } from './changeform.js';
@@ -278,6 +278,9 @@ export const ENTRY_POINTS = {
   '19:BC6B': substMesiaReunion,                       // s150 (web/test/states/mesia.json)
   '30:CC17': function* (m) { substOutOfMp(m); },      // s151 (web/test/states/outofmp.json; one pass, no wait)
   '19:BDF2': substFinalSceneReset,                    // s152 (web/test/states/finalscene.json)
+  // s203: event acts reached by ItemUseRun's JMP 30:D523 (their RTS ends the substate handler); Y = $22 * 2
+  '30:D5A4': (m) => EVENT_ACTIONS[1](m, 2),           // EvActThunderWarp (web/test/states/event01.json)
+  '30:D5E6': (m) => EVENT_ACTIONS[7](m, 14),          // EvActMesiaMessage (web/test/states/event07.json)
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */
