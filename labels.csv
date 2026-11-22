@@ -398,6 +398,7 @@ bank,addr,name,comment
 30,D552,EventActionDispatch,JMP via EventActionTable[$22]
 30,D563,EventActionTable,32 words: action handlers for event triggers (ItemHook2 path)
 30,D5A4,EvActThunderWarp,act 1: msg 28.17 then warp to area $F2 entry $41
+30,C867,ObjClear4to11,s149: obj_active slots 4-11 = 0 (SwordRaisePose entry)
 30,D5E6,EvActMesiaMessage,act 7: slot 13 anim + type $DE fx + msg 14.5
 30,D659,EvActSpawnType38,act 9: ObjInit type $38 in slot $1E from EvType38Pos by area/entry
 30,D6A8,EvType38Pos,9 x 5 bytes: x lo/hi y lo/hi $069E ($FF = none)

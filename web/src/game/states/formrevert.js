@@ -18,7 +18,7 @@ import { oamClipTop } from './talk.js';
 import { queueAttrAll } from '../world/ppuqueue.js';
 
 /** FarCall_B14_800E: sprite pass with banks 14/15 mapped, then $6E/$6F restored */
-function farSpriteDraw(m) {
+export function farSpriteDraw(m) {
   const r6 = m.rd(0x6E), r7 = m.rd(0x6F);
   switchBank16(m, 0x0E);
   spriteDraw(m);
