@@ -371,6 +371,20 @@ def _poke_follow(ram, wram, r):
 ROUTINES['MakeFollower13'] = (None, 0xD23F, _poke_follow, None)
 ROUTINES['EvActTwoFollowers'] = (None, 0xD75E, _poke_follow, None)
 ROUTINES['EvActMakeFollowers'] = (None, 0xD7CE, _poke_follow, None)
+
+
+def _poke_type38(ram, wram, r):
+    """s200 (Ph7 leftovers (i)): EventActionTable act 9. Player flashing b6 or not, slot $1E busy or not,
+    area $64 / $68 / other, area_entry 0-8 (rec 3/5/6 = $FF none) or past the table."""
+    _poke_obj(ram, wram, r)
+    ram[0x0710] = r.choice([0, 0, 0x40, r.randrange(256)])
+    ram[0x04BE] = r.choice([0, 0, 0, r.randrange(1, 256)])
+    ram[0x6C] = r.choice([0x64, 0x68, r.randrange(256), r.randrange(256)])
+    ram[0x6D] = r.choice([r.randrange(9), r.randrange(9), r.randrange(256)])
+
+
+# s200: EventActionTable act 9 EvActSpawnType38 30:D659 (web/src/game/states/giveitem.js)
+ROUTINES['EvActSpawnType38'] = (None, 0xD659, _poke_type38, None)
 ROUTINES['ObjCollideAll'] = (26, 0x8F6E, _poke_coll, None)
 ROUTINES['ObjOverlapScan'] = (26, 0x95F8, _poke_coll, lambda r: {'x': r.choice([1, 2, 3, 0x0C, r.randrange(32)])})
 # HitHandlerTable 26:8FBB entries with the CollPairTable attacker slots (X) and a target Y in $0D-$1E

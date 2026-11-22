@@ -16,10 +16,11 @@
 // The SwordPowerLevel 30:D9D8 call after a pickup (30:D408) discards its Y result: $0719 is only written by the
 // equip menu (30:D8FD). Its one lasting effect is $10 = sword - 1 (when a sword and a ball are equipped).
 import { R } from '../ram.js';
-import { cpuRd, indY, setR7, switchBank16 } from '../prg.js';
+import { cpuRd, indY, setR7, switchBank16, farRestore } from '../prg.js';
 import { playSound } from '../playsound.js';
 import { objInit, farObjInit } from '../obj/objinit.js';
-import { SPIN, statRecalc, waitFrames } from './death.js';
+import { spriteDraw } from '../obj/sprites.js';
+import { SPIN, statRecalc, waitFrame, waitFrames } from './death.js';
 import { showMessage, showMessagePacked, npcResult, flagTest, flagApply, npcVanish, makeFollower13, TALK_ACTIONS } from './talk.js';
 import { restoreIfArea5F, saveGame } from './saveload.js';
 import { swordPowerLevel } from './equip.js';
@@ -277,6 +278,7 @@ export function* itemEventHook(m, n) {
 }
 
 // ---------------------------------------------------------------- EventActionTable 30:D563
+// Not ported (log "not ported"): acts 1 (Sword of Thunder warp), 6/17 (AreaLoadB), 7 (Mesia), 14 (AreaLoadA).
 /** GiveItemA 30:D22B: A -> $057F, GiveItem with $0623 = $1F (restored after) */
 function* giveItemA(m, a) {
   m.wr(0x057F, a);
@@ -296,8 +298,58 @@ function* talkGiveParam(m, p2) {
 TALK_ACTIONS[0x03] = (m) => talkGiveParam(m, false);      // s199
 TALK_ACTIONS[0x11] = (m) => talkGiveParam(m, true);
 
+/** WaitSfxDone 30:D88B: WaitFrame until snd_sfx_priority $0112 = $FF */
+function* waitSfxDone(m) {
+  do { yield* waitFrame(m); } while (m.rd(0x0112) !== 0xFF);
+}
+/** EvActClearSlot13/14 30:D718 / D71F (acts 19/20, s200): clear the slot, SFX $6B, WaitSfxDone; both 13 and 14
+ *  empty -> boss_cam_lock $07D7 = $7F, ObjInit slot 15 type $04CF */
+function* evActClearSlot(m, slot, y) {
+  m.wr(ACTIVE + slot, 0);
+  playSound(m, 0x6B, y);
+  yield* waitSfxDone(m);
+  if (m.rd(ACTIVE + 0x0D) | m.rd(ACTIVE + 0x0E)) return;
+  m.wr(0x07D7, 0x7F);
+  m.wr(0x11, m.rd(0x04CF)); m.wr(0x10, 0x0F);
+  objInit(m);
+}
+
 const nop = function* () {};
 export const EVENT_ACTIONS = {
+  9: function* (m) {                                     // D659 EvActSpawnType38 (s200)
+    if (m.rd(0x0710) & 0x40 || m.rd(ACTIVE + 0x1E)) return;
+    const area = m.rd(R.area_id);
+    const y = area === 0x64 ? 5 : area === 0x68 ? 10 : (m.rd(0x6D) * 5) & 0xFF;
+    const x = cpuRd(m, 0xD6A8 + y);                      // EvType38Pos: x lo, x hi, y lo, y hi, $069E
+    if (x === 0xFF) return;
+    m.wr(0x8E, x);
+    m.wr(0x10, 0x1E); m.wr(0x11, 0x38);
+    objInit(m);                                          // keeps Y
+    m.wr(0xAE, cpuRd(m, 0xD6A9 + y)); m.wr(0xCE, cpuRd(m, 0xD6AA + y));
+    m.wr(0xEE, cpuRd(m, 0xD6AB + y)); m.wr(0x069E, cpuRd(m, 0xD6AC + y));
+    playSound(m, 0x48, y);
+  },
+  19: (m, y) => evActClearSlot(m, 0x0D, y),              // D718
+  20: (m, y) => evActClearSlot(m, 0x0E, y),              // D71F
+  21: function* (m, y) {                                 // D746 EvActSpawn9E (s200): SFX $6B, stop music, type $9E in 13
+    playSound(m, 0x6B, y);
+    playSound(m, 0x00, y);                               // PlaySound reloads Y from snd_saved_y
+    yield* waitSfxDone(m);
+    m.wr(0x11, 0x9E); m.wr(0x10, 0x0D);
+    objInit(m);
+  },
+  23: function* (m) {                                    // D791 EvActHistory (s200): sprite pass, msgs 22.0/2/4/6
+    const r6 = m.rd(0x6E), r7 = m.rd(0x6F);              // FarCall_B14_800E
+    switchBank16(m, 0x0E);
+    spriteDraw(m);
+    farRestore(m, r6, r7);
+    m.wr(0x0381, m.rd(0x0381) & 0xFB);
+    m.wr(MSG, 0); m.wr(GROUP, 0x16);
+    do {
+      yield* showMessage(m);
+      inc(m, MSG); inc(m, MSG);
+    } while (m.rd(MSG) !== 8);
+  },
   2: function* (m) {                                     // D5D6 (s199): slot 13 gives its item, $030D = $88, follower
     m.wr(TALK_SLOT, 0x0D);
     yield* talkGiveParam(m, true);

@@ -41,6 +41,7 @@ const RUN = {
   MakeFollower13: (m) => { makeFollower13(m); },             // s199 talk acts 6 / 13, event acts 24 / 27
   EvActTwoFollowers: (m) => { runNow(EVENT_ACTIONS[24](m)); },
   EvActMakeFollowers: (m) => { runNow(EVENT_ACTIONS[27](m)); },
+  EvActSpawnType38: (m) => { runNow(EVENT_ACTIONS[9](m)); },       // s200 event act 9
   NpcScript: (m) => { npcScript(m); },                                       // s115 states/talk.js
   AiS0DTransform: (m, r) => { aiS0DTransform(m, r.x); },
   PlaySound: (m, r) => { playSound(m, r.a, r.y); },
