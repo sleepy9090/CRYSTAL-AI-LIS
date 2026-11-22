@@ -973,6 +973,7 @@ bank,addr,name,comment
 26,92BF,HitPlayerShot,s46: enemy shot (spawn_b2 $FF) by spawn_param: 0 damage; 1 paralysis; 2 stone; 3 -> type $0B; >=4 status 4
 26,92F5,HitShotDespawn,s113: obj_active;Y = 0 (the shot); after the stone path's PaletteBuild Y = 4 so it clears slot 4 instead (ROM quirk)
 26,9357,HitPlayer,s46: HitHandlerTable 2 (player touched): shots; poison; AI $0B duel push (s77); gold $7B; platforms $38/$3C; damage attack-defence; 30f invuln
+26,9410,HitPlayerDamage,s180: STA HP - damage ($10); BCS 26:941A; else clamp 0 at 26:9415; SFX $5F (area-$09 AiChase contact hits; group09_check)
 26,9431,PlayerInvuln,s46: invuln_timer $071A=$1E; obj_flags_s01 b2
 26,943F,RidePlatform,s46: platform AI $38/$3C: $0541=slot; move slot 0 one step in its dir at speed 2; s129 run by scenario ride_platform (area $6A slot $18)
 31,E40A,AreaEntryDispatch,s46: JMP (AreaEntryTable[($6D&$E0)>>4])

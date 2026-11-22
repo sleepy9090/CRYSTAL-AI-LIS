@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """s175: print chosen columns of two frame CSVs (tools.emu / web port) side by side, one line per frame.
 
-usage: python3 tools/csv_cols.py A.csv B.csv COLS [LO-HI]
+usage: python3 tools/csv_cols.py A.csv B.csv COLS [LO-HI[:STEP]]   (s180: STEP samples every STEP-th frame)
 COLS = comma list; a column given as a prefix (e.g. o0E) expands to every column starting with it.
 Cells that differ print as A|B*. (No argparse: on Python 3.14 it imports inspect -> dis, which tools/dis.py
 shadows when run as a script.)"""
@@ -24,9 +24,10 @@ def main(argv):
     cols = []
     for c in argv[2].split(','):
         cols += [h for h in ha if h == c] or [h for h in ha if h.startswith(c)]
-    lo, hi = (map(int, argv[3].split('-')) if len(argv) > 3 else (min(ra), max(ra)))
+    rng, _, step = (argv[3] if len(argv) > 3 else '').partition(':')
+    lo, hi = (map(int, rng.split('-')) if rng else (min(ra), max(ra)))
     print('frame  ' + '  '.join(cols))
-    for f in range(lo, hi + 1):
+    for f in range(lo, hi + 1, int(step or 1)):
         x, y = ra.get(f), rb.get(f)
         if not x or not y:
             continue
