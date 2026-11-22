@@ -232,6 +232,8 @@ FIELD_AIS = {
     'AiDuelStart': (0x0A, 0xA70E), 'AiPhaseUnhide': (0x33, 0xA4C6), 'AiFlagGatedSpawn': (0x51, 0xA6C5),
     'AiDuelOpponent': (0x52, 0xA753), 'AiHideAfterEvent': (0x53, 0xA7CD), 'AiChasePlayer': (0x54, 0xA802),
     'AiCarryLeft': (0x55, 0xA616),
+    # s170: AIs $34 $39 $40
+    'AiPeriodicShot': (0x34, 0xB318), 'AiArenaLock': (0x39, 0xA519), 'AiWander16': (0x40, 0xB39E),
 }
 for _n, (_id, _ad) in FIELD_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r: {'x': _slot(r)})
@@ -554,6 +556,20 @@ def _fix_field(name, ram, r, x, wram=None):
         if r.random() < 0.5:                       # free slots so SpawnShot spawns
             for s in range(0x0D, 0x1F):
                 if r.random() < 0.6:
+                    ram[0x04A0 + s] = 0
+    if name in ('AiPeriodicShot', 'AiArenaLock', 'AiWander16'):
+        # s170: anim / phase / slot X-1 / $07D5 / screen-y edges; free slots so SpawnShot spawns
+        ram[0x04E0 + x] = r.choice([0, 1, 7, 8, 9, 0x80, r.randrange(256)])
+        ram[0x0600 + x] = r.choice([0, 0, 1, 2, 0x7F, 0x80, 0x81, r.randrange(256)])
+        ram[0x049F + x] = r.choice([0, 0, r.randrange(256)])
+        ram[0x07D5] = r.choice([0, 0, 1, r.randrange(256)])
+        ram[0x05E0 + x] = r.choice([0xBF, 0xC0, r.randrange(256)])
+        ram[0x0480 + x] = r.choice([0, 1, r.randrange(256)])
+        ram[0x08] = r.randrange(256)
+        ram[0x0440 + x] = r.choice([0x17, 0x3E, r.randrange(0x80), r.randrange(256)])
+        if r.random() < 0.5:
+            for s in range(0x0D, 0x1F):
+                if s != x and r.random() < 0.6:
                     ram[0x04A0 + s] = 0
     if wram is not None and 'wram' in _BASE and name in ('AiDasher', 'AiTrapChest', 'AiBounceShot') \
             and r.random() < 0.4:

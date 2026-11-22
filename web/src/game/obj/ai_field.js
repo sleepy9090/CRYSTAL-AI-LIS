@@ -8,6 +8,7 @@
 //   AI $5D AiDrifter 27:B690         AI $5E AiWaitClear 27:B5F3   AI $2B AiTrapChest 27:AC60 (+ ChestHop 27:B79F)
 //   AI $7B AiCoin 27:B778            AI $38 AiPitShuttle 27:AFA9      AI $3C AiCrumblePlatform 27:AFF5 (s117)
 //   AI $3A AiNpcBossReveal 27:A555 (s133)   AI $30 AiNpcWander 27:ACD9 / $31 AiNpcStill 27:AE16 / $78 RTS (s140)
+//   s170: AI $34 AiPeriodicShot 27:B318, $39 AiArenaLock 27:A519, $40 AiWander16 27:B39E
 import { cpuRd } from '../prg.js';
 import {
   rand64, dirToTarget, spawnShot, objPosToTemp, tempToObjPos, tempAddOffset, tempAddStep, objStepVector,
@@ -385,7 +386,79 @@ function aiNpcWander(m, x) {
   dec(m, ANIM + x);
 }
 
+// ---- s170: AI $34 $39 $40 (ai_missing.py) ----
+
+/** AI $34 27:B318 (type $8F): obj_anim--; every 8th step, onscreen: SpawnShot(obj_shot_id, Y = x_lo b7 ? 6 : 2)
+ *  (ROL x4 of the 9-bit A:C ring puts old b7 in b2, so the caller's carry never matters) */
+export function aiPeriodicShot(m, x) {
+  dec(m, ANIM + x);
+  if (m.rd(ANIM + x) & 7) return;
+  if (m.rd(FLAGS + x) & 0x80) return;
+  spawnShot(m, x, m.rd(SHOT_ID + x), (m.rd(X_LO + x) & 0x80) ? 6 : 2);   // B336 JMP 26:972D
+}
+
+/** AI $39 AiArenaLock 27:A519 (type $29): slot X-1 inactive -> obj_active = 0, boss_cam_lock = 0. Phase 0:
+ *  onscreen with screen y < $C0 -> phase 1, boss_cam_lock = $FF. Phase != 0: $07D5 = 0 -> boss_cam_lock = $FF and
+ *  slot 0 obj_freeze = 5; else boss_cam_lock = $10 */
+export function aiArenaLock(m, x) {
+  if (m.rd(0x049F + x) === 0) {
+    m.wr(ACTIVE + x, 0);
+    m.wr(0x07D7, 0);
+    return;
+  }
+  if (m.rd(PHASE + x) === 0) {
+    if (m.rd(FLAGS + x) & 0x80) return;
+    if (m.rd(0x05E0 + x) >= 0xC0) return;
+    m.wr(PHASE + x, 1);
+    m.wr(0x07D7, 0xFF);
+    return;
+  }
+  if (m.rd(0x07D5) === 0) {
+    m.wr(0x07D7, 0xFF);
+    m.wr(FREEZE, 5);                                                       // A54B STA $05A0 (no ,X)
+    return;
+  }
+  m.wr(0x07D7, 0x10);
+}
+
+/** AI $40 AiWander16 27:B39E (types $55 $7C): AiOffscreenHalf; phase 0: phase = $CF, heading = DirToTarget(Y = 1)*2
+ *  + B41E[(x_lo + y_lo + timer of slot 0) & 3]; phase $01-$7F: anim -= 2, every 8 anim steps heading = B40E[(x +
+ *  anim >> 3) & $F], flags2 $0C; phase >= $80: anim -= 3, phase--, flags2 $0E; both then timer--, one free step,
+ *  phase-- */
+export function aiWander16(m, x) {
+  if (offscreenSkip(m, x)) return;
+  const p = m.rd(PHASE + x);
+  if (p === 0) {
+    m.wr(PHASE + x, 0xD0);
+    dirToTarget(m, x, 1);                                                  // B3AD LDY #1, JSR 26:8409
+    m.wr(0x10, (m.rd(0x20) << 1) & 0xFF);
+    const y = (m.rd(X_LO) + m.rd(0xB0) + m.rd(TIMER)) & 3;
+    m.wr(META_DIR + x, (cpuRd(m, 0xB41E + y) + m.rd(0x10)) & 0x0F);
+    dec(m, PHASE + x);
+    return;
+  }
+  if (p & 0x80) {                                                          // B422
+    m.wr(ANIM + x, m.rd(ANIM + x) - 3);
+    dec(m, PHASE + x);
+    m.wr(FLAGS2 + x, 0x0E);
+  } else {
+    m.wr(ANIM + x, m.rd(ANIM + x) - 2);
+    if ((m.rd(ANIM + x) & 6) === 0) {
+      m.wr(0x10, m.rd(ANIM + x) >> 3);
+      m.wr(META_DIR + x, cpuRd(m, 0xB40E + ((x + m.rd(0x10)) & 0x0F)));
+      m.wr(FLAGS2 + x, 0x0C);
+    }
+  }
+  dec(m, TIMER + x);                                                       // B3F9
+  objPosToTemp(m, x);
+  objStepVector(m, x, m.rd(META_DIR + x));
+  tempAddStep(m);
+  dec(m, PHASE + x);
+  tempToObjPos(m, x);                                                      // B40B JMP 26:9897
+}
+
 export const AI_FIELD = {
+  0x34: aiPeriodicShot, 0x39: aiArenaLock, 0x40: aiWander16,             // s170
   0x30: aiNpcWander, 0x31: aiNpcStill, 0x78: () => {},                    // $78 = 27:A914 RTS (event triggers)
   0x3A: aiNpcBossReveal, 0x2B: aiTrapChest, 0x44: aiDasher, 0x45: aiHomingFlyer, 0x48: aiHomingShooter, 0x58: aiOrbiter,
   0x5C: aiPatrolGunner, 0x5D: aiDrifter, 0x5E: aiWaitClear, 0x7B: aiCoin, 0x38: aiPitShuttle, 0x3C: aiCrumblePlatform,

@@ -509,7 +509,9 @@ bank,addr,name,comment
 27,AE31,AiPathWalk,AI $32 (type $38): walk path AiPathTable[$0680] step $0620 one dir byte per 16 steps; FC/FD/FE/FF terminators
 27,AF04,AiPathTable,ptr16[16] direction-byte paths for AiPathWalk (data AF24-AFA5)
 27,B2C5,AiCountdown,AI $14: obj_anim -= $0600 per frame; borrow -> 27:98C7
-27,B39E,AiWander16,AI $40 (types $55 $7C): new 16-way direction every $D0 frames from 27:B41E + position
+27,B39E,AiWander16,AI $40 (types $55 $7C): aim via DirToTarget(Y=1)+B41E jitter; phase>=$80 40 f flags2 $0E then 127 f B40E wander flags2 $0C. s170: ported obj/ai_field.js
+27,B318,AiPeriodicShot,s170: AI $34 (type $8F): anim--; every 8th onscreen: SpawnShot(obj_shot_id; dir x_lo b7 ? 6 : 2). ported obj/ai_field.js
+27,B422,Wander16Aimed,s170: AiWander16 phase>=$80: anim-=3; phase--; flags2=$0E; then B3F9 step
 15,A400,BossPhaseDispatch,A=boss base: JMP (15:A413[(A+$0600 X)*2]) per-boss phase handlers
 15,A413,BossPhaseTable,ptr16[] phase handlers for BossPhaseDispatch
 15,ADD4,AiBoss88,AI $E7 (type $88): $07D7=4 when phase!=0; 26:9B07 A=$C0; BossPhaseDispatch base $1B
@@ -1234,7 +1236,7 @@ bank,addr,name,comment
 27,B11B,AiHoverShot,s86: AI $17 (type $FE): anim-=2 from $0F; negative -> meta++ obj_active=$10 (straight mover)
 27,B12D,AiBounceShot,s86: AI $1B (types $CA $BF): commit step then ObjBgProbe($40); blocked -> dir+=4 retry x5; anim 0 -> bg_mask=0
 27,A414,AiBodyPart,s86: AI $3F/$BF (type $C2): irq_mode=7; RTS (moved by BossEBMove 15:A8FF)
-27,A519,AiArenaLock,s86: AI $39 (type $29): slot X-1 gone -> despawn + boss_cam_lock=0; onscreen y<$C0 -> boss_cam_lock=$FF until $07D5 then $10
+27,A519,AiArenaLock,s86: AI $39 (type $29): slot X-1 gone -> despawn + boss_cam_lock=0; onscreen y<$C0 -> boss_cam_lock=$FF until $07D5 then $10 (s170: + player obj_freeze=5 while $07D5=0; ported obj/ai_field.js)
 27,A555,AiNpcBossReveal,s86: AI $3A (type $2A area $6E slot $0E): 3 hits -> msgs $10.$10-$12; then slots $0D/$0F off and ObjInit(self;$7D). s133: run by scenario npc_reveal; ported obj/ai_field.js
 27,AE16,AiNpcStill,s86: AI $31 / AiNpcWander with obj_behav b2: no move; b0 -> anim=$08>>3; $0603=0 -> meta=$06C0
 27,B40E,Wander16DirPerm,s86: 16 bytes permutation of 0-F: AiWander16 drift headings
