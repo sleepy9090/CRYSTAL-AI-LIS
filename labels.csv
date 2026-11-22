@@ -1506,3 +1506,8 @@ bank,addr,name,comment
 27,B2D5,AiShotTurnMeta,s166: AI $18 (types $1C/$1D): timer2++; meta_id |= dir>>1; then AiShotTurn
 27,B2E2,AiShotTurn,s166: AI $19 (type $1E): dir = (dir*2 + ROM B2F1+X) & $0F (own code bytes indexed by slot); obj_active = $10
 27,B2F4,AiNull1A,s166: AI $1A table entry = RTS; dead (ObjUpdateAll 30:CD7F sends id $1A to 30:CD8A first)
+27,A5CB,AiFollowPlayerWait,s167: AI $0C: $0561|$0641 = 0 -> obj_active++ (AI $0D); else timer2=$10 meta $4C and copy the player position
+27,A5ED,AiMessageAfterWait,s167: AI $0D: meta $8A; timer2-- ; at 0 obj_active=$30 pending msg 12.4 (12.5 in area $68) sub_state=$10
+27,B02C,AiShotEmitter,s167: AI $1D (type $BE): anim-- 0 -> obj_active=0; odd anim -> SpawnShot(shot_id dir)
+27,B048,AiFallingObj,s167: AI $2F (type $B9): fall dy=timer2 (0..8 capped) dx 0; y_lo >= $C8 -> obj_active=0
+27,B070,AiDropSpawner,s167: AI $36 (type $33): dir=0; first frame SpawnShot($14 dir 0) new obj y+$18; then AiStraightMoverTail

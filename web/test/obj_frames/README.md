@@ -40,6 +40,12 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   `_fix_field`): `python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300
   --routine AiTrailShot,AiRingSpawner,AiShotTurnMeta,AiShotTurn --out web/test/obj_frames/fuzz_shot.json`.
 
+- `fuzz_misc.json` (s167): 300 cases each of AI `$0E` `AiShopEmpty`, `$0F` `AiSetSubstate`, `$0C` `AiFollowPlayerWait`,
+  `$0D` `AiMessageAfterWait`, `$1D` `AiShotEmitter`, `$2F` `AiFallingObj`, `$36` `AiDropSpawner` (`obj/ai_shot.js`, in
+  `FIELD_AIS`, steered by `_fix_field`): `python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state
+  --cases 300 --routine AiShopEmpty,AiSetSubstate,AiFollowPlayerWait,AiMessageAfterWait,AiShotEmitter,AiFallingObj,AiDropSpawner
+  --out web/test/obj_frames/fuzz_misc.json`.
+
 - `fuzz_platform.json` (s117): 300 cases each for the pit platforms in `obj/ai_field.js` (`PLATFORM_AIS`:
   `AiPitShuttle` `$38`, `AiCrumblePlatform` `$3C`, Y = id·2), captured from `gfx/compare/s116_a6a.state` (area `$6A`,
   which has pit cells) so that `_fix_platform` can put half the cases on the real map, where the probe finds b0:

@@ -224,6 +224,10 @@ FIELD_AIS = {
     # s166: the rest of the B27A-B2F4 block
     'AiTrailShot': (0x15, 0xB27A), 'AiRingSpawner': (0x1C, 0xB2A4), 'AiShotTurnMeta': (0x18, 0xB2D5),
     'AiShotTurn': (0x19, 0xB2E2),
+    # s167: shop / message AIs and three more shot AIs
+    'AiShopEmpty': (0x0E, 0xA5C0), 'AiSetSubstate': (0x0F, 0xA5C5), 'AiFollowPlayerWait': (0x0C, 0xA5CB),
+    'AiMessageAfterWait': (0x0D, 0xA5ED), 'AiShotEmitter': (0x1D, 0xB02C), 'AiFallingObj': (0x2F, 0xB048),
+    'AiDropSpawner': (0x36, 0xB070),
 }
 for _n, (_id, _ad) in FIELD_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r: {'x': _slot(r)})
@@ -496,6 +500,20 @@ def _fix_field(name, ram, r, x, wram=None):
         ram[0x0600 + x] = r.choice([0, 1, 4, r.randrange(256)])
         ram[0x0460 + x] = r.choice([0, 0, 6, 0x27, r.randrange(256)])
         ram[0x0360 + x] = r.choice([r.randrange(16), r.randrange(256)])
+    if name in ('AiFollowPlayerWait', 'AiMessageAfterWait', 'AiShotEmitter', 'AiFallingObj', 'AiDropSpawner'):
+        # s167: the zero / nonzero edges of each branch
+        ram[0x0561] = r.choice([0, 0, r.randrange(256)])
+        ram[0x0641] = r.choice([0, 0, r.randrange(256)])
+        ram[0x0620 + x] = r.choice([0, 0, 1, 7, 8, 9, r.randrange(256)])
+        ram[0x04E0 + x] = r.choice([0, 1, 2, 3, r.randrange(256)])
+        ram[0x0440 + x] = r.choice([0x14, 0x17, 0x3E, r.randrange(0x80), r.randrange(256)])
+        ram[0x6C] = r.choice([0x68, 0x68, r.randrange(256)])
+        ram[0xB0 + x] = r.choice([0xC0, 0xC7, 0xC8, r.randrange(256)])
+        ram[0x0360 + x] = r.choice([r.randrange(16), r.randrange(256)])
+        if r.random() < 0.5:                       # free slots so SpawnShot spawns
+            for s in range(0x0D, 0x1F):
+                if r.random() < 0.6:
+                    ram[0x04A0 + s] = 0
     if wram is not None and 'wram' in _BASE and name in ('AiDasher', 'AiTrapChest', 'AiBounceShot') \
             and r.random() < 0.4:
         wram[0x2F0:0x340] = _BASE['wram'][0x2F0:0x340]   # the real map, the object on the player's screen
