@@ -753,6 +753,14 @@ SCENARIOS['group_6E'] = dict(note='area 6E: AI $3A reveal on the slot-$0D NPC, p
                              exec=[place_player(0x0080, 0x0178, cam=True)],
                              keys=[],   # state taken at +12; the run's keys are in web/test/group6e_check.mjs
                              frames=480, watch=[0x03C1, 0x060E, 0x04AD, 0x04AE, 0x04AF, 0x0702])
+# s194: group_B2 = area B2 slot $0D type $92 (h0 p=$42 b2=$80, AI $41 27:B339 AiShellOnHit: AiShooterChase, a hit
+# closes the shell for 63 frames; hp $8A def 0 atk $5E, elem 7 = only sword 4 hurts it) + slots $14/$15 type $91
+# (AI $27, elem 5); level 16, sword 4 (SwordAttackTable[4] = 8), max defences
+SCENARIOS['group_B2'] = dict(note='area B2: type $92 AI $41 in slot $0D (+ type $91 AI $27 x2), level 16, sword 4, walk + B',
+                             area='B2', pokes={0x0421: 16, 0x0711: 4, 0x03E1: 16 + 8, 0x03C1: 0xC0, 0x0708: 0xC0,
+                                               0x0401: 0x40, 0x0400: 0x30},
+                             keys=[],   # state taken at +12; the run's keys are in web/test/groupb2_check.mjs
+                             frames=480, watch=[0x03C1, 0x03CD, 0x04AD, 0x0702])
 
 
 def set_from(dst, src):
