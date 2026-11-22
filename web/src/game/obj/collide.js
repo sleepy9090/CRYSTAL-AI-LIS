@@ -15,7 +15,7 @@
 // (HudRedraw(2) leaves Y = 2*6). HudRedraw's X argument only feeds $14.
 import { cpuRd, farRestore, switchBank16 } from '../prg.js';
 import { playSound } from '../playsound.js';
-import { hudRedraw, hudHpBar, statRecalc, paletteBuildRom } from '../states/death.js';
+import { hudRedraw, hudRedrawCycles, hudHpBar, statRecalc, paletteBuildRom } from '../states/death.js';
 import { farObjInit } from './objinit.js';
 import { hitSetFlag } from './objects.js';
 import { objMoveSlide } from './move.js';
@@ -181,19 +181,42 @@ function* hitByPlayerShot(m, x, y) {
   playSound(m, 0x21, y);
 }
 
-/** EnemyKilled 26:9152 (X = attacker, Y = the killed object) */
+/** s216 (gap (c3)): PlaySound 30:C125 cycles for an SFX id $20-$9F (C125-C13D 13: CMP #$A0 leaves N set for every
+ *  id $20-$9F, so BMI C12C is taken to AND #$7F; + C13F-C147 12 + queue not full 19 / full ($0100 = 5, overwrite
+ *  $0108) 29 + C160-C168 16), without the caller's JSR; tools.emu.span_cost: 13 / 31 / 10 + RTS at $81 f2922 */
+const playSoundSfxCycles = (m) => (m.rd(0x0100) === 5 ? 70 : 60);
+
+/** EnemyKilled 26:9152 (X = attacker, Y = the killed object).
+ *  s216 (gap (c3) lag model): runs as passStage 'col' with the exact ROM cycles in m.cyc (the lag model's col
+ *  stage = m.cyc only), from 9152 to its RTS 91F9: JSR AddXp 6 + AddXp 26:924B (25 / 30 on a carry into $0705 /
+ *  66 for a b7 value) + death type 0: 9155-915D 12 + EnemyDeathFx 26:91FA 71 + JMP 3, else 9155-9167 23 + the
+ *  FarCall_C25D ObjInit (passStage 'colh', fitted) + XP compare 916A-9177 21 (BCC taken) / 20 + 9179-9186 16 + 3
+ *  (level >= $10) + 91EF LDA JSR 8 + HudRedraw(2) + LDA JSR 8 + PlaySound($21) + RTS 6. A level-up 9188-91EC runs
+ *  as 'colh' (fitted, no exact count). Before s216 all of it was 'colh', fitted mostly on HitPlayer passes:
+ *  the $81 f2922 kill pass came out 453 cycles low (col 2546 vs tools.emu 2999). */
 function* enemyKilled(m, x, y) {
+  const stage = m.passStage;
+  m.passStage = 'col';
+  const v = m.rd(XP_VAL + y);
+  m.cyc += 6 + (v & 0x80 ? 66 : (m.rd(XP) + v > 0xFF ? 30 : 25));
   addXp(m, y);
-  if (m.rd(DEATH + y) === 0) enemyDeathFx(m, y);
+  if (m.rd(DEATH + y) === 0) { m.cyc += 86; enemyDeathFx(m, y); }
   else {
+    m.cyc += 23;
     m.wr(0x10, y);
     m.wr(0x11, m.rd(DEATH + y));
+    m.passStage = 'colh';
     farObjInit(m);
+    m.passStage = 'col';
   }
   const xp = m.rd(XP) | m.rd(XP + 1) << 8, next = m.rd(XP_NEXT) | m.rd(XP_NEXT + 1) << 8;
+  m.cyc += xp >= next ? 20 + 16 : 21;
   if (xp >= next) {
     m.wr(XP, 0); m.wr(XP + 1, 0);
-    if (!(m.rd(LEVEL) & 0xF0)) {                         // 9188 level up
+    if (m.rd(LEVEL) & 0xF0) m.cyc += 3;
+    else {                                               // 9188 level up
+      m.cyc += 2;
+      m.passStage = 'colh';
       const lv = (m.rd(LEVEL) + 1) & 0xFF;
       m.wr(LEVEL, lv);
       m.wr(0x03C0, cpuRd(m, 0x8B7F + lv));
@@ -209,10 +232,14 @@ function* enemyKilled(m, x, y) {
       m.wr(MSG_ID, 0x0D);
       m.wr(MSG_GROUP, 0x20);
       yield* statRecalc(m, x);
+      m.passStage = 'col';
     }
   }
+  m.cyc += 8 + hudRedrawCycles(m, 2);
   const ry = yield* hudRedraw(m, 2, x);                  // 91EF
+  m.cyc += 8 + playSoundSfxCycles(m) + 6;
   playSound(m, 0x21, ry);                                // Y = HudRedraw's $18 (2*6) or the flush's Y
+  m.passStage = stage;                                   // back in the caller (HitByPlayerShot / HitElemWall)
 }
 
 /** EnemyDeathFx 26:91FA: the object becomes the AI $7D death puff */
@@ -362,15 +389,25 @@ function ridePlatform(m, y) {
   m.wr(META_DIR, d);
 }
 
-/** PickupGold 26:946D */
+/** PickupGold 26:946D.
+ *  s216 (gap (c3) lag model): like enemyKilled, runs as passStage 'col' with exact ROM cycles from HitPlayer's
+ *  JMP PickupGold 26:9399 (3) on: 946D-9489 45 (BCC taken) / 54 (carry: $FFFF) + 9493-949A 15 + PlaySound($24)
+ *  + LDA JMP 5 + HudRedraw(1) (its JMP PpuNmiOn's RTS returns to ObjCollideAll). tools.emu.span_cost: 946D-949D
+ *  120 at $81 f2941 (before s216 the pass came out 812 cycles low in col; HitPlayer 9357-9399 stays fitted). */
 function* pickupGold(m, y) {
+  const stage = m.passStage;
+  m.passStage = 'col';
   const x = (m.rd(ELEM + y) >> 4) << 1;
   const g = (m.rd(0x0702) | m.rd(0x0703) << 8) + (cpuRd(m, 0x8BDE + x) | cpuRd(m, 0x8BDF + x) << 8);
+  m.cyc += 3 + (g > 0xFFFF ? 54 : 45) + 15;
   m.wr(0x0702, g > 0xFFFF ? 0xFF : g & 0xFF);
   m.wr(0x0703, g > 0xFFFF ? 0xFF : g >> 8);
   m.wr(ACTIVE + y, 0);
+  m.cyc += playSoundSfxCycles(m);
   playSound(m, 0x24, y);
+  m.cyc += 5 + hudRedrawCycles(m, 1);
   yield* hudRedraw(m, 1, x);
+  m.passStage = stage;
 }
 
 /** TalkProbeHit 26:94B0 (HitHandlerTable 4: the slot 3 probe touched y) */

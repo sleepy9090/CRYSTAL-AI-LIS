@@ -125,6 +125,21 @@ export function* hudRedraw(m, e, xReg = 0) {
   return y ?? x;                                      // s113: the Y register (LDY $18, or the flush's Y)
 }
 
+/** s216 (gap (c3) lag model): exact ROM cycles of HudRedraw 26:8E46 for element e, from the current state, without
+ *  the caller's JSR, for the no-wait case (PpuQueueWaitSrc 30:C72B: 8 slots x 17 - 1 + LDY / RTS = 143) with
+ *  rendering on (8EBB BNE taken, no 30:C8B2 flush): 8E46-8E6E 73 (+1 if the value pointer's low byte is $FF,
+ *  LDA (zp),Y Y=1 page cross) + 3 (16-bit, BNE 8E71 taken) / 7 (8-bit) + JSR HudToDecimal 6 + HudToDecimal
+ *  26:8F2B (22 + 52 per subtraction = digit sum + 37 per power x 5 - 1 + RTS 6 = 212 + 52 x digit sum)
+ *  + 8E7A-8E83 15 + digit copy 5 x 16 - 1 + 8E8E-8EC2 75 + PpuNmiOff / PpuNmiOn 15 each (LDA ORA/AND STA RTS) */
+export function hudRedrawCycles(m, e) {
+  const x = e * 6;
+  const ptr = cpuRd(m, 0x8EC5 + x) | cpuRd(m, 0x8EC6 + x) << 8;
+  const wide = cpuRd(m, 0x8ECA + x) !== 0;
+  let v = cpuRd(m, ptr) | (wide ? cpuRd(m, ptr + 1) << 8 : 0), ds = 0;
+  for (; v; v = Math.floor(v / 10)) ds += v % 10;
+  return 73 + ((ptr & 0xFF) === 0xFF ? 1 : 0) + (wide ? 3 : 7) + 143 + 6 + 212 + 52 * ds + 15 + 79 + 75 + 30;
+}
+
 /** HudHpBar 26:8CC0: 17 tiles at $2B26: $8C/$8D frame up to max HP, $88 full cells, partial cell 26:8D49 */
 export function* hudHpBar(m) {
   while (queueHasSrc(m, 0x60)) yield SPIN;          // PpuQueueWaitSrc($60)

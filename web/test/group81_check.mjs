@@ -10,7 +10,7 @@
 // f2923 ($03CE 2 -> $EA, puff AI $7D, slot clear f2975); the player takes 7 hits ($C0 -> $42, contact + shots);
 // the $84 in $10 climbs into reach and takes sword-4 hits too ($40 -> $12, its AI $2E phase 1).
 // s215: **f2506-2923 are compared** (418 rows, incl. 11 tools.emu lag frames: 6 from the lag model, the hit-stop ones
-// ported before); `--last F` compares to F without the HP / kill lists. Before s215 only f2506-2604. The area runs at the frame budget: ObjUpdateAll (2 AI $21, 2 AI $2E, 2 AI-$70
+// ported before); `--last F` compares to F without the HP / kill lists. s216: the whole ref f2506-2984 (see LAST). Before s215 only f2506-2604. The area runs at the frame budget: ObjUpdateAll (2 AI $21, 2 AI $2E, 2 AI-$70
 // phase-12 followers) ~100 lines + ObjSpriteDraw ~65-80 + ObjCollideAll ~60, and CameraTick costs ~50 lines
 // instead of ~11 on a vertical scroll. At f2604 ObjCollideAll starts at L235, the NMI finds frame_ready 1 and
 // f2605 has no pass (tools/emu/pass_probe.py: 18 such frames in the 480). The port has no general cycle model
@@ -39,9 +39,11 @@ const verbose = process.argv.includes('-v');
 let fails = 0;
 const fail = (msg) => { fails++; if (verbose || fails <= 30) console.log('  FAIL ' + msg); };
 const li = process.argv.indexOf('--last');
-// s215: to f2923 with the lag model (web/src/game/lagmodel.js; was f2604, the first lag frame): f2924 is the first
-// miss, the slot-$0E kill pass f2922 (EnemyKilled hit handler estimated ~450 cycles low); the ref runs to f2984
-const LAST = li > 0 ? Number(process.argv[li + 1]) : 2923;
+// s215: to f2923 with the lag model (web/src/game/lagmodel.js; was f2604, the first lag frame): f2924 was the first
+// miss, the slot-$0E kill pass f2922 (EnemyKilled hit handler estimated ~450 cycles low).
+// s216: EnemyKilled / PickupGold count exact ROM cycles (obj/collide.js, gap (c3)): the whole ref f2506-2984
+// (15 tools.emu lag frames, all predicted; the f2941 coin pickup was the next miss, 812 cycles low before)
+const LAST = li > 0 ? Number(process.argv[li + 1]) : 2984;
 const KEYS = parseKeys(('2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:DOWN:7 2592:B:4 2601:DOWN:6 2607:B:5 2618:DOWN:6 '
   + '2624:B:4 2634:DOWN:5 2639:B:4 2650:DOWN:6 2656:B:5 2666:DOWN:6 2672:B:4 2681:DOWN:6 2687:B:5 2698:DOWN:6 '
   + '2704:B:4 2713:DOWN:6 2719:B:5 2729:DOWN:8 2737:B:3 2745:DOWN:7 2752:B:4 2761:DOWN:7 2768:B:4 2777:DOWN:7 '
