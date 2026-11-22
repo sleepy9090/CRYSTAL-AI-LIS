@@ -357,6 +357,20 @@ def _coll_target(r):
     return r.randrange(0x0D, 0x1F)
 
 
+def _poke_follow(ram, wram, r):
+    """s199 (Ph7 leftovers (i)): follower acts. Slots 13/14 empty / already $32 / other, freeze 0 or not,
+    $0623 = the trigger slot (often 13-$1E)."""
+    _poke_obj(ram, wram, r)
+    for s in (0x0D, 0x0E):
+        ram[0x04A0 + s] = r.choice([0, 0x32, 0x32, r.randrange(1, 256), r.randrange(1, 256)])
+        ram[0x05A0 + s] = r.choice([0, 0, r.randrange(256)])
+    ram[0x0623] = r.choice([0x0D, 0x0E, r.randrange(0x0F, 0x1F), r.randrange(32)])
+
+
+# s199: EventActionTable acts 24 / 27 and MakeFollower13 (talk act 6 / 13) (web/src/game/states/talk.js, giveitem.js)
+ROUTINES['MakeFollower13'] = (None, 0xD23F, _poke_follow, None)
+ROUTINES['EvActTwoFollowers'] = (None, 0xD75E, _poke_follow, None)
+ROUTINES['EvActMakeFollowers'] = (None, 0xD7CE, _poke_follow, None)
 ROUTINES['ObjCollideAll'] = (26, 0x8F6E, _poke_coll, None)
 ROUTINES['ObjOverlapScan'] = (26, 0x95F8, _poke_coll, lambda r: {'x': r.choice([1, 2, 3, 0x0C, r.randrange(32)])})
 # HitHandlerTable 26:8FBB entries with the CollPairTable attacker slots (X) and a target Y in $0D-$1E

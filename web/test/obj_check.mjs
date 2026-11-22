@@ -13,7 +13,8 @@ import { playSound } from '../src/game/playsound.js';
 import { dirToTarget, spawnShot, objBgProbe } from '../src/game/obj/util.js';
 import { aiStraightMover, aiDirShot, aiBurst, aiFanTurret, aiTurret, aiS0DTransform } from '../src/game/obj/ai_static.js';
 import { areaSpawnEntry } from '../src/game/world/spawn.js';
-import { npcScript } from '../src/game/states/talk.js';
+import { npcScript, makeFollower13 } from '../src/game/states/talk.js';
+import { EVENT_ACTIONS } from '../src/game/states/giveitem.js';
 import { ppuQueueFlush } from '../src/game/world/ppuqueue.js';
 import { bgRowRender, bgColRender, fullScreenDraw, runNow } from '../src/game/world/bgstream.js';
 import { objMoveSlide } from '../src/game/obj/move.js';
@@ -37,6 +38,9 @@ const hx = (v, n = 2) => v.toString(16).toUpperCase().padStart(n, '0');
 const RUN = {
   ObjInit: (m) => { objInit(m); },
   AreaSpawnEntry: (m, r) => { areaSpawnEntry(m, r.x, r.y); },              // s112 world/spawn.js
+  MakeFollower13: (m) => { makeFollower13(m); },             // s199 talk acts 6 / 13, event acts 24 / 27
+  EvActTwoFollowers: (m) => { runNow(EVENT_ACTIONS[24](m)); },
+  EvActMakeFollowers: (m) => { runNow(EVENT_ACTIONS[27](m)); },
   NpcScript: (m) => { npcScript(m); },                                       // s115 states/talk.js
   AiS0DTransform: (m, r) => { aiS0DTransform(m, r.x); },
   PlaySound: (m, r) => { playSound(m, r.a, r.y); },

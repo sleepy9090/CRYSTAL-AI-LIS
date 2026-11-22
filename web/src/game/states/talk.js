@@ -437,6 +437,14 @@ export function npcVanish(m, y =m.rd(TALK_SLOT)) {
   playSound(m, 0x6D, y);
 }
 
+/** MakeFollower13 30:D23F (talk acts 6 / 13, event acts 2 / 28): slot 13 becomes type $32 (follower) */
+export function makeFollower13(m) {
+  m.wr(ACTIVE + 0x0D, 0x32);
+  m.wr(0x03AD, 0); m.wr(0x062D, 0); m.wr(0x064D, 0);
+  m.wr(0x04ED, 1);
+  m.wr(0x060D, 0xFF);
+}
+
 const nop = function* () {};
 /** TalkActionTable 30:D123 (ported entries; the rest log "not ported") */
 export const TALK_ACTIONS = {
@@ -450,6 +458,8 @@ export const TALK_ACTIONS = {
     objInit(m);
   },
   0x02: function* (m) { npcVanish(m); },                 // D31C
+  0x06: function* (m) { makeFollower13(m); },            // D23F (s199)
+  0x0D: function* (m) { makeFollower13(m); },            // D23F (s199)
   0x08: function* (m) {                                  // D63F re-init slot 14 with $04CE unless active = 8
     if (m.rd(ACTIVE + 0x0E) === 0x08) return;
     m.wr(0x10, 0x0E); m.wr(0x11, m.rd(0x04CE));

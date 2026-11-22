@@ -20,7 +20,7 @@ import { cpuRd, indY, setR7, switchBank16 } from '../prg.js';
 import { playSound } from '../playsound.js';
 import { objInit, farObjInit } from '../obj/objinit.js';
 import { SPIN, statRecalc, waitFrames } from './death.js';
-import { showMessage, showMessagePacked, npcResult, flagTest, flagApply, npcVanish, TALK_ACTIONS } from './talk.js';
+import { showMessage, showMessagePacked, npcResult, flagTest, flagApply, npcVanish, makeFollower13, TALK_ACTIONS } from './talk.js';
 import { restoreIfArea5F, saveGame } from './saveload.js';
 import { swordPowerLevel } from './equip.js';
 import { mainState1, playPaletteRestore } from './play.js';
@@ -286,8 +286,42 @@ function* giveItemA(m, a) {
   m.wr(TALK_SLOT, s);
 }
 
+/** TalkGiveParam2 30:D21D (talk act 17): GiveItemA(obj_param2[$0623]) if non-zero, else TalkGiveParam1 30:D225
+ *  (talk act 3): GiveItemA(obj_param1[$0623]) */
+function* talkGiveParam(m, p2) {
+  const y = m.rd(TALK_SLOT);
+  const a = p2 ? m.rd(0x06A0 + y) : 0;
+  yield* giveItemA(m, a || m.rd(0x0680 + y));
+}
+TALK_ACTIONS[0x03] = (m) => talkGiveParam(m, false);      // s199
+TALK_ACTIONS[0x11] = (m) => talkGiveParam(m, true);
+
 const nop = function* () {};
-const EVENT_ACTIONS = {
+export const EVENT_ACTIONS = {
+  2: function* (m) {                                     // D5D6 (s199): slot 13 gives its item, $030D = $88, follower
+    m.wr(TALK_SLOT, 0x0D);
+    yield* talkGiveParam(m, true);
+    m.wr(0x030D, 0x88);
+    makeFollower13(m);
+  },
+  24: function* (m) {                                    // D75E EvActTwoFollowers (s199)
+    m.wr(0x068D, 0x0B); m.wr(0x068E, 0x0A);
+    m.wr(ACTIVE + 0x0D, 0x32); m.wr(ACTIVE + 0x0E, 0x32);
+    for (const a of [0x062D, 0x062E, 0x064D, 0x064E]) m.wr(a, 0);
+    m.wr(ACTIVE + m.rd(TALK_SLOT), 0);
+    m.wr(0x04ED, 1); m.wr(0x04EE, 1);
+  },
+  27: function* (m) {                                    // D7CE EvActMakeFollowers (s199)
+    m.wr(ACTIVE + m.rd(TALK_SLOT), 0);
+    for (let y = 0x0D; y < 0x0F; y++) {
+      const t = m.rd(ACTIVE + y);
+      if (t === 0 || t === 0x32 || m.rd(0x05A0 + y)) continue;
+      m.wr(0x0680 + y, y - 0x0B);
+      m.wr(ACTIVE + y, 0x32);
+      m.wr(0x04E0 + y, 1);
+    }
+  },
+  28: function* (m) { yield* giveItemA(m, 0x29); makeFollower13(m); },   // D7FD Gas Mask (s199)
   0: nop, 3: nop, 5: nop, 18: nop, 26: nop, 4: nop,     // D5A3 / D653 RTS
   8: (m) => giveItemA(m, 0x42),                          // D654 Paralysis
   10: function* (m, y) { playSound(m, 0x6E, y); },       // D63A
