@@ -251,7 +251,9 @@ BOSS_AIS = {'BossAiE0': (0x60, 0xA477, range(8)), 'BossHomingShot': (0x61, 0xA5E
             'BossAiE3': (0x63, 0xA95D, range(5)), 'BossRockShot': (0x64, 0xAB3E, (0, 0, 1, 2, 2)),
             # s104: $E6 phases 2/3 are null (15:0000), $E8 phase 2 = 15:B051
             'BossAiE6': (0x66, 0xAC7B, (0, 1, 1)), 'AiBoss88': (0x67, 0xADD4, range(6)),
-            'BossAiE8': (0x68, 0xAF48, (0, 1, 1, 2, 2))}
+            'BossAiE8': (0x68, 0xAF48, (0, 1, 1, 2, 2)),
+            # s156: $E9 statues (phase 2 = the shared fire entry B105), $EA patrol / dive / rise
+            'BossAiE9': (0x69, 0xB0B6, (0, 1, 1, 2)), 'BossAiEA': (0x6A, 0xB130, (0, 1, 1, 2, 3, 3))}
 for _n, (_id, _ad, _p) in BOSS_AIS.items():
     ROUTINES[_n] = ((26, 15), _ad, _poke_bg, lambda r: {'x': _slot(r)})
 # AI ids the port has (web/src/game/obj/ai_static.js, ai_walk.js, ai_field.js) + ids whose ObjAiTable 27:A314 entry is 0
@@ -636,6 +638,24 @@ def _fix_boss(name, ram, r, x, wram):
         if _id == 0x67 and p == 3 and r.random() < 0.5:   # $E7: the bounce's act_timer end
             ram[0x0620 + x] |= 1
             ram[0x0640 + x] = 1
+    if _id in (0x69, 0x6A):                        # s156: obj_anim fire edges, timer2 wind-up end, y edges
+        ram[0x6C] = r.choice([0xA0, 0x9F, 0xA6, 0xA6, r.randrange(256)])
+        ram[0x04E0 + x] = r.choice([0, 0, 0x24, 0x20, 0x21, 0x1F, 0xC0, 0xBF, 0xA0, 0x80, r.randrange(256)])
+        ram[0x0620 + x] = r.choice([0, 0, 0, 1, 0x20, 0x21, 0x40, r.randrange(256)])
+        ram[0xB0 + x] = r.choice([0x2F, 0x30, 0x40, 0x41, 0x80, 0x9F, 0xA0, 0xCF, 0xD0, r.randrange(256)])
+        if r.random() < 0.4:
+            ram[0x0380 + x] &= 0x7F
+            ram[0x07D5] = 1
+        if r.random() < 0.4:                       # close to the player's x (the |dx| < 8 test)
+            ram[0x90 + x] = ram[0x90]
+            ram[0x70 + x] = (ram[0x70] + r.randrange(-12, 13)) & 0xFF
+        if r.random() < 0.3:
+            ram[0x08] &= 0xF8
+        ram[0x0440 + x] = r.choice([0x32, 0x31, 0x31, r.randrange(256)])   # their real shots ($CB / $CC)
+        if r.random() < 0.3:                       # a fire frame: statue anim $24, EA timer2 under $21 on $08 & 7 = 0
+            ram[0x04E0 + x] = 0x24
+            ram[0x0620 + x] = r.choice([1, 0x10, 0x20, 0x21])
+            ram[0x08] &= 0xF8
     if r.random() < 0.4:
         _rand_zero_next(ram, r)
     if r.random() < 0.5:                           # the boss on the player's screen, near the arena edges

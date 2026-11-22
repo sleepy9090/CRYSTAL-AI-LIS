@@ -553,7 +553,18 @@ bank,addr,name,comment
 15,AC7B,BossAiE6,boss AI $E6 (type $90) phase base $17 x2
 15,AF48,BossAiE8,boss AI $E8 (type $97) phase base $21 x3
 15,B0B6,BossAiE9,boss AI $E9 (statues $9C/$9D) phase base $24 x3
+15,B0C5,BossE9Intro,phase 0: freeze player until $07D5; slot $0D queues msg 27.3
+15,B0F4,BossE9Watch,phase 1: obj_anim=$24 when x lo b7 matches slot 1's ($71)
+15,B105,BossE9Fire,phase 2 / fire entry: anim-=4; at $20 SpawnShot dir DirToTarget*2+B12C[Rand64&3]
+15,B12C,BossE9AimJitter,4 bytes 00 00 01 FF added to the statue shot dir
 15,B130,BossAiEA,boss AI $EA (type $9B) phase base $27 x4
+15,B14F,BossEAIntro,phase 0: CHR R4 $79 spr pal $41/$40; aligned -> msg 27.4 (area $A6) or 27.0
+15,B1A5,BossEAPatrol,phase 1: walk dir 2/6 toward player x; |dx|<8 (off by one for dx<0) -> dive
+15,B203,BossEAMove,obj_timer-- + BossE7Step move tail
+15,B215,BossEADive,phase 2: speed 8 down until y >= $D0
+15,B22C,BossEARise,phase 3: speed 2 up; fire at y $80/$40; y<$30 -> phase 1
+15,B278,BossEAFire,obj_timer2--: wind-up >= $20 then 4-way fan every 8 frames
+15,B2D2,BossEAFanTable,4 x (dir16 dy): 06 00 / 07 10 / 09 10 / 0A 00
 27,B0B5,AiStraightMover,AI $10: lifetime $0480; ObjStepVector; optional BG collision via $0460
 27,ACD9,AiNpcWander,AI $30: talkable NPC random 4-dir wander with pauses
 27,AD9C,NpcLookAhead,4 x (dx;dy) 16px look-ahead per dir

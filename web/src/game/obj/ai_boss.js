@@ -12,6 +12,8 @@
 //   AI $66 (= $E6) BossAiE6  15:AC7B  flyer with a fire fan (phases AC8F ACF5; 2/3 are null)       (session 104)
 //   AI $67 (= $E7) AiBoss88  15:ADD4  bouncer + curve-shot volley (phases ADE8 AE35 AE43 AE5A AEC9 AEEC)
 //   AI $68 (= $E8) BossAiE8  15:AF48  waypoint flyer (route 15:B02B in slot $1F, HomingMove) (phases AF5C AFAD B051)
+//   AI $69 (= $E9) BossAiE9  15:B0B6  statues (phases B0C5 B0F4 B105)                                (session 156)
+//   AI $6A (= $EA) BossAiEA  15:B130  patrol / dive / rise + fire fan 15:B278 (phases B14F B1A5 B215 B22C)
 import { cpuRd, setR6 } from '../prg.js';
 import { playSound } from '../playsound.js';
 import { paletteBuildRom } from '../states/death.js';
@@ -584,6 +586,143 @@ export function bossAiE8(m, x) {
   return bossPhaseDispatch(m, x, 0x21);
 }
 
+// ---- AI $E9 BossAiE9 15:B0B6 (statues, session 156) ----------------------------------------------------------
+
+function e9Intro(m, x) {                                     // B0C5
+  if (m.rd(FLAGS + x) & 0x80) return;
+  m.wr(CAM_LOCK, 0xFF);
+  m.wr(FREEZE, 0x10);
+  if (!m.rd(0x07D5)) return;
+  m.wr(FREEZE, 0);
+  inc(m, PHASE + x);
+  if (x === 0x0D) introMessage(m, 0x1B, 0x03);
+}
+
+/** B105 (also phase 2): obj_anim -= 4; at $20 one shot in DirToTarget*2 + 15:B12C[Rand64 & 3] */
+function e9Fire(m, x) {
+  const a = (m.rd(ANIM + x) - 4) & 0xFF;
+  m.wr(ANIM + x, a);
+  if (a !== 0x20) return;
+  dirToTarget(m, x, 1);
+  m.wr(0x20, (m.rd(0x20) << 1) & 0xFF);
+  const y = (cpuRd(m, 0xB12C + (rand64(m) & 3)) + m.rd(0x20)) & 0xFF;
+  return spawnShot(m, x, m.rd(SHOT_ID + x), y);
+}
+
+function e9Watch(m, x) {                                     // B0F4
+  if (m.rd(ANIM + x)) return e9Fire(m, x);
+  if ((m.rd(X_LO + x) ^ m.rd(0x71)) & 0x80) return;          // EOR $71 (slot 1's x lo)
+  m.wr(ANIM + x, 0x24);
+}
+
+export function bossAiE9(m, x) {
+  if (m.rd(PHASE + x)) m.wr(CAM_LOCK, 0x7F);
+  return bossPhaseDispatch(m, x, 0x24);
+}
+
+// ---- AI $EA BossAiEA 15:B130 (session 156) -------------------------------------------------------------------
+
+/** 15:B203: obj_timer--, then BossE7Step's move (98A8 / 8480 / 9861 / 9897) */
+function eaMove(m, x) {
+  dec(m, TIMER + x);
+  stepMove16(m, x);
+}
+
+/** 15:B278 fire: wind-up above $20, then every 8 frames a 4-way fan (dir, dy) from 15:B2D2 */
+function eaFire(m, x) {
+  if (dec(m, TIMER2 + x) >= 0x20) {
+    m.wr(META + x, 0xE0); m.wr(OVERLAY + x, 0xE1);
+    dec(m, ANIM + x);
+    return;
+  }
+  m.wr(META + x, 0xE2); m.wr(OVERLAY + x, 0xF2);
+  m.wr(ANIM + x, (m.rd(ANIM + x) - 4) & 0xFF);
+  if (m.rd(0x08) & 7) return;
+  m.wr(0x1E, 3);
+  for (;;) {
+    const y = (m.rd(0x1E) << 1) & 0xFF;
+    m.wr(0x1F, cpuRd(m, 0xB2D3 + y));
+    if (!spawnShot(m, x, m.rd(SHOT_ID + x), cpuRd(m, 0xB2D2 + y))) return;
+    const n = m.rd(0x10);
+    m.wr(Y_LO + n, (m.rd(Y_LO + n) + m.rd(0x1F)) & 0xFF);
+    if (dec(m, 0x1E) & 0x80) return;
+  }
+}
+
+function eaIntro(m, x) {                                     // B14F
+  if (m.rd(FLAGS + x) & 0x80) return;
+  m.wr(FREEZE, 0x10);
+  m.wr(0x07F4, 0x79);
+  m.wr(0x07E6, 0x41); m.wr(0x07E7, 0x40);
+  m.wr(CAM_LOCK, 0xFF);
+  if (!m.rd(0x07D5)) return;
+  m.wr(FLAGS + x, 0x0B);
+  m.wr(OVERLAY + x, 0x4C);
+  m.wr(COLL + x, 0x30);
+  m.wr(FREEZE, 0);
+  playSound(m, 0x12, 0x4E);                                  // Y = BossPhaseDispatch's ($27 + 0) * 2
+  m.wr(0x06C3, m.rd(0x6C) === 0xA6 ? 0x04 : 0x00);
+  m.wr(0x06E3, 0x1B);
+  m.wr(0x41, 0x10);
+  inc(m, PHASE + x);
+}
+
+function eaPatrol(m, x) {                                    // B1A5
+  if (m.rd(TIMER2 + x)) return eaFire(m, x);
+  m.wr(META + x, 0xDB); m.wr(OVERLAY + x, 0x4C);
+  m.wr(FLAGS2 + x, 4);
+  const a = dec(m, ANIM + x);
+  let face = true;
+  if (a < 0xC0) {
+    if (a & 0x1F) face = false;
+    else if (rand64(m) & 1) m.wr(TIMER2 + x, 0x40);
+  }
+  if (face) {                                                // B1D5: x >= player x (16 bit) -> left
+    const c = m.rd(X_LO + x) >= m.rd(X_LO) ? 1 : 0;
+    const ge = m.rd(X_HI + x) - m.rd(X_HI) - (1 - c) >= 0;
+    m.wr(META_DIR + x, ge ? 6 : 2);
+  }
+  const lo = (m.rd(X_LO) - m.rd(X_LO + x)) & 0xFF;          // B1E6
+  m.wr(0x10, lo);
+  const b = m.rd(X_LO) < m.rd(X_LO + x) ? 1 : 0;
+  const hi = (m.rd(X_HI) - m.rd(X_HI + x) - b) & 0xFF;
+  const d = hi & 0x80 ? ((lo ^ 0xFF) - 1) & 0xFF : lo;      // EOR #$FF / SEC / SBC #1 (= -dx - 2)
+  if (d < 8) { inc(m, PHASE + x); return; }
+  eaMove(m, x);
+}
+
+function eaDive(m, x) {                                      // B215
+  if (m.rd(Y_LO + x) >= 0xD0) { inc(m, PHASE + x); return; }
+  m.wr(FLAGS2 + x, 8);
+  m.wr(META_DIR + x, 4);
+  eaMove(m, x);
+}
+
+function eaRise(m, x) {                                      // B22C
+  dec(m, ANIM + x);
+  m.wr(META + x, 0xE0); m.wr(OVERLAY + x, 0xE1);
+  if (m.rd(TIMER2 + x)) return eaFire(m, x);
+  const yl = m.rd(Y_LO + x);
+  if (yl < 0xA0) {
+    if ((((yl - 0x20) & 0xFF) & 0x3F) === 0x20) m.wr(TIMER2 + x, 0x40);
+    if (yl < 0x30) {
+      m.wr(PHASE + x, 1);
+      m.wr(META_DIR + x, rand64(m) & 1 ? 6 : 2);
+      return;
+    }
+  }
+  m.wr(FLAGS2 + x, 2);                                       // B26B
+  m.wr(META_DIR + x, 0);
+  eaMove(m, x);
+}
+
+export function bossAiEA(m, x) {
+  hitFlashPal(m, x, 0xC0);
+  if (m.rd(0x6C) === 0xA6) m.wr(HP + x, 0xFF);
+  if (m.rd(PHASE + x)) m.wr(CAM_LOCK, 0x10);
+  return bossPhaseDispatch(m, x, 0x27);
+}
+
 // ---- BossPhaseDispatch 15:A400 -------------------------------------------------------------------------------
 
 const BOSS_PHASES = {
@@ -593,6 +732,8 @@ const BOSS_PHASES = {
   0xAC8F: e6Intro, 0xACF5: e6Fight,
   0xADE8: e7Intro, 0xAE35: e7Pose, 0xAE43: e7Wait, 0xAE5A: e7Bounce, 0xAEC9: e7Aim, 0xAEEC: e7Volley,
   0xAF5C: e8Intro, 0xAFAD: e8Route, 0xB051: e8Attack,
+  0xB0C5: e9Intro, 0xB0F4: e9Watch, 0xB105: e9Fire,
+  0xB14F: eaIntro, 0xB1A5: eaPatrol, 0xB215: eaDive, 0xB22C: eaRise,
 };
 
 export function bossPhaseDispatch(m, x, base) {
@@ -607,5 +748,5 @@ export function bossPhaseDispatch(m, x, base) {
 
 export const AI_BOSS = {
   0x60: bossAiE0, 0x61: bossHomingShot, 0x63: bossAiE3, 0x64: bossRockShot,
-  0x66: bossAiE6, 0x67: aiBoss88, 0x68: bossAiE8,
+  0x66: bossAiE6, 0x67: aiBoss88, 0x68: bossAiE8, 0x69: bossAiE9, 0x6A: bossAiEA,
 };

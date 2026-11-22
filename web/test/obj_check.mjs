@@ -106,6 +106,8 @@ const RUN = {
   BossAiE6: (m, r) => { B.bossAiE6(m, r.x); },
   AiBoss88: (m, r) => { B.aiBoss88(m, r.x); },
   BossAiE8: (m, r) => { B.bossAiE8(m, r.x); },
+  BossAiE9: (m, r) => { B.bossAiE9(m, r.x); },               // s156
+  BossAiEA: (m, r) => { B.bossAiEA(m, r.x); },
   // s111 (gameplay frames (e2)): obj/player.js, generators (HudChargeMeter / HudRedraw / HudHpBar queue waits)
   PlayerUpdate: (m, r) => { runNow(P.playerUpdate(m, r.x)); },
   PlayerMoveLocked: (m, r) => { runNow(P.playerMoveLocked(m, r.x)); },
