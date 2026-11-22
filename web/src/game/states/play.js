@@ -32,6 +32,7 @@ import { substCureMagic } from './cure.js';
 import { substFormRevert } from './formrevert.js';
 import { swordRaisePose } from './swordraise.js';
 import { substMesiaReunion } from './mesia.js';
+import { substFinalSceneReset } from './finalscene.js';
 
 function unported(m, what) {
   if (!m.unported.has(what)) { m.unported.add(what); m.log(`${what} not ported yet`); }
@@ -236,6 +237,7 @@ const SUBSTATES = new Map([
   [27, substMesiaReunion],                            // 19:BC6B event act 30 (s150, states/mesia.js)
   [28, substOutOfMp],                                 // 30:CC17 SpendMp short of MP -> msg 32.14 (s151)
   [29, substTeleportMenu],                         // 30:DB28 2nd entry (never stored)
+  [30, substFinalSceneReset],                         // 19:BDF2 AI $70 phase 10 -> ending (s152, states/finalscene.js)
   [31, substRestoreScreen],                           // 30:CC4D (s120; set by AI $70 phase 2)
   [32, substArmorShop],                               // 30:D985 (s122, states/shop.js; types $42 $48)
   [33, substToolShop],                                // 30:D98E (s122; types $41 $44 $47)
@@ -275,6 +277,7 @@ export const ENTRY_POINTS = {
   '19:BC04': swordRaisePose,                          // s149 (web/test/states/swordraise.json)
   '19:BC6B': substMesiaReunion,                       // s150 (web/test/states/mesia.json)
   '30:CC17': function* (m) { substOutOfMp(m); },      // s151 (web/test/states/outofmp.json; one pass, no wait)
+  '19:BDF2': substFinalSceneReset,                    // s152 (web/test/states/finalscene.json)
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */

@@ -25,7 +25,7 @@ import { objPosToTemp, tempToObjPos, tempAddStep } from '../obj/util.js';
 const STEP_TABLE = 0xBD59;                              // bank 19 at $A000 (SwitchBank16(9))
 
 /** 19:BDDC: pal_buf $6140-$615F = A, WaitFrame, SetR6($1A) + PaletteBuild 26:8C0E, WaitFrame */
-function* palFlash(m, a) {
+export function* palFlash(m, a) {
   for (let y = 0x1F; y >= 0; y--) m.wr(0x6140 + y, a);
   yield* waitFrame(m);
   setR6(m, 0x1A);
