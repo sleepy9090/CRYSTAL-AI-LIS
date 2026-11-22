@@ -385,6 +385,10 @@ def _poke_type38(ram, wram, r):
 
 # s200: EventActionTable act 9 EvActSpawnType38 30:D659 (web/src/game/states/giveitem.js)
 ROUTINES['EvActSpawnType38'] = (None, 0xD659, _poke_type38, None)
+# s201: TalkActionTable acts 10 / 21 / 24 (web/src/game/states/talk.js; no frame waits)
+ROUTINES['TalkSpawnShot0F'] = (None, 0xD2F4, _poke_follow, None)
+ROUTINES['TalkTwoFollowers'] = (None, 0xD2D3, _poke_follow, None)
+ROUTINES['TalkWarp'] = (None, 0xD280, _poke_follow, None)
 ROUTINES['ObjCollideAll'] = (26, 0x8F6E, _poke_coll, None)
 ROUTINES['ObjOverlapScan'] = (26, 0x95F8, _poke_coll, lambda r: {'x': r.choice([1, 2, 3, 0x0C, r.randrange(32)])})
 # HitHandlerTable 26:8FBB entries with the CollPairTable attacker slots (X) and a target Y in $0D-$1E

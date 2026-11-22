@@ -13,7 +13,7 @@ import { playSound } from '../src/game/playsound.js';
 import { dirToTarget, spawnShot, objBgProbe } from '../src/game/obj/util.js';
 import { aiStraightMover, aiDirShot, aiBurst, aiFanTurret, aiTurret, aiS0DTransform } from '../src/game/obj/ai_static.js';
 import { areaSpawnEntry } from '../src/game/world/spawn.js';
-import { npcScript, makeFollower13 } from '../src/game/states/talk.js';
+import { npcScript, makeFollower13, TALK_ACTIONS } from '../src/game/states/talk.js';
 import { EVENT_ACTIONS } from '../src/game/states/giveitem.js';
 import { ppuQueueFlush } from '../src/game/world/ppuqueue.js';
 import { bgRowRender, bgColRender, fullScreenDraw, runNow } from '../src/game/world/bgstream.js';
@@ -42,6 +42,9 @@ const RUN = {
   EvActTwoFollowers: (m) => { runNow(EVENT_ACTIONS[24](m)); },
   EvActMakeFollowers: (m) => { runNow(EVENT_ACTIONS[27](m)); },
   EvActSpawnType38: (m) => { runNow(EVENT_ACTIONS[9](m)); },       // s200 event act 9
+  TalkSpawnShot0F: (m) => { runNow(TALK_ACTIONS[10](m)); },        // s201 talk acts 10 / 21 / 24
+  TalkTwoFollowers: (m) => { runNow(TALK_ACTIONS[21](m)); },
+  TalkWarp: (m) => { runNow(TALK_ACTIONS[24](m)); },
   NpcScript: (m) => { npcScript(m); },                                       // s115 states/talk.js
   AiS0DTransform: (m, r) => { aiS0DTransform(m, r.x); },
   PlaySound: (m, r) => { playSound(m, r.a, r.y); },

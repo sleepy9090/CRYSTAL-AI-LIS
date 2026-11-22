@@ -297,6 +297,17 @@ function* talkGiveParam(m, p2) {
 }
 TALK_ACTIONS[0x03] = (m) => talkGiveParam(m, false);      // s199
 TALK_ACTIONS[0x11] = (m) => talkGiveParam(m, true);
+// s201: talk acts 20 (D18E Flight + JMP TalkFullRestore), 25 (D2AE Shield Ring, slot 14 follower), 26 (D336)
+TALK_ACTIONS[0x14] = function* (m, y) { yield* giveItemA(m, 0x48); yield* TALK_ACTIONS[0x17](m, y); };
+TALK_ACTIONS[0x19] = function* (m) {
+  yield* giveItemA(m, 0x30);
+  m.wr(ACTIVE + 0x0E, 0x32);
+  m.wr(0x03AE, 0); m.wr(0x062E, 0); m.wr(0x064E, 0);
+  m.wr(0x04EE, 1);
+  m.wr(0x060E, 0xFF);
+  m.wr(0x068E, 0x0D);
+};
+TALK_ACTIONS[0x1A] = function* (m) { yield* giveItemA(m, 0x09); m.wr(0x060D, 4); };
 
 /** WaitSfxDone 30:D88B: WaitFrame until snd_sfx_priority $0112 = $FF */
 function* waitSfxDone(m) {

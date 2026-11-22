@@ -177,5 +177,8 @@ Regenerate (about 10 s each):
     # s200: EventActionTable act 9 EvActSpawnType38 30:D659 (states/giveitem.js)
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --seed 200 \
         --routine EvActSpawnType38 --out web/test/obj_frames/fuzz_type38.json
+    # s201: TalkActionTable acts 10 / 21 / 24 (states/talk.js)
+    python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 150 --seed 201 \
+        --routine TalkSpawnShot0F,TalkTwoFollowers,TalkWarp --out web/test/obj_frames/fuzz_talkacts.json
 
 `python3 -m tools.emu.routine_capture --list` shows the routines; `--routine A,B` captures a subset.

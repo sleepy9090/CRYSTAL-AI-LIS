@@ -18,7 +18,8 @@ import { SPIN, waitFrame, oamClip, hudRedraw, hudHpBar } from './death.js';
 import { farSpriteDraw } from './areaenter.js';
 import { readPads } from '../pads.js';
 import { playSound } from '../playsound.js';
-import { objInit } from '../obj/objinit.js';
+import { objInit, farObjInit } from '../obj/objinit.js';
+import { objPosToTemp, tempToObjPos } from '../obj/util.js';
 import { queueEmpty, queuePush, ppuCtrlNmiOn, ppuCtrlNmiOff } from '../world/ppuqueue.js';
 
 const BUF = 0x6000, Q = 0x6200;
@@ -485,6 +486,30 @@ export const TALK_ACTIONS = {
     npcVanish(m);
   },
   0x1B: function* (m) { m.wr(0x060D, 6); },              // D341
+  0x0A: function* (m) {                                  // D2F4 TalkSpawnShot0F (s201): type $0F in $1E at the NPC
+    setR6(m, 0x1A);
+    objPosToTemp(m, m.rd(TALK_SLOT));
+    m.wr(0x10, 0x1E); m.wr(0x11, 0x0F);
+    tempToObjPos(m, 0x1E);
+    farObjInit(m);
+    m.wr(0x057E, 0x39); m.wr(0x055E, 2); m.wr(0x061E, 3);
+    npcVanish(m);                                        // falls into D31C
+  },
+  0x15: function* (m) {                                  // D2D3 TalkTwoFollowers (s201), skipped if slot 14 is $32
+    if (m.rd(ACTIVE + 0x0E) === 0x32) return;
+    m.wr(0x068D, 0x0E); m.wr(0x068E, 0x0F);
+    m.wr(ACTIVE + 0x0D, 0x32); m.wr(ACTIVE + 0x0E, 0x32);
+    m.wr(0x04ED, 1); m.wr(0x04EE, 1);
+  },
+  0x18: function* (m) {                                  // D280 TalkWarp (s201): player slots 0/1 to slot $1E
+    m.wr(0x0620, 0);                                     // obj_timer2 slot 0
+    setR6(m, 0x1A);
+    objPosToTemp(m, 0x1E);
+    tempToObjPos(m, 0); tempToObjPos(m, 1);
+    m.wr(0x0710, m.rd(0x0710) | 0x40);                   // obj1_flash b6 = warp exit
+    m.wr(0x0561, 2); m.wr(0x0641, 2);
+    m.wr(ACTIVE + 0x1E, 0x0C);
+  },
 };
 
 /** NpcTalk 30:D0C8 (sub_state $11). yIn = the Y register at the dispatch (PlaySound keeps it in $010F). */

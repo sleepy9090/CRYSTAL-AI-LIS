@@ -1169,7 +1169,12 @@ bank,addr,name,comment
 *,6423,name_entry_frames,s74: INC per NameEntryInput pass (19:A3F6); cleared at 19:A3F2; saved (mirrors $6D23/$7D23 -> save_checksum $70F4/$70F5)
 30,DC58,TeleportAreaTable,s75: 11 area ids (02 18 1C D5 50 1B 71 72 8C 8E 93) + FF; index = cursor row*3+col (30:DC79; 11 = cancel); flag test TestFlagF2F0 at DC82; same area -> no reload
 30,DF2F,ChangeFormApply,s76: change-form menu A key: SFX $39; 31-frame R4=$4D effect; obj1_flash |= ($21<<4)|$80 (b7 changed form + b5-4 form 0-3); SpendMp($14)
-30,D280,EvActWarp,s76: event act 24: player slots 0/1 to slot $1E pos; obj1_flash |= $40 (warp exit: speed 9 spin until off b1/b2 tiles); $0561=$0641=2
+30,D280,TalkWarp,s76/s201: TalkActionTable act 24 (not event act 24 = D75E): player slots 0/1 to slot $1E pos; obj1_flash |= $40 (warp exit: speed 9 spin until off b1/b2 tiles); $0561=$0641=2; $04BE=$0C
+30,D18E,TalkGiveFlight,s201: talk act 20: GiveItemA($48 Flight) then JMP TalkFullRestore
+30,D2AE,TalkShieldRingFollower,s201: talk act 25: GiveItemA($30 Shield Ring); slot 14 type $32 follower ($068E=$0D)
+30,D2D3,TalkTwoFollowers,s201: talk act 21: unless slot 14 = $32: slots 13/14 type $32 with $068D/$068E = $0E/$0F
+30,D2F4,TalkSpawnShot0F,s201: talk act 10: type $0F in slot $1E at the NPC's pos ($057E=$39 $055E=2 $061E=3), falls into NpcVanish
+30,D336,TalkGiveWaterBall,s201: talk act 26: GiveItemA($09 Ball of Water); $060D=4
 26,9B41,WarpSpinPoseTable,s76: 4 meta ids 88 C2 8A EF by facing while obj1_flash b6 (warp exit)
 15,BF46,DebugCheatStub,s77: lone RTS = target of PauseWait's JSR at 15:BDE4; switches off DebugPauseCheat (body starts 1 byte later)
 15,BF47,DebugPauseCheat,s77: dead debug cheat (never reached): boot_ab_flag + pad2 dir -> fill empty inventory from 15:BF7F; level $0F; MP $FF/$FF; pad2 A -> slots 0/1 speed 9
