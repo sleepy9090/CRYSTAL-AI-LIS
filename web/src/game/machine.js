@@ -8,7 +8,7 @@
 // -> NMI work. The game only talks to the PPU through its registers (ppu.writeReg / oamDma / setChrReg).
 import { Ram, R } from './ram.js';
 import { Ppu } from '../nes/ppu.js';
-import { mainStep, nmiWork, irqMenuChrSplit, irqIntroSplit, irqWrapSplit, irqHud, irqMsgWindowTop,
+import { mainStep, nmiWork, nmiLostToHud, irqMenuChrSplit, irqIntroSplit, irqWrapSplit, irqHud, irqMsgWindowTop,
   irqMsgWindowEnd } from './mainloop.js';
 import { ENTRY_POINTS } from './states/play.js';
 import { Apu } from '../nes/apu.js';
@@ -150,6 +150,7 @@ export class Machine {
     this._installSplits();
     this.ppu.renderFrame();
     if (this.skipNmi) this.skipNmi = false;          // s107: NO_NMI (lost NMI, see states/death.js)
+    else if (this.hudNmiLost) { this.hudNmiLost = false; nmiLostToHud(this); }   // s174: see irqHud
     else nmiWork(this);
     // s114: CPU overrun. The ROM's frame ran past line 241, so its NMI found frame_ready != 0 (no OAM DMA, no
     // scroll copy, frame_ready 2). Then MainLoop's 30:C919 clears it and waits a whole frame for the next NMI.

@@ -264,10 +264,52 @@ export function irqHud(m) {
   p.writeReg(6, 0x2B); p.writeReg(6, 0x00); p.writeReg(5, 0x00);
   p.setChrReg(0, 0x3C);
   p.setChrReg(1, 0x38);
+  const start = musicStartId(m);
   m.wr(R.nmi_busy_flag, 1);
   m.soundUpdate(m);
+  // s174: a SoundUpdate that starts a track runs its first tick on all 4 channels. When that is longer than
+  // the time to line 241, the NMI comes while nmi_busy_flag is set: it only sets nmi_missed_flag (no DMA, no
+  // PpuQueueFlush / PaletteUpload, no frame_ready increment) and this handler then runs NmiModeDispatch
+  // alone. Machine.runFrame does that in place of nmiWork (hudNmiLost).
+  if (start >= 0 && m.rd(0x0111) === start && MUSIC_START_CYCLES[start] > HUD_SOUND_BUDGET) {
+    m.hudNmiLost = true;
+    return;
+  }
   m.wr(R.nmi_busy_flag, 0);
   if (m.rd(R.nmi_missed_flag)) nmiModeDispatch(m);
+  m.wr(R.nmi_missed_flag, 0);
+}
+
+/** s174 (tools/emu/sound_cost_probe.py): CPU cycles of the SoundUpdate call that starts music id $00-$1F
+ *  (SndCommand + the first SndTick, from SndInit, NMI / IRQ blocked). */
+const MUSIC_START_CYCLES = [
+  2677, 6010, 414, 4512, 5297, 414, 5614, 5764, 5822, 5016, 4305, 5683, 4959, 4171, 4555, 4715,
+  414, 5097, 6228, 4443, 5668, 6197, 3941, 5012, 4981, 5487, 5910, 4579, 6091, 5033, 5341, 4869,
+];
+/** IrqHandler1Hud sets nmi_busy_flag at about L191 dot 172 (31:F4CF, area $5F f2664-2673); the NMI is at
+ *  L241 dot 1: (50 * 341 - 171) / 3 = 5626 CPU cycles. Music $14 (5668 alone, 5718 in the scene) loses it. */
+const HUD_SOUND_BUDGET = 5626;
+
+/** The music id the next SoundUpdate starts (its F832 resume or F843 queue path, id < $20), else -1 */
+function musicStartId(m) {
+  const pend = m.rd(0x0102);
+  if (pend & 0x80) {
+    const resume = (m.rd(0xFE) & 0x80)
+      ? ((m.rd(0x0168) | m.rd(0x0169) | m.rd(0x016A) | m.rd(0x016B)) & 0x0F) === 0
+      : m.rd(0x0111) === 0xFF;
+    if (resume) return (pend & 0x7F) < 0x20 ? pend & 0x7F : -1;
+  }
+  if (m.rd(0x0101) === 0 && m.rd(0x0100) !== 0 && m.rd(0x0103) < 0x20) return m.rd(0x0103);
+  return -1;
+}
+
+/** s174: the NMI that found nmi_busy_flag set (31:F3BE): PPUSTATUS read, nmi_missed_flag; then the end of
+ *  IrqHandler1Hud: busy off, NmiModeDispatch, missed flag off */
+export function nmiLostToHud(m) {
+  m.ppu.readStatus();
+  if (m.rd(R.nmi_disable)) { m.wr(R.nmi_busy_flag, 0); return; }
+  m.wr(R.nmi_busy_flag, 0);
+  nmiModeDispatch(m);
   m.wr(R.nmi_missed_flag, 0);
 }
 

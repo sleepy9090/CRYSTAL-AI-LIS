@@ -925,6 +925,8 @@ bank,addr,name,comment
 31,F6AD,NmiModeDispatch,s41: $57=0; JMP (JmpTable31_F6C2[irq_mode]); called every NMI (F417) and from IRQ handler 1 when $07 (missed NMI) set
 31,F6D6,NmiMode0,s41: irq_mode 0/7 NMI routine; JMP SoundUpdate only when PPUMASK shadow $01&$18=0 (rendering off so no HUD IRQ)
 31,F488,IrqHandler1Hud,s41: gameplay HUD split (line 190 in tools.emu): sprites off; PPUADDR $2B00; scroll X 0; CHR R0=$3C R1=$38; SoundUpdate with $06=1
+31,F4CD,HudIrqSoundBusy,s174: $06=1 then JSR SoundUpdate (L191); a music-start call > ~5626 cycles still runs at the L241 NMI -> NMI only sets $07 (frame lost)
+31,F4D4,HudIrqMissedNmi,s174: after DEC $06: nmi_missed_flag set -> JSR NmiModeDispatch (the lost NMI's mode routine only; no DMA / queue flush / frame_ready++)
 31,F691,IrqHandler6,s41: title/intro IRQ handler (line 137 in tools.emu); set every frame by bank 18 intro (irq_mode 5); s65: PPUADDR <- $59:$5A (intro: $2800 at line $89=137)
 11,BE00,Wram6000InitTable,s32/s72: 256 B copied to wram_buf by 30:CCA4 / 19:BE5E / 27:BD03 (SetR6($0B); read as $9E00); tile source of PpuQueueBlock $3E-$43 / $45 / $44 ($6000-$60DF); $60E0-$60FF copied but never read
 27,A8A2,AiDirTable_A8A2,s32: 4 bytes 08 08 09 07 = obj_meta_dir by Rand64&3 (27:A898); tracer decodes them as code because the BNE at A8A0 is always taken

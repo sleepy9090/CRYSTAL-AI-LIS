@@ -59,8 +59,16 @@ export function hitFlashPal(m, x, a) {
   }
 }
 
+const countActive = (m) => { let n = 0; for (let s = 0; s < 0x1F; s++) if (m.rd(ACTIVE + s)) n++; return n; };
+
 /** 27:BCD7: hit flash (mask 7), irq_mode 0, or 2 with chr_r0_alt $58-$5D = chr_r0_play $07F0-$07F5 when $08 b2 clear */
 function flashIrq(m, x) {
+  // s174 lag-frame heuristic for phases 4-6 (the port has no CPU cycle count; gap (c)). tools.emu, area $5F
+  // (restore5f_s120.state, tools/emu/pass_probe.py + lag08_probe.py): the MainLoop clear 30:C919 of a pass
+  // with N active slots lands at L237 (N = 13) / L255 (14) when $08 is even (CollPairTable records 7..0, the
+  // heavier half) and at L234 (16) / L248 (17) when odd. Past the L241 NMI the pass is a lag frame.
+  const n = countActive(m);
+  if (n >= 17 || (n >= 14 && !(m.rd(0x08) & 1))) m.overrun = true;
   hitFlashPal(m, x, 7);
   m.wr(0x51, 0);
   if (m.rd(0x08) & 4) return;
