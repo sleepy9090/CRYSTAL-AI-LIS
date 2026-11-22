@@ -447,6 +447,7 @@ bank,addr,name,comment
 *,6430,inventory,$6430-$645F: 6430-33 swords 6434-37 armor 6438-3B shields 643C-3F balls/bracelets 6440-47 consumables 6448-4F rings 6450-57 key items 6458-5F magic
 *,6428,inv_select,$6428-$642F per-category selection ($FF = none; static guess); $6428-$6477 = $FF on new game (30:C957)
 30,CCCC,ObjUpdateAll,banks 26/27; slots 0-30: $05A0 timer (hit-flag clear) then JSR ObjAiTable[obj_active&$7F]; ids $60-$6F map bank 15 at $A000; id $1A -> 30:CD7F
+30,CCFA,ObjUpdateDispatch,s191: per-slot AI dispatch inside ObjUpdateAll (X = slot; reached unless knockback / freeze branch); hooked by tools/emu/pass_probe.py --slots
 27,A314,ObjAiTable,ptr16[128] object AI handlers indexed by obj_active&$7F (0 = none); ids $60-$6F run in bank 15 (SetR7($0F))
 26,9152,EnemyKilled,HP underflow: AddXp; $04C0=0 -> EnemyDeathFx else ObjInit(slot;$04C0); level-up check (XP $0704 >= $0706)
 26,91FA,EnemyDeathFx,obj Y -> AI $7D death puff (overlay $AB; anim $1F; $04C0=$0B)

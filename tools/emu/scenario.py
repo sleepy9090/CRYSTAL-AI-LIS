@@ -715,6 +715,26 @@ SCENARIOS['group_84'] = dict(note='area 84: natural spawns (type $55 AI $40 x3 +
                              area='84', pokes={0x0421: 16, 0x0711: 1, 0x03E1: 16 + 1, 0x03C1: 0x60, 0x0708: 0x60},
                              keys=[],   # state taken at +12; the run's keys are in web/test/group84_check.mjs
                              frames=480, watch=[0x03C1, 0x03D2, 0x03D3, 0x03D5, 0x04B2, 0x04B3, 0x04B5, 0x0702])
+# s191: group_81 = area 81 slots $0D/$0E type $85 (h0 p=$35 b2=$00, AI $21 27:A969 AiShooterWalk, hp $4A def 8
+# atk $52, elem 5 = immune to swords 1 and 3) + slots $0F/$10 type $84 (AI $2E, elem 3); level 16 + sword 2
+# (SwordAttackTable[2] = 2), max defences
+SCENARIOS['group_81'] = dict(note='area 81: natural spawns (type $85 AI $21 x2 + type $84 AI $2E x2), level 16, walk + B',
+                             area='81', pokes={0x0421: 16, 0x0711: 4, 0x03E1: 16 + 8, 0x03C1: 0xC0, 0x0708: 0xC0,
+                                               0x0401: 0x40, 0x0400: 0x30},
+                             # the entry shaft (560, 415) leads into the lower corridor past the sword-2-proof
+                             # $84 in slot $10, so drop the player into the vertical shaft above slot $0E
+                             exec=[place_player(0x0180, 0x00C8, cam=True)],
+                             keys=[],   # state taken at +12; the run's keys are in web/test/group81_check.mjs
+                             frames=480, watch=[0x03C1, 0x03CD, 0x03CE, 0x04AD, 0x04AE, 0x0702])
+# s191: group_81 overruns the frame in tools.emu (18 lag frames / 480: the AI-$21/$2E/$70 pass + sprite pass +
+# ObjCollideAll ~240 lines, CameraTick +40 on a vertical scroll), which the port does not model (gap (c)).
+# group_84b = area 84's type $85 (slot $11, AI $21) instead: player placed in the y-380 corridor left of it
+SCENARIOS['group_84b'] = dict(note='area 84: type $85 AI $21 in slot $11 (+ AI $40 x3), placed player, sword 4, walk + B',
+                              area='84', pokes={0x0421: 16, 0x0711: 4, 0x03E1: 16 + 8, 0x03C1: 0xC0, 0x0708: 0xC0,
+                                                0x0401: 0x40, 0x0400: 0x30},
+                              exec=[place_player(0x0098, 0x018C, cam=True)],
+                              keys=[],   # state taken at +12; the run's keys are in web/test/group84b_check.mjs
+                              frames=480, watch=[0x03C1, 0x03D1, 0x04B1, 0x0702])
 
 
 def set_from(dst, src):
