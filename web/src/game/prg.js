@@ -15,6 +15,7 @@ export function prgByte(m, bank, addr) {
 
 export function cpuRd(m, a) {
   a &= 0xFFFF;
+  m.romRd++;                                         // s211: counted for web/test/pass_count.mjs
   if (a < 0x2000) return m.mem.ram[a & 0x7FF];
   if (a >= 0x6000 && a < 0x8000) return m.mem.wram[a - 0x6000];
   if (a < 0x6000) throw new Error(`cpuRd $${a.toString(16)}: PPU/APU/open bus not modelled`);

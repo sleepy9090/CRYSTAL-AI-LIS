@@ -16,8 +16,12 @@ def parse(path):
         if not m:
             continue
         st = dict((k, int(v)) for k, v in re.findall(r'(top|upd|cam|spr|col)\s+(\d+)', m.group(4)))
-        rows.append(dict(f=int(m.group(1)), l=int(m.group(2)), act=int(m.group(3)), st=st,
-                         tot=int(m.group(5)), lag=bool(m.group(7))))
+        it = re.search(r'int\s+(\d+)', m.group(4))
+        e = re.match(r'f(\d+)L\s*(\d+)', m.group(6))
+        rows.append(dict(int=int(it.group(1)) if it else 0,          # s211 pass_cost --split-int
+f=int(m.group(1)), l=int(m.group(2)), act=int(m.group(3)), st=st,
+                         tot=int(m.group(5)), lag=bool(m.group(7)),
+                         ef=int(e.group(1)) if e else -1, el=int(e.group(2)) if e else -1))
     return rows
 
 

@@ -8,8 +8,10 @@ main_state handler (end)), the frame / line of that end, the active-slot count,
 and LAG when the NMI inside the pass found frame_ready != 0. Cycles include the NMI / IRQ time that fell into
 a stage. --slots adds the cycles of each slot's AI dispatch (30:CCFA X = slot, up to the next dispatch or
 CameraTick) as `SS:AI=cyc`.
+s211 --split-int: the NMI / IRQ cycles (entry to the RTI back to the interrupted PC / S) are taken out of the
+stage (and --slots) they fell into and shown as `int N` before `tot` (`tot` stays the wall-clock pass length).
 
-usage: python3 -m tools.emu.pass_cost STATE FRAMES [--from F] [--to F] [--slots] [--out FILE] --keys SPEC ...
+usage: python3 -m tools.emu.pass_cost STATE FRAMES [--from F] [--to F] [--slots] [--split-int] [--out FILE] --keys SPEC ...
   (--keys must be last)"""
 import sys
 
@@ -34,6 +36,29 @@ def main(argv):
     rows = []
     cur = {}
 
+    split = '--split-int' in argv
+    ints = []                       # open interrupts: (cycles before entry, return pc, S before entry)
+    icyc = [0]                      # s211: total NMI / IRQ cycles so far (outermost interrupts only)
+
+    if split:
+        cpu = nes.cpu
+        intr0, step0 = cpu._interrupt, cpu.step
+
+        def intr(vector, brk=False):
+            ints.append((cpu.cycles, cpu.pc, cpu.s))
+            return intr0(vector, brk)
+
+        def step():
+            c = step0()
+            if ints and cpu.pc == ints[-1][1] and cpu.s == ints[-1][2]:
+                c0 = ints.pop()[0]
+                if not ints:
+                    icyc[0] += cpu.cycles - c0
+                    if cur and cur['stg'] not in ('end',):
+                        cur['it'][cur['stg']] = cur['it'].get(cur['stg'], 0) + cpu.cycles - c0
+            return c
+        cpu._interrupt, cpu.step = intr, step
+
     def mark(tag):
         def f(n):
             c = n.cpu.cycles
@@ -42,14 +67,16 @@ def main(argv):
                     rows.append(dict(cur))
                 cur.clear()
                 cur.update(f=n.ppu.frame_no, l=n.ppu.line, t={'top': c}, lag=False, sl=[], last=None,
-                           act=sum(1 for s in range(0x1F) if n.bus.ram[0x04A0 + s]))
+                           act=sum(1 for s in range(0x1F) if n.bus.ram[0x04A0 + s]), stg='top', it={})
                 return
             if not cur:
                 return
             if tag == 'cam' and cur['last']:
-                s, ai, c0 = cur['last']
-                cur['sl'].append(f'{s:02X}:{ai:02X}={c - c0}')
+                s, ai, c0, i0 = cur['last']
+                cur['sl'].append(f'{s:02X}:{ai:02X}={c - c0 - (icyc[0] - i0)}')
                 cur['last'] = None
+            if tag not in cur['t']:
+                cur['stg'] = tag
             cur['t'].setdefault(tag, c)
             if tag == 'end' and 'wfl' not in cur:
                 cur['wfl'] = n.ppu.line
@@ -65,9 +92,9 @@ def main(argv):
             return
         c, x = n.cpu.cycles, n.cpu.x
         if cur['last']:
-            s, ai, c0 = cur['last']
-            cur['sl'].append(f'{s:02X}:{ai:02X}={c - c0}')
-        cur['last'] = (x, n.bus.ram[0x04A0 + x] & 0x7F, c) if n.bus.ram[0x04A0 + x] else None
+            s, ai, c0, i0 = cur['last']
+            cur['sl'].append(f'{s:02X}:{ai:02X}={c - c0 - (icyc[0] - i0)}')
+        cur['last'] = (x, n.bus.ram[0x04A0 + x] & 0x7F, c, icyc[0]) if n.bus.ram[0x04A0 + x] else None
 
     nes.on_exec(30, 0xC904, mark('top'))
     nes.on_exec(30, 0xCCCC, mark('upd'))
@@ -86,7 +113,9 @@ def main(argv):
         t = r['t']
         seg = []
         for a, b in zip(STAGES, STAGES[1:]):
-            seg.append(f'{a}{t[b] - t[a]:6}' if a in t and b in t else f'{a}     -')
+            seg.append(f'{a}{t[b] - t[a] - r["it"].get(a, 0):6}' if a in t and b in t else f'{a}     -')
+        if split:
+            seg.append(f'int{sum(r["it"].values()):6}')
         tot = t['end'] - t['top'] if 'end' in t else -1
         wf = f"f{r['wff']}L{r['wfl']:3}" if 'wfl' in r else '-'
         s = (f"f{r['f']} L{r['l']:3} act {r['act']:2} " + ' '.join(seg) + f' tot {tot:6} end {wf}'

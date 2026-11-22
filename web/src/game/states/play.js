@@ -48,12 +48,17 @@ function* substPlay(m) {
 
 /** 30:CB68-CB81: everything after PlayDeathMenuCheck; y = the Y register (PlaySound saves it in $010F) */
 function* substPlayBody(m, y) {
+  // s211: m.passStage names the main-loop stage for web/test/pass_count.mjs (= tools.emu.pass_cost's columns)
   yield* playerStatusTick(m, y);                        // CB68
+  m.passStage = 'upd';
   yield* objUpdateAll(m);                               // CB6B
+  m.passStage = 'cam';
   if (yield* cameraTick(m)) return;                     // CB6E (ExitLookup PLAs CameraTick's caller)
+  m.passStage = 'spr';
   switchBank16(m, 0x0E);                                // CB71
   spriteDraw(m);                                        // CB76 JSR 28:800E
   switchBank16(m, 0x0D);                                // CB79
+  m.passStage = 'col';
   yield* objCollideAll(m);                              // CB7E JSR 26:8F6E (s113 obj/collide.js)
   substPlayTail(m);                                     // CB81 JMP 31:E0B8
 }
