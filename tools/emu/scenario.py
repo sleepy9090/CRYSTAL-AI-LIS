@@ -201,6 +201,13 @@ for _n, _t, _dx, _dy in (('obj_dasher', 0x5B, 48, 0), ('obj_fan', 0x5D, 48, -32)
     SCENARIOS[_n] = dict(note=f'area 03: ObjInit type ${_t:02X} in slot $0F at player+({_dx},{_dy}) at +10',
                          area='03', pokes={0x03C1: 0x60, 0x0421: 16}, spawn=[(10, 0x0F, _t, _dx, _dy)],
                          keys=['200:LEFT:20'], frames=500, watch=[0x04AF, 0x060F])
+# s177: the fan-turret quirk (AiFanTurretIdle 27:B5D3 JMPs to AiShootCheck, whose attack-start PLA PLA pops
+# ObjUpdateAll's return): a dasher (AI $44, moves every frame) in slot $1C must stand still on that frame
+SCENARIOS['fan_skip'] = dict(note='area 03: fan turret $5D in slot $0F + dasher $5B in slot $1C at +10; the attack '
+                                  'start skips the AI of slots $10-$1E for one frame',
+                             area='03', pokes={0x03C1: 0x60, 0x0421: 16},
+                             spawn=[(10, 0x0F, 0x5D, 48, -32), (10, 0x1C, 0x5B, -48, 0)],
+                             keys=['200:LEFT:20'], frames=500, watch=[0x064F, 0x061C, 0x007C])
 # BossDefeated scans BossAreaList 15:B95D for $6C with no end mark: outside a boss area the index runs on
 # ($42 from area 03) and the record's code hook JSRs into RAM (crash at $1890). Area $0A = list entry 0.
 SCENARIOS['obj_explode'].update(area='0A', note='area 0A (BossAreaList entry 0): ObjInit type $DC '
