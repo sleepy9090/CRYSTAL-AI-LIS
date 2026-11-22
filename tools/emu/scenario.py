@@ -651,6 +651,12 @@ SCENARIOS['group_11'] = dict(note='area 11: natural spawns (type $61 AI $20, typ
                              area='11', pokes={0x0421: 16, 0x0711: 1, 0x03E1: 16 + 1, 0x03C1: 0x60, 0x0708: 0x60},
                              keys=['31:DOWN:50', '81:LEFT:70', '301:A:4', '345:B:4', '369:UP:30'],
                              frames=480, watch=[0x03C1, 0x03CD, 0x03D1, 0x04AD, 0x04B1, 0x0702, 0x0041])
+# s183: group_18 = area 18 (town): h1 records only, type $30 NPCs p=$16 $18 $19 $17 $1A $08 in slots $0D-$12
+# + h2 p=$A6 at $13; walk about and talk (B) to one NPC
+SCENARIOS['group_18'] = dict(note='area 18 (town): natural spawns (6 h1 NPCs type $30 + h2), walk + talk',
+                             area='18', pokes={0x0421: 16, 0x03C1: 0x60, 0x0708: 0x60},
+                             keys=['31:LEFT:36', '205:A:4', '265:A:4', '305:UP:30', '345:LEFT:80'],
+                             frames=480, watch=[0x0041, 0x0623, 0x04AD, 0x04B2])
 
 
 def set_from(dst, src):
