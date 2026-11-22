@@ -673,6 +673,13 @@ SCENARIOS['group_6B'] = dict(note='area 6B: natural spawns (type $78 AI $26 + h2
                              + [f'{146 + 12 * i}:B:4' for i in range(20)] + ['386:DOWN:10']
                              + [f'{396 + 12 * i}:B:4' for i in range(3)],
                              frames=480, watch=[0x03C1, 0x03CD, 0x04AD, 0x0702])
+# s186: group_40 = area 40 slot $12 type $6A (p=$1A, AI $27 27:A9DB = AiShooterChase idle offscreen, hp $20
+# def 4 atk $2C, elem 2 = immune to sword 2) + h3 p=$02 at $18 + h2 p=$8D at $19; level 16 + sword 1
+SCENARIOS['group_40'] = dict(note='area 40: natural spawns (type $6A AI $27 + h2/h3), level 16, walk + B',
+                             area='40', pokes={0x0421: 16, 0x0711: 1, 0x03E1: 16 + 1, 0x03C1: 0x60, 0x0708: 0x60},
+                             exec=[place_player(0x01E0, 0x02D0, cam=True)],
+                             keys=['33:RIGHT:12', '45:DOWN:2'] + [f'{47 + 12 * i}:B:4' for i in range(26)],
+                             frames=480, watch=[0x03C1, 0x03D2, 0x04B2, 0x0702])
 
 
 def set_from(dst, src):
