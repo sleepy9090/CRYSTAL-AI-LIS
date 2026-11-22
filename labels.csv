@@ -1080,6 +1080,7 @@ bank,addr,name,comment
 19,A749,TitleMenuInput,s63: SELECT toggles $82 (cursor x 19:A77B); START -> 19:A77D; idle timer $06B4/$06B5
 19,A77D,TitleMenuStart,s63: $82=1 -> main_state=8 (continue) else title_mode=1 (new game)
 19,BFC4,FinalSceneToEnding,s63: end of SubstFinalSceneReset: main_state=4 (only writer)
+19,BFC9,FinalSceneMsg,s153: message EventMsgTable19[$2E] + SFX $29 + FarCall ShowMessage; $2E+1 (5 calls)
 31,F731,NmiMode1,s64: irq_mode 1/9 NMI routine: NmiScrollSet + ApplyChrPlay; arm IRQ handler 2 at latch ((07DA&7)^7)+7
 31,F751,NmiMode2,s64: irq_mode 2 (pause/status): PPUCTRL NT2 ($2800); scroll 0;0; ApplyChrAlt; rendering on -> NmiMode0HudIrq else JMP SoundUpdate
 31,F782,NmiMode4,s64: irq_mode 4 (dead: shop-door effect stubbed out): R1 alt = F7B5[$58]; $58!=0 -> handler 4 at line 4 (+stray STA $F451); $58=0 -> BG off + IRQ off

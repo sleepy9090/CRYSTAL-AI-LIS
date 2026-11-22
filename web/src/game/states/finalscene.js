@@ -1,4 +1,5 @@
-// re-c web port — final scene (session 152). REVERSE.md substate table row 30.
+// re-c web port — final scene (session 152; checked s153 by web/test/finalscene_check.mjs). REVERSE.md
+// substate table row 30.
 //
 //   substFinalSceneReset(m)  SubstFinalSceneReset 19:BDF2 (sub_state $1E, stored only by AI $70 phase 10
 //                            27:BD19 when its obj_timer2 wraps):
