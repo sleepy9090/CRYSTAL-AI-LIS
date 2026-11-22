@@ -289,6 +289,12 @@ export const ENTRY_POINTS = {
   '30:D5D6': (m) => EVENT_ACTIONS[2](m, 4),           // slot 13 item + MakeFollower13 (event02.json)
   '30:D70D': (m) => EVENT_ACTIONS[15](m, 30),         // Refresh via GiveItem (event15.json)
   '30:D7FD': (m) => EVENT_ACTIONS[28](m, 56),         // Gas Mask + MakeFollower13 (event28.json)
+  // s206
+  '30:D6D8': (m) => EVENT_ACTIONS[11](m, 22),         // give item $46 Barrier (event11.json)
+  '30:D6DD': (m) => EVENT_ACTIONS[12](m, 24),         // give item $47 Change + NpcVanish slot 14 (event12.json)
+  '30:D6E7': (m) => EVENT_ACTIONS[13](m, 26),         // give item $3E Bow of Moon (event13.json)
+  '30:D718': (m) => EVENT_ACTIONS[19](m, 38),         // EvActClearSlot13 (event19.json)
+  '30:D71F': (m) => EVENT_ACTIONS[20](m, 40),         // EvActClearSlot14 (event20.json)
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */

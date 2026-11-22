@@ -21,6 +21,9 @@
 //   act generators from web/test/pending_probe.mjs.
 // s205: acts 2 (D5D6, NN 02), 15 (D70D, NN 0F), 28 (D7FD, NN 1C), refs core,pal,obj,snd,oam_crc --frames 300
 //   --keys 2620:A .. 2740:A f2541-2839 (act 2 lists LATE / PARTIAL pose cells in skip02; 15 and 28 every cell).
+// s206: acts 11 (D6D8, NN 0B), 12 (D6DD, NN 0C), 13 (D6E7, NN 0D), same refs as s205, every cell;
+//   19 (D718, NN 13), 20 (D71F, NN 14), --frames 300 no keys, every cell; 19b = act 19 plus a second
+//   --force 30:D552:04AE=00 (slot 14 emptied too -> the both-empty spawn branch), --out event19b.json.
 // Exit code 1 on any mismatch.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -79,7 +82,7 @@ function run(nn, keys, last, skip, checks) {
     if (d.length) fail(`event${nn} f${f}: ${d.join(' ')}`);
   }
   if (m.unported.size) fail(`event${nn}: ${[...m.unported].join(', ')}`);
-  console.log(`${fails > before ? 'FAIL' : 'ok  '} event act ${+nn}: ${n} rows vs tools.emu (${listed} listed cells)`);
+  console.log(`${fails > before ? 'FAIL' : 'ok  '} event act ${nn.replace(/^0/, '')}: ${n} rows vs tools.emu (${listed} listed cells)`);
 }
 
 // act 7: slot 13 changes to meta $D2 for 32 frames, then $2E + type $DE fx in slot $1E at slot 13, msg 14.5
@@ -153,5 +156,28 @@ run('15', KEYS4, 2839, null, {
 // act 28: GiveItemA($29 Gas Mask) + MakeFollower13; every cell at shift 0
 run('28', KEYS4, 2839, null, {
   ...ret('28', 2629, 8, (m) => { want(m, 0x057F, 0x29, 'event28 GiveItem item'); follower13(m, 'event28'); }),
+});
+// s206: acts 11 (D6D8 Barrier $46), 12 (D6DD Change $47 + NpcVanish slot 14: obj_active $04AE = $53 at the
+// return, slot 14 was $24 in this base), 13 (D6E7 Bow of Moon $3E); every cell at shift 0, all return f2629
+run('11', KEYS4, 2839, null, { ...ret('11', 2629, 8, (m) => want(m, 0x057F, 0x46, 'event11 GiveItem item')) });
+run('12', KEYS4, 2839, null, {
+  ...ret('12', 2629, 8, (m) => { want(m, 0x057F, 0x47, 'event12 GiveItem item'); want(m, 0x04AE, 0x53, 'event12 slot 14 vanish'); }),
+});
+run('13', KEYS4, 2839, null, { ...ret('13', 2629, 8, (m) => want(m, 0x057F, 0x3E, 'event13 GiveItem item')) });
+// s206: acts 19 (D718) / 20 (D71F) clear slot 13 / 14, SFX $6B, WaitSfxDone (returns f2596, no keys). In this base the
+// other follower slot stays occupied (13 = $7F, 14 = $24), so 19 and 20 skip the spawn ($07D7 untouched);
+// 19b = act 19 with $04AE also forced to 0 at 30:D552, so both are empty: $07D7 = $7F + ObjInit slot 15 type $04CF (= 0 here)
+let cam = 0;
+const camKeep = () => ({ 2541: (m) => { gen = m.pending; cam = m.rd(0x07D7); } });
+run('19', [], 2839, null, {
+  ...ret('19', 2596, 8, (m) => { want(m, 0x04AD, 0, 'event19 slot 13 cleared'); want(m, 0x04AE, 0x24, 'event19 slot 14 kept'); want(m, 0x07D7, cam, 'event19 $07D7 kept'); }),
+  ...camKeep('19'),
+});
+run('20', [], 2839, null, {
+  ...ret('20', 2596, 8, (m) => { want(m, 0x04AE, 0, 'event20 slot 14 cleared'); want(m, 0x04AD, 0x7F, 'event20 slot 13 kept'); want(m, 0x07D7, cam, 'event20 $07D7 kept'); }),
+  ...camKeep('20'),
+});
+run('19b', [], 2839, null, {
+  ...ret('19b', 2596, 8, (m) => { want(m, 0x07D7, 0x7F, 'event19b boss_cam_lock'); want(m, 0x04AF, 0, 'event19b slot 15 (type $04CF = 0)'); }),
 });
 process.exit(fails ? 1 : 0);
