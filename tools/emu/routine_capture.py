@@ -261,6 +261,11 @@ BOSS_AIS = {'BossAiE0': (0x60, 0xA477, range(8)), 'BossHomingShot': (0x61, 0xA5E
             'AiReward6C': (0x6E, 0xB728, range(14))}
 for _n, (_id, _ad, _p) in BOSS_AIS.items():
     ROUTINES[_n] = ((26, 15), _ad, _poke_bg, lambda r: {'x': _slot(r)})
+# s159: AI $6F BossDefeated 15:B807 (type $CF). Not in BOSS_AIS / PORTED_AIS: a random area_id in an ObjUpdateAll
+# case picks a garbage BossRecPtrs entry whose hook jumps anywhere. Areas $28/$6E/$F2 (BossFleeSpeech) and $A6
+# (BossHookA6) wait for an NMI, so _fix_boss_defeated keeps to the other list entries.
+ROUTINES['BossDefeated'] = ((26, 15), 0xB807, _poke_bg, lambda r: {'x': r.choice([0x0D, 0x0D, 0x0E, 0x0F, _slot(r)])})
+BOSS_DEFEAT_AREAS = (0x0A, 0x1A, 0x1A, 0xA9, 0xAC, 0xB9, 0xB6, 0x9F, 0x9F, 0x6C, 0x5F, 0x5F)
 # AI ids the port has (web/src/game/obj/ai_static.js, ai_walk.js, ai_field.js) + ids whose ObjAiTable 27:A314 entry is 0
 PORTED_AIS = (0x10, 0x11, 0x2C, 0x4C, 0x4D, 0x4E) + tuple(i for i, _ in WALK_AIS.values()) + \
     tuple(i for i, _ in FIELD_AIS.values()) + tuple(i for i, _ in EFFECT_AIS.values()) + \
@@ -330,7 +335,8 @@ for _n, (_ad, _xs) in HIT_HANDLERS.items():
     ROUTINES[_n] = (26, _ad, _poke_coll, lambda r, _xs=_xs: {'x': r.choice(_xs), 'y': _coll_target(r)})
 PPU_ROUTINES = ('PpuQueueFlush', 'BgRowRender', 'BgColRender', 'FullScreenDraw',
                 'Ai70PhaseDispatch',          # s97: phases 0/2/9 flush PPU blocks (NMI would discard the case)
-                'NpcScript')                  # s115: an IRQ inside the VM left $8000 mapped to another bank
+                'NpcScript',                  # s115: an IRQ inside the VM left $8000 mapped to another bank
+                'BossDefeated')               # s159: area $1A's hook flushes PpuQueueBlock($2C)
 
 
 def _steer_attack(ram, r, x, dist):
@@ -793,6 +799,13 @@ def _fix_case(name, ram, r, regs, wram=None):
         _fix_final(ram, r, x, wram)
     if name in BOSS_AIS:
         _fix_boss(name, ram, r, x, wram)
+    if name == 'BossDefeated':                     # s159: list areas only, ring empty + rendering off (hook B8CF)
+        ram[0x6C] = r.choice(BOSS_DEFEAT_AREAS)
+        ram[0x0B] = ram[0x0A]
+        ram[0x01] &= ~0x18
+        for s in range(0x0D, 0x1F):                # the $D5 loop's keep list vs other enemies
+            if s != x:
+                ram[0x04A0 + s] = r.choice([0, 0, 0x78, 0x7F, 0x30, 0x39, 0x70, 0xF0, 0x21, r.randrange(256)])
     if name in PLAYER_AIS:
         _fix_player(name, ram, r, x, wram)
     if name in ('AiMpDrain', 'ObjUpdateAll', 'Ai70PhaseDispatch'):

@@ -15,9 +15,12 @@
 //   AI $68 (= $E8) BossAiE8  15:AF48  waypoint flyer (route 15:B02B in slot $1F, HomingMove) (phases AF5C AFAD B051)
 //   AI $69 (= $E9) BossAiE9  15:B0B6  statues (phases B0C5 B0F4 B105)                                (session 156)
 //   AI $6A (= $EA) BossAiEA  15:B130  patrol / dive / rise + fire fan 15:B278 (phases B14F B1A5 B215 B22C)
-import { cpuRd, setR6 } from '../prg.js';
+import { cpuRd, indY, setR6, switchBank16, farRestore } from '../prg.js';
 import { playSound } from '../playsound.js';
-import { paletteBuildRom } from '../states/death.js';
+import { paletteBuildRom, waitFrame } from '../states/death.js';
+import { waitPpuQueue, ppuQueueBlock } from '../states/pause.js';
+import { fullScreenDraw, FSD_LAG } from '../world/bgstream.js';
+import { spriteDraw } from './sprites.js';
 import { hitFlashPal } from './ai_final.js';
 import { farObjInit } from './objinit.js';
 import {
@@ -832,6 +835,108 @@ export function aiReward6C(m, x) {
   m.wr(CAM_LOCK, 0x10);                                       // B7BB
 }
 
+// ---- AI $6F BossDefeated 15:B807 (s159) ---------------------------------------------------------------------
+
+/** FarCall_B14_800E: one sprite pass with banks $0E mapped */
+function farSpritePass(m) {
+  const r6 = m.rd(0x6E), r7 = m.rd(0x6F);
+  switchBank16(m, 0x0E);
+  spriteDraw(m);
+  farRestore(m, r6, r7);
+}
+const objInitAt = (m, slot, type) => { m.wr(0x10, slot); m.wr(0x11, type); farObjInit(m); };
+
+/** 15:B8CF (BossRecs index 1, area $1A): WRAM $6000-$607F = $7E, PpuQueueBlock($2C), slots $0E-$13 active $73 */
+function* hookB8CF(m) {
+  yield* waitPpuQueue(m);
+  for (let y = 0x7F; y >= 0; y--) m.wr(0x6000 + y, 0x7E);
+  yield* ppuQueueBlock(m, 0x2C);
+  for (let y = 0x0E; y !== 0x14; y++) m.wr(ACTIVE + y, 0x73);
+}
+/** 15:B8EE (index 10, area $9F): the drop's y lo = $60, slot $1E = type $B2 */
+function hookB8EE(m, x) {
+  m.wr(Y_LO + x, 0x60);
+  objInitAt(m, 0x1E, 0xB2);
+}
+/** BossHookA6 15:B8FD (index 11, area $A6): irq_mode 0, slots $0D-$13 off, sprite pass, player pos <- camera,
+ *  slot $14 = type ($04D4), slot $15 = type $B3, rendering off, WaitFrame, FullScreenDraw(1), rendering on */
+function* bossHookA6(m) {
+  m.wr(0x51, 0);
+  for (let y = 0x0D; y !== 0x14; y++) m.wr(ACTIVE + y, 0);
+  farSpritePass(m);
+  for (let y = 3; y >= 0; y--) m.wr(0x34 + y, m.rd(0x3C + y));
+  objInitAt(m, 0x14, m.rd(0x04D4));
+  objInitAt(m, 0x15, 0xB3);
+  m.wr(0x01, m.rd(0x01) & 0xE7);
+  yield* waitFrame(m);
+  yield* fullScreenDraw(m, 1, FSD_LAG);
+  m.wr(0x01, m.rd(0x01) | 0x18);
+}
+/** 15:B947 (index 13, area $5F): slots $0D-$0F off (the drop too when it sits there), slot $14 = type $B5 */
+function hookB947(m) {
+  m.wr(0x04AD, 0); m.wr(0x04AE, 0); m.wr(0x04AF, 0);
+  objInitAt(m, 0x14, 0xB5);
+}
+const BOSS_REC_HOOKS = { 0xB8CF: hookB8CF, 0xB8EE: hookB8EE, 0xB8FD: bossHookA6, 0xB947: hookB947 };
+const D5_KEEP = new Set([0, 0x78, 0x7F, 0x30, 0x39, 0x70]);
+
+/** AI $6F BossDefeated 15:B807 (type $CF, the end of the boss death chain): the slot becomes type $0F (the reward
+ *  drop, AI $6E) at x lo $80 / y lo $90, obj_phase = the BossAreaList 15:B95D index of area_id (Y wraps to 0 if
+ *  no byte of the 256 from the list matches), then the 21-byte record at BossRecPtrs 15:B96B[index]:
+ *  +0 hook (JSR $0010 with $10 = $4C), +3 music $0102, +4 the drop's spawn param, +5 8 pal ids $07E0-$07E7,
+ *  +13 6 CHR $07F0-$07F5 (0 = keep), +19 $62FE, +20 != 0: slots $0E-$1E whose AI is not 0/$78/$7F/$30/$39/$70
+ *  become type $D5 (tile ofs $80, meta $EB, freeze (slot - $0E) * 4); then PaletteBuild 26:8C0E. */
+export function* bossDefeated(m, x) {
+  objInitAt(m, x, 0x0F);                                       // B807
+  m.wr(X_LO + x, 0x80);
+  m.wr(Y_LO + x, 0x90);
+  let y = 0;
+  while (cpuRd(m, 0xB95D + y) !== m.rd(0x6C)) {                 // B81A
+    y = (y + 1) & 0xFF;
+    if (y === 0) break;
+  }
+  m.wr(PHASE + x, y);
+  const yy = (y << 1) & 0xFF;
+  m.wr(0x18, cpuRd(m, 0xB96B + yy));
+  m.wr(0x19, cpuRd(m, 0xB96C + yy));
+  const r18 = m.rd(0x18), r19 = m.rd(0x19);                   // PHA PHA (TXA PHA keeps the slot)
+  m.wr(0x10, 0x4C);
+  m.wr(0x11, indY(m, 0x18, 0));
+  m.wr(0x12, indY(m, 0x18, 1));
+  const hook = m.rd(0x12) << 8 | m.rd(0x11);
+  if (hook) {                                                 // B84B JSR $0010
+    const h = BOSS_REC_HOOKS[hook];
+    if (h) {
+      const r = h(m, x);
+      if (r && typeof r.next === 'function') yield* r;
+    } else unported(m, `BossDefeated hook 15:${hook.toString(16).toUpperCase().padStart(4, '0')}` +
+                        (hook === 0xBA98 ? ' (BossFleeSpeech: WaitFrames + ShowMessage)' : ''));
+  }
+  m.wr(0x19, r19); m.wr(0x18, r18);                           // B84E
+  m.wr(0x0102, indY(m, 0x18, 3));
+  m.wr(0x0560 + x, indY(m, 0x18, 4));
+  let i = 5;
+  for (m.wr(0x10, 8); m.rd(0x10) !== 0; dec(m, 0x10), i++) {    // B868: pal ids -> $07E0-$07E7
+    const v = indY(m, 0x18, i);
+    if (v) m.wr(0x07DB + i, v);
+  }
+  for (m.wr(0x10, 6); m.rd(0x10) !== 0; dec(m, 0x10), i++) {    // B878: CHR -> $07F0-$07F5
+    const v = indY(m, 0x18, i);
+    if (v) m.wr(0x07E3 + i, v);
+  }
+  m.wr(0x62FE, indY(m, 0x18, 19));
+  if (indY(m, 0x18, 20)) {                                    // B88A
+    for (let s = 0x0E; s !== 0x1F; s++) {
+      if (D5_KEEP.has(m.rd(ACTIVE + s) & 0x7F)) continue;
+      objInitAt(m, s, 0xD5);
+      m.wr(0x0320 + s, 0x80);
+      m.wr(META + s, 0xEB);
+      m.wr(FREEZE + s, ((s - 0x0E) << 2) & 0xFF);
+    }
+  }
+  paletteBuildRom(m, 0);                                      // B8CC JMP 26:8C0E
+}
+
 // ---- BossPhaseDispatch 15:A400 -------------------------------------------------------------------------------
 
 const BOSS_PHASES = {
@@ -860,5 +965,5 @@ export function bossPhaseDispatch(m, x, base) {
 export const AI_BOSS = {
   0x60: bossAiE0, 0x61: bossHomingShot, 0x63: bossAiE3, 0x64: bossRockShot, 0x65: aiTalkEventE5,
   0x66: bossAiE6, 0x67: aiBoss88, 0x68: bossAiE8, 0x69: bossAiE9, 0x6A: bossAiEA,
-  0x6C: aiReward6C, 0x6D: aiReward6C, 0x6E: aiReward6C,
+  0x6C: aiReward6C, 0x6D: aiReward6C, 0x6E: aiReward6C, 0x6F: bossDefeated,
 };

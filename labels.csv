@@ -458,7 +458,11 @@ bank,addr,name,comment
 *,0704,xp,player XP (16-bit) $0704/$0705
 *,0706,xp_next,XP needed for next level $0706/$0707 (26:8B9E[level])
 27,B83B,ObjAiExplode,AI $74 boss explosion (types $DC -> $DD -> $CF via ObjBecomeNext)
-15,B807,BossDefeated,AI $6F (type $CF): slot -> type $0F reward drop; BossAreaList[area] -> 21-byte BossRecs record
+15,B807,BossDefeated,AI $6F (type $CF): slot -> type $0F reward drop; BossAreaList[area] -> 21-byte BossRecs record (s159 web obj/ai_boss.js bossDefeated)
+15,B8CF,BossHook1A,s159: BossRecs index 1 (area $1A) hook: WaitPpuQueue; $6000-$607F=$7E; PpuQueueBlock($2C); slots $0E-$13 obj_active=$73
+15,B8EE,BossHook9F,s159: BossRecs index 10 (area $9F) hook: drop y lo=$60; slot $1E = type $B2
+15,B947,BossHook5F,s159: BossRecs index 13 (area $5F) hook: slots $0D-$0F off; slot $14 = type $B5
+15,BB5B,BossFleeWalkOff,s159: BossFleeSpeech tail loop: slot $1F (type $2B) steps by 15:BB8F[anim&$1F] + WaitFrame + sprite pass until $CF >= $C0
 15,B95D,BossAreaList,14 areas: 0A 1A 28 FF 6E F2 A9 AC B9 B6 9F A6 6C 5F; no end mark (s99: scan from a non-boss area runs past it -> garbage record hook)
 15,B96B,BossRecPtrs,ptr16[14] -> 21-byte records (code ptr; ?; music; drop param; 8 pal ids; 6 CHR; $62FE; clear-enemies flag)
 15,B987,BossRecs,13 x 21 bytes (see REVERSE.md Boss defeat); byte 3 -> snd_cur_music (15:B85A); entry 12 (area $5F) = $FF

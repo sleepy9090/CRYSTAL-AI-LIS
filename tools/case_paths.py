@@ -23,7 +23,7 @@ def main():
         for a in counts:
             ad = int(a[4:], 16) + x if a.startswith('col:') else int(a, 16)
             v = after.get(ad)
-            if v is not None and v != ram[ad]:
+            if v is not None and (ad >= len(ram) or v != ram[ad]):    # s159: WRAM ($6000+) = listed in 'after'
                 counts[a] += 1
                 hit = True
         none += not hit

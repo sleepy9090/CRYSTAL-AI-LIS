@@ -110,6 +110,7 @@ const RUN = {
   BossAiEA: (m, r) => { B.bossAiEA(m, r.x); },
   AiTalkEventE5: (m, r) => { B.aiTalkEventE5(m, r.x); },
   AiReward6C: (m, r) => { B.aiReward6C(m, r.x); },             // s158
+  BossDefeated: (m, r) => { runNow(B.bossDefeated(m, r.x)); },  // s159 (hooks B8CF / BossHookA6 are generators)
   // s111 (gameplay frames (e2)): obj/player.js, generators (HudChargeMeter / HudRedraw / HudHpBar queue waits)
   PlayerUpdate: (m, r) => { runNow(P.playerUpdate(m, r.x)); },
   PlayerMoveLocked: (m, r) => { runNow(P.playerMoveLocked(m, r.x)); },
