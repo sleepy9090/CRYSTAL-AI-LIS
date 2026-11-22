@@ -927,7 +927,7 @@ bank,addr,name,comment
 26,9CEF,PlayerPlaceBody,s44: slot 1 = slot 0 pos + JumpHeightTable[$0620]; obj_coll $60 air / $50 ground
 26,9D4D,JumpHeightTable,s44: s8[49] slot 1 y offset per $0620 (idx $20 -> 0); verified s45
 26,9FD2,PlayerConveyor,s44: BG attr b5: move in obj_param1&$0F at speed obj_aux $0660 (ramps 0..9); s128: run by scenario conveyor (area $20)
-15,B8FD,BossHookA6,s128: BossRecs area $A6 hook: irq_mode 0; clear slots $0D-$13; camera from $3C; slot $14 = type $04D4; slot $15 = type $B3 (AI $70 phase 1)
+15,B8FD,BossHookA6,s128: BossRecs area $A6 hook: irq_mode 0; clear slots $0D-$13; camera from $3C; slot $14 = type $04D4; slot $15 = type $B3 (AI $70 phase 1); s162: port checked vs tools.emu (bossa6_check.mjs; FullScreenDraw NMIs after rows 9/15/21/27)
 15,B728,AiReward6C,s128: AI $6C-$6E reward entry: obj_spawn_param b7 -> becomes type $B3 (AI $70 phase 1) via FarCall_C25D; s158: waits for idle enemy slots $0D-$1E, restarts music once (timer2), applies RewardRecs[phase], cam lock $10 (web obj/ai_boss.js aiReward6C)
 15,B766,RewardApply,s158: AiReward6C after the idle scan: phase != 3 -> timer2++ + music restart; coll $8D meta $AA; RewardRecs record
 15,B7BB,RewardCamLock,s158: boss_cam_lock = $10; RTS
