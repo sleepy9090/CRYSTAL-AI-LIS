@@ -173,23 +173,35 @@ function substPlayTail(m) {
   bgChrAnimTick(m);
   const f = m.rd(0x08);
   if (f & 0x0F) return;
+  // s213 (gap (c) lag model): m.cyc += this path's exact ROM cycles over the every-frame `BNE E12A` exit
+  // (web/test/pass_count.mjs `colc`): slot active 27; empty: +28 + SwitchBank16_6 77 + table 21 (+1 for
+  // $9202+Y crossing at Y = $FE) + BCC 3 (bank-$93 half 16) + LDA BPL 6 (no record; a record: 5 + LDY LDX 4); per entry
+  // (LDA (zp),Y +1 on a page cross): $Fx end 12, other slot 34 (32 at x = $1C), the slot 30 (no respawn) / 29 +
+  // JSR JSR 12 + BCS 3 (on screen: 9); AreaSpawnEntry + ObjOffscreenCheck run as passStage 'colh'
   const slot = (f >> 4) + 0x0D;
   m.wr(0x13, slot);
-  if (m.rd(0x04A0 + slot) !== 0) return;
+  if (m.rd(0x04A0 + slot) !== 0) { m.cyc += 27; return; }
   switchBank16(m, 6);                                                      // E0D8 SwitchBank16_6
   const id = m.rd(R.area_id), t = (id & 0x80) ? 0x9301 : 0x9201, yy = (id << 1) & 0xFF;
+  m.cyc += 28 + 77 + 21 + (yy === 0xFE ? 1 : 0) + (id & 0x80 ? 16 : 3) + 6;
   m.wr(0x10, cpuRd(m, t + yy));
   m.wr(0x11, cpuRd(m, t + yy + 1));
   if (!(m.rd(0x11) & 0x80)) return;                                        // no area record
+  m.cyc += 3;                                                              // BPL not taken (-1) + LDY LDX 4
   const p = m.rd(0x10) | m.rd(0x11) << 8;
+  const pc = (y) => (((p & 0xFF) + y) > 0xFF ? 1 : 0);                     // (zp),Y page cross
   for (let y = 5, x = 0x0D; x !== 0x1D; y += 4, x++) {
     const b0 = cpuRd(m, p + y);
-    if ((b0 & 0xF0) === 0xF0) return;                                      // $Fx (FE/FF) ends the scan
-    if (x !== slot) continue;
+    if ((b0 & 0xF0) === 0xF0) { m.cyc += 12 + pc(y); return; }             // $Fx (FE/FF) ends the scan
+    if (x !== slot) { m.cyc += (x === 0x1C ? 32 : 34) + pc(y); continue; }
     const b1 = cpuRd(m, p + y + 1);
-    if (!(b1 & 0x80)) return;                                              // not a respawning entry
+    if (!(b1 & 0x80)) { m.cyc += 30 + pc(y) + pc(y + 1); return; }          // not a respawning entry
+    m.passStage = 'colh';
     m.spawnEntry(x, y);                                                    // E110 AreaSpawnEntry (s112)
-    if (!objOffscreen(m, x)) m.wr(0x04A0 + x, 0);                          // E113: on screen -> undo
+    const off = objOffscreen(m, x);
+    m.passStage = 'col';
+    m.cyc += 29 + pc(y) + pc(y + 1) + 12 + (off ? 3 : 9);
+    if (!off) m.wr(0x04A0 + x, 0);                                         // E113: on screen -> undo
     return;
   }
 }

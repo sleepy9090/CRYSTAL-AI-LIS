@@ -33,35 +33,46 @@ const rd = (m, a) => m.rd(a & 0xFFFF);
 const box = (i) => 0x9691 + i;                          // HitboxTable {dx w dy h}
 
 /** ObjOverlapScan 26:95F8: attacker x vs targets $10+1 .. $11-1 -> first overlapping target or -1 */
+// s213 (gap (c) lag model): m.cyc += the exact ROM cycles of ObjCollideAll's record loop + ObjOverlapScan
+// (hit handlers excluded; web/test/pass_count.mjs `colc`). Exits: STX + early outs + LDX/CLC/RTS 95F4 (11);
+// per target (INY/CPY/BEQ 7 included): skip flags 14 / coll 23 / flags2 29 / self 34 / x1 73 / x2 82 / y1 97 /
+// y2 106 / hit 116 (LDX SEC RTS), end of range 20 (BEQ 9641 -> 95F4 crosses a page); HitboxTable $9691+i,
+// +1..+3 cross the $9700 page for i >= $6F / $6E / $6D / $6C (+1 each).
+const pgx = (i, k) => (i + k >= 0x6F ? 1 : 0);          // HitboxTable byte k of box i crosses $9700
 export function objOverlapScan(m, x) {
   m.wr(0x1B, x);
-  if (m.rd(FLAGS + x) & 0x80 || m.rd(FLAGS2 + x) & 0x80) return -1;
+  if (m.rd(FLAGS + x) & 0x80) { m.cyc += 21; return -1; }
+  if (m.rd(FLAGS2 + x) & 0x80) { m.cyc += 27; return -1; }
   const grp = m.rd(COLL + x) & 0xF0;
-  if (!grp) return -1;
+  if (!grp) { m.cyc += 35; return -1; }
   m.wr(0x1F, grp);
   m.wr(0x15, (m.rd(COLL + x) & 0x0F) << 2);
   const i = (m.rd(HITFLAGS + x) & 0x40) | m.rd(0x15);
+  m.cyc += 97 + pgx(i, 0) + pgx(i, 1) + pgx(i, 2) + pgx(i, 3);
   m.wr(0x15, (m.rd(SCR_Y + x) + cpuRd(m, box(i + 2))) & 0xFF);
   m.wr(0x16, (m.rd(0x15) + cpuRd(m, box(i + 3))) & 0xFF);
   m.wr(0x13, (m.rd(SCR_X + x) + cpuRd(m, box(i))) & 0xFF);
   m.wr(0x14, (m.rd(0x13) + cpuRd(m, box(i + 1))) & 0xFF);
   for (let y = (m.rd(0x10) + 1) & 0xFF; y !== m.rd(0x11); y = (y + 1) & 0xFF) {
-    if (rd(m, FLAGS + y) & 0x80) continue;
-    if (!(rd(m, COLL + y) & m.rd(0x1F))) continue;
-    if (rd(m, FLAGS2 + y) & 0x80) continue;
-    if (y === m.rd(0x1B)) continue;
+    if (rd(m, FLAGS + y) & 0x80) { m.cyc += 14; continue; }
+    if (!(rd(m, COLL + y) & m.rd(0x1F))) { m.cyc += 23; continue; }
+    if (rd(m, FLAGS2 + y) & 0x80) { m.cyc += 29; continue; }
+    if (y === m.rd(0x1B)) { m.cyc += 34; continue; }
     m.wr(0x10, (rd(m, COLL + y) & 0x0F) << 2);
     const j = (rd(m, HITFLAGS + y) & 0x40) | m.rd(0x10);
     let a = rd(m, SCR_X + y) + cpuRd(m, box(j));
-    if ((a & 0xFF) >= m.rd(0x14)) continue;            // BCS (the ADC carry is dropped by CMP)
+    if ((a & 0xFF) >= m.rd(0x14)) { m.cyc += 73 + pgx(j, 0); continue; }   // BCS (the ADC carry is dropped by CMP)
     a = ((a & 0xFF) + cpuRd(m, box(j + 1))) & 0xFF;      // C = 0 after the BCS not taken
-    if (a < m.rd(0x13)) continue;
+    if (a < m.rd(0x13)) { m.cyc += 82 + pgx(j, 0) + pgx(j, 1); continue; }
     a = (rd(m, SCR_Y + y) + cpuRd(m, box(j + 2))) & 0xFF;
-    if (a >= m.rd(0x16)) continue;
+    if (a >= m.rd(0x16)) { m.cyc += 97 + pgx(j, 0) + pgx(j, 1) + pgx(j, 2); continue; }
     a = (a + cpuRd(m, box(j + 3))) & 0xFF;
-    if (a < m.rd(0x15)) continue;
+    const cx = pgx(j, 0) + pgx(j, 1) + pgx(j, 2) + pgx(j, 3);
+    if (a < m.rd(0x15)) { m.cyc += 106 + cx; continue; }
+    m.cyc += 116 + cx;
     return y;
   }
+  m.cyc += 20;
   return -1;
 }
 
@@ -445,8 +456,12 @@ export function* objCollideAll(m) {
   const odd = m.rd(0x08) & 1;
   m.wr(0x2F, odd ? 0x0E : 0x07);
   m.wr(0x2E, odd ? 0x07 : 0x08);
+  m.cyc += odd ? 31 : 28;                                // s213: 8F6E-8F85 (cycle note above objOverlapScan)
   do {
     const r = (m.rd(0x2F) << 2) & 0xFF;
+    // s213: record 8F87-8FAC 60 cycles + CollPairTable $96F1+r+k crossing $9700, then BCC (3 / 2 + JSR $0020 + JMP
+    // = 11 on a hit; the handler is passStage 'colh'), DEC DEC 10, BNE 3 (last 2 + RTS 6)
+    m.cyc += 60 + [0, 1, 2, 3].reduce((s, k) => s + (r + k >= 0x0F ? 1 : 0), 0) + 10;
     const x = cpuRd(m, 0x96F1 + r);
     m.wr(0x10, cpuRd(m, 0x96F2 + r));
     m.wr(0x11, cpuRd(m, 0x96F3 + r));
@@ -458,9 +473,15 @@ export function* objCollideAll(m) {
     if (y >= 0) {
       const fn = HANDLERS[h >> 1];
       if (h & 1 || !fn) throw new Error(`ObjCollideAll: handler index ${h} not in HitHandlerTable`);
+      m.cyc += 11;
+      m.passStage = 'colh';
       yield* fn(m, x, y);
-    }
+      m.passStage = 'col';
+    } else m.cyc += 3;
     m.wr(0x2F, (m.rd(0x2F) - 1) & 0xFF);
-    m.wr(0x2E, (m.rd(0x2E) - 1) & 0xFF);
-  } while (m.rd(0x2E) !== 0);
+    const n = (m.rd(0x2E) - 1) & 0xFF;
+    m.wr(0x2E, n);
+    m.cyc += n !== 0 ? 3 : 8;
+    if (n === 0) break;
+  } while (true);
 }

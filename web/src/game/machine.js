@@ -60,7 +60,8 @@ export class Machine {
     this.pending = null;
     this.frame = 0;
     this.romRd = 0;                                  // s211: prg.js cpuRd calls (web/test/pass_count.mjs)
-    this.passStage = 'top';                          // s211: main-loop stage (states/play.js, pass_count.mjs)
+    this.cyc = 0;                                    // s213: exact ROM cycles of modelled code (obj/collide.js)
+    this.passStage = 'top';                         // s211: main-loop stage (states/play.js, pass_count.mjs)
     // PpuQueueFlush 30:C67D (world/ppuqueue.js, s79), called by the NMI at F40A
     this.ppuQueueFlush = ppuQueueFlush;
     // sound (7/8, s56-57): SoundUpdate 31:F7FE + the APU. Register writes take effect at once; the APU is

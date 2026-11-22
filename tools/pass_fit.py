@@ -15,6 +15,9 @@ port already models); --show STAGE|int lists every pass of one stage / the inter
 s212: --ai fits ObjUpdateAll per AI dispatch (needs pass_cost --slots + pass_count.mjs slot tokens), see ai_mode;
 the top stage is fitted without the passes where pass_cost saw a ReadPadStable re-read (`padretry`), whose
 cost is a separate 'padretry' constant (tools.emu key-timing artifact); --sort orders --show by |residual|.
+s213: when COUNTS has `colc` tokens (pass_count.mjs: exact ROM cycles of ObjCollideAll's record loop +
+ObjOverlapScan + SubstPlayTail's respawn scan, from collide.js / play.js m.cyc), col = a*colc + the `colh` bucket's
+rd/wr/rom (hit handlers, AreaSpawnEntry) + d; a fits to 0.999, d = 77.
 All steps: sh tools/passfit_runs.sh.
 
 usage: python3 tools/pass_fit.py COST.txt COUNTS.txt [--worst N]
@@ -121,7 +124,11 @@ def stages_mode(argv, cost, worst):
     for s in STAGES:
         if s == 'upd' and '--ai' in argv:
             continue
-        xs = [(*p[1][s], 1) for p in pts]
+        colc = s == 'col' and all('colc' in p[1] for p in pts)
+        if colc:   # s213: exact record-loop cycles (collide.js m.cyc) + the hit handlers' rd/wr/rom
+            xs = [(p[1]['colc'][0], *p[1].get('colh', (0, 0, 0)), 1) for p in pts]
+        else:
+            xs = [(*p[1][s], 1) for p in pts]
         ys = [p[2]['st'][s] for p in pts]
         rt = [p[2]['retry'] if s == 'top' else 0 for p in pts]   # s212: ReadPadStable re-reads (pass_cost)
         if s not in coef:
@@ -143,8 +150,12 @@ def stages_mode(argv, cost, worst):
             if '--sort' in argv:   # s212: largest |residual| first
                 rows.sort(key=lambda t: -abs(t[3]))
             for p, x, y, r in rows:
-                print(f'  f{p[0]} {s} {y:6} rd/wr/rom {x[0]}/{x[1]}/{x[2]} residual {r:+.0f}  '
-                      f'end f{p[2]["ef"]}L{p[2]["el"]}')
+                print(f'  f{p[0]} {s} {y:6} {"colc/h rd/wr/rom" if colc else "rd/wr/rom"} '
+                      f'{"/".join(map(str, x[:-1]))} residual {r:+.0f}  end f{p[2]["ef"]}L{p[2]["el"]}')
+        if colc:
+            print(f'{s}: cyc ={c[0]:.3f}*colc + handlers {c[1]:.2f}*rd + {c[2]:.2f}*wr + {c[3]:.2f}*rom +{c[4]:.0f}; '
+                  f'rms {rms(res):.0f}, max |res| {max(map(abs, res)):.0f} (stage mean {sum(ys) / len(ys):.0f})')
+            continue
         print(f'{s}: cyc ={c[0]:.2f}*rd + {c[1]:.2f}*wr + {c[2]:.2f}*rom +{c[3]:.0f}; '
               f'rms {rms(res):.0f}, max |res| {max(map(abs, res)):.0f} (stage mean {sum(ys) / len(ys):.0f})')
     if '--show' in argv and argv[argv.index('--show') + 1] == 'int':

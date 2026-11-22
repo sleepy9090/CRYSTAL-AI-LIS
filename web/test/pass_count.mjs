@@ -25,11 +25,16 @@ const keys = parseKeys(keyArgs);
 const m = new Machine(data, { log: () => {} });
 m.reset();
 m.loadState(state);
-const ST = ['top', 'upd', 'cam', 'spr', 'col', 'nmi'];
-let cnt = {};
-let stage = 'top', rom0 = 0;
+// s213: `colh` = ObjCollideAll's hit handlers (collide.js), `colc` = the exact ROM cycles collide.js adds to m.cyc
+// during `col` (record loop + ObjOverlapScan, handlers excluded)
+const ST = ['top', 'upd', 'cam', 'spr', 'col', 'colh', 'nmi'];
+let cnt = {}, cyc = {};
+let stage = 'top', rom0 = 0, cyc0 = 0;
 const bucket = () => cnt[stage] ??= [0, 0, 0];
-const flushRom = () => { bucket()[2] += m.romRd - rom0; rom0 = m.romRd; };
+const flushRom = () => {
+  bucket()[2] += m.romRd - rom0; rom0 = m.romRd;
+  cyc[stage] = (cyc[stage] || 0) + m.cyc - cyc0; cyc0 = m.cyc;
+};
 Object.defineProperty(m, 'passStage', { get: () => stage, set: (s) => { flushRom(); stage = s; } });
 const r0 = m.rd.bind(m), w0 = m.wr.bind(m);
 m.rd = (a) => { bucket()[0]++; return r0(a); };
@@ -40,7 +45,7 @@ const f0 = state.frame0 ?? state.frame;
 const out = [];
 while (f0 + m.frame <= Number(last)) {
   const f = f0 + m.frame;
-  cnt = {};
+  cnt = {}; cyc = {};
   m.passStage = 'top';
   m.runFrame(keys.get(f) || 0);
   flushRom();
@@ -53,7 +58,7 @@ while (f0 + m.frame <= Number(last)) {
     for (let i = 0; i < 3; i++) u[i] += b[i];
     return [x, `${x.toString(16).toUpperCase().padStart(2, '0')}:${id.toString(16).toUpperCase().padStart(2, '0')}=${b.join('/')}`];
   }).sort((a, b) => a[0] - b[0]).map((t) => t[1]);
-  if (stages) out.push(`${f} ` + ST.map((s) => `${s}=${(cnt[s] || [0, 0, 0]).join('/')}`).join(' ') + (sl.length ? '  ' + sl.join(' ') : ''));
+  if (stages) out.push(`${f} ` + ST.map((s) => `${s}=${(cnt[s] || [0, 0, 0]).join('/')}`).join(' ') + ` colc=${cyc.col || 0}` + (sl.length ? '  ' + sl.join(' ') : ''));
   else out.push(`${f} ${tot[0]} ${tot[1]}`);
 }
 if (outFile) writeFileSync(outFile, out.join('\n') + '\n');
