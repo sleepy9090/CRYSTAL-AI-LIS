@@ -102,6 +102,28 @@ def ai_mode(pts, coef, pred, argv):
         print(f'  ({miss} tools.emu dispatches without a port bucket, left in updrest)')
 
 
+INT_BASE = 202   # s211: the fixed interrupt time every pass holds
+
+
+def hud_fit(pts, coef, argv):
+    """s214: the HUD IRQ (IrqHandler1Hud 31:F488 + its SoundUpdate) in a pass that runs past ~L191: int - 202 =
+    a*rd + b*wr + c*rom + d on the port's `snd` bucket (pass_count.mjs, the SoundUpdate of the same port row)."""
+    v = [(p, (*p[1]['snd'], 1), p[2]['int'] - INT_BASE) for p in pts if p[2]['int'] > 400]
+    if len(v) < 5:
+        print(f'hud: {len(v)} HUD-interrupted passes, too few to fit')
+        return
+    if 'hud' not in coef:
+        coef['hud'] = lstsq([s[1] for s in v], [s[2] for s in v])
+    c = coef['hud']
+    res = [s[2] - sum(a * b for a, b in zip(c, s[1])) for s in v]
+    print(f'hud: {len(v)} passes, int-{INT_BASE} ={c[0]:.2f}*rd + {c[1]:.2f}*wr + {c[2]:.2f}*rom +{c[3]:.0f}; '
+          f'rms {rms(res):.0f}, max |res| {max(map(abs, res)):.0f} (mean {sum(s[2] for s in v) / len(v):.0f})')
+    if '--show' in argv and argv[argv.index('--show') + 1] == 'hud':
+        for s, r in zip(v, res):
+            print(f'  f{s[0][0]} hud {s[2]:5} snd {"/".join(map(str, s[1][:-1]))} residual {r:+.0f}'
+                  f'  end f{s[0][2]["ef"]}L{s[0][2]["el"]}')
+
+
 def stages_mode(argv, cost, worst):
     pts = []
     # comma lists COST1,COST2 COUNTS1,COUNTS2: several runs fitted together (each joined on its own)
@@ -162,6 +184,8 @@ def stages_mode(argv, cost, worst):
         for p, q in zip(pts, pred):
             print(f'  f{p[0]} int {p[2]["int"]:5} main-loop {p[2]["tot"] - p[2]["int"]:6} (fit {q:6.0f}) '
                   f'end f{p[2]["ef"]}L{p[2]["el"]}')
+    if all('snd' in p[1] for p in pts):
+        hud_fit(pts, coef, argv)
     res = [p[2]['tot'] - p[2]['int'] - q for p, q in zip(pts, pred)]
     print(f'{len(pts)} passes, sum of stages vs tot - int: rms {rms(res):.0f}, max |res| {max(map(abs, res)):.0f} cycles')
     for r, p in sorted(zip(res, pts), key=lambda t: -abs(t[0]))[:worst]:

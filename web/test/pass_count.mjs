@@ -27,7 +27,7 @@ m.reset();
 m.loadState(state);
 // s213: `colh` = ObjCollideAll's hit handlers (collide.js), `colc` = the exact ROM cycles collide.js adds to m.cyc
 // during `col` (record loop + ObjOverlapScan, handlers excluded)
-const ST = ['top', 'upd', 'cam', 'spr', 'col', 'colh', 'nmi'];
+const ST = ['top', 'upd', 'cam', 'spr', 'col', 'colh', 'nmi', 'snd'];
 let cnt = {}, cyc = {};
 let stage = 'top', rom0 = 0, cyc0 = 0;
 const bucket = () => cnt[stage] ??= [0, 0, 0];
@@ -41,6 +41,10 @@ m.rd = (a) => { bucket()[0]++; return r0(a); };
 m.wr = (a, v) => { bucket()[1]++; w0(a, v); };
 const rf0 = m.ppu.renderFrame.bind(m.ppu);
 m.ppu.renderFrame = () => { m.passStage = 'nmi'; return rf0(); };
+// s214: `snd` = SoundUpdate 31:F7FE calls (in gameplay only IrqHandler1Hud's F4CF one) = the HUD IRQ's variable
+// cost that lands in a pass running past ~L191 (pass_cost `int`)
+const su0 = m.soundUpdate;
+m.soundUpdate = (mm) => { const s = stage; m.passStage = 'snd'; su0(mm); m.passStage = s; };
 const f0 = state.frame0 ?? state.frame;
 const out = [];
 while (f0 + m.frame <= Number(last)) {

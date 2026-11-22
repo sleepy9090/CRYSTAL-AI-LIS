@@ -12,6 +12,9 @@ s212: `padretry N` = ReadPadStable 31:FF17 re-reads in the top stage (the two re
 key changed between them, ~+380 cycles; a key-timing artifact the port does not model).
 s211 --split-int: the NMI / IRQ cycles (entry to the RTI back to the interrupted PC / S) are taken out of the
 stage (and --slots) they fell into and shown as `int N` before `tot` (`tot` stays the wall-clock pass length).
+s214: --split-int also lists every outermost interrupt from this pass top to the next as `ints KLINE=cyc,..`
+(K = N NMI / I IRQ, LINE = entry line), inside the pass or in the frame_ready wait, e.g. the HUD IRQ I190 cost
+on frames where the pass ended before it.
 
 usage: python3 -m tools.emu.pass_cost STATE FRAMES [--from F] [--to F] [--slots] [--split-int] [--out FILE] --keys SPEC ...
   (--keys must be last)"""
@@ -47,15 +50,17 @@ def main(argv):
         intr0, step0 = cpu._interrupt, cpu.step
 
         def intr(vector, brk=False):
-            ints.append((cpu.cycles, cpu.pc, cpu.s))
+            ints.append((cpu.cycles, cpu.pc, cpu.s, 'N' if vector == 0xFFFA else 'I', nes.ppu.line))
             return intr0(vector, brk)
 
         def step():
             c = step0()
             if ints and cpu.pc == ints[-1][1] and cpu.s == ints[-1][2]:
-                c0 = ints.pop()[0]
+                c0, _, _, kind, line = ints.pop()
                 if not ints:
                     icyc[0] += cpu.cycles - c0
+                    if cur:   # s214: every outermost interrupt between two pass tops, in or after the pass
+                        cur.setdefault('ilog', []).append(f'{kind}{line}={cpu.cycles - c0}')
                     if cur and cur['stg'] not in ('end',):
                         cur['it'][cur['stg']] = cur['it'].get(cur['stg'], 0) + cpu.cycles - c0
             return c
@@ -127,6 +132,8 @@ def main(argv):
         wf = f"f{r['wff']}L{r['wfl']:3}" if 'wfl' in r else '-'
         s = (f"f{r['f']} L{r['l']:3} act {r['act']:2} " + ' '.join(seg) + f' tot {tot:6} end {wf}'
              + (' LAG' if r['lag'] else '') + (f" padretry {r['pad'] - 2}" if r.get('pad', 2) > 2 else ''))
+        if split:
+            s += '  ints ' + ','.join(r.get('ilog', []))
         if slots:
             s += '  ' + ' '.join(r['sl'])
         lines.append(s)

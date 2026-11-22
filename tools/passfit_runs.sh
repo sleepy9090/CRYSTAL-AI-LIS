@@ -26,3 +26,7 @@ python3 tools/pass_fit.py "$D/c81.txt,$D/c59.txt" "$D/s81.txt,$D/s59.txt" --stag
   --save "$D/coef.json"
 echo '--- out of sample ($5A):'
 python3 tools/pass_fit.py "$D/c5a.txt" "$D/s5a.txt" --stages --ai --skip-lag --worst 6 --coef "$D/coef.json"
+# s214: HUD IRQ / NMI cost fits (pass_cost `ints` log + pass_count.mjs snd / nmi buckets), in and out of sample
+python3 tools/int_fit.py "$D/c81.txt,$D/c59.txt" "$D/s81.txt,$D/s59.txt" --save "$D/icoef.json"
+echo '--- out of sample ($5A):'
+python3 tools/int_fit.py "$D/c5a.txt" "$D/s5a.txt" --coef "$D/icoef.json"
