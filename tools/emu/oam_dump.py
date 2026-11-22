@@ -12,6 +12,8 @@ from tools.emu import debug, state
 
 
 def main(argv):
+    show_all = '--all' in argv                         # s193: also the hidden (Y >= $F0) entries
+    argv = [a for a in argv if a != '--all']
     st, frames = argv[0], sorted(int(f) for f in argv[1].split(','))
     keys = argv[argv.index('--keys') + 1:] if '--keys' in argv else []
     nes = NES()
@@ -24,7 +26,7 @@ def main(argv):
         if f in frames:
             o = bytes(nes.bus.ram[0x200:0x300])
             spr = [f'{i:02X}:{o[i * 4]:02X} {o[i * 4 + 1]:02X} {o[i * 4 + 2]:02X} {o[i * 4 + 3]:02X}'
-                   for i in range(64) if o[i * 4] < 0xF0]
+                   for i in range(64) if o[i * 4] < 0xF0 or show_all]
             print(f'f{f} crc {zlib.crc32(o)}  ' + '  '.join(spr))
 
 

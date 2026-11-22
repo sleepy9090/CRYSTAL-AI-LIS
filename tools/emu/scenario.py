@@ -744,6 +744,15 @@ SCENARIOS['group_88'] = dict(note='area 88: type $87 AI $4E turret in slot $0D, 
                              exec=[place_player(0x0160, 0x003C, cam=True)],
                              keys=[],   # state taken at +12; the run's keys are in web/test/group88_check.mjs
                              frames=480, watch=[0x03C1, 0x03CD, 0x04AD, 0x0702])
+# s193: group_6E = area 6E slot $0E type $2A (h4 p=$2A, AI $3A 27:A555 AiNpcBossReveal, invisible + hittable) on
+# the slot-$0D NPC; as npc_reveal (player + camera below the NPC) but no per-frame pokes, so the port state
+# at +12 runs on by itself: 3 sword hits -> msgs $10.$10-$12 (closed by B) -> type $7D BossAiE6 intro
+SCENARIOS['group_6E'] = dict(note='area 6E: AI $3A reveal on the slot-$0D NPC, placed player, sword 1, B swings',
+                             area='6E', pokes={0x0421: 16, 0x0711: 1, 0x03E1: 16 + 1, 0x03C1: 0xC0, 0x0708: 0xC0,
+                                               0x0401: 0x40, 0x0400: 0x30},
+                             exec=[place_player(0x0080, 0x0178, cam=True)],
+                             keys=[],   # state taken at +12; the run's keys are in web/test/group6e_check.mjs
+                             frames=480, watch=[0x03C1, 0x060E, 0x04AD, 0x04AE, 0x04AF, 0x0702])
 
 
 def set_from(dst, src):
