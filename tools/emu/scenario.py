@@ -735,6 +735,15 @@ SCENARIOS['group_84b'] = dict(note='area 84: type $85 AI $21 in slot $11 (+ AI $
                               exec=[place_player(0x0098, 0x018C, cam=True)],
                               keys=[],   # state taken at +12; the run's keys are in web/test/group84b_check.mjs
                               frames=480, watch=[0x03C1, 0x03D1, 0x04B1, 0x0702])
+# s192: group_88 = area 88 slot $0D type $87 (h0 p=$37 b2=$C0, AI $4E 27:B5D9 AiTurret: static, aimed shot $26
+# every 16 obj_anim steps; hp $64 def 6 atk $50, elem 2 = immune to sword 2) + 7 h0 p=$3F records $0F-$15;
+# player placed in the turret's room (screen 1 row 0) below it, sword 1, max defences
+SCENARIOS['group_88'] = dict(note='area 88: type $87 AI $4E turret in slot $0D, placed player, sword 1, walk + B',
+                             area='88', pokes={0x0421: 16, 0x0711: 1, 0x03E1: 16 + 1, 0x03C1: 0xC0, 0x0708: 0xC0,
+                                               0x0401: 0x40, 0x0400: 0x30},
+                             exec=[place_player(0x0160, 0x003C, cam=True)],
+                             keys=[],   # state taken at +12; the run's keys are in web/test/group88_check.mjs
+                             frames=480, watch=[0x03C1, 0x03CD, 0x04AD, 0x0702])
 
 
 def set_from(dst, src):
