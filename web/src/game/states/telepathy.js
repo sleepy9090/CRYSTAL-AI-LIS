@@ -32,7 +32,7 @@ export function hideOam0(m) { for (let i = 0; i < 4; i++) m.wr(OAM + i, 0xF0); }
 function chime(m, y) { if (!(m.rd(BLINK) & 0x3F)) playSound(m, 0x2C, y); }
 
 /** 30:C874: BG palettes $6140-$615C (every 4th) and $6140-$614C = $0F, $6000-$603F = 0, PpuQueueBlock($2B), WaitFrame */
-function* blackenBg(m) {
+export function* blackenBg(m) {
   yield* waitPpuQueue(m);
   for (let x = 0x1C; x >= 0; x -= 4) m.wr(0x6140 + x, 0x0F);
   for (let x = 0x0C; x >= 0; x--) m.wr(0x6140 + x, 0x0F);

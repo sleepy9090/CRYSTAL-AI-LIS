@@ -1003,6 +1003,7 @@ bank,addr,name,comment
 15,BC40,PauseScreen,s60: START (called directly from 30:CBA8); also substate 12 entry; builds window; INC $41; falls into PauseWait
 15,BDDB,PauseWait,s60: substate 13: loop until START; sub_state=8 at 15:BE07; s142: table entry unreachable (no store of 12/13; dispatched its PLA would eat MainLoop's return addr)
 19,BB39,SubstCureMagic,s60: substate 24 (magic 5 / stone cure): status cleared; 63-frame anim; msg 32.2
+19,BB75,CureMagicAnimLoop,s147: WaitFrame + FarCall_B14_800E until obj_anim_s01 ($3F) = 0; then slot 1 meta pulled + StatRecalc (X=0)
 19,BB9D,SubstFormRevert,s60: substate 25: PlayerMagic with status b7 (changed form) -> human graphics back
 19,BC6B,SubstMesiaReunion,s60: substate 27 (event act 30 trigger $A4): scene then sub_state=7 GiveItem
 19,BDF2,SubstFinalSceneReset,s60: substate 30 (AI $70 phase 10): clear slots 4-$1E; screen rebuild
