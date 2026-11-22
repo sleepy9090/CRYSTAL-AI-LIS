@@ -11,8 +11,9 @@
 // Rendering rules follow tools/emu/ppu.py (the self-emulator that tools/emu/ppu_lines.py snapshots):
 // 8 sprites per line, first opaque sprite wins, behind-BG priority, left-8 masking, greyscale,
 // sprite rows from OAM y+1, no sprites on line 0, $3F10/14/18/1C mirroring, rendering-off colour.
-// Not modelled (no game code depends on it): sprite-0 hit / overflow flags, $2007 reads,
-// mid-scanline register changes, colour emphasis.
+// Mid-line writes (s209): a split hook can queue writes at a dot of its line with timed(dot, fn); such a
+// line is rendered by _renderLineTimed with tools/emu/ppu.py's fetch pipeline (IRQ handlers 1/2/3 use it).
+// Not modelled (no game code depends on it): sprite-0 hit / overflow flags, $2007 reads, colour emphasis.
 
 const PAL_MIRROR = (a) => {
   a &= 0x1F;
@@ -58,7 +59,7 @@ export class Ppu {
   get rendering() { return (this.mask & 0x18) !== 0; }
 
   // ------------------------------------------------------------ MMC3 CHR
-  setChrReg(r, val) { this.chrRegs[r] = val & 0xFF; }
+  setChrReg(r, val) { if (this._timed) this._flushTimed(); this.chrRegs[r] = val & 0xFF; }
   /** eight 1KB bank numbers mapped at PPU $0000-$1FFF */
   chrBanks() {
     const r = this.chrRegs;
@@ -81,6 +82,7 @@ export class Ppu {
     return ((a >> 1) & 0x400) | (a & 0x3FF);                    // horizontal
   }
   vramWrite(a, val) {
+    if (this._timed) this._flushTimed();
     a &= 0x3FFF;
     if (a < 0x2000) return;                                     // CHR ROM: ignored
     if (a < 0x3F00) this.vram[this.ntIndex(a)] = val;
@@ -95,10 +97,12 @@ export class Ppu {
 
   // ------------------------------------------------------------ CPU registers ($2000-$2007, vblank semantics)
   readStatus() {                                                // $2002: clears w (vblank flag not modelled)
+    if (this._timed) this._flushTimed();
     this.w = 0;
     return this.status;
   }
   writeReg(r, val) {
+    if (this._timed) this._flushTimed();
     val &= 0xFF;
     switch (r & 7) {
       case 0: this.ctrl = val; this.t = (this.t & 0xF3FF) | ((val & 3) << 10); break;
@@ -121,6 +125,7 @@ export class Ppu {
     }
   }
   oamDma(src, off = 0) {                                        // $4014: 256 bytes from RAM page
+    if (this._timed) this._flushTimed();
     for (let i = 0; i < 256; i++) this.oam[(this.oamAddr + i) & 0xFF] = src[off + i];
   }
 
@@ -232,15 +237,94 @@ export class Ppu {
     for (let line = 0; line < 240; line++) {
       const hook = this.splits.get(line);
       if (hook) hook(this);
-      this.renderLine(line);
+      if (this._timed) this._renderLineTimed(line);
+      else this.renderLine(line);
       if (this.rendering) {
         this._incY();
         this.v = (this.v & ~0x041F) | (this.t & 0x041F);
         this.evalSprites(line + 1);
       } else this.sprBuf.fill(0);
     }
+    this._flushTimed();                     // a split hook on line 239's end has no line left
     this.status |= 0x80;                    // vblank
     this.frameNo++;
+  }
+
+  // ------------------------------------------------------------ mid-line writes (s209)
+  /** Queue fn(ppu) to run at `dot` of the line the current split hook precedes (= the CPU write's PPU dot,
+   *  as tools/emu/split_probe.py logs it). Any other register access first runs the queue at once, so the
+   *  register state stays in program order; only the line's pixels see the dot. */
+  timed(dot, fn) {
+    (this._timed || (this._timed = [])).push([dot, fn]);
+  }
+  _flushTimed() {
+    const q = this._timed;
+    if (!q || this._inTimed) return;
+    this._timed = null;
+    this._inTimed = true;
+    for (const [, fn] of q) fn(this);
+    this._inTimed = false;
+  }
+
+  /** One visible line with queued writes, after tools/emu/ppu.py: tiles 0/1 come from the previous line's
+   *  prefetch (v, v+1); tile t >= 2 is fetched at dot 8(t-1) from the live v / CHR banks, then coarse X++.
+   *  A write at dot D is seen by fetches at dots >= D and by pixels x >= D-1 (pixel x is output at dot x+1),
+   *  with mask / fine x / palette read live per pixel. this.v is left at the reloaded v (its vertical bits
+   *  feed the caller's Y increment; the horizontal bits are replaced by the t copy). */
+  _renderLineTimed(line) {
+    const q = this._timed.slice().sort((a, b) => a[0] - b[0]);
+    this._timed = null;
+    const fb = this.fb, base = line * 256;
+    const tiles = this._tileBuf || (this._tileBuf = new Int16Array(34 * 8));
+    tiles.fill(-1);                                    // -1: not fetched (transparent)
+    const fetch = (t) => {
+      const v = this.v, vram = this.vram, chr = this.chr, offs = this._bankOffsets();
+      const tile = vram[this.ntIndex(0x2000 | (v & 0x0FFF))];
+      const at = vram[this.ntIndex(0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07))];
+      const p = ((at >> (((v >> 4) & 4) | (v & 2))) & 3) << 2;
+      const pa = ((this.ctrl & 0x10) ? 0x1000 : 0) + tile * 16 + ((v >> 12) & 7);
+      const lo = chr[offs[pa >> 10] + (pa & 0x3FF)], pb = pa + 8, hi = chr[offs[pb >> 10] + (pb & 0x3FF)];
+      const d = ((lo << 8) | hi) * 8;
+      for (let i = 0; i < 8; i++) { const c = DEC[d + i]; tiles[t * 8 + i] = c ? (p | c) : 0; }
+      this._incX();
+    };
+    if (this.rendering) { fetch(0); fetch(1); }
+    let nextT = 2, x = 0;
+    const fetchBefore = (dot) => {                     // fetches at dots 8.. < dot
+      while (nextT <= 32 && 8 * (nextT - 1) < dot) { if (this.rendering) fetch(nextT); nextT++; }
+    };
+    const drawBefore = (xe) => {                       // pixels x .. < xe with the current state
+      xe = Math.min(xe, 256);
+      const pal = this.pal, mask = this.mask, grey = (mask & 1) ? 0x30 : 0x3F;
+      if (!(mask & 0x18)) {
+        const v = this.v;
+        const c = ((v & 0x3F00) === 0x3F00 ? pal[PAL_MIRROR(v)] : pal[0]) & grey;
+        for (; x < xe; x++) fb[base + x] = c;
+        return;
+      }
+      const bgFrom = (mask & 0x08) ? ((mask & 2) ? 0 : 8) : 256;
+      const spFrom = (mask & 4) ? 0 : 8;
+      const spr = (mask & 0x10) ? this.sprBuf : null;
+      const fx = this.x;
+      for (; x < xe; x++) {
+        const b = x >= bgFrom ? tiles[x + fx] : 0;
+        const bp = b > 0 ? b : 0;
+        const sp = (spr && x >= spFrom) ? spr[x] : 0;
+        let col;
+        if (sp) col = (bp && (sp & 0x40)) ? pal[bp] : pal[0x10 | (sp & 0x0F)];
+        else col = pal[bp];
+        fb[base + x] = col & grey;
+      }
+    };
+    this._inTimed = true;
+    for (const [dot, fn] of q) {
+      fetchBefore(dot);
+      drawBefore(dot - 1);
+      fn(this);
+    }
+    this._inTimed = false;
+    fetchBefore(257);
+    drawBefore(256);
   }
 }
 

@@ -204,6 +204,18 @@ function nmiMode1(m) {
  *  lands N + 3 lines after their own split line, not N + 1. */
 const MSG_LATE = 2;
 
+/** s209: an IRQ handler's ApplyChrAlt / ApplyChrPlay (R0-R5 from RAM at `base`) on the line its hook precedes:
+ *  register r switches at dot0 + r * step (tools/emu/split_probe.py --mapper, the dot where tools.emu's
+ *  unsynced PPU stands = the first fetch the new bank serves). Only R0/R1 (BG $0000) change this line's
+ *  pixels; R2-R5 are queued too so the writes stay in order. */
+function chrTimed(m, base, dot0, step) {
+  const p = m.ppu;
+  for (let r = 0; r < 6; r++) {
+    const v = m.rd(base + r);
+    p.timed(dot0 + r * step, () => p.setChrReg(r, v));
+  }
+}
+
 /** A chained MMC3 IRQ: reload N written inside the handler of line `line` fires N + 1 lines later */
 function chainSplit(m, line, n, handler) {
   const at = line + n + 1;
@@ -216,8 +228,10 @@ function chainSplit(m, line, n, handler) {
 export function irqMsgWindowTop(m, line) {
   const p = m.ppu;
   p.readStatus();
-  p.writeReg(6, 0x28); p.writeReg(6, 0x00); p.writeReg(5, 0x00);
-  applyChrAlt(m);
+  p.writeReg(6, 0x28); p.writeReg(6, 0x00); p.writeReg(5, 0x00);   // previous line's hblank (dots 272-315)
+  // ApplyChrAlt: R0 at dot 10-22 of this line (2nd PPUADDR at the line before, dot 290-303, - 281), the
+  // middle 13; then every 39 dots (talk16.state, 200 frames)
+  chrTimed(m, R.chr_r0_alt, 13, 39);
   chainSplit(m, line, 0x48 + MSG_LATE, 3);
   irqIndex(m, 3);                                   // F515 SetIrqHandler(3) (s208: $56 / $54-$55)
   let z = (m.rd(R.zp_57) + 0x46) & 0xFF;
@@ -237,8 +251,10 @@ export function irqMsgWindowTop(m, line) {
 export function irqMsgWindowEnd(m, line) {
   const p = m.ppu;
   p.readStatus();
-  p.writeReg(6, m.rd(0x5E)); p.writeReg(6, m.rd(0x5F)); p.writeReg(5, m.rd(R.scroll_x_irq));
-  applyChrPlay(m);
+  p.writeReg(6, m.rd(0x5E)); p.writeReg(6, m.rd(0x5F)); p.writeReg(5, m.rd(R.scroll_x_irq));   // hblank
+  // ApplyChrPlay: R0 at dot 0-13 (2nd PPUADDR at the line before, dot 266-279, - 266), the middle 4;
+  // then every 42 dots
+  chrTimed(m, R.chr_r0_play, 4, 42);
   const a = (0xEF - m.rd(R.scroll_x_irq + 2)) & 0xFF;
   const z = m.rd(R.zp_57);
   if (a < 0xBC && a >= z) {
@@ -269,11 +285,17 @@ export function irqWrapSplit(m, line) {
 export function irqHud(m) {
   const p = m.ppu;
   p.readStatus();
-  p.writeReg(1, (m.rd(R.ppumask_shadow) & 0x0E) | 0x08);
-  p.readStatus();
-  p.writeReg(6, 0x2B); p.writeReg(6, 0x00); p.writeReg(5, 0x00);
-  p.setChrReg(0, 0x3C);
-  p.setChrReg(1, 0x38);
+  p.writeReg(1, (m.rd(R.ppumask_shadow) & 0x0E) | 0x08);   // line 190 dot 331-338 (hblank): whole next line
+  // s209: the rest lands inside the next line (tools/emu/split_probe.py --hist, 299 frames: 2nd PPUADDR at
+  // dot 38/39/41/42/44/45, one per CPU cycle of IRQ latency, about evenly; the port takes the middle, 41).
+  // Until R0/R1 switch, the PPU fetches the HUD nametable row through the playfield CHR: the line-191 stripe
+  // hardware shows too (triage (g)). The first PPUADDR write (dot 23) only sets t, so it goes with the second.
+  p.timed(HUD_DOT_ADDR, () => { p.readStatus(); p.writeReg(6, 0x2B); p.writeReg(6, 0x00); });
+  p.timed(HUD_DOT_ADDR + 18, () => p.writeReg(5, 0x00));       // STA PPUSCROLL 31:F4AF (+6 cycles)
+  // STA MMC3_BANKDATA 31:F4B9 / F4C2 write at +54 / +90 dots, but tools.emu's mapper writes do not sync the
+  // PPU (only $2000-$2007 / DMA do), so a CHR switch already applies from the dot its STA starts (-9)
+  p.timed(HUD_DOT_ADDR + 45, () => p.setChrReg(0, 0x3C));
+  p.timed(HUD_DOT_ADDR + 81, () => p.setChrReg(1, 0x38));
   const start = musicStartId(m);
   m.wr(R.nmi_busy_flag, 1);
   m.soundUpdate(m);
@@ -289,6 +311,9 @@ export function irqHud(m) {
   if (m.rd(R.nmi_missed_flag)) nmiModeDispatch(m);
   m.wr(R.nmi_missed_flag, 0);
 }
+
+/** s209: PPU dot of IrqHandler1Hud's 2nd PPUADDR write (31:F4AA) on the line after the IRQ line */
+const HUD_DOT_ADDR = 41;
 
 /** s174 (tools/emu/sound_cost_probe.py): CPU cycles of the SoundUpdate call that starts music id $00-$1F
  *  (SndCommand + the first SndTick, from SndInit, NMI / IRQ blocked). */
