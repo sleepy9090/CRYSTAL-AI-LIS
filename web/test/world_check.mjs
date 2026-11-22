@@ -72,7 +72,13 @@ for (const key of Object.keys(data.areas.areas).sort()) {
   const want = { 0x62FC: k0.W - 1, 0x62FD: k0.H - 1, 0x62FE: k0.f62FE, 0x62FF: k0.f62FF,
     0x07E0: k1.pal[0], 0x07E1: k1.pal[1], 0x07E2: k1.pal[2], 0x07E3: 0x7F, 0x67: k1.v67, 0x69: k1.v69,
     0x07F0: k1.R0, 0x07F1: k1.R1 };
-  if (a.record && 'e6' in a.record) Object.assign(want, { 0x07E6: a.record.e6, 0x07E7: a.record.e7, 0x07F4: a.record.r4, 0x07F5: a.record.r5 });
+  if (a.record && 'e6' in a.record) {
+    Object.assign(want, { 0x07E6: a.record.e6, 0x07E7: a.record.e7, 0x07F4: a.record.r4, 0x07F5: a.record.r5 });
+    // SpawnH4_Item 31:E239: a flag-item spawn (handler 4, p & $F0 = $40) overrides sprite palettes 2/3
+    // with (area & 7) + 9 after the record's own e6/e7 (s196, gap (j)).
+    if ((a.record.spawns || []).some((s) => s.handler === 4 && (s.param & 0xF0) === 0x40))
+      want[0x07E6] = want[0x07E7] = (id & 7) + 9;
+  }
   if (a.header.k2.length && a.header.k2[0]) {
     const p = a.header.k2[0];
     Object.assign(want, { 0x34: p.x & 255, 0x35: p.x >> 8, 0x36: p.y & 255, 0x37: p.y >> 8 });
