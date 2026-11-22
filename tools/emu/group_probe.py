@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Enemy-group probe (session 181): plan the keys of a group_AA scenario.
 
-usage: python3 tools/emu/group_probe.py STATE --slots 0D,13 [--seg BUTTONS:FRAMES ...] [--every N]
+usage: python3 tools/emu/group_probe.py STATE --slots 0D,13 [--seg BUTTONS:FRAMES ...] [--every N | --changes]
 
 From a save state (e.g. scenario_state group_05 12 --save-state ...) play the button segments in order
 (NONE:10 LEFT:40 B:4 ...) and print every N frames (and on any HP / active change): player x,y (16-bit world,
@@ -36,6 +36,10 @@ def main(argv):
                 segs.append((b, 0 if b == 'NONE' else parse_buttons(b), int(n)))
                 i += 1
             continue
+        if a == '--changes':     # s188: print only HP / active changes (long swing sequences)
+            every = 0
+            i += 1
+            continue
         if a == '--every':
             every = int(argv[i + 1])
         elif a == '--slots':
@@ -55,7 +59,7 @@ def main(argv):
             nes.keys = (lambda m: (lambda _f: m))(mask)
             nes.run_frame()
             now = snap(r, slots)
-            if f % every == 0 or f == n - 1 or now != last:
+            if now != last or (every and (f % every == 0 or f == n - 1)):
                 px, py = pos(r, 1)
                 cols = []
                 for s in slots:

@@ -690,6 +690,16 @@ SCENARIOS['group_7C'] = dict(note='area 7C: natural spawns (type $82 AI $29 + h2
                              keys=['30:LEFT:14', '44:DOWN:8', '52:LEFT:2', '256:UP:9', '265:LEFT:26']
                              + [f'{291 + 12 * i}:B:4' for i in range(13)],
                              frames=480, watch=[0x03C1, 0x03B4, 0x03D4, 0x04B4, 0x0702])
+# s188: group_28 = area 28 slots $11/$12/$16 type $64 (h0 p=$14, AI $2A 27:ABF8, hp $16 def 6 atk $30,
+# elem 6 = immune to swords 2 and 3) + h1 p=$C2 boss record $0D, h4 $0E, h1 $0F/$10/$17, h2 $18-$1C; sword 1
+SCENARIOS['group_28'] = dict(note='area 28: natural spawns (type $64 AI $2A x3 + h1/h2/h4), level 16, walk + B',
+                             area='28', pokes={0x0421: 16, 0x0711: 1, 0x03E1: 16 + 1, 0x03C1: 0x60, 0x0708: 0x60,
+                                               0x0401: 0x28, 0x0400: 0x20},   # mid-gear defences: atk $30 hits
+                             # for $08 / $10 (at $40 they do 0, at the level-1 values $2F = dead in 3)
+                             exec=[place_player(0x0488, 0x0190, cam=True)],
+                             keys=['51:RIGHT:2', '163:RIGHT:6', '169:B:4', '294:RIGHT:10']
+                             + [f'{304 + 12 * i}:B:4' for i in range(16)],
+                             frames=480, watch=[0x03C1, 0x03D1, 0x03D2, 0x04B1, 0x04B2, 0x0702])
 
 
 def set_from(dst, src):
