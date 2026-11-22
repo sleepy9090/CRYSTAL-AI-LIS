@@ -114,6 +114,7 @@ const RUN = {
   AiDropSpawner: (m, r) => { S.aiDropSpawner(m, r.x); },
   // s168: AI $0A $33 $51-$55 (obj/ai_shot.js), $77 (obj/ai_effect.js)
   AiDuelStart: (m, r) => { S.aiDuelStart(m, r.x); },
+  AiPlayerDuel: (m, r) => { S.aiPlayerDuel(m, r.x); },      // s172
   AiPhaseUnhide: (m, r) => { S.aiPhaseUnhide(m, r.x); },
   AiFlagGatedSpawn: (m, r) => { S.aiFlagGatedSpawn(m, r.x); },
   AiDuelOpponent: (m, r) => { S.aiDuelOpponent(m, r.x); },

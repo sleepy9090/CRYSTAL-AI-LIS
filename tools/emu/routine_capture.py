@@ -237,6 +237,8 @@ FIELD_AIS = {
     # s171: AIs $07 $12 $13 $32
     'AiElementWall': (0x07, 0xA85F), 'AiWiggleShot': (0x12, 0xB174), 'AiSpiralShot': (0x13, 0xB235),
     'AiPathWalk': (0x32, 0xAE31),
+    # s172: AI $0B (slot 0 in the duel; its end test 27:A2B4 runs the sprite pass, which leaves X in OAM-offset land)
+    'AiPlayerDuel': (0x0B, 0xA24A),
 }
 for _n, (_id, _ad) in FIELD_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r: {'x': _slot(r)})
@@ -244,6 +246,7 @@ for _n, (_id, _ad) in FIELD_AIS.items():
 for _n in ('AiWiggleShot', 'AiSpiralShot'):
     ROUTINES[_n] = (26, FIELD_AIS[_n][1], _poke_bg, lambda r: {'x': r.choice([3, 4, 5, 6, 7, r.randrange(1, 0x1F)])})
 ROUTINES['AiPathWalk'] = (26, 0xAE31, _poke_bg, lambda r: {'x': r.choice([0x0D, 0x0D, 0x0E, _slot(r)])})
+ROUTINES['AiPlayerDuel'] = (26, 0xA24A, _poke_bg, lambda r: {'x': r.choice([0, 0, 0, 0, _slot(r)])})
 # s93 (boss / effect AI port (a)): web/src/game/obj/ai_effect.js; Y = id*2 as ObjUpdateAll's TAY 30:CD07 leaves it
 EFFECT_AIS = {'AiPlayerFollowC': (0x04, 0xB2FC), 'AiStraightMoverTl': (0x57, 0xB0BE), 'AiMpDrain': (0x76, 0xA4DC),
               'AiMpDrain99': (0x77, 0xA4E0),
@@ -615,6 +618,20 @@ def _fix_field(name, ram, r, x, wram=None):
             for s in range(0x0D, 0x1F):
                 if s != x and r.random() < 0.6:
                     ram[0x04A0 + s] = 0
+    if name == 'AiPlayerDuel':
+        # s172: y at the duel ends ($58 / $98 edges), B press vs phase $0B-$12, pad_dir 0-7 / $80+, x at $27 / $98,
+        # the sprite pass's final X (obj1_flash b7 + orbit level / burst: X = 0 or obj1_oam_ofs + 4n)
+        c = r.choice
+        ram[0xB0 + x] = c([0x57, 0x58, 0x97, 0x98, 0x40, 0xA0, r.randrange(0x58, 0x98), r.randrange(0x58, 0x98),
+                           r.randrange(256)])
+        ram[0x0600 + x] = c([0, 0, 0, 1, 0x0B, 0x0C, 0x10, 0x11, 0x12, r.randrange(256)])
+        ram[0x4B] = c([0, 0, 0x40, 0xC0, r.randrange(256)])
+        ram[0x49] = c([0, 1, 2, 3, 4, 5, 6, 7, 0x80, 0xFF, r.randrange(256)])
+        ram[0x70 + x] = c([0x25, 0x26, 0x27, 0x28, 0x96, 0x97, 0x98, 0x99, r.randrange(256)])
+        ram[0x0710] = c([0, 0, 0x80, 0x90, r.randrange(256)])
+        ram[0x06C0] = c([0, 0, 7, 8, 0x18, r.randrange(256)])
+        ram[0x06C1] = c([0, 0, 0, 1, 0x0D, 0x0E, r.randrange(256)])
+        ram[0x07EF] = c([0x04, 0x10, 0xF0, 0xF8, r.randrange(256) & 0xFC])
     if wram is not None and 'wram' in _BASE and name in ('AiDasher', 'AiTrapChest', 'AiBounceShot') \
             and r.random() < 0.4:
         wram[0x2F0:0x340] = _BASE['wram'][0x2F0:0x340]   # the real map, the object on the player's screen

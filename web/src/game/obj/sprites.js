@@ -38,7 +38,8 @@ function rom(m, a) {
   return m.data.spritesB28[a - 0x8000];
 }
 
-/** ObjSpriteDraw 28:800E */
+/** ObjSpriteDraw 28:800E. Returns the X register at its RTS (s172, AI $0B uses it): 0 after a full OrbitSprites
+ *  loop, else ObjHideUnusedOam's X (0, or obj1_oam_ofs + 4 * n when obj1_flash b7 is set) */
 export function spriteDraw(m) {
   const rd = (a) => m.rd(a), wr = (a, v) => m.wr(a, v);
   wr(T1E, (rd(0x08) & 2) ? 3 : 0);                          // 800E: $1E = $08 b1 ? 3 : 0 (dead, see ObjDrawMeta)
@@ -52,8 +53,8 @@ export function spriteDraw(m) {
     wr(T11, rd(T11) + 1);                                   // 808E
     wr(T_LEFT, rd(T_LEFT) - 1);
   } while (rd(T_LEFT) !== 0);
-  hideUnusedOam(m);                                         // 8094
-  orbitSprites(m);                                          // 8097 JMP
+  const hx = hideUnusedOam(m);                              // 8094
+  return orbitSprites(m) ?? hx;                             // 8097 JMP
 }
 
 function setOffscreen(m, x) { m.wr(OBJ_FLAGS + x, m.rd(OBJ_FLAGS + x) | 0x80); }   // 809A
@@ -174,13 +175,14 @@ export function hideUnusedOam(m) {
   const rd = (a) => m.rd(a), wr = (a, v) => m.wr(a, v);
   let o = rd(T_OAM);
   if (o !== 0) for (; o < 0x100; o += 4) wr(OAM + o, 0xF0);
-  if (!(rd(OBJ1_FLASH) & 0x80)) return;
+  if (!(rd(OBJ1_FLASH) & 0x80)) return 0;                   // X = 0 (BEQ, or the INX loop wrapped)
   let n = (rd(OBJ_FLAGS + 1) & 0x40) ? 4 : 6;               // $0381 ASL -> N = b6
   let x = rd(OBJ1_OAM_OFS);
   do {
     wr(OAM + 2 + x, rd(OAM + 2 + x) & 0xFC);
     x = (x + 4) & 0xFF;
   } while (--n);
+  return x;
 }
 
 /** OrbitSprites 28:80D6 */
@@ -211,7 +213,7 @@ function orbitSprites(m) {
       o += 4;
     }
     wr(T_OAM, 0xFF);
-    return;
+    return 0;                                               // X = $E0 + 8 * 4 wrapped
   }
   wr(ORBIT_BURST, burst - 1);                               // 814A DEC; CMP uses the old value
   if (burst >= 0x0E) return;
@@ -240,4 +242,5 @@ function orbitSprites(m) {
     o += 4;
   }
   wr(T_OAM, 0xFF);
+  return 0;
 }

@@ -1169,7 +1169,9 @@ bank,addr,name,comment
 15,BF46,DebugCheatStub,s77: lone RTS = target of PauseWait's JSR at 15:BDE4; switches off DebugPauseCheat (body starts 1 byte later)
 15,BF47,DebugPauseCheat,s77: dead debug cheat (never reached): boot_ab_flag + pad2 dir -> fill empty inventory from 15:BF7F; level $0F; MP $FF/$FF; pad2 A -> slots 0/1 speed 9
 27,A70E,AiDuelStart,s77: AI $0A (slot 0; set by AiPathWalk $FD): msg 3/3 + sub_state $10; walk slots 0/1 up to y $86; then slot $0D -> AI $52 coll $60; slot 0 -> AI $0B; R5=$4E; story_flags_F7F8+1
-27,A24A,AiPlayerDuel,s77: AI $0B: player in the sparring duel: no walking (dir 0; meta $A7); only B sword; HitPlayer pushes both 8 px per 4th touch; no damage
+27,A24A,AiPlayerDuel,s77/s172: AI $0B: player in the sparring duel: meta $A7 dir 0; only sideways moves (DuelStepX 2 px; x kept in $27-$97); B = swing (phase $12); HitPlayer pushes both 8 px per 4th touch; no damage; web obj/ai_shot.js
+27,A2AC,DuelStepX,s172: s8[8] by pad_dir: 00 02 02 02 00 FE FE FE (right dirs +2 / left dirs -2)
+27,A2B4,DuelEndCheck,s172: AI $0B first: player y >= $98 = lost (msg 3.2; chr_r5 $4D); y < $58 = won (slot $0E AI $53 unhidden; msg 3.1; $06ED=5; $06CD=$57); either -> sub_state $10; slot $0D meta $06CD / coll $80 / AI $30; slot 0 AI $03; FarCall_B14_800E (X clobbered)
 27,A753,AiDuelOpponent,s77: AI $52: sparring opponent (slot $0D) set by AiDuelStart
 27,AFA9,AiPitShuttle,s77: AI $38 (types $7E/$7F): platform; moves while the probe point ahead (27:AFED) is a b0 pit cell; else reverse dir + obj_freeze $20
 27,AFED,PlatformProbeOfs,s77: 4 x (dx;dy) signed by dir&6: (0;-24) (12;0) (0;8) (-12;0)

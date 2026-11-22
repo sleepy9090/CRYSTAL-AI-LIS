@@ -66,6 +66,10 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   onto a path terminator `$FC-$FF`), `FIELD_AIS`, steered by `_fix_field`:
   `python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine
   AiElementWall,AiWiggleShot,AiSpiralShot,AiPathWalk --out web/test/obj_frames/fuzz_field3.json`.
+- `fuzz_duel2.json` (s172): 300 cases of AI `$0B` `AiPlayerDuel` (X = 0 mostly; `_fix_field` steers y onto the duel
+  ends `$58`/`$98`, B vs phase, pad_dir, x edges and the sprite pass's final X via `obj1_flash` / orbit level / burst):
+  `python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine
+  AiPlayerDuel --out web/test/obj_frames/fuzz_duel2.json`.
 
 - `fuzz_platform.json` (s117): 300 cases each for the pit platforms in `obj/ai_field.js` (`PLATFORM_AIS`:
   `AiPitShuttle` `$38`, `AiCrumblePlatform` `$3C`, Y = id·2), captured from `gfx/compare/s116_a6a.state` (area `$6A`,

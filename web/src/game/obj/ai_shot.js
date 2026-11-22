@@ -6,6 +6,7 @@
 // s166: $15 $18 $19 $1A $1C (27:B27A-B2F4). s167: $0C $0D $0E $0F (27:A5C0-A615), $1D $2F $36 (27:B02C-B093).
 // $16 $17 $1E $1F $36 end in AiStraightMoverTail 27:B0BE (obj/ai_static.js).
 // s168: $0A $33 $51 $52 $53 $54 $55 (27:A4C6-A85E); $77 = AiMpDrain99 27:A4E0 (obj/ai_effect.js).
+// s172: $0B AiPlayerDuel 27:A24A (+ its duel-end test 27:A2B4, which runs the sprite pass and takes X from it).
 import {
   objDespawn, objPosToTemp, objStepVector, tempAddStep, tempAddOffset, tempToObjPos, objBgProbe, spawnShot, rand64,
   dirToTarget,
@@ -13,7 +14,8 @@ import {
 import { aiStraightMoverTail } from './ai_static.js';
 import { farObjInit } from './objinit.js';
 import { playSound } from '../playsound.js';
-import { cpuRd } from '../prg.js';
+import { cpuRd, switchBank16, farRestore } from '../prg.js';
+import { spriteDraw } from './sprites.js';
 
 const META_ID = 0x0300, META_DIR = 0x0360, FLAGS = 0x0380, SHOT_ID = 0x0440, BG_MASK = 0x0460, TIMER = 0x0480;
 const ACTIVE = 0x04A0, ANIM = 0x04E0, PHASE = 0x0600, TIMER2 = 0x0620;
@@ -249,6 +251,66 @@ export function aiDuelStart(m, x) {
   m.wr(0x657F, m.rd(0x657F) + 1);                           // story_flags_F7F8
 }
 
+/** 27:A2B4 (AI $0B's duel-end test): player y >= $98 = lost (msg 3.2, chr_r5 $4D), y < $58 = won (slot $0E
+ *  unhidden as AI $53, msg 3.1, $06ED = 5, $06CD = $57); either end -> sub_state $10, slot $0D meta = $06CD /
+ *  coll $80 / AI $30, slot 0 AI $03, FarCall_B14_800E. Returns X after it (the sprite pass clobbers X) */
+function duelEndCheck(m, x) {
+  const y = m.rd(0xB0 + x);
+  if (y < 0x98) {
+    if (y >= 0x58) return x;
+    m.wr(0x038E, m.rd(0x038E) | 4);
+    m.wr(0x04AE, 0x53);
+    m.wr(0x06C3, 1); m.wr(0x06E3, 3);
+    m.wr(0x03AD, 0x80);
+    m.wr(0x06ED, 5);
+    m.wr(0x06CD, 0x57);
+  } else {
+    m.wr(0x06C3, 2); m.wr(0x06E3, 3);
+    m.wr(0x07F5, 0x4D);                                     // chr_r5_play
+    m.wr(0x03AD, 0x80);
+  }
+  m.wr(0x41, 0x10);                                         // A2FC
+  m.wr(0x030D, m.rd(0x06CD));
+  m.wr(0x04A0, 0x03);
+  m.wr(0x04AD, 0x30);
+  const r6 = m.rd(0x6E), r7 = m.rd(0x6F);                   // FarCall_B14_800E
+  switchBank16(m, 0x0E);
+  const nx = spriteDraw(m);
+  farRestore(m, r6, r7);
+  return nx;
+}
+
+/** AI $0B AiPlayerDuel 27:A24A (slot 0 in the sparring duel): duel-end test, then timer2 / orbit_level 0, meta
+ *  $A7 dir 0; B (pad_new b6) with phase < $0C or = $11 -> phase $12; phase != 0 -> slot 1 anim = phase, meta 4,
+ *  phase--; else pad_dir 0-7 moves x by A2AC[dir] (then x < $27 -> +2, x >= $98 -> -2), slot 1 anim-- */
+export function aiPlayerDuel(m, x) {
+  x = duelEndCheck(m, x);
+  m.wr(TIMER2 + x, 0);
+  m.wr(0x06C0 + x, 0);
+  m.wr(META_ID + x, 0xA7);
+  m.wr(META_DIR + x, 0);
+  if (m.rd(0x4B) & 0x40) {
+    const p = m.rd(PHASE + x);
+    if (p < 0x0C || p === 0x11) m.wr(PHASE + x, 0x12);
+  }
+  m.wr(0x0301, 0);
+  const p = m.rd(PHASE + x);
+  if (p !== 0) {
+    m.wr(0x04E1, p);
+    m.wr(0x0301, 4);
+    m.wr(PHASE + x, p - 1);
+    return;
+  }
+  const d = m.rd(0x49);
+  if (d & 0x80) return;
+  let v = (cpuRd(m, 0xA2AC + d) + m.rd(0x70 + x)) & 0xFF;
+  m.wr(0x70 + x, v);
+  if (v < 0x27) v += 2;                                     // A299 INY INY
+  if (v >= 0x98) v -= 2;                                    // A29F DEY DEY
+  m.wr(0x70 + x, v & 0xFF);
+  dec(m, 0x04E1);
+}
+
 /** AI $52 AiDuelOpponent 27:A753 (slot $0D): swing (timer2 counts down by 2, meta $56, shot $5B dir 4 at anim
  *  $0E) or follow the player's x 1 px a frame (meta $55, x skips $27 / $98); every 8th frame a Rand64 roll
  *  >= ((F7F8 * 2 + 6) & 7) | 1 within 8 px of the player starts a swing (timer2 = $1E) */
@@ -320,7 +382,7 @@ export function aiChasePlayer(m, x) {
 }
 
 export const AI_SHOT = {
-  0x0A: aiDuelStart, 0x33: aiPhaseUnhide, 0x51: aiFlagGatedSpawn, 0x52: aiDuelOpponent, 0x53: aiHideAfterEvent,
+  0x0A: aiDuelStart, 0x0B: aiPlayerDuel, 0x33: aiPhaseUnhide, 0x51: aiFlagGatedSpawn, 0x52: aiDuelOpponent, 0x53: aiHideAfterEvent,
   0x54: aiChasePlayer, 0x55: aiCarryLeft,
   0x0C: aiFollowPlayerWait, 0x0D: aiMessageAfterWait, 0x0E: aiShopEmpty, 0x0F: aiSetSubstate,
   0x14: aiCountdown, 0x15: aiTrailShot, 0x16: aiCurveShot, 0x17: aiHoverShot, 0x18: aiShotTurnMeta,
