@@ -19,6 +19,7 @@ import { cpuRd, setR6 } from '../prg.js';
 import { playSound } from '../playsound.js';
 import { paletteBuildRom } from '../states/death.js';
 import { hitFlashPal } from './ai_final.js';
+import { farObjInit } from './objinit.js';
 import {
   rand64, objPosToTemp, tempToObjPos, tempAddOffset, tempAddStep, dirToTarget, objStepVector, spawnShot,
 } from './util.js';
@@ -785,6 +786,52 @@ export function bossAiEA(m, x) {
   return bossPhaseDispatch(m, x, 0x27);
 }
 
+// ---- AI $6C-$6E AiReward6C 15:B728 (the boss reward drop, type $0F; obj_phase = BossAreaList index) -----------
+// Waits until slots $0D-$1E (except itself) hold only AI 0/$78/$70/$7F/$30/$39, then (once: obj_timer2++) replays
+// the area music and applies its 5-byte RewardRecs 15:B7C1 record (pal id 3, CHR R5, tile ofs, pending msg).
+// Phase 3 (BossAreaList $FF) skips the obj_timer2/music step, so it re-applies every frame. Every path except the
+// spawn_param b7 one stores boss_cam_lock $10.
+
+const REWARD_IDLE = new Set([0x78, 0x70, 0x7F, 0x30, 0x39, 0x00]);
+
+export function aiReward6C(m, x) {
+  if (m.rd(0x0560 + x) & 0x80) {                              // B72B: becomes type $B3 (AI $70 phase 1)
+    m.wr(0x10, x); m.wr(0x11, 0xB3);
+    farObjInit(m);
+    return;
+  }
+  if (m.rd(TIMER2 + x) === 0) {
+    let busy = false;
+    for (let y = 0x0D; y !== 0x1F; y++) {                     // B740: $10 = Y each pass
+      m.wr(0x10, y);
+      if (x === y) continue;
+      if (!REWARD_IDLE.has(m.rd(ACTIVE + y))) { busy = true; break; }
+    }
+    if (!busy) {
+      const ph = m.rd(PHASE + x);
+      if (ph !== 3) {
+        inc(m, TIMER2 + x);
+        const mus = m.rd(0x0102);
+        m.wr(0x0102, 0);
+        playSound(m, mus, 0);                                 // B778
+      }
+      m.wr(COLL + x, 0x8D);
+      m.wr(META + x, 0xAA);
+      const r = 0xB7C1 + ((ph * 5) & 0xFF);
+      if (cpuRd(m, r) !== 0) {
+        m.wr(0x07E7, cpuRd(m, r));
+        m.wr(0x07F5, cpuRd(m, r + 1));
+        m.wr(0x0320 + x, cpuRd(m, r + 2));
+        m.wr(0x06E3, cpuRd(m, r + 3));
+        m.wr(0x06C3, cpuRd(m, r + 4));
+        if (cpuRd(m, r + 3) | cpuRd(m, r + 4)) m.wr(0x41, 0x10);
+        paletteBuildRom(m, 0);                                // B7B8 JSR 26:8C0E
+      }
+    }
+  }
+  m.wr(CAM_LOCK, 0x10);                                       // B7BB
+}
+
 // ---- BossPhaseDispatch 15:A400 -------------------------------------------------------------------------------
 
 const BOSS_PHASES = {
@@ -813,4 +860,5 @@ export function bossPhaseDispatch(m, x, base) {
 export const AI_BOSS = {
   0x60: bossAiE0, 0x61: bossHomingShot, 0x63: bossAiE3, 0x64: bossRockShot, 0x65: aiTalkEventE5,
   0x66: bossAiE6, 0x67: aiBoss88, 0x68: bossAiE8, 0x69: bossAiE9, 0x6A: bossAiEA,
+  0x6C: aiReward6C, 0x6D: aiReward6C, 0x6E: aiReward6C,
 };

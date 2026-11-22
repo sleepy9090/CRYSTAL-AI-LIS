@@ -256,7 +256,9 @@ BOSS_AIS = {'BossAiE0': (0x60, 0xA477, range(8)), 'BossHomingShot': (0x61, 0xA5E
             # s156: $E9 statues (phase 2 = the shared fire entry B105), $EA patrol / dive / rise
             'BossAiE9': (0x69, 0xB0B6, (0, 1, 1, 2)), 'BossAiEA': (0x6A, 0xB130, (0, 1, 1, 2, 3, 3)),
             # s157: $E5 area $43 talk event (phases 4 / 6 are set by talk acts 26 / 27)
-            'AiTalkEventE5': (0x65, 0xABDA, (0, 1, 2, 3, 4, 5, 6, 7, 7, 7))}
+            'AiTalkEventE5': (0x65, 0xABDA, (0, 1, 2, 3, 4, 5, 6, 7, 7, 7)),
+            # s158: $6C-$6E reward drop (type $0F), phase = BossAreaList index 0-13 (RewardRecs 15:B7C1)
+            'AiReward6C': (0x6E, 0xB728, range(14))}
 for _n, (_id, _ad, _p) in BOSS_AIS.items():
     ROUTINES[_n] = ((26, 15), _ad, _poke_bg, lambda r: {'x': _slot(r)})
 # AI ids the port has (web/src/game/obj/ai_static.js, ai_walk.js, ai_field.js) + ids whose ObjAiTable 27:A314 entry is 0
@@ -662,6 +664,14 @@ def _fix_boss(name, ram, r, x, wram):
     if _id == 0x65:                                # s157: anim count edges ($1E -> $1F, 1 -> 0), throw y edges
         ram[0x04E0 + x] = r.choice([0, 1, 1, 2, 0x1E, 0x1E, 0x1F, r.randrange(256)])
         ram[0xB0] = r.choice([0xA7, 0xA8, 0xA9, 0xAF, 0xB0, 0xF8, r.randrange(256)])
+    if _id == 0x6E:                                # s158: reward: spawn_param b7 path, timer2 0, real music ids
+        ram[0x0560 + x] = r.choice([0, 0x05, 0x1E, 0x80, 0xC0, r.randrange(256)])
+        ram[0x0620 + x] = r.choice([0, 0, 0, 1, r.randrange(256)])
+        ram[0x0102] = r.choice([0, 0x01, 0x05, 0x08, 0x0B, r.randrange(1, 0x10)])
+        if r.random() < 0.5:                       # every other enemy slot idle (the apply path)
+            for s in range(0x0D, 0x1F):
+                if s != x:
+                    ram[0x04A0 + s] = r.choice([0, 0, 0, 0x78, 0x70, 0x7F, 0x30, 0x39])
     if r.random() < 0.4:
         _rand_zero_next(ram, r)
     if r.random() < 0.5:                           # the boss on the player's screen, near the arena edges
