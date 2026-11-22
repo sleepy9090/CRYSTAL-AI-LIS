@@ -1453,3 +1453,8 @@ bank,addr,name,comment
 30,C176,WaitFrames,s146: Y = count; WaitFrame x Y
 31,E038,ChangeFormCasterRecord,s146: record $6000 = x $84 y $A0 meta $02 tile $4C flags $0B; $1F!=0 -> anim $07FF + meta $21*4+$2E + tile $D0 (form preview)
 31,E077,OamAttrPalClear,s146: all 64 OAM attr bytes &= $FC (palette 0)
+19,BCB0,MesiaScript,s150: X=1 slot 1 walk/pose script over MesiaStepTable ($20*5): dx dy n meta ovl = n steps (TempAddStep; slot 0 follows) / $80 = hold to anim 8 then ObjInit(slot $22 type $C2) y-$18 / $81 end
+19,BD51,MesiaSpriteDraw,s150: TXA PHA; FarCall_B14_800E sprite pass; PLA TAX
+19,BD59,MesiaStepTable,s150: 5-byte records for MesiaScript (11 records + $81 end: up 16, left 48, 3x(hold+spawn, right 32), hold+spawn, left 48, still 1)
+19,BD91,MesiaSpawnFly,s150: 16 frames slots $15-$18 x +3/+1/-1/-3; clear $15-$17; slot $18 flags 9 + 8 white flashes (MesiaPalFlash $30) moving y+1; clear $18
+19,BDDC,MesiaPalFlash,s150: pal_buf = A; WaitFrame; SetR6($1A) PaletteBuild; WaitFrame

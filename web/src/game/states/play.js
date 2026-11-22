@@ -31,6 +31,7 @@ import { substChangeForm } from './changeform.js';
 import { substCureMagic } from './cure.js';
 import { substFormRevert } from './formrevert.js';
 import { swordRaisePose } from './swordraise.js';
+import { substMesiaReunion } from './mesia.js';
 
 function unported(m, what) {
   if (!m.unported.has(what)) { m.unported.add(what); m.log(`${what} not ported yet`); }
@@ -222,6 +223,7 @@ const SUBSTATES = new Map([
   [24, substCureMagic],                               // 19:BB39 magic 5 / stone cure (s147, states/cure.js)
   [25, substFormRevert],                              // 19:BB9D magic press in a changed form (s148, states/formrevert.js)
   [26, swordRaisePose],                               // 19:BC04 event act 22 (s149, states/swordraise.js)
+  [27, substMesiaReunion],                            // 19:BC6B event act 30 (s150, states/mesia.js)
   [29, substTeleportMenu],                          // 30:DB28 2nd entry (never stored)
   [31, substRestoreScreen],                           // 30:CC4D (s120; set by AI $70 phase 2)
   [32, substArmorShop],                               // 30:D985 (s122, states/shop.js; types $42 $48)
@@ -260,6 +262,7 @@ export const ENTRY_POINTS = {
   '19:BB39': substCureMagic,                          // s147 (web/test/states/cure.json)
   '19:BB9D': substFormRevert,                         // s148 (web/test/states/formrevert.json)
   '19:BC04': swordRaisePose,                          // s149 (web/test/states/swordraise.json)
+  '19:BC6B': substMesiaReunion,                       // s150 (web/test/states/mesia.json)
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */
