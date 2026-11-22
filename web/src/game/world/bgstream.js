@@ -243,6 +243,9 @@ export function* bgColRender(m) {
  *  fall after rows 7, 13, 19, 25 (~6 rows of ~43 scanlines per frame) and after the last row.
  *  s118: also used for AI $5F's redraw (not measured there). */
 export const FSD_LAG = (n) => n === 30 || (n > 1 && n % 6 === 1);
+/** s161: the same draw started right after a WaitFrame (BossHookA6 15:B8FD, area $A6 f2505-2510): the NMIs
+ *  fall after rows 9, 15, 21, 27 (tools.emu pos cursor 488/440/392/344 at the frame ends) */
+export const FSD_LAG_WF = (n) => n === 29 || (n < 30 && n % 6 === 0);
 
 /** 30:C831: draw the 30 rows of the screen at $34-$37 (bottom-up), banks restored; A != 0 -> 30:C739 */
 export function* fullScreenDraw(m, a, lagRows = null) {

@@ -20,7 +20,7 @@ import { playSound } from '../playsound.js';
 import { paletteBuildRom, waitFrame, waitFrames, statRecalc } from '../states/death.js';
 import { showMessage } from '../states/talk.js';
 import { waitPpuQueue, ppuQueueBlock } from '../states/pause.js';
-import { fullScreenDraw, FSD_LAG } from '../world/bgstream.js';
+import { fullScreenDraw, FSD_LAG_WF } from '../world/bgstream.js';
 import { spriteDraw } from './sprites.js';
 import { hitFlashPal } from './ai_final.js';
 import { farObjInit } from './objinit.js';
@@ -870,7 +870,7 @@ function* bossHookA6(m) {
   objInitAt(m, 0x15, 0xB3);
   m.wr(0x01, m.rd(0x01) & 0xE7);
   yield* waitFrame(m);
-  yield* fullScreenDraw(m, 1, FSD_LAG);
+  yield* fullScreenDraw(m, 1, FSD_LAG_WF);                     // s161: NMIs after rows 9 15 21 27
   m.wr(0x01, m.rd(0x01) | 0x18);
 }
 /** 15:B947 (index 13, area $5F): slots $0D-$0F off (the drop too when it sits there), slot $14 = type $B5 */
