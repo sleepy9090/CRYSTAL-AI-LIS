@@ -235,6 +235,12 @@ SCENARIOS['boss_fade'] = dict(note='area 5F (BossAreaList entry 13): ObjInit typ
                                    '$0F at +10 -> music $FF -> fade-out (SndFadeStep)', area='5F',
                               pokes={0x03C1: 0x60}, spawn=[(10, 0x0F, 0xCF, 48, 0)], frames=2500,
                               watch=[0x04AF, 0x060F, 0x0102, 0x0103, 0x00FE, 0x0110, 0x04B4])
+# s155: the same kill run on: SubstFinalSceneReset 19:BDF2 -> FinalSceneToEnding 19:BFC4 -> main_state 4
+# MainStateEndingInit 30:C944 -> 5 MainStateEnding 30:C94C (bank-17 ending, steps $0600 0..29; no keys needed)
+SCENARIOS['ending'] = dict(SCENARIOS['boss_fade'], frames=9000, watch=[0x0600, 0x8D], peek=[0x0600, 0x0602],
+                           keys=[f'{f}:A' for f in range(460, 1520, 40)],   # the final scene's 5 messages
+                           note='area 5F: boss_fade kill run on through the final scene (A every 40 f for its '
+                                'messages) into the bank-17 ending (main_state 4/5)')
 
 
 def place_player(x, y, skip=10, cam=False):

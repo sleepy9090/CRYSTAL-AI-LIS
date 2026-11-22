@@ -263,6 +263,32 @@ tools.emu scenarios vs the 178 labels the tour never ran (docs/emu_tour.txt)
     f20: $0041 <- 14  pc 27:A1AF
   newly run (3): 30:C482:PpuQueueBlock 30:DB28:SubstTeleportMenu 30:DD58:TestFlagF2F0
 
+[warp_pick] area 03: Warp Boots + all town flags F2F5-F2FF -> DOWN, A = index 3 (area $D5)
+  end: $40/$41 1/08 area D5 hp 48 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $006D $6440 $0715), first of each:
+    scenario start: abs f2496
+    abs f2492: 23:BC00 $04A0=03 $41=01
+    abs f2702: 23:BC00 $04A0=03 $41=06
+    abs f2845: 14:8354 $04A0=03 $41=08
+    abs f2845: 23:BC00 $04A0=03 $41=08
+    f20: $0041 <- 06  pc 26:9B5A
+    f141: $006C <- D5  pc 30:DC95
+    f141: $006D <- 40  pc 30:DC99
+    f283: $0041 <- 08  pc 30:CA53
+    f349: $0041 <- 08  pc 30:D51A
+    f349: $6440 <- FF  pc 14:8381
+    f349: $6440 <- FF  pc 14:8389
+    f349: $0715 <- 00  pc 14:8398
+    f349: $0041 <- 08  pc 30:D884
+  newly run (5): 14:831E:ItemUseHook 14:8354:InvRemoveItem 30:D497:ItemUseMenu 30:DB28:SubstTeleportMenu 30:DD58:TestFlagF2F0
+
+[mp_teleport_pick] magic 4 (A, PlayerMagic 27:A022) + all town flags -> RIGHT, A = index 1 (area $18)
+  end: $40/$41 1/08 area 18 hp 48 lv 1 gold 0 xp 0 mp 76
+  state writes ($40/$41), first of each:
+    f20: $0041 <- 14  pc 27:A1AF
+    f263: $0041 <- 08  pc 30:CA53
+  newly run (3): 26:9AE8:SpendMp 30:DB28:SubstTeleportMenu 30:DD58:TestFlagF2F0
+
 [mp_cure] magic 5 (A, PlayerMagic 27:A022) poisoned -> 19:BB39 SubstCureMagic
   end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 72
   state writes ($40/$41), first of each:
@@ -947,6 +973,942 @@ tools.emu scenarios vs the 178 labels the tour never ran (docs/emu_tour.txt)
     f10: $0041 <- 24  pc 27:A5C4
   newly run (2): 27:A5C0:AiShopEmpty 30:D9C1:SubstShopEmpty
 
+[mp_fail_area] magic 3 (A, PlayerMagic 27:A022) area $58 -> MagicFailSound
+  end: $40/$41 1/08 area 58 hp 48 lv 1 gold 0 xp 0 mp 96
+  state writes ($40/$41), first of each:
+  newly run (1): 27:A1BB:MagicFailSound
+
+[mp_fail_status] magic 7 (A, PlayerMagic 27:A022) status 4 ($0710) -> MagicStatus4Check -> MagicFailSound
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 96
+  state writes ($40/$41), first of each:
+  newly run (1): 27:A1BB:MagicFailSound
+
+[boss_fade] area 5F (BossAreaList entry 13): ObjInit type $CF (AI $6F BossDefeated) in slot $0F at +10 -> music $FF -> fade-out (SndFadeStep)
+  end: $40/$41 1/1E area 5F hp 96 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $04AF $060F $0102 $0103 $00FE $0110 $04B4), first of each:
+    f2: $0041 <- 1F  pc 27:BC08
+    f10: $060F <- 00  pc 30:C2A3
+    f10: $04AF <- 00  pc 30:C29D
+    f10: $04AF <- 6F  pc 30:C34A
+    f12: $0041 <- 08  pc 30:CCCB
+    f18: $0110 <- 1E  pc 24:8228
+    f166: $0102 <- 14  pc 30:C13A
+    f166: $0103 <- 14  pc 30:C157
+    f167: $04AF <- 6E  pc 30:C34A
+    f167: $060F <- 0D  pc 15:B828
+    f167: $04AF <- 00  pc 15:B952
+    f167: $04B4 <- 00  pc 30:C29D
+    f167: $04B4 <- 70  pc 30:C34A
+    f167: $0102 <- FF  pc 15:B85D
+    f167: $0110 <- 14  pc 31:F853
+    f167: $00FE <- 00  pc 24:8107
+    f167: $0103 <- 00  pc 31:F85E
+    f432: $0041 <- 1E  pc 27:BD23
+    f432: $04B4 <- 00  pc 27:BD28
+    f432: $04AF <- 00  pc 19:BDF9
+    f432: $04B4 <- 00  pc 19:BDF9
+    f543: $0103 <- 5C  pc 30:C157
+    f543: $0110 <- 5C  pc 31:F853
+    f543: $0103 <- 29  pc 31:F85E
+    f544: $0110 <- 29  pc 31:F853
+    f1319: $0110 <- 14  pc 24:8228
+  newly run (5): 15:B807:BossDefeated 19:BDF2:SubstFinalSceneReset 30:C482:PpuQueueBlock 30:CC4D:SubstRestoreScreen 31:FFCF:FarCall_D354
+
+[ending] area 5F: boss_fade kill run on through the final scene (A every 40 f for its messages) into the bank-17 ending (main_state 4/5)
+  end: $40/$41 5/08 area 5F hp 96 lv 1 gold 0 xp 0 mp 34 $0600=1D $0602=00
+  state writes ($40/$41 $0600 $008D), first of each:
+    f2: $0041 <- 1F  pc 27:BC08
+    f12: $0041 <- 08  pc 30:CCCB
+    f432: $0041 <- 1E  pc 27:BD23
+    f432: $0600 <- 00  pc 19:BE07
+    f589: $0041 <- 08  pc 30:D3C1
+    f1260: $0040 <- 04  pc 19:BFC8
+    f1263: $0600 <- 00  pc 17:A031
+    f1263: $0040 <- 05  pc 17:A050
+    f1269: $0600 <- 01  pc 17:A208
+    f1356: $0600 <- 02  pc 17:A0FF
+    f1357: $0600 <- 03  pc 17:A211
+    f1422: $008D <- 3C  pc 17:A34F
+    f1461: $0600 <- 04  pc 17:A38E
+    f1523: $0600 <- 05  pc 17:A0FF
+    f1524: $008D <- 3B  pc 17:A39E
+    f1525: $008D <- 3A  pc 17:A39E
+    f1526: $008D <- 39  pc 17:A39E
+    f1527: $008D <- 38  pc 17:A39E
+    f1528: $008D <- 37  pc 17:A39E
+    f1529: $008D <- 36  pc 17:A39E
+    f1530: $008D <- 35  pc 17:A39E
+    f1531: $008D <- 34  pc 17:A39E
+    f1532: $008D <- 33  pc 17:A39E
+    f1533: $008D <- 32  pc 17:A39E
+    f1534: $008D <- 31  pc 17:A39E
+    f1535: $008D <- 30  pc 17:A39E
+    f1536: $008D <- 2F  pc 17:A39E
+    f1537: $008D <- 2E  pc 17:A39E
+    f1538: $008D <- 2D  pc 17:A39E
+    f1539: $008D <- 2C  pc 17:A39E
+    f1540: $008D <- 2B  pc 17:A39E
+    f1541: $008D <- 2A  pc 17:A39E
+    f1542: $008D <- 29  pc 17:A39E
+    f1543: $008D <- 28  pc 17:A39E
+    f1544: $008D <- 27  pc 17:A39E
+    f1545: $008D <- 26  pc 17:A39E
+    f1546: $008D <- 25  pc 17:A39E
+    f1547: $008D <- 24  pc 17:A39E
+    f1548: $008D <- 23  pc 17:A39E
+    f1549: $008D <- 22  pc 17:A39E
+  newly run (15): 15:B807:BossDefeated 17:A000:EndingInit 17:A0EB:EndingWait 17:A100:EndingTick 17:A14A:EndingScene 17:A751:NtFill_b17 17:AA74:EndingFadeIn 17:AAAD:EndingFadeOut 19:BDF2:SubstFinalSceneReset 19:BFC4:FinalSceneToEnding 30:C482:PpuQueueBlock 30:C944:MainStateEndingInit 30:C94C:MainStateEnding 30:CC4D:SubstRestoreScreen 31:FFCF:FarCall_D354
+
+[conveyor] area 20: slots 0/1 placed on the conveyor strip (x $0280, y $01C8) at the 10th PlayerMove 26:9D9A, DOWN held -> PlayerConveyor 26:9FD2
+  end: $40/$41 1/08 area 20 hp 96 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $0641 $0661 $0681 $0071 $0091 $00B1 $00D1), first of each:
+    f0: $0071 <- EF  pc 26:989B
+    f0: $0091 <- 05  pc 26:989F
+    f0: $00B1 <- 80  pc 26:98A3
+    f0: $00D1 <- 04  pc 26:98A7
+    f3: $0641 <- 00  pc 26:9F80
+    f3: $0641 <- 00  pc 26:9F7A
+    f12: $0641 <- 20  pc 26:9F9A
+    f12: $0071 <- 80  pc 26:989B
+    f12: $0091 <- 02  pc 26:989F
+    f12: $00B1 <- C8  pc 26:98A3
+    f12: $00D1 <- 01  pc 26:98A7
+    f13: $00B1 <- C9  pc 26:98A3
+    f15: $00B1 <- CC  pc 26:98A3
+    f16: $00B1 <- CE  pc 26:98A3
+    f17: $00B1 <- D1  pc 26:98A3
+    f18: $00B1 <- D3  pc 26:98A3
+    f19: $00B1 <- D6  pc 26:98A3
+    f20: $00B1 <- D8  pc 26:98A3
+    f21: $00B1 <- DB  pc 26:98A3
+    f22: $00B1 <- DD  pc 26:98A3
+    f23: $00B1 <- E0  pc 26:98A3
+    f24: $00B1 <- E5  pc 26:98A3
+    f25: $00B1 <- E9  pc 26:98A3
+    f26: $00B1 <- EE  pc 26:98A3
+    f27: $00B1 <- 02  pc 26:98A3
+    f27: $00D1 <- 02  pc 26:98A7
+    f28: $00B1 <- 07  pc 26:98A3
+    f29: $00B1 <- 0B  pc 26:98A3
+  newly run (1): 26:9FD2:PlayerConveyor
+
+[final_locked] area A6 (BossAreaList entry 11): ObjInit type $CF (AI $6F BossDefeated) at +10 -> hook 15:B8FD -> type $B3 (AI $70 phase 1), A taps through messages $1B.05-07 -> player obj_active 2 = PlayerMoveLocked 26:9D81
+  end: $40/$41 1/08 area 58 hp 96 lv 1 gold 0 xp 0 mp 34 $04A0=03 $04A1=01 $0340=06 $0341=06 $05A0=00 $07D7=00 $0710=00
+  state writes ($40/$41 $04A0 $060F $07DE $0676 $006C), first of each:
+    scenario start: abs f2495
+    abs f2505: 15:B8FD $04A0=03 $41=08
+    abs f2511: 27:BAF5 $04A0=03 $41=08
+    abs f3144: 27:BB6E $04A0=03 $41=08
+    abs f3255: 26:9D81 $04A0=02 $41=08
+    abs f3573: 26:9D91 $04A0=02 $41=08
+    f10: $060F <- 00  pc 30:C2A3
+    f10: $060F <- 0B  pc 15:B828
+    f28: $060F <- 02  pc 30:C3C0
+    f46: $0676 <- 00  pc 30:C2A3
+    f369: $07DE <- 05  pc 27:BB30
+    f499: $0041 <- 08  pc 30:D3C1
+    f499: $07DE <- 06  pc 27:BB3D
+    f619: $07DE <- 07  pc 27:BB3D
+    f649: $07DE <- 08  pc 27:BB3D
+    f649: $0676 <- 01  pc 27:BB49
+    f649: $04A0 <- 02  pc 27:BB73
+    f649: $0676 <- 02  pc 27:A7DD
+    f650: $0676 <- 03  pc 27:A7DD
+    f651: $0676 <- 04  pc 27:A7DD
+    f652: $0676 <- 05  pc 27:A7DD
+    f653: $0676 <- 06  pc 27:A7DD
+    f654: $0676 <- 07  pc 27:A7DD
+    f655: $0676 <- 08  pc 27:A7DD
+    f656: $0676 <- 09  pc 27:A7DD
+    f657: $0676 <- 0A  pc 27:A7DD
+    f658: $0676 <- 0B  pc 27:A7DD
+    f659: $0676 <- 0C  pc 27:A7DD
+    f660: $0676 <- 0D  pc 27:A7DD
+    f661: $0676 <- 0E  pc 27:A7DD
+    f662: $0676 <- 0F  pc 27:A7DD
+    f663: $0676 <- 10  pc 27:A7DD
+    f664: $0676 <- 11  pc 27:A7DD
+    f665: $0676 <- 12  pc 27:A7DD
+    f666: $0676 <- 13  pc 27:A7DD
+    f667: $0676 <- 14  pc 27:A7DD
+    f668: $0676 <- 15  pc 27:A7DD
+    f669: $0676 <- 16  pc 27:A7DD
+    f670: $0676 <- 17  pc 27:A7DD
+    f671: $0676 <- 18  pc 27:A7DD
+  newly run (3): 15:B807:BossDefeated 26:9D81:PlayerMoveLocked 31:FFCF:FarCall_D354
+
+[pitfall] area 6A: slots 0/1 placed on the pit column ($0578,$0168) at the 10th PlayerMove -> AreaPitFall 31:E544 -> AreaEdgeLink k5 match -> area $69 fall-in
+  end: $40/$41 1/08 area 69 hp 96 lv 1 gold 0 xp 0 mp 34
+  state writes ($40/$41 $006C $006D $0041 $0620 $00D0), first of each:
+    scenario start: abs f2494
+    abs f2508: 31:E544 $04A0=03 $41=01
+    abs f2520: 31:E573 $04A0=03 $41=01
+    abs f2536: 31:E5E5 $04A0=03 $41=01
+    abs f2537: 31:E600 $04A0=03 $41=01
+    f13: $0041 <- 01  pc 31:F07C
+    f13: $006D <- 60  pc 31:F084
+    f14: $00D0 <- 01  pc 26:98A7
+    f42: $00D0 <- 02  pc 31:E5C1
+    f42: $006C <- 69  pc 31:E5E5
+    f43: $0620 <- 30  pc 31:E600
+    f68: $0041 <- 08  pc 30:CA53
+    f72: $0620 <- 2F  pc 26:9DC5
+    f73: $0620 <- 2E  pc 26:9DC5
+    f74: $0620 <- 2D  pc 26:9DC5
+    f75: $0620 <- 2C  pc 26:9DC5
+    f76: $0620 <- 2B  pc 26:9DC5
+    f77: $0620 <- 2A  pc 26:9DC5
+    f78: $0620 <- 29  pc 26:9DC5
+    f79: $0620 <- 28  pc 26:9DC5
+    f80: $0620 <- 27  pc 26:9DC5
+    f81: $0620 <- 26  pc 26:9DC5
+    f82: $0620 <- 25  pc 26:9DC5
+    f83: $0620 <- 24  pc 26:9DC5
+    f84: $0620 <- 23  pc 26:9DC5
+    f85: $0620 <- 22  pc 26:9DC5
+    f86: $0620 <- 21  pc 26:9DC5
+    f87: $0620 <- 20  pc 26:9DC5
+    f88: $0620 <- 1F  pc 26:9DC5
+    f89: $0620 <- 1E  pc 26:9DC5
+    f90: $0620 <- 1D  pc 26:9DC5
+    f91: $0620 <- 1C  pc 26:9DC5
+    f92: $0620 <- 1B  pc 26:9DC5
+    f93: $0620 <- 1A  pc 26:9DC5
+    f94: $0620 <- 19  pc 26:9DC5
+    f95: $0620 <- 18  pc 26:9DC5
+    f96: $0620 <- 17  pc 26:9DC5
+    f97: $0620 <- 16  pc 26:9DC5
+    f98: $0620 <- 15  pc 26:9DC5
+    f99: $0620 <- 14  pc 26:9DC5
+  newly run (2): 31:E544:AreaPitFall 31:E573:AreaEdgeLink
+
+[ride_platform] area 6A: player parked at ($0580,$0100) + camera set (10th PlayerMove), then put on slot $18 (AI $38 AiPitShuttle over the pit strip) at the 400th -> ObjCollideAll -> RidePlatform 26:943F, no pit fall
+  end: $40/$41 1/08 area 6A hp 96 lv 1 gold 0 xp 0 mp 34 $04B8=38 $0088=80 $00A8=05 $00C8=A7 $00E8=01 $0071=80 $0091=05 $00B1=A6 $00D1=01 $006C=6A
+  state writes ($40/$41 $0541 $04B8 $0071 $00B1 $006D), first of each:
+    scenario start: abs f2494
+    abs f2896: 26:943F $04A0=03 $41=08
+    abs f2897: 31:F073 $04A0=03 $41=08
+    f0: $0071 <- 30  pc 26:989B
+    f0: $00B1 <- AF  pc 26:98A3
+    f0: $0541 <- 00  pc 26:8F73
+    f12: $0071 <- 80  pc 26:989B
+    f12: $00B1 <- 00  pc 26:98A3
+    f402: $00B1 <- 4C  pc 26:98A3
+    f402: $0541 <- 18  pc 26:9447
+    f403: $00B1 <- 4B  pc 26:98A3
+    f404: $00B1 <- 4A  pc 26:98A3
+    f405: $00B1 <- 49  pc 26:98A3
+    f406: $00B1 <- 48  pc 26:98A3
+    f407: $00B1 <- 47  pc 26:98A3
+    f408: $00B1 <- 46  pc 26:98A3
+    f409: $00B1 <- 45  pc 26:98A3
+    f411: $00B1 <- 44  pc 26:98A3
+    f412: $00B1 <- 43  pc 26:98A3
+    f413: $00B1 <- 42  pc 26:98A3
+    f414: $00B1 <- 41  pc 26:98A3
+    f415: $00B1 <- 40  pc 26:98A3
+    f416: $00B1 <- 3F  pc 26:98A3
+    f417: $00B1 <- 3E  pc 26:98A3
+    f418: $00B1 <- 3D  pc 26:98A3
+    f419: $00B1 <- 3C  pc 26:98A3
+    f420: $00B1 <- 3B  pc 26:98A3
+    f421: $00B1 <- 3A  pc 26:98A3
+    f422: $00B1 <- 39  pc 26:98A3
+    f423: $00B1 <- 38  pc 26:98A3
+    f424: $00B1 <- 37  pc 26:98A3
+    f425: $00B1 <- 36  pc 26:98A3
+    f426: $00B1 <- 35  pc 26:98A3
+    f427: $00B1 <- 34  pc 26:98A3
+    f428: $00B1 <- 33  pc 26:98A3
+    f429: $00B1 <- 32  pc 26:98A3
+    f430: $00B1 <- 31  pc 26:98A3
+    f431: $00B1 <- 30  pc 26:98A3
+    f432: $00B1 <- 2F  pc 26:98A3
+    f433: $00B1 <- 2E  pc 26:98A3
+  newly run (1): 26:943F:RidePlatform
+
+[thunder_transform] area 06: thunder sword ($0711=4), level 16; slot $0D (type $53) parked at the sword, B/A swings -> ThunderTransform -> type $69
+  end: $40/$41 1/08 area 06 hp 96 lv 16 gold 8 xp 20 mp 34 $050D=4E $040D=0D $042D=86 $03E1=20 $0502=00 $03E2=00 $04AD=00 $03CD=01
+  state writes ($40/$41 $0711 $04AD $03CD $06ED $056D $054D $0704), first of each:
+    scenario start: abs f2493
+    abs f2529: 26:90BB $04A0=03 $41=08
+    abs f2529: 26:923E $04A0=03 $41=08
+    abs f2531: 26:9125 $04A0=03 $41=08
+    abs f2697: 26:913B $04A0=03 $41=08
+    abs f2697: 26:9152 $04A0=03 $41=08
+    f36: $054D <- 00  pc 30:C2A0
+    f36: $056D <- 00  pc 30:C2A0
+    f36: $04AD <- 00  pc 30:C29D
+    f36: $03CD <- 00  pc 30:C29A
+    f36: $06ED <- 00  pc 30:C2A3
+    f36: $03CD <- 5A  pc 30:C300
+    f36: $04AD <- 24  pc 30:C34A
+    f36: $054D <- 00  pc 30:C380
+    f36: $056D <- 01  pc 30:C38A
+    f204: $03CD <- ED  pc 26:9144
+    f204: $0704 <- 14  pc 26:9257
+    f204: $04AD <- 7D  pc 26:9213
+    f252: $04AD <- 00  pc 26:98CC
+  newly run (5): 26:9152:EnemyKilled 26:91FA:EnemyDeathFx 26:924B:AddXp 26:946D:PickupGold 27:B79F:ChestHop
+
+[sword_charge] area 03: sword 1, sword_power 0, B held 80 frames at +20 -> orbit + burst (BurstRadius 28:81A5), release -> charged shot
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 64 $06C0=00 $06C1=00 $0708=40 $0719=00
+  state writes ($40/$41 $06C0 $06C1 $0708), first of each:
+    scenario start: abs f2496
+    abs f2519: 26:9E13 $04A0=03 $41=08
+    abs f2547: 26:9E1F $04A0=03 $41=08
+    abs f2548: 28:81A5 $04A0=03 $41=08
+    abs f2596: 26:9C91 $04A0=03 $41=08
+    abs f2596: 26:9CBA $04A0=03 $41=08
+    f23: $06C0 <- 01  pc 26:9E16
+    f27: $06C0 <- 02  pc 26:9E16
+    f31: $06C0 <- 03  pc 26:9E16
+    f35: $06C0 <- 04  pc 26:9E16
+    f39: $06C0 <- 05  pc 26:9E16
+    f43: $06C0 <- 06  pc 26:9E16
+    f47: $06C0 <- 07  pc 26:9E16
+    f51: $06C0 <- 08  pc 26:9E16
+    f51: $06C1 <- 0E  pc 26:9E22
+    f51: $06C1 <- 0D  pc 28:814D
+    f52: $06C1 <- 0C  pc 28:814D
+    f53: $06C1 <- 0B  pc 28:814D
+    f54: $06C1 <- 0A  pc 28:814D
+    f55: $06C0 <- 09  pc 26:9E16
+    f55: $06C0 <- 08  pc 26:9E39
+    f55: $06C1 <- 09  pc 28:814D
+    f56: $06C1 <- 08  pc 28:814D
+    f57: $06C1 <- 07  pc 28:814D
+    f58: $06C1 <- 06  pc 28:814D
+    f59: $06C1 <- 05  pc 28:814D
+    f60: $06C1 <- 04  pc 28:814D
+    f61: $06C1 <- 03  pc 28:814D
+    f62: $06C1 <- 02  pc 28:814D
+    f63: $06C1 <- 01  pc 28:814D
+    f64: $06C1 <- 00  pc 28:814D
+    f100: $06C0 <- 00  pc 26:9CD6
+    f100: $06C1 <- 00  pc 26:9CD9
+  newly run (2): 27:B0A8:AiDirShot 28:81A5:BurstRadius
+
+[sword_charge2] area 03: sword 1, sword_power 2, B held 120 frames at +20 -> orbit + burst (BurstRadius 28:81A5), release -> charged shot
+  end: $40/$41 1/08 area 03 hp 48 lv 1 gold 0 xp 0 mp 56 $06C0=00 $06C1=00 $0708=38 $0719=02
+  state writes ($40/$41 $06C0 $06C1 $0708), first of each:
+    scenario start: abs f2496
+    abs f2519: 26:9E13 $04A0=03 $41=08
+    abs f2547: 26:9E1F $04A0=03 $41=08
+    abs f2548: 28:81A5 $04A0=03 $41=08
+    abs f2636: 26:9C91 $04A0=03 $41=08
+    abs f2636: 26:9CBA $04A0=03 $41=08
+    abs f2636: 26:9CCE $04A0=03 $41=08
+    f23: $06C0 <- 01  pc 26:9E16
+    f27: $06C0 <- 02  pc 26:9E16
+    f31: $06C0 <- 03  pc 26:9E16
+    f35: $06C0 <- 04  pc 26:9E16
+    f39: $06C0 <- 05  pc 26:9E16
+    f43: $06C0 <- 06  pc 26:9E16
+    f47: $06C0 <- 07  pc 26:9E16
+    f51: $06C0 <- 08  pc 26:9E16
+    f51: $06C1 <- 0E  pc 26:9E22
+    f51: $06C1 <- 0D  pc 28:814D
+    f52: $06C1 <- 0C  pc 28:814D
+    f53: $06C1 <- 0B  pc 28:814D
+    f54: $06C1 <- 0A  pc 28:814D
+    f55: $06C0 <- 09  pc 26:9E16
+    f55: $06C1 <- 09  pc 28:814D
+    f56: $06C1 <- 08  pc 28:814D
+    f57: $06C1 <- 07  pc 28:814D
+    f58: $06C1 <- 06  pc 28:814D
+    f59: $06C0 <- 0A  pc 26:9E16
+    f59: $06C1 <- 05  pc 28:814D
+    f60: $06C1 <- 04  pc 28:814D
+    f61: $06C1 <- 03  pc 28:814D
+    f62: $06C1 <- 02  pc 28:814D
+    f63: $06C0 <- 0B  pc 26:9E16
+    f63: $06C1 <- 01  pc 28:814D
+    f64: $06C1 <- 00  pc 28:814D
+    f67: $06C0 <- 0C  pc 26:9E16
+    f71: $06C0 <- 0D  pc 26:9E16
+    f75: $06C0 <- 0E  pc 26:9E16
+    f79: $06C0 <- 0F  pc 26:9E16
+    f83: $06C0 <- 10  pc 26:9E16
+    f87: $06C0 <- 11  pc 26:9E16
+    f91: $06C0 <- 12  pc 26:9E16
+  newly run (2): 26:9AE8:SpendMp 28:81A5:BurstRadius
+
+[shot_eater] area 03: magic 6 held at +20 (slot $0C shot eater), enemy shot type $3F (obj_spawn_b2 $FF) spawned on the player into slots $0F/$10/$11 -> HitShotEater 26:906C
+  end: $40/$41 1/08 area 03 hp 96 lv 1 gold 0 xp 0 mp 83 $04AC=00 $04AF=00 $04B0=00 $04B1=24 $03C1=60
+  state writes ($40/$41 $04AC $060C $04AF $04B0 $04B1 $0708), first of each:
+    scenario start: abs f2496
+    abs f2536: 26:92BF $04A0=03 $41=08
+    abs f2536: 26:8FC4 $04A0=03 $41=08
+    abs f2536: 26:906C $04A0=03 $41=08
+    abs f2536: 26:9071 $04A0=03 $41=08
+    f20: $060C <- 00  pc 30:C2A3
+    f20: $04AC <- 00  pc 30:C29D
+    f20: $04AC <- 04  pc 30:C34A
+    f20: $060C <- 01  pc 30:C3C0
+    f23: $0708 <- 5F  pc 26:9B01
+    f27: $04AC <- 00  pc 27:B317
+    f31: $0708 <- 5E  pc 26:9B01
+    f39: $0708 <- 5D  pc 26:9B01
+    f40: $04AF <- 00  pc 30:C29D
+    f40: $04AF <- 10  pc 30:C34A
+    f40: $04AF <- 00  pc 26:942E
+    f40: $04AF <- 00  pc 26:9076
+    f56: $0708 <- 5C  pc 26:9B01
+    f64: $0708 <- 5B  pc 26:9B01
+    f70: $04B0 <- 00  pc 30:C29D
+    f70: $04B0 <- 10  pc 30:C34A
+    f70: $04B0 <- 00  pc 26:9076
+    f72: $0708 <- 5A  pc 26:9B01
+    f80: $0708 <- 59  pc 26:9B01
+    f88: $0708 <- 58  pc 26:9B01
+    f96: $0708 <- 57  pc 26:9B01
+    f100: $04B1 <- 00  pc 30:C29D
+    f100: $04B1 <- 10  pc 30:C34A
+    f100: $04B1 <- 00  pc 26:942E
+    f100: $04B1 <- 00  pc 26:9076
+    f113: $0708 <- 56  pc 26:9B01
+    f121: $0708 <- 55  pc 26:9B01
+    f129: $0708 <- 54  pc 26:9B01
+    f137: $0708 <- 53  pc 26:9B01
+    f137: $04B1 <- 24  pc 30:C34A
+    f169: $04AF <- 24  pc 30:C34A
+  newly run (3): 26:8FC4:HitHandler3 26:92BF:HitPlayerShot 26:9AE8:SpendMp
+
+[npc_reveal] area 6E: player + camera put below the slot-$0D NPC (x $0080, y $0178), B swings -> 3 hits on the hidden slot $0E (AI $3A) -> msgs $10.$10-$12 -> type $7D boss
+  end: $40/$41 1/08 area 6E hp 96 lv 16 gold 0 xp 0 mp 34 $04AD=00 $04AE=E6 $04AF=00 $060E=01 $03CE=94 $0071=77 $0091=00 $00B1=D1 $00D1=01 $007D=FE $009D=00 $00BD=51 $00DD=01 $007E=7F $009E=00 $00BE=B9 $00DE=01 $034E=0C $03AE=30 $038E=0B $05CE=7F $05EE=B1 $0381=07 $05C1=77 $05E1=C9 $0002=00 $0003=00 $0004=08 $0005=01 $0301=02
+  state writes ($40/$41 $060E $04AD $04AE $04AF $06C3 $06E3 $00D1 $034E), first of each:
+    scenario start: abs f2496
+    abs f2496: 27:A58B $04A0=03 $41=08
+    abs f2524: 26:9CBA $04A0=03 $41=08
+    abs f2526: 26:90AA $04A0=03 $41=08
+    abs f2527: 27:A5A0 $04A0=03 $41=08
+    abs f2842: 27:A56D $04A0=03 $41=08
+    abs f2843: 15:AC7B $04A0=03 $41=08
+    f0: $00D1 <- 02  pc 26:98A7
+    f12: $00D1 <- 01  pc 26:98A7
+    f30: $034E <- 80  pc 26:95D4
+    f31: $034E <- 90  pc 30:CD3A
+    f31: $060E <- 01  pc 27:A5AD
+    f31: $06C3 <- 10  pc 27:A5B6
+    f31: $06E3 <- 10  pc 27:A5BB
+    f31: $0041 <- 10  pc 27:A5BF
+    f83: $0041 <- 08  pc 30:D3C1
+    f84: $034E <- A0  pc 30:CD3A
+    f85: $034E <- B0  pc 30:CD3A
+    f86: $034E <- C0  pc 30:CD3A
+    f87: $034E <- D0  pc 30:CD3A
+    f88: $034E <- E0  pc 30:CD3A
+    f89: $034E <- F0  pc 30:CD3A
+    f90: $034E <- 00  pc 30:CD3A
+    f104: $060E <- 02  pc 27:A5AD
+    f104: $06C3 <- 11  pc 27:A5B6
+    f200: $060E <- 03  pc 27:A5AD
+    f200: $06C3 <- 12  pc 27:A5B6
+    f346: $04AD <- 00  pc 27:A56A
+    f346: $04AF <- 00  pc 27:A56D
+    f346: $060E <- 00  pc 30:C2A3
+    f346: $034E <- 00  pc 30:C29A
+    f346: $04AE <- 00  pc 30:C29D
+    f346: $034E <- 0C  pc 30:C2D8
+    f346: $04AE <- E6  pc 30:C34A
+    f347: $04AD <- 00  pc 15:BB49
+    f347: $04AF <- 00  pc 15:BB49
+    f513: $060E <- 01  pc 15:ACC7
+    f521: $04AD <- 00  pc 30:C29D
+    f521: $04AD <- 10  pc 30:C34A
+    f529: $04AF <- 00  pc 30:C29D
+  newly run (1): 26:92BF:HitPlayerShot
+
+[npc_reveal_flee] npc_reveal with sword 2 + $03E1 held at $20, boss $7D (BossAiE6) parked in front of the player -> death type $CF (BossDefeated + BossFleeSpeech)
+  end: $40/$41 1/08 area 6E hp 96 lv 16 gold 0 xp 0 mp 34 $04AE=00 $060E=04 $03CE=00 $050E=00 $040E=00 $042E=00 $0502=00 $03E2=00 $03E1=20 $0102=08 $006C=6E
+  state writes ($40/$41 $060E $04AE $03CE $06C3 $06E3 $0102), first of each:
+    scenario start: abs f2496
+    abs f2575: 26:90AA $04A0=03 $41=08
+    abs f2575: 26:913B $04A0=03 $41=08
+    abs f2576: 27:A5A0 $04A0=03 $41=08
+    abs f2914: 27:A56D $04A0=03 $41=08
+    abs f2915: 15:AC7B $04A0=03 $41=08
+    abs f3134: 26:9152 $04A0=03 $41=08
+    abs f3135: 15:B807 $04A0=03 $41=08
+    abs f3135: 15:BA98 $04A0=03 $41=08
+    f17: $0041 <- 11  pc 26:9514
+    f57: $0041 <- 08  pc 30:D3C1
+    f79: $03CE <- DD  pc 26:9144
+    f80: $03CE <- FF  pc 27:A5A5
+    f80: $060E <- 01  pc 27:A5AD
+    f80: $06C3 <- 10  pc 27:A5B6
+    f80: $06E3 <- 10  pc 27:A5BB
+    f80: $0041 <- 10  pc 27:A5BF
+    f175: $03CE <- BB  pc 26:9144
+    f176: $060E <- 02  pc 27:A5AD
+    f176: $06C3 <- 11  pc 27:A5B6
+    f272: $060E <- 03  pc 27:A5AD
+    f272: $06C3 <- 12  pc 27:A5B6
+    f418: $060E <- 00  pc 30:C2A3
+    f418: $04AE <- 00  pc 30:C29D
+    f418: $03CE <- 00  pc 30:C29A
+    f418: $03CE <- 94  pc 30:C300
+    f418: $04AE <- E6  pc 30:C34A
+    f458: $0102 <- 12  pc 30:C13A
+    f585: $060E <- 01  pc 15:ACC7
+    f586: $03CE <- 7A  pc 26:9144
+    f594: $03CE <- 60  pc 26:9144
+    f606: $03CE <- 46  pc 26:9144
+    f614: $03CE <- 2C  pc 26:9144
+    f630: $03CE <- 12  pc 26:9144
+    f638: $03CE <- F8  pc 26:9144
+    f638: $04AE <- 6F  pc 30:C34A
+    f639: $04AE <- 6E  pc 30:C34A
+    f639: $060E <- 04  pc 15:B828
+    f778: $0102 <- 08  pc 15:B85D
+    f779: $0102 <- 00  pc 15:B778
+  newly run (8): 14:8000:NpcScript 15:B807:BossDefeated 15:BA98:BossFleeSpeech 26:9152:EnemyKilled 26:924B:AddXp 26:92BF:HitPlayerShot 30:D0C8:NpcTalk 31:FFCF:FarCall_D354
+
+[guard_attack] area 73: player + camera put below guard slot $0F (x $0068, y $0090), UP into it -> NpcTalk -> NPC $2D act 1 (30:D19C) -> slots $0F/$10 = type $64 (AI $2A)
+  end: $40/$41 1/08 area 73 hp 96 lv 1 gold 0 xp 0 mp 34 $04AF=2A $04B0=2A $060F=01 $0610=00 $03CF=16 $03D0=16 $0623=0F $03C1=60
+  state writes ($40/$41 $04AF $04B0 $0623 $07DE $07DF), first of each:
+    scenario start: abs f2496
+    abs f2511: 30:D0C8 $04A0=03 $41=11
+    abs f2565: 30:D19C $04A0=03 $41=08
+    abs f2566: 27:ABF8 $04A0=03 $41=08
+    abs f2566: 27:AC40 $04A0=03 $41=08
+    f15: $0623 <- 0F  pc 26:9510
+    f15: $0041 <- 11  pc 26:9514
+    f16: $07DE <- 74  pc 30:D34C
+    f16: $07DF <- 02  pc 30:D351
+    f16: $07DF <- 04  pc 30:D3C9
+    f16: $07DF <- 09  pc 30:D3CD
+    f16: $07DF <- 13  pc 30:D3D1
+    f16: $07DE <- 14  pc 30:D3D9
+    f69: $0041 <- 08  pc 30:D3C1
+    f69: $04AF <- 00  pc 30:C29D
+    f69: $04AF <- 2A  pc 30:C34A
+    f69: $04B0 <- 00  pc 30:C29D
+    f69: $04B0 <- 2A  pc 30:C34A
+  newly run (3): 14:8000:NpcScript 26:92BF:HitPlayerShot 30:D0C8:NpcTalk
+
+[hit_level_gate] area 03: level 1, enemy $0E with need level 5 (obj_hitflags & $1F) -> miss 26:9125 (clink $3A); level <- 5 at +250 -> damage 26:913B / EnemyKilled
+  end: $40/$41 1/08 area 03 hp 96 lv 5 gold 0 xp 1 mp 34 $042E=05 $03CE=FE $04AE=00
+  state writes ($40/$41 $0421 $04AE $03CE $04A2 $0702), first of each:
+    scenario start: abs f2496
+    abs f2533: 26:90FA $04A0=03 $41=08
+    abs f2533: 26:9125 $04A0=03 $41=08
+    abs f2753: 26:913B $04A0=03 $41=08
+    abs f2793: 26:9152 $04A0=03 $41=08
+    f36: $04A2 <- 00  pc 26:9C51
+    f36: $04A2 <- 00  pc 30:C29D
+    f36: $04A2 <- 10  pc 30:C34A
+    f37: $04A2 <- 00  pc 26:912A
+    f257: $03CE <- 02  pc 26:9144
+    f265: $03CE <- 00  pc 26:9144
+    f297: $03CE <- FE  pc 26:9144
+    f297: $04AE <- 7D  pc 26:9213
+    f345: $04AE <- 00  pc 26:98CC
+  newly run (4): 26:9152:EnemyKilled 26:91FA:EnemyDeathFx 26:924B:AddXp 27:B79F:ChestHop
+
+[hit_defense] area 03: level 16, enemy $0E defence $FF -> borrow at 26:9123 -> miss 26:9125; defence <- 0 at +250 (each hook stops forcing) -> damage
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 1 mp 34 $040E=00 $03CE=FE $04AE=00
+  state writes ($40/$41 $04AE $03CE $0702), first of each:
+    scenario start: abs f2496
+    abs f2533: 26:90FA $04A0=03 $41=08
+    abs f2533: 26:9125 $04A0=03 $41=08
+    abs f2753: 26:913B $04A0=03 $41=08
+    abs f2793: 26:9152 $04A0=03 $41=08
+    f257: $03CE <- 02  pc 26:9144
+    f265: $03CE <- 00  pc 26:9144
+    f297: $03CE <- FE  pc 26:9144
+    f297: $04AE <- 7D  pc 26:9213
+    f345: $04AE <- 00  pc 26:98CC
+  newly run (4): 26:9152:EnemyKilled 26:91FA:EnemyDeathFx 26:924B:AddXp 27:B79F:ChestHop
+
+[gold_class_0] area 03: kill (1 HP) with obj_elem_drop hi = 0 -> PickupGold adds GoldDropTable[0]
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 1 mp 34 $0702=00 $0703=00 $050E=00
+  state writes ($40/$41 $0702 $0703 $04AE), first of each:
+    scenario start: abs f2496
+    abs f2533: 26:90FA $04A0=03 $41=08
+    abs f2533: 26:913B $04A0=03 $41=08
+    abs f2533: 26:9152 $04A0=03 $41=08
+    f37: $04AE <- 7D  pc 26:9213
+    f85: $04AE <- 00  pc 26:98CC
+  newly run (3): 26:9152:EnemyKilled 26:91FA:EnemyDeathFx 26:924B:AddXp
+
+[gold_class_3] area 03: kill (1 HP) with obj_elem_drop hi = 3 -> PickupGold adds GoldDropTable[3]
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 4 xp 1 mp 34 $0702=04 $0703=00 $050E=30
+  state writes ($40/$41 $0702 $0703 $04AE), first of each:
+    scenario start: abs f2496
+    abs f2533: 26:90FA $04A0=03 $41=08
+    abs f2533: 26:913B $04A0=03 $41=08
+    abs f2533: 26:9152 $04A0=03 $41=08
+    abs f2727: 26:946D $04A0=03 $41=08
+    f37: $04AE <- 7D  pc 26:9213
+    f85: $04AE <- 00  pc 26:98CC
+    f231: $0702 <- 04  pc 26:9480
+    f231: $0703 <- 00  pc 26:9489
+  newly run (5): 26:9152:EnemyKilled 26:91FA:EnemyDeathFx 26:924B:AddXp 26:946D:PickupGold 27:B79F:ChestHop
+
+[gold_class_6] area 03: kill (1 HP) with obj_elem_drop hi = 6 -> PickupGold adds GoldDropTable[6]
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 30 xp 1 mp 34 $0702=1E $0703=00 $050E=60
+  state writes ($40/$41 $0702 $0703 $04AE), first of each:
+    scenario start: abs f2496
+    abs f2533: 26:90FA $04A0=03 $41=08
+    abs f2533: 26:913B $04A0=03 $41=08
+    abs f2533: 26:9152 $04A0=03 $41=08
+    abs f2727: 26:946D $04A0=03 $41=08
+    f37: $04AE <- 7D  pc 26:9213
+    f85: $04AE <- 00  pc 26:98CC
+    f231: $0702 <- 1E  pc 26:9480
+    f231: $0703 <- 00  pc 26:9489
+  newly run (5): 26:9152:EnemyKilled 26:91FA:EnemyDeathFx 26:924B:AddXp 26:946D:PickupGold 27:B79F:ChestHop
+
+[gold_class_9] area 03: kill (1 HP) with obj_elem_drop hi = 9 -> PickupGold adds GoldDropTable[9]
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 200 xp 1 mp 34 $0702=C8 $0703=00 $050E=90
+  state writes ($40/$41 $0702 $0703 $04AE), first of each:
+    scenario start: abs f2496
+    abs f2533: 26:90FA $04A0=03 $41=08
+    abs f2533: 26:913B $04A0=03 $41=08
+    abs f2533: 26:9152 $04A0=03 $41=08
+    abs f2727: 26:946D $04A0=03 $41=08
+    f37: $04AE <- 7D  pc 26:9213
+    f85: $04AE <- 00  pc 26:98CC
+    f231: $0702 <- C8  pc 26:9480
+    f231: $0703 <- 00  pc 26:9489
+  newly run (5): 26:9152:EnemyKilled 26:91FA:EnemyDeathFx 26:924B:AddXp 26:946D:PickupGold 27:B79F:ChestHop
+
+[gold_class_F] area 03: kill (1 HP) with obj_elem_drop hi = 15 -> PickupGold adds GoldDropTable[15]
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 500 xp 1 mp 34 $0702=F4 $0703=01 $050E=F0
+  state writes ($40/$41 $0702 $0703 $04AE), first of each:
+    scenario start: abs f2496
+    abs f2533: 26:90FA $04A0=03 $41=08
+    abs f2533: 26:913B $04A0=03 $41=08
+    abs f2533: 26:9152 $04A0=03 $41=08
+    abs f2727: 26:946D $04A0=03 $41=08
+    f37: $04AE <- 7D  pc 26:9213
+    f85: $04AE <- 00  pc 26:98CC
+    f231: $0702 <- F4  pc 26:9480
+    f231: $0703 <- 01  pc 26:9489
+  newly run (5): 26:9152:EnemyKilled 26:91FA:EnemyDeathFx 26:924B:AddXp 26:946D:PickupGold 27:B79F:ChestHop
+
+[freeze_shot] area 03: magic 2 (freeze shot, slot $0C) at enemy $0E parked 40 px right -> HitHandler3 26:8FC4
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 88 $05AE=3B $042E=01 $054E=00 $056E=01
+  state writes ($40/$41 $05AE $04AC), first of each:
+    scenario start: abs f2496
+    abs f2519: 26:8FC4 $04A0=03 $41=08
+    abs f2519: 26:8FDF $04A0=03 $41=08
+    abs f2519: 26:8FE6 $04A0=03 $41=08
+    abs f2519: 26:8FF1 $04A0=03 $41=08
+    f20: $04AC <- 00  pc 30:C29D
+    f20: $04AC <- 11  pc 30:C34A
+    f20: $04AC <- 10  pc 27:B0B5
+    f23: $04AC <- 00  pc 26:8FDF
+    f23: $05AE <- FF  pc 26:8FF4
+    f24: $05AE <- FE  pc 30:CCE5
+    f25: $05AE <- FD  pc 30:CCE5
+    f26: $05AE <- FC  pc 30:CCE5
+    f27: $05AE <- FB  pc 30:CCE5
+    f28: $05AE <- FA  pc 30:CCE5
+    f29: $05AE <- F9  pc 30:CCE5
+    f30: $05AE <- F8  pc 30:CCE5
+    f31: $05AE <- F7  pc 30:CCE5
+    f32: $05AE <- F6  pc 30:CCE5
+    f33: $05AE <- F5  pc 30:CCE5
+    f34: $05AE <- F4  pc 30:CCE5
+    f35: $05AE <- F3  pc 30:CCE5
+    f36: $05AE <- F2  pc 30:CCE5
+    f37: $05AE <- F1  pc 30:CCE5
+    f38: $05AE <- F0  pc 30:CCE5
+    f39: $05AE <- EF  pc 30:CCE5
+    f40: $05AE <- EE  pc 30:CCE5
+    f41: $05AE <- ED  pc 30:CCE5
+    f42: $05AE <- EC  pc 30:CCE5
+    f43: $05AE <- EB  pc 30:CCE5
+    f44: $05AE <- EA  pc 30:CCE5
+    f45: $05AE <- E9  pc 30:CCE5
+    f46: $05AE <- E8  pc 30:CCE5
+    f47: $05AE <- E7  pc 30:CCE5
+    f48: $05AE <- E6  pc 30:CCE5
+    f49: $05AE <- E5  pc 30:CCE5
+    f50: $05AE <- E4  pc 30:CCE5
+    f51: $05AE <- E3  pc 30:CCE5
+    f52: $05AE <- E2  pc 30:CCE5
+    f53: $05AE <- E1  pc 30:CCE5
+  newly run (3): 26:8FC4:HitHandler3 26:9AE8:SpendMp 27:B0A8:AiDirShot
+
+[freeze_shot_b5] area 03: magic 2 (freeze shot, slot $0C) at enemy $0E parked 40 px right with obj_hitflags b5 forced -> HitHandler3 26:8FC4
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 88 $05AE=00 $042E=21 $054E=00 $056E=01
+  state writes ($40/$41 $05AE $04AC), first of each:
+    scenario start: abs f2496
+    abs f2519: 26:8FC4 $04A0=03 $41=08
+    abs f2519: 26:8FDF $04A0=03 $41=08
+    f20: $04AC <- 00  pc 30:C29D
+    f20: $04AC <- 11  pc 30:C34A
+    f20: $04AC <- 10  pc 27:B0B5
+    f23: $04AC <- 00  pc 26:8FDF
+  newly run (3): 26:8FC4:HitHandler3 26:9AE8:SpendMp 27:B0A8:AiDirShot
+
+[wall_D0_s1] area 03: type $D0 element wall spawned at +10 (dx 40), sword 1: tap +30, charged B +60..110
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 88 $04AE=00 $050E=00 $030E=00 $06EE=00
+  state writes ($40/$41 $04AE $02EE), first of each:
+    scenario start: abs f2496
+    abs f2734: 26:9094 $04A0=03 $41=08
+    abs f2734: 26:90A7 $04A0=03 $41=08
+    abs f2734: 26:9152 $04A0=03 $41=08
+    f10: $04AE <- 00  pc 30:C29D
+    f10: $04AE <- 87  pc 30:C34A
+    f94: $02EE <- 01  pc 28:819C
+    f165: $02EE <- 01  pc 28:813C
+    f238: $04AE <- 08  pc 30:C34A
+  newly run (5): 26:9152:EnemyKilled 26:924B:AddXp 26:9AE8:SpendMp 27:B0A8:AiDirShot 28:81A5:BurstRadius
+
+[wall_D0_s4] area 03: type $D0 element wall spawned at +10 (dx 40), sword 4: tap +30, charged B +60..110
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 56 $04AE=87 $050E=0E $030E=4C $06EE=00
+  state writes ($40/$41 $04AE $02EE), first of each:
+    scenario start: abs f2496
+    abs f2599: 26:9094 $04A0=03 $41=08
+    abs f2599: 26:9093 $04A0=03 $41=08
+    f10: $04AE <- 00  pc 30:C29D
+    f10: $04AE <- 87  pc 30:C34A
+    f94: $02EE <- 01  pc 28:819C
+    f165: $02EE <- 01  pc 28:813C
+  newly run (4): 26:9AE8:SpendMp 28:81A5:BurstRadius 30:C482:PpuQueueBlock 31:F751:NmiMode2
+
+[wall_D1_s1] area 03: type $D1 element wall spawned at +10 (dx 40), sword 1: tap +30, charged B +60..110
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 88 $04AE=87 $050E=0D $030E=4C $06EE=00
+  state writes ($40/$41 $04AE $02EE), first of each:
+    scenario start: abs f2496
+    abs f2734: 26:9094 $04A0=03 $41=08
+    abs f2734: 26:9093 $04A0=03 $41=08
+    f10: $04AE <- 00  pc 30:C29D
+    f10: $04AE <- 87  pc 30:C34A
+    f94: $02EE <- 01  pc 28:819C
+    f165: $02EE <- 01  pc 28:813C
+  newly run (3): 26:9AE8:SpendMp 27:B0A8:AiDirShot 28:81A5:BurstRadius
+
+[wall_D1_s4] area 03: type $D1 element wall spawned at +10 (dx 40), sword 4: tap +30, charged B +60..110
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 56 $04AE=87 $050E=0D $030E=4C $06EE=00
+  state writes ($40/$41 $04AE $02EE), first of each:
+    scenario start: abs f2496
+    abs f2599: 26:9094 $04A0=03 $41=08
+    abs f2599: 26:9093 $04A0=03 $41=08
+    f10: $04AE <- 00  pc 30:C29D
+    f10: $04AE <- 87  pc 30:C34A
+    f94: $02EE <- 01  pc 28:819C
+    f165: $02EE <- 01  pc 28:813C
+  newly run (4): 26:9AE8:SpendMp 28:81A5:BurstRadius 30:C482:PpuQueueBlock 31:F751:NmiMode2
+
+[wall_D2_s1] area 03: type $D2 element wall spawned at +10 (dx 40), sword 1: tap +30, charged B +60..110
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 88 $04AE=87 $050E=0B $030E=4C $06EE=00
+  state writes ($40/$41 $04AE $02EE), first of each:
+    scenario start: abs f2496
+    abs f2734: 26:9094 $04A0=03 $41=08
+    abs f2734: 26:9093 $04A0=03 $41=08
+    f10: $04AE <- 00  pc 30:C29D
+    f10: $04AE <- 87  pc 30:C34A
+    f94: $02EE <- 01  pc 28:819C
+    f165: $02EE <- 01  pc 28:813C
+  newly run (3): 26:9AE8:SpendMp 27:B0A8:AiDirShot 28:81A5:BurstRadius
+
+[wall_D2_s4] area 03: type $D2 element wall spawned at +10 (dx 40), sword 4: tap +30, charged B +60..110
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 56 $04AE=87 $050E=0B $030E=4C $06EE=00
+  state writes ($40/$41 $04AE $02EE), first of each:
+    scenario start: abs f2496
+    abs f2599: 26:9094 $04A0=03 $41=08
+    abs f2599: 26:9093 $04A0=03 $41=08
+    f10: $04AE <- 00  pc 30:C29D
+    f10: $04AE <- 87  pc 30:C34A
+    f94: $02EE <- 01  pc 28:819C
+    f165: $02EE <- 01  pc 28:813C
+  newly run (4): 26:9AE8:SpendMp 28:81A5:BurstRadius 30:C482:PpuQueueBlock 31:F751:NmiMode2
+
+[wall_D3_s1] area 03: type $D3 element wall spawned at +10 (dx 40), sword 1: tap +30, charged B +60..110
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 88 $04AE=87 $050E=07 $030E=4C $06EE=00
+  state writes ($40/$41 $04AE $02EE), first of each:
+    scenario start: abs f2496
+    abs f2734: 26:9094 $04A0=03 $41=08
+    abs f2734: 26:9093 $04A0=03 $41=08
+    f10: $04AE <- 00  pc 30:C29D
+    f10: $04AE <- 87  pc 30:C34A
+    f94: $02EE <- 01  pc 28:819C
+    f165: $02EE <- 01  pc 28:813C
+  newly run (3): 26:9AE8:SpendMp 27:B0A8:AiDirShot 28:81A5:BurstRadius
+
+[wall_D3_s4] area 03: type $D3 element wall spawned at +10 (dx 40), sword 4: tap +30, charged B +60..110
+  end: $40/$41 1/08 area 03 hp 96 lv 16 gold 0 xp 0 mp 56 $04AE=08 $050E=00 $030E=4C $06EE=00
+  state writes ($40/$41 $04AE $02EE), first of each:
+    scenario start: abs f2496
+    abs f2599: 26:9094 $04A0=03 $41=08
+    abs f2599: 26:9093 $04A0=03 $41=08
+    abs f2736: 26:90A7 $04A0=03 $41=08
+    abs f2736: 26:9152 $04A0=03 $41=08
+    f10: $04AE <- 00  pc 30:C29D
+    f10: $04AE <- 87  pc 30:C34A
+    f94: $02EE <- 01  pc 28:819C
+    f165: $02EE <- 01  pc 28:813C
+    f240: $04AE <- 08  pc 30:C34A
+  newly run (6): 26:9152:EnemyKilled 26:924B:AddXp 26:9AE8:SpendMp 28:81A5:BurstRadius 30:C482:PpuQueueBlock 31:F751:NmiMode2
+
+[final_boss] area A6: ObjInit type $9E (final boss) in slot $0D at +10, sword 1, level 16, $03E1 held 0x11, player held under the boss, UP+B swings -> hits per phase
+  end: $40/$41 1/08 area A6 hp 96 lv 16 gold 0 xp 0 mp 96 $04AD=EB $060D=05 $03CD=FF $050D=00
+  state writes ($40/$41 $060D $04AD $03CD $0051), first of each:
+    scenario start: abs f2495
+    abs f2505: 15:B301 $04A0=03 $41=08
+    abs f2606: 15:B6C1 $04A0=03 $41=08
+    abs f2697: 15:B3BC $04A0=03 $41=08
+    abs f2793: 15:B587 $04A0=03 $41=08
+    abs f3800: 15:B4DD $04A0=03 $41=08
+    abs f4010: 15:B552 $04A0=03 $41=08
+    abs f4049: 15:B524 $04A0=03 $41=08
+    f0: $03CD <- FF  pc 15:B140
+    f10: $060D <- 00  pc 30:C2A3
+    f10: $04AD <- 00  pc 30:C29D
+    f10: $03CD <- 00  pc 30:C29A
+    f10: $03CD <- FF  pc 30:C300
+    f10: $04AD <- EB  pc 30:C34A
+    f116: $060D <- 01  pc 15:B39A
+    f202: $0051 <- 07  pc 15:B2F3
+    f202: $0051 <- 07  pc 27:A418
+    f297: $060D <- 05  pc 15:B546
+    f651: $060D <- 01  pc 15:B5AB
+    f1304: $060D <- 02  pc 15:B4A1
+    f1513: $060D <- 04  pc 15:B50B
+    f1553: $060D <- 03  pc 15:B586
+  newly run (4): 15:B2DA:AiBowOfTruth9E 15:B6C1:BossBgStrip 26:92BF:HitPlayerShot 30:C482:PpuQueueBlock
+
+[final_boss_s4] area A6: ObjInit type $9E (final boss) in slot $0D at +10, sword 4, level 16, $03E1 held 0x28, player held under the boss, UP+B swings -> hits per phase
+  end: $40/$41 1/08 area A6 hp 96 lv 16 gold 0 xp 0 mp 34 $04AD=00 $060D=02 $03CD=00 $050D=00
+  state writes ($40/$41 $060D $04AD $03CD $0051), first of each:
+    scenario start: abs f2495
+    abs f2505: 15:B301 $04A0=03 $41=08
+    abs f2606: 15:B6C1 $04A0=03 $41=08
+    abs f2697: 15:B3BC $04A0=03 $41=08
+    abs f2793: 15:B587 $04A0=03 $41=08
+    f0: $03CD <- FF  pc 15:B140
+    f10: $060D <- 00  pc 30:C2A3
+    f10: $04AD <- 00  pc 30:C29D
+    f10: $03CD <- 00  pc 30:C29A
+    f10: $03CD <- FF  pc 30:C300
+    f10: $04AD <- EB  pc 30:C34A
+    f116: $060D <- 01  pc 15:B39A
+    f202: $0051 <- 07  pc 15:B2F3
+    f202: $0051 <- 07  pc 27:A418
+    f297: $060D <- 05  pc 15:B546
+    f302: $03CD <- F5  pc 26:9144
+    f314: $03CD <- EB  pc 26:9144
+    f331: $03CD <- E1  pc 26:9144
+    f344: $03CD <- D7  pc 26:9144
+    f366: $03CD <- CD  pc 26:9144
+    f380: $03CD <- C3  pc 26:9144
+    f393: $03CD <- B9  pc 26:9144
+    f406: $03CD <- AF  pc 26:9144
+    f425: $03CD <- A5  pc 26:9144
+    f441: $03CD <- 9B  pc 26:9144
+    f454: $03CD <- 91  pc 26:9144
+    f471: $03CD <- 87  pc 26:9144
+    f487: $03CD <- 7D  pc 26:9144
+    f501: $03CD <- 73  pc 26:9144
+    f516: $03CD <- 69  pc 26:9144
+    f529: $03CD <- 5F  pc 26:9144
+    f544: $03CD <- 55  pc 26:9144
+    f557: $03CD <- 4B  pc 26:9144
+    f572: $03CD <- 41  pc 26:9144
+    f593: $03CD <- 37  pc 26:9144
+    f615: $03CD <- 2D  pc 26:9144
+    f628: $060D <- 01  pc 15:B5AB
+    f666: $03CD <- 23  pc 26:9144
+    f674: $03CD <- 19  pc 26:9144
+    f687: $03CD <- 0F  pc 26:9144
+  newly run (10): 15:B2DA:AiBowOfTruth9E 15:B6C1:BossBgStrip 15:B807:BossDefeated 26:9152:EnemyKilled 26:924B:AddXp 26:92BF:HitPlayerShot 26:9D81:PlayerMoveLocked 27:B83B:ObjAiExplode 30:C482:PpuQueueBlock 31:FFCF:FarCall_D354
+
+[final_boss_cx] area A6: ObjInit type $9E (final boss) in slot $0D at +10, sword 5, level 16, $03E1 held 0x20, player held under the boss, UP+B swings -> hits per phase
+  end: $40/$41 1/08 area A6 hp 96 lv 16 gold 0 xp 0 mp 34 $04AD=00 $060D=02 $03CD=00 $050D=00
+  state writes ($40/$41 $060D $04AD $03CD $0051), first of each:
+    scenario start: abs f2495
+    abs f2505: 15:B301 $04A0=03 $41=08
+    abs f2606: 15:B6C1 $04A0=03 $41=08
+    abs f2697: 15:B3BC $04A0=03 $41=08
+    abs f2793: 15:B587 $04A0=03 $41=08
+    f0: $03CD <- FF  pc 15:B140
+    f10: $060D <- 00  pc 30:C2A3
+    f10: $04AD <- 00  pc 30:C29D
+    f10: $03CD <- 00  pc 30:C29A
+    f10: $03CD <- FF  pc 30:C300
+    f10: $04AD <- EB  pc 30:C34A
+    f116: $060D <- 01  pc 15:B39A
+    f202: $0051 <- 07  pc 15:B2F3
+    f202: $0051 <- 07  pc 27:A418
+    f230: $03CD <- F5  pc 26:9144
+    f232: $03CD <- EB  pc 26:9144
+    f234: $03CD <- E1  pc 26:9144
+    f242: $03CD <- D7  pc 26:9144
+    f244: $03CD <- CD  pc 26:9144
+    f246: $03CD <- C3  pc 26:9144
+    f254: $03CD <- B9  pc 26:9144
+    f256: $03CD <- AF  pc 26:9144
+    f258: $03CD <- A5  pc 26:9144
+    f266: $03CD <- 9B  pc 26:9144
+    f268: $03CD <- 91  pc 26:9144
+    f270: $03CD <- 87  pc 26:9144
+    f278: $03CD <- 7D  pc 26:9144
+    f280: $03CD <- 73  pc 26:9144
+    f282: $03CD <- 69  pc 26:9144
+    f290: $03CD <- 5F  pc 26:9144
+    f292: $03CD <- 55  pc 26:9144
+    f294: $03CD <- 4B  pc 26:9144
+    f297: $060D <- 05  pc 15:B546
+    f302: $03CD <- 41  pc 26:9144
+    f314: $03CD <- 37  pc 26:9144
+    f331: $03CD <- 2D  pc 26:9144
+    f344: $03CD <- 23  pc 26:9144
+    f365: $03CD <- 19  pc 26:9144
+    f379: $03CD <- 0F  pc 26:9144
+    f390: $03CD <- 05  pc 26:9144
+  newly run (9): 15:B2DA:AiBowOfTruth9E 15:B6C1:BossBgStrip 15:B807:BossDefeated 26:9152:EnemyKilled 26:924B:AddXp 26:9D81:PlayerMoveLocked 27:B83B:ObjAiExplode 30:C482:PpuQueueBlock 31:FFCF:FarCall_D354
+
+[final_boss_cx_max] area A6: ObjInit type $9E (final boss) in slot $0D at +10, sword 5, level 16, $03E1 held 0x30, player held under the boss, UP+B swings -> hits per phase
+  end: $40/$41 1/08 area A6 hp 96 lv 16 gold 0 xp 0 mp 34 $04AD=00 $060D=02 $03CD=00 $050D=00
+  state writes ($40/$41 $060D $04AD $03CD $0051), first of each:
+    scenario start: abs f2495
+    abs f2505: 15:B301 $04A0=03 $41=08
+    abs f2606: 15:B6C1 $04A0=03 $41=08
+    abs f2697: 15:B3BC $04A0=03 $41=08
+    f0: $03CD <- FF  pc 15:B140
+    f10: $060D <- 00  pc 30:C2A3
+    f10: $04AD <- 00  pc 30:C29D
+    f10: $03CD <- 00  pc 30:C29A
+    f10: $03CD <- FF  pc 30:C300
+    f10: $04AD <- EB  pc 30:C34A
+    f116: $060D <- 01  pc 15:B39A
+    f202: $0051 <- 07  pc 15:B2F3
+    f202: $0051 <- 07  pc 27:A418
+    f230: $03CD <- E5  pc 26:9144
+    f232: $03CD <- CB  pc 26:9144
+    f234: $03CD <- B1  pc 26:9144
+    f242: $03CD <- 97  pc 26:9144
+    f244: $03CD <- 7D  pc 26:9144
+    f246: $03CD <- 63  pc 26:9144
+    f254: $03CD <- 49  pc 26:9144
+    f256: $03CD <- 2F  pc 26:9144
+    f258: $03CD <- 15  pc 26:9144
+    f266: $03CD <- FB  pc 26:9144
+    f266: $04AD <- 74  pc 30:C34A
+    f267: $060D <- FF  pc 27:B858
+    f267: $060D <- 05  pc 27:B8CA
+    f268: $060D <- 04  pc 27:B858
+    f269: $060D <- 03  pc 27:B858
+    f270: $060D <- 02  pc 27:B858
+    f271: $060D <- 01  pc 27:B858
+    f272: $060D <- 00  pc 27:B858
+    f279: $060D <- 02  pc 27:B8CA
+    f283: $060D <- 04  pc 27:B8CA
+    f322: $060D <- 03  pc 27:B8CA
+    f463: $04AD <- 6F  pc 30:C34A
+    f465: $04AD <- 6E  pc 30:C34A
+    f465: $060D <- 0B  pc 15:B828
+    f465: $0051 <- 00  pc 15:B901
+    f465: $04AD <- 00  pc 15:B908
+    f471: $04AD <- 14  pc 30:C34A
+  newly run (9): 15:B2DA:AiBowOfTruth9E 15:B6C1:BossBgStrip 15:B807:BossDefeated 26:9152:EnemyKilled 26:924B:AddXp 26:9D81:PlayerMoveLocked 27:B83B:ObjAiExplode 30:C482:PpuQueueBlock 31:FFCF:FarCall_D354
+
 [slot_repair_a] area 01: $7150 changed, warm reset: primary sum matches -> SlotCopy(0) primary->backup
   end: $40/$41 3/08 area 01 hp 48 lv 1 gold 0 xp 0 mp 0
   state writes ($40/$41 $7001 $70F0 $70F1 $7150 $7450), first of each:
@@ -976,16 +1938,14 @@ tools.emu scenarios vs the 178 labels the tour never ran (docs/emu_tour.txt)
     f24: $0040 <- 03  pc 19:A00F
   newly run (10): 24:8020:SndInit 31:F0A4:BootSaveCheck 31:F140:BootCheckSlot1 31:F1C7:BootSaveRestoreR7 31:F1E2:BootCheckCurrent 31:F23D:SaveSumSlot 31:F273:SlotCopy 31:F2A4:Reset 31:F39F:WarmBootContinue 31:F3A2:CopySramBlock
 
-union: 136 / 178 newly run; still never run (42):
+union: 156 / 178 newly run; still never run (22):
   bank  4: 8000:ScreenBlank80
   bank 16: 8232:MenuChrR1
-  bank 17: A000:EndingInit A0EB:EndingWait A100:EndingTick A14A:EndingScene A751:NtFill_b17 AA74:EndingFadeIn AAAD:EndingFadeOut
   bank 18: 8000:IntroRectPtr 8002:IntroRect 824B:NtRectBlitQueued 838B:MenuPalSets
-  bank 19: B162:DateCardRectPtr BDF2:SubstFinalSceneReset BFC4:FinalSceneToEnding
+  bank 19: B162:DateCardRectPtr
   bank 23: BE00:NewSaveTemplate
   bank 24: 8395:SndOpSweep 8609:SndFadeStep
-  bank 26: 8C32:PaletteBlackFill 8FC4:HitHandler3 943F:RidePlatform 9D81:PlayerMoveLocked 9FD2:PlayerConveyor
-  bank 27: A092:MagicButtonSel A1BB:MagicFailSound A211:FacingKeep AD9C:NpcLookAhead
-  bank 28: 81A5:BurstRadius
-  bank 30: C7D6:FadeSaveZpToWram C944:MainStateEndingInit C94C:MainStateEnding CC4D:SubstRestoreScreen
-  bank 31: E544:AreaPitFall E573:AreaEdgeLink EF33:ScreenPageAtCamera F5E1:IrqRowStretch F60E:IrqOffSound F782:NmiMode4 FE01:ShopDoorOpen FE18:ShopDoorClose FFBE:FarCall_B26_8CC0
+  bank 26: 8C32:PaletteBlackFill
+  bank 27: A092:MagicButtonSel A211:FacingKeep AD9C:NpcLookAhead
+  bank 30: C7D6:FadeSaveZpToWram
+  bank 31: EF33:ScreenPageAtCamera F5E1:IrqRowStretch F60E:IrqOffSound F782:NmiMode4 FE01:ShopDoorOpen FE18:ShopDoorClose FFBE:FarCall_B26_8CC0
