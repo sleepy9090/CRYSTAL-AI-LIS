@@ -139,6 +139,7 @@ bank,addr,name,comment
 26,8C49,FadeIn,s89 (was Bank26_FadeB): A->$18; $11 $40->0 step $F0; 5 PaletteBuild steps then WaitFrame (port: states/death.js fadeIn)
 26,8CC0,HudHpBar,s46: redraw HP bar ($6060-$6070 from player_hp_max/player_hp); was Bank26_8CC0 (called via FarCall_B26_8CC0)
 30,C900,MainLoop,wait $09 (NMI flag) then dispatch on state $40 via MainStateTable
+30,C919,MainLoopPassEnd,s210: after the main_state handler: frame_ready = 0; a pass still running at the NMI makes that NMI see frame_ready 1 (lag frame); tools.emu.pass_cost end point
 30,C91F,MainStateTable,s63: ptr16[9]: C957 CAB6 C931 C939 C944 C94C 0 0 C9DA
 *,0000,ppuctrl_shadow,
 *,0002,scroll_shadow0,copied to $07D8 in NMI
