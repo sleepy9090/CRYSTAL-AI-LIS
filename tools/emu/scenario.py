@@ -550,6 +550,56 @@ for _t in (0xD0, 0xD1, 0xD2, 0xD3):
             exec=[(26, 0x9094, hit_logger('wall')), (27, 0xB0A8, obj_logger('shot', every=1))])
 
 
+# s154: the final boss (type $9E, AI $EB AiBowOfTruth9E 15:B2DA) from a live fight. Area $A6, EvActSpawn9E-style
+# ObjInit $9E into slot $0D at +10, player (level 16) held below the boss every PlayerMove, B swings. Logs each
+# BossEBSetElem 15:B618 call (A) and each HitByPlayerShot on a boss slot $0D-$13 with the boss phase and outcome.
+def boss_hit_log(limit=24):
+    n, last = [0], [None]
+
+    def tag(t):
+        def f(nes):
+            r, x, y = nes.bus.ram, nes.cpu.x, nes.cpu.y
+            if t == 'elem':                       # only when the value changes (phase 5 calls it every frame)
+                if nes.cpu.a != last[0]:
+                    last[0] = nes.cpu.a
+                    print(f'    f{nes.ppu.frame_no}: BossEBSetElem A={nes.cpu.a:02X} phase {r[0x060D]}')
+            elif 0x0D <= y <= 0x13:
+                if n[0] < limit:
+                    n[0] += 1
+                    if True:
+                        print(f'    f{nes.ppu.frame_no}: {t} shot X={x:02X} elem {r[0x0500 + x]:02X} '
+                              f'atk {r[0x03E0 + x]:02X} $03E1 {r[0x03E1]:02X} -> slot {y:02X} '
+                              f'elem {r[0x0500 + y]:02X} hp {r[0x03C0 + y]:02X} def {r[0x0400 + y]:02X} '
+                              f'| boss phase {r[0x060D]} hp {r[0x03CD]:02X}')
+        return f
+    return [(15, 0xB618, tag('elem')), (26, 0x9125, tag('MISS')),
+            (26, 0x913B, tag('DAMAGE'))]
+
+
+# $03E1 = StatRecalc 30:C008's attack: level (x2 with accessory $0E) + SwordAttackTable[sword] (00 01 02 04 08 10);
+# the pokes skip StatRecalc, so hold it: 'max' = level 16 x2 + table, the highest value the game can produce
+def _boss_each(atk):
+    def f(nes, o):
+        r = nes.bus.ram
+        r[0x03C1], r[0x071A], r[0x03E1] = 0x60, 0x1E, atk
+    return f
+
+
+for _n, _sw, _atk in (('final_boss', 1, 16 + 1), ('final_boss_s4', 4, 32 + 8), ('final_boss_cx', 5, 16 + 16),
+                      ('final_boss_cx_max', 5, 32 + 16)):
+    SCENARIOS[_n] = dict(note=f'area A6: ObjInit type $9E (final boss) in slot $0D at +10, sword {_sw}, level 16, '
+                              f'$03E1 held {_atk:#04x}, player held under the boss, UP+B swings -> hits per phase',
+                         area='A6', pokes={0x0421: 16, 0x0711: _sw, 0x03C1: 0x60, 0x0708: 0x60},
+                         spawn=[(10, 0x0D, 0x9E, 0, -48)],
+                         each=_boss_each(_atk),
+                         exec=[place_on_slot(0x0D, skip=30, dy=0x28, hold=100000)] + boss_hit_log(),
+                         keys=[f'{30 + 12 * i}:UP+B:4' for i in range(160)], frames=2000,
+                         watch=[0x060D, 0x04AD, 0x03CD, 0x0051],
+                         pcs=[(15, 0xB301), (15, 0xB3BC), (15, 0xB4DD), (15, 0xB524), (15, 0xB552), (15, 0xB587),
+                              (15, 0xB67A), (15, 0xB6C1)],
+                         peek=[0x04AD, 0x060D, 0x03CD, 0x050D])
+
+
 def set_from(dst, src):
     """exec hook value: write RAM[src] to dst (e.g. make a save checksum match the running sum $16)."""
     return lambda nes: write_mem(nes, dst, nes.bus.ram[src])

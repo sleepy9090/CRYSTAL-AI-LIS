@@ -1159,7 +1159,7 @@ bank,addr,name,comment
 15,AF28,BossE7BounceDirs,s78: u8[32] new 16-dir heading by edge*8 + Rand64 (top/right/bottom/left)
 15,B02B,BossE8Route,s78: (x cell; y byte) waypoint pairs; FF = leg end (attack); FE = restart
 15,B4C8,BossBgCycle,s78: BossBgStrip(obj_behav); obj_behav = (obj_behav+1) mod 10
-15,B618,BossEBSetElem,s78: A -> obj_elem_drop of slots $0D-$13 (0 = vulnerable in phase 5; $0F = immune)
+15,B618,BossEBSetElem,s78: A -> obj_elem_drop of slots $0D-$13 (0 = vulnerable in phase 5; $0F = immune to swords 1-4; s154 emu: Crystalis elem 0 hurts in every phase)
 15,B623,BossEBFlame,s78: every 4f 2 x SpawnShot($2E zp) at x -+$12; dir obj_act_timer + wobble 15:B672
 15,B6A3,BossEBEdgeBounce,s78: mirror 16-dir heading (15:B50C) at x < $38 (moving left) or >= $D8 (moving right)
 15,B71D,BossEBHandsIdle,s78: slot $10/$11 meta = $E9/$E7
