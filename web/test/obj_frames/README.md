@@ -180,5 +180,8 @@ Regenerate (about 10 s each):
     # s201: TalkActionTable acts 10 / 21 / 24 (states/talk.js)
     python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 150 --seed 201 \
         --routine TalkSpawnShot0F,TalkTwoFollowers,TalkWarp --out web/test/obj_frames/fuzz_talkacts.json
+    # s202: SpawnFxAtSlot 30:D1FF, talk act 19 (D1B5), event acts 6/17 (D6D5) and 14 (D6EC): AreaLoadA/B on a real area
+    python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 150 --seed 202 \
+        --routine SpawnFxAtSlot,TalkFxVanish,EvActAreaLoadB,EvActFxSlot15 --out web/test/obj_frames/fuzz_areaload.json
 
 `python3 -m tools.emu.routine_capture --list` shows the routines; `--routine A,B` captures a subset.

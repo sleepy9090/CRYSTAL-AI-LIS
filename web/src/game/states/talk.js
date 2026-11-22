@@ -20,6 +20,7 @@ import { readPads } from '../pads.js';
 import { playSound } from '../playsound.js';
 import { objInit, farObjInit } from '../obj/objinit.js';
 import { objPosToTemp, tempToObjPos } from '../obj/util.js';
+import { areaLoad } from '../world/area.js';
 import { queueEmpty, queuePush, ppuCtrlNmiOn, ppuCtrlNmiOff } from '../world/ppuqueue.js';
 
 const BUF = 0x6000, Q = 0x6200;
@@ -446,6 +447,19 @@ export function makeFollower13(m) {
   m.wr(0x060D, 0xFF);
 }
 
+/** SpawnFxAtSlot 30:D1FF (s202): type $DF in slot $1E at slot x's position, $033E = $80, JMP AreaLoadB.
+ *  ObjInit pushes/pulls X, so the STA obj_tile_ofs,X hits slot $1E. */
+export function spawnFxAtSlot(m, x) {
+  setR6(m, 0x1A);
+  objPosToTemp(m, x);
+  m.wr(0x10, 0x1E);
+  tempToObjPos(m, 0x1E);
+  m.wr(0x11, 0xDF);
+  objInit(m);
+  m.wr(0x033E, 0x80);
+  areaLoad(m, 0);                                        // AreaLoadB 31:E148
+}
+
 const nop = function* () {};
 /** TalkActionTable 30:D123 (ported entries; the rest log "not ported") */
 export const TALK_ACTIONS = {
@@ -509,6 +523,20 @@ export const TALK_ACTIONS = {
     m.wr(0x0710, m.rd(0x0710) | 0x40);                   // obj1_flash b6 = warp exit
     m.wr(0x0561, 2); m.wr(0x0641, 2);
     m.wr(ACTIVE + 0x1E, 0x0C);
+  },
+  0x13: function* (m) {                                  // D1B5 (s202): fx at the NPC, AreaLoadA, NpcVanish $0623+1
+    spawnFxAtSlot(m, m.rd(TALK_SLOT));
+    m.wr(0x033E, 0xA0);
+    areaLoad(m, 1);                                      // AreaLoadA 31:E144
+    npcVanish(m, (m.rd(TALK_SLOT) + 1) & 0xFF);          // JMP D31F
+  },
+  0x16: function* (m, y) {                               // D1CA (s202): SFX $29, msg 19.0, AreaLoadA, fx at the NPC
+    playSound(m, 0x29, y);
+    m.wr(MSG, 0); m.wr(GROUP, 0x13);
+    yield* showMessage(m);
+    areaLoad(m, 1);
+    spawnFxAtSlot(m, m.rd(TALK_SLOT));
+    m.wr(0x033E, 0xA0);
   },
 };
 

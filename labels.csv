@@ -1175,6 +1175,11 @@ bank,addr,name,comment
 30,D2D3,TalkTwoFollowers,s201: talk act 21: unless slot 14 = $32: slots 13/14 type $32 with $068D/$068E = $0E/$0F
 30,D2F4,TalkSpawnShot0F,s201: talk act 10: type $0F in slot $1E at the NPC's pos ($057E=$39 $055E=2 $061E=3), falls into NpcVanish
 30,D336,TalkGiveWaterBall,s201: talk act 26: GiveItemA($09 Ball of Water); $060D=4
+30,D1B5,TalkFxVanish,s202: talk act 19: SpawnFxAtSlot($0623); $033E=$A0; AreaLoadA; NpcVanish slot $0623+1 (JMP D31F)
+30,D1CA,TalkFxMsg13,s202: talk act 22: SFX $29; msg 19.0 ShowMessage; AreaLoadA; SpawnFxAtSlot($0623); $033E=$A0
+30,D1EB,TalkTeachRecover,s202: talk act 16: msg 11.1 ShowMessage; GiveItemA($45 Recover); falls into SpawnFxAtSlot X=$0E
+30,D6D5,EvActAreaLoadB,s202: event acts 6 / 17: JMP AreaLoadB (reload the area's spawn record)
+30,D6EC,EvActFxSlot15,s202: event act 14: AreaLoadA; type $DF in slot $1E at slot 15's pos; $033E=$A0
 26,9B41,WarpSpinPoseTable,s76: 4 meta ids 88 C2 8A EF by facing while obj1_flash b6 (warp exit)
 15,BF46,DebugCheatStub,s77: lone RTS = target of PauseWait's JSR at 15:BDE4; switches off DebugPauseCheat (body starts 1 byte later)
 15,BF47,DebugPauseCheat,s77: dead debug cheat (never reached): boot_ab_flag + pad2 dir -> fill empty inventory from 15:BF7F; level $0F; MP $FF/$FF; pad2 A -> slots 0/1 speed 9

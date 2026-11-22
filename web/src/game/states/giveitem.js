@@ -16,12 +16,14 @@
 // The SwordPowerLevel 30:D9D8 call after a pickup (30:D408) discards its Y result: $0719 is only written by the
 // equip menu (30:D8FD). Its one lasting effect is $10 = sword - 1 (when a sword and a ball are equipped).
 import { R } from '../ram.js';
-import { cpuRd, indY, setR7, switchBank16, farRestore } from '../prg.js';
+import { cpuRd, indY, setR6, setR7, switchBank16, farRestore } from '../prg.js';
+import { areaLoad } from '../world/area.js';
+import { objPosToTemp, tempToObjPos } from '../obj/util.js';
 import { playSound } from '../playsound.js';
 import { objInit, farObjInit } from '../obj/objinit.js';
 import { spriteDraw } from '../obj/sprites.js';
 import { SPIN, statRecalc, waitFrame, waitFrames } from './death.js';
-import { showMessage, showMessagePacked, npcResult, flagTest, flagApply, npcVanish, makeFollower13, TALK_ACTIONS } from './talk.js';
+import { showMessage, showMessagePacked, npcResult, flagTest, flagApply, npcVanish, makeFollower13, spawnFxAtSlot, TALK_ACTIONS } from './talk.js';
 import { restoreIfArea5F, saveGame } from './saveload.js';
 import { swordPowerLevel } from './equip.js';
 import { mainState1, playPaletteRestore } from './play.js';
@@ -278,7 +280,7 @@ export function* itemEventHook(m, n) {
 }
 
 // ---------------------------------------------------------------- EventActionTable 30:D563
-// Not ported (log "not ported"): acts 1 (Sword of Thunder warp), 6/17 (AreaLoadB), 7 (Mesia), 14 (AreaLoadA).
+// Not ported (log "not ported"): acts 1 (Sword of Thunder warp), 7 (Mesia). s202: 6/17 (AreaLoadB), 14 (AreaLoadA).
 /** GiveItemA 30:D22B: A -> $057F, GiveItem with $0623 = $1F (restored after) */
 function* giveItemA(m, a) {
   m.wr(0x057F, a);
@@ -308,6 +310,13 @@ TALK_ACTIONS[0x19] = function* (m) {
   m.wr(0x068E, 0x0D);
 };
 TALK_ACTIONS[0x1A] = function* (m) { yield* giveItemA(m, 0x09); m.wr(0x060D, 4); };
+// s202: talk act 16 (D1EB): msg 11.1 "teach Recover", GiveItemA($45 Recover), SpawnFxAtSlot slot 14 (falls in)
+TALK_ACTIONS[0x10] = function* (m) {
+  m.wr(0x07DE, 1); m.wr(0x07DF, 0x0B);
+  yield* showMessage(m);
+  yield* giveItemA(m, 0x45);
+  spawnFxAtSlot(m, 0x0E);
+};
 
 /** WaitSfxDone 30:D88B: WaitFrame until snd_sfx_priority $0112 = $FF */
 function* waitSfxDone(m) {
@@ -339,6 +348,18 @@ export const EVENT_ACTIONS = {
     m.wr(0xAE, cpuRd(m, 0xD6A9 + y)); m.wr(0xCE, cpuRd(m, 0xD6AA + y));
     m.wr(0xEE, cpuRd(m, 0xD6AB + y)); m.wr(0x069E, cpuRd(m, 0xD6AC + y));
     playSound(m, 0x48, y);
+  },
+  6: function* (m) { areaLoad(m, 0); },                  // D6D5 JMP AreaLoadB (s202)
+  17: function* (m) { areaLoad(m, 0); },                 // D6D5
+  14: function* (m) {                                    // D6EC (s202): AreaLoadA, type $DF in $1E at slot 15
+    areaLoad(m, 1);
+    setR6(m, 0x1A);
+    objPosToTemp(m, 0x0F);
+    m.wr(0x10, 0x1E);
+    tempToObjPos(m, 0x1E);
+    m.wr(0x11, 0xDF);
+    objInit(m);
+    m.wr(0x033E, 0xA0);
   },
   19: (m, y) => evActClearSlot(m, 0x0D, y),              // D718
   20: (m, y) => evActClearSlot(m, 0x0E, y),              // D71F

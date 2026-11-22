@@ -389,6 +389,25 @@ ROUTINES['EvActSpawnType38'] = (None, 0xD659, _poke_type38, None)
 ROUTINES['TalkSpawnShot0F'] = (None, 0xD2F4, _poke_follow, None)
 ROUTINES['TalkTwoFollowers'] = (None, 0xD2D3, _poke_follow, None)
 ROUTINES['TalkWarp'] = (None, 0xD280, _poke_follow, None)
+# s202: area ids with a record (AreaPtrTable 12:9201 / 12:9301 entry hi b7 set), for AreaLoadA/B callers
+_AREAS_WITH_REC = tuple(a for a in range(256)
+                        if _PRG[12 * 0x2000 + (0x1301 if a & 0x80 else 0x1201) + ((a << 1) & 0xFF) + 1] & 0x80)
+
+
+def _poke_areaload(ram, wram, r):
+    """s202 (Ph7 leftovers (a)/(i)): SpawnFxAtSlot 30:D1FF and the AreaLoadA/B talk / event acts. A real area
+    (record present), random story flags $6480-$64FF (spawn presence tests), $0623 a slot 13-$1E."""
+    _poke_follow(ram, wram, r)
+    for i in range(0x80):
+        wram[0x480 + i] = r.choice([0, 0xFF, r.randrange(256)])
+    ram[0x6C] = r.choice(_AREAS_WITH_REC)
+    ram[0x0623] = r.choice([0x0D, 0x0E, r.randrange(0x0F, 0x1E)])
+
+
+ROUTINES['SpawnFxAtSlot'] = (None, 0xD1FF, _poke_areaload, lambda r: {'x': r.choice([0x0E, _slot(r)])})
+ROUTINES['TalkFxVanish'] = (None, 0xD1B5, _poke_areaload, None)
+ROUTINES['EvActAreaLoadB'] = (None, 0xD6D5, _poke_areaload, None)
+ROUTINES['EvActFxSlot15'] = (None, 0xD6EC, _poke_areaload, None)
 ROUTINES['ObjCollideAll'] = (26, 0x8F6E, _poke_coll, None)
 ROUTINES['ObjOverlapScan'] = (26, 0x95F8, _poke_coll, lambda r: {'x': r.choice([1, 2, 3, 0x0C, r.randrange(32)])})
 # HitHandlerTable 26:8FBB entries with the CollPairTable attacker slots (X) and a target Y in $0D-$1E
