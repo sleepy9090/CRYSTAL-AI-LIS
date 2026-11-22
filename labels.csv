@@ -1181,7 +1181,11 @@ bank,addr,name,comment
 26,9535,NpcPushBack,s78: solid NPC (obj_behav b2): 4 passes push slots 3..0 opposite player facing while touching
 26,8BDE,GoldDropTable,s78: u16[16] gold by obj_elem_drop hi: 0 1 2 4 8 16 30 50 100 200 400 50 100 200 400 500
 26,8BFE,CoinMetaTable,s78: u8[16] coin meta by drop class: A8 x11; A9 x4; AA
-27,B9AA,DeathPuff,s78: AI $7D: 16f jitter then fade (meta $AC); drop class != 0 -> SpawnShot($3F) coin type $0C
+27,B9AA,DeathPuff,s78: AI $7D: 16f jitter then fade (meta $AC); drop class != 0 -> SpawnShot($3F) coin type $0C (s169 web obj/ai_effect.js aiDeathPuff)
+27,B93E,AiCrumbleRedraw06,s169: AI $06 (type $D6): boss_cam_lock $10; JSR B955; act_timer--; <4 -> LDA #8 JMP B805 (row redraw tail; web obj/ai_effect.js)
+27,B955,CrumbleStep,s169: timer2--; SpawnShot($3D dir Y) -> new slot at self + ExplodeStepRecs[(timer2&F)*4] dx/dy; phase 0: anim++ to $17 then phase 1; else anim-- 0 -> off
+27,B805,RedrawRowTail,s169: A=sub -> $1F; MarkScreenVisited; WaitPpuQueue; BG row at y + act_timer*8 - sub; attr all when timer 0 (AI $08 sub $28 / AI $06 sub 8)
+27,A90C,AiBank15Fall79,s169: AI $79 (no type): LDA #$0F JSR SetR7 swaps its own window -> RTS lands on 15:A911 (mid-BossEBMove: ASL $A820 mirroring write; slot step loop to $13; LDX $2F); 27:A911 JMP $B728 never runs
 27,B778,AiCoin,s78: AI $7B coin: anim -= 2; obj_timer lifetime -> ObjBecomeNext
 15,A4FB,BossE0Spots,s78: u8[16] teleport cells (hi nibble x/16; lo nibble y/16) by $08&$0F
 15,A5A2,BossE0Fire,s78: when obj_aux&3=0: 2 x SpawnShot(obj_shot_id) with param1 dx +-2 and param2 dy +-4

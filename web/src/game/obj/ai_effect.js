@@ -8,7 +8,7 @@
 //                                   obj_anim -1 per frame (-3 while a button is newly pressed), borrow -> off
 //
 // AiMpDrain is a generator: HudRedraw 26:8E46 spins in PpuQueueWaitSrc($7B) while an MP / HUD record is queued.
-import { objPosToTemp, tempToObjPos, tempAddOffset, spawnShot, objBecomeNext } from './util.js';
+import { objPosToTemp, tempToObjPos, tempAddOffset, tempAddStep, spawnShot, objBecomeNext, objDespawn } from './util.js';
 import { cpuRd, indY, switchBank16, farRestore } from '../prg.js';
 import { aiStraightMoverTail } from './ai_static.js';
 import { playSound } from '../playsound.js';
@@ -19,7 +19,7 @@ import { bgRowRender, fullScreenDraw, FSD_LAG } from '../world/bgstream.js';
 import { queueAttrAll } from '../world/ppuqueue.js';
 
 const ANIM = 0x04E0, ACTIVE = 0x04A0, TIMER2 = 0x0620, PHASE = 0x0600, ACT_TIMER = 0x0640;
-const META_ID = 0x0300, TILE_OFS = 0x0320;
+const META_ID = 0x0300, TILE_OFS = 0x0320, FLAGS = 0x0380, DROP = 0x0500;
 
 /** AI $04 27:B2FC: ignores its own slot X; always moves / ages slot $0C, and returns with X = $0C, so
  *  ObjUpdateAll's INX goes on at slot $0D (returns $0C: objUpdateAll takes a number as the new X). */
@@ -119,11 +119,21 @@ export function* aiScreenRedraw08(m, x, y = 0x10) {
   const t = (m.rd(ACT_TIMER + x) - 1) & 0xFF;
   m.wr(ACT_TIMER + x, t);
   if (t >= 0x0A) return;
-  m.wr(0x1F, 0x28);
+  yield* redrawRowTail(m, x, t, 0x28);
+  // s114 lag-frame heuristic (the port has no CPU cycle count). In tools.emu a frame that spawns a shot AND
+  // renders a row ends ObjCollideAll at about L236 with 11 active slots (f2463). With 12 or more (f2466, f2470)
+  // it runs past the NMI at L241, so that frame is a lag frame.
+  if (spawned && countActive(m) >= 12) m.overrun = true;
+}
+
+/** 27:B805 (A = sub): $1F = sub, MarkScreenVisited, WaitPpuQueue, one BG row at the object's y + (t*8 - sub)
+ *  (x = camera $3C/$3D, FarCall_EB91), PpuQueueAttrAll when t = 0. Shared by AI $08 (sub $28) and AI $06 (sub 8). */
+function* redrawRowTail(m, x, t, sub) {
+  m.wr(0x1F, sub);
   markScreenVisited(m, x);
   yield* waitPpuQueue(m);
   objPosToTemp(m, x);
-  m.wr(0x31, ((t << 3) - 0x28) & 0xFF);                    // ASL x3, SEC SBC $1F ($30 as left)
+  m.wr(0x31, ((t << 3) - sub) & 0xFF);                     // ASL x3, SEC SBC $1F ($30 as left)
   tempAddOffset(m);
   m.wr(0x30, 0xFF); m.wr(0x31, 0xFF);
   m.wr(0x34, m.rd(0x3C)); m.wr(0x35, m.rd(0x3D));
@@ -131,10 +141,78 @@ export function* aiScreenRedraw08(m, x, y = 0x10) {
   yield* bgRowRender(m);
   farRestore(m, r6, r7);
   if (t === 0) queueAttrAll(m);                             // PpuQueueAttrAll 30:C739
-  // s114 lag-frame heuristic (the port has no CPU cycle count). In tools.emu a frame that spawns a shot AND
-  // renders a row ends ObjCollideAll at about L236 with 11 active slots (f2463). With 12 or more (f2466, f2470)
-  // it runs past the NMI at L241, so that frame is a lag frame.
-  if (spawned && countActive(m) >= 12) m.overrun = true;
+}
+
+/** AI $06 AiCrumbleRedraw06 27:B93E (type $D6; Y = $0C): camera lock $10; 27:B955 (timer2--, shot $3D in dir Y,
+ *  spawned -> placed at this slot + ExplodeStepRecs[(timer2 & $F)*4] dx/dy; phase 0: anim++ until $17 then phase 1;
+ *  phase != 0: anim--, 0 -> off); then act_timer--, below 4 the 27:B805 row redraw with sub = 8 */
+export function* aiCrumbleRedraw06(m, x, y = 0x0C) {
+  m.wr(0x07D7, 0x10);                                       // boss_cam_lock
+  crumbleStep(m, x, y);                                     // B943 JSR B955
+  const t = (m.rd(ACT_TIMER + x) - 1) & 0xFF;
+  m.wr(ACT_TIMER + x, t);
+  if (t >= 4) return;
+  yield* redrawRowTail(m, x, t, 8);                         // B950 LDA #8, JMP B805
+}
+
+function crumbleStep(m, x, y) {
+  m.wr(TIMER2 + x, (m.rd(TIMER2 + x) - 1) & 0xFF);
+  if (spawnShot(m, x, 0x3D, y)) {                           // B95A JSR 26:972D, BCC B980
+    // timer2 read after the spawn: a shot spawned into this slot (fuzz: obj_active 0) has it cleared
+    const r = (m.rd(TIMER2 + x) & 0x0F) << 2;
+    m.wr(0x30, cpuRd(m, 0xB8E6 + r));
+    m.wr(0x31, cpuRd(m, 0xB8E7 + r));
+    objPosToTemp(m, x);
+    m.wr(0x11, x);
+    tempAddOffset(m);                                       // LDX $10 (the new slot): 26:9824 / 26:9897
+    tempToObjPos(m, m.rd(0x10));
+  }
+  if (m.rd(PHASE + x) === 0) {                              // B980
+    const a = (m.rd(ANIM + x) + 1) & 0xFF;
+    m.wr(ANIM + x, a);
+    if (a === 0x17) m.wr(PHASE + x, m.rd(PHASE + x) + 1);
+    return;
+  }
+  const a = (m.rd(ANIM + x) - 1) & 0xFF;                    // B993
+  m.wr(ANIM + x, a);
+  if (a === 0) m.wr(ACTIVE + x, 0);
+}
+
+/** AI $7D DeathPuff 27:B9AA (no object type uses it): phase 0 = 16-frame jitter (x += 27:BA2C[(anim >> 1) & 1]
+ *  = -4/+4, anim -= 2), at the borrow: flags &= $DD | 1, anim $3F, meta / phase $AC, tile ofs 0; drop class
+ *  (obj_elem_drop b4-7) != 0 -> SpawnShot($3F, dir 0); none free -> this slot off and a second try (keeps
+ *  elem_drop); spawned -> the new slot gets elem_drop + meta id 26:8BFE[class]. phase != 0: anim -= 2, borrow -> off */
+export function aiDeathPuff(m, x) {
+  if (m.rd(PHASE + x)) {                                    // B99E
+    const a = (m.rd(ANIM + x) - 2) & 0xFF;
+    m.wr(ANIM + x, a);
+    if (a & 0x80) objDespawn(m, x);                         // BPL: N of the 2nd DEC; JMP 26:98C7
+    return;
+  }
+  objPosToTemp(m, x);
+  m.wr(0x30, cpuRd(m, 0xBA2C + ((m.rd(ANIM + x) >> 1) & 1)));
+  m.wr(0x31, 0);
+  tempAddStep(m);                                           // 26:9861
+  tempToObjPos(m, x);
+  const a = (m.rd(ANIM + x) - 2) & 0xFF;
+  m.wr(ANIM + x, a);
+  if (!(a & 0x80)) return;
+  m.wr(FLAGS + x, (m.rd(FLAGS + x) & 0xDD) | 1);            // B9D1
+  m.wr(ANIM + x, 0x3F);
+  m.wr(META_ID + x, 0xAC);
+  m.wr(PHASE + x, 0xAC);
+  m.wr(TILE_OFS + x, 0);
+  if ((m.rd(DROP + x) & 0xF0) === 0) return;
+  if (!spawnShot(m, x, 0x3F, 0)) {                          // B9F9, BCS BA14
+    m.wr(ACTIVE + x, 0);
+    const d = m.rd(DROP + x);
+    const ok = spawnShot(m, x, 0x3F, 0);
+    m.wr(DROP + x, d);
+    if (!ok) return;
+  }
+  const n = m.rd(0x10), d = m.rd(DROP + x);                 // BA14
+  m.wr(DROP + n, d);
+  m.wr(META_ID + n, cpuRd(m, 0x8BFE + (d >> 4)));
 }
 
 const countActive = (m) => { let n = 0; for (let s = 0; s < 0x1F; s++) if (m.rd(ACTIVE + s)) n++; return n; };
@@ -207,6 +285,7 @@ export function* aiFloorReveal(m, x) {
 
 export const AI_EFFECT = {
   0x04: aiPlayerFollowC, 0x05: aiFollowFacing, 0x08: aiScreenRedraw08, 0x57: aiStraightMoverTail, 0x5F: aiFloorReveal,
+  0x06: aiCrumbleRedraw06, 0x7D: aiDeathPuff,                // s169
   0x74: aiExplode, 0x76: aiMpDrain,
   0x77: (m, x) => aiMpDrain(m, x, 0x99, 0x77),              // s168: AiMpDrain99 27:A4E0 (no object type uses it)
   0x7C: (m, x) => aiScreenRedraw08(m, x, 0xF8),             // s166: same entry 27:B7F6, Y = $7C*2 (obj_active b2 set)

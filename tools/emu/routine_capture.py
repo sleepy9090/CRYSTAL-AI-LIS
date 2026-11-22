@@ -237,7 +237,10 @@ for _n, (_id, _ad) in FIELD_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r: {'x': _slot(r)})
 # s93 (boss / effect AI port (a)): web/src/game/obj/ai_effect.js; Y = id*2 as ObjUpdateAll's TAY 30:CD07 leaves it
 EFFECT_AIS = {'AiPlayerFollowC': (0x04, 0xB2FC), 'AiStraightMoverTl': (0x57, 0xB0BE), 'AiMpDrain': (0x76, 0xA4DC),
-              'AiMpDrain99': (0x77, 0xA4E0)}
+              'AiMpDrain99': (0x77, 0xA4E0),
+              # s169: AI $06 (crumble + BG row redraw, in PPU_ROUTINES), $7D DeathPuff, $79 (SetR7($0F) swaps its own
+              # window: falls into 15:A911 mid-BossEBMove)
+              'AiCrumbleRedraw06': (0x06, 0xB93E), 'AiDeathPuff': (0x7D, 0xB9AA), 'AiBank15Fall79': (0x79, 0xA90C)}
 for _n, (_id, _ad) in EFFECT_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r, _i=_id: {'x': _slot(r), 'y': (_i << 1) & 0xFF})
 # s117 (gameplay frames leftovers): the pit platforms (web/src/game/obj/ai_field.js); Y = id*2 (AI $3C's PlaySound)
@@ -353,7 +356,8 @@ PPU_ROUTINES = ('PpuQueueFlush', 'BgRowRender', 'BgColRender', 'FullScreenDraw',
                 'Ai70PhaseDispatch',          # s97: phases 0/2/9 flush PPU blocks (NMI would discard the case)
                 'NpcScript',                  # s115: an IRQ inside the VM left $8000 mapped to another bank
                 'BossDefeated',               # s159: area $1A's hook flushes PpuQueueBlock($2C)
-                'BossAiEB')                   # s164: BossBgStrip blocks $2F-$38 / mouth block $3D
+                'BossAiEB',                   # s164: BossBgStrip blocks $2F-$38 / mouth block $3D
+                'AiCrumbleRedraw06')          # s169: WaitPpuQueue + BG row (27:B805)
 
 
 def _steer_attack(ram, r, x, dist):
@@ -582,6 +586,19 @@ def _fix_effect(name, ram, r, x, wram):
         ram[0x4B] = r.choice([0, 0, r.randrange(256)])
         ram[0x04E0 + x] = r.choice([0, 1, 2, 3, 4, r.randrange(256)])
         ram[0x01] = r.choice([ram[0x01], ram[0x01] & ~0x18])   # rendering off: HudRedraw flushes at once
+    if name in ('AiCrumbleRedraw06', 'AiDeathPuff', 'AiBank15Fall79'):
+        # s169: phase / anim / act_timer / drop edges; free slots so SpawnShot spawns; empty PPU queue
+        ram[0x0600 + x] = r.choice([0, 0, 1, r.randrange(14), r.randrange(256)])
+        ram[0x04E0 + x] = r.choice([0, 1, 2, 3, 0x16, 0x17, 0x80, r.randrange(256)])
+        ram[0x0640 + x] = r.choice([0, 1, 4, 5, r.randrange(256)])
+        ram[0x0620 + x] = r.choice([0, 1, 0x10, r.randrange(256)])
+        ram[0x0500 + x] = r.choice([0, 0x0F, 0x10, 0x30, r.randrange(256)])
+        ram[0x0560 + x] = r.choice([0, 0x80, r.randrange(256)])
+        ram[0x0B] = ram[0x0A]                      # WaitPpuQueue passes at once (no NMI in a PPU case)
+        if r.random() < 0.5:
+            for s in range(0x0D, 0x1F):
+                if s != x and r.random() < 0.6:
+                    ram[0x04A0 + s] = r.choice([0, 0, 0x78, 0x30])
     if name == 'AiPlayerFollowC':
         ram[0x04EC] = r.choice([0, 1, 2, 0x80, 0x81, r.randrange(256)])
         ram[0x062C] = r.choice([0, 1, 2, r.randrange(256)])

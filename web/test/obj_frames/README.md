@@ -52,6 +52,11 @@ address), and the bytes it changed. The port must leave the same RAM + WRAM (sta
   `python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine
   AiDuelStart,AiPhaseUnhide,AiFlagGatedSpawn,AiDuelOpponent,AiHideAfterEvent,AiChasePlayer,AiCarryLeft,AiMpDrain99
   --out web/test/obj_frames/fuzz_duel.json`.
+- `fuzz_effect2.json` (s169): 300 cases each of AI `$06` `AiCrumbleRedraw06` (in `PPU_ROUTINES`: CIRAM compared, PPU queue
+  steered empty for `WaitPpuQueue`), `$7D` `AiDeathPuff` (`obj/ai_effect.js`) and `$79` `AiBank15Fall79` (`obj/ai_boss.js`;
+  `SetR7($0F)` falls into `15:A911`), all `EFFECT_AIS` steered by `_fix_effect`:
+  `python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine
+  AiCrumbleRedraw06,AiDeathPuff,AiBank15Fall79 --out web/test/obj_frames/fuzz_effect2.json`.
 
 - `fuzz_platform.json` (s117): 300 cases each for the pit platforms in `obj/ai_field.js` (`PLATFORM_AIS`:
   `AiPitShuttle` `$38`, `AiCrumblePlatform` `$3C`, Y = id·2), captured from `gfx/compare/s116_a6a.state` (area `$6A`,

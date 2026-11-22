@@ -17,7 +17,7 @@
 //   AI $69 (= $E9) BossAiE9  15:B0B6  statues (phases B0C5 B0F4 B105)                                (session 156)
 //   AI $6A (= $EA) BossAiEA  15:B130  patrol / dive / rise + fire fan 15:B278 (phases B14F B1A5 B215 B22C)
 //   AI $6B (= $EB) AiBowOfTruth9E 15:B2DA  final boss, BG face (phases B301 B3BC B4DD B524 B552 B587 B67A) (s164)
-import { cpuRd, indY, setR6, switchBank16, farRestore } from '../prg.js';
+import { cpuRd, indY, setR6, setR7, switchBank16, farRestore } from '../prg.js';
 import { playSound } from '../playsound.js';
 import { paletteBuildRom, waitFrame, waitFrames, statRecalc, fadeIn, fadeOut, SPIN } from '../states/death.js';
 import { showMessage } from '../states/talk.js';
@@ -890,6 +890,25 @@ function bossEBMove(m, x) {
   partAnims(m);
 }
 
+/** AI $79 27:A90C (no object type uses it; s169): LDA #$0F, JSR SetR7 swaps out the $A000 window the code runs
+ *  in, so the RTS lands on 15:A911 (mid-BossEBMove), never on 27:A911's JMP $B728. There: ASL $A820 (RMW on the
+ *  MMC3 mirroring register: writes 15:A820 = $99 then $32 -> vertical), TYA, then 15:A915 for this slot without
+ *  its 26:98A8 (temp $34-$37 as left + $30/$31), the 98A8/9861/9897 loop up to slot $12 (from X >= $13 the INX
+ *  wraps through every zero-page slot), the negated step for slot $13, LDX $2F (stale) and the part animations.
+ *  Returns X = $2F (ObjUpdateAll goes on after it). */
+function aiBank15Fall79(m, x) {
+  setR7(m, 0x0F);
+  if (m.ppu) m.ppu.mirroring = 0x32 & 1;                     // ASL $A820: $99 (dummy write), then $32
+  tempAddStep(m);                                             // A915 JSR 26:9861
+  tempToObjPos(m, x);                                         // A918 JSR 26:9897
+  for (x = (x + 1) & 0xFF; x !== 0x13; x = (x + 1) & 0xFF) stepSlot(m, x);
+  m.wr(0x30, (-m.rd(0x30)) & 0xFF);
+  m.wr(0x31, (-m.rd(0x31)) & 0xFF);
+  stepSlot(m, 0x13);
+  partAnims(m);
+  return m.rd(0x2F);
+}
+
 /** phase 0 15:A684: player freeze $10; once the camera is aligned: music $12 (Y = $10), phase 1, CHR / palettes,
  *  body parts (15:A814 Y = 0), fade in + out ($10), the second part set (Y = $13), slot $0D meta $C8 at ($88, $60),
  *  WRAM $6000-$608F = 15:A77C (+ attr_shadow from $6078), PPU blocks $2C/$2D, palettes $88-$8A, fade in ($20),
@@ -1412,5 +1431,6 @@ export const AI_BOSS = {
   0x60: bossAiE0, 0x61: bossHomingShot, 0x62: bossAiE2, 0x63: bossAiE3, 0x64: bossRockShot, 0x65: aiTalkEventE5,
   0x66: bossAiE6, 0x67: aiBoss88, 0x68: bossAiE8, 0x69: bossAiE9, 0x6A: bossAiEA, 0x6B: aiBowOfTruth9E,
   0x6C: aiReward6C, 0x6D: aiReward6C, 0x6E: aiReward6C, 0x6F: bossDefeated,
+  0x79: aiBank15Fall79,
   0x3F: aiBodyPart,                                           // s163 (bank 27, but only the bosses' parts use it)
 };

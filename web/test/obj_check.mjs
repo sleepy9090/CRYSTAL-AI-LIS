@@ -113,6 +113,10 @@ const RUN = {
   AiChasePlayer: (m, r) => { S.aiChasePlayer(m, r.x); },
   AiCarryLeft: (m, r) => { S.aiCarryLeft(m, r.x); },
   AiMpDrain99: (m, r) => { runNow(E.AI_EFFECT[0x77](m, r.x)); },
+  // s169: AI $06 (generator: WaitPpuQueue + BG row), $7D, $79 (AI_BOSS: SetR7($0F) falls into 15:A911)
+  AiCrumbleRedraw06: (m, r) => { runNow(E.aiCrumbleRedraw06(m, r.x, r.y)); },
+  AiDeathPuff: (m, r) => { E.aiDeathPuff(m, r.x); },
+  AiBank15Fall79: (m, r) => { B.AI_BOSS[0x79](m, r.x); },
   // s93 (boss / effect AI port (a)): obj/ai_effect.js; AiMpDrain is a generator (HudRedraw's queue wait)
   AiPlayerFollowC: (m) => { E.aiPlayerFollowC(m); },
   AiStraightMoverTl: (m, r) => { E.AI_EFFECT[0x57](m, r.x); },
