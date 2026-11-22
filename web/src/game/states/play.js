@@ -22,7 +22,7 @@ import { objUpdateAll } from '../obj/objects.js';
 import { spriteDraw } from '../obj/sprites.js';
 import { objCollideAll } from '../obj/collide.js';
 import { cameraTick } from '../world/camera.js';
-import { npcTalk } from './talk.js';
+import { npcTalk, TALK_ACTIONS } from './talk.js';
 import { substWakeCutscene } from './wake.js';
 import { giveItem, itemUseMenu, showPendingMessage, area5FIrqOff, EVENT_ACTIONS } from './giveitem.js';
 import { substTeleportMenu } from './teleport.js';
@@ -295,6 +295,14 @@ export const ENTRY_POINTS = {
   '30:D6E7': (m) => EVENT_ACTIONS[13](m, 26),         // give item $3E Bow of Moon (event13.json)
   '30:D718': (m) => EVENT_ACTIONS[19](m, 38),         // EvActClearSlot13 (event19.json)
   '30:D71F': (m) => EVENT_ACTIONS[20](m, 40),         // EvActClearSlot14 (event20.json)
+  // s207: talk acts entered through EventActionDispatch's JMP ($0010) redirected at 30:D560 (Y = act * 2,
+  // as after NpcTalk's TAY 30:D115); web/test/states/talkDD.json, DD = act in decimal
+  '30:D1EB': (m) => TALK_ACTIONS[0x10](m, 32),        // teach Recover + SpawnFxAtSlot slot 14
+  '30:D18E': (m) => TALK_ACTIONS[0x14](m, 40),        // Flight + TalkFullRestore
+  '30:D1B5': (m) => TALK_ACTIONS[0x13](m, 38),        // fx at the NPC, AreaLoadA, NpcVanish $0623+1
+  '30:D1CA': (m) => TALK_ACTIONS[0x16](m, 44),        // SFX $29, msg 19.0, AreaLoadA, fx at the NPC
+  '30:D2AE': (m) => TALK_ACTIONS[0x19](m, 50),        // Shield Ring + slot 14 follower
+  '30:D336': (m) => TALK_ACTIONS[0x1A](m, 52),        // Ball of Water, $060D = 4
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */

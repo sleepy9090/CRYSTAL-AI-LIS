@@ -537,6 +537,9 @@ export const TALK_ACTIONS = {
     areaLoad(m, 1);
     spawnFxAtSlot(m, m.rd(TALK_SLOT));
     m.wr(0x033E, 0xA0);
+    // s207: CPU overrun: AreaLoadA + SpawnFxAtSlot's AreaLoadB run from the message close (f2628 L253) past the
+    // next NMI (f2629, frame_ready 0 = normal NMI) to the main-loop top at f2630 L252 (talk22.json, tools.emu)
+    yield;
   },
 };
 

@@ -53,14 +53,15 @@ function skip01(f, c) {
 
 function run(nn, keys, last, skip, checks) {
   const before = fails;
-  const [head, ...lines] = readFileSync(path.join(WEB, `test/event${nn}_ref.csv`), 'utf8').trim().split('\n');
+  const base = nn.startsWith('t') ? `talk${nn.slice(1)}` : `event${nn}`;   // s207: 'tDD' = talk act DD
+  const [head, ...lines] = readFileSync(path.join(WEB, `test/${base}_ref.csv`), 'utf8').trim().split('\n');
   const refCols = head.split(',');
   const ref = new Map(lines.map((l) => { const v = l.split(',').map(Number); return [v[0], v]; }));
   const webCols = compareColumns(), idx = refCols.map((c) => webCols.indexOf(c));
   if (idx.some((i) => i < 0)) throw new Error(`event${nn}_ref.csv has a column the port does not write`);
   const m = new Machine(data, { log: () => {} });
   m.reset();
-  const s = JSON.parse(readFileSync(path.join(WEB, `test/states/event${nn}.json`), 'utf8'));
+  const s = JSON.parse(readFileSync(path.join(WEB, `test/states/${base}.json`), 'utf8'));
   m.loadState(s);
   const f0 = s.frame0 ?? s.frame, pad = parseKeys(keys);
   let n = 0, listed = 0;
@@ -82,7 +83,8 @@ function run(nn, keys, last, skip, checks) {
     if (d.length) fail(`event${nn} f${f}: ${d.join(' ')}`);
   }
   if (m.unported.size) fail(`event${nn}: ${[...m.unported].join(', ')}`);
-  console.log(`${fails > before ? 'FAIL' : 'ok  '} event act ${nn.replace(/^0/, '')}: ${n} rows vs tools.emu (${listed} listed cells)`);
+  const label = base.startsWith('talk') ? `talk act ${nn.slice(1)}` : `event act ${nn.replace(/^0/, '')}`;
+  console.log(`${fails > before ? 'FAIL' : 'ok  '} ${label}: ${n} rows vs tools.emu (${listed} listed cells)`);
 }
 
 // act 7: slot 13 changes to meta $D2 for 32 frames, then $2E + type $DE fx in slot $1E at slot 13, msg 14.5
@@ -180,4 +182,31 @@ run('20', [], 2839, null, {
 run('19b', [], 2839, null, {
   ...ret('19b', 2596, 8, (m) => { want(m, 0x07D7, 0x7F, 'event19b boss_cam_lock'); want(m, 0x04AF, 0, 'event19b slot 15 (type $04CF = 0)'); }),
 });
+// s207: TalkActionTable acts in the same base: EventActionDispatch's JMP ($0010) at 30:D560 is redirected into the
+// talk handler (Y = act * 2 there, as after NpcTalk's TAY 30:D115), states web/test/states/talkDD.json (DD decimal):
+//   web_state ... --force 30:D552:0022=NN --force 30:D560:0010=LO --force 30:D560:0011=HI --until 30:HILO
+// refs talkDD_ref.csv as s205 (keys 2620:A .. 2740:A, act 19 none), every cell at shift 0 incl. oam_crc
+const fx1E = (m, t, ofs) => {                            // SpawnFxAtSlot: type $DF in slot $1E, then obj_tile_ofs
+  if (!m.rd(0x04BE)) fail(`${t}: slot $1E not active`);
+  want(m, 0x033E, ofs, `${t} slot $1E tile ofs`);
+};
+// act 16 (D1EB): msg 11.1 + GiveItemA($45 Recover) (two messages, returns f2709), SpawnFxAtSlot slot 14 -> slot $1E
+run('t16', KEYS4, 2839, null, { ...ret('t16', 2709, 8, (m) => { want(m, 0x057F, 0x45, 'talk16 item'); fx1E(m, 'talk16', 0x80); }) });
+// act 19 (D1B5): SpawnFxAtSlot NPC, $033E = $A0, AreaLoadA, NpcVanish $0623+1 (no wait: returns f2541)
+run('t19', [], 2839, null, {
+  ...ret('t19', 2541, 8, (m) => { fx1E(m, 'talk19', 0xA0); want(m, 0x04A0 + ((m.rd(0x0623) + 1) & 0xFF), 0x53, 'talk19 NpcVanish slot'); }),
+});
+// act 20 (D18E): GiveItemA($48 Flight) + TalkFullRestore (HP / MP = max)
+run('t20', KEYS4, 2839, null, {
+  ...ret('t20', 2629, 8, (m) => { want(m, 0x057F, 0x48, 'talk20 item'); want(m, 0x03C1, m.rd(0x03C0), 'talk20 HP'); want(m, 0x0708, m.rd(0x0709), 'talk20 MP'); }),
+});
+// act 22 (D1CA): SFX $29, msg 19.0, AreaLoadA + SpawnFxAtSlot's AreaLoadB = a CPU overrun past one NMI (talk.js
+// `yield`): returns f2630 = tools.emu's main-loop top f2630 L252
+run('t22', KEYS4, 2839, null, { ...ret('t22', 2630, 8, (m) => fx1E(m, 'talk22', 0xA0)) });
+// act 25 (D2AE): GiveItemA($30 Shield Ring), slot 14 follower ($068E = $0D)
+run('t25', KEYS4, 2839, null, {
+  ...ret('t25', 2629, 8, (m) => { want(m, 0x057F, 0x30, 'talk25 item'); want(m, 0x04AE, 0x32, 'talk25 slot 14 follower'); want(m, 0x068E, 0x0D, 'talk25 $068E'); }),
+});
+// act 26 (D336): GiveItemA($09 Ball of Water), $060D = 4
+run('t26', KEYS4, 2839, null, { ...ret('t26', 2629, 8, (m) => { want(m, 0x057F, 0x09, 'talk26 item'); want(m, 0x060D, 4, 'talk26 $060D'); }) });
 process.exit(fails ? 1 : 0);
