@@ -26,7 +26,7 @@ import { padNewButtonIndex } from './teleport.js';
 
 const OAM = 0x0200, BLINK = 0x07FF, MP = 0x0708, MP_MAX = 0x0709, RNG = 0x07C0, LEVEL = 0x0421;
 
-function hideOam0(m) { for (let i = 0; i < 4; i++) m.wr(OAM + i, 0xF0); }
+export function hideOam0(m) { for (let i = 0; i < 4; i++) m.wr(OAM + i, 0xF0); }
 
 /** 30:DE72: SFX $2C when $07FF & $3F = 0. Y = the caller's Y (PlaySound saves it in $010F). */
 function chime(m, y) { if (!(m.rd(BLINK) & 0x3F)) playSound(m, 0x2C, y); }
@@ -42,7 +42,7 @@ function* blackenBg(m) {
 }
 
 /** 30:DF8F: the message window + cursor setup */
-function* selectOpen(m) {
+export function* selectOpen(m) {
   m.wr(0x04AC, 0);
   yield* waitPpuQueue(m);
   setR6(m, 0x14);
@@ -86,7 +86,7 @@ function* drawFaces(m) {
 }
 
 /** 30:DDED: $21 &= 3, cursor x = $21 * 48 + $38 */
-function cursorX(m) {
+export function cursorX(m) {
   const s = m.rd(0x21) & 3;
   m.wr(0x21, s);
   m.wr(0x10, (s << 4) & 0xFF);
@@ -206,7 +206,7 @@ function* telepathyReply(m) {
 }
 
 /** 30:DE51 */
-function* selectExit(m, savedIrq) {
+export function* selectExit(m, savedIrq) {
   hideOam0(m);
   oamClip(m, 0xF0);                                     // OamClipTail
   setR6(m, 0x1A);

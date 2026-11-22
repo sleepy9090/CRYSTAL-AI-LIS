@@ -27,6 +27,7 @@ import { substWakeCutscene } from './wake.js';
 import { giveItem, itemUseMenu, showPendingMessage } from './giveitem.js';
 import { substTeleportMenu } from './teleport.js';
 import { substTelepathySelect } from './telepathy.js';
+import { substChangeForm } from './changeform.js';
 
 function unported(m, what) {
   if (!m.unported.has(what)) { m.unported.add(what); m.log(`${what} not ported yet`); }
@@ -214,7 +215,8 @@ const SUBSTATES = new Map([
   [19, substWakeCutscene],                            // 30:D9B6 -> 20:9400 new-game wake-up (s138, states/wake.js)
   [20, substTeleportMenu],                            // 30:DB28 magic 4 teleport menu (s143, states/teleport.js)
   [21, substTelepathySelect],                         // 30:DD6B magic 3 telepathy + reply 30:DE04 (s145, states/telepathy.js)
-  [29, substTeleportMenu],                            // 30:DB28 2nd entry (never stored)
+  [23, substChangeForm],                              // 30:DEC1 magic 7 change form (s146, states/changeform.js)
+  [29, substTeleportMenu],                           // 30:DB28 2nd entry (never stored)
   [31, substRestoreScreen],                           // 30:CC4D (s120; set by AI $70 phase 2)
   [32, substArmorShop],                               // 30:D985 (s122, states/shop.js; types $42 $48)
   [33, substToolShop],                                // 30:D98E (s122; types $41 $44 $47)
@@ -248,6 +250,7 @@ export const ENTRY_POINTS = {
   '30:D497': itemUseMenu,                             // s141 (web/test/states/itemuse_*.json)
   '30:D085': showPendingMessage,                      // s141
   '30:DD6B': substTelepathySelect,                    // s145 (web/test/states/telepathy_magic.json)
+  '30:DEC1': substChangeForm,                         // s146 (web/test/states/changeform.json)
 };
 
 /** PlayPaletteRestore 30:CC2E: slot 4 AI $1A (palette effect) -> clear it, PaletteBuild, irq_mode 2 -> 0 */

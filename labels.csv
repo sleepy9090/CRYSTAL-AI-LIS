@@ -1444,3 +1444,10 @@ bank,addr,name,comment
 27,ADA4,NpcCellBlocked,s140: AiNpcWander look-ahead cell ($34-$37 >> 4) held by an active slot $0D-$1E or slot 0 -> $20 |= 6
 27,ADC8,NpcCellScan,s140: slots $12..$13-1 except X: same 16px cell as $10/$11 -> $20 |= 6 + RTS
 27,AE07,PosToCell16,s140: (Y:A) >> 4 -> A ($1F scratch)
+30,DEE4,ChangeFormLoop,s146: change-form menu loop: CursorBlink; $1F=0; 31:E038; 30:DFD4; 31:E077; WaitFrame; pad -> JmpTable30_DF0E
+30,DF1E,ChangeFormRight,s146: RIGHT: INC INC DEC $21 (falls into DF22)
+30,DF22,ChangeFormCursorStep,s146: DEC $21; TelepathyCursorX; SFX $4B; JMP ChangeFormLoop
+30,DFD4,TelepathyDrawRecords,s146: 2nd half of TelepathyDrawFaces (no WaitPpuQueue): records 30:E088 -> $6008; $20=4; ObjSlot1FDraw
+30,C176,WaitFrames,s146: Y = count; WaitFrame x Y
+31,E038,ChangeFormCasterRecord,s146: record $6000 = x $84 y $A0 meta $02 tile $4C flags $0B; $1F!=0 -> anim $07FF + meta $21*4+$2E + tile $D0 (form preview)
+31,E077,OamAttrPalClear,s146: all 64 OAM attr bytes &= $FC (palette 0)
