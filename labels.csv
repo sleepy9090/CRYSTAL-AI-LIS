@@ -354,8 +354,21 @@ bank,addr,name,comment
 30,D834,ItemEventHook,A=hook 0-2 -> bank14 word 30:D885[A] (826F/831E/80E3); shows $21:$20 msg
 30,D885,ItemEventHookTable,3 words: 14:826F 14:831E 14:80E3
 30,DB28,SubstTeleportMenu,substate 20 (and 29; Warp Boots JSR from 30:D4DC): refusals HP 0 / $07D7 / area $58-$5F / status 4 (SFX $4E); msg 33.0 town list; web states/teleport.js (s143)
-30,DD6B,SubstTelepathySelect,substate 21: msg 33.2 pick sage
-30,DE04,SubstTelepathyReply,substate 22: 14:816F -> message
+30,DD6B,SubstTelepathySelect,substate 21 (magic 3): msg 33.2 pick sage; PHA irq_mode (PLA at DE6A); L/R = sage $21; A -> DE04; B/SEL/START -> DE51; web states/telepathy.js (s145)
+30,DD9A,TelepathySelectLoop,s145: DE72 chime + DDCD blink + DFCE faces; WaitFrame; ReadPadsMenu; PadNewButtonIndex -> JmpTable30_DDBD
+30,DDCD,TelepathyCursorBlink,s145: DEC $07FF; OAM0 tile $3F if $07FF b3 else $3D
+30,DDED,TelepathyCursorX,s145: $21 &= 3; OAM0 x = $21*48 + $38
+30,DE04,SubstTelepathyReply,substate 22 (never stored; JmpTable30_DDBD entry 0): Telepathy 14:816F -> TextPrintBox; face 30:DEA1[$21] until A/B/SEL/START
+30,DE51,TelepathyExit,s145: HideOam0; OamClipTail($F0); PaletteBuild; PpuQueueAttrAll; WaitFrame; StatRecalc; irq_mode = PLA; sub_state 8
+30,DE72,TelepathyChime,s145: PlaySound($2C) when $07FF & $3F = 0
+30,DE7E,TelepathyReplyFace,s145: $6008-$600F = 30:DEA1 + $21*8; $6009 = $44 - (cam_y & 7)
+30,DEA1,TelepathyReplyFaces,s145: 4 x 8-byte sprite records (one sage face each)
+30,DF8F,TelepathyOpen,s145: $04AC=0; TextWindowOpen + TextPrintBox; 30:C874; CHR R0/R1 alt $3C/$38; cursor OAM0 (x $38 y $4C-(cam_y&7)); irq_mode 1; $21=0
+30,DFCE,TelepathyDrawFaces,s145: TelepathyCasterRecord + 4 records 30:E088 -> $6008 (y $4C-(cam_y&7)); $20=4; JMP ObjSlot1FDraw
+30,DFFD,TelepathyCasterRecord,s145: record $6000 = x $84 y $A0 meta $CD tile $4C flags $0B; DEC anim; $1F!=0 -> meta $CC + anim $07FF>>2 ($1F=0 at 0); runs on into the fixed bank at 31:E000-E037
+30,E088,TelepathyFaceRecords,s145: 4 x 8-byte sprite records (the 4 sages in the select)
+30,E0A8,TelepathyPalette,s145: 16 bytes -> $6150-$615F (sprite palettes)
+30,C874,BgBlackClearBuf,s145: WaitPpuQueue; BG palette bytes $6140-$614C + every 4th to $615C = $0F; $6000-$603F = 0; PpuQueueBlock($2B); WaitFrame
 30,DEC1,SubstChangeForm,substate 23: msg 33.1 What form will you take?
 14,80A0,NpcHidden,$23=param; $20!=0 -> NPC absent (called 31:E34B spawn handler)
 14,80E3,ItemHook2,item ids >=$80; table 14:A17A; applies set-list

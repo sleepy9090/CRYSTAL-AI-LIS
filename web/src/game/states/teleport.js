@@ -60,7 +60,7 @@ const MOVES = {
 };
 
 /** PadNewButtonIndex 30:C210: index 0-7 (A B SEL START U D L R) of the single button in pad_new, else -1 */
-function padNewButtonIndex(m) {
+export function padNewButtonIndex(m) {
   const p = m.rd(R.pad_new);
   for (let y = 7; y >= 0; y--) if (p === cpuRd(m, 0xC222 + y)) return y;
   return -1;

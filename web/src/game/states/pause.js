@@ -55,7 +55,7 @@ export function* ppuQueueBlock(m, a) {
 /** 30:C1AE: $20+1 sprite records of 8 bytes at $6000 (x y meta tile_ofs flags flags2 dir anim) drawn one by
  *  one through object slot $1F (28:8000 -> ObjDrawMeta with $1B = 1), OAM from offset 4, then
  *  ObjHideUnusedOam; banks restored. */
-function objSlot1FDraw(m) {
+export function objSlot1FDraw(m) {
   const r6 = m.rd(0x6E), r7 = m.rd(0x6F);
   switchBank16(m, 0x0E);
   m.wr(0x10, 4);
