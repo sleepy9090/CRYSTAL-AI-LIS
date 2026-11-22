@@ -33,10 +33,10 @@ export function aiPlayerFollowC(m) {
 }
 
 /** AI $76 27:A4DC (27:A4E0 = an unreferenced second entry with overlay $99) */
-export function* aiMpDrain(m, x, overlay = 0xA3) {
+export function* aiMpDrain(m, x, overlay = 0xA3, id = 0x76) {
   m.wr(0x0581, overlay);                                    // obj_overlay_id slot 1
   if ((m.rd(0x08) & 0x0F) === 0) {
-    playSound(m, 0x31, (0x76 << 1) & 0xFF);                 // Y = id*2 from ObjUpdateAll's TAY 30:CD07
+    playSound(m, 0x31, (id << 1) & 0xFF);               // Y = id*2 from ObjUpdateAll's TAY 30:CD07
     m.wr(0x05A0, 2);                                        // obj_freeze slot 0
     if (m.rd(0x0708)) {                                     // mp_cur
       m.wr(0x0708, m.rd(0x0708) - 1);
@@ -208,5 +208,6 @@ export function* aiFloorReveal(m, x) {
 export const AI_EFFECT = {
   0x04: aiPlayerFollowC, 0x05: aiFollowFacing, 0x08: aiScreenRedraw08, 0x57: aiStraightMoverTail, 0x5F: aiFloorReveal,
   0x74: aiExplode, 0x76: aiMpDrain,
+  0x77: (m, x) => aiMpDrain(m, x, 0x99, 0x77),              // s168: AiMpDrain99 27:A4E0 (no object type uses it)
   0x7C: (m, x) => aiScreenRedraw08(m, x, 0xF8),             // s166: same entry 27:B7F6, Y = $7C*2 (obj_active b2 set)
 };

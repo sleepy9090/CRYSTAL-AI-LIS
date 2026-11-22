@@ -104,6 +104,15 @@ const RUN = {
   AiShotEmitter: (m, r) => { S.aiShotEmitter(m, r.x); },
   AiFallingObj: (m, r) => { S.aiFallingObj(m, r.x); },
   AiDropSpawner: (m, r) => { S.aiDropSpawner(m, r.x); },
+  // s168: AI $0A $33 $51-$55 (obj/ai_shot.js), $77 (obj/ai_effect.js)
+  AiDuelStart: (m, r) => { S.aiDuelStart(m, r.x); },
+  AiPhaseUnhide: (m, r) => { S.aiPhaseUnhide(m, r.x); },
+  AiFlagGatedSpawn: (m, r) => { S.aiFlagGatedSpawn(m, r.x); },
+  AiDuelOpponent: (m, r) => { S.aiDuelOpponent(m, r.x); },
+  AiHideAfterEvent: (m, r) => { S.aiHideAfterEvent(m, r.x); },
+  AiChasePlayer: (m, r) => { S.aiChasePlayer(m, r.x); },
+  AiCarryLeft: (m, r) => { S.aiCarryLeft(m, r.x); },
+  AiMpDrain99: (m, r) => { runNow(E.AI_EFFECT[0x77](m, r.x)); },
   // s93 (boss / effect AI port (a)): obj/ai_effect.js; AiMpDrain is a generator (HudRedraw's queue wait)
   AiPlayerFollowC: (m) => { E.aiPlayerFollowC(m); },
   AiStraightMoverTl: (m, r) => { E.AI_EFFECT[0x57](m, r.x); },

@@ -228,11 +228,16 @@ FIELD_AIS = {
     'AiShopEmpty': (0x0E, 0xA5C0), 'AiSetSubstate': (0x0F, 0xA5C5), 'AiFollowPlayerWait': (0x0C, 0xA5CB),
     'AiMessageAfterWait': (0x0D, 0xA5ED), 'AiShotEmitter': (0x1D, 0xB02C), 'AiFallingObj': (0x2F, 0xB048),
     'AiDropSpawner': (0x36, 0xB070),
+    # s168: AIs $0A $33 $51-$55
+    'AiDuelStart': (0x0A, 0xA70E), 'AiPhaseUnhide': (0x33, 0xA4C6), 'AiFlagGatedSpawn': (0x51, 0xA6C5),
+    'AiDuelOpponent': (0x52, 0xA753), 'AiHideAfterEvent': (0x53, 0xA7CD), 'AiChasePlayer': (0x54, 0xA802),
+    'AiCarryLeft': (0x55, 0xA616),
 }
 for _n, (_id, _ad) in FIELD_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r: {'x': _slot(r)})
 # s93 (boss / effect AI port (a)): web/src/game/obj/ai_effect.js; Y = id*2 as ObjUpdateAll's TAY 30:CD07 leaves it
-EFFECT_AIS = {'AiPlayerFollowC': (0x04, 0xB2FC), 'AiStraightMoverTl': (0x57, 0xB0BE), 'AiMpDrain': (0x76, 0xA4DC)}
+EFFECT_AIS = {'AiPlayerFollowC': (0x04, 0xB2FC), 'AiStraightMoverTl': (0x57, 0xB0BE), 'AiMpDrain': (0x76, 0xA4DC),
+              'AiMpDrain99': (0x77, 0xA4E0)}
 for _n, (_id, _ad) in EFFECT_AIS.items():
     ROUTINES[_n] = (26, _ad, _poke_bg, lambda r, _i=_id: {'x': _slot(r), 'y': (_i << 1) & 0xFF})
 # s117 (gameplay frames leftovers): the pit platforms (web/src/game/obj/ai_field.js); Y = id*2 (AI $3C's PlaySound)
@@ -514,6 +519,38 @@ def _fix_field(name, ram, r, x, wram=None):
             for s in range(0x0D, 0x1F):
                 if r.random() < 0.6:
                     ram[0x04A0 + s] = 0
+    if name in ('AiDuelStart', 'AiPhaseUnhide', 'AiFlagGatedSpawn', 'AiDuelOpponent', 'AiHideAfterEvent',
+                'AiChasePlayer', 'AiCarryLeft'):
+        # s168: the compare / zero edges of each branch
+        ram[0x0600 + x] = r.choice([0x3F, 0x3F, 0, r.randrange(256)])
+        ram[0x0660 + x] = r.choice([0, 0, 1, 0x3F, r.randrange(256)])
+        ram[0x0620 + x] = r.choice([0, 0, 0x0E, 0x10, 0x1E, r.randrange(256)])
+        ram[0x04E0 + x] = r.choice([0, 1, 0x20, 0x21, r.randrange(256)])
+        ram[0x41] = r.choice([8, 8, r.randrange(256)])
+        ram[0x6C] = r.choice([0x03, 0x51, 0x60, 0x60, r.randrange(256)])
+        ram[0x6D] = r.choice([0, 0, r.randrange(256)])
+        ram[0x04AD] = r.choice([8, 0, r.randrange(256)])
+        ram[0x06C0 + x] = r.choice([0, r.randrange(0x40)])
+        ram[0x06E0 + x] = r.randrange(8)
+        ram[0x0340] = r.choice([0, 0x80, r.randrange(256)])
+        ram[0x49] = r.choice([0, 0x80, r.randrange(256)])
+        ram[0x08] = r.choice([0, 8, r.randrange(256)])
+        if r.random() < 0.3:
+            ram[0xB0] = 0x87
+        if r.random() < 0.3:
+            ram[0x70 + x], ram[0x90 + x] = 0x81, 0x06
+        if r.random() < 0.3:
+            ram[0x70 + x] = (ram[0x71] + r.randrange(-9, 10)) & 0xFF
+        if r.random() < 0.2:
+            ram[0x70 + x] = r.choice([0x26, 0x28, 0x97, 0x99])
+        if wram is not None:
+            wram[0x2F1] = r.choice([0, 0, r.randrange(256)])
+            if r.random() < 0.6:                   # AI $51's story-flag gate passes
+                wram[0x480 + ram[0x06C0 + x]] = 0xFF
+        if r.random() < 0.5:                       # free slots so SpawnShot spawns
+            for s in range(0x0D, 0x1F):
+                if r.random() < 0.6:
+                    ram[0x04A0 + s] = 0
     if wram is not None and 'wram' in _BASE and name in ('AiDasher', 'AiTrapChest', 'AiBounceShot') \
             and r.random() < 0.4:
         wram[0x2F0:0x340] = _BASE['wram'][0x2F0:0x340]   # the real map, the object on the player's screen
@@ -538,7 +575,7 @@ def _fix_platform(ram, r, x, wram):
 
 def _fix_effect(name, ram, r, x, wram):
     """s93: AI $76 sound / MP frame + button + borrow edges; AI $04 slot $0C timer edges; AI $57 = mover tail"""
-    if name == 'AiMpDrain':
+    if name in ('AiMpDrain', 'AiMpDrain99'):
         if r.random() < 0.6:
             ram[0x08] &= 0xF0                      # the every-16th-frame drain
         ram[0x0708] = r.choice([0, 1, 2, r.randrange(256)])
