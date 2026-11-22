@@ -1,8 +1,8 @@
 // re-c web port — the per-frame object loop (Ph7 web 5/8 (a), s80). REVERSE.md "Object update + boss defeat"
 // and "Per-frame order inside ObjUpdateAll" (session 30).
 //
-//   objUpdateAll(m)   ObjUpdateAll 30:CCCC, a generator (AI $1A's palette/IRQ sequence 30:CD8A waits on the
-//                     PPU queue and on frames). For slots 0-30, each with SwitchBank16($0D) first:
+//   objUpdateAll(m)   ObjUpdateAll 30:CCCC, a generator (AI $1A's palette/IRQ sequence 30:CD8A, obj/ai_thunder.js,
+//                     waits on the PPU queue and on frames). For slots 0-30, each with SwitchBank16($0D) first:
 //                     knockback (obj_flags2 hi nibble: += $10; slots != 1 with obj_active b7 clear slide one
 //                     step in obj_meta_dir>>4 at speed 8 and skip the AI), obj_freeze (DEC, skip while != 0;
 //                     reaching 0 on spawn_b2 = 1 clears the hit flag), then JSR $0010 = JMP ObjAiTable 27:A314
@@ -21,6 +21,7 @@ import { AI_FINAL } from './ai_final.js';
 import { AI_BOSS } from './ai_boss.js';
 import { AI_PLAYER } from './player.js';
 import { objMoveSlide } from './move.js';
+import { thunderStep } from './ai_thunder.js';
 
 const FLAGS2 = 0x0340, META_DIR = 0x0360, TIMER = 0x0480, ACTIVE = 0x04A0, SPAWN_B2 = 0x0540, SPAWN_PARAM = 0x0560;
 const FREEZE = 0x05A0;
@@ -84,8 +85,9 @@ export function* objUpdateAll(m) {
       }
     }
     const act = m.rd(ACTIVE + x), id = act & 0x7F;          // CCFA
-    if (id === 0x1A) {                                      // CD7F: palette / IRQ sequence 30:CD8A
-      unported(m, 'AI $1A (30:CD8A)');
+    if (id === 0x1A) {                                      // CD03 JMP ObjUpdateAi1A 30:CD7F
+      yield* thunderStep(m, x);                             // CD7F JSR 30:CD8A (waits on frames; s197)
+      switchBank16(m, 0x0D);                                // CD82
       continue;
     }
     m.wr(0x10, 0x4C);

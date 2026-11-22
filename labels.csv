@@ -1536,4 +1536,11 @@ bank,addr,name,comment
 27,A7CD,AiHideAfterEvent,s168: AI $53 (type $2B): aux 0 waits sub_state 8 -> $0575=$43 $0623=$15 sub_state 7; then flags b2 + aux++ to $40 -> obj_active=0
 27,A802,AiChasePlayer,s168: AI $54: idle while player flags2 b7 clear and pad_dir b7; every 4th frame DirToTarget(slot 0) flags b4 flags2 5/7/8 meta dir; timer-- anim-- 1 step (9824)
 30,D3AA,ShowMessageCloseLoop,s175: 8 x (WaitFrame; sprite pass 28:800E; OamClipTop) after the A/B close; the pass runs in vblank right after the NMI so a row sampled at L261 sees it part-done (kill_check PARTIAL oam); s182: or done but before OamClipTop (group11_check f2797/f2801)
+30,CD8A,ThunderStep,s197: AI $1A step (sword 4 charge-3 shot $0F = type $1F slot 4): ThunderBolt; WaitPpuQueue; ThunderClearBuf; irq_mode saved; ThunderStepRun[obj_phase]; irq_mode restored; obj_phase++; $6A = end (obj_active 0 + WaitFrame + irq_mode 0 + PaletteBuild); else irq_mode!=0 -> obj_flags slot 1 |= $10 (slot-0 ORA at CDCC has no STA)
+30,CDD5,ThunderBolt,s197: SetR6($1A); SpawnShot($1E dir 0) = type $1B bolt (slots 5-$0B) put on slot $0D+(obj_phase&$0F) x/y (even if empty)
+30,CE07,ThunderClearBuf,s197: $6000-$60BF = $7F
+30,CE12,ThunderStepRun,s197: A = phase; record ThunderStepTable 30:CF47+3A ($D047 copy when 3A >= $100) -> $20-$22; SwitchBank16(0); t20 b7 = nibble tile rows + PpuQueueBlock(t22) + flash/PaletteBuild by $08 parity; 0 = palette from banks 0/1 (t21:$F0 and +$100); 1 = PlaySound($43) + $6060-$609F + block 3; else PaletteBuild
+30,CE89,ThunderNibbleRow,s197: 8 bytes at ($10),Y -> 16 tiles $70+nibble at $6000+X; X += $20
+30,CF28,ThunderIrqAlt,s197: irq_mode = 2; CHR alt R0/R1 = $34 and R2-R5 alt = play set $07F2-$07F5
+30,CF47,ThunderStepTable,s197: 106 x 3 bytes (t20 t21 t22) for AI $1A phases 0-$69
 31,FE97,ReadPadsNew,s175: STA pad_new $4B in ReadPads; area 03 at L260-261 (port key = emu frame + 1); after the level-up msg (music $81 playing; cause not measured) L2-5 of the next frame (port key = emu frame); s179 area 08: moves between L2-6 of F and L261 of F-1 per press/release (port keys = pass frames of the pad_prev $43 writes)

@@ -761,6 +761,12 @@ SCENARIOS['group_B2'] = dict(note='area B2: type $92 AI $41 in slot $0D (+ type 
                                                0x0401: 0x40, 0x0400: 0x30},
                              keys=[],   # state taken at +12; the run's keys are in web/test/groupb2_check.mjs
                              frames=480, watch=[0x03C1, 0x03CD, 0x04AD, 0x0702])
+# s197: thunder_B2 = group_B2 + ball $08 (SwordPowerLevel 30:D9D8: (ball-1)&3 = sword-1, &$0C != 0 -> sword_power 2),
+# so a long B hold charges orbit_level to $18 and the release spawns shot $0F = type $1F, AI $1A (30:CD8A)
+SCENARIOS['thunder_B2'] = dict(note='area B2, sword 4 + ball 8 (sword_power 2): level-3 charged shot = AI $1A thunder',
+                               area='B2', pokes={**SCENARIOS['group_B2']['pokes'], 0x0718: 8, 0x0719: 2},
+                               keys=[],   # state taken at +12; the run's keys are in web/test/thunder_check.mjs
+                               frames=480, watch=[0x06C0, 0x04A4, 0x0600, 0x0051])
 # s195: group_59 = area 59 slot $16 type $A2 (h0 p=$52 b2=$00, AI $5C 27:B626 AiPatrolGunner, hp $50 atk 0 def 0,
 # elem $0F while patrolling) + type $A0 (p=$50, AI $2A) x3 in $13-$15 and six b2=$C0 p=$51 records $0D-$12;
 # level 16, sword 4, max defences
