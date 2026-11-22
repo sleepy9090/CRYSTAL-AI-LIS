@@ -700,6 +700,14 @@ SCENARIOS['group_28'] = dict(note='area 28: natural spawns (type $64 AI $2A x3 +
                              keys=['51:RIGHT:2', '163:RIGHT:6', '169:B:4', '294:RIGHT:10']
                              + [f'{304 + 12 * i}:B:4' for i in range(16)],
                              frames=480, watch=[0x03C1, 0x03D1, 0x03D2, 0x04B1, 0x04B2, 0x0702])
+# s189: group_7F = area 7F slots $0E/$0F type $84 (h0 p=$34 b2=$80, AI $2E 27:A9B4 = one linked SpawnShot child
+# then AI $2A AiLunger, hp $40 def 6 atk $4E, elem 3 = immune to swords 1 and 2) + slot $10 type $6D (p=$1D,
+# hp $14 def 4 atk $29, elem 2); level 16 + sword 3 (SwordAttackTable[3] = 4), max defences
+SCENARIOS['group_7F'] = dict(note='area 7F: natural spawns (type $84 AI $2E x2 + type $6D), level 16, walk + B',
+                             area='7F', pokes={0x0421: 16, 0x0711: 3, 0x03E1: 16 + 4, 0x03C1: 0x60, 0x0708: 0x60,
+                                               0x0401: 0x40, 0x0400: 0x30},
+                             keys=[],   # state taken at +12; the run's keys are in web/test/group7f_check.mjs
+                             frames=480, watch=[0x03C1, 0x03CE, 0x03CF, 0x03D0, 0x04AE, 0x04AF, 0x04B0, 0x0702])
 
 
 def set_from(dst, src):
