@@ -19,6 +19,7 @@ import { ppuQueueFlush } from './world/ppuqueue.js';
 import { playSound } from './playsound.js';
 import { objPosToTemp } from './obj/util.js';
 import { areaSpawnEntry } from './world/spawn.js';
+import { passLags, startLine, lagDomain } from './lagmodel.js';
 import { introLeftovers, coldSaveInit, bootSaveCheck, copySramBlock } from './boot.js';
 
 export const FRAME_HZ = 60.0988;       // NTSC: 39375000/11/341/262*3 ≈ 60.0988 (odd-frame skip ignored)
@@ -61,13 +62,36 @@ export class Machine {
     this.frame = 0;
     this.romRd = 0;                                  // s211: prg.js cpuRd calls (web/test/pass_count.mjs)
     this.cyc = 0;                                    // s213: exact ROM cycles of modelled code (obj/collide.js)
-    this.passStage = 'top';                         // s211: main-loop stage (states/play.js, pass_count.mjs)
+    // s215: per-stage rd / wr / cpuRd counts (lagCnt) + m.cyc deltas (lagCyc) of the current frame for the lag
+    // model (lagmodel.js; also read by web/test/pass_count.mjs). passStage is an accessor (see below).
+    this.lagModel = true;
+    this.lagCnt = {}; this.lagCyc = {};
+    this._stage = 'top'; this._lb = [0, 0, 0]; this.lagCnt.top = this._lb;
+    this._rom0 = 0; this._cyc0 = 0;
+    this.lagPass = false;                            // s215: a whole SubstPlay pass ran this frame (states/play.js)
+    this.lagLine = 252;                              // s215: start line of the next pass (last NMI's length)
     // PpuQueueFlush 30:C67D (world/ppuqueue.js, s79), called by the NMI at F40A
     this.ppuQueueFlush = ppuQueueFlush;
     // sound (7/8, s56-57): SoundUpdate 31:F7FE + the APU. Register writes take effect at once; the APU is
     // advanced one frame of CPU cycles at the end of runFrame (the driver writes once or twice per frame, so
     // only the phase within the frame differs from hardware).
-    this.soundUpdate = soundUpdate;
+    // s214/s215: SoundUpdate runs as passStage 'snd' (HUD IRQ cost of the lag model)
+    // s215: the HUD IRQ's SoundUpdate (render, stage 'nmi') skips the queued command when every queued entry was
+    // added after tools.emu's L189 IRQ point (m.sndLate, lagmodel.js lateSoundCheck): it starts next frame there
+    this.sndLate = 0;
+    this.soundUpdate = (m) => {
+      const s = this._stage;
+      this.passStage = 'snd';
+      let q0 = -1;
+      if (this.sndLate && s === 'nmi') {
+        const q = this.mem.rd(0x0100);
+        if (q <= this.sndLate) { q0 = q; this.mem.wr(0x0100, 0); }
+        this.sndLate = 0;
+      }
+      soundUpdate(m);
+      if (q0 >= 0) this.mem.wr(0x0100, q0);
+      this.passStage = s;
+    };
     this.apu = new Apu((a) => cpuRd(this, a));
     this.apuWrite = (a, v) => this.apu.write(a, v);
     this.apuRead = (a) => this.apu.read(a);
@@ -90,8 +114,26 @@ export class Machine {
     this.irqHandlers[7] = irqMenuChrSplit;             // 31:F61A (s98)
   }
 
-  rd(a) { return this.mem.rd(a); }
-  wr(a, v) { this.mem.wr(a, v); }
+  rd(a) { this._lb[0]++; return this.mem.rd(a); }
+  wr(a, v) { this._lb[1]++; this.mem.wr(a, v); }
+
+  /** s211 main-loop stage (states/play.js, obj/objects.js); s215: switching it books the cpuRd / m.cyc deltas */
+  get passStage() { return this._stage; }
+  set passStage(s) {
+    this._lb[2] += this.romRd - this._rom0; this._rom0 = this.romRd;
+    this.lagCyc[this._stage] = (this.lagCyc[this._stage] || 0) + this.cyc - this._cyc0; this._cyc0 = this.cyc;
+    this._stage = s;
+    this._lb = this.lagCnt[s] ??= [0, 0, 0];
+  }
+
+  /** s215: clear the per-frame stage buckets (start of runFrame) */
+  _lagBegin() {
+    this.lagCnt = {}; this.lagCyc = {};
+    this._stage = 'top'; this._lb = this.lagCnt.top = [0, 0, 0];
+    this._rom0 = this.romRd; this._cyc0 = this.cyc;
+    this.lagPass = false;
+    this.sndLate = 0;
+  }
 
   /**
    * Reset 31:F2A4, the parts that set state the frame skeleton depends on (REVERSE.md "Boot" +
@@ -169,15 +211,26 @@ export class Machine {
   runFrame(buttons = 0, buttons2 = 0) {
     this.buttons[0] = buttons & 0xFF;
     this.buttons[1] = buttons2 & 0xFF;
+    this._lagBegin();
     mainStep(this);
     this._installSplits();
+    this.passStage = 'nmi';                          // s215: render + IRQ + NMI work (lag model `nmi` bucket)
     this.ppu.renderFrame();
+    // s215 (gap (c2), lagmodel.js): a whole SubstPlay pass whose estimated ROM cycles reach the next NMI is a
+    // CPU overrun like the s114 heuristics: frame_ready stays 1 for this NMI (mainStep cleared it already)
+    if (this.lagModel && this.lagPass && !this.overrunNmi && lagDomain(this) && passLags(this.lagCnt, this.lagCyc, this.lagLine, this.irqSplits)) {
+      this.wr(0x09, 1);
+      this.overrunNmi = true;
+      this.lagFrames = (this.lagFrames || 0) + 1;
+    }
     if (this.skipNmi) this.skipNmi = false;          // s107: NO_NMI (lost NMI, see states/death.js)
     else if (this.hudNmiLost) { this.hudNmiLost = false; nmiLostToHud(this); }   // s174: see irqHud
     else nmiWork(this);
     // s114: CPU overrun. The ROM's frame ran past line 241, so its NMI found frame_ready != 0 (no OAM DMA, no
     // scroll copy, frame_ready 2). Then MainLoop's 30:C919 clears it and waits a whole frame for the next NMI.
     if (this.overrunNmi) { this.overrunNmi = false; this.wr(0x09, 0); }
+    this.passStage = 'nmi';                          // flush the last cpuRd / m.cyc deltas
+    this.lagLine = startLine(this.lagCnt.nmi);       // s215: the next pass starts after this NMI
     this.ppu.latchVert();                            // s125: pre-render vertical copy (see Ppu.latchVert)
     this._cyc3 += FRAME_CYCLES3;
     const n = Math.floor(this._cyc3 / 3);

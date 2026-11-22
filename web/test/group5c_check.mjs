@@ -8,7 +8,9 @@
 // Level 16, sword 4, HP / max HP $C0, max defences `$0401` = $40 / `$0400` = $30.
 //   group_59: `place_player` (880, 846) on the walkway right of the gunner; UP 40, then B 4 every 16.
 //   group_5A: `place_player` (720, 598) (x 656 sits under a dropper); UP 40, then B 4 every 16.
-// **Only the frames before tools.emu's first CPU overrun are compared** (as group81_check.mjs): with the gunner's
+// s215: **the whole refs are compared** (479 rows each, every cell at shift 0 incl. snd): the port's lag model
+// (web/src/game/lagmodel.js) reproduces all 11 / 6 overruns ($5A was in no fit: out-of-sample run). Before s215
+// only the frames before tools.emu's first CPU overrun were compared (as group81_check.mjs): with the gunner's
 // and droppers' shots up to 20 slots are active, ObjUpdateAll takes ~108 lines and ObjCollideAll starts at
 // L226-236, so the NMI finds frame_ready 1 and the next frame has no pass (tools/emu/pass_probe.py: area $59
 // 11 such frames in 480, first f2611; area $5A 6, first f2600; the idle area-$5B run has none, but its gunner
@@ -38,16 +40,19 @@ const fail = (msg) => { fails++; if (verbose || fails <= 30) console.log('  FAIL
 const hx = (v) => '$' + v.toString(16);
 
 const RUNS = [
-  { name: '59', last: 2611, php: [0xA7], attack: 'f2589',
+  // s215: the whole refs with the lag model (web/src/game/lagmodel.js; was to f2611 / f2600, the first lag frames)
+  { name: '59', last: 2985, php: [0xA7, 0x8E, 0x75, 0x5C, 0x43, 0x2A], attack: 'f2589,f2688,f2851,f2917,f2984',
     keys: '2510:UP:40 2550:B:4 2566:B:4 2582:B:4 2598:B:5 2615:B:4 2631:B:4 2647:B:4 2663:B:4 2679:B:3 2695:B:3 '
       + '2711:B:4 2727:B:4 2743:B:3 2758:B:4 2774:B:4 2790:B:4 2806:B:4 2823:B:4 2839:B:4 2855:B:4 2870:B:5 2886:B:4 '
       + '2902:B:4 2918:B:4 2934:B:4 2951:B:4 2967:B:4' },
-  { name: '5a', last: 2600, php: [0x92], attack: 'f2567',
+  { name: '5a', last: 2995, php: [0x92, 0x83, 0x4B], attack: 'f2567,f2633,f2734,f2894,f2958',
     keys: '2520:UP:40 2560:B:4 2576:B:5 2593:B:4 2609:B:4 2625:B:4 2641:B:4 2656:B:5 2673:B:4 2688:B:4 2705:B:3 '
       + '2721:B:4 2737:B:4 2753:B:4 2769:B:4 2785:B:4 2801:B:4 2817:B:4 2833:B:4 2849:B:4 2865:B:4 2881:B:4 2897:B:4 '
       + '2913:B:4 2929:B:3 2944:B:5 2961:B:4 2977:B:4' },
 ];
 const out = [];
+const li = process.argv.indexOf('--last');                   // s215: --last F = compare to F (lag-model study)
+if (li > 0) for (const run of RUNS) { run.last = Number(process.argv[li + 1]) + (run.name === '5a' ? 10 : 0); run.php = run.attack = null; }
 for (const run of RUNS) {
   const state = JSON.parse(readFileSync(path.join(WEB, `test/states/group${run.name}.json`), 'utf8'));
   const [head, ...lines] = readFileSync(path.join(WEB, `test/group${run.name}_ref.csv`), 'utf8').trim().split('\n');
@@ -71,8 +76,8 @@ for (const run of RUNS) {
   }
   if (m.unported.size) fail(`${run.name}: unported: ${[...m.unported].join(', ')}`);
   if (ai !== 0xDC) fail(`${run.name}: slot $16 obj_ai ${hx(ai)}, want $dc (AI $5C active)`);
-  if (php.join() !== run.php.join()) fail(`${run.name}: player HP steps ${php.map(hx)}, want ${run.php.map(hx)}`);
-  if (attack.join() !== run.attack) fail(`${run.name}: attack starts ${attack}, want ${run.attack}`);
+  if (run.php && php.join() !== run.php.join()) fail(`${run.name}: player HP steps ${php.map(hx)}, want ${run.php.map(hx)}`);
+  if (run.php && attack.join() !== run.attack) fail(`${run.name}: attack starts ${attack}, want ${run.attack}`);
   let n = 0;
   for (const l of lines) {
     const w = l.split(',').map(Number), f = w[0], row = rows.get(f);

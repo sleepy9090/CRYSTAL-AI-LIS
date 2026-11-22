@@ -9,7 +9,8 @@
 // Run: DOWN 2, wait, then (DOWN 6, B 4, idle 6) every 16 frames: $0E is hit f2597 / f2862 / f2891 and dies
 // f2923 ($03CE 2 -> $EA, puff AI $7D, slot clear f2975); the player takes 7 hits ($C0 -> $42, contact + shots);
 // the $84 in $10 climbs into reach and takes sword-4 hits too ($40 -> $12, its AI $2E phase 1).
-// **Only f2506-2604 are compared.** This area runs at the frame budget: ObjUpdateAll (2 AI $21, 2 AI $2E, 2 AI-$70
+// s215: **f2506-2923 are compared** (418 rows, incl. 11 tools.emu lag frames: 6 from the lag model, the hit-stop ones
+// ported before); `--last F` compares to F without the HP / kill lists. Before s215 only f2506-2604. The area runs at the frame budget: ObjUpdateAll (2 AI $21, 2 AI $2E, 2 AI-$70
 // phase-12 followers) ~100 lines + ObjSpriteDraw ~65-80 + ObjCollideAll ~60, and CameraTick costs ~50 lines
 // instead of ~11 on a vertical scroll. At f2604 ObjCollideAll starts at L235, the NMI finds frame_ready 1 and
 // f2605 has no pass (tools/emu/pass_probe.py: 18 such frames in the 480). The port has no general cycle model
@@ -37,7 +38,10 @@ const data = await loadData((n) => readFileSync(path.join(WEB, 'data', n)));
 const verbose = process.argv.includes('-v');
 let fails = 0;
 const fail = (msg) => { fails++; if (verbose || fails <= 30) console.log('  FAIL ' + msg); };
-const LAST = 2604;   // f2605 = tools.emu's first lag frame (see above); the ref runs to f2984
+const li = process.argv.indexOf('--last');
+// s215: to f2923 with the lag model (web/src/game/lagmodel.js; was f2604, the first lag frame): f2924 is the first
+// miss, the slot-$0E kill pass f2922 (EnemyKilled hit handler estimated ~450 cycles low); the ref runs to f2984
+const LAST = li > 0 ? Number(process.argv[li + 1]) : 2923;
 const KEYS = parseKeys(('2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:DOWN:7 2592:B:4 2601:DOWN:6 2607:B:5 2618:DOWN:6 '
   + '2624:B:4 2634:DOWN:5 2639:B:4 2650:DOWN:6 2656:B:5 2666:DOWN:6 2672:B:4 2681:DOWN:6 2687:B:5 2698:DOWN:6 '
   + '2704:B:4 2713:DOWN:6 2719:B:5 2729:DOWN:8 2737:B:3 2745:DOWN:7 2752:B:4 2761:DOWN:7 2768:B:4 2777:DOWN:7 '
@@ -45,9 +49,9 @@ const KEYS = parseKeys(('2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:DOWN:7 2592:B:4 2
   + '2864:B:4 2873:DOWN:7 2880:B:4 2889:DOWN:7 2896:B:4 2906:DOWN:5 2911:B:4 2922:DOWN:6 2928:B:4 2937:DOWN:7 '
   + '2944:B:3 2954:DOWN:5 2959:B:4 2970:DOWN:5 2975:B:4').split(' '));
 // to f2604 (the whole tools.emu run: player $AE $9C $8A $78 $66 $54 $42, slot $0E $32 $1A $02 $EA, kill f2923)
-const KILLS = [];                                            // slot AI -> $7D (puff), ref o0E_ai
-const PHP = [0xAE];                                          // player HP $03C1 steps
-const EHP = [0x32];                                          // slot $0E HP $03CE steps
+const KILLS = li > 0 ? [] : [[0x0E, 2923]];                  // slot AI -> $7D (puff), ref o0E_ai
+const PHP = li > 0 ? null : [0xAE, 0x9C, 0x8A, 0x78, 0x66, 0x54, 0x42];   // player HP $03C1 steps
+const EHP = li > 0 ? null : [0x32, 0x1A, 0x02, 0xEA];        // slot $0E HP $03CE steps
 
 const state = JSON.parse(readFileSync(path.join(WEB, 'test/states/group81.json'), 'utf8'));
 const [head, ...lines] = readFileSync(path.join(WEB, 'test/group81_ref.csv'), 'utf8').trim().split('\n');
@@ -73,8 +77,8 @@ while (f0 + m.frame <= LAST) {
 if (m.unported.size) fail(`unported: ${[...m.unported].join(', ')}`);
 if (ais.some((a) => a !== 0x21)) fail(`slots $0D/$0E AI ${ais.map((a) => a.toString(16))}, want $21`);
 for (const [s, want] of KILLS) if (kill.get(s) !== want) fail(`slot $${s.toString(16)} kill f${kill.get(s)}, want f${want}`);
-if (php.join() !== PHP.join()) fail(`player HP steps ${php.map((v) => v.toString(16))}, want ${PHP.map((v) => v.toString(16))}`);
-if (ehp.join() !== EHP.join()) fail(`slot $0E HP steps ${ehp.map((v) => v.toString(16))}, want ${EHP.map((v) => v.toString(16))}`);
+if (PHP && php.join() !== PHP.join()) fail(`player HP steps ${php.map((v) => v.toString(16))}, want ${PHP.map((v) => v.toString(16))}`);
+if (EHP && ehp.join() !== EHP.join()) fail(`slot $0E HP steps ${ehp.map((v) => v.toString(16))}, want ${EHP.map((v) => v.toString(16))}`);
 let n = 0;
 for (const l of lines) {
   const w = l.split(',').map(Number), f = w[0], row = rows.get(f);

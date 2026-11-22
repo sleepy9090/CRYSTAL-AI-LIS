@@ -40,6 +40,7 @@ function unported(m, what) {
 
 /** SubstPlay 30:CB62 */
 function* substPlay(m) {
+  m.lagStart = m.frame;                                 // s215: lag model (lagmodel.js) judges whole passes only
   const y = readPads(m);
   const r = yield* playDeathMenuCheck(m, y);
   if (r === true) return;                               // PLA PLA: the frame ends here
@@ -61,6 +62,7 @@ function* substPlayBody(m, y) {
   m.passStage = 'col';
   yield* objCollideAll(m);                              // CB7E JSR 26:8F6E (s113 obj/collide.js)
   substPlayTail(m);                                     // CB81 JMP 31:E0B8
+  if (m.lagStart === m.frame) m.lagPass = true;
 }
 
 /** PlayDeathMenuCheck 30:CB84. Returns true when it PLAs SubstPlay's return address (the frame ends),

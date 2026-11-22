@@ -6,6 +6,8 @@
 // ids < $20 are music: dropped if equal to snd_cur_music $0102, else $0102 = id. $80-$9F lose b7. When the
 // queue holds 5 entries, an id >= $20 overwrites the last one ($0108) and music is dropped.
 
+import { lateSoundCheck } from './lagmodel.js';
+
 export function playSound(m, id, y = 0) {
   let a = id & 0xFF;
   m.wr(0x010F, y);                                         // C125 STY snd_saved_y
@@ -23,8 +25,10 @@ export function playSound(m, id, y = 0) {
     q = 5;
   }
   m.wr(0x0103 + q, a);                                     // C154
+  const added = q < 5;
   q = (q + 1) & 0xFF;
   if (q === 6) q--;
   m.wr(0x0100, q);
   m.wr(0x0101, 0);                                         // C160
+  if (added) lateSoundCheck(m);                            // s215: queued after tools.emu's HUD IRQ? (lagmodel.js)
 }
