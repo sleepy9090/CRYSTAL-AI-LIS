@@ -1,0 +1,20 @@
+<Project>
+  <!-- shared settings for every ReC project (../CSHARP/docs/architecture_cs.md §1: net10.0, BCL only, 0 warnings) -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- T6 (Win s1): no build-machine paths in the binaries (source paths in PDB / CodeView records) -->
+    <Deterministic>true</Deterministic>
+    <PathMap>$(MSBuildThisFileDirectory)=/_/</PathMap>
+  </PropertyGroup>
+  <!-- `dotnet publish` (global _IsPublishing, also seen by referenced projects): no PDB / debug directory shipped -->
+  <PropertyGroup Condition="'$(_IsPublishing)' == 'true'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+</Project>

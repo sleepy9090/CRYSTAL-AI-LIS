@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- re-c Windows host (architecture_win.md §1 rules 2-3): raw Win32 P/Invoke, single-file self-contained trimmed exe.
+       Publish: dotnet publish src/ReC.Win -c Release -r win-x64 -o dist  → dist/ReC.exe -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <RootNamespace>ReC.Win</RootNamespace>
+    <AssemblyName>ReC</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <SelfContained>true</SelfContained>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <IsAotCompatible>true</IsAotCompatible>
+    <!-- T6: icon (tools/make_icon.py) + version resource -->
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <Product>re-c</Product>
+    <AssemblyTitle>re-c (Windows port)</AssemblyTitle>
+    <Description>re-c — Windows port of the re-c NES reverse-engineering project</Description>
+    <Company>re-c port</Company>
+    <Copyright>personal use build</Copyright>
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <InformationalVersion>1.0.0</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(_IsPublishing)' == 'true'">
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <DebugType>none</DebugType>
+    <DebuggerSupport>false</DebuggerSupport>
+    <EventSourceSupport>false</EventSourceSupport>
+    <StackTraceSupport>true</StackTraceSupport>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../ReC.Core/ReC.Core.csproj" />
+    <!-- the headless runner = ReC.Run's, compiled in (same code under Wine as on Linux) -->
+    <Compile Include="../ReC.Run/Headless.cs" Link="Headless.cs" />
+    <!-- keep every member of the ported core in the exe (architecture §4: every `// js:` member present after
+         trimming; 17 render / test helpers would otherwise be removed); only the framework is trimmed -->
+    <TrimmerRootAssembly Include="ReC.Core" />
+  </ItemGroup>
+</Project>

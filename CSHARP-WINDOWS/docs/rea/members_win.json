@@ -1,0 +1,423 @@
+{
+ "evidence_bundle": {
+  "bytes": 1216848,
+  "path": "./out/rea_members_win.json"
+ },
+ "summary": {
+  "analysis_profile": null,
+  "authority": "shipped-artifact",
+  "caller_input_path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.dll",
+  "confidence": "derived",
+  "environment": null,
+  "evidence_format": 2,
+  "evidence_id": "ev_26022481cbd8b587a8f853157aaa55c0b8f3d25cac35326eb7400dbde074dcbf",
+  "evidence_links": [
+   "ev_047f1254fb076d46532be795d8f1dcc65da119e88d6e801be54492da7baaec67"
+  ],
+  "limitations": [
+   "CIL instruction anchors are decoded from file-backed method bodies only; no target assembly is loaded or executed.",
+   "Exported types are reported from ExportedType rows as declared; forwarded types are not resolved in their implementing assemblies.",
+   "Field constants are file-backed Constant-table declarations, not runtime field values. Parameter and property defaults and enum-name mappings are not decoded.",
+   "Member signatures decode ECMA-335 primitive, class, valuetype, generic instantiation, generic variable, pointer, byref, single-dimension and general array, function pointer including VARARG sentinels, custom modifier, and typed reference forms; type operands keep their encoded TypeDefOrRefOrSpec values and append readable TypeDef/TypeRef names when resolved.",
+   "Metadata tokens are build-local coordinates and are only meaningful with the reported artifact SHA-256 and MVID.",
+   "User strings are the #US literals loaded by ldstr in the inspected method bodies, with their own coverage; instruction anchors and normalized CIL digests keep their build-local tokens."
+  ],
+  "locations": [
+   {
+    "kind": "artifact-path",
+    "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.dll"
+   }
+  ],
+  "normalized_result": {
+   "artifact": {
+    "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.dll",
+    "sha256": "cd1911074f1b81403dc8f8062d14d72d11713ffcb24cbc82a84c6612901a2486"
+   },
+   "coverage": {
+    "examined": 1971,
+    "exhausted": true,
+    "next_offset": null,
+    "status": "complete-within-view",
+    "total": 1971
+   },
+   "kind": "summary",
+   "limitations": [
+    "CIL instruction anchors are decoded from file-backed method bodies only; no target assembly is loaded or executed.",
+    "Exported types are reported from ExportedType rows as declared; forwarded types are not resolved in their implementing assemblies.",
+    "Field constants are file-backed Constant-table declarations, not runtime field values. Parameter and property defaults and enum-name mappings are not decoded.",
+    "Member signatures decode ECMA-335 primitive, class, valuetype, generic instantiation, generic variable, pointer, byref, single-dimension and general array, function pointer including VARARG sentinels, custom modifier, and typed reference forms; type operands keep their encoded TypeDefOrRefOrSpec values and append readable TypeDef/TypeRef names when resolved.",
+    "Metadata tokens are build-local coordinates and are only meaningful with the reported artifact SHA-256 and MVID.",
+    "User strings are the #US literals loaded by ldstr in the inspected method bodies, with their own coverage; instruction anchors and normalized CIL digests keep their build-local tokens."
+   ],
+   "parent_digest": "047f1254fb076d46532be795d8f1dcc65da119e88d6e801be54492da7baaec67",
+   "parent_evidence_id": "ev_047f1254fb076d46532be795d8f1dcc65da119e88d6e801be54492da7baaec67",
+   "parent_operation": "inspect_managed_members",
+   "summary": {
+    "artifact": {
+     "byte_length": 45056,
+     "format": "pe",
+     "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.dll",
+     "sha256": "cd1911074f1b81403dc8f8062d14d72d11713ffcb24cbc82a84c6612901a2486"
+    },
+    "assembly": {
+     "culture": null,
+     "flags": 0,
+     "hash_algorithm": 32772,
+     "name": "ReC",
+     "public_key": {
+      "byte_length": 0,
+      "kind": "none",
+      "sha256": null,
+      "token": null
+     },
+     "row_offset": 23018,
+     "token": "0x20000001",
+     "version": "1.0.0.0"
+    },
+    "coverage": {
+     "issues": [],
+     "state": "complete"
+    },
+    "identity_scope": {
+     "requires_artifact_sha256": "cd1911074f1b81403dc8f8062d14d72d11713ffcb24cbc82a84c6612901a2486",
+     "requires_mvid": "43140697-a487-41c4-bbf0-6bfe0dabdbea",
+     "token_identity": "build-local"
+    },
+    "limitations": [
+     "Metadata tokens are build-local coordinates and are only meaningful with the reported artifact SHA-256 and MVID.",
+     "CIL instruction anchors are decoded from file-backed method bodies only; no target assembly is loaded or executed.",
+     "Field constants are file-backed Constant-table declarations, not runtime field values. Parameter and property defaults and enum-name mappings are not decoded.",
+     "Exported types are reported from ExportedType rows as declared; forwarded types are not resolved in their implementing assemblies.",
+     "User strings are the #US literals loaded by ldstr in the inspected method bodies, with their own coverage; instruction anchors and normalized CIL digests keep their build-local tokens.",
+     "Member signatures decode ECMA-335 primitive, class, valuetype, generic instantiation, generic variable, pointer, byref, single-dimension and general array, function pointer including VARARG sentinels, custom modifier, and typed reference forms; type operands keep their encoded TypeDefOrRefOrSpec values and append readable TypeDef/TypeRef names when resolved."
+    ],
+    "metadata": {
+     "status": "complete",
+     "table_row_counts": {
+      "Assembly": 1,
+      "AssemblyRef": 4,
+      "ClassLayout": 2,
+      "Constant": 1,
+      "CustomAttribute": 235,
+      "Field": 165,
+      "FieldMarshal": 15,
+      "ImplMap": 40,
+      "MemberRef": 214,
+      "MethodDef": 145,
+      "MethodSemantics": 8,
+      "MethodSpec": 23,
+      "Module": 1,
+      "ModuleRef": 4,
+      "NestedClass": 27,
+      "Param": 44,
+      "Property": 5,
+      "PropertyMap": 3,
+      "StandAloneSig": 43,
+      "TypeDef": 39,
+      "TypeRef": 108,
+      "TypeSpec": 31
+     },
+     "version": "v4.0.30319"
+    },
+    "method_rows": {
+     "count": 145,
+     "offset": 0,
+     "total": 145
+    },
+    "module": {
+     "enc_base_id": null,
+     "enc_id": null,
+     "generation": 0,
+     "mvid": "43140697-a487-41c4-bbf0-6bfe0dabdbea",
+     "name": "ReC.dll",
+     "row_offset": 15188,
+     "token": "0x00000001"
+    },
+    "nesting_read": true,
+    "reported_counts": {
+     "call_edges": 717,
+     "exported_types": 0,
+     "field_accesses": 586,
+     "fields": 165,
+     "member_refs": 214,
+     "methods": 145,
+     "types": 39,
+     "unresolved_definitions": 0,
+     "user_strings": 105
+    },
+    "selection": null,
+    "signature_resolution": "type-names-v2",
+    "unresolved_method_names_examined": true,
+    "user_strings": {
+     "issues": [
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30467,
+       "scope": "metadata.#US:0x70000011"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30485,
+       "scope": "metadata.#US:0x70000210"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30503,
+       "scope": "metadata.#US:0x70000222"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30517,
+       "scope": "metadata.#US:0x70000234"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30531,
+       "scope": "metadata.#US:0x70000242"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30545,
+       "scope": "metadata.#US:0x70000250"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30573,
+       "scope": "metadata.#US:0x7000025e"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30589,
+       "scope": "metadata.#US:0x7000027a"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30605,
+       "scope": "metadata.#US:0x7000028a"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30621,
+       "scope": "metadata.#US:0x7000029a"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30643,
+       "scope": "metadata.#US:0x700002aa"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30667,
+       "scope": "metadata.#US:0x700002c0"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30693,
+       "scope": "metadata.#US:0x700002d8"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30719,
+       "scope": "metadata.#US:0x700002f2"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30745,
+       "scope": "metadata.#US:0x7000030c"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30765,
+       "scope": "metadata.#US:0x70000326"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30771,
+       "scope": "metadata.#US:0x7000033a"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30777,
+       "scope": "metadata.#US:0x70000340"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 30829,
+       "scope": "metadata.#US:0x70000366"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 31101,
+       "scope": "metadata.#US:0x70000486"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 31293,
+       "scope": "metadata.#US:0x7000053a"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 31415,
+       "scope": "metadata.#US:0x700005ae"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 31433,
+       "scope": "metadata.#US:0x700005c4"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 31445,
+       "scope": "metadata.#US:0x700005d6"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 31483,
+       "scope": "metadata.#US:0x700005e2"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 32108,
+       "scope": "metadata.#US:0x70000608"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 32579,
+       "scope": "metadata.#US:0x70000879"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 32589,
+       "scope": "metadata.#US:0x70000a50"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 32607,
+       "scope": "metadata.#US:0x70000a5a"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 32727,
+       "scope": "metadata.#US:0x70000a76"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 32819,
+       "scope": "metadata.#US:0x70000b30"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 32833,
+       "scope": "metadata.#US:0x70000b40"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 32847,
+       "scope": "metadata.#US:0x70000b4e"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 32869,
+       "scope": "metadata.#US:0x70000b5c"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 32939,
+       "scope": "metadata.#US:0x70000b82"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 33061,
+       "scope": "metadata.#US:0x70000c16"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 33225,
+       "scope": "metadata.#US:0x70000c92"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 33257,
+       "scope": "metadata.#US:0x70000cd8"
+      }
+     ],
+     "state": "partial"
+    }
+   },
+   "unknowns": [
+    "Collection counts and pages cover producer-returned rows; member completeness remains the original coverage, not an absence claim about unreturned rows.",
+    "Unresolved TypeDef coordinates cover the assembly-wide name scan.",
+    "Unresolved MethodDef coordinates follow the recorded source method interval and any declaring-type selection.",
+    "Metadata tokens are build-local coordinates bound to the recorded artifact SHA-256 and module MVID; this view does not load or execute the assembly."
+   ],
+   "view": {
+    "kind": "summary"
+   },
+   "view_digest": "4762616ed318541e0d1fb01c3ff8e9e9c4ca3c95256256beedc87e47db43d753"
+  },
+  "operation": "inspect_analysis_view",
+  "parameters": {
+   "parent_evidence_id": "ev_047f1254fb076d46532be795d8f1dcc65da119e88d6e801be54492da7baaec67",
+   "view": {
+    "kind": "summary"
+   }
+  },
+  "predicate_type": "rea.analysis-view",
+  "provider": {
+   "id": "rea-analysis-view",
+   "name": "REA analysis view projection",
+   "version": "1"
+  },
+  "raw_result": null,
+  "relationship_coverage": null,
+  "subject": {
+   "identity": {
+    "architecture": "x86_64",
+    "format": "pe",
+    "kind": "file",
+    "selection": null,
+    "sha256": "cd1911074f1b81403dc8f8062d14d72d11713ffcb24cbc82a84c6612901a2486"
+   },
+   "local_path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.dll",
+   "name": "ReC.dll"
+  }
+ }
+}

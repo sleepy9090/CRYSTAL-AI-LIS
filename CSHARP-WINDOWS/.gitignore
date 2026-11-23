@@ -1,0 +1,9 @@
+bin/
+obj/
+dist/
+out/
+.wine/
+re-c.sav
+__pycache__/
+# stray icon preview from the first make_icon.py run (previews now go to out/)
+src/ReC.Win/app_256.png

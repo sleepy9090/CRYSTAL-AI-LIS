@@ -1,0 +1,6 @@
+module,name,reason
+game/obj/sprites.js,rd,"local alias `const rd = (a) => m.rd(a)` in each sprite-pass function (6 copies); the C# calls m.Rd directly (C# s3)"
+game/obj/sprites.js,wr,"local alias `const wr = (a, v) => m.wr(a, v)` in each sprite-pass function (6 copies); the C# calls m.Wr directly (C# s3)"
+main.js,$,"DOM lookup `document.getElementById`; the ReC.Win window has no page elements (Window.Status sets the window title via SetWindowTextW) (Win s1)"
+save.js,toB64,"localStorage only holds strings, so the JS base64-encodes WRAM; ReC.Win's Save.SaveWram writes the 8 KB raw to %APPDATA%\re-c\re-c.sav (Win s1)"
+save.js,fromB64,"inverse of toB64; Save.LoadWram reads the 8 KB file back raw (Win s1)"

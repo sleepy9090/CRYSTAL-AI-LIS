@@ -1,0 +1,245 @@
+{
+ "evidence_bundle": {
+  "bytes": 30668166,
+  "path": "./out/rea_members.json"
+ },
+ "summary": {
+  "analysis_profile": null,
+  "authority": "shipped-artifact",
+  "caller_input_path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll",
+  "confidence": "derived",
+  "environment": null,
+  "evidence_format": 2,
+  "evidence_id": "ev_5b7ff244b6a171b459c47d9abc81902c68120502daf19fd6a23d8f35d32a04ea",
+  "evidence_links": [
+   "ev_3c3a6ac036b557522905e51b7a7c221fdd7bbc883d565efbf6b9b8c5a5044c1e"
+  ],
+  "limitations": [
+   "CIL instruction anchors are decoded from file-backed method bodies only; no target assembly is loaded or executed.",
+   "Exported types are reported from ExportedType rows as declared; forwarded types are not resolved in their implementing assemblies.",
+   "Field constants are file-backed Constant-table declarations, not runtime field values. Parameter and property defaults and enum-name mappings are not decoded.",
+   "Member signatures decode ECMA-335 primitive, class, valuetype, generic instantiation, generic variable, pointer, byref, single-dimension and general array, function pointer including VARARG sentinels, custom modifier, and typed reference forms; type operands keep their encoded TypeDefOrRefOrSpec values and append readable TypeDef/TypeRef names when resolved.",
+   "Metadata tokens are build-local coordinates and are only meaningful with the reported artifact SHA-256 and MVID.",
+   "User strings are the #US literals loaded by ldstr in the inspected method bodies, with their own coverage; instruction anchors and normalized CIL digests keep their build-local tokens."
+  ],
+  "locations": [
+   {
+    "kind": "artifact-path",
+    "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll"
+   }
+  ],
+  "normalized_result": {
+   "artifact": {
+    "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll",
+    "sha256": "9b8e125914e0d2ac9c41ead9c6f37483e6043108b2ef5f8559282907130ca55a"
+   },
+   "coverage": {
+    "examined": 46812,
+    "exhausted": true,
+    "next_offset": null,
+    "status": "complete-within-view",
+    "total": 46812
+   },
+   "kind": "summary",
+   "limitations": [
+    "CIL instruction anchors are decoded from file-backed method bodies only; no target assembly is loaded or executed.",
+    "Exported types are reported from ExportedType rows as declared; forwarded types are not resolved in their implementing assemblies.",
+    "Field constants are file-backed Constant-table declarations, not runtime field values. Parameter and property defaults and enum-name mappings are not decoded.",
+    "Member signatures decode ECMA-335 primitive, class, valuetype, generic instantiation, generic variable, pointer, byref, single-dimension and general array, function pointer including VARARG sentinels, custom modifier, and typed reference forms; type operands keep their encoded TypeDefOrRefOrSpec values and append readable TypeDef/TypeRef names when resolved.",
+    "Metadata tokens are build-local coordinates and are only meaningful with the reported artifact SHA-256 and MVID.",
+    "User strings are the #US literals loaded by ldstr in the inspected method bodies, with their own coverage; instruction anchors and normalized CIL digests keep their build-local tokens."
+   ],
+   "parent_digest": "3c3a6ac036b557522905e51b7a7c221fdd7bbc883d565efbf6b9b8c5a5044c1e",
+   "parent_evidence_id": "ev_3c3a6ac036b557522905e51b7a7c221fdd7bbc883d565efbf6b9b8c5a5044c1e",
+   "parent_operation": "inspect_managed_members",
+   "summary": {
+    "artifact": {
+     "byte_length": 4295168,
+     "format": "pe",
+     "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll",
+     "sha256": "9b8e125914e0d2ac9c41ead9c6f37483e6043108b2ef5f8559282907130ca55a"
+    },
+    "assembly": {
+     "culture": null,
+     "flags": 0,
+     "hash_algorithm": 32772,
+     "name": "ReC.Core",
+     "public_key": {
+      "byte_length": 0,
+      "kind": "none",
+      "sha256": null,
+      "token": null
+     },
+     "row_offset": 4224144,
+     "token": "0x20000001",
+     "version": "1.0.0.0"
+    },
+    "coverage": {
+     "issues": [],
+     "state": "complete"
+    },
+    "identity_scope": {
+     "requires_artifact_sha256": "9b8e125914e0d2ac9c41ead9c6f37483e6043108b2ef5f8559282907130ca55a",
+     "requires_mvid": "92a23f17-41c3-4606-9934-7ee44fce9be9",
+     "token_identity": "build-local"
+    },
+    "limitations": [
+     "Metadata tokens are build-local coordinates and are only meaningful with the reported artifact SHA-256 and MVID.",
+     "CIL instruction anchors are decoded from file-backed method bodies only; no target assembly is loaded or executed.",
+     "Field constants are file-backed Constant-table declarations, not runtime field values. Parameter and property defaults and enum-name mappings are not decoded.",
+     "Exported types are reported from ExportedType rows as declared; forwarded types are not resolved in their implementing assemblies.",
+     "User strings are the #US literals loaded by ldstr in the inspected method bodies, with their own coverage; instruction anchors and normalized CIL digests keep their build-local tokens.",
+     "Member signatures decode ECMA-335 primitive, class, valuetype, generic instantiation, generic variable, pointer, byref, single-dimension and general array, function pointer including VARARG sentinels, custom modifier, and typed reference forms; type operands keep their encoded TypeDefOrRefOrSpec values and append readable TypeDef/TypeRef names when resolved."
+    ],
+    "metadata": {
+     "status": "complete",
+     "table_row_counts": {
+      "Assembly": 1,
+      "AssemblyRef": 4,
+      "ClassLayout": 12,
+      "Constant": 901,
+      "CustomAttribute": 3462,
+      "Field": 3189,
+      "FieldRVA": 74,
+      "GenericParam": 1,
+      "InterfaceImpl": 1262,
+      "ManifestResource": 20,
+      "MemberRef": 330,
+      "MethodDef": 4070,
+      "MethodImpl": 1764,
+      "MethodSemantics": 534,
+      "MethodSpec": 21,
+      "Module": 1,
+      "NestedClass": 340,
+      "Param": 2815,
+      "Property": 527,
+      "PropertyMap": 261,
+      "StandAloneSig": 498,
+      "TypeDef": 415,
+      "TypeRef": 105,
+      "TypeSpec": 81
+     },
+     "version": "v4.0.30319"
+    },
+    "method_rows": {
+     "count": 4070,
+     "offset": 0,
+     "total": 4070
+    },
+    "module": {
+     "enc_base_id": null,
+     "enc_id": null,
+     "generation": 0,
+     "mvid": "92a23f17-41c3-4606-9934-7ee44fce9be9",
+     "name": "ReC.Core.dll",
+     "row_offset": 4064868,
+     "token": "0x00000001"
+    },
+    "nesting_read": true,
+    "reported_counts": {
+     "call_edges": 19447,
+     "exported_types": 0,
+     "field_accesses": 19086,
+     "fields": 3189,
+     "member_refs": 330,
+     "methods": 4070,
+     "types": 415,
+     "unresolved_definitions": 0,
+     "user_strings": 275
+    },
+    "selection": null,
+    "signature_resolution": "type-names-v2",
+    "unresolved_method_names_examined": true,
+    "user_strings": {
+     "issues": [
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 4262930,
+       "scope": "metadata.#US:0x7000012d"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 4263221,
+       "scope": "metadata.#US:0x700001d7"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 4264391,
+       "scope": "metadata.#US:0x700006cc"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 4265795,
+       "scope": "metadata.#US:0x70000bf8"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 4265855,
+       "scope": "metadata.#US:0x70000ca4"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 4266067,
+       "scope": "metadata.#US:0x70000d5e"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 4266077,
+       "scope": "metadata.#US:0x70000d84"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 4267420,
+       "scope": "metadata.#US:0x7000126f"
+      }
+     ],
+     "state": "partial"
+    }
+   },
+   "unknowns": [
+    "Collection counts and pages cover producer-returned rows; member completeness remains the original coverage, not an absence claim about unreturned rows.",
+    "Unresolved TypeDef coordinates cover the assembly-wide name scan.",
+    "Unresolved MethodDef coordinates follow the recorded source method interval and any declaring-type selection.",
+    "Metadata tokens are build-local coordinates bound to the recorded artifact SHA-256 and module MVID; this view does not load or execute the assembly."
+   ],
+   "view": {
+    "kind": "summary"
+   },
+   "view_digest": "9674d7b8f4fa55f2198329c43a49338dfa2acf7da02a871a6d2b90c912171ba7"
+  },
+  "operation": "inspect_analysis_view",
+  "parameters": {
+   "parent_evidence_id": "ev_3c3a6ac036b557522905e51b7a7c221fdd7bbc883d565efbf6b9b8c5a5044c1e",
+   "view": {
+    "kind": "summary"
+   }
+  },
+  "predicate_type": "rea.analysis-view",
+  "provider": {
+   "id": "rea-analysis-view",
+   "name": "REA analysis view projection",
+   "version": "1"
+  },
+  "raw_result": null,
+  "relationship_coverage": null,
+  "subject": {
+   "identity": {
+    "architecture": "x86",
+    "format": "pe",
+    "kind": "file",
+    "selection": null,
+    "sha256": "9b8e125914e0d2ac9c41ead9c6f37483e6043108b2ef5f8559282907130ca55a"
+   },
+   "local_path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll",
+   "name": "ReC.Core.dll"
+  }
+ }
+}

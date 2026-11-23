@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ReC</RootNamespace>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <!-- trim analysis for the single-file exe (architecture_win.md §1 rule 3) -->
+    <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+  <!-- T2 (Win s1): ../web/data embedded (architecture_win.md §1 rule 4). Logical name `re-c.data.<file>`;
+       Data.LoadEmbedded() reads manifest.json and the files it lists (catalog_manifest.json is not one of them). -->
+  <PropertyGroup>
+    <WebDataDir>$(MSBuildThisFileDirectory)../../../web/data/</WebDataDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(WebDataDir)*.bin;$(WebDataDir)*.json" Exclude="$(WebDataDir)catalog_manifest.json"
+                      LogicalName="re-c.data.%(Filename)%(Extension)" Visible="false" />
+  </ItemGroup>
+</Project>

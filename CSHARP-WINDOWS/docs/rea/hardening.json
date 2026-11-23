@@ -1,0 +1,231 @@
+{
+ "analysis_profile": null,
+ "authority": "shipped-artifact",
+ "caller_input_path": "./dist/ReC.exe",
+ "confidence": "observed",
+ "environment": null,
+ "evidence_format": 2,
+ "evidence_id": "ev_e8ee8ef72b8bb30150bc41d4d5c81698264ba9af5807f5370c731e8729c5aa45",
+ "evidence_links": [],
+ "limitations": [
+  "This inspection reads headers, program tables, dynamic symbols, and imports. It does not execute the image or assess exploitability.",
+  "A missing stack-protector or fortify symbol does not establish that the protection is absent.",
+  "An undefined stack-protector or fortify symbol is a sign that some code uses the protection, not proof that all code does.",
+  "Authenticode and Mach-O code-signature rows report table or load-command presence, not signature validity.",
+  "PE control-flow guard state is the GuardFlags linker claim, not a check that CFG checks run.",
+  "Mach-O hardened runtime is not read here. inspect_signature owns CodeDirectory flags."
+ ],
+ "locations": [
+  {
+   "kind": "artifact-path",
+   "path": "./dist/ReC.exe"
+  },
+  {
+   "end": 360,
+   "kind": "file-offset-range",
+   "start": 358
+  },
+  {
+   "end": 360,
+   "kind": "file-offset-range",
+   "start": 358
+  },
+  {
+   "end": 360,
+   "kind": "file-offset-range",
+   "start": 358
+  },
+  {
+   "end": 360,
+   "kind": "file-offset-range",
+   "start": 358
+  },
+  {
+   "end": 360,
+   "kind": "file-offset-range",
+   "start": 358
+  },
+  {
+   "end": 360,
+   "kind": "file-offset-range",
+   "start": 358
+  },
+  {
+   "end": 6769556,
+   "kind": "file-offset-range",
+   "start": 6769552
+  },
+  {
+   "end": 440,
+   "kind": "file-offset-range",
+   "start": 432
+  },
+  {
+   "end": 456,
+   "kind": "file-offset-range",
+   "start": 448
+  }
+ ],
+ "normalized_result": {
+  "artifact": {
+   "bytes": 11582032,
+   "path": "./dist/ReC.exe",
+   "sha256": "40b1d0cb38f38db18be9798bb4a87e0d3540955aab4491d0afab4d2b3fcbfe09"
+  },
+  "format": "pe",
+  "images": [
+   {
+    "architecture": "x86_64",
+    "bits": 64,
+    "byte_order": "little",
+    "format": "pe",
+    "machine": 34404,
+    "reason": null,
+    "rows": [
+     {
+      "basis": "DllCharacteristics bit 0x40 is set.",
+      "confidence": "observed",
+      "location": {
+       "bytes": 2,
+       "offset": 358
+      },
+      "next_probe": null,
+      "note": null,
+      "property": "dynamic_base",
+      "state": "enabled"
+     },
+     {
+      "basis": "DllCharacteristics bit 0x20 is set.",
+      "confidence": "observed",
+      "location": {
+       "bytes": 2,
+       "offset": 358
+      },
+      "next_probe": null,
+      "note": "HIGH_ENTROPY_VA is defined for 64-bit images.",
+      "property": "high_entropy_va",
+      "state": "enabled"
+     },
+     {
+      "basis": "DllCharacteristics bit 0x100 is set.",
+      "confidence": "observed",
+      "location": {
+       "bytes": 2,
+       "offset": 358
+      },
+      "next_probe": null,
+      "note": null,
+      "property": "nx_compat",
+      "state": "enabled"
+     },
+     {
+      "basis": "DllCharacteristics bit 0x80 is clear.",
+      "confidence": "observed",
+      "location": {
+       "bytes": 2,
+       "offset": 358
+      },
+      "next_probe": null,
+      "note": null,
+      "property": "force_integrity",
+      "state": "disabled"
+     },
+     {
+      "basis": "DllCharacteristics bit 0x400 is clear.",
+      "confidence": "observed",
+      "location": {
+       "bytes": 2,
+       "offset": 358
+      },
+      "next_probe": null,
+      "note": null,
+      "property": "no_seh",
+      "state": "disabled"
+     },
+     {
+      "basis": "DllCharacteristics bit 0x4000 is set.",
+      "confidence": "observed",
+      "location": {
+       "bytes": 2,
+       "offset": 358
+      },
+      "next_probe": null,
+      "note": null,
+      "property": "guard_cf",
+      "state": "enabled"
+     },
+     {
+      "basis": "GuardFlags bit IMAGE_GUARD_CF_INSTRUMENTED is set.",
+      "confidence": "observed",
+      "location": {
+       "bytes": 4,
+       "offset": 6769552
+      },
+      "next_probe": null,
+      "note": "IMAGE_GUARD_CF_INSTRUMENTED is a linker claim, not a check that CFG checks run.",
+      "property": "cfg_instrumented",
+      "state": "enabled"
+     },
+     {
+      "basis": "IMAGE_DIRECTORY_ENTRY_SECURITY address and size are zero.",
+      "confidence": "observed",
+      "location": {
+       "bytes": 8,
+       "offset": 432
+      },
+      "next_probe": null,
+      "note": null,
+      "property": "authenticode_present",
+      "state": "disabled"
+     },
+     {
+      "basis": "IMAGE_DIRECTORY_ENTRY_DEBUG address and size are both nonzero. This is presence, not validity.",
+      "confidence": "observed",
+      "location": {
+       "bytes": 8,
+       "offset": 448
+      },
+      "next_probe": null,
+      "note": null,
+      "property": "debug_record_present",
+      "state": "enabled"
+     }
+    ],
+    "slice": null,
+    "status": "parsed"
+   }
+  ],
+  "limitations": [
+   "This inspection reads headers, program tables, dynamic symbols, and imports. It does not execute the image or assess exploitability.",
+   "A missing stack-protector or fortify symbol does not establish that the protection is absent.",
+   "An undefined stack-protector or fortify symbol is a sign that some code uses the protection, not proof that all code does.",
+   "Authenticode and Mach-O code-signature rows report table or load-command presence, not signature validity.",
+   "PE control-flow guard state is the GuardFlags linker claim, not a check that CFG checks run.",
+   "Mach-O hardened runtime is not read here. inspect_signature owns CodeDirectory flags."
+  ]
+ },
+ "operation": "inspect_binary_hardening",
+ "parameters": {
+  "max_file_bytes": 67108864,
+  "path": "./dist/ReC.exe"
+ },
+ "predicate_type": "rea.analysis",
+ "provider": {
+  "id": "rea-binary-hardening",
+  "name": "REA binary hardening parser",
+  "version": "1"
+ },
+ "raw_result": null,
+ "relationship_coverage": null,
+ "subject": {
+  "identity": {
+   "architecture": "x86_64",
+   "format": "pe",
+   "kind": "file",
+   "selection": null,
+   "sha256": "40b1d0cb38f38db18be9798bb4a87e0d3540955aab4491d0afab4d2b3fcbfe09"
+  },
+  "local_path": "./dist/ReC.exe",
+  "name": "ReC.exe"
+ }
+}

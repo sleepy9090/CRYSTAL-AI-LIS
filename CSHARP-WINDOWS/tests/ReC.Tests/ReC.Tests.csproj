@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ReC.Tests</RootNamespace>
+    <!-- linked ReC.Win sources use LibraryImport / pointers (never called on Linux) -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/ReC.Core/ReC.Core.csproj" />
+    <!-- Windows-host pure-logic tests (WinHostTests.cs): ReC.Win sources compiled in, minus Program.cs (Main) -->
+    <Compile Include="../../src/ReC.Win/Win32.cs;../../src/ReC.Win/Pad.cs;../../src/ReC.Win/Save.cs;../../src/ReC.Win/Audio.cs;../../src/ReC.Win/Window.cs"
+             LinkBase="ReC.Win" />
+  </ItemGroup>
+</Project>

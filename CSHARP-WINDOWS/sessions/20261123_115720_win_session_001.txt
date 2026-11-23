@@ -1,0 +1,302 @@
+  ▶ ls -la && ls sessions docs src tools tests 2>&1 | head -80
+  ▶ Read TASKS.md
+  ▶ Read architecture_win.md
+  ▶ Read 20261123_115720_win_session_001.txt
+  ▶ cat .gitignore Directory.Build.props README.md; ls ../CSHARP; ls ../CSHARP/tools; find src tests -name '*.csproj' -o -na
+  ▶ cat .gitignore Directory.Build.props README.md; find src tests -name '*.csproj'
+  ▶ Glob
+  ▶ Read ReC.slnx
+  ▶ Read core_vs_web.py
+Starting T1: fixing the copied tool paths and adding the solution file, then build/tests/parity.
+  ▶ grep -n "ReC.slnx\|cs_vs_web\|architecture_cs\|CSHARP\b\|ReC.Sdl\|Sdl" -r tools src tests Directory.Build.props --includ
+  ▶ sed -n 1,30p tools/gen_cs_data.py; echo ----; sed -n 1,60p tools/apu_wav_compare.py; echo ----; sed -n 1,25p tools/pass_
+Now the edits: solution file plus tool fixes.
+  ▶ Write ReC.Windows.slnx
+  ▶ cat tools/pass_count_diff.py | sed -n 25,110p; grep -n "cs_vs_web\|out/rea_members\|ReC.Sdl\|Sdl" tools/*.py tools/*.mjs
+  ▶ sed -i \
+I'll use Edit instead.
+  ▶ Edit core_vs_web.py
+  ▶ Edit core_vs_web.py
+  ▶ Edit core_vs_web.py
+  ▶ Edit core_vs_web.py
+  ▶ Edit pass_count_diff.py
+  ▶ Edit pass_count_diff.py
+  ▶ Edit pass_count_diff.py
+  ▶ Edit apu_wav_compare.py
+  ▶ Edit check_keys.mjs
+  ▶ Edit gen_cs_data.py
+  ▶ Edit cs_coverage.py
+  ▶ Edit cs_coverage.py
+Now cs_rea_members.py paths, then build.
+  ▶ Read cs_rea_members.py
+  ▶ Edit cs_rea_members.py
+  ▶ Edit cs_rea_members.py
+  ▶ Edit cs_rea_members.py
+  ▶ dotnet build ReC.Windows.slnx -c Release -nologo 2>&1 | tail -8
+Build clean. Running tests and coverage.
+  ▶ timeout 900 dotnet run --project tests/ReC.Tests -c Release 2>&1 | tail -15; python3 tools/cs_coverage.py --quiet 2>&1 |
+Tests 88/88, coverage misses only platform modules (audio/input/main/save — expected until T3-T5). Now the full parity run.
+  ▶ mkdir -p out && python3 tools/core_vs_web.py --no-build --canon --states --checks wake > out/t1_parity.txt 2>&1; echo rc
+  ▶ python3 tools/core_vs_web.py --no-build --canon --states --checks wake > out/t1_parity.txt 2>&1
+  ▶ python3 tools/core_vs_web.py --no-build --canon --states --checks wake 2>&1
+While parity runs, I'll read ahead for T2 (Data.cs loading).
+  ▶ Read Data.cs
+  ▶ cat src/ReC.Core/ReC.Core.csproj src/ReC.Run/ReC.Run.csproj; ls -la ../web/data | head -40; grep -rn "JsonSerializer\|Js
+  ▶ Glob
+  ▶ Read ReC.Core.csproj
+  ▶ Grep
+  ▶ python3 tools/json_peek.py ../web/data/manifest.json files
+  ▶ Read bjxyjmiji.output
+Parity going well. Meanwhile, implementing T2's embedding in the core (doesn't affect the running binaries until rebuild — I'll hold the build until parity finishes).
+  ▶ Read Program.cs
+  ▶ Write ReC.Core.csproj
+Now Data.cs: add `LoadEmbedded` + `EmbeddedNames`.
+  ▶ Edit Data.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+Now the test. Let me see the test harness structure.
+  ▶ Read Program.cs
+  ▶ Edit Program.cs
+  ▶ Read bjxyjmiji.output
+While parity continues, reading the SDL host as reference for T3.
+  ▶ Glob
+  ▶ Read Program.cs
+  ▶ Read Program.cs
+  ▶ Read ReC.Run.csproj
+  ▶ sleep 240; tail -3 /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM-CSHARP-WINDOWS/c3d1140d-9e2f-4d7e-8
+I'll prepare the T3 headless refactor source now (no build until parity finishes).
+  ▶ Read Program.cs
+  ▶ Write Headless.cs
+  ▶ Edit Headless.cs
+  ▶ Write Program.cs
+Now the ReC.Win project skeleton (T3).
+  ▶ Write ReC.Win.csproj
+  ▶ Write app.manifest
+  ▶ Write Win32.cs
+  ▶ Write Program.cs
+  ▶ Read bjxyjmiji.output
+Parity is still running (all ok so far). Writing `tools/win_vs_web.py` meanwhile, reusing core_vs_web's cases and compare logic.
+  ▶ Edit core_vs_web.py
+  ▶ Write win_vs_web.py
+  ▶ ToolSearch
+  ▶ until grep -q "cases identical" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM-CSHARP-WINDOWS/c3d1140
+T1 parity: 156/156 identical. Ticking T1, then building T2/T3 changes.
+  ▶ Edit TASKS.md
+  ▶ Edit ReC.Windows.slnx
+  ▶ dotnet build ReC.Windows.slnx -c Release -nologo 2>&1 | grep -E "error|warn|Warning\(s\)|Error\(s\)" | head -30
+  ▶ timeout 900 dotnet run --project tests/ReC.Tests -c Release --no-build 2>&1 | grep -E "FAIL|embedded|passed"
+Now the trimmed publish (T2's trim-warning criterion and T3's exe).
+  ▶ dotnet publish src/ReC.Win -c Release -r win-x64 -o dist -nologo 2>&1 | grep -vE "^\s*$" | tail -15; ls -la dist
+  ▶ dotnet publish src/ReC.Win -c Release -r win-x64 -o dist -nologo 2>&1 | tail -15; ls -la dist
+11.5 MB exe, no trim warnings. Quick Wine smoke test:
+  ▶ python3 tools/win_vs_web.py --timeout 600 town02_enter canon 2>&1 | tail -5
+Works under Wine. Launching both full suites in the background: core_vs_web (now on embedded data, T2) and win_vs_web (T3).
+  ▶ python3 tools/core_vs_web.py --no-build --canon --states --checks wake 2>&1 | grep -v "^ok"
+  ▶ python3 tools/win_vs_web.py --canon --states wake 2>&1 | grep -v "^ok"
+While those run, starting T4: reading the web platform modules and the SDL host's Input/Save.
+  ▶ Read Save.cs
+  ▶ Read Input.cs
+  ▶ Read main.js
+Now writing T4: extending Win32.cs with the user32/gdi32/winmm imports.
+  ▶ Write Win32.cs
+Save.cs and the keyboard part of Pad.cs:
+  ▶ Write Save.cs
+  ▶ Write Pad.cs
+Now Window.cs (window, message pump, blit, fixed-step loop, script keys):
+  ▶ Write Window.cs
+  ▶ Edit Window.cs
+  ▶ Edit Window.cs
+  ▶ Edit Window.cs
+  ▶ Edit Window.cs
+Now Program.cs window-mode option parsing:
+  ▶ Edit Program.cs
+  ▶ dotnet build src/ReC.Win -c Release -nologo 2>&1 | grep -E "error|warning|Warning\(s\)|Error\(s\)" | sort -u | head -30
+Builds clean. Checking background progress, then a windowed smoke test from the build output (dist stays untouched while win_vs_web runs).
+  ▶ cat /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM-CSHARP-WINDOWS/c3d1140d-9e2f-4d7e-80c6-1300d1ae434
+No failures so far. Windowed smoke test:
+  ▶ mkdir -p out/t4 && B=src/ReC.Win/bin/Release/net10.0-windows/win-x64 && WINEPREFIX=$PWD/.wine WINEDEBUG=-all timeout 300
+  ▶ mkdir -p out/t4 && WINEPREFIX=/home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP-WINDOWS/.wine WINEDEBUG=-all timeo
+I'll put the smoke check into a tool script (`tools/win_smoke.py`), which T4's done-criterion needs anyway.
+  ▶ Write win_smoke.py
+  ▶ python3 tools/win_smoke.py --exe src/ReC.Win/bin/Release/net10.0-windows/win-x64/ReC.exe --canon
+Both window checks pass (smoke PNG = headless; scripted windowed canon CSV = headless). While the suites finish, reading audio for T5.
+  ▶ Read Audio.cs
+  ▶ Read audio.js
+  ▶ until grep -q "cases identical" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM-CSHARP-WINDOWS/c3d1140
+T2's criteria all hold (156/156 on embedded data, `embedded` test, publish with no trim warnings). Ticking T2.
+  ▶ Edit TASKS.md
+  ▶ Grep
+  ▶ Read SoundTests.cs
+  ▶ Grep
+  ▶ Read SoundTests.cs
+  ▶ cat /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM-CSHARP-WINDOWS/c3d1140d-9e2f-4d7e-80c6-1300d1ae434
+The Wine suite is on its last case. Writing T5 now: Audio.cs (winmm waveOut).
+  ▶ Write Audio.cs
+  ▶ Read b5llkh1n3.output
+T3 holds: 89/89 identical running dist/ReC.exe under Wine. Ticking T3.
+  ▶ Edit TASKS.md
+Integrating audio into Window.cs:
+  ▶ Edit Window.cs
+  ▶ Edit Window.cs
+  ▶ Edit Window.cs
+  ▶ Edit Window.cs
+  ▶ Edit Window.cs
+  ▶ Edit Window.cs
+  ▶ Edit Window.cs
+Now the XInput `Pad` class in Pad.cs:
+  ▶ Edit Pad.cs
+Now `--wav` in the exe (WavOut.cs) and the Program hook:
+  ▶ Write WavOut.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ dotnet build ReC.Windows.slnx -c Release -nologo 2>&1 | grep -E "error|warning|Warning\(s\)|Error\(s\)" | sort -u | head
+Adding `--exe` to apu_wav_compare.py:
+  ▶ Read apu_wav_compare.py
+  ▶ Edit apu_wav_compare.py
+  ▶ Read apu_wav_compare.py
+  ▶ Edit apu_wav_compare.py
+  ▶ Edit apu_wav_compare.py
+  ▶ Edit apu_wav_compare.py
+Publishing the new dist exe, then running smoke + canon + wav checks on it.
+  ▶ dotnet publish src/ReC.Win -c Release -r win-x64 -o dist -nologo 2>&1 | grep -iE "warn|error|-> " ; ls -l dist
+  ▶ python3 tools/win_smoke.py --canon -- --scale 2; python3 tools/apu_wav_compare.py --exe 0x05 0x10
+All pass. Let me see the windowed run's own log (audio device, pad, underruns):
+  ▶ WINEPREFIX=/home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP-WINDOWS/.wine WINEDEBUG=-all timeout 120 xvfb-run -a 
+  ▶ Read ReC.Tests.csproj
+  ▶ Read Program.cs
+  ▶ Write WinHostTests.cs
+  ▶ Edit Program.cs
+  ▶ Write ReC.Tests.csproj
+  ▶ dotnet build ReC.Windows.slnx -c Release -nologo 2>&1 | grep -E "error|warning|Warning\(s\)|Error\(s\)" | sort -u | head
+The option fields are only assigned in Program.cs. I'll move parsing into `WindowOptions.Parse` (testable, fixes the warning-as-error).
+  ▶ Edit Window.cs
+  ▶ Read Program.cs
+  ▶ Edit Program.cs
+Add a parse test, then rebuild + tests:
+  ▶ Edit WinHostTests.cs
+  ▶ dotnet build ReC.Windows.slnx -c Release -nologo 2>&1 | grep -E "error|warning|Warning\(s\)|Error\(s\)" | sort -u | head
+That's correct behaviour (the image stays centred; the minimum track size keeps the client ≥ 1x anyway). Fixing the test expectation:
+  ▶ Edit WinHostTests.cs
+  ▶ dotnet build ReC.Windows.slnx -c Release -nologo 2>&1 | grep -E "Warning\(s\)|Error\(s\)" && timeout 900 dotnet run --pr
+Coverage now 100% (0 missing). Republishing dist after the refactor and re-running the T4/T5 checks on it:
+  ▶ dotnet publish src/ReC.Win -c Release -r win-x64 -o dist -nologo 2>&1 | grep -iE "warn|error"; ls -l dist/ReC.exe; sha25
+Now the true "no XInput DLL" case: disabling both DLLs in Wine via `WINEDLLOVERRIDES`:
+  ▶ WINEDLLOVERRIDES="xinput1_4,xinput9_1_0=d" WINEPREFIX=/home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP-WINDOWS/.w
+I'll add a `--no-xinput` switch to win_smoke.py instead.
+  ▶ Edit win_smoke.py
+  ▶ Edit win_smoke.py
+  ▶ Edit win_smoke.py
+  ▶ Edit win_smoke.py
+  ▶ python3 tools/win_smoke.py --no-xinput --verbose --canon && python3 tools/win_smoke.py --verbose --frames 900
+T4 and T5 criteria hold. Recording them in TASKS.md:
+  ▶ Edit TASKS.md
+  ▶ Edit TASKS.md
+Recording deviations in architecture §5 now:
+  ▶ Edit architecture_win.md
+Moving on to T6. First the icon: I'll look at early frames to pick an icon source.
+  ▶ mkdir -p out/icon && src/ReC.Run/bin/Release/net10.0/ReC.Run --frames 1100 --quiet --shots 400,700,1000,1240 out/icon
+  ▶ src/ReC.Run/bin/Release/net10.0/ReC.Run --frames 1100 --quiet --shots 400,700,1000,1240 out/smoke
+  ▶ Read web_1240.png
+  ▶ Read web_0700.png
+  ▶ Read web_1000.png
+I'll use frame 1000's burning-city art (128×128 crop) for the icon. Writing the generator tool:
+  ▶ Write make_icon.py
+  ▶ python3 tools/make_icon.py
+  ▶ Read app_256.png
+Looks good. I'll move the preview out of src/ (it's only for inspection):
+  ▶ Edit make_icon.py
+  ▶ rm src/ReC.Win/app_256.png && python3 tools/make_icon.py
+Can't delete it without approval; I'll gitignore that stray preview instead and regenerate.
+  ▶ Edit .gitignore
+  ▶ python3 tools/make_icon.py
+Wiring icon + version info into the csproj and the window class:
+  ▶ Edit ReC.Win.csproj
+  ▶ Edit Window.cs
+Avoiding build-path leaks (user's home path in PDB references) solution-wide via Directory.Build.props:
+  ▶ Edit ReC.Win.csproj
+  ▶ Write Directory.Build.props
+  ▶ dotnet build ReC.Windows.slnx -c Release -nologo 2>&1 | grep -E "error|Warning\(s\)|Error\(s\)" | sort -u; dotnet publis
+The bundle is compressed, so grep there proves little. Checking the uncompressed trimmed assemblies that went into the bundle:
+  ▶ ls src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ | head; grep -lc "sleepy9090" src/ReC.Win/obj/Release/net10.0
+No build-machine paths in the shipped assemblies. Now the REA report — checking for the `rea` CLI:
+  ▶ which rea && rea --help 2>&1 | head -40
+  ▶ rea inspect-pe-imports --help 2>&1 | head -30; rea inspect-binary-hardening --help 2>&1 | head -20; rea audit-release-ex
+I'll write the report tool to save raw JSON first, then inspect the schemas to build the summary.
+  ▶ Write rea_pe_report.py
+  ▶ Edit rea_pe_report.py
+  ▶ python3 tools/rea_pe_report.py && ls -la docs/rea && python3 tools/json_peek.py docs/rea/pe_imports.json && python3 tool
+Members output looks too small; peeking at it and the other results' normalized parts:
+  ▶ cat docs/rea/members_core.json; echo; python3 tools/json_peek.py docs/rea/pe_resources.json normalized_result; echo; pyt
+Members need `--evidence_output`. Peeking at the resource/exposure fields I need for the summary:
+  ▶ python3 tools/json_peek.py docs/rea/pe_resources.json normalized_result.resources.0; echo; python3 tools/json_peek.py do
+Now the summary/expectation logic of the report tool:
+  ▶ Edit rea_pe_report.py
+  ▶ Edit rea_pe_report.py
+  ▶ Edit rea_pe_report.py
+  ▶ python3 tools/rea_pe_report.py; cat docs/rea/summary.md
+Icon group id is 32512 as Window.cs expects. Checking what the `native.pdb_path` finding actually is:
+  ▶ Grep
+That's Microsoft's CI path baked into the stock .NET single-file host, not ours. Now the tag-vs-trimmed-members check:
+  ▶ python3 tools/cs_rea_members.py 2>&1 | tail -25
+  ▶ Edit ReC.Win.csproj
+  ▶ dotnet publish src/ReC.Win -c Release -r win-x64 -o dist -nologo 2>&1 | grep -iE "warn|error"; ls -l dist/ReC.exe && pyt
+  ▶ Grep
+Evidence files must be fresh; the tool will remove the old ones first:
+  ▶ Edit rea_pe_report.py
+  ▶ python3 tools/rea_pe_report.py && python3 tools/cs_rea_members.py 2>&1 | tail -3
+All 1029 tagged members are present in the trimmed exe now (+25 KB). Launching the final full Wine parity suite on this exe (T6's last criterion):
+  ▶ sha256sum dist/ReC.exe && python3 tools/win_vs_web.py --canon --states --checks wake 2>&1 | grep -v "^ok"
+Meanwhile, the architecture §4 findings:
+  ▶ Edit architecture_win.md
+While the suite runs, T7 prep: platform waivers that mention SDL.
+  ▶ Grep
+  ▶ python3 tools/cs_coverage.py --module main.js; python3 tools/cs_coverage.py --module audio.js; python3 tools/cs_coverage
+  ▶ Read waivers.csv
+Re-reasoning the three platform waivers for ReC.Win:
+  ▶ Edit waivers.csv
+  ▶ python3 tools/cs_coverage.py --quiet | tail -2; echo; git -C .. status --short -- CSHARP-WINDOWS | head -40
+  ▶ python3 tools/cs_coverage.py --quiet
+Now README.md (T7):
+  ▶ Write README.md
+Updating architecture §2 layout to match what was built:
+  ▶ Edit architecture_win.md
+Re-running the window/audio checks on the final exe while the parity suite continues:
+  ▶ python3 tools/win_smoke.py --canon --verbose && python3 tools/apu_wav_compare.py --exe 0x05 0x10
+Rebuild + tests after the props changes:
+  ▶ dotnet build ReC.Windows.slnx -c Release -nologo 2>&1 | grep -E "Warning\(s\)|Error\(s\)" && timeout 900 dotnet run --pr
+  ▶ until grep -q "cases identical" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM-CSHARP-WINDOWS/c3d1140
+156/156 identical on the final exe. For T7's "all checks identical" I'll re-run the Linux core suite once more on the current build (props changed since its last run), and record T6 meanwhile.
+  ▶ python3 tools/core_vs_web.py --no-build --canon --states --checks wake 2>&1 | grep -v "^ok"
+  ▶ Edit TASKS.md
+Checking the committed REA JSON for any remaining home-directory paths:
+  ▶ Grep
+Clean. Checking how re_loop.sh handles commits (so I don't double-commit):
+  ▶ Grep
+The loop script commits after the session, so I won't commit. Waiting for the final core suite:
+  ▶ until grep -q "cases identical" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM-CSHARP-WINDOWS/c3d1140
+All T7 criteria hold. Ticking T7:
+  ▶ Edit TASKS.md
+I finished all seven tasks (T1–T7) in `TASKS.md` this session and ticked them. `dist/ReC.exe` is a working single-file Windows build: 11,582,032 bytes, sha256 `40b1d0cb…fe09`.
+
+**Verification on the final build:**
+- **Web port parity:** the Linux core matches the web port on all 156 cases (canon, every state, every check, wake). `dist/ReC.exe` running headless under Wine matches on the same 156.
+- **Window mode under Wine + Xvfb:** a 600-frame run exits 0, writes the 8 KB save, and its final screen is byte-identical to the headless run. A windowed run driven by scripted key presses (sent through the same window-message path as the keyboard) produces the same CSV as headless.
+- **Audio:** waveOut opens at 44.1 kHz with 0 underruns in the final run (one earlier run had 1). `ReC.exe --wav` output for music `$05` and `$10` is byte-identical to `apu_check.mjs`.
+- **Controller:** with Wine's XInput present or with both XInput DLLs disabled, the game runs keyboard-only without crashing.
+- **Build, tests, coverage:** 0 build warnings, 157/157 tests, and `cs_coverage.py` exits 0 (every web-port function ported or waived with a reason).
+- **REA report** (`docs/rea/summary.md`): only standard system DLL imports; ASLR, DEP and CFG are on; icon, version info and manifest are present; no PDB and no paths from this machine shipped. The two low findings come from .NET's single-file format itself, not from this code.
+
+**What I changed or decided along the way:**
+- **Game data** is embedded in the exe. `--data DIR` still overrides it.
+- **Headless runner:** its code is shared with `ReC.Run`, so the Windows exe runs exactly the same loop as the Linux runner.
+- **When the window opens:** the exe runs headless when given `--headless`, or a test-output option (`--compare`, `--dump-*`, etc.) without `--window`. Otherwise it opens the window, which is what the T4 smoke command needs.
+- **Trimming:** the whole game core is kept, because trimming had removed 17 helper functions the parity tools rely on. This adds about 25 KB.
+- **New tools:** `win_vs_web.py`, `win_smoke.py`, `make_icon.py` (icon from the intro picture at frame 1000), `rea_pe_report.py`, plus a `--exe` option on `apu_wav_compare.py`.
+- All deviations from `../CSHARP` are listed in `docs/architecture_win.md` §5, and README.md now covers build, run, keys, save location, options and checks.
+
+**Still to do / for you:**
+- Nothing tests Esc, window close, fullscreen, a real controller or a real sound device automatically. Those need a play-test on a real Windows PC.
+- A stray preview image, `src/ReC.Win/app_256.png`, is left over because deleting it needed approval. I added it to `.gitignore`, so you can delete it whenever.
+- I didn't commit; `re_loop.sh` commits after the session.
+
+SESSION_SUMMARY: Win s1: T1-T7 all done — single-file dist/ReC.exe (11.6 MB, Win32 window + waveOut + XInput, embedded data, icon/version), 156/156 identical vs web under Wine, smoke/wav/REA checks pass, coverage 100%

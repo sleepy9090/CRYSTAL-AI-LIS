@@ -1,0 +1,454 @@
+{
+ "analysis_profile": null,
+ "authority": "shipped-artifact",
+ "caller_input_path": "./dist/ReC.exe",
+ "confidence": "observed",
+ "environment": null,
+ "evidence_format": 2,
+ "evidence_id": "ev_acb9aaf53137095465e9e32adc4afaae5aa858d7c1e076c26df4e2ed3c43e71d",
+ "evidence_links": [],
+ "limitations": [
+  "This report states what static analysis of the selected artifact recovered. It does not establish that the application is secure.",
+  "Did not examine PE debug records in ReC.Core.dll.",
+  "Did not examine PE debug records in System.Private.CoreLib.dll."
+ ],
+ "locations": [
+  {
+   "kind": "artifact-path",
+   "path": "./dist/ReC.exe"
+  }
+ ],
+ "normalized_result": {
+  "checks": [
+   {
+    "confidence": "observed",
+    "id": "javascript.source_map_sources",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": null,
+    "observation": {
+     "counts": {
+      "embedded": 0,
+      "skipped": 0,
+      "unparsed": 0,
+      "without_sources": 0
+     },
+     "samples": []
+    },
+    "remediation": "Ship the release without sourcesContent. Remove the source maps or omit sourcesContent from maps that ship.",
+    "severity": null,
+    "status": "not_observed"
+   },
+   {
+    "confidence": "observed",
+    "id": "javascript.source_maps",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": null,
+    "observation": {
+     "counts": {
+      "embedded": 0,
+      "skipped": 0,
+      "unparsed": 0,
+      "without_sources": 0
+     },
+     "samples": []
+    },
+    "remediation": "Do not ship source maps beside the release.",
+    "severity": null,
+    "status": "not_observed"
+   },
+   {
+    "confidence": "inferred",
+    "id": "electron.run_as_node",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": "inspect_electron_fuses",
+    "observation": {
+     "counts": {
+      "images": 1,
+      "implications": 0
+     },
+     "samples": []
+    },
+    "remediation": "Set FuseV1Options.RunAsNode to false with @electron/fuses before packaging.",
+    "severity": null,
+    "status": "unknown"
+   },
+   {
+    "confidence": "inferred",
+    "id": "electron.asar_integrity",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": "inspect_electron_fuses",
+    "observation": {
+     "counts": {
+      "images": 1,
+      "implications": 0
+     },
+     "samples": []
+    },
+    "remediation": "Set FuseV1Options.EnableEmbeddedAsarIntegrityValidation to true with @electron/fuses. Electron compiles this check for macOS and Windows; an ELF byte stays unknown.",
+    "severity": null,
+    "status": "unknown"
+   },
+   {
+    "confidence": "inferred",
+    "id": "electron.only_load_from_asar",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": "inspect_electron_fuses",
+    "observation": {
+     "counts": {
+      "images": 1,
+      "implications": 0
+     },
+     "samples": []
+    },
+    "remediation": "Set FuseV1Options.OnlyLoadAppFromAsar to true with @electron/fuses so the packaged app loads application code from app.asar.",
+    "severity": null,
+    "status": "unknown"
+   },
+   {
+    "confidence": "inferred",
+    "id": "electron.node_cli_inspect",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": "inspect_electron_fuses",
+    "observation": {
+     "counts": {
+      "images": 1,
+      "implications": 0
+     },
+     "samples": []
+    },
+    "remediation": "Set FuseV1Options.EnableNodeCliInspectArguments to false with @electron/fuses so the packaged app ignores --inspect.",
+    "severity": null,
+    "status": "unknown"
+   },
+   {
+    "confidence": "observed",
+    "id": "packaging.extractable_payload",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "ReC.Core.dll"
+     },
+     {
+      "kind": "artifact-path",
+      "path": "ReC.deps.json"
+     },
+     {
+      "kind": "artifact-path",
+      "path": "ReC.dll"
+     },
+     {
+      "kind": "artifact-path",
+      "path": "ReC.runtimeconfig.json"
+     },
+     {
+      "kind": "artifact-path",
+      "path": "System.Collections.Immutable.dll"
+     },
+     {
+      "kind": "artifact-path",
+      "path": "System.Collections.dll"
+     },
+     {
+      "kind": "artifact-path",
+      "path": "System.Console.dll"
+     },
+     {
+      "kind": "artifact-path",
+      "path": "System.Diagnostics.StackTrace.dll"
+     }
+    ],
+    "next_probe": "inspect_artifact",
+    "observation": {
+     "counts": {
+      "formats": 1,
+      "readable_members": 18,
+      "unreadable_members": 0
+     },
+     "samples": [
+      "dotnet-bundle",
+      "ReC.Core.dll",
+      "ReC.deps.json",
+      "ReC.dll",
+      "ReC.runtimeconfig.json",
+      "System.Collections.Immutable.dll",
+      "System.Collections.dll",
+      "System.Console.dll"
+     ]
+    },
+    "remediation": "Readable members are part of this package format. Treat packaged sources as public. This check does not rewrite the artifact.",
+    "severity": "low",
+    "status": "exposed"
+   },
+   {
+    "confidence": "observed",
+    "id": "native.debug_companions",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": null,
+    "observation": {
+     "counts": {
+      "companions": 0,
+      "skipped": 0
+     },
+     "samples": []
+    },
+    "remediation": "Do not ship .pdb, .dSYM, .debug, or linker map files beside the release.",
+    "severity": null,
+    "status": "not_observed"
+   },
+   {
+    "confidence": "observed",
+    "id": "native.pdb_path",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": null,
+    "observation": {
+     "counts": {
+      "examined": 15,
+      "failed": 2,
+      "paths": 1
+     },
+     "samples": [
+      "D:\\a\\_work\\1\\s\\src\\runtime\\artifacts\\obj\\coreclr\\windows.x64.Release\\Corehost.Static\\singlefilehost.pdb"
+     ]
+    },
+    "remediation": "Rebuild without a CodeView PDB path, or accept that the path string is recoverable from the PE. The PDB file itself is a separate check.",
+    "severity": "low",
+    "status": "exposed"
+   },
+   {
+    "confidence": "inferred",
+    "id": "go.build_paths",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": "inspect_go_binary",
+    "observation": {
+     "counts": {
+      "images": 1,
+      "paths": 0
+     },
+     "samples": []
+    },
+    "remediation": "Rebuild with -trimpath so file paths are not written into the binary. Module names can remain.",
+    "severity": null,
+    "status": "unknown"
+   },
+   {
+    "confidence": "inferred",
+    "id": "rust.dependency_metadata",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": "inspect_rust_binary",
+    "observation": {
+     "counts": {
+      "images": 1,
+      "packages": 0
+     },
+     "samples": []
+    },
+    "remediation": "Omit cargo-auditable metadata from the release if the crate list should not ship.",
+    "severity": null,
+    "status": "unknown"
+   },
+   {
+    "confidence": "observed",
+    "id": "text.credential_markers",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": null,
+    "observation": {
+     "counts": {
+      "omitted_hits": 0,
+      "scanned_members": 2,
+      "skipped_members": 0
+     },
+     "samples": []
+    },
+    "remediation": "Remove the provider-prefixed credential from the shipped text and rotate it if it is real. This check reports the rule id and location only.",
+    "severity": null,
+    "status": "not_observed"
+   },
+   {
+    "confidence": "inferred",
+    "id": "native.hardening",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": "inspect_binary_hardening",
+    "observation": {
+     "counts": {
+      "assessed": 0
+     },
+     "samples": []
+    },
+    "remediation": "This audit does not assess native hardening. Use inspect_binary_hardening when that tool is available.",
+    "severity": null,
+    "status": "not_assessed"
+   },
+   {
+    "confidence": "inferred",
+    "id": "macho.hardened_runtime",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": "inspect_signature",
+    "observation": {
+     "counts": {
+      "assessed": 0
+     },
+     "samples": []
+    },
+    "remediation": "This audit does not assess the Mach-O hardened runtime. inspect_signature reads code signatures and would change this tool's effects, so it stays a next probe.",
+    "severity": null,
+    "status": "not_assessed"
+   },
+   {
+    "confidence": "inferred",
+    "id": "android.manifest",
+    "locations": [
+     {
+      "kind": "artifact-path",
+      "path": "./dist/ReC.exe"
+     }
+    ],
+    "next_probe": "inspect_android_package",
+    "observation": {
+     "counts": {
+      "assessed": 0
+     },
+     "samples": []
+    },
+    "remediation": "This audit does not read Android manifests. Use inspect_android_package, which needs JADX.",
+    "severity": null,
+    "status": "not_assessed"
+   }
+  ],
+  "coverage": {
+   "allowances": [
+    "Selected file reads stop at 268435456 bytes.",
+    "Text member scans read at most 262144 bytes each and 4194304 bytes in total.",
+    "HTML script targets keep at most 1048576 bytes of resolved paths. Later targets stay unassessed.",
+    "Local source map targets keep at most 1048576 bytes of resolved paths. Later targets stay unassessed.",
+    "Source map scans read at most 32 maps and 1048576 bytes each. sourcesContent text is counted and then dropped.",
+    "Other files and package members are identified from their first 4096 bytes, and those without a NUL byte in that prefix are scanned as text. Up to 64 packaged PE images are read for debug records, 262144 bytes each.",
+    "Packaged ELF, Mach-O, and PE images are read in full and copied to a temporary file to probe for an embedded package. They share one max_file_bytes allowance, and an image that does not fit is not probed.",
+    "Go, Rust, and Electron fuse readers run on at most 4 native images."
+   ],
+   "omitted": [
+    {
+     "count": 16,
+     "reason": "Go, Rust, and Electron fuse readers run on files on disk, not on images stored inside a package.",
+     "subject": "packaged native images"
+    }
+   ]
+  },
+  "limitations": [
+   "This report states what static analysis of the selected artifact recovered. It does not establish that the application is secure.",
+   "Did not examine PE debug records in ReC.Core.dll.",
+   "Did not examine PE debug records in System.Private.CoreLib.dll."
+  ],
+  "summary": {
+   "by_severity": {
+    "high": 0,
+    "info": 0,
+    "low": 2,
+    "medium": 0
+   },
+   "by_status": {
+    "exposed": 2,
+    "not_applicable": 0,
+    "not_assessed": 3,
+    "not_observed": 4,
+    "unknown": 6
+   },
+   "highest_exposed_severity": "low",
+   "no_exposure_observed_in_assessed_checks": false
+  },
+  "target": {
+   "format": "dotnet-bundle",
+   "kind": "executable",
+   "selected_path": "./dist/ReC.exe",
+   "sha256": "40b1d0cb38f38db18be9798bb4a87e0d3540955aab4491d0afab4d2b3fcbfe09"
+  }
+ },
+ "operation": "audit_release_exposure",
+ "parameters": {
+  "max_file_bytes": 268435456,
+  "path": "./dist/ReC.exe"
+ },
+ "predicate_type": "rea.analysis",
+ "provider": {
+  "id": "rea-release-exposure",
+  "name": "REA release exposure audit",
+  "version": "1"
+ },
+ "raw_result": null,
+ "relationship_coverage": null,
+ "subject": {
+  "identity": {
+   "architecture": null,
+   "format": "dotnet-bundle",
+   "kind": "file",
+   "selection": null,
+   "sha256": "40b1d0cb38f38db18be9798bb4a87e0d3540955aab4491d0afab4d2b3fcbfe09"
+  },
+  "local_path": "./dist/ReC.exe",
+  "name": "ReC.exe"
+ }
+}
