@@ -1,0 +1,84 @@
+  ▶ ls -t re_loop_sessions | head -5 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | head -40
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_15[4567].txt && grep -n "\- \[ \]" REVERSE.md | head -20
+  ▶ Read REVERSE.md +2307
+  ▶ Read 20261122_031152_session_156.txt
+  ▶ grep -n "B728\|B807\|AiTalkEventE5\|ABDA\|BossDefeated" REVERSE.md labels.csv | cut -c1-300 | head -30; wc -l web/src/ga
+  ▶ Read REVERSE.md +1028
+I'm on the boss AI port task; this session I'm porting AI `$65` (`AiTalkEventE5`, the area `$43` talk event). Next I'll disassemble it and read the existing port code.
+  ▶ python3 tools/dis.py 15 ABDA 0xA1
+  ▶ grep -n "972D\|^export\|^const BOSS_PHASES\|^function\|BOSS_PHASES\|AI_BOSS" web/src/game/obj/ai_boss.js | head -80; gre
+  ▶ Read ai_boss.js +1
+  ▶ Read ai_boss.js +585
+  ▶ grep -n "const OVERLAY\|^const SUB\|0x41" web/src/game/obj/ai_boss.js | head; sed -n '/^export function spawnShot/,/^}/p
+  ▶ Grep "const OVERLAY|export function spawnShot" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj
+Now writing the port of `$E5`.
+  ▶ Edit ai_boss.js
+  ▶ python3 tools/dis.py 15 A400 0x13 && python3 tools/decode_tables.py 15:A431 8 word 2>&1 | head -12
+  ▶ python3 - <<'EOF'
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+Now the capture side: `BOSS_AIS` and `_fix_boss` in `routine_capture.py`.
+  ▶ Grep "BOSS_AIS|def _fix_boss|BossAiE9|BossAiEA|0x69|0x6A" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/routine_capture.py
+  ▶ Read routine_capture.py +245
+  ▶ Read routine_capture.py +600
+  ▶ Read routine_capture.py +755
+Adding `$E5` to `BOSS_AIS` with a steer block for its edges (anim `$1E`/`$1F`/1, slot 0 y near `$B0`).
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ grep -n "fuzz_boss\|fuzz_update" web/test/obj_frames/README.md; grep -n "BossAiEA" web/test/obj_check.mjs
+  ▶ Read README.md +68
+  ▶ Edit obj_check.mjs
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine BossAiE0,B
+The `fuzz_boss` capture worked, but the `fuzz_update` capture crashed. Looking at the traceback.
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 --routine ObjMoveSli
+  ▶ sed -n 815,830p tools/emu/routine_capture.py; sed -n 875,890p tools/emu/routine_capture.py
+  ▶ sed -n 850,874p tools/emu/routine_capture.py; grep -n "^from\|^import" tools/emu/routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 --routine ObjUpdateA
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 --routine ObjMoveSli
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 --routine ObjMoveSli
+All checks pass: `AiTalkEventE5` 300/300, `ObjUpdateAll` 200/200, and 16900/16900 routine cases overall. Now the docs.
+  ▶ grep -n "Session 156\|s156" REVERSE.md | cut -c1-200; grep -n "BossAiEA\|ai_boss" docs/architecture_web.md | cut -c1-200
+  ▶ Read REVERSE.md +1304
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +197
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2488
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Also fixing the s28 summary line that called the `AC41` call a `26:972D` sound-like call, then README, architecture_web, and labels.
+  ▶ Edit REVERSE.md
+  ▶ Edit README.md
+  ▶ Edit README.md
+  ▶ Read architecture_web.md +227
+  ▶ Edit architecture_web.md
+  ▶ Grep "^15,(ABE4|ABFC|AC0F|AC1A|AC1E|AC31|AC41|AC5B)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +552
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 15 AC41 6 | head -3 && node web/test/obj_check.mjs 2>&1 | tail -1
+I ported boss AI `$65` `AiTalkEventE5` (`15:ABDA`, the area `$43` talk event) to the web port. Its 300 new test cases match the emulator, and so do all 16900 routine cases. `core_check` also passes.
+
+**Port** (`web/src/game/obj/ai_boss.js`): its 8 phase handlers are in the phase dispatch table, and AI id `$65` is in `AI_BOSS`.
+
+**Corrections to the earlier notes** (now in REVERSE.md):
+- The call at `AC41` is `SpawnShot` (shot `$0E`, direction 4).
+- Phase 7 doesn't add 8 to each of the player's two y values. Every frame it takes slot 0's y + 8 and writes that one value into both slots 0 and 1, until it reaches `$B0`. Then it sets `$0640` = `$FF` and goes back to phase 4.
+- Phase 3 only counts `obj_anim` down. Talk acts 26/27 move it to phase 4 or 6.
+
+**Test capture** (`tools/emu/routine_capture.py`):
+- `AiTalkEventE5` is in `BOSS_AIS`, with extra settings so the cases reach the counter edges and the y values near `$B0`.
+- `fuzz_boss.json` and `fuzz_update.json` are recaptured.
+- **Capture fix:** adding `$65` changed which random `ObjUpdateAll` cases get drawn, and one of them sent a different AI into data (`26:8271`), which crashed the emulator. That state can't happen in the real game, so the capture now skips cases that hit an illegal opcode, as it already skipped cases that never return.
+
+**Docs:**
+- **REVERSE.md:** a "Session 157" note in the boss port section, a new Verification Log row, the corrected area `$43` summary, and the task text updated in place.
+- **labels.csv:** 8 new labels for the phase handlers.
+- **Other files:** the regenerate command in `web/test/obj_frames/README.md` and the boss row in `docs/architecture_web.md`.
+
+I didn't commit anything. The boss task stays unchecked because it is a low-priority leftovers task. Still open in its text: `$6C-$6F`, `$62`, `$6B`, death chains, drops, missing ids, scenarios, and `ShowMessage`.
+
+SESSION_SUMMARY: Session 157 ported boss AI $65 AiTalkEventE5 (15:ABDA, 8 phases) to obj/ai_boss.js; its 300 cases and all 16900 routine cases match tools.emu, the capture now skips illegal-opcode fuzz cases, docs and 8 labels were added, and the low-priority boss task stays open for $6C-$6F/$62/$6B and the rest.

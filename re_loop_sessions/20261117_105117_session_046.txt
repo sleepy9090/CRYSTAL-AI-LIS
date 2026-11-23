@@ -1,0 +1,128 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*}
+  ▶ Grep "^- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +1500
+  ▶ Read dead_ends.md
+  ▶ wc -l REVERSE.md && tail -c 3000 re_loop_sessions/20261117_105117_session_046.txt && tail -c 2500 re_loop_sessions/20261
+  ▶ Read REVERSE.md +1600
+  ▶ Read REVERSE.md +1505
+  ▶ Grep "^#{2,4} " REVERSE.md
+  ▶ Grep "MetatileAttr|ObjBgProbe|ExitLookup|AreaEdgeLink|CameraUpdate|CameraClampX|obj_hp|player_hp|DamagePlayer|HitKnockback|obj1_flash|\$0710" REVERSE.md
+  ▶ Read REVERSE.md +840
+  ▶ Read REVERSE.md +1213
+  ▶ python3 tools/dis.py 26 9A30 0x90 && echo ---- && python3 tools/dis.py 26 9947 0x90
+  ▶ python3 tools/dis.py 26 9AB9 0x30 && echo ---- && python3 tools/dis.py 26 99D4 0x60 && python3 tools/dis.py 26 9907 0x40
+  ▶ python3 tools/dis.py 26 9AB9 0x30 && echo ---- && python3 tools/dis.py 26 99D4 0x60
+  ▶ python3 tools/decode_tables.py 26:9907 64 u8 2>&1 | tail -20; python3 tools/xref.py 0069 2>&1 | tail -20
+  ▶ python3 tools/dis.py 31 E6C8 0x30; python3 tools/xref.py 006A 2>&1 | grep -E "STA|STX|STY" 
+  ▶ Grep "`\$69`|\$67/\$69|zp_69|9:A[0-9A-F]00|tile attr|collision attr" REVERSE.md
+  ▶ Grep "def area_bg|v69|'k1'|"k1"|return dict|return \{" tools/render_screen.py
+  ▶ Read render_screen.py
+Collision attributes are a separate 256-byte-per-tileset table in bank 9 (page `$69` from k1), not the palette table `MetatileAttr`. I'll write a dump tool for it.
+  ▶ Write bg_coll_dump.py
+  ▶ python3 tools/bg_coll_dump.py
+  ▶ python3 tools/xref.py 0641 2>&1 | tail -15; python3 tools/search_bytes.py "24 20" 2>&1 | tail -15
+  ▶ python3 tools/dis.py 26 9F40 0x60; echo ----; python3 tools/dis.py 31 F060 0x30; echo ---; python3 tools/dis.py 31 EF68 
+Found two more readers: `31:F06D` (attr b0 on the ground → `sub_state`=1, `area_entry` |= `$60`, which looks like a pit/fall) and `31:EF6F` (b7). Next I'll check the context around both.
+  ▶ python3 tools/dis.py 31 EF50 0x40; echo; python3 tools/dis.py 31 EF8C 0x40
+  ▶ Grep "\| `\$0D` \||\| `\$13` \||equip_armor|equip_shield|\$0716" REVERSE.md
+  ▶ python3 tools/xref.py 0716 2>&1 | tail -12; python3 tools/xref.py EF55 2>&1 | tail -4
+  ▶ python3 tools/dis.py 30 C990 0x14; python3 tools/dis.py 30 C00C 0x40
+  ▶ Grep "\$0D.{0,40}(Ring|Armor|Shield|Boots|Suit|Pendant|Bracelet|item)|item `\$13`|`\$13` [A-Z]" REVERSE.md
+Checkpoint: I'll write the BG collision and hazard findings into REVERSE.md now, then move on to player damage, exits/k5 and the camera.
+  ▶ Read REVERSE.md +938
+  ▶ Edit REVERSE.md
+Next: player damage via hit handler 2 (`26:9357`, enemy touches the player).
+  ▶ python3 tools/dis.py 26 9357 0x160 --stop
+  ▶ python3 tools/dis.py 26 9361 0x15F
+  ▶ python3 tools/dis.py 26 927E 0x41 && echo ---- && python3 tools/dis.py 26 92BF 0x98
+  ▶ Grep "^(32|\$?20)[.:](25|26|27|\$?19|\$?1A|\$?1B)\b" gfx
+  ▶ Grep "pending_msg_group|msg (\d+)\.(\d+)|group.*id" REVERSE.md
+  ▶ python3 tools/dis.py 31 F089 0x20; python3 tools/dis.py 26 8CC0 0x20
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 31 F030 0x36; python3 tools/xref.py F04E 2>&1 | tail -3; python3 tools/dis.py 30 CB5C 0x30
+`31:EF55` is one long per-frame routine running to `F0A3`; it includes HP regen for armor 8 and MP regen. `CB84` is the death check (HP=0 → `sub_state` 3). Next I'll read the middle part.
+  ▶ python3 tools/dis.py 31 EFBC 0x76; python3 tools/dis.py 30 CB90 0x8
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Damage and status are written up. Next: exits (k3), edge links (k5) and the camera. First I'll check what session 8 already documented.
+  ▶ Grep "ExitLookup|AreaEdgeLink|E573|CameraUpdate|E90A|E8F6|CameraClampX" REVERSE.md
+  ▶ sed -n '386,396p' REVERSE.md | cut -c1-1500
+k3 and k5 formats are already documented. What's missing is the link between the pit bit and k5 (`31:E561` tests `$20` b0), and the camera follow rules. Next I'll disassemble both.
+  ▶ python3 tools/dis.py 31 E530 0x50; python3 tools/xref.py E530 2>&1 | tail -3
+  ▶ python3 tools/xref.py E544 2>&1 | tail -4; python3 tools/dis.py 31 E57F 0x95
+  ▶ python3 tools/dis.py 31 E3C4 0x24; python3 tools/decode_tables.py 31:E3D9 8 u16 2>&1 | tail -3; python3 tools/dis.py 26 
+  ▶ python3 tools/decode_tables.py 31:E3D9 8 u16; python3 tools/dis.py 31 E404 0x20
+  ▶ python3 tools/dis.py 31 E8F6 0xC0
+  ▶ python3 tools/dis.py 31 E9B6 0x12A
+Camera follow is decoded: dead zones, a 3 px/frame cap, 1 px re-centring, the clamp ranges and the `$3A`/`$3B` draw offsets. Writing up the exits and camera parts now.
+  ▶ Edit REVERSE.md
+Correcting the session-44 "rising exit" wording in the player constants table:
+  ▶ Edit REVERSE.md
+  ▶ Grep "^(26|31),(9A30|9947|9907|99FF|927E|92BF|9357|9431|943F|8CC0|E3D9|E544|E8F6|E90A|E9AD|EA2F|EF55|EB91|EC87),|^\*,(0716|0714|0713|0541|071A|003A|003B|0641)," labels.csv
+  ▶ Read labels.csv +795
+Now updating the existing label lines and appending the new ones.
+  ▶ sed -n '133p;225p;500p;520p;563p;564p;650p;668p;696p;697p;698p;699p;797p' labels.csv | wc -l
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Before appending, I'll check whether any tool hard-codes the old label names.
+  ▶ Grep "JmpTable31_E3D9|Bank26_8CC0|ram_0713|ram_0714|ram_0716|ram_071A|obj_spawn_b2_s01|obj_act_timer_s01|zp_3A|zp_3B|'CameraUpdate'" tools
+  ▶ cat >> labels.csv <<'EOF'
+Shell redirection needs approval, so I'll append with Edit instead.
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 26 9357 4; python3 tools/dis.py 31 E40F 3
+Commas in the comment field cut off the comment (the CSV parser splits on them). I'll write a small reusable fixer instead of editing each line by hand.
+  ▶ Write labels_fix_commas.py
+  ▶ python3 tools/labels_fix_commas.py --dry
+64 lines are affected, most of them older labels whose comments were also being cut off. Only the comment field changes, so I'll apply it to all of them.
+  ▶ Edit labels_fix_commas.py
+  ▶ python3 tools/labels_fix_commas.py | tail -1 && python3 tools/dis.py 26 9357 2 && python3 tools/labels_fix_commas.py --d
+The comment fix worked. Next I'll check that `disasm_all.py` doesn't depend on the label I renamed.
+  ▶ Grep "E3D9|0xE3D9" tools
+Now updating the cross-references: the k5 row, the `obj_hitflags` row, and the two leftover tasks this session partly answers.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^- \[ \] Ph3 gameplay 2/3" REVERSE.md | cut -c1-60
+Marking the task done and adding the single leftovers task at the end of RE Investigation.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Last step: adding the two new tools to the Intermediate Output Files table.
+  ▶ Edit REVERSE.md
+  ▶ Grep "^#### World interaction|^- \[x\] Ph3 gameplay 2/3|world-interaction leftovers" REVERSE.md
+I finished task **Ph3 gameplay 2/3 (world interaction)** and marked it done. Everything is from reading the disassembly: none of the new rules have been checked in the emulator yet. That check is filed as a low-priority task at the end of the list. Nothing is committed.
+
+**What I found** (new section "World interaction" in REVERSE.md, under Key Findings):
+- **Wall and floor collision uses its own table.** The table session 23 decoded, `MetatileAttr`, only holds tile palettes. Collision comes from a 256-byte page per tileset in bank 9 (`9:B300-BDFF`). Each bit of a tile's byte means one thing:
+  - b0: pit
+  - b1: low obstacle (blocks walking, can be jumped)
+  - b2: wall (blocks even mid-jump)
+  - b3: tile that changes once the screen is visited (opened walls)
+  - b4: drawn in front of sprites
+  - b5: conveyor
+  - b6: sink
+  - b7: damage floor
+
+  The new `tools/bg_coll_dump.py` writes all the pages to `docs/bg_coll.txt`. This also settles an old question: `9:B300-BDFF` is live data, not filler.
+- **Movement blocking** (`26:9947`): each object is tested as an 8×8 box at a few points per direction (table `26:9907`). One quirk: the down-left direction never tests its top-left corner. The player also can't move past fixed screen-edge margins.
+- **Player damage** (`26:9357`): damage = enemy attack − player defence, then 30 frames of flicker invulnerability and knockback.
+  - If defence ≥ attack, or the result is 128 or more, nothing happens except a sound.
+  - Enemy shots can cause paralysis or stone, or transform the player. Touching a poisonous enemy gives a 1-in-16 chance of poison.
+  - The armor and shield can block some of these, and some objects act as platforms that carry the player over pits.
+- **Per-frame status routine** (`31:EF55`): poison and damage floors cost 4 HP; certain items regenerate HP or MP while standing still; pits are detected here; invulnerability counts down. Death (HP 0) is checked at `30:CB84`.
+- **Area entry and pits**: `31:E3D9` is the area-entry jump table, one of the dispatch tables earlier sessions couldn't trace. A pit slides the player down, then uses the k5 link table to load the area below. The player drops in from above, which corrects session 44: `JumpHeightTable` entries `$21-$30` are this fall-in, not a "rising exit".
+- **Camera** (`31:E9AD`, `31:EA72`): dead zones and a maximum speed of 3 px per frame; with no left/right input it drifts back at 1 px per frame. It is clamped to the area edges, with 40 extra lines at the bottom because the HUD covers that part of the view.
+- `$0713`, `$0714` and `$0716` are the equipped armor, shield and accessory.
+
+**Labels:** 15 new and 11 renamed. While adding them I found that a comma in a comment cuts it short when the tools load labels. 64 older labels had lost part of their comment this way. The new `tools/labels_fix_commas.py` fixed them all; only comment text changed.
+
+**Still open:** hit handlers 0 and 3/4 (the player hitting enemies) stay with "gameplay 3/3". Everything else left over is in one new low-priority task at the end of the list: the emulator checks, what level `$11` (no damage) means, the platform and "player held" objects, and a collision overlay for the level renderer.
+
+SESSION_SUMMARY: Session 46 — Ph3 gameplay 2/3 done (static RE): BG collision is a separate per-tileset table (9:B300-BDFF, 8 bits decoded, bg_coll_dump.py), movement probe points, player damage/status effects/invulnerability, per-frame hazard/regen/pit routine, area-entry table + pit → k5 link, camera follow/clamp rules; armor/shield/accessory named; 15 new + 11 renamed labels, 64 cut-short label comments fixed; emulator checks queued as one low-priority task.

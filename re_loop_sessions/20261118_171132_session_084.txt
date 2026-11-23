@@ -1,0 +1,101 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## |^### |^- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +2270
+  ▶ Read 20261118_121114_session_083.txt
+  ▶ Read 20261118_171132_session_084.txt
+  ▶ Read dead_ends.md
+  ▶ Glob ref/trace*
+  ▶ Glob tools/ref/*
+  ▶ Grep "def |argparse|add_argument" tools/compare_ref.py
+  ▶ Read fceux_capture.lua
+  ▶ Grep "def |add_argument|fold" tools/ref/compare_ref.py
+The top task needs an FCEUX rerun, which needs your approval, so I'm doing the parts that don't: the colour-fold flag in `pixel_diff` (b) and the menu/death/save steps in the Lua capture (c).
+  ▶ Read compare_ref.py +1
+  ▶ Edit compare_ref.py
+  ▶ Edit compare_ref.py
+  ▶ Edit compare_ref.py
+  ▶ cp docs/ref_compare.txt /tmp/ref_compare_old.txt; time python3 tools/ref/compare_ref.py --out docs/ref_compare.txt > /de
+  ▶ python3 tools/ref/compare_ref.py --out docs/ref_compare.txt > /dev/null; grep -nE "^==|PIXELS|FOLD|^#" docs/ref_compare.
+  ▶ git diff -U0 docs/ref_compare.txt | head -40; git log --oneline -1 -- docs/ref_compare.txt
+  ▶ Write blank_probe.py
+  ▶ python3 tools/ref/blank_probe.py --frame 2409 --window 5 2>&1 | tee docs/ref_blank_2409.txt
+Running the new blank-frame probe around ref frame 2409.
+  ▶ python3 tools/ref/blank_probe.py --frame 2409 --window 5 > docs/ref_blank_2409.txt 2>&1; cat docs/ref_blank_2409.txt
+  ▶ python3 tools/ref/blank_probe.py --frame 2409 --window 5 2>&1
+Probe done: tools.emu also goes blank from f2409, and the new FOLD flag catches the faded-room frames (d ≤ −1). Next: the §4 steps for the Lua script.
+  ▶ Grep "^## |area1_enter|SELECT|HP poke|death" COMPARISON.md
+  ▶ Read COMPARISON.md +246
+  ▶ Grep "def |'p'|'w'|'s'|split\(|area1_enter|frame_no" tools/emu/probe_screens.py
+  ▶ Read probe_screens.py
+  ▶ Grep "area1_enter" tools/emu
+  ▶ Grep "area1_enter.*(f2450|2450|frame)" REVERSE.md
+  ▶ Edit fceux_capture.lua
+Added the 8 screen scenarios to the Lua capture; now fixing `capture()` to accept names and adding `--screens` to the comparator.
+  ▶ Edit fceux_capture.lua
+  ▶ Edit fceux_capture.lua
+  ▶ which luac luac5.1 luac5.3 luac5.4 lua fceux 2>&1
+  ▶ Edit compare_ref.py
+  ▶ Edit compare_ref.py
+  ▶ mkdir -p build_tmp_s84 && cp gfx/compare/screens/status.png build_tmp_s84/screen_status.png && cp gfx/compare/screens/de
+  ▶ mkdir -p build_tmp_s84 && cp gfx/compare/screens/status.png build_tmp_s84/screen_status.png && cp gfx/compare/screens/de
+  ▶ Edit compare_ref.py
+  ▶ python3 tools/ref/compare_ref.py --screens --tamper; echo "exit $?"; python3 tools/ref/compare_ref.py --screens; echo "e
+Running the `--screens` self-test (each emu screen vs itself and vs a different one).
+  ▶ python3 tools/ref/compare_ref.py --screens --tamper
+  ▶ python3 tools/ref/compare_ref.py --screens
+Works as expected. Now writing the findings to REVERSE.md.
+  ▶ Grep "Reference-compare triage|^\| Tour leftovers|ref f2409|\(h\)" REVERSE.md
+  ▶ Read REVERSE.md +1535
+  ▶ Read REVERSE.md +121
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Checking other callers of `pixel_diff`, since its return value changed.
+  ▶ Grep "pixel_diff\(" tools
+  ▶ Read comparison.py +95
+  ▶ Edit comparison.py
+  ▶ python3 tools/comparison.py --help 2>&1 | head -20
+That `--help` actually regenerated COMPARISON.md (the script has no argparse). Checking what it rewrote.
+  ▶ Grep "sys.argv|def main|def sec_|if __name__" tools/comparison.py
+  ▶ Read comparison.py +546
+`--help` only rebuilt the report from the cached JSON, which is harmless. Now refreshing §1 with the fixed comparator.
+  ▶ python3 tools/comparison.py ref 2>&1 | grep -E "^ref|wrote"
+f2409 now pairs with a blank tools.emu frame, and §1 marks it FIXED (CRITICAL 12 → 11). Checking the §1 wording.
+  ▶ Grep "2409" COMPARISON.md
+  ▶ Grep "blank-ish screen" tools/comparison.py
+  ▶ Read comparison.py +362
+  ▶ Edit comparison.py
+  ▶ python3 tools/comparison.py report
+Now updating the task list: (b) and the script half of (c) are done; the FCEUX-dependent rest goes into one gated task at the end.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Last, registering the new tool in the output-files list.
+  ▶ Grep "drift_probe" REVERSE.md
+  ▶ Edit REVERSE.md
+I picked the top open task, the FCEUX reference-compare leftovers. Launching FCEUX needs your approval, so I did only the parts that don't need a new FCEUX run. The task is marked done, and the rest is queued.
+
+**Ref frame 2409 ("FCEUX blank, tools.emu shows the faded room"): not a real difference.**
+- **Cause:** the colour matcher in `pixel_diff` maps every tools.emu colour onto the reference's single colour, so any picture scores 0 bad pixels against a blank frame. Because of that, session 43's offset search paired the blank frame with a faded-room frame three frames early.
+- **Probe:** the new `tools/ref/blank_probe.py` compares ref f2409 with tools.emu f2404–f2414. tools.emu shows the fading room up to f2408 and is blank from f2409 on. At the measured gameplay offset (+1, or +2 by RAM diffs) both frames are blank.
+- **WRAM differences at that frame:** `$6009-$601F`, `$6120-$612F` and `$6204` are buffers the area load rewrites every frame. The FCEUX values show up in tools.emu one or two frames later, so these are harmless.
+
+**Comparator fixes**
+- `pixel_diff` now reports `FOLD` when one reference colour absorbs 3 or more sizeable tools.emu colours, and such a frame no longer counts as identical. The probe flags f2404–f2408 and nothing from f2409 on.
+- `tools/comparison.py ref` ranks folded offsets last. In COMPARISON.md §1, f2409 moved from CRITICAL to FIXED (CRITICAL count 12 → 11).
+- I reran `compare_ref.py`. The saved `docs/ref_compare.txt` was an old copy from session 41 that predated the 224-row crop fix; it now has real pixel results for all 12 frames.
+
+**Menu/death/save screens in the FCEUX script**
+- `tools/ref/fceux_capture.lua` now saves a state after frame 2450 and replays the 8 menu/death/save scenarios from COMPARISON.md §4, writing `ref/screen_<name>.*`.
+- `compare_ref.py --screens` compares those captures with `gfx/compare/screens/`. Its `--tamper` self-test passes for all 8 screens.
+- The Lua changes haven't run in FCEUX, and there's no Lua compiler installed here, so their syntax isn't checked either.
+
+**Still open**
+A new task at the end of RE Investigation, "Ph6 (low priority) FCEUX rerun", holds the parts that need your approval to launch `/usr/games/fceux` or a real browser:
+- diffing the per-frame lag trace;
+- running `--screens` on real captures;
+- checking `web/catalog.html` in a browser;
+- upgrading the matching sections from "self-emu" to "VERIFIED".
+
+Findings are under "(h)" and "(i)" in REVERSE.md's "Reference-compare triage" section, with a new Verification Log row for session 84.
+
+SESSION_SUMMARY: Session 84: ref f2409 "blank vs faded room" was a comparator artifact (tools.emu is blank too); added a colour-fold flag to the pixel compare (§1 f2409 now FIXED) and the §4 menu/death/save screens to the FCEUX capture script; the FCEUX-dependent rest is queued pending approval.

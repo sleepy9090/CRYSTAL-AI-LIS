@@ -1,0 +1,48 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks\|^### \|- \[ \]" REVERSE.md | h
+  ▶ Read dead_ends.md
+  ▶ tail -c 5000 re_loop_sessions/20261122_031152_session_161.txt; echo ----; tail -c 2500 re_loop_sessions/20261122_031152_
+  ▶ git show HEAD -- web/src tools/keyseq.py tools/emu/lag08_probe.py | head -150; grep -n "Session 161\|s161" REVERSE.md | 
+  ▶ grep -o "web_state_compare.py[^\n]*" re_loop_sessions/20261122_031152_session_161.txt | head -20; grep -n "scenario_stat
+  ▶ Read 20261122_031152_session_161.txt
+  ▶ Read bossflee_check.mjs
+  ▶ cut -d, -f1-7 web/test/bossa6_ref.csv | tail -5; wc -l web/test/bossa6_ref.csv; sed -n 1,60p tools/web_state_compare.py 
+Picking up session 161's unfinished work: verifying the area-`$A6` `BossHookA6` against tools.emu. Re-running the comparison first.
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+The hook frames f2504–2535 match exactly. From f2536 on, the port runs one frame behind (that's the AI `$70` phase-1 lag, a separate issue). Checking that it's a clean 1-frame shift:
+  ▶ python3 tools/compare_frames.py /tmp/a6/emu.csv /tmp/a6/web.csv --frames 2537-2543 --shift 1 2>&1 | tail -8
+  ▶ Read ai_boss.js +845
+Writing `web/test/bossa6_check.mjs`, using bossflee_check as the template:
+  ▶ Write bossa6_check.mjs
+  ▶ node web/test/bossa6_check.mjs; node web/test/bossflee_check.mjs; node web/test/obj_check.mjs 2>&1 | tail -3
+All three pass. Now updating the docs: REVERSE.md (session note, Verification Log, task text), CLAUDE.md, and labels.
+  ▶ grep -n "Session 160\|bossflee_check" REVERSE.md docs/architecture_web.md | cut -c1-200; grep -n "B8FD\|FSD_LAG" labels.
+  ▶ Read REVERSE.md +1318
+  ▶ Read REVERSE.md +200
+Now the REVERSE.md edits:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the task text (it stays unchecked, since it's a low-priority leftovers task):
+  ▶ grep -o "scenario \`final_locked\`), \`fuzz_boss.json\` 3600/3600, see \"Session 156\"…\"Session 160\"[^;]*; still open 
+I'll just make the edits directly from the task text I read earlier.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+Last: the BossHookA6 label comment, then a core regression check.
+  ▶ Edit labels.csv
+  ▶ node web/test/core_check.mjs 2>&1 | tail -3
+  ▶ Read architecture_web.md +228
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+I finished the check that session 161 started before it hit the usage limit: the area-`$A6` boss-defeat hook (`BossHookA6`, `15:B8FD`) in the web port now matches tools.emu.
+
+**Result:** I loaded the `final_locked` state into both tools.emu and the port and ran 40 frames with no input. Frames f2504 through f2535, which cover the hook and the first frames of AI `$70`, are identical in every column with no frame shift. This depends on session 161's fix. The hook redraws the screen right after waiting one frame, so the NMIs land after rows 9, 15, 21 and 27 instead of where the existing `FSD_LAG` timing puts them. The new timing is `FSD_LAG_WF` in `world/bgstream.js`.
+
+**New check:** `web/test/bossa6_check.mjs` compares 31 rows against `bossa6_ref.csv` and requires every cell to match. It also checks that rendering is off from f2505 to f2510 and back on afterwards, and that `irq_mode` ends at 0. It passes, and so do `bossflee_check`, `obj_check` (17500/17500) and `core_check`.
+
+**Still open:** from f2536, when AI `$70` phase 1 starts spawning, the port runs about one frame behind. It isn't a clean one-frame offset: with a shift of 1, a few cells still differ at f2537 and f2541. That falls under the existing CPU-overrun gap (c) in the gameplay-leftovers task, not the hook. `tools/emu/lag08_probe.py` from session 161 shows where the lag frames fall.
+
+**Docs:** I added a "Sessions 161-162" note to REVERSE.md, plus a Verification Log row and an update to the boss task text. The task stays unchecked because it's a low-priority leftovers task. Still open there: bosses `$62` and `$6B`, the death chains and drops, the missing AI ids, the per-enemy-group scenarios, and AI `$70` phase 1's three `ShowMessage` calls. I also added the new check to CLAUDE.md and `docs/architecture_web.md` and updated the `BossHookA6` comment in `labels.csv`. Nothing is committed.
+
+SESSION_SUMMARY: Session 162 finished session 161's interrupted BossHookA6 15:B8FD check: area $A6 matches tools.emu in every cell over f2504-2535 with no shift (FSD_LAG_WF redraw timing), new bossa6_check.mjs + docs/labels updated; the post-hook AI $70 one-frame drift is left under gap (c), and the low-priority boss task stays open.

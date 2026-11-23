@@ -1,0 +1,129 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -4; gr
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/*_18[4-6].txt; tail -c 6000 re_loop_sessions
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "group_40\|group_6B\|def place_player\|def _group" tools/em
+  ▶ Grep "group_40|group_6B|def place_player" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ python3 tools/area_dump.py spawns 7C
+  ▶ Grep "\| `\$29` \|AiTypeW|27:A[0-9A-F]{3}.*\$29|AI `\$29`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/area_dump.py spawns 0x7C
+  ▶ Read scenario.py +240
+  ▶ Read scenario.py +600
+Picking up the next per-group scenario: AI `$29` in area `$7C`. Checking the enemy catalog for its type.
+  ▶ python3 tools/enemy_catalog.py --out /tmp/cat.txt >/dev/null; grep -n "7C" /tmp/cat.txt | head; head -5 /tmp/cat.txt
+  ▶ python3 tools/enemy_catalog.py --out /tmp/cat.txt
+  ▶ Grep "7C|^\s*type|^#" /tmp/cat.txt
+  ▶ Read cat.txt
+  ▶ Read cat.txt +135
+  ▶ Grep "AB9E" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "AB9E" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+AI `$29` is `AiBurrower` (type `$82`, elem 2 → sword 1). Reading its notes, then making the scenario.
+  ▶ sed -n '1166p;1210p' REVERSE.md | cut -c1-1500
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_7C 12 --out web/test/states/group7c.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7c.state --slots 14,0E,16,17 --every 20 --seg NONE:20
+Player spawns ~950 px from the enemy, so I'll use `place_player` near it (as in s186) and probe.
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_7C 12 --out web/test/states/group7c.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7c.state --slots 14 --every 6 --seg NONE:20 UP:16 $(f
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7c.state --slots 14 --every 8 --seg NONE:20 UP:16 B:4
+The player looks stuck at the placed spot (likely inside a wall). Checking the area render to choose an open spot.
+  ▶ Glob gfx/areas/*7C*
+  ▶ Glob gfx/areas/*7[cC]*
+  ▶ ls gfx/areas | head -5; ls gfx/areas | grep -i 7c
+  ▶ Read area_124_coll.png
+  ▶ head -c 1500 gfx/areas/area_124_coll.txt; echo; wc -l gfx/areas/area_124_coll.txt
+  ▶ Grep "^3\." /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/areas/area_124_coll.txt
+Placing the player in screen 4's open pocket (x `$04C0`, y `$0380`) east of the enemy, then probing a walk-left + swings.
+  ▶ sed -i 's/place_player(0x0468, 0x03C0, cam=True)/place_player(0x04C0, 0x0380, cam=True)/' tools/emu/scenario.py && timeo
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_7C 12 --out web/test/states/group7c.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7c.state --slots 14 --every 8 --seg NONE:20 LEFT:30 B
+The player took two `$44`-attack hits (HP `$60`→`$19`→0) and the swings never landed. Checking the player defense RAM — the pokes skip `StatRecalc`, so defense is likely still level 1.
+  ▶ Grep "\$03E1|\$03F1|player defen[cs]e" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "StatRecalc" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 30 C008 80 --stop
+  ▶ python3 tools/decode_tables.py 26:8BC0 27 u8
+Max reachable defense is level 16×2 + best shield `$20` = `$40`, so I'll poke `$0400 = $40` (a legal stat) and stop the walk farther from the enemy.
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_7C 12 --out web/test/states/group7c.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7c.state --slots 14 --every 6 --seg NONE:20 LEFT:14 B
+Defense works (shot hit = 4 dmg at f2748). Swings at 12 px never land — the burrower is probably only hittable while surfaced. Checking the AI code.
+  ▶ python3 tools/dis.py 27 AB9E 80
+  ▶ Grep "group `\$40`|group `\$10`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "obj_coll.{0,40}(high nibble|groups?|bits)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '1916p' REVERSE.md | cut -c1-2500
+The enemy surfaces (coll `$11`) only around its shot; the y offset (848 vs ~860) may also make swings miss. Trying a lower stance and continuous swings.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7c.state --slots 14 --every 6 --seg NONE:20 LEFT:14 D
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7c.state --slots 14 --every 12 --seg NONE:20 LEFT:14 
+A contact hit at f2602 did `$43` (defense apparently not applied to contact), and swings at 10 px still never hit. Checking what the sword-hit path requires (type's `hitf` = `$8B`, `ed` = `$82`).
+  ▶ Grep "hitf(lags)?.{0,80}bit ?7|hitflags.{0,60}\$80|HitBySword" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "HitHandler|SwordElemBit|HitBySword" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 26 90AA 70
+  ▶ python3 tools/dis.py 26 90F1 90
+  ▶ python3 tools/decode_tables.py 26:96F1 60 u8 && python3 tools/xref.py 96F1
+  ▶ python3 tools/dis.py 26 8F00 0xBB
+  ▶ python3 tools/dis.py 26 95F8 0x60
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group7c.state --frames 480 --watch 03B4,03D4,03C1 --keys 
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group7c.state --frames 480 --watch 03B4,03D4,03C1 --keys 
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group7c.state --frames 480 --watch 03B4,03D4,03C1 --keys 
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group7c.state --frames 480 --watch 03B4 --keys 2525:LEFT:
+Surfaced (`$11`) from f2789 while it sits at x≈1108, y≈842. Finding where the window ends.
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group7c.state --frames 480 --watch 03B4 --keys 2525:LEFT:
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_7C 12 --out web/test/states/group7c.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7c.state --slots 14 --every 12 --seg NONE:20 LEFT:14 
+Swings don't affect its path; it surfaces f2789-2909 at (1108,842). Plan: idle, then at ~f2752 walk up+left to x≈1134 and swing through the window.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7c.state --slots 14 --every 4 --seg NONE:20 LEFT:14 D
+Five sword hits (16 each) kill it at ~f2848 → puff AI `$7D`, no drop. Verifying the mapped keys (probe frame − 1) in plain tools.emu, watching the enemy HP `$03D4`.
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group7c.state --frames 480 --watch 03D4 --keys 2525:LEFT:
+Kill at f2847 (5 hits of 10). Now the port key frames from the pad writes (`$43`).
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group7c.state --frames 480 --watch 0043 --keys 2525:LEFT:
+  ▶ Read group40_check.mjs
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/group7c.state --web web/test/states/group7c.json
+The diffs are expected (that run feeds emu key frames to the port). Trimming the ref and writing the check.
+  ▶ python3 tools/csv_trim.py gfx/group7c/emu.csv web/test/group7c_ref.csv --frames 2506-2985 && wc -l web/test/group7c_ref.
+Ref has 479 rows (f2506-2984); slot `$14` AI → `$7D` at f2848. Writing the check.
+  ▶ Write group7c_check.mjs
+  ▶ node web/test/group7c_check.mjs 2>&1 | tail -35
+All 479 rows match; only my kill-frame constant was off (f2847, the ref's odd row I skipped with step 2). Fixing it.
+  ▶ python3 tools/csv_cols.py web/test/group7c_ref.csv web/test/group7c_ref.csv o14_ai,o14_x 2845-2849 2>&1 | head; python3 
+  ▶ sed -i 's/^const KILL = 2848; /const KILL = 2847; /; s/puff AI \$7D at f2848/puff AI $7D in the same frame/' web/test/gr
+  ▶ Edit group7c_check.mjs
+  ▶ Edit group7c_check.mjs
+  ▶ node web/test/group7c_check.mjs
+Check passes: 479/479 rows at shift 0 incl. sound. Starting the full suite in the background while I update the docs.
+  ▶ timeout 3000 python3 tools/run_checks.py 2>&1 | tail -45
+  ▶ Grep "^\| Area-`\$40` enemy group" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +216
+  ▶ Edit REVERSE.md
+Now the task note and the remaining-AI list in Next Tasks.
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+Checking whether `$0401` (body defence) is labelled.
+  ▶ Grep "^\*,040[01]," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+Docs done; waiting for the full suite to finish.
+  ▶ ToolSearch max_results query
+  ▶ Read bk0fcsgf8.output
+The full check suite is still running in the background (its output goes through `tail`, so nothing shows until it finishes). I'll report the result when it completes.
+  ▶ Read bk0fcsgf8.output
+I checked area `$7C`'s enemy group (AI `$29`, `AiBurrower`, enemy type `$82`) against tools.emu. The web port matches it without any code changes: the new `web/test/group7c_check.mjs` passes all 479 rows (f2506-2984) at shift 0, sound included, with no cells excused.
+
+**Setup.** The player enters about 950 px from the enemy. As in s186, the new `group_7C` scenario uses `place_player` to put them in the enemy's pocket on screen (4,3). My first spot turned out to be inside a wall, so I picked the second one from `area_124_coll.txt`. The scenario uses sword 1, because the enemy's element 2 blocks sword 2.
+
+**What the run showed:**
+- **Defence pokes are needed.** The enemy's contact hits ignore `$0400`. They use the body defence `$0401` (`StatRecalc`: level plus the armour table). With the level-1 values, each contact hit with attack `$44` did `$43`, and two of them killed the player. The scenario now pokes `$0401 = $40` and `$0400 = $30`. Both values are reachable in the game (level 16, best armour and shield, accessory `$10`), and a contact hit now does 4. I added `$0401` to `labels.csv`.
+- **The burrower can only be hit while it is above ground.** While it walks underground (`obj_coll` = `$41`), it can still touch the player, but no sword swing hits it, even when the two overlap. It can only be hit while surfaced (`obj_coll` = `$11`), which happened from f2789 to f2909.
+- **The scripted run:** a contact hit at f2602, then the player walks up to the enemy and swings during that window. Four sword hits take its HP 46 → 36 → 26 → 16 → 6, and the fifth kills it at f2847. It leaves a death puff and drops nothing. None of the burrower's shots hit the player in this run.
+
+**Full suite:** 39 of 40 checks pass. The one failure is `world_check` on areas `$3C`, `$3D` and `$BC`, which is the known gap (j).
+
+**Docs:**
+- REVERSE.md has a new Verification Log row ("Area-`$7C` enemy group, AI `$29` `AiBurrower`").
+- The task has an s187 note, and `$29` is struck from its list of remaining AIs. The task stays open because it is the low-priority leftovers task.
+- CLAUDE.md lists the new check.
+
+New files are `web/test/group7c_check.mjs`, `web/test/group7c_ref.csv`, `web/test/states/group7c.json` and `tools/emu/states/group7c.state`. Nothing is committed.
+
+SESSION_SUMMARY: Session 187 checked area $7C's enemy group (AI $29 AiBurrower, type $82, sword 1) with the new group_7C scenario, which places the player near the enemy and pokes legal max defences $0401/$0400; the burrower can only be hit while surfaced (obj_coll $11). web/test/group7c_check.mjs: 479/479 rows equal at shift 0 including sound (4 hits, kill at f2847, contact hit at f2602), no port change; 39/40 checks pass (world_check is the known gap (j)).

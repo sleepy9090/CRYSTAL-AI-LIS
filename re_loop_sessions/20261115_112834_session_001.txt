@@ -1,0 +1,59 @@
+  ▶ Read dead_ends.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## |^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md
+  ▶ Read 20261115_112834_session_001.txt
+  ▶ python3 tools/dis.py 30 C40E 48 && python3 tools/search_bytes.py "A9 ?? 20 0E C4" --max 100
+  ▶ Read nesrom.py
+Now a tool to map each `LDA #n / JSR SwitchBank16` site to n and the swapped-bank targets called afterward.
+  ▶ Write bank_calls.py
+  ▶ sed -n '1,0p' /dev/null; python3 - <<'EOF' 2>/dev/null || true
+  ▶ Grep "^[A-Z_]+ =|^def " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/instruction_set.py
+Use the real opcode table instead of my hand-rolled sizes.
+  ▶ python3 - < /dev/null; true
+  ▶ Edit bank_calls.py
+  ▶ Edit bank_calls.py
+  ▶ python3 tools/bank_calls.py --summary
+  ▶ python3 tools/bank_calls.py --summary
+  ▶ python3 tools/search_bytes.py "A9 ?? 20 0E C4" --disasm --context 14 --max 100
+  ▶ python3 tools/xref.py C40E && python3 tools/xref.py C427 && python3 tools/dis.py 31 FF80 0x80
+  ▶ python3 tools/dis.py 28 8000 0x20 && python3 tools/dis.py 26 8C3D 0x20 && python3 tools/dis.py 26 8CC0 0x18 && python3 t
+Mapped all 48 bank-switch call sites; now writing the findings to REVERSE.md and labels.csv.
+  ▶ Grep "6E|6F|C40E|C427|C418|FFDB|F320" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Now REVERSE.md: fix the boot step (reset uses n=$0C → banks 24/25, not 12/13) and add the bank map.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Quick check of the 4 non-immediate sites and the C7DA start address before closing.
+  ▶ python3 tools/dis.py 30 C7D4 0x10 && python3 tools/dis.py 30 CAD0 0xB && python3 tools/dis.py 30 DA66 0xC && python3 too
+  ▶ python3 tools/search_bytes.py "BD 2E CB" --context 24 --max 3 && python3 tools/dis.py 30 CB2E 0x18
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I finished the bank-switching task and wrote everything to REVERSE.md and labels.csv. One new tool, `tools/bank_calls.py`, has never been run: its run command needed your approval. I got the same results with `search_bytes.py --disasm` instead, so the tool is untested.
+
+**Bank-switch routines (confirmed):**
+- `30:C427` SetR7 sets the bank at `$A000` and keeps a copy in `$6F`.
+- `30:C418` is a second setter I hadn't labelled. SetR6 sets the bank at `$8000` and keeps a copy in `$6E`.
+- `SwitchBank16` calls `SetR7(2n+1)`, then runs straight into the SetR6 code with `2n`. Some code swaps just one 8KB bank: bank 26 alone at `$8000`, bank 23 alone at `$A000`, and banks 26/27 change their own `$A000` bank.
+
+**Correction:** the reset routine maps 16KB pair 12 (8KB banks 24/25), not banks 12/13 as the notes said before. The value at `31:F320` is `$0C`. I fixed the boot steps.
+
+**Bank-saving call helpers (`31:FF80-FFE2`):** six small routines save the current two banks, map a bank, call a routine, then restore both banks through `31:FFDB` RestoreBanks.
+
+**Which code uses which banks:** I checked all 48 places that call `SwitchBank16` and put the full table in Key Findings. The main points:
+- Banks 26/27 are used most, mainly for fades and per-player (X=0/1) routines.
+- Banks 18/19 hold main states 2 and 3, the cold-boot init, and a shared routine at `$BA65`.
+- Banks 16/17 hold main states 4 and 5.
+- Banks 14/15 hold object logic, and code returns to banks 12/13 afterwards.
+- Banks 28/29 have a routine at `$800E` that runs every frame. It's a candidate for the sound driver.
+- Banks 0-7 are only reached through packed pointers decoded at `31:EF38`: the top 2 bits of the high byte pick the 16KB pair. That explains why banks 2/3 and 6/7 never show up in a direct call.
+- State 1 (`CAB6`) picks a handler from `30:CADE` and a bank from `30:CB2E`, using the sub-state in `$41`.
+- No path I found maps banks 22/23 as a pair.
+
+I added three follow-up tasks: identify the sound driver, decode the state-1 sub-state tables, and trace the packed-pointer decoder at `EF38`.
+
+SESSION_SUMMARY: Confirmed SetR6/SetR7 and the six bank-saving call helpers; mapped all 48 SwitchBank16 calls to bank pairs and subsystems; fixed the reset bank (24/25, not 12/13); found bank selection via packed pointers (EF38) and a state-1 bank table (CB2E); added 3 follow-up tasks.

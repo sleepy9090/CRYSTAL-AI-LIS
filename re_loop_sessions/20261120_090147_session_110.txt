@@ -1,0 +1,136 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; gr
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions; wc -c 20261120_061816_session_10[789].txt 20261120
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; git status --short | head; git show --stat HEAD | head -30; ls web/
+  ▶ git -C /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM status --short | head; git -C /home/sleepy9090/Downloads/nes-por
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ git status --short
+Recent sessions reviewed; I'm taking the top task (gameplay frames, starting with SubstPlay `30:CB62`). Checking the current web state first.
+  ▶ ls web/src/game web/src/game/*/; grep -rn "CB62\|SubstPlay\|substPlay" web/src --include=*.js | head -20
+  ▶ Read play.js
+  ▶ python3 tools/dis.py 30 CB62 0x60; echo ----; python3 tools/dis.py 31 EF55 0x80 --stop; echo ----; python3 tools/dis.py 
+  ▶ grep -n "^export" web/src/game/obj/*.js web/src/game/world/camera.js web/src/game/pads.js web/src/game/states/pause.js w
+  ▶ Read objects.js
+  ▶ Read sprites.js
+  ▶ grep -n "PlayerStatusTick\|ObjCollideAll\|BgChrAnimTick\|SubstPlayTail\|PlayerMove\b\|PlayerUpdate" REVERSE.md | cut -c1
+  ▶ Read REVERSE.md +1395
+Docs for PlayerStatusTick are in hand; now disassembling the rest of it and the tail routines so I can port SubstPlay's frame skeleton.
+  ▶ python3 tools/dis.py 31 EFD5 0xD0; echo ----; python3 tools/dis.py 31 E0D8 0x60 --stop; echo ----; python3 tools/dis.py 
+  ▶ python3 tools/dis.py 31 E11E 0x98; echo ----; python3 tools/dis.py 31 E3D4 8; grep -n "AreaSpawnEntry\|E12B\|spawnEntry"
+  ▶ Read area.js
+  ▶ Read machine.js
+  ▶ grep -n "spawns\|skip\|respawn" tools/gen_web_data.py | head -20
+  ▶ Read gen_web_data.py +120
+  ▶ grep -n "'skip'\|def decode\|b2 =\|prm =\|ents.append" tools/area_dump.py | head; grep -n "export function cpuRd" -A15 w
+Still porting: I've got the ROM detail for SubstPlay, PlayerStatusTick, the respawn tail and BgChrAnimTick; writing them into `states/play.js` now.
+  ▶ Read area_dump.py +60
+  ▶ python3 tools/dis.py 30 CBC1 0x30 --stop; grep -rn "9AE8\|spendMp\|8C0E\|paletteBuild\b\|8E46\|8CC0" web/src/game --incl
+  ▶ python3 tools/dis.py 30 CBEC 0x40 --stop; python3 tools/dis.py 26 9AE8 0x30 --stop; grep -n "zp_4C\|^\*,4C\|^\*,43" labe
+  ▶ python3 tools/dis.py 26 9AFE 0x18 --stop; python3 tools/dis.py 30 CBFC 0x40 --stop | head -40; grep -n "SubstDebugPause\
+  ▶ python3 tools/dis.py 26 9AFE 0x18 --stop; python3 tools/dis.py 30 CBFC 0x40 --stop
+  ▶ Grep "SubstDebugPause|debug area cycler" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read death.js
+  ▶ Read pads.js
+  ▶ python3 tools/dis.py 26 8C0E 0x60 --stop; python3 tools/dis.py 31 FEC8 0x18 --stop
+  ▶ python3 tools/dis.py 26 8D10 0x40 --stop
+  ▶ python3 tools/dis.py 26 8CF8 0x52
+  ▶ grep -n "export function playSound" -B6 -A12 web/src/game/playsound.js; python3 tools/dis.py 31 FE80 0x48 --stop
+  ▶ Read pause.js +110
+  ▶ Read camera.js
+  ▶ Edit pads.js
+  ▶ Edit pads.js
+  ▶ grep -n "area_id\|sub_state\|pad_new\|pad_act\|pad_dir\|pad_prev\|irq_mode\|frame_ready" web/src/game/ram.js | head; gre
+Now writing the SubstPlay port into `play.js`.
+  ▶ Write play.js
+  ▶ grep -n "area_entry" web/src/game/ram.js
+  ▶ Edit play.js
+  ▶ Edit pause.js
+  ▶ sed -i 's/R\.area_entry/0x6D/g' web/src/game/states/play.js; grep -n "0x6D" web/src/game/states/play.js; sed -n '1,12p' 
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Read pause.js
+  ▶ Edit pause.js
+  ▶ for t in core_check serve_check ppu_check sprite_check obj_check; do echo "== $t"; node web/test/$t.mjs 2>&1 | tail -2; 
+  ▶ node web/test/core_check.mjs 2>&1 | tail -2; node web/test/serve_check.mjs 2>&1 | tail -2; node web/test/ppu_check.mjs 2
+Checks pass. Now comparing gameplay frames past the first SubstPlay frame against tools.emu (new-game path, as in s108).
+  ▶ grep -n "2301\|canonical\|f2321\|--keys" REVERSE.md | grep -i "s108\|new game" | cut -c1-400 | head -5
+  ▶ Read REVERSE.md +161
+  ▶ python3 -m tools.emu --frames 2461 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --compare 
+  ▶ mkdir -p gfx/compare/s110 && python3 -m tools.emu --frames 2461 --keys 1250:START 1400:START 1600:START 1700:START 2300:
+  ▶ python3 -m tools.emu --frames 2461 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --compare 
+  ▶ node web/test/run.mjs --frames 2247 --keys 1250:START 1400:START 1600:START 1700:START 2301:START 2340:DOWN:80 --compare
+SubstPlay now runs every frame in the port; diffing against tools.emu to see what still differs.
+  ▶ python3 tools/compare_frames.py gfx/compare/s110_emu.csv gfx/compare/s110_web.csv --cols core,obj --frames 2350-2460 2>&
+  ▶ python3 tools/compare_frames.py gfx/compare/s110_emu.csv gfx/compare/s110_web.csv --frames 2350-2356 2>&1 | head -12
+  ▶ Grep "\| `\$05` \|" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/decode_tables.py 27:A31E 1 ptr16 2>&1 | head -3; grep -n "AI \`\$05\`\|AI \$05\|ai05\|Ai05" REVERSE.md lab
+  ▶ python3 tools/dis.py 27 A31E 2
+  ▶ python3 tools/dis.py 27 A219 0x50 --stop
+  ▶ Read util.js
+  ▶ Read ai_effect.js
+Adding AI `$05` (small follower that tracks slot 0 by facing) here, then re-running the obj/core checks.
+  ▶ python3 tools/dis.py 27 A242 8
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+  ▶ node web/test/run.mjs --frames 2247 --keys 1250:START 1400:START 1600:START 1700:START 2301:START 2340:DOWN:80 --compare
+  ▶ node web/test/world_check.mjs 2>&1 | tail -1; node web/test/sound_check.mjs 2>&1 | tail -1; node web/test/core_check.mjs
+  ▶ ls web/test/states/ tools/emu/states/ | grep -i "pause\|bc40\|status"
+  ▶ Grep "pause\.json" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/web_state_compare.py --help 2>&1 | head -30
+Gameplay frames now match until the player moves. Re-checking the pause-screen state test, since the pause exit now runs into the rest of SubstPlay.
+  ▶ sed -n '171p' REVERSE.md | grep -o "web_state_compare[^|]*" | head -3
+  ▶ sed -n '171p' REVERSE.md | grep -o "web_state_compare.py --state S.\{0,600\}"
+  ▶ Grep "web_state_compare.py --state S --web web/test/states/pause.json.{0,700}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +171
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --keys 2470:START -
+  ▶ python3 tools/web_state_compare.py --state gfx/compare/s110_pause.state --web gfx/compare/s110_pause.json --frames 100 -
+  ▶ python3 tools/web_state_compare.py --state gfx/compare/s110_pause.state --web gfx/compare/s110_pause.json --frames 100 -
+  ▶ python3 tools/web_state_compare.py --state gfx/compare/s110_pause.state --web gfx/compare/s110_pause.json --frames 100 -
+  ▶ python3 tools/web_state_compare.py --state gfx/compare/s110_pause.state --web gfx/compare/s110_pause.json --frames 100 -
+  ▶ Grep "^(27,A219|27,A242|30,CB62|31,E12B|31,E0B8)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv
+  ▶ Read labels.csv +942
+Recording results: labels first, then REVERSE.md.
+  ▶ Edit labels.csv
+  ▶ printf '%s\n' '27,A219,AiFollowFacing,s110: AI $05: DEC $0603 (slot 3) while != 0; slot X = slot 0 pos + 4 px toward obj
+  ▶ Edit labels.csv
+Now the task text in REVERSE.md (it's a leftovers-style task, so I update it in place and leave it unchecked).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^- \*\*s108 (into gameplay" REVERSE.md | cut -c1-20; grep -n "play.js\|pause.js" docs/architecture_web.md | cut
+  ▶ Read architecture_web.md +160
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Now the Web Port Fixes note in REVERSE.md, after the s108 entry.
+  ▶ Read REVERSE.md +2450
+  ▶ Edit REVERSE.md
+I ported SubstPlay `30:CB62`, the normal gameplay frame (`sub_state` 8), so the port now runs gameplay frames past the first one. On the canonical new-game run every compared column matches tools.emu for f2350–2356. From f2357 only the player differs, because its two AIs (`$03` and `$01`) aren't ported yet.
+
+**What changed (`web/src/game/states/play.js`)**
+- **The frame itself:** pads → death and menu check → PlayerStatusTick → object update → camera (an exit ends the frame) → sprite pass → collision → tail.
+- **Death and menu check (`30:CB84`):** HP 0 goes to death; START opens the pause screen and then finishes the frame; SELECT opens the menu. The two leftover pad-2 debug features (frame-advance pause and area cycler) are ported too.
+- **PlayerStatusTick (`31:EF55`), complete:** hazard damage with the white flash, paralysis and stone handling (including the magic-5 cure with its MP cost), MP/HP regeneration from equipment, the area `$52` counter, the pit-fall trigger, and the invulnerability flicker.
+- **Frame tail (`31:E0B8`):** the BG CHR animation, and the every-16-frames respawn check read straight from the area record bytes.
+- **Small supporting changes:** `readPads` and `pauseScreen` now return the Y register, which the ROM saves when it plays a sound. The pause entry point moved from `pause.js` to `play.js` and now continues the frame after the pause.
+- **AI `$05` (`27:A219`, in `obj/ai_effect.js`):** a slot that follows the player 4 px in the direction it faces (slot 3 in the start room).
+
+**Tests**
+- All web checks still pass: core, serve, ppu, world, sprite 552/552, obj 7100/7100, sound 130/130.
+- I re-ran the session-94 pause comparison (extended to 100 frames). The pause screen still matches outside the HUD rows. After START, the differences come from three things not ported yet:
+  - **Respawned enemy:** slot `$16` appears in tools.emu at f2543 but not in the port, because spawning only logs a message.
+  - **Player position:** it differs because the player AIs aren't ported.
+  - **Slots `$0F`–`$14` and `$17`:** I didn't trace these; they fill in over the following frames.
+
+**Still not ported**
+- Object collision (`ObjCollideAll` `26:8F6E`), which is called but only logs a message.
+- The player AIs `$03`/`$01`.
+- The spawn handlers.
+- Pit falls.
+
+The gameplay-frames task in REVERSE.md stays unchecked; its text now marks part (e4) done and lists the rest. I also added a Web Port Fixes note, three labels (`27:A219`, `27:A242`, `31:E12B`) plus an updated `31:E0B8` comment, and updated `docs/architecture_web.md`.
+
+My scratch files are in `gfx/compare/` (`s110_emu.csv`, `s110_web.csv`, `s110_pause.json`, `s110_pause.state`). They're untracked and safe to delete.
+
+SESSION_SUMMARY: Session 110: ported SubstPlay 30:CB62 (sub_state 8: death/START/SELECT/debug checks, full PlayerStatusTick 31:EF55, SubstPlayTail with BgChrAnimTick and the respawn tick, pause return into the frame) plus AI $05 27:A219; new-game f2350-2356 match tools.emu on all compared columns, f2357+ differ only from the unported player AIs; all web checks pass; (e4) marked done in the still-open gameplay-frames task.

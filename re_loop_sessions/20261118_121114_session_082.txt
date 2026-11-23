@@ -1,0 +1,157 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; gr
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/*_08[012].txt; tail -c 4000 re_loop_sessions
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; awk 'NR>=2092 && NR<=2251 {print NR": "substr($0,1,220)}' REVERSE.m
+  ▶ Grep "^(#+ |- \[ \])" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2238
+Reading the web port's current state for the title/menu task (top task, part (a)).
+  ▶ find web/src -name "*.js" | xargs wc -l | sort -n | tail -40
+  ▶ Read mainloop.js
+  ▶ Read machine.js
+  ▶ Grep "MainState3|State3ModeTable|9FCC|19:A000|BA65|06F3|06B2" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +596
+  ▶ python3 tools/dis.py 18 9FCC 52 && python3 tools/dis.py 19 A000 0xB5
+  ▶ ls disasm/ | head -50 && python3 tools/dis.py 19 A79F 0x60
+Porting the title side: reading the opening-step code (19:A7F6–ABB4) and its bank-18 helpers.
+  ▶ python3 tools/dis.py 19 A7F6 0x3B5 | grep -v "^$" | cut -c1-100
+  ▶ python3 tools/dis.py 19 A7F6 0x3B5
+Now the bank-18 helpers these steps call.
+  ▶ python3 tools/dis.py 18 80E7 0x2A0 && python3 tools/dis.py 18 9FC2 10 && python3 tools/dis.py 19 ABAB 9
+  ▶ python3 tools/dis.py 18 8385 8 && python3 tools/dis.py 19 A653 0x14C && python3 tools/dis.py 30 C900 0x31
+  ▶ Read prg.js
+  ▶ Grep "writeReg\(|case [0-7]:|^  [a-zA-Z]+\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/nes/ppu.js
+  ▶ Read ram.js
+  ▶ Grep "KEYS|keys" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/web_compare.py
+  ▶ grep -n "CANON_KEYS =" -A3 tools/ref/compare_ref.py tools/*.py 2>/dev/null | head; ls tools/emu/ | head -50
+  ▶ mkdir -p /tmp/s82 && time python3 -m tools.emu --frames 1500 --keys 1250:START 1400:START 1600:START --compare /tmp/s82/
+Getting a tools.emu reference run of the title frames to compare against.
+  ▶ Grep "add_argument" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/__main__.py
+  ▶ time python3 -m tools.emu --frames 1460 --keys 1250:START 1400:START --compare gfx/compare/s82_emu.csv
+  ▶ head -c 1500 gfx/compare/s82_emu.csv; echo; sed -n '214,216p' gfx/compare/s82_emu.csv
+  ▶ sed -n '1,60p' web/test/run.mjs
+  ▶ cat tools/emu/compare.py | head -80; grep -n "compareColumns\|compareRow" -A25 web/test/harness.mjs | head -70
+  ▶ Grep "core|GROUPS|'obj'" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/compare_frames.py
+  ▶ Read compare_frames.py +1
+Adding title-state columns (`ttl_*`, `oam_crc`) to both CSV writers so step timing can be diffed per frame.
+  ▶ python3 - <<'EOF'
+  ▶ Grep "compare\.columns|compare\.row|columns\(\)|CompareWriter" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+Safe to append. Editing both writers.
+  ▶ Edit compare.py
+  ▶ Edit compare.py
+  ▶ Edit compare.py
+  ▶ Edit harness.mjs
+  ▶ Edit harness.mjs
+  ▶ Edit harness.mjs
+  ▶ python3 -m tools.emu --frames 1460 --keys 1250:START 1400:START --compare gfx/compare/s82_emu.csv
+  ▶ Read ppu.js +76
+  ▶ Grep "function\*|yield" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Read pads.js
+  ▶ cat web/src/game/sound/soundupdate.js web/src/game/playsound.js && python3 tools/dis.py 30 C931 0x26
+Writing `web/src/game/states/title.js` (state 2 init, MainState3 dispatch, fades, opening, title menu).
+  ▶ Write title.js
+Wiring the new states into `mainloop.js`.
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ node web/test/run.mjs --frames 1246 --keys 1250:START 1400:START --compare gfx/compare/s82_web.csv; python3 tools/compar
+Close already. Looking at the `ttl_ctr` divergence (boot state left by the skipped intro).
+  ▶ python3 tools/compare_frames.py gfx/compare/s82_emu.csv gfx/compare/s82_web.csv --cols ttl_ctr,pal_crc,oam_crc --frames 
+Only f214 differs before f1239 on those columns. Now the triangle-channel (`snd2_period`) diffs.
+  ▶ python3 tools/compare_frames.py gfx/compare/s82_emu.csv gfx/compare/s82_web.csv --cols snd,music --frames 214-1238 --max
+  ▶ for f in gfx/compare/s82_emu.csv gfx/compare/s82_web.csv; do awk -F, 'NR==1{for(i=1;i<=NF;i++)h[$i]=i} $1>=275&&$1<=281 
+  ▶ Write csv_rows.py
+  ▶ python3 tools/csv_rows.py gfx/compare/s82_emu.csv gfx/compare/s82_web.csv --cols music,snd,ttl_ctr --frames 274-281,308-
+Name clash with `tools/dis.py`; switching to plain `sys.argv` parsing.
+  ▶ Write csv_rows.py
+  ▶ python3 tools/csv_rows.py gfx/compare/s82_emu.csv gfx/compare/s82_web.csv --cols music,snd,ttl_ctr --frames 274-281,308-
+Only the triangle channel lags, by one frame, at note changes. Checking when tools.emu samples its row relative to the NMI's SoundUpdate.
+  ▶ Grep "on_frame|frame_no \+=|frame_no\+=" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ Grep "def parse_break|break.*SPEC|--break" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ sed -n 1,50p tools/emu/__main__.py
+  ▶ python3 -m tools.emu --frames 281 --watch 0176 --watch 0174 2>&1 | tail -6
+Confirmed: the triangle write lands at line 20 of the *next* frame (the NMI's SoundUpdate overruns vblank), so it's a sampling artifact of tools.emu rows, not a port bug. Now f1239+.
+  ▶ python3 tools/csv_rows.py gfx/compare/s82_emu.csv gfx/compare/s82_web.csv --cols state,cam_y,ttl_,pal_crc --frames 1236-
+f1239 is a lag frame inside `OpeningPage3` (heavy NtFill + 3 blits): the NMI lands mid-step. Locating exactly where with a trace.
+  ▶ python3 -m tools.emu --frames 1241 --trace /tmp/claude-1000/s82_trace.txt --trace-frames 1238-1240 --trace-range 19:AA30
+  ▶ python3 -m tools.emu --frames 1241 --trace gfx/compare/s82_trace.txt --trace-frames 1238-1240 --trace-range 19:AA30-AAC1
+  ▶ Grep "AA8[C-F]|AAA[2-7]|AA5[7-A]|AA7[5-8]|F3B6" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/compare/s82_trace.txt
+The NMI fires right as blit 2 (`AA8F`) re-enables NMI. Adding that yield to `openingPage3`.
+  ▶ Edit title.js
+  ▶ Edit title.js
+  ▶ node web/test/run.mjs --quiet --frames 1246 --keys 1250:START 1400:START --compare gfx/compare/s82_web.csv; python3 tool
+  ▶ python3 tools/csv_rows.py gfx/compare/s82_emu.csv gfx/compare/s82_web.csv --cols cam_y,snd0_period,snd1_period,ttl_,pal_
+  ▶ sed -n 1,50p tools/web_compare.py
+  ▶ python3 tools/web_compare.py --frames 300,420,600,700,900,1000,1100,1200,1238,1242,1300,1350,1419,1420,1450 2>&1 | tail 
+Pixel-identical at every title frame except 6 px at f1420. Looking at that diff.
+  ▶ Read web_1420.png
+  ▶ for t in core_check ppu_check serve_check world_check sprite_check obj_check sound_check apu_check; do node web/test/$t.
+  ▶ node web/test/core_check.mjs 2>&1 | tail -4; node web/test/ppu_check.mjs 2>&1 | tail -2; node web/test/serve_check.mjs 2
+  ▶ node web/test/sprite_check.mjs 2>&1 | tail -2; node web/test/obj_check.mjs 2>&1 | tail -3; node web/test/sound_check.mjs
+Two checks relied on the old stubs (`stubHits`) and the module count. Inspecting them.
+  ▶ grep -n "smoke\|stubHits\|want 28" web/test/core_check.mjs | head; grep -n "ES modules\|FAIL\|modules" web/test/serve_ch
+  ▶ node web/test/serve_check.mjs 2>&1 | grep -v "^ok" | head; sed -n 105,122p web/test/core_check.mjs
+  ▶ Read serve_check.mjs +84
+Both are stale assumptions about stub states. Updating them to the ported behaviour.
+  ▶ Edit serve_check.mjs
+  ▶ Edit core_check.mjs
+  ▶ node web/test/core_check.mjs 2>&1 | grep -c "^ok"; node web/test/core_check.mjs 2>&1 | grep -v "^ok"; node web/test/serv
+All suites pass. Now labels, REVERSE.md and the architecture doc. Checking which helper addresses already have labels.
+  ▶ Grep "^18,(8174|817C|8184|818E|8F3B|838B|9FC2|94BE),|^19,(A070|A07C|A6FE|A77D|A7EE|A8C8|A8CD|B162|A6DD)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv && cat >> labels.csv <<'EOF'
+  ▶ Read labels.csv +1060
+  ▶ Edit labels.csv
+Now REVERSE.md. Reading the Verification Log format.
+  ▶ Read REVERSE.md +121
+  ▶ Edit REVERSE.md
+Now the task list: marking the top task done and redistributing its leftovers.
+  ▶ Read REVERSE.md +2236
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now updating the "Web fix: title / name entry" task with what remains.
+  ▶ Edit REVERSE.md
+Adding a short note to the "Main states 2/3" section, then updating the architecture doc.
+  ▶ Edit REVERSE.md
+  ▶ Grep "states/|state2|state3|mainloop.js|stub" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Adding `csv_rows.py` to the tool table and running the emu CLI test (the column change touches it).
+  ▶ Grep "^\| `tools/ref/drift_probe.py`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ timeout 600 python3 -m pytest -q tools/emu/test_cli.py 2>&1 | tail -3
+  ▶ python3 -m pytest -q tools/emu/test_cli.py
+  ▶ python3 tools/web_compare.py 2>&1 | tail -18 && python3 tools/comparison.py report 2>&1 | tail -3
+  ▶ rm gfx/compare/s82_trace.txt && git status --short | head -20
+I ported the title side of the game this session: the state 2 init and the state 3 frame code are now in the web port, and the port matches tools.emu from f215 to f1459. That covers the first part of (a) in the top task. Following the leftover rule, I marked the task done and moved the rest elsewhere. Nothing was committed.
+
+**What changed:**
+- **New `web/src/game/states/title.js`:**
+  - state 2 init (`18:9FCC` → `19:A000`) and the state 3 dispatcher (`19:A015`)
+  - fade in and fade out
+  - title mode 0: the 25-step opening (date card, four picture pages, their animations, flashes and page flips)
+  - title modes 5 and 6: building the title menu, its sprites, SELECT/START handling and the idle restart
+  - the bank-18 screen helpers those use (nametable fill, rectangle copy, palette sets, scene sprites, wait for frame)
+- `mainloop.js` now runs these instead of the state 2/3 stubs.
+- **CSV columns:** both `tools/emu/compare.py` and `web/test/harness.mjs` now write `ttl_mode ttl_step ttl_s3 ttl_wait ttl_ctr ttl_snd oam_crc`, so title timing can be diffed frame by frame.
+- **New tool:** `tools/csv_rows.py` shows chosen columns of several CSVs side by side.
+
+**Results:**
+- **Frame data:** f215–f1459 has no differences in the core, object, palette, title-variable or sprite-memory columns.
+- **Pixels:** 14 of 15 checked frames are pixel-identical.
+- **COMPARISON.md:** I reran the reference compare. f600, f1200, f1450 and f1500 now show 0 px differences (they were 18–89 % before). The first core difference moved from f889 to f1602, which is the story screen and isn't ported yet.
+- **The few remaining differences are not port bugs:**
+  - Single-frame sound-period differences at note changes. tools.emu writes its row at the start of the next frame, while the sound update is still running past vblank. A write watch showed the triangle note being set at frame 279, line 20.
+  - f1419 `$06FE` and 6 pixels on screen line 0 at f1420. Both come from game code that runs after the frame interrupt but before the next frame starts drawing.
+  - f214 still differs because the port skips the boot intro. That has its own queued task.
+- **Test suites:** core, ppu, serve, world, sprite, obj (2989 identical + 11 known gaps), sound (130/130) and apu all pass. I had to update two checks that assumed the old stubs: the core smoke test now checks `$06FF` = `$E4`, and the serve check expects `pal_buf` = `$0F`. I didn't run `tools/emu/test_cli.py` because pytest needed approval; it compares the CSV header against the same `compare.columns()` function, so the new columns shouldn't break it.
+
+**New fact about the ROM:** step 16 of the opening (`OpeningPage3`) runs past the end of its frame. The bank-18 drawing code turns the frame interrupt off while it writes to the PPU, so the interrupt fires late, when the second copy turns it back on (traced at f1239, line 241). The rest of the step then runs in the next frame. The port pauses at that exact point.
+
+**Records:** 8 labels in `labels.csv`, a session 82 Verification Log row, a note in the "Main states 2/3" section, and updates to `docs/architecture_web.md`.
+
+**Where the leftovers went:**
+- Title modes 1–4 (story, status screen, name entry, through to state 0) were added to "Web fix: title / name entry", with the method for finding late frames.
+- (b), the gameplay HUD, was already covered by "Web fix: gameplay frames".
+- (c) and (d), the pause/status/equipment/save menus and the death path, are a new low-priority task at the end of RE Investigation.
+
+A scratch trace file, `gfx/compare/s82_trace.txt`, is still there because deleting it needed approval. You can remove it.
+
+SESSION_SUMMARY: Session 82 ported state 2 init, MainState3, the fades and title modes 0/5/6 (opening + title menu) to `web/src/game/states/title.js`; the port matches tools.emu f215–f1459 and f600/f1200/f1450/f1500 are now pixel-identical; added title CSV columns and `tools/csv_rows.py`; title modes 1–4 merged into "Web fix: title / name entry", menus/death moved to a new low-priority task; not committed.

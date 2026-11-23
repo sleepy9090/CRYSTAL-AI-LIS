@@ -1,0 +1,263 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -5; wc -l dead_ends.md REVERSE.md; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for f in re_loop_sessions/*_07[456].txt; do echo "== $f"; wc -c $f;
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/20261118_055659_session_07*.txt; tail -c 300
+  ▶ Grep "World interaction|AreaPitFall|damage floor|invuln_timer|PlayerConveyor|dead zone" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1128
+I'm on the world-interaction leftovers task (blocking, camera, damage, pits, hazards). Checking the existing emulator probe tools first.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls tools/emu/ tools/emu/states/; for f in player_probe poke_probe s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls tools/emu/ tools/emu/states/; python3 -m tools.emu.poke_probe --
+  ▶ Read step_probe.py
+  ▶ Read poke_probe.py
+  ▶ Grep "^\*,(3[A-F]|02|03|04|05|08|20|25|0620|0641|0541|071A|03C1|0421|0401|0716|6C|40|41|0710|06B0)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -nE '^\*,(3A|3B|3C|3D|3E|3F|0040|0041|006C|002|03|04|05|08|40|
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -nE '^\*,00(0[2-8]|3[0-F]|7[01]|9[01]|B[01]|D[01]),' labels.cs
+Writing a general per-frame world probe tool (`tools/emu/world_probe.py`) to log player/camera/HP/attr state under button segments and pokes.
+  ▶ Write world_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -nE "def (read|write|on_exec|on_write|prg_bank_at)|self\.prg\b
+  ▶ Read mapper.py +20
+Fixing the prg access (`cart.prg`) and simplifying the grid y math.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "prg" tools/emu/loader.py | head -5; grep -n "self.bus\b\|s
+  ▶ Edit world_probe.py
+  ▶ Edit world_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "self.cart" tools/emu/nes.py | head -2; python3 -m tools.em
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --seg LEFT:24 DOWN:12 LEFT:30 2>&1
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --every 3 --seg LEFT:24 DOWN:12 LE
+Wall blocking matches the 8×8 box model (stop at x=$84 against a wall cell ending at $7F, x=$64 against $5F). Now area 1 for a `$02` obstacle and the camera.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --state tools/emu/states/area1_ent
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -40 docs/bg_coll.txt
+  ▶ Grep "^## page" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/bg_coll.txt
+  ▶ Grep "area_w|area_h|k5 areas|10 k5" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Adding a `--map` option to dump the whole area's collision map as characters.
+  ▶ Edit world_probe.py
+  ▶ Edit world_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --map --seg NONE:1 2>&1 
+Area 14 (8×8 screens) has `$02` obstacles, sink and `$C0` damage floor — good test bed. Checking where the player lands.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --grid --seg NONE:2 2>&1
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --every 4 --seg RIGHT:10
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --every 6 --seg UP:60 DO
+Y follow matches (rel kept at `$78` below, 240-line page wrap `$3E4`→`$400`). The open part of area 14 doesn't reach the area edges, so I'll test the clamps by poking the camera out of range.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --poke 3C=80 3D=FF 3E=F0
+X clamps confirmed (−8 → `$FFF8`, `$0980` → `$0700` = `area_w`·256, y `$FF10` → 0). My y-bottom poke used an invalid lo byte (`$F0` ≥ 240); retrying with valid values.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for v in "3E=50 3F=08" "3E=80 3F=07" "3E=29 3F=07"; do python3 -m t
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --poke 3E=50 3F=08 --seg
+All camera clamps confirmed (bottom = `$0728` = `area_h`·240+`$28` in page form). Writing (a) results to REVERSE.md before moving on.
+  ▶ Edit REVERSE.md
+Now the `$02` low obstacle (ground vs. mid-jump). Checking which button jumps.
+  ▶ Grep "jump (button|key|on B|on A)|B = jump|B jumps|jump.*\bB\b press" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n -i "jump" REVERSE.md | grep -i "press\|button\|pad" | head 
+  ▶ Read REVERSE.md +1076
+Jump = magic slot 0 with accessory `$12` (A press). Setting up a scenario in area 14: player poked just below a band of `$02` cells (screen 3, x=`$318`), camera poked nearby.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --poke 70=18 90=03 B0=B8
+On the ground the player stops at y=`$2A6` (next 2-px step would put y−5 at `$29F`) ✓. But the jump (A+UP held) didn't move slot 0 at all — checking the PlayerMove notes for why.
+  ▶ Read REVERSE.md +1060
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "obj_bg_mask" labels.csv; python3 tools/dis.py 27 A143 30
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "a9 34 9d 60 04" --disasm 2>&1 | head
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 9E55 50; python3 tools/search_bytes.py "8d 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^\*,03E1\|mp\b\|player_mp" labels.csv | head -3; python3 -
+Flight (magic 8) sets mask `$34` at `27:A131` and the body passes straight over the `$02` rows. Recording (a) and the b1 correction.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now (d): the damage floor. Poking the player onto a `$C0` cell in area 14 (screen 2, x=`$288`, y=`$258`).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --poke 70=88 90=02 B0=58
+Damage floor works (−4 HP, `$6151`=`$30` flash, restored next frame; accessory `$13` blocks it), but the interval is **34** frames, not 32. Checking how `$08` counts across the hit.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --poke 70=88 90=02 B0=58
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 1A --watch 03C1 0008 --seg 
+Area `$1A`: −4 HP every 8 `$08` ticks (10 real frames), blocked by accessory `$0D`. Writing (d).
+  ▶ Edit REVERSE.md
+Now (b), enemy contact damage. Adding an `--objs` dump to find an enemy near the player.
+  ▶ Edit world_probe.py
+  ▶ Edit world_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --objs --seg NONE:1 2>&1
+  ▶ Grep "HitPlayer|9357|enemy|EnemyKilled" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_tour.txt
+  ▶ Edit world_probe.py
+  ▶ Edit world_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --objs --every 1000 --se
+Enemies spawn as screens come into view (slot `$11` AI `$26`, attack `$16`). Adding a `--poke-at N:ADDR=VAL` option so I can move an enemy onto the player mid-run.
+  ▶ Edit world_probe.py
+  ▶ Edit world_probe.py
+  ▶ Edit world_probe.py
+  ▶ Edit world_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --every 1000 --seg RIGHT
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --objs --every 1000 --se
+The enemy sits 13 px away and no `HitPlayer` fires. Placing it exactly on the player for a few frames:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --every 1000 --seg RIGHT
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --every 1000 --seg RIGHT
+Contact hit confirmed: HP 48→27 = attack `$16` − defence `$01`, `invuln_timer`=`$1E`. Now the frames after the hit (knockback + invulnerability):
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --every 1 --seg RIGHT:10
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --every 1 --seg RIGHT:10
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --every 1000 --seg RIGHT
+Both no-damage cases give SFX `$3A`, no HP change, no invulnerability. Checking whether knockback still happens in that case:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --every 1 --seg RIGHT:10
+Knockback happens even on a no-damage hit (step 6 runs before the damage check). One more: `player_level`=`$11`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --every 1000 --seg RIGHT
+`player_level`=`$11`: silent no-damage (no SFX, no invulnerability). Writing (b), then checking how high the level can go for (e).
+  ▶ Edit REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 924B 60; python3 tools/xref.py 0421 2>&1 | 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 9178 20; python3 tools/dis.py 26 90FC 12; p
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 BF40 40; python3 tools/dis.py 14 81BF 14; g
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "BF47\|boot_ab_flag" REVERSE.md labels.csv | head; grep -n 
+  ▶ Grep "BF47|boot_ab_flag|level.*\$0F.*debug" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+New find: `15:BF47` **does** read `boot_ab_flag` (REVERSE.md says no reader). Disassembling the rest and finding its caller.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 BF67 24; python3 tools/decode_tables.py 15:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "15:BF\|15 BF" disasm/coverage.txt gfx/filler_scan.txt | he
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "BF4\|BF3\|BF2\|BF1\|BF0" disasm/bank15.asm 2>/dev/null | h
+  ▶ Grep "BF4[0-9A-F]|BF3[0-9A-F]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm/bank_15.asm
+The only caller is `JSR $BF46` at `15:BDE4`, and `15:BF46` is a bare `RTS` sitting right before the cheat body — i.e. the debug routine was disabled by one RTS byte. Checking the caller's context:
+  ▶ Read bank_15.asm +2040
+Writing the debug-cheat find and the `$11` answer now.
+  ▶ Edit REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^15,BF4\|^15,BF7\|^15,BDDB" labels.csv; tail -3 labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat >> labels.csv <<'EOF'
+Using Edit instead.
+  ▶ Read labels.csv +789
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l labels.csv
+  ▶ Edit labels.csv
+  ▶ Read labels.csv +1023
+  ▶ Edit labels.csv
+Now (e): the message texts and AIs `$0B`/`$38`/`$3C`. Looking for a message-dump tool and existing AI notes.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls tools/*.py | tr '\n' ' '; ls docs/
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,25p tools/text_dump.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/text_dump.py msgs 2>&1 | grep -iE "^ *(20|\\\$20|g20|
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/text_dump.py msgs > /tmp/re_c_msgs.txt 2>&1; head -5 
+  ▶ python3 /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/text_dump.py msgs --json /tmp/re_c_msgs.json
+  ▶ Glob **/*{msg,text,dialog}*.{txt,json}
+Still on (e): looking up messages `$20/$19-$1B` in the existing text dump.
+  ▶ Grep "^(g?20[./:]|\[20[./:]|20:1[9AB])" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Read text.txt
+  ▶ Grep "group 20|group \$20|== group|^ *\$?20[:.]1[9AB]|g=20" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+Group `$20` = group 32 in the dump; messages `$19-$1B` = 25-27.
+  ▶ Read text.txt +2440
+Texts: `$20/$19` "You're poisoned!", `$1A` "Your body is paralyzed!", `$1B` "Your body is turned to stone!". Now which object types use AIs `$0B`/`$38`/`$3C`:
+  ▶ Grep "AI \$?(0B|38|3C)\b|ai (0B|38|3C)\b|\$0B\b.*held|AiPlatform|\b38\b.*platform" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/objtype_dump.py --help 2>&1 | head -8; python3 tools/
+  ▶ Grep "ai \$(0B|38|3C)->" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/enemies.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/objtype_dump.py | grep -E "ai .(0B|38|3C)->" | cut -c
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "a9 0b 8d a0 04" --context 0 2>&1 | h
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 A700 90 2>&1 | head -60; grep -n "^27,A[67]
+  ▶ Grep "A70E|A6F[0-9A-F]|AI `?\$52|AI `?\$0B|0B->|\$0B` .*held" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "ObjAiTable" labels.csv; python3 tools/objtype_dump.py | gr
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 27:A314 128 u16 2>&1 | head -20
+AI `$0A` = `27:A70E` (the setter), AI `$0B` = `27:A24A`. Which type uses AI `$0A`, and the `$0B` body:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/objtype_dump.py | grep -E "ai .(0A|52)->" | cut -c1-1
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "a9 0a 8d a0 04" 2>&1 | head -3; pyth
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 AE80 40 2>&1 | head -30; grep -n "^27,AE\|^
+  ▶ Grep "AiPathWalk" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "AiPathWalk" REVERSE.md | head -1 | cut -c1-20; grep -o "Ai
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 896p REVERSE.md
+Still on (e): AI `$0A` is set by the Shell-Flute path walker's `$FD` terminator. Checking message group 3 / msg 3 that AI `$0A` shows:
+  ▶ Read text.txt +459
+AI `$0A` shows msg 3.3 ("I'm Stom… Let's have at it!"), so AI `$0B` is the player during a sparring duel, not "held". Checking existing labels before adding:
+  ▶ Grep "^27,(A70E|A24A|A753|AFA9|AFF5|A2B4)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 AFA9 76 2>&1 | head -45
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 AFF5 60 2>&1 | head -40
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+Updating the `HitPlayer` label comment, then (c) pits: finding the k5 areas.
+  ▶ Edit labels.csv
+  ▶ Grep "k5.{0,40}(areas|10 )" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "k5 only in areas.{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+k5 areas: `6A 6D 6E 8A 9F A2 A5 AE AF B4`. Mapping area `6A` for pit cells:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 6A --map --grid --seg NONE:
+The tool crashed after the grid; checking the traceback.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 6A --seg NONE:1 2>&1 | tail
+That was just a broken pipe from `head`. Area `6A` has a pit column in screen 5 (x `$560-$59F`). Poking the player onto it:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 6A --poke 70=78 90=05 B0=68
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 26:9D6E 16 s8
+  ▶ Edit REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l tools/render_level.py; grep -n "def \|argparse\|add_argument\
+  ▶ Read render_level.py
+Now the `Renderer.screen` in render_screen.py, to see how metatile ids per cell are obtained:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "def \|v69\|'k1'\|0xBE00\|subst" tools/render_screen.py | h
+  ▶ Read render_screen.py +35
+  ▶ Edit render_level.py
+  ▶ Edit render_level.py
+  ▶ Edit render_level.py
+  ▶ Edit render_level.py
+  ▶ Edit render_level.py
+  ▶ Edit render_level.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/render_level.py 14 6A --coll --scale-down 2 && diff <
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/render_level.py 14 6A --coll --scale-down 2
+  ▶ Edit render_level.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/render_level.py 14 6A --coll --scale-down 2; sed -n 1
+Rows match the emulator's `--map` output for area `6A` (e.g. `1.10` with the `pppp` column). A quick look at the overlay image:
+  ▶ Read area_106_coll.png
+The overlay is right (walls red, pit column magenta). Now scanning every area for pit cells to answer the non-k5 question:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; time python3 tools/render_level.py --all --coll --scale-down 4 | gr
+Pits in areas without k5: `$91` (2 cells), `$B9` (192), `$BA` (144). Finding a pit cell in `$B9` to test the no-k5 path:
+  ▶ Grep "p" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/areas/area_185_coll.txt
+  ▶ Grep "p" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/areas/area_145_coll.txt
+Testing a pit fall in `$B9` (no k5): player poked onto (`$178`,`$518`).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area B9 --poke 70=78 90=01 B0=18
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 91 --poke 70=68 90=06 B0=68
+Same loop in `$91`. Recording (c) part 2 and (f):
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now (g), the conveyor. Finding conveyor cells in area `$20`:
+  ▶ Grep "c" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/areas/area_032_coll.txt
+Conveyor column in screen 2 (x `$260-$29F`), rows `1.B0`–`2.A0`. Poking the player into it and watching `obj_aux` `$0660` (speed ramp) and `obj_param1` `$0680`:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 20 --poke 70=78 90=02 B0=28
+The current pushes down; `obj_aux` ramps 0→1→2 every 16 frames — but REVERSE.md says "on direction 4 it starts at 6". Checking `PlayerConveyor`:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 9FA8 80 2>&1 | head -50
+The ramp is `INC obj_aux` every 16 `$08` ticks up to 9; the "starts at 6" case is when **`pad_dir` = 4 (DOWN held)**, regardless of the current's direction. Testing DOWN and UP held:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 20 --poke 70=78 90=02 B0=28
+Against the current (UP held), the climb slows as `obj_aux` ramps and reverses at 7 (net push back from f2506). Quick look at who sets slot 0's `obj_param1` (the current direction):
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "8d 80 06" --context 8 --disasm 2>&1 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 20 --seg NONE:1 2>&1 | tail
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.world_probe --area 14 --poke 70=30 90=01 B0=98
+`$4C` appears only for 2 frames (f2404-2405), then `$A7` again mid-air while `obj_flags` b6 is still set. Checking the condition at `26:9DBD`:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 9D9A 40 2>&1 | head -24
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Fixing the conveyor wording at the PlayerMove step 10 note too:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "The emulator checks of these rules are queued" REVERSE.md;
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +121
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Marking the task done and merging the small leftovers (platform ride check, reachability of the non-k5 pit cells) into the existing Ph6 scripted-scenarios task.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+`docs/bg_coll.txt` still says b1 is "jumpable"; fixing the generator text and regenerating it.
+  ▶ Grep "jumpable|not tested by the probe" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/bg_coll_dump.py
+  ▶ Read bg_coll_dump.py +17
+  ▶ Edit bg_coll_dump.py
+  ▶ Edit bg_coll_dump.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -12 tools/bg_coll_dump.py | grep -i "usage\|docs"; python3 too
+Only the header lines changed. Last check that `labels.csv` still parses with the new labels:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 BF46 3 && python3 tools/dis.py 27 AFF5 2 &&
+Oops — `labels_fix_commas.py` has no `--help` and actually ran, rewriting some existing labels. Checking what it changed:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; git diff labels.csv | grep "^[-+]" | grep -v "s77" | cut -c1-200
+I finished the session-77 task, the Ph3 world-interaction leftovers, all parts (a)–(g). Everything was checked in the project's own emulator (tools.emu), not against FCEUX. Most of the documented rules held; two were wrong and a few new quirks turned up.
+
+**Matched the documented model:**
+- **Walls:** the player's collision box starts at x−4, as documented.
+- **Camera:** the follow dead zones, the 1 px/frame drift back to centre, the view-offset ramp and all four clamps behave as written. The clamps were tested by poking the camera out of range, since the open part of the test area doesn't reach the edges.
+- **Enemy contact (b):** HP drops by attack − defence (48 → 27 in the test). Then come 30 frames of invulnerability and a knockback of 7 frames × 5 px. When defence ≥ attack, or the damage is ≥ 128, you get sound `$3A` and no damage, but the knockback still happens.
+- **Hazards (d):** a damage floor takes 4 HP every 32 frame-counter ticks, which is 34 real frames because the hit frame and the palette-restore frame don't tick the counter. Area `$1A` hurts every 10 frames. The two accessories (`$13`, `$0D`) block these as documented.
+- **Pit fall (c):** in a pit area with an exit record, the player drops, lands in area `$69` and falls in from above as described.
+
+**Corrections:**
+- **Low obstacles (`$02` tiles) block a normal jump too.** The normal jump never changes the collision mask, so only the flight magic and the warp-exit status can cross these tiles. REVERSE.md and `docs/bg_coll.txt` now say so.
+- **The sinking "empty" sprite (`$4C`) shows on the ground in a sink tile, not in the air.**
+
+**New findings:**
+- **Fall-in height table sign slip:** entry `$2F` is +118 where −118 was meant. For one frame the player sprite is drawn 118 px *below* the player, off-screen in my test. The web port reads this table from the ROM, so it keeps the glitch.
+- **Endless pit loop:** areas `$91`, `$B9` and `$BA` have pit tiles but no record for where a pit leads. Standing on one makes the game fall, fade back in, and fall again forever. I didn't check whether a player can actually reach those tiles.
+- **Currents always push the player down**, because the player object starts with direction 4 and nothing changes it. Holding DOWN jumps the current's speed to 6; walking against it stalls at speed 6 and is pushed back from 7.
+- **Player level `$11` (e):** normal levelling stops at `$10`, so `$11` is a developer-only invincibility value that only a RAM or save edit can set.
+- **Debug cheat:** the A+B-at-boot flag does have one reader, a cheat at `15:BF47` that fills the inventory and maxes level and MP. It is switched off by a single `RTS` byte at `15:BF46`, so it never runs.
+- **Object AIs (e):** AIs `$0A`/`$0B`/`$52` are the sparring duel, not "player held". AI `$38` is a platform that shuttles across a pit, and `$3C` is a one-use platform that disappears after you ride it. The status messages `$19`–`$1B` are poisoned / paralyzed / turned to stone.
+
+**Tools:**
+- **New `tools/emu/world_probe.py`:** from a save state it can poke an area, poke RAM (once, every frame, or at a given frame) and play button segments. It then logs the player, camera, HP and state per frame, and can print the live collision map, the cells around the player, and the active objects.
+- **New `--coll` option in `tools/render_level.py`** (task part f): it writes a tinted collision PNG plus a per-cell text map for each area. The text uses the same characters as the probe's live map, so the web port's collision map can be compared area by area. For area `$6A`, the rows I compared matched the emulator.
+
+REVERSE.md has the results, a Verification Log row and the tool table entries, and the task is marked done. Two small leftovers went into the existing Ph6 scripted-scenarios task: riding a platform over a pit, and whether those three areas' pit tiles can be reached. `labels.csv` has 9 new labels and 2 corrected comments.
+
+One unintended change: I ran `tools/labels_fix_commas.py --help` to check it parsed the new labels, but it ignores `--help` and ran. It replaced commas with semicolons in about 9 existing comments in `labels.csv`. The meanings are unchanged; `git diff labels.csv` shows them if you'd rather revert. Nothing is committed.
+
+SESSION_SUMMARY: Session 77 finished the Ph3 world-interaction leftovers (a)–(g) in tools.emu. Walls, camera, enemy damage, hazards and pit falls match the docs. Two corrections: `$02` obstacles also block a normal jump, and the sink sprite `$4C` is shown on the ground. New: a sign slip at fall-in height `$2F`, an endless fall loop on the pits of areas `$91`/`$B9`/`$BA`, currents always push down, level `$11` is dev-only, a debug cheat switched off by one `RTS`, and the duel/platform AIs. New tools: `world_probe.py` and `render_level.py --coll`.

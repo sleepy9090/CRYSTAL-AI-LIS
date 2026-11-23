@@ -1,0 +1,93 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_session_15[6789].txt && tail -c 3500 re_loop_sessions/20261122_031152_session_158.txt
+  ▶ grep -n "Session 15[678]\|BossDefeated\|B807" REVERSE.md | cut -c1-250; grep -n "B807\|BossDefeated" labels.csv web/src/
+  ▶ sed -n '1030,1045p;1300,1312p' REVERSE.md
+Now the disassembly of BossDefeated.
+  ▶ python3 tools/dis.py 15 B807 0x160 --stop
+  ▶ python3 tools/decode_tables.py 15:B95D 14 u8 2>&1 | head -20; python3 tools/decode_tables.py 15:B96B 14 ptr 2>&1 | head 
+  ▶ python3 tools/decode_tables.py --help 2>&1 | head; python3 tools/decode_tables.py 15:B96B 14 u16 2>&1 | head
+  ▶ python3 tools/decode_tables.py 15:B96B 14 u16 | tail -4; python3 tools/decode_tables.py 15:B987 13 hex21
+  ▶ python3 tools/dis.py 15 B8CF 0x8E; echo ----; python3 tools/dis.py 15 BA98 0x60 --stop
+  ▶ python3 tools/dis.py 15 BAF8 0x40 --stop; ls web/src/game/obj/; grep -rln "waitFrame\|WaitFrames\|yield" web/src/game | 
+Working on the boss AI task: porting AI `$6F` `BossDefeated` `15:B807`, which runs record hooks that wait frames. Next I'll check how the port handles waits inside AIs.
+  ▶ grep -n "yield\|function\*\|waitFrame" web/src/game/obj/ai_final.js web/src/game/obj/objects.js web/src/game/obj/ai_effe
+  ▶ grep -n "BOSS_AIS\|AiReward6C\|_fix_boss\|PPU_ROUTINES\|def \|max_cycles\|frames" tools/emu/routine_capture.py | head -8
+  ▶ sed -n 180,275p tools/emu/routine_capture.py; sed -n 560,700p tools/emu/routine_capture.py; sed -n 775,916p tools/emu/ro
+  ▶ grep -rn "B8FD\|HookA6\|BA98\|FleeSpeech\|800E\|clearEnemySlots\|statRecalc\|export function\*\? *\(waitFrames\|waitFram
+  ▶ grep -rn "D354\|98A8\|9897\|BB5B" web/src --include=*.js | cut -c1-200 | head; python3 tools/dis.py 26 9897 0x20; python
+  ▶ sed -n 1,60p web/src/game/obj/ai_boss.js; grep -n "aiReward6C" -A60 web/src/game/obj/ai_boss.js | head -90; grep -n "AI_
+Still on `BossDefeated`: I'm checking the port's ROM-read and palette helpers before writing the handler.
+  ▶ grep -n "export function cpuRd" -A12 web/src/game/prg.js; grep -n "export function\*\? *paletteBuildRom" -A8 web/src/gam
+  ▶ grep -n "AiReward6C\|Ai70PhaseDispatch\|AiMpDrain\|next()\|SPIN\|function run\|done" web/test/obj_check.mjs | head -30; 
+  ▶ sed -n 328,336p tools/emu/routine_capture.py; python3 tools/decode_tables.py 30:C5D4 1 hex5; grep -n "ciram_after\|PPU_C
+  ▶ sed -n 755,782p tools/emu/routine_capture.py; grep -n "PORTED_AIS\|AI_TYPES\|_TYPES_BY_AI" tools/emu/routine_capture.py 
+  ▶ sed -n 425,436p web/src/game/obj/collide.js; grep -n "^import" web/src/game/obj/collide.js web/src/game/obj/ai_effect.js
+Writing the port now: `bossDefeated` and its record hooks in `ai_boss.js`.
+  ▶ sed -n 858,870p web/src/game/obj/ai_boss.js; grep -n "export function\* waitFrame\|export const FSD_LAG\|export function
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+Now the capture side: a `BossDefeated` routine entry in `routine_capture.py`.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ grep -n "fuzz_boss" -B2 -A6 web/test/obj_frames/README.md | head -40; grep -n "fuzz_boss" web/test/obj_check.mjs
+  ▶ sed -i "s|  AiReward6C: (m, r) => { B.aiReward6C(m, r.x); },             // s158|&\n  BossDefeated: (m, r) => { runNow(B
+  ▶ Edit obj_check.mjs
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine BossAiE0,B
+  ▶ node web/test/obj_check.mjs 2>&1 | tail -25
+All 17500 match. Checking that `BossDefeated` cases covered each hook and the `$D5` loop:
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -i "boss"; python3 tools/case_paths.py 2>&1 | head -5
+  ▶ python3 tools/case_paths.py web/test/obj_frames/fuzz_boss.json BossDefeated 6000 04AE 04CC 04BE 04B4 62FE 07E7 07F4 07E0
+  ▶ python3 tools/case_paths.py web/test/obj_frames/fuzz_boss.json BossDefeated 04AE 04BE 04B4 04B2 62FE 07E7 07F4 07E0 05BE
+  ▶ Read case_paths.py
+  ▶ Edit case_paths.py
+  ▶ python3 tools/case_paths.py web/test/obj_frames/fuzz_boss.json BossDefeated 6000 04AE 04BE 04B4 04B2 62FE 07E7 07F4 07E0
+Every reachable path ran: the area `$1A` hook (50 cases), the `$5F`/`$9F` hooks, and the `$D5` loop. Running `core_check`, then the docs.
+  ▶ node web/test/core_check.mjs 2>&1 | tail -3; grep -n "Verification Log" REVERSE.md | head -3; grep -n "AiReward6C" REVER
+  ▶ sed -n 199p REVERSE.md; sed -n 227p docs/architecture_web.md; sed -n 77,80p web/test/obj_frames/README.md
+Updating the docs:
+  ▶ cat > /tmp/s159_docs.py <<'EOF'
+I'll use the Edit tool for the doc changes instead.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit README.md
+  ▶ Edit README.md
+Now the labels for the three unnamed hooks (checking none already exist):
+  ▶ Grep "^15,(B8CF|B8EE|B947|B96B|B95D|BB5B)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +460
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 15 B8EE 2 | head -2; python3 tools/dis.py 15 BB5B 2 | head -2
+I ported AI `$6F` `BossDefeated` (`15:B807`), the routine that turns a dead boss into its reward drop, to `web/src/game/obj/ai_boss.js`. Two of its record hooks aren't verified yet: the boss-flee speech hook isn't ported, and the area-`$A6` hook is ported but untested. Its 300 new test cases match the emulator, as do all 17,500 routine cases, and `core_check` passes.
+
+**What the routine does:**
+- It turns the boss slot into the reward drop (type `$0F`) at x `$80`, y `$90`.
+- It finds the area in `BossAreaList` and stores that index as the drop's phase.
+- It applies that boss's 21-byte record: music, the drop's item, palette ids, CHR banks and `$62FE`. Some records also turn the remaining enemies in slots `$0E-$1E` into type `$D5`.
+- It finishes with `PaletteBuild`.
+
+**The record hooks:**
+- **Ported and tested:** the area `$1A` hook (`15:B8CF`), the area `$9F` hook (`15:B8EE`) and the area `$5F` hook (`15:B947`).
+- **Ported but untested:** `BossHookA6` (area `$A6`). It waits for a frame, and the test capture skips any case that does.
+- **Not ported:** `BossFleeSpeech` (`15:BA98`), used by areas `$28`, `$6E` and `$F2`. It needs `ShowMessage`, which the port doesn't have yet, so it only logs "not ported". It and the `BossHookA6` check are listed as still to do in the task text.
+
+**Quirks found:**
+- The `$FF` list entry's record pointer is `$0000`, so that record would be read from zero page.
+- The `$D5` loop doesn't skip the drop's own slot. A boss that died in slot `$0E` or later would turn its own drop into an enemy. Bosses die in slot `$0D`, so this doesn't happen in play.
+
+**Test setup:**
+- `tools/emu/routine_capture.py` has a separate `BossDefeated` entry. It is kept out of the random object-loop test pool, where a random area id would read a garbage record and jump to a garbage hook.
+- Cases only use areas whose hooks don't wait for a frame.
+- `tools/case_paths.py` now handles WRAM addresses. Its counts show every testable path ran: the area `$1A` hook in 50 cases, the area `$5F` hook in 150, and the `$D5` loop in about 95–100.
+- `obj_check.mjs` runs the new cases, and `fuzz_boss.json` was recaptured (3,600 cases).
+
+I updated REVERSE.md (a "Session 159" note, a Verification Log row and the task text), `docs/architecture_web.md`, the capture command in `web/test/obj_frames/README.md`, and added 4 labels to `labels.csv`. The boss task stays unchecked because it's a low-priority leftovers task. Nothing is committed.
+
+SESSION_SUMMARY: Session 159 ported AI $6F BossDefeated 15:B807 (reward-drop setup, 21-byte BossRecs records, the $D5 enemy loop, hooks B8CF/B8EE/B947, BossHookA6 ported but untested) to obj/ai_boss.js; its 300 cases and all 17500 routine cases match tools.emu, BossFleeSpeech 15:BA98 stays unported (needs ShowMessage), docs and 4 labels updated, and the low-priority boss task stays open.

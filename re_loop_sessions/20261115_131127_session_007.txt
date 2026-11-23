@@ -1,0 +1,55 @@
+  ▶ Glob {dead_ends.md,REVERSE.md,re_loop_sessions/*,tools/*.py}
+  ▶ Grep "^- \[ \]" REVERSE.md
+  ▶ Grep "^## |^- \[ \]" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md
+  ▶ wc -l re_loop_sessions/*00[567].txt && python3 tools/dis.py 31 E140 0x90
+  ▶ python3 tools/dis.py 31 E1CF 0x80 --stop; python3 tools/xref.py E144; python3 tools/xref.py E148; python3 tools/xref.py 
+  ▶ python3 tools/decode_tables.py 31:E218 8 ptr16; python3 tools/dis.py 31 E228 0x70; python3 tools/decode_tables.py 12:920
+  ▶ python3 tools/dis.py 31 E297 0x140 | cut -c1-70; python3 tools/decode_tables.py 30:C000 8 hex1
+  ▶ Grep "C25D|C000|,6C,|,6480|,07E6|,07E7|,2F,|,0540|,0560" labels.csv
+  ▶ python3 tools/dis.py 30 C25D 0x40 --stop | cut -c1-70; python3 tools/dis.py 30 D190 0x10; python3 tools/dis.py 30 D1B8 0
+  ▶ Grep "^def |^class " tools/nesrom.py
+  ▶ Read decode_tables.py
+Now writing `tools/area_dump.py` to decode every area record.
+  ▶ Write area_dump.py
+  ▶ python3 tools/area_dump.py chr && python3 tools/area_dump.py list | awk '{print $3}' | sort | uniq -c | sort -rn | head 
+  ▶ python3 tools/area_dump.py chr; python3 tools/area_dump.py spawns 0 1 2 3 0x40
+Decode works. Quick check: rendering metasprites using area `$03`'s real R4/R5 to see whether enemy ids come out clean.
+  ▶ python3 tools/meta_dump.py png gfx/metasprites_area67_66.png --chr 40,42,67,66
+  ▶ Read metasprites_area67_66.png
+A good number of enemy ids now render clean (e.g. the blue humanoids around ids `$55-$5F` and `$88-$8F`), so the CHR pair matches. Writing up the results now.
+  ▶ Edit area_dump.py
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the labels.
+  ▶ Read labels.csv +1
+  ▶ tail -c 200 labels.csv && cat >> labels.csv <<'EOF'
+  ▶ wc -l labels.csv
+  ▶ Read labels.csv +150
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 31 E14A 8
+I finished session 7's task: decoding the area table plus `LoadAreaChrRecord`. It's marked done in REVERSE.md.
+
+**What the table is:** There's only one table. It sits at `12:9201` (banks 12/13), holds 252 entries, and is looked up by the current area id `$6C`. The `$9301` read is just the upper half of the same table. Besides setting the sprite CHR, each area record is also that area's list of objects to spawn:
+- **Record layout:** a `00` byte, then `$07E6`, `$07E7`, R4 and R5, then one 4-byte entry per object slot starting at slot `$0D`, ending with `FF`. An entry starting with `FE`, or with bit 7 set in its second byte, skips that slot.
+- **Position:** Y = b0·16+12 and X = (b1&$7F)·16+8, with an extra +8 when b2 bit 6 is set.
+- **Spawn type:** b2 bits 0-2 pick one of 5 spawn handlers at `31:E218`, and b3 is a parameter. One handler places collectible items. It checks a bit in WRAM `$6480` and, if the bit is set, spawns object `$4E` instead (probably the "already collected" version).
+
+**New tool:** `tools/area_dump.py list|chr|spawns [areas]` decodes all of this, and I ran it. The `chr` mode groups areas by their R4/R5 pair. There are over 100 distinct pairs; the most common are `4A/4A` (28 areas) and `67/66` (12 areas).
+
+**Check against the sprites:** I rendered the metasprites with `meta_dump.py --chr 40,42,67,66`. The blue humanoid enemy ids (`$58-$5F`, `$6B-$6F`, `$8C-$8F`) now come out clean, where the old placeholder CHR scrambled them. The image is `gfx/metasprites_area67_66.png`. This is only a comparison against the old render, not a check in an emulator.
+
+**Still unknown, added as a new follow-up task:**
+- what `$07E6/$07E7` mean
+- what R4/R5 = `$FF` means (it appears in many areas)
+- how `ObjInit` `30:C25D` handles each object type
+- the indirect spawn records in banks 4/5
+- what sets `$6C`
+- what reads `$18`
+
+I added about 20 labels to labels.csv. Nothing needed recording in dead_ends.md.
+
+SESSION_SUMMARY: Session 7 — decoded the 252-entry area table `12:9201` (indexed by `$6C`): each record holds `$07E6/$07E7`, sprite CHR R4/R5 and a per-slot object spawn list with 5 handlers at `31:E218`; wrote and ran `tools/area_dump.py`, and enemy sprites render clean with the real CHR pair.

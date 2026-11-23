@@ -1,0 +1,101 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls re_loop_sessions | tail -4; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/*_21[789].txt re_loop_sessions/*_220.txt; ta
+  ▶ Grep "Ai70FlashIrq|NmiMode2|irq_mode` 2|irq_mode 2" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l web/src/game/lagmodel.js; grep -n "lagDomain\|NMI_MODE_EXTRA\
+  ▶ Read lagmodel.js
+  ▶ Read ai_final.js +40
+Picking up the last open part of the leftovers task: extending the lag model to `irq_mode` 2 (AI `$70`'s flash phases), replacing the s174 heuristic. Looking at `NmiMode2` first.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 F6C2 0x40; echo ----; python3 tools/dis.py 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,80p web/test/ai70ph3_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; mkdir -p /tmp/s220; timeout 600 python3 -m tools.emu.pass_cost tool
+  ▶ timeout 600 python3 -m tools.emu.pass_cost tools/emu/states/restore5f_s120.state 252 --split-int --slots --out /tmp/cost
+  ▶ Read cost5f.txt
+Tools.emu shows 21 lag passes in this run; mode-2 NMIs are ~1215 cycles (start line L251), mode 0's 1314. Now checking how the port wires the model in.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -rn "lagDomain\|NMI_MODE_EXTRA\|startLine(\|lagMode7\|lagLine\
+  ▶ Read machine.js +195
+Implementing: add `irq_mode` 2 to the lag domain behind an `m.lagMode2` flag, and turn the s174 heuristic off when it's on.
+  ▶ Edit lagmodel.js
+  ▶ Edit machine.js
+  ▶ Edit ai_final.js
+  ▶ node web/test/lag_probe.mjs web/test/states/restore5f.json 2733 --out /tmp/p5f.txt && python3 tools/lag_model_check.py /
+Estimates run ~1300–3800 cycles low. Breaking it down per stage:
+  ▶ python3 tools/lag_stage_diff.py /tmp/p5f.txt /tmp/cost5f.txt --slots 2>&1 | head -40
+  ▶ Grep "^f269[3-6]" /tmp/p5f.txt
+  ▶ Read p5f.txt
+The port's pass labels run 1 frame after tools.emu's here (emu f2671 ≈ port f2672: spr/col agree within ~100). `upd` is ~1400 low. Getting the port's per-AI counts:
+  ▶ node web/test/pass_count.mjs web/test/states/restore5f.json 2733 --stages --out /tmp/c5f.txt; grep -n "^f267[2-4]" /tmp/
+  ▶ node web/test/pass_count.mjs web/test/states/restore5f.json 2733 --stages --out /tmp/c5f.txt
+  ▶ Grep "^f267[2-4]" /tmp/c5f.txt
+  ▶ wc -l /tmp/c5f.txt; sed -n '160,168p' /tmp/c5f.txt | cut -c1-1200
+  ▶ Read c5f.txt +163
+  ▶ grep -n "passStage *= *\`s\|passStage = 's\|'s' + \|\`s\${" -r web/src/game | head; grep -n "export function paletteBuil
+  ▶ Grep "passStage = `s|function paletteBuildRom" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Grep "export function paletteBuild\b|export function paletteBuild\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Grep "passStage =" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read machine.js +76
+I'll measure AI `$70`'s flash routine `27:BCD7` (HitFlashPal + PaletteBuild) in exact ROM cycles and book them in the port instead of fitting it. Disassembling it:
+  ▶ python3 tools/dis.py 27 BCD7 0x30 --stop
+  ▶ timeout 600 python3 -m tools.emu.span_cost tools/emu/states/restore5f_s120.state 226 27:BCD7 27:BCF5 27:BCD9 27:BCDC --f
+  ▶ timeout 600 python3 -m tools.emu.span_cost tools/emu/states/restore5f_s120.state 226 27:BCD7 27:BCF5 27:BCD9 27:BCDC --f
+  ▶ Read span_cost.py
+  ▶ timeout 600 python3 -m tools.emu.span_cost tools/emu/states/restore5f_s120.state 226 27:BCD7 27:BCF5 27:BCD9 27:BCDC --f
+  ▶ timeout 600 python3 -m tools.emu.span_cost tools/emu/states/restore5f_s120.state 226 27:BCD7 27:BCF5 27:BCD9 27:BCDC --f
+HitFlashPal is a constant 2154 cycles here; the whole `Ai70FlashIrq` is 2169 (`$08` b2 set) / 2258 (b2 clear) + 6 for the RTS. Checking how `m.cyc` is booked per stage so I can add it:
+  ▶ Grep "lagCyc|set passStage|_stage" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/machine.js
+Booking `Ai70FlashIrq`'s exact cycles in its own stage `fl70` (rd/wr counts there ignored by the fits):
+  ▶ Edit ai_final.js
+  ▶ Edit lagmodel.js
+Now rerunning the probe against tools.emu:
+  ▶ node web/test/lag_probe.mjs web/test/states/restore5f.json 2733 --out /tmp/p5f.txt && python3 tools/lag_model_check.py /
+21/21 lag frames agree now (rms 191). Remaining: start lines after mode-2 NMIs are 1 line early in tools.emu (NMI 1215 vs mode 0's 1314, 1519 vs 1618: −99 cycles). Adding that:
+  ▶ Edit lagmodel.js
+  ▶ Edit lagmodel.js
+  ▶ node web/test/lag_probe.mjs web/test/states/restore5f.json 2733 --out /tmp/p5f.txt && python3 tools/lag_model_check.py /
+Start lines all match, 21/21 lags. Now the real test — the check and the full suite:
+  ▶ node web/test/ai70ph3_check.mjs
+  ▶ timeout 1200 python3 tools/run_checks.py
+All 52 checks pass with the model judging the mode-2 passes (the s174 heuristic is now only the `lagMode2 = false` fallback). Updating the lag-model doc comment, then REVERSE.md.
+  ▶ Edit lagmodel.js
+  ▶ Grep "Lag-model fits for AIs `\$34`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '186p' REVERSE.md | cut -c1-400; sed -n '187p' REVERSE.md | cut -c1-120
+Adding a Verification Log row after the s219 one:
+  ▶ python3 tools/insert_after_line.py 2>&1 | head -3; ls tools | grep -i -E "insert|md_" | head
+  ▶ Edit REVERSE.md
+Now the task text. All of (a)–(j) were done and only `irq_mode` 2 was left of (c), so the task is complete:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Updating the check's header and CLAUDE.md entry, which still describe the old heuristic:
+  ▶ Edit ai70ph3_check.mjs
+  ▶ Edit CLAUDE.md
+  ▶ Edit CLAUDE.md
+  ▶ node web/test/ai70ph3_check.mjs
+I finished the last open part of the gameplay-leftovers task: the port's lag-frame model now also handles `irq_mode` 2, the mode AI `$70` uses in its flash phases 4-6. That was the only part left, so the task is marked done. All 52 checks pass, and the model now flags exactly the same 21 lag frames as tools.emu in that fight.
+
+**What I measured in tools.emu** (area `$5F` boss fight, frames 2671-2733)
+- **The flash routine `Ai70FlashIrq` (`27:BCD7`) costs a fixed amount:** 2169 cycles when `$08` bit 2 is set and 2258 when it is clear, plus 6 for the RTS. Of that, 2154 is its call to `HitFlashPal`, which rebuilds the palette.
+- **The old estimate for this AI was far too low:** about 960 cycles where tools.emu measures 2389-2518. The AI `$70` fit came from a different phase in area `$81`.
+- **Mode-2 frame interrupts are 99 cycles shorter than mode 0's** (1215 vs 1314, and 1519 vs 1618). So the next pass starts one line earlier, at line 251 or 254.
+
+**What I changed in the port**
+- `obj/ai_final.js`: the flash routine now adds its exact cycle cost under a separate stage, `fl70`, instead of being estimated from read/write counts. The old phase 4-6 rule (14 or 17 active slots) now only runs when `m.lagMode2 = false`.
+- `lagmodel.js`: mode 2 counts toward the lag model when `m.lagMode2` is on (the default). Its frame interrupts are treated as 99 cycles shorter, and there are two new start-line steps (line 251 and line 254).
+- `machine.js`: adds the `m.lagMode2` switch.
+
+**Results against tools.emu**
+
+| | Before | After |
+|---|---|---|
+| Lag frames, port / tools.emu | 0 / 1 (on the 19 passes the tool could match) | 21 / 21 |
+| Wrong start lines | 10 | 0 |
+| Estimate − tools.emu (rms) | 2126 | 191 |
+| Average bias | −1979 | +72 |
+
+- `ai70ph3_check.mjs` gives the same result as before.
+
+**Not covered:** I only measured the flash routine's palette-rebuild path. The other path (when `obj_flags2` bit 7 is set) never ran in this fight, so it is still estimated from counts.
+
+REVERSE.md has a new Verification Log row with the commands to rebuild the run files, which are only in /tmp. I also updated the task text, CLAUDE.md and the check's header. Nothing is committed.
+
+SESSION_SUMMARY: s220 extended the lag model to `irq_mode` 2 (exact `Ai70FlashIrq` cycles 2169 / 2258 as stage `fl70`, `NmiMode2` NMIs −99 so passes start at L251 / L254, `m.lagMode2` replaces the s174 heuristic): area `$5F` matches 21/21 tools.emu lag frames with 0 start-line misses (rms 2126 → 191); 52/52 checks pass; the Ph7 leftovers task is done.

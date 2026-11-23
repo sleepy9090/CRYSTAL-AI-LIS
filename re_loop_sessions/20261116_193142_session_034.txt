@@ -1,0 +1,43 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## Next Tasks|^- \[ \]|^### " disasm/REVERSE.md
+  ▶ Glob **/{REVERSE.md,dead_ends.md,labels.csv}
+  ▶ Read 20261116_163435_session_033.txt
+  ▶ Read dead_ends.md
+  ▶ Read 20261116_163435_session_032.txt
+  ▶ Grep "^## Next Tasks|^- \[ \]|^#{2,3} " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1391
+  ▶ Glob tools/**/*.py
+  ▶ Read instruction_set.py
+Picked the top task: **Ph5.5 emu 1/6 — 6502 CPU + memory** (`tools/emu/`). Reading `nesrom.py` to reuse its ROM loader.
+  ▶ Read nesrom.py
+  ▶ python3 tools/dis.py 31 F2A4 0x60 --stop
+Writing the emulator package: loader, memory bus, CPU.
+  ▶ Write __init__.py
+  ▶ Write loader.py
+  ▶ Write memory.py
+  ▶ Write cpu.py
+Now the unit tests.
+  ▶ Write test_cpu.py
+  ▶ python3 tools/emu/test_cpu.py --rom
+All 24 tests pass, and the ROM smoke test reaches `SwitchBank16` with A=`$0C`, which matches the documented reset pair. Updating REVERSE.md.
+  ▶ Grep "tools/emu|tools\.emu" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1360
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I finished task **Ph5.5 emu 1/6**, the CPU and memory part of the emulator. All 24 tests pass (`python3 tools/emu/test_cpu.py --rom`).
+
+**New package `tools/emu/`** (pure Python, nothing third-party):
+- **`loader.py`** reads the ROM using the existing `nesrom.py` and checks the header: MMC3, 32 × 8KB PRG banks, battery save.
+- **`memory.py`** is the CPU's address map:
+  - RAM, mirrored the way the console does it.
+  - Hooks for the parts that don't exist yet (graphics, sound and controller registers). The sprite-copy register (`$4014`) already makes the CPU pay its 513-514 cycle delay.
+  - Battery save RAM at `$6000-$7FFF`, and per-address read/write watches for later debugging.
+  - Until the bank-switching chip (MMC3) is written in emu 2/6, a fixed stand-in maps banks 0/1/30/31 and records the game's writes to it.
+- **`cpu.py`** is the processor. Its opcode table comes from `instruction_set.py`, so it runs all 151 official opcodes plus the few unofficial ones listed there. Cycle counts are exact, including the extra cycles for crossing a page and for taken branches. It also handles the known 6502 address-wrap bugs, BRK, NMI and IRQ. Decimal mode is ignored, as on the real NES chip.
+- **`test_cpu.py`** has 23 hand-written tests covering flags, arithmetic overflow, address wrapping, cycle counts, the stack and interrupts. It also has one test against the real ROM: starting from the reset vector `31:F2A4`, the CPU reaches `SwitchBank16` (`$C40E`) after 261 instructions, asking for bank pair `$0C` (banks 24/25). That matches what REVERSE.md already says the reset code does.
+
+**Not modelled:** dummy reads and writes, the one-instruction delay before an IRQ after CLI/SEI/PLP, and an NMI taking over a BRK. These are written down in REVERSE.md, to be added only if a trace comparison ever needs them.
+
+**REVERSE.md:** the task is marked done, and a `tools/emu/` entry under Intermediate Output Files describes the hooks the MMC3, graphics, sound and controller code will plug into. No new ROM addresses were found, so `labels.csv` is unchanged. Nothing is committed.
+
+SESSION_SUMMARY: Session 34 — Ph5.5 emu 1/6 done: new `tools/emu/` (loader, memory bus, 2A03 CPU with exact cycles and interrupts) passes 24/24 tests, including the re-c Reset → `SwitchBank16` smoke test (A=`$0C`, banks 24/25).

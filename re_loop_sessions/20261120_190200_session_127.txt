@@ -1,0 +1,101 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ Read REVERSE.md +2272
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_12[4567].txt && tail -c 2500 re_loop_sessions/20261120_190200_session_126.txt; tail -c 1500 re_
+  ▶ wc -l tools/emu/scenario.py && grep -n "^    '\|^    \"\|^def \|^SCENARIOS" tools/emu/scenario.py | head -80; grep -n "I
+  ▶ Grep "SndFadeStep|SndOpSweep|IrqOffSound|F5E1" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Picked the top unchecked task (Ph6 scenario leftovers). Checking whether the IRQ-handler and sound-op items can run at all, starting with the IRQ handlers.
+  ▶ python3 tools/xref.py F5E1; python3 tools/xref.py F60E; python3 tools/search_bytes.py "E1 F5"; python3 tools/search_byte
+  ▶ grep -n -o ".\{300\}SndFadeStep.\{300\}" REVERSE.md | head; grep -n -o ".\{200\}SndOpSweep.\{300\}" REVERSE.md | head
+IRQ handlers 4/5 confirmed dead (only reachable via the dead `NmiMode4` path). Now checking whether the sound sweep op and fade step can ever run.
+  ▶ python3 tools/xref.py 8609 --bank 24; python3 tools/xref.py 8395 --bank 24; python3 tools/xref.py 8395 --bank 24 --data;
+  ▶ python3 tools/dis.py 24 82E0 40 | head -20; python3 tools/xref.py 0100 --bank 24 2>/dev/null | head; grep -n "snd_fade\|
+  ▶ python3 tools/search_bytes.py "85 FE" --disasm --context 4 | head -60; grep -n "snd_fade_timer" labels.csv
+  ▶ grep -n ",PlaySound\|,SndCommand\|,SoundQueue" labels.csv; python3 tools/dis.py 24 8048 30 | head -14
+  ▶ python3 tools/search_bytes.py "A9 FF 20 25 C1" --context 6 --disasm; python3 tools/search_bytes.py "A9 FF 4C 25 C1"; pyt
+  ▶ python3 tools/search_bytes.py "8D 10 01" --disasm --context 8; python3 tools/search_bytes.py "8E 10 01"; python3 tools/s
+Tracing how sound command `$FF` (which starts the fade) can reach the driver: two writers in `SoundUpdate`, one inside the driver.
+  ▶ python3 tools/dis.py 24 8210 40 | head -18; python3 tools/dis.py 31 F7FE 110 | head -50; python3 tools/dis.py 30 C125 50
+  ▶ grep -n -o ".\{250\}fade out.\{150\}\|.\{200\}cmd \$FF.\{200\}" REVERSE.md | head -8
+  ▶ Grep ".{0,200}(music fade|cmd `?\$FF|PlaySound\(\$FF\)|sound \$FF).{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "sound id|PlaySound callers|sound_ids" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ head -30 tools/sound_ids.py; python3 tools/sound_ids.py 2>&1 | grep -i -B2 -A8 "ff\b\|unknown\|non-imm" | head -60
+No `PlaySound($FF)` with an immediate. Writing a small tool to list the callers that pass a computed id.
+  ▶ Write playsound_dynamic.py
+  ▶ python3 tools/playsound_dynamic.py
+  ▶ python3 tools/dis.py 15 B768 20 | head -10; python3 tools/dis.py 30 C27E 18; python3 tools/dis.py 31 E628 14
+Candidates: area header music byte (`AreaLoadMap`), an object-type sound list (`ObjInit` `30:C289`), and a boss replaying the current music. Checking the data for any `$FF` id.
+  ▶ sed -n 1,25p tools/area_dump.py | grep -i "usage\|music\|mode" ; python3 tools/dis.py 30 C25D 40 | head -24
+  ▶ python3 tools/area_dump.py list | head -5; grep -n "def \|music" tools/area_dump.py | head -30
+  ▶ Read area_dump.py +40
+  ▶ Write sound_ff_scan.py
+  ▶ python3 tools/sound_ff_scan.py
+No `$FF` in any area music byte or object-type sound byte. Last check: the boss path `15:B778` replays `snd_cur_music` — confirming what can be stored there.
+  ▶ python3 tools/search_bytes.py "8D 02 01" --disasm --context 4 | grep -v "^ *[0-9A-F]\{4\}: [0-9a-f ]\{8\} *\.db" | head 
+  ▶ python3 tools/dis.py 15 B836 40 | head -22; python3 tools/dis.py 15 B75A 20 | head -8; grep -n "^15,B7\|^15,B8" labels.c
+  ▶ Grep "BossRecs.{0,400}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1076
+  ▶ grep -n "BossRecs\|BossAreaList" labels.csv; python3 tools/dis.py 15 B807 50 | head -28
+  ▶ python3 tools/decode_tables.py --help 2>&1 | head -8; python3 tools/decode_tables.py 15:B96B 14 word 2>&1 | head -20
+Checking the boss records' music byte (byte 3) — the last place an id could come from.
+  ▶ python3 tools/decode_tables.py 15:B96B 14 ptr16; python3 tools/decode_tables.py 15:B987 13 hex21
+Found it: boss record 12 (area `$5F`, final boss) has music byte `$FF`. Tracing where it gets replayed.
+  ▶ python3 tools/dis.py 15 B728 0xE0 | head -80
+  ▶ Grep "SndFadeStep|SndOpSweep|8609|BossDefeated" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+Adding a scenario to run it: spawn `BossDefeated` (type `$CF`) in area `$5F`.
+  ▶ Read scenario.py +184
+  ▶ python3 tools/dis.py 15 B947 22; grep -n "^15,B94\|^15,B95" labels.csv
+  ▶ Edit scenario.py
+  ▶ time timeout 600 python3 -m tools.emu.scenario boss_fade 2>&1 | tail -40
+  ▶ sed -i "s/'\$0F at +10 -> music \$FF -> fade-out (SndFadeStep)', area='5F',/'\$0F at +10 -> music \$FF -> fade-out (SndF
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario boss_fade 2>&1 | sed -n 3,40p | grep -v "^  bank"
+Still no `$FF` command after 2500 frames: the final scene (sub_state `$1E`) takes over. One more possible source: the driver's own chain id `$0113` (`24:8222`).
+  ▶ python3 tools/search_bytes.py "8D 13 01" --disasm --context 6; python3 tools/search_bytes.py "99 13 01"; python3 tools/s
+`$0113` is always op & `$1F`, so it can't be `$FF`. Conclusion: `SndFadeStep` can't run in real play. Now `SndOpSweep`: checking whether any sound stream uses op `$Cx`.
+  ▶ Grep "0xC0|SndOpSweep|sweep" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ Read sound_export.py +1
+  ▶ sed -n 100,118p tools/sound_export.py; ls web/data/sound.json && python3 tools/sound_export.py --out /tmp/s127_sound.jso
+  ▶ Grep ""op": ?"sweepreg"" /tmp/s127_sound.json
+  ▶ Grep "sweepnote|sweepreg" /tmp/s127_sound.json
+The JSON is a single line, so I'm adding a small counter tool.
+  ▶ Write sound_op_count.py
+  ▶ python3 tools/sound_op_count.py /tmp/s127_sound.json; python3 tools/sound_op_count.py /tmp/s127_sound.json sweepnote | t
+  ▶ Write sound_op_count.py
+  ▶ python3 tools/sound_op_count.py /tmp/s127_sound.json; python3 tools/sound_op_count.py /tmp/s127_sound.json sweepnote | t
+`SndOpSweep` (op `$Cx`) appears in none of the 326 exported streams; only op `$Bx` (sweep + note, 39 uses in SFX) sets the sweep. Recording the findings now.
+  ▶ grep -n "^31,F5E1\|^24,8395\|^24,8609\|^31,F60E\|^15,B987\|^15,B728\|^15,B947" labels.csv
+  ▶ python3 - <<'EOF' 2>/dev/null || echo "inline python blocked by rule; use Edit"
+  ▶ Read labels.csv +19
+  ▶ Read labels.csv +96
+  ▶ Read labels.csv +442
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Now the REVERSE.md task text.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I worked through three items in the top open task (the low-priority Ph6 scenario leftovers): `IrqOffSound` (IRQ handler 5), `SndOpSweep` and `SndFadeStep`. None of the three can run in real play.
+
+- **`IrqOffSound` `31:F60E`:** the only way in is IRQ handler 4 (`IrqRowStretch` `31:F5E1`), which nothing calls. The handler table entries are only selected by `NmiMode4`, and only the already-dead `ShopDoorOpen/Close` reach that, so both handlers are dead.
+- **`SndOpSweep` `24:8395`** (sound stream op `$Cx`): none of the 22,028 ops in the exported music and sound-effect data uses it. Sweeps only come from op `$Bx` (39 uses, all in sound effects).
+- **`SndFadeStep` `24:8609`:** it only runs after sound command `$FF`, and no caller passes `$FF` as a fixed value. The only `$FF` in the data is the final boss record (area `$5F`) music byte. `BossDefeated` stores it, but the same record's hook `15:B947` deletes the reward object before that object can replay the music, so the fade never starts. A new scenario confirms it:
+  - **Command:** `python3 -m tools.emu.scenario boss_fade`, 2500 frames, about 25 s.
+  - **Result:** the `$FF` is stored at frame 167 and the reward object is deleted in the same frame. Command `$FF` never reaches the driver and the fade timer is never set.
+  - **Also run for the first time:** `SubstFinalSceneReset` and `FarCall_D354`.
+
+The web port keeps both sound handlers, which is harmless, so I made no web changes.
+
+**Records:**
+- **REVERSE.md:** findings added to the task. The task stays unchecked, as the rules say for low-priority leftovers tasks.
+- **labels.csv:** updated comments on four labels. No new addresses.
+- **New tools:**
+  - `tools/playsound_dynamic.py`: lists the sound calls whose id is computed.
+  - `tools/sound_ff_scan.py`: checks the area and object-type sound bytes.
+  - `tools/sound_op_count.py`: counts the stream ops.
+
+**Not done:** I didn't regenerate `docs/emu_scenarios.txt`; the full run takes about 55 minutes and is planned for the next batch of scenarios. Still open in the task: pits, conveyor, the warp pick, the burst, hit rules, the final boss, reveals, the transform, the shot eater, type `$64` and the ending labels.
+
+SESSION_SUMMARY: Session 127: IrqOffSound, SndOpSweep and SndFadeStep can't run in real play (handler 5 only via dead H4/NmiMode4; op $Cx used by 0 of 22028 stream ops; fade needs sound cmd $FF whose only source, the final-boss BossRecs music byte $FF, is cut off when hook 15:B947 deletes the reward object; new scenario boss_fade confirms); new tools playsound_dynamic.py, sound_ff_scan.py, sound_op_count.py; scenario-leftovers task stays open.

@@ -1,0 +1,39 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -3 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ Read dead_ends.md
+  ▶ tail -c 3000 re_loop_sessions/20261120_140125_session_118.txt; echo ----; tail -c 1500 re_loop_sessions/20261120_140125_
+  ▶ wc -c re_loop_sessions/20261120_190200_session_119.txt && head -c 600 re_loop_sessions/20261120_190200_session_119.txt; 
+  ▶ git diff REVERSE.md; python3 tools/web_compare.py --help 2>&1 | head -30
+  ▶ python3 tools/comparison.py report 2>&1 | tail -15; ls gfx/compare | grep -E "2352|2450|2385|2392|2460" ; python3 tools/
+Web compare done: title frames are 0 px; gameplay frames differ only on tile row 23. Now checking those pixels are exactly scanline 191.
+  ▶ sed -n 1,40p tools/compare_frames.py | grep -n "diff\|line\|row" | head; for f in 2352 2385 2392 2450 2460; do python3 t
+  ▶ python3 tools/compare_frames.py gfx/compare/ref_2352.png gfx/compare/web_2352.png; python3 tools/compare_frames.py gfx/c
+  ▶ Grep "png|rows|def " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/web_compare.py
+  ▶ Read web_compare.py +84
+I'll write a small tool that reports the exact scanlines of mismatching pixels from the triple images.
+  ▶ Write triple_lines.py
+  ▶ Grep "^def read_png" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/render_compare.py
+  ▶ Read render_compare.py +44
+  ▶ Read render_compare.py +68
+Returns `(w, h, list of RGB tuples)` — adjusting the tool.
+  ▶ Edit triple_lines.py
+  ▶ python3 tools/triple_lines.py gfx/compare/web_1450.png gfx/compare/web_2352.png gfx/compare/web_2385.png gfx/compare/web
+All gameplay differences are confined to scanline 191 (the known split line). Running the web check suite to confirm the s118 state is sound before ticking the checkpoint.
+  ▶ for t in core_check ppu_check serve_check world_check sprite_check obj_check; do printf "%s: " $t; node web/test/$t.mjs 
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/serve_check.mjs 2
+All checks pass. Updating REVERSE.md: ticking the Ph7 checkpoint and the task.
+  ▶ Read REVERSE.md +2250
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I've ticked the Ph7 checkpoint ("web port pixel-compared against emulator screenshots"). Session 119's task was to check that the gameplay port meets that criterion, and it does.
+
+**Results** (I reran `tools/web_compare.py` and `tools/comparison.py report`; the second refreshed COMPARISON.md):
+- **Identical (0 px):** title frames f600, f1200, f1450, f1500 and f2250, plus gameplay f2409.
+- **Small differences:** f2352 (35 px), f2385 (30 px), f2392 (35 px), f2450 (81 px) and f2460 (76 px). Every one of these pixels is on scanline 191, between x=8 and x=103. That is the HUD split line, a difference known since session 108. Game state, sub-state, area, music and palette match on all frames.
+- **Per-frame data:** a few rows still differ (core 8 of 2247 frames, palette 9, objects 1, sound 74). These are the timing and note-change mismatches between the two runs that earlier sessions already explained.
+- **Checks:** all web checks pass — core, ppu, serve, world, sprites 552/552 and routines 14900/14900. Session 118 was cut off partway through, so I ran them to confirm its AI `$5F` port left nothing broken.
+
+To confirm the differences were all on one scanline, I added `tools/triple_lines.py`. It lists the mismatched scanlines in a `web_compare.py` comparison image.
+
+In REVERSE.md, the checkpoint entry in the Verification Checklist now records these numbers, and the session 119 task is marked done. Nothing is committed.
+
+SESSION_SUMMARY: Session 119: Ph7 checkpoint ticked — the web compare shows title frames at 0 px and gameplay f2352–f2460 differing only on scanline 191 (the HUD split, found with the new tools/triple_lines.py); all web checks pass.

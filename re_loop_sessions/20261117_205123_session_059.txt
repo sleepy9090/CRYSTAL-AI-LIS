@@ -1,0 +1,71 @@
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | tail -30
+  ▶ Read REVERSE.md +1731
+  ▶ Read dead_ends.md
+  ▶ sed -n '1731,1885p' REVERSE.md | grep -n "\- \[ \]" | head; sed -n '1876,1885p' REVERSE.md | cut -c1-400
+  ▶ for f in re_loop_sessions/*_05[678].txt; do echo "== $f"; tail -c 1500 $f; done; wc -c re_loop_sessions/*059.txt
+  ▶ tail -c 1500 re_loop_sessions/20261117_155157_session_056.txt; echo; tail -c 1500 re_loop_sessions/20261117_205123_sessi
+  ▶ Grep "\$62FE|\$0680|\$06A0|`\$67`|\$67/|\$69\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Most of this is already covered: `$0680/$06A0` = `obj_param1/2` (item ids in talk acts), and `$67/$69/$6A` in the k1/metatile sections. Checking `$62FE`.
+  ▶ sed -n '800,830p' REVERSE.md | cut -c1-300; grep -n "62F[C-F]" labels.csv; grep -n "62FE\|62FC" REVERSE.md | cut -c1-250
+`$62FE` is the only part still TBD. Finding its readers.
+  ▶ python3 tools/xref.py 62FE 2>&1 | head -30
+  ▶ python3 tools/dis.py 31 E730 80; echo ----; python3 tools/dis.py 15 A680 40
+`E75E`: if `$62FE` ≠ 0, `chr_r1_play` = `$E779[$62FE·8 + ((tmp_08>>3)&7)]`, which looks like an animated BG CHR bank. Checking the table, the caller, and what `tmp_08` is.
+  ▶ python3 tools/xref.py E75E; python3 tools/decode_tables.py E779 48 u8 2>&1 | head -20; grep -n "^\*,8,\|^\*,08," labels.
+Table has 4 rows (values 0-3; `E799` onward is code). Checking the caller context and what `$08` holds.
+  ▶ python3 tools/dis.py 31 E0A8 30; grep -n ",E0[89A-F][0-9A-F]," labels.csv | head; grep -in "^\*,0\?8,\|frame_ctr\|frame_
+`$08` is the frame counter, so `E75E` is a BG CHR animation tick: it swaps R1 (the 2KB BG bank at `$0800`) every 8 frames through 8 steps. Next, which areas set which value.
+  ▶ python3 tools/area_dump.py --help 2>&1 | head -20
+  ▶ Read area_dump.py +230
+  ▶ python3 tools/area_dump.py sub 1 2>&1 | head -8; grep -n "f62FE\|62FE\|def decode_sub" tools/area_dump.py tools/render_l
+  ▶ python3 tools/area_dump.py sub 2>/dev/null > /tmp/s59_sub.txt; grep -B1 -A2 "62FE=0[1-9A-F]\|62FE=[1-9A-F]" /tmp/s59_sub
+  ▶ python3 tools/area_dump.py sub 2>/dev/null | grep -B1 -A2 "62FE=[0-9A-F][1-9A-F]\|62FE=[1-9A-F]0"
+All values are 0-3, so the 4-row table is complete. Checking whether the web port already has this tick, and what the bank-15 `A699` routine is.
+  ▶ grep -rn "62FE\|0x62fe\|E75E\|e75e" web/src | head; grep -n ",A6[0-9A-F][0-9A-F],\|,A400," labels.csv | head
+Not in the web port yet (only stored at `area.js:28`). Writing findings: labels first.
+  ▶ Read labels.csv +228
+  ▶ Grep "^31,E7[0-9A-F][0-9A-F],|^15,A684" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "area_f62FE" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+Keeping the existing label name, since `web/data/ram_labels.json` and `docs/ram_map.txt` are generated from it, and updating the comment. Adding the routine and table labels.
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Now REVERSE.md. Reading the k0 row and the task line.
+  ▶ sed -n '406p;1512p;1841p;1880p' REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding a findings paragraph after the area sub-table table.
+  ▶ sed -n '412,419p' REVERSE.md | cut -c1-160
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Area lists checked against the dump. Now adding the port gap to the existing gameplay web-fix task (same subsystem), and checking that the label loads.
+  ▶ grep -n "^- \[ \] Web fix: gameplay frames" REVERSE.md | cut -c1-20; grep -o "7/8 leftovers (b) (HUD + gameplay \`SoundU
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 31 E75E 8
+I finished the top open task, "Ph3: area follow-ups 3". Most of it had already been documented in earlier sessions. The one real unknown left was `$62FE`, and it turns out to control **background tile animation**. This is static analysis only; I haven't confirmed it in the emulator.
+
+**What `$62FE` does**
+- Each area's setup data sets `$62FE` to a value from 0 to 3.
+- During gameplay, `31:E75E` runs once per frame (from `SubstPlayTail`, skipped while the boss camera is locked).
+- If `$62FE` is not 0, the routine swaps one 2KB background graphics bank (MMC3 R1, `$07F1`) using a small table at `31:E779`, picked by the frame counter `$08`.
+- The bank changes every 8 frames and the pattern repeats every 64 frames:
+
+| Value | Bank sequence | Areas |
+|---|---|---|
+| 0 | none (the bank set at area load stays) | all others |
+| 1 | `0A 08 06 04` (looping) | 29 areas |
+| 2 | `26 24 22 20` (each held for 16 frames) | 24 areas |
+| 3 | `20 22 24 26` (looping) | 21 areas |
+
+Two other places also write it: the boss-defeated record sets a new value after a boss fight, and the phase handler at `15:A699` (boss AI `$E2`) sets it to 0 and fixes the graphics banks.
+
+**The rest of the task was already covered**
+- `$0680/$06A0` are the object's two parameters (the "give item" talk actions use them).
+- `$67/$69/$6A` are described in the metatile and background-collision sections.
+
+**Updates**
+- **`labels.csv`:** new labels `BgChrAnimTick` (`31:E75E`) and `BgChrAnimTable` (`31:E779`). I updated the `$62FE` comment but kept its name `area_f62FE`, because two generated files (`web/data/ram_labels.json` and `docs/ram_map.txt`) use it.
+- **`REVERSE.md`:** added a section with the table above and filled in the three places that said "TBD". Also marked the task done.
+- **Web port:** it stores `$62FE` but doesn't animate anything yet, so area 1 and the other animated areas will look different from the emulator. I added this to the existing gameplay web-fix task rather than opening a new one.
+
+SESSION_SUMMARY: Session 59 — area follow-ups 3 done: `$62FE` is the background tile animation set (`BgChrAnimTick` `31:E75E` swaps a graphics bank every 8 frames, table `31:E779`, 3 animated sets used by 74 areas); the other parts were already documented; labels and REVERSE.md updated, and the web port gap added to the gameplay fix task.

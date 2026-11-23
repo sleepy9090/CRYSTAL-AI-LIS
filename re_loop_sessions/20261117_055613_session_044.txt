@@ -1,0 +1,52 @@
+  ▶ Glob {dead_ends.md,REVERSE.md,re_loop_sessions/*}
+  ▶ Read dead_ends.md
+  ▶ Grep "SESSION_SUMMARY" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions
+  ▶ Grep "^## Next Tasks|^- \[ \]|^###" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1555
+  ▶ Grep "PlayerUpdate|9BF6|9CEF|A1C9|\$0711|pad_dir|pad_new|pad_held" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '420,424p;1505,1520p' REVERSE.md | cut -c1-2500
+Picked the top task: Ph3 gameplay 1/3 (player update routine). Now disassembling `PlayerUpdate` at `26:9B45`.
+  ▶ python3 tools/dis.py 26 9B45 0x1B0
+  ▶ Read REVERSE.md +1149
+  ▶ ls tools/emu tools/emu/states && sed -n 1,80p tools/emu/padprobe.py
+  ▶ Grep "def (on_exec|on_write|on_frame|load_state|save_state|run_frame|call)\b|def load|def save" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ python3 tools/dis.py 26 9CEF 0xE0
+  ▶ python3 tools/dis.py 26 9824 0x90 && python3 tools/decode_tables.py 26:9D4D 49 u8 2>&1 | head -20
+Mapped the jump arc (slot 0 = ground position, slot 1 = drawn body offset by a height table). Next: the `A1C9` sub-call.
+  ▶ python3 tools/dis.py 26 A1C9 0x120 && python3 tools/xref.py 9D81 | head; python3 tools/xref.py 9D4D | head
+`$A1C9` is in bank 27 (the upper half of the 26/27 pair), so I'm disassembling it there instead.
+  ▶ python3 tools/dis.py 27 A1C9 0x140
+`27:A1C9` is the facing logic: slot 1's 4-way facing follows slot 0's movement direction, with a ±45° dead zone. So slot 0 is the moving body. Next I'll find slot 0's AI.
+  ▶ Grep "9D81|9D9A|AI \$0[0-3]\b|type \$0[0-3]\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+AI `$03` at `26:9D9A` (slot 0, type `$06`) is the real movement routine, and AI `$02` (`9D81`) is the same routine with input cleared. Dumping it in full:
+  ▶ python3 tools/dis.py 26 9DCE 0x260 | cut -c1-70
+  ▶ python3 tools/dis.py 26 9FFF 0xA0 | cut -c1-70; python3 tools/dis.py 26 98D7 0x70 | cut -c1-70
+  ▶ python3 tools/dis.py 26 9947 0xE9 | cut -c1-75; python3 tools/dis.py 27 A000 0x50 | cut -c1-70
+  ▶ Grep "ObjStepVector|ObjBgProbe|,9AE8|SpawnShot|obj1_flash|ram_0714|ram_0716|,8D59|orbit_level|mp_cur" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 26 8480 0x3C --stop | cut -c1-70; python3 tools/decode_tables.py 26:84BC 48 u8
+Next I'll write a decoder for the speed tables (8-frame step patterns per speed and direction) and the jump arc.
+  ▶ Grep "^def " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/nesrom.py
+  ▶ Read nesrom.py
+  ▶ Write player_dump.py
+  ▶ python3 tools/player_dump.py > docs/player_tables.txt; grep -n "speed\|sum" docs/player_tables.txt | awk 'NR<=60' | cut 
+  ▶ python3 tools/player_dump.py > docs/player_tables.txt && wc -l docs/player_tables.txt
+  ▶ python3 tools/player_dump.py
+Speed and jump-arc tables are decoded. Now the remaining player code (`27:A04F-A1C9`, the B-button/item use path):
+  ▶ python3 tools/dis.py 27 A04F 0x17A | cut -c1-70
+  ▶ Grep "^\*,(0712|0716|0714|0715|0717|0708|0709|03C1|0620|0640|0660|0680|06A0|06E0|0561|0641),|,9AE8,|,8D59,|,8CC0," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 26 9AE8 0x30 --stop | cut -c1-70; grep -n -o '.\{80\}\$071[246].\{80\}' REVERSE.md | head -8
+  ▶ python3 tools/dis.py 26 9AE8 0x30 --stop
+  ▶ Grep ".{0,90}\$071[246]\b.{0,90}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "\| `?\$(14|15|17|18|1C|06|10)`? \|" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "State1Sub|SubstPlay|sub_state.{0,40}\$1C|CADE" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/decode_tables.py 30:CADE 32 ptr16
+Writing the REVERSE.md section now (substate targets resolved: magic 3→telepathy, 4→teleport, 7→change form).
+  ▶ Read REVERSE.md +872
+  ▶ Edit REVERSE.md
+Static write-up done. Now an emulator probe to check walk speed, slot roles and the sword charge.
+  ▶ Grep "state\.load|from emu|import state|parse_buttons" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/tour.py
+  ▶ Write player_probe.py
+  ▶ python3 tools/emu/player_probe.py --seg NONE:4 RIGHT:32 LEFT:16 DOWN:16 B:100 NONE:24 --every 4
+  ▶ Edit player_probe.py
+  ▶ python3 tools/emu/player_probe.py --seg NONE:4 RIGHT:32 LEFT:16 DOWN:16 B:100 NONE:24 --every 4
+You've hit your 5-hour limit · resets 10:50am (America/New_York)

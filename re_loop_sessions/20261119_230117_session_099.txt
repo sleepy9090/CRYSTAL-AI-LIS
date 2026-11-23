@@ -1,0 +1,96 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | tail -30
+  ▶ Read dead_ends.md
+  ▶ grep -n "^- \[ \]" REVERSE.md | head; wc -c re_loop_sessions/*099*; tail -c 3000 re_loop_sessions/20261119_230117_sessio
+  ▶ git status --short | head -20; git log --oneline -1; sed -n 2370,2382p REVERSE.md | cut -c1-300
+  ▶ wc -l tools/emu/scenario.py docs/emu_scenarios.txt && grep -n "argparse\|add_argument\|^def \|^SCENARIOS\|^    '[a-z_0-9
+  ▶ Read scenario.py
+I'm starting on the top task, the Ph6 scenario leftovers. Next I'll check which labels the scenarios still haven't run, then pick a group I can cover in one session.
+  ▶ grep -n "still never run" -A 30 docs/emu_scenarios.txt
+  ▶ grep -n "AiDasher\|AiFanTurret\|AiOrbiter\|AiBurst\|ObjAiExplode\|AiChase\b\|AiShootCheck" labels.csv gfx/obj_ai.txt | c
+  ▶ grep -E "^ai \\\$(2C|44|4C|4D|58|74|24|21|26) " gfx/obj_ai.txt; ls gfx/ | head -50; grep -n "type\|^ *[0-9]" gfx/area_sp
+  ▶ Grep "^ai \$(2C|44|4C|4D|58|74|24|21|26) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ Read area_spawns.txt
+  ▶ awk '/^ +[0-9]+ \$/{a=$2} /h0 p=\$(0B|0D|27|01|06|19) /{print a, $0}' gfx/area_spawns.txt | sort -k6 | awk '{c[$6]++; if
+  ▶ Grep "h0 p=\$(0B|0D|27) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/area_spawns.txt
+I'm looking for areas that spawn the never-run enemy types (dasher, fan turret, orbiter, burst).
+  ▶ Grep "type=[^p]|h[5-9]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/area_spawns.txt
+  ▶ Grep "\$5B|\$5D|\$77|\$C8|\$4D" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "p\+\$50|def .*type" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ sed -n 1,30p tools/enemy_catalog.py; ls docs gfx | grep -i enemy
+  ▶ python3 tools/enemy_catalog.py --all 2>&1 | grep -E "^ *(type )?\\\$?(4D|5B|5D|77|C8|DC|58|51|6C)\b|ai \\\$(2C|44|4C|4D|
+  ▶ python3 tools/enemy_catalog.py --all --out /tmp/enemy_cat.txt && wc -l /tmp/enemy_cat.txt
+  ▶ mkdir -p tmp && python3 tools/enemy_catalog.py --all --out tmp/enemy_cat.txt
+The shell blocks writing a temp file, so I'll read the enemy catalogue straight from stdout to find where those enemies spawn.
+  ▶ python3 tools/enemy_catalog.py --all
+  ▶ Grep "ObjInit|ObjLoadType|TypeInit|ObjSetType|ObjBecome" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ grep -n "def call\|def on_exec\|def set_tracer\|def run_frame" -A10 tools/emu/nes.py | head -70; python3 tools/dis.py 30
+  ▶ python3 tools/dis.py 30 C264 60 | head -30; sed -n 156,185p tools/emu/nes.py
+  ▶ python3 tools/dis.py 30 C427 20 --stop; grep -n "self.p\b\|self.p =\|def _push\|def reset" tools/emu/cpu.py | head; grep
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+Now the scenarios themselves: each never-run enemy type goes in slot `$0F` (an empty skip slot in area 03) 48 px from the player, plus the boss explosion chain type `$DC`.
+  ▶ Edit scenario.py
+  ▶ time python3 -m tools.emu.scenario obj_dasher obj_fan obj_fan77 obj_orbiter obj_burst obj_explode 2>&1 | grep -v "^  ban
+Five of the six ran their AI on the first try (AiDasher, AiFanTurret + Idle, AiOrbiter, and HitPlayerShot as a bonus). My `head` cut off the last two, so I'm rerunning burst and explode on their own.
+  ▶ python3 -m tools.emu.scenario obj_burst obj_explode 2>&1 | grep -v "^  bank\|<- [0-9A-F][0-9A-F]  pc 27:B448" | head -70
+  ▶ python3 tools/dis.py 15 B807 90 | head -45; grep -n "BossDefeated" REVERSE.md | cut -c1-400 | head
+  ▶ python3 tools/decode_tables.py 15:B95D 14 u8; sed -n 982,990p REVERSE.md | cut -c1-600
+Area `$0A` is entry 0 in the list, so I'm moving `obj_explode` there.
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario obj_explode 2>&1 | grep -v "^  bank\|pc 27:B8[5-9A-C]" | head -50
+  ▶ python3 tools/xref.py 81A5 2>&1 | head; grep -n "BurstRadius" labels.csv REVERSE.md | cut -c1-300
+  ▶ python3 -m tools.emu.scenario --out docs/emu_scenarios.txt > /dev/null 2>&1; echo exit $?
+  ▶ Grep "Chest / give-item / bow / telepathy / shop scenarios" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 -m tools.emu.scenario --out docs/emu_scenarios.txt > /dev/null 2>&1
+  ▶ Read REVERSE.md +186
+While the rerun goes, I'm writing the Verification Log entry for the six new scenarios.
+  ▶ Edit REVERSE.md
+Now I'm updating Next Tasks: marking this task done for the spawned-enemy / boss-defeat group and moving what's left into one task at the end of RE Investigation.
+  ▶ grep -n "^- \[ \] Ph6 (low priority) scenario leftovers\|^### Web Port Fixes" REVERSE.md
+  ▶ Read REVERSE.md +2390
+  ▶ Grep "BossAreaList|BossRecPtrs" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+I've added a note to the `labels.csv` entry for `BossAreaList`. Next, the task edits; I'll fill in the union count once the rerun finishes.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+The task edits are in. Now I'm waiting for the full rerun to fill in the two placeholders.
+  ▶ ToolSearch max_results query
+  ▶ Monitor command description timeout_ms
+The rerun takes about 50 minutes, and my monitor is watching for its summary line. I'll fill in the two placeholders when it finishes.
+  ▶ Monitor command description timeout_ms
+The rerun is still going (about 10 of ~50 minutes so far), so I've re-armed the watch.
+  ▶ Monitor command description timeout_ms
+The rerun is still going (about 20 minutes in), so I've re-armed the watch.
+  ▶ Monitor command description timeout_ms
+The rerun is still going (about 30 minutes in), so I've re-armed the watch.
+  ▶ Grep "^union:|^  bank" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_scenarios.txt
+The rerun finished: 130 of 178, exactly 122 + the 8 new labels, so no earlier scenario lost coverage. Filling in the placeholders.
+  ▶ sed -i 's/(union UNION_S99;/(full rerun: union **130\/178**, was 122;/; s/LEFT_S99 labels still never run/48 labels stil
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I finished the session-99 task. The scenarios now cover the never-run enemies that no area places, plus the boss-defeat chain. The full rerun now runs **130 of the 178 never-run labels (was 122)**, and every earlier scenario kept its coverage.
+
+**What I added to `tools/emu/scenario.py`:**
+- A new `spawn=[(off, slot, type, dx, dy)]` option. Between frames it runs the ROM's object-setup routine `ObjInit` (`30:C25D`), puts the CPU, mapper and zero-page state back, and places the object next to the player.
+- Six new scenarios. Each ran the code REVERSE.md predicts for it:
+
+| Scenario | Labels it now runs | Note |
+|---|---|---|
+| `obj_dasher` | `AiDasher` | |
+| `obj_fan`, `obj_fan77` | `AiFanTurret`, `AiFanTurretIdle` | In `obj_fan` a shot hits the player (`HitPlayerShot`) and the knockback pushes them into an exit to area 02 |
+| `obj_orbiter` | `AiOrbiter` | |
+| `obj_burst` | `AiBurst` | Despawns itself the frame it fires |
+| `obj_explode` (area `$0A`) | `ObjAiExplode`, `BossDefeated` | Explosion → reward drop; area music `$11` comes back |
+
+**Findings:**
+- **`BossAreaList` `15:B95D` has no end marker.** In my first run, from the non-boss area 03, `BossDefeated` read past the end of the list and the CPU jumped into RAM and crashed. That only happens because I forced the object there; in the real game the chain only fires in a boss's own area. I moved `obj_explode` to area `$0A` (the first boss area in the list) and noted this in `labels.csv`.
+- **`BurstRadius` `28:81A5` has nothing to do with `AiBurst`.** It belongs to a player sprite effect, so it stays on the open list.
+- `AiChase` and `AiShootCheck` had already left the never-run list before this session.
+
+The findings are in the REVERSE.md Verification Log, and `docs/emu_scenarios.txt` is regenerated. I marked the task done and moved the remaining 48 labels into one new low-priority task at the end of RE Investigation. That list includes the live bosses `BossAiE2`/`BossFleeSpeech`, `AiShopEmpty`, pits and platforms, the sound sweep/fade, the hit rules and other save slots. Three of the 48 are dead code.
+
+SESSION_SUMMARY: Session 99: added a `spawn` option to `scenario.py` (`ObjInit` between frames) and six object scenarios that now run AiDasher, AiFanTurret(+Idle), AiOrbiter, AiBurst, ObjAiExplode, BossDefeated and HitPlayerShot (never-run coverage 122→130/178); found BossAreaList has no end marker (the crash outside boss areas comes from forcing the object); the remaining 48 labels moved to one new last task.
+That was the last background watch ending. It reports the same 130/178 already written into REVERSE.md and the task list, so nothing changes.
+
+SESSION_SUMMARY: Session 99: added a `spawn` option to `scenario.py` (`ObjInit` between frames) and six object scenarios that now run AiDasher, AiFanTurret(+Idle), AiOrbiter, AiBurst, ObjAiExplode, BossDefeated and HitPlayerShot (never-run coverage 122→130/178); found BossAreaList has no end marker (the crash outside boss areas comes from forcing the object); the remaining 48 labels moved to one new last task.

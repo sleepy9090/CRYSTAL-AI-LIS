@@ -1,0 +1,55 @@
+  ▶ ls re_loop_sessions | tail -3 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | head -40
+  ▶ Read dead_ends.md
+  ▶ tail -c 2500 re_loop_sessions/20261121_000129_session_130.txt; echo ----; tail -c 3000 re_loop_sessions/20261121_000129_
+  ▶ grep -n "^- \[ \]" REVERSE.md | head -10
+  ▶ grep -n -o ".\{200\}shot eater.\{200\}" REVERSE.md | head; grep -n -o ".\{150\}type \`\$7D\`.\{200\}" REVERSE.md | head
+  ▶ Grep ".{0,250}(shot eater|magic-6|magic 6).{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1184
+Picking the magic-6 shot-eater item from the scenario leftovers; now reading how existing scenarios are written.
+  ▶ Grep "mp_fail_area|thunder_transform|def follow_enemy|def place_player|^SCENARIOS|^def force|^def set_from" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Read scenario.py
+  ▶ python3 tools/dis.py 26 8FC4 0x30 && python3 tools/dis.py 26 906C 0x20
+  ▶ Grep ".{0,200}(MagicBarrier|magic 6|Magic 6|\$11`/`\$12|shot id `\$11`).{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/search_bytes.py "a9 ff 99 40 05" --context 0 && python3 tools/search_bytes.py "a9 ff 9d 40 05" --context 0
+  ▶ Grep ".{0,200}spawn_b2` = `\$FF`.{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Finding which code marks enemy shots ($0540 = $FF) so the scenario can spawn a real one.
+  ▶ Grep "STA obj_spawn_b2" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm
+  ▶ python3 tools/objtype_dump.py 2>&1 | grep -n "0540=FF" | head -20
+  ▶ Grep ".{0,100}CollPairTable.{0,300}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario shot_eater 2>&1 | head -60
+  ▶ python3 tools/dis.py 26 9420 0x14 && python3 tools/decode_tables.py 26:96F1 15 4b 2>&1 | head -20
+  ▶ python3 tools/decode_tables.py 2>&1 | head -15
+The shot eater ran (enemy shots removed at `26:9073`); now checking collision order vs the player hit and refining the scenario.
+  ▶ python3 tools/decode_tables.py 26:96F1 15 hex4
+  ▶ Write shot_eater_probe.py
+  ▶ timeout 300 python3 -m tools.emu.shot_eater_probe 2>&1 | head -70
+  ▶ python3 tools/dis.py 26 8F6E 0x4D
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario shot_eater 2>&1 | sed -n 3,45p; timeout 300 python3 -m tools.emu.shot_eater_pr
+  ▶ Grep "906C|shotEater|ShotEater|0x3A\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj
+  ▶ Grep "LDX #\$07|0x0e|tmp_2F|descend|7\.\.0|for \(let" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj/collide.js
+The port already has the shot eater and the descending record order; recording results in REVERSE.md and labels.csv now.
+  ▶ grep -n "^26,906C\|^26,8FC4\|^26,8F6E" labels.csv
+  ▶ sed -i '1112s/.*/26,906C,HitShotEater,s78: HitHandler3 with attacker phase 1: target enemy shot -> removed; SFX $3A. s13
+  ▶ Read labels.csv +1112
+  ▶ Edit labels.csv
+Now REVERSE.md: the Handler 3 line and the task.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I finished one more item of the scenario-leftovers task: the magic-6 shot eater now runs in the emulator. The task stays unchecked, as the rules require for a leftovers task.
+
+**New scenario `shot_eater`** (in `tools/emu/scenario.py`, 260 frames, run with `python3 -m tools.emu.scenario shot_eater`):
+- **Setup:** area `$03` with magic 6 selected. A is held for 120 frames and the player's HP is held. Enemy shots of type `$3F` (marked as enemy shots by `obj_spawn_b2` = `$FF`) are spawned onto the player at +40, +70 and +100, offset 0, +4 and −4 px.
+- **Result:** the shot eater (`HitShotEater` `26:906C`) removed all three shots in the frame they appeared. Holding magic 6 respawns the eater object in slot `$0C` every frame and costs 1 MP every 8 frames. A shot spawned at +200, after A was released, just hit the player.
+- **New finding:** the eater does not stop a shot that is already touching the player's body. The collision pass `ObjCollideAll` checks its pairs from last to first, so the player-hit pair (`HitPlayer`) runs before the eater's pair in the same frame. The shots at offsets 0 and −4 therefore still hit the player at `26:942B` and were only then removed by the eater. Only the +4 shot, which reached the eater's box without touching the body, was removed with no damage. A new probe, `python3 -m tools.emu.shot_eater_probe`, logs that order frame by frame.
+- **Web port:** no change needed. `obj/collide.js` already has `hitShotEater` and checks the pairs in the same order.
+
+**Records:**
+- **REVERSE.md:** the result is added to the "Handler 3" item. The item is struck through in the task, with an s132 note at the end.
+- **labels.csv:** the `HitShotEater` comment is updated.
+
+**Not done:** `docs/emu_scenarios.txt` is still not regenerated (about 55 minutes). Still open in the task: the warp pick, hit rules, the final boss, the area-`$6E` reveal, type `$64` and the ending labels.
+
+SESSION_SUMMARY: Session 132: new scenario shot_eater runs HitShotEater 26:906C (magic 6 held removes type-$3F enemy shots); because ObjCollideAll checks pairs last-to-first, HitPlayer runs before the eater, so shots already touching the body still hit; added the shot_eater_probe tool; the port already matches; scenario-leftovers task stays open.

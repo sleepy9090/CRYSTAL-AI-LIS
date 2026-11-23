@@ -1,0 +1,143 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### \|- \[ \]" REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*05[123].txt && tail -c 5000 re_loop_sessions/20261117_155157_session_052.txt; echo ----; tail -c
+  ▶ find web -type f -not -path "*/data/*" | xargs wc -l | sort -n | tail -30; ls web/data | head -50; cat web/data/manifest
+  ▶ grep -n "^#### \|^### " REVERSE.md | sed -n 1,200p | head -120; wc -l docs/architecture_web.md
+  ▶ Read REVERSE.md +1267
+  ▶ Read architecture_web.md
+Working on Ph7 web 4/8 (world module). Now reading the current port code and `render_level.py`, which serves as the reference.
+  ▶ cat web/src/game/machine.js web/src/data.js web/src/game/ram.js && sed -n 1,80p web/src/nes/ppu.js
+  ▶ grep -n "AreaLoadMap\|ScreenRowRender\|BgRowRender\|BgColRender\|PpuQueueFlush\|MetatileExpand\|ScreenTileSubst\|AreaLoa
+  ▶ Grep "AreaLoadMap|ScreenRowRender|BgRowRender|BgColRender|PpuQueueFlush|MetatileExpand|ScreenTileSubst" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +380
+  ▶ sed -n 1,60p tools/render_level.py; grep -n "^def " tools/render_level.py tools/render_screen.py
+  ▶ Read render_screen.py
+Next: checking what `areas.json` already decodes and whether the `gfx/areas/` reference PNGs exist.
+  ▶ ls gfx/areas | wc -l; ls gfx/areas | head -3; node -e '
+  ▶ Write s53_peek.mjs
+  ▶ node /tmp/s53_peek.mjs
+  ▶ cp /tmp/s53_peek.mjs /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/_peek.mjs && node /home/sleepy9090/Downlo
+  ▶ Write _peek.mjs
+  ▶ node web/test/_peek.mjs
+  ▶ Edit _peek.mjs
+  ▶ node web/test/_peek.mjs
+  ▶ Edit _peek.mjs
+  ▶ node web/test/_peek.mjs 2>&1 | tail -4
+Data format is clear (decimal area keys, pre-decoded k0-k4). Now checking that the port's `nesRgb` table matches `palette_dump.rgb`, so area PNGs can be compared directly.
+  ▶ Grep "def rgb|NES_RGB|nesRgb|def read_png|def load_png" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ Glob gfx/areas/area_00*.png
+  ▶ Read harness.mjs
+  ▶ Grep "def write_png" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/meta_dump.py
+  ▶ python3 tools/dis.py 31 E628 0x100
+  ▶ python3 tools/dis.py 31 E725 0x50; python3 tools/dis.py 31 E140 0xD8
+  ▶ python3 tools/dis.py 30 CA2E 0x34; python3 tools/dis.py 30 C800 0x80
+  ▶ Write _peek.mjs
+  ▶ node web/test/_peek.mjs 2>&1 | cut -c1-1500; ls tools/emu/states/
+  ▶ cat web/src/game/palette.js; python3 tools/dis.py 30 C000 8; python3 tools/dis.py 26 8C0E 0x60
+  ▶ python3 tools/dis.py 26 8C6E 0x60 --stop
+Writing the port modules now: `PaletteBuild` into `palette.js`, then `world/bg.js` and `world/area.js`.
+  ▶ Edit palette.js
+  ▶ Write bg.js
+  ▶ Write area.js
+  ▶ Grep "record|def area" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/gen_web_data.py
+  ▶ Read gen_web_data.py +123
+Keys are 2-digit hex (`'01'` = area 1), not decimal; fixing that, plus the `ignored` record case.
+  ▶ Edit area.js
+  ▶ Edit area.js
+  ▶ Edit area.js
+Now the Machine hooks, then the checker. Adding the three no-op hooks to `machine.js`:
+  ▶ Edit machine.js
+  ▶ sed -n 1,58p web/test/ppu_check.mjs
+  ▶ Grep "loadData|readFile" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/run.mjs
+Now the checker: renders every area through the port and diffs against `gfx/areas/area_NNN.png` (plain filter-0 RGB PNGs, decoded with `node:zlib`).
+  ▶ Write world_check.mjs
+  ▶ node web/test/world_check.mjs 2>&1 | tail -25
+All 213 areas match on the first run, which is suspicious enough that I want proof the diff can actually fail. Checking the `--visited` path and a deliberate corruption:
+  ▶ Glob gfx/areas/*_v.png
+  ▶ Read render_level.py +60
+  ▶ python3 tools/render_level.py 00 01 3C 6A 90 C2 && node web/test/world_check.mjs --visited --areas 00,01,3C,6A,90,C2 --v
+  ▶ python3 tools/render_level.py 00 01 3C 6A 90 C2 --visited | tail -1 && node web/test/world_check.mjs --visited --areas 0
+Visited path matches too. Now the negative test: swap the visited render in as area `$90`'s normal reference. The check must fail, and then I regenerate the file.
+  ▶ cp gfx/areas/area_144_v.png gfx/areas/area_144.png; node web/test/world_check.mjs --areas 90; echo "exit $?"; python3 to
+I'll avoid touching the reference files and add a `--ref plain|visited` override to the checker instead, so render mode and reference can be mismatched on purpose.
+  ▶ Edit world_check.mjs
+  ▶ Edit world_check.mjs
+  ▶ node web/test/world_check.mjs --visited --ref plain --areas 00,01,3C,6A,90,C2
+  ▶ python3 -m tools.emu --help 2>&1 | head -50
+  ▶ mkdir -p web/test/world_frames && python3 -m tools.emu --load-state tools/emu/states/area1_enter.state --frames 0 --dump
+  ▶ python3 -m tools.emu --load-state tools/emu/states/area1_enter.state --frames 1 --dump-ram /tmp/a1e.ram --dump-wram /tmp
+  ▶ Write _peek.mjs
+  ▶ node web/test/_peek.mjs /tmp/a1e.ram /tmp/a1e.wram /tmp/a1e.png
+Camera y is `$FFEC` (−20), so the screen starts above the area. Rerunning with negative offsets allowed and only in-area pixels counted:
+  ▶ Edit _peek.mjs
+  ▶ node web/test/_peek.mjs /tmp/a1e.ram /tmp/a1e.wram /tmp/a1e.png
+95% of pixels match at offset (0, −4). Breaking down the remaining differences (colour pairs per row), and reading line 0's `v` register from the recorded PPU frame:
+  ▶ Edit _peek.mjs
+  ▶ node web/test/_peek.mjs /tmp/a1e.ram /tmp/a1e.wram /tmp/a1e.png
+  ▶ Write README.md
+  ▶ python3 -m tools.emu --load-state tools/emu/states/area1_enter.state --frames 1 --dump-ram web/test/world_frames/area1_e
+  ▶ python3 -m tools.emu --load-state tools/emu/states/gameplay_first.state --frames 1 --dump-ram web/test/world_frames/game
+Frame numbers match the JSON (2451, 2353). Adding the emulator-frame section to `world_check.mjs`:
+  ▶ Edit world_check.mjs
+  ▶ Edit world_check.mjs
+  ▶ node web/test/world_check.mjs
+  ▶ Edit world_check.mjs
+  ▶ Edit world_check.mjs
+  ▶ node web/test/world_check.mjs | tail -3
+  ▶ python3 tools/search_bytes.py "85 68" --disasm --context 3 | head -40
+  ▶ Edit world_check.mjs
+  ▶ node web/test/world_check.mjs | tail -3; node web/test/core_check.mjs | tail -1; node web/test/ppu_check.mjs | tail -1; 
+All checks pass. One gap: `paletteBuild` hasn't been checked against the emulator yet, because the frame test uses the emulator's own `pal_buf`. Adding that comparison to the fresh-load block:
+  ▶ Edit world_check.mjs
+  ▶ node web/test/world_check.mjs | tail -3
+`PaletteBuild` matches the emulator's `pal_buf` byte for byte in both frames. Removing the scratch script:
+  ▶ rm web/test/_peek.mjs
+The scratch file `web/test/_peek.mjs` needs your approval to delete, so I'll leave it and mention it at the end. Now the docs. Checking the labels for `$68` and the 4/8 task line:
+  ▶ Grep "^\*,(68|66|6A|6B)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read REVERSE.md +1810
+Before writing the findings, checking whether the `cam_y + 16` display offset is already documented:
+  ▶ Grep "NmiScrollSet|\$10 \(16\)|\+ ?16 |\+\$10" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/dis.py 31 F71B 0x20 --stop
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the single leftover task, appended at the end of `### RE Investigation`:
+  ▶ Read REVERSE.md +1851
+  ▶ Edit REVERSE.md
+  ▶ Grep "core_check.mjs` \||world_check|ppu_check.mjs`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Adding a row to the Intermediate Output Files table next to the s52 entry:
+  ▶ Grep "^\| `web/test/run\.mjs" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read CLAUDE.md
+  ▶ Edit CLAUDE.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Last bookkeeping item: the `$68` label comment. `dis.py` printed `zp_68`, so a row exists in some address format:
+  ▶ Grep "zp_68|zp_66" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+  ▶ node web/test/world_check.mjs | tail -4; node web/test/core_check.mjs | tail -1; node web/test/serve_check.mjs | tail -1
+I finished the static half of task Ph7 web 4/8: the area-loading code, the background renderer and the palette builder are ported and checked. The moving parts (the PPU write queue, live row and column drawing, camera, exits and screen-split handlers) are not ported. I marked 4/8 done and put that remainder into one task at the end of the RE Investigation list, as the rules ask. Its note says it has to be done before 5/8 can match the emulator in gameplay. Nothing is committed.
+
+**What I added**
+- **`web/src/game/world/area.js`** loads an area into RAM the way the ROM does, at the same addresses and in the same order. That covers the screen grid and music, the persistent visited screens, the player start position, tileset/palette/CHR settings, and the area record with its spawn list. Music, object spawning and the special "no entry point" case go through three empty hooks on `Machine` for tasks 5/8 and 7/8 to fill.
+- **`web/src/game/world/bg.js`** turns screen ids into metatiles, tiles and palettes, including the bank-10 screen quirk and the visited-screen tile swaps. `renderArea()` draws a whole area as one image.
+- **`paletteBuild()`** in `palette.js` builds the 32-byte palette buffer from the palette ids.
+
+**How it's checked:** `node web/test/world_check.mjs` exits 1 on any difference.
+- **All 213 areas** are pixel-identical to the existing `render_level.py` images in `gfx/areas/`. The RAM the loaders write matches the decoded area data.
+- **Visited-screen rendering** matches for the 6 areas I generated `--visited` reference images for. Rendering with visited screens and diffing against the plain images correctly fails for areas `$01` and `$6A`, which shows the check can catch a mismatch.
+- **Two real emulator frames** (frames 2451 and 2353):
+  - The background above the HUD is identical. Sprite areas and the left 8 pixels the game hides are not compared.
+  - Running the loaders fresh for the same area reproduces the emulator's RAM and palette buffer exactly.
+  - The emulator's RAM and WRAM for these frames are dumped into `web/test/world_frames/`, with a README on how to regenerate them.
+
+**Findings, written to REVERSE.md**
+- The top screen line shows world y = camera y + 16, confirmed against the PPU scroll register. This is needed for the camera port.
+- `$68` is not area data while the game is running. The area loader sets it to 0, but the collision probe (`26:9A30`) then reuses `$68/$69` as a pointer. I updated its comment in labels.csv.
+- A palette colour of `$FF` copies the backdrop value as it is at that moment, already faded, and then the fade is applied a second time.
+
+I also updated CLAUDE.md, `docs/architecture_web.md` and the output-files table in REVERSE.md.
+
+**Cleanup for you:** `web/test/_peek.mjs` is a scratch script I couldn't delete without your approval; it's safe to remove. `gfx/areas/` now has 6 extra `area_*_v.png` reference images, which are valid generated files.
+
+SESSION_SUMMARY: Session 53 — Ph7 web 4/8 static part done: `world/area.js` (k0/k4/k2/k1/record loaders, ROM write order, hooks for sound/spawn/entry `$FF`), `world/bg.js` (page/subst/metatile/attr helpers + `renderArea`), `paletteBuild`; new `world_check.mjs`: 213/213 areas pixel-identical to `render_level.py`, 2 tools.emu frames BG-identical with loader RAM + `pal_buf` matching; findings: line 0 = cam_y+16, `$68` reused by `ObjBgProbe`, `$FF` backdrop double fade; runtime leftovers (PPU queue, row/col render, camera, exits, IRQ/NMI modes) in one task at the end of RE Investigation.

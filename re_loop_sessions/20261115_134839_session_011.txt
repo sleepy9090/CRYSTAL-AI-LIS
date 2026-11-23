@@ -1,0 +1,114 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*}
+  ▶ Grep "^## |^- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +373
+  ▶ Read dead_ends.md
+  ▶ wc -l re_loop_sessions/*_00{8,9}.txt re_loop_sessions/*_010.txt; tail -c 1500 re_loop_sessions/20261115_131127_session_0
+  ▶ tail -c 1200 re_loop_sessions/20261115_131127_session_008.txt; echo ----; tail -c 1200 re_loop_sessions/20261115_131127_
+  ▶ Grep "(bank|banks) 2[0-3]\b|n=\$?0?[AB]\b|SetR7|C9DF" REVERSE.md
+Reading the bank-table section, then disassembling the `SetR7($17)` site at `30:C9DF`.
+  ▶ Read REVERSE.md +100
+  ▶ python3 tools/dis.py 30 C9C0 80
+  ▶ python3 tools/dis.py 23 BC06 120 --stop; python3 tools/xref.py C9DA
+  ▶ python3 tools/dis.py 23 BCDA 200 --stop; python3 tools/xref.py C9DA --data
+  ▶ Glob tools/*.py
+  ▶ python3 tools/dis.py 23 BC00 0xDA; python3 tools/dis.py 30 C920 16
+  ▶ python3 tools/dis.py 23 BCF7 0xC9; python3 tools/decode_tables.py BDC0 30 u8 2>&1 | head -5
+  ▶ python3 tools/decode_tables.py --help 2>&1 | head -8; python3 tools/dis.py 23 BDF6 0x40
+Found the save/load code at the end of bank 23. Now I'm decoding its copy-descriptor tables and the per-area table at `$BF00`.
+  ▶ python3 tools/decode_tables.py 23:BDC0 5 hex6; python3 tools/decode_tables.py 23:BDDE 4 hex6; python3 tools/decode_table
+  ▶ python3 tools/search_bytes.py "20 00 BC" --disasm --context 4 | head -40; python3 tools/search_bytes.py "20 03 BC" --dis
+  ▶ python3 tools/search_bytes.py "A9 17 20 27 C4" --disasm --context 3; python3 tools/dis.py 17 BC00 9; python3 tools/dis.p
+  ▶ python3 tools/dis.py 30 D8D4 0x18; python3 tools/dis.py 31 F0A4 0x40; python3 tools/dis.py 31 F1CD 0x16
+Bank 23's tail is save/load code, and bank 16 runs with bank 23 mapped at `$A000`. Writing these findings down before I profile the rest of banks 21–23.
+  ▶ Read REVERSE.md +50
+  ▶ Read REVERSE.md +294
+Writing a small ASCII/byte-profile tool to see what the rest of banks 21–23 holds.
+  ▶ Write bank_profile.py
+  ▶ Grep "^def " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/nesrom.py
+  ▶ Read nesrom.py +19
+  ▶ cd tools && python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit bank_profile.py
+  ▶ Edit bank_profile.py
+  ▶ Edit bank_profile.py
+  ▶ Edit bank_profile.py
+  ▶ python3 tools/bank_profile.py 21 22 23 --pages --strings --min 8 | head -120
+Bank 21 is plain ASCII English dialogue, not DTE. Checking banks 22/23 and the control-code bytes.
+  ▶ python3 tools/bank_profile.py 22 23 --pages | grep -v "ascii 0\.[6-8]"; python3 tools/decode_tables.py 21:A000 8 hex16
+The text uses single-byte codes ≥`$80` as a word dictionary, plus control bytes `00/01/02/06/FF`. Looking for the reader at `20:9400` (the pair n=10 entry).
+  ▶ python3 tools/dis.py 30 D9A8 0x20; python3 tools/dis.py 20 9400 0x60
+  ▶ python3 tools/search_bytes.py "74 68 65 20" | grep -v "^2[123]:" | head -20; python3 tools/search_bytes.py "79 6F 75" | 
+  ▶ python3 tools/decode_tables.py 20:8CC0 24 hex16
+Dictionary found in bank 20 (zero-terminated words). Locating its start and the reader code.
+  ▶ python3 tools/bank_profile.py 20 --strings --min 3 | awk -F'[: ]+' '{print}' | head -40
+  ▶ python3 tools/bank_profile.py 20 --strings --min 2 | head -45
+  ▶ python3 tools/search_bytes.py "B1 ?? C9 80" --disasm --context 2; python3 tools/search_bytes.py "B1 ?? 10 ??" | head -20
+  ▶ python3 tools/xref.py C427 | grep -E "^ *(20|21|22|16|17|18|19):" ; python3 tools/xref.py C418 | grep -E "^ *(20|21|22|1
+  ▶ python3 tools/dis.py 19 B910 0x40; python3 tools/dis.py 19 BC78 0x30
+  ▶ python3 tools/search_bytes.py "A9 16 20 18 C4" --disasm --context 3; python3 tools/search_bytes.py "A9 15 20 27 C4"; pyt
+Bank 20 is mapped alone at `$8000` from five fixed-bank sites. Checking one, since that is probably where the text printer is.
+  ▶ python3 tools/dis.py 30 D350 0x50
+  ▶ python3 tools/dis.py 20 8500 0x90
+Found the text printer at `20:853A`. Decoding its bank/pointer tables and the control/dictionary handlers.
+  ▶ python3 tools/dis.py 20 885A 0x1F; python3 tools/dis.py 20 8593 0x30; python3 tools/dis.py 20 86F5 0x40
+  ▶ python3 tools/decode_tables.py 20:83FE 36 u8 --per-line 18; python3 tools/decode_tables.py 20:8422 36 ptr16 --per-line 9
+Text layout: 34 message groups, each group's bank in `20:83FE` (banks 21/22/23), and a 128-word dictionary at `20:8900`. Writing this into REVERSE.md now, then I'll decode the control codes.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 20 85B6 0x140
+  ▶ python3 tools/dis.py 20 8720 0xB0
+Control codes are decoded. Writing `tools/text_dump.py` to dump the dictionary, the three name tables, and every message.
+  ▶ Write text_dump.py
+  ▶ python3 tools/text_dump.py tables; python3 tools/text_dump.py dict | head -40
+Tables decode cleanly. Now the full message dump to JSON, plus a sanity check on the first group.
+  ▶ python3 tools/text_dump.py msgs --json gfx/text.json > gfx/text.txt; tail -1 gfx/text.txt; head -30 gfx/text.txt; grep -
+  ▶ Edit text_dump.py
+  ▶ python3 tools/text_dump.py all --json gfx/text.json --out gfx/text.txt
+  ▶ Grep "^== group|^wrote|<[0-9A-F]{2}>|\?0[567]:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Read text.txt +252
+Decoding is clean (511 messages, no unknown codes). One fix: codes 05/06/07 return through the same auto-space check as dictionary words (`JMP $8693`), so `{Zebu}in` should read `{Zebu} in`.
+  ▶ Edit text_dump.py
+  ▶ Edit text_dump.py
+  ▶ python3 tools/text_dump.py all --json gfx/text.json --out gfx/text.txt
+  ▶ Grep "\}[a-z]|[a-z]\{|<KEY>|\{NAME\}|\{ITEM" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+Output looks right. Recording the control-code semantics, the save/load module in bank 23, and the corrected bank-23 mapping list.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ tail -5 labels.csv; python3 tools/xref.py 07DF | head -12; python3 tools/xref.py 07DE | head -12
+  ▶ printf '%s\n' \
+  ▶ Grep "^17,A751" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +1
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 30 D35C 8; python3 tools/dis.py 23 BC23 6
+Labels load correctly. Last step: mark the task done, add follow-up tasks, and update Intermediate Output Files.
+  ▶ Read REVERSE.md +380
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Banks 21–23 are English dialogue text: plain ASCII plus a 128-word dictionary. There is no DTE and no compression. The end of bank 23 isn't text at all; it's the save/load code.
+
+**Text format**
+- **Encoding:** bytes `$20-$7E` are plain characters. Bytes `$80-$FF` are dictionary words, looked up through the pointer table at `20:8900`. Bytes `$00-$09` are control codes: end, clear box, newline, wait for a button press, player name (from `$6400`), three name tables, current item, and N spaces.
+- **Printer:** `TextPrint` at `20:853A`. The message is chosen by `$07DF` (group) and `$07DE` (message within the group). Each group's bank comes from `20:83FE`: groups 0–13 are in bank 21, 14–25 in bank 22, and 26–33 in bank 23. The pointer tables are at `20:8422`.
+- **Text box:** the text is built in a buffer at `$6000-$60FF`. That buffer is uploaded to nametable 2 at PPU `$2820-$291F`, four double-spaced lines.
+- **Spacing quirk:** after a dictionary word or a name-table string, the printer adds a space only if the next byte meets a specific rule. Plain characters never get one. The web port has to copy this rule exactly or spacing will come out wrong.
+- **Decoded output:** I wrote `tools/text_dump.py` and ran it. It decoded all 511 messages in 34 groups with no unknown control codes, written to `gfx/text.txt` and `gfx/text.json`.
+
+**Save/load code (bank 23 `$BC00`)**
+- **Entry points:** `SaveGame`, `LoadGame` and `LoadGameAndInit`.
+- **When saving is allowed:** a per-area table at `23:BF00` decides whether the current area can save.
+- **What a save does:** it stores the area and player state at `$7DF0-$7DF8` and writes a 3-byte tag `AMI` at `$7DFD`. It then runs five block copies, writes an 8-bit checksum to `$70F5`, and copies everything to a backup at `$6D00`.
+- **Copy-length quirk:** the block-copy routine copies `lo + 1 + hi` bytes instead of the intended 16-bit count. For example, a count of `$01FF` copies 257 bytes. The port needs the same lengths.
+- **Correction:** the old notes said bank 23 is mapped at one place (`30:C9DF`). It is actually mapped at 7 places, including from bank 16 code and the boot check.
+
+**Records updated**
+- REVERSE.md has new "Text / dialogue" and "Save / load module" sections, a corrected bank-mapping note, and the Data-Range Map split out for banks 20–23.
+- I added 38 labels to `labels.csv` and two new tools, `bank_profile.py` and `text_dump.py`; both ran.
+- The task is marked done. I added one follow-up task covering four open questions:
+  - how the game picks which message an NPC says;
+  - the small block of text in bank 20 and its separate entry path;
+  - which tiles the characters map to in the text box;
+  - the other per-area flag tables.
+- Nothing needed recording in `dead_ends.md`.
+
+SESSION_SUMMARY: Session 11 — banks 21-23 are ASCII dialogue with a 128-word dictionary and 10 control codes (printer `TextPrint` 20:853A, 34 groups / 511 messages decoded by the new `text_dump.py` into `gfx/text.*`, auto-space quirk documented); bank 23 `$BC00` is the save/load module (`AMI` tag, checksum, copy-length quirk); 38 labels, text follow-ups added.

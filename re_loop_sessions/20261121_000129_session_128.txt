@@ -1,0 +1,129 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | tail -30
+  ▶ Read dead_ends.md
+  ▶ ls -la re_loop_sessions | tail -5; grep -n "^- \[ \]" REVERSE.md | head
+  ▶ cat re_loop_sessions/20261120_190200_session_128.txt re_loop_sessions/20261121_000129_session_128.txt; tail -c 2500 re_l
+  ▶ Grep "PlayerConveyor|PlayerMoveLocked|AreaPitFall|AreaEdgeLink|RidePlatform" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/xref.py 9FD2; python3 tools/xref.py 9D81; python3 tools/dis.py 26 9FD2 60
+Working on the Ph6 scenario leftovers. Right now I'm checking whether `PlayerConveyor` and `PlayerMoveLocked` can actually run in play.
+  ▶ python3 tools/dis.py 26 9F70 0x62; python3 tools/dis.py 18 9D90 0x30
+  ▶ python3 tools/dis.py 26 9F20 0x50; grep -n "9F7B\|9F95\|player_bg_attr" labels.csv | head
+  ▶ Grep "[Cc]onveyor" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ ls gfx/areas/coll_index.txt && head -5 gfx/areas/coll_index.txt && awk 'NR>1 && $0 ~ /conv/ {print}' gfx/areas/coll_inde
+  ▶ Read coll_index.txt
+  ▶ sed -n 1366,1395p REVERSE.md | cut -c1-400
+Conveyor tiles exist (18 metatiles with b5). Now I'm checking which areas place them, so I can build a scenario that runs it.
+  ▶ Grep "conv" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/areas/coll_index.txt
+  ▶ grep -n "legend\|LEGEND\|'C'\|conveyor" tools/render_level.py | head -20
+  ▶ Grep " c=\d+" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/areas/coll_index.txt
+Conveyors are placed in areas `$20`, `$21`, `$28`, `$29`, `$40-$42` and `$60`. Next I'll look at how `scenario.py` defines scenarios so I can add one that puts the player on a conveyor.
+  ▶ wc -l tools/emu/scenario.py && grep -n "def \|^SCENARIOS\|'mp_fail_area'\|'boss_fade'" tools/emu/scenario.py | head -60
+  ▶ Read scenario.py +1
+  ▶ Read scenario.py +186
+I'll add a `conveyor` scenario that puts the player on a conveyor cell in area `$20`. First I need the cell coordinates from the collision map.
+  ▶ ls gfx/areas/ | grep -i "032\|_20" | head; 
+  ▶ Read area_032_coll.txt
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario conveyor 2>&1 | grep -v "^  bank" | head -60
+Placing the player didn't trigger it: `$0641` never became `$20`, and the player didn't move. I'll hold DOWN after the placement so the move/probe path runs, and log the position.
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario conveyor 2>&1 | grep -v "^  bank" | head -60
+  ▶ Grep "^26,9[DE]..,PlayerMove|,PlayerMove," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+`PlayerMove` runs on slot 0, the ground body. I'll set both slots 0 and 1 from an exec hook at `26:9D9A`.
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario conveyor 2>&1 | grep -v "^  bank" | head -70
+  ▶ Grep "9FD2|[Cc]onveyor|9D81|MoveLocked" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ python3 tools/dis.py 26 9D81 0x19; python3 tools/search_bytes.py "a9 02 9d a0 04" ; python3 tools/search_bytes.py "a9 02
+  ▶ python3 tools/dis.py 27 BB50 0x30; grep -n "^27,BB[0-9A-F][0-9A-F]," labels.csv
+  ▶ python3 tools/dis.py 27 BB20 0x30; grep -n "^27,BB[0-4]" labels.csv; grep -n "BB6E\|BB70" REVERSE.md | cut -c1-300
+  ▶ grep -n "AI \`\$70\`" REVERSE.md | cut -c1-500 | head -8
+  ▶ Grep "AI `\$70`.{0,300}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+AI `$70` is the final-scene object, and s120 saved `tools/emu/states/restore5f_s120.state`. I'll run a scenario from that state to see whether phase 1 ends and `PlayerMoveLocked` runs.
+  ▶ Glob tools/emu/states/*5f*
+  ▶ sed -n 654,662p REVERSE.md | cut -c1-1500
+Phase 1 ends by setting the player's `obj_active` to 2. I'll add a scenario `final_locked` that starts from `area5f_s120.state` and taps A through the three messages.
+  ▶ Edit scenario.py
+  ▶ timeout 500 python3 -m tools.emu.scenario final_locked 2>&1 | grep -v "^  bank" | head -60
+That state is already past phase 1: phase 2 runs at f3, then the player dies at f232. I'll start instead from the default state with an area-`$5F` poke, like `boss_fade` does, and raise the HP.
+  ▶ Edit scenario.py
+  ▶ timeout 500 python3 -m tools.emu.scenario final_locked 2>&1 | grep -v "^  bank" | head -60
+  ▶ Grep "ObjAiTable" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/decode_tables.py 27:A314 4 u16 2>&1 | head; python3 tools/dis.py 30 CCCC 0x40
+  ▶ Edit scenario.py
+  ▶ timeout 500 python3 -m tools.emu.scenario final_locked 2>&1 | grep -v "^  bank" | head -60
+The freeze ends at f170, but `PlayerMoveLocked` still doesn't run. I'll add an optional `peek` list to the scenario end report so I can see slot 0's `obj_active`, `obj_flags2` and AI state.
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 500 python3 -m tools.emu.scenario final_locked 2>&1 | grep "end:"
+`$04A0` is back to `03` at the end. So either phase 1's end never ran in this setup, or something reset the AI afterwards. I'll look for an existing tool that reports when given PCs run.
+  ▶ Grep "--until|--pcs|--exec" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+No generic tool does that. I'll add a `pcs` option to the scenario. It logs every frame in which the given bank:PCs run, from power-on through the area wait.
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 500 python3 -m tools.emu.scenario final_locked 2>&1 | grep -v "^  bank" | head -50
+Phases 0 and 1 never run here: the object starts at phase 2 (`BBE7`). I'll look up how phases 0 and 1 are entered.
+  ▶ Grep ".{0,250}(BAF5|BA5A).{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "AI \$70|ai=70|AI 70" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ head -5 gfx/obj_ai.txt; grep -n -i " 70 \|\$70\|0x70" gfx/obj_ai.txt | head
+  ▶ Read obj_ai.txt
+  ▶ Grep "^ai \$70" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ Grep ".{0,200}type `\$(A4|B2|B3|B4|F9|FA)`.{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+I'm tracing which object type starts AI `$70` at phase 1. One boss-record hook (`15:B8EE`) spawns type `$B2`, so I'm checking that next.
+  ▶ sed -n 1015,1032p REVERSE.md | cut -c1-260; python3 tools/dis.py 15 B8EE 0x20
+  ▶ Grep "ObjType|TypeRec" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "AC00|0xAD00" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ sed -n 1,25p tools/objtype_dump.py
+  ▶ python3 tools/objtype_dump.py A4 B2 B3 B4 B5 F9 FA
+Phase 1 belongs to type `$B3`, and phase 0 to `$B2`. Next I'll search for the code that spawns `$B3`.
+  ▶ python3 tools/search_bytes.py "a9 b3 85 11"; python3 tools/search_bytes.py "a9 b3"
+  ▶ python3 tools/dis.py 15 B718 0x24; python3 tools/dis.py 15 B915 0x20; grep -n "^15,B7[0-3]\|^15,B9[0-3]" labels.csv
+  ▶ grep -n "BossRecs\|B8FD\|BossAreaList" labels.csv | cut -c1-300
+  ▶ sed -n 1033,1040p REVERSE.md | cut -c1-600
+  ▶ Edit scenario.py
+  ▶ timeout 500 python3 -m tools.emu.scenario final_locked 2>&1 | grep -v "^  bank" | head -60
+  ▶ Edit scenario.py
+  ▶ timeout 500 python3 -m tools.emu.scenario final_locked 2>&1 | grep -v "^  bank" | head -45
+  ▶ Grep "def on_exec|_exec_hooks|exec_hooks" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/nes.py
+  ▶ Grep "def call|clear_hooks\(|cpu.trace =" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/nes.py
+Found it. `BAF5` runs every frame in phase 1, so it fills the 30-entry `pc_log` cap before `BB6E` is logged, and the dedup then folds those lines into one. I'll dedup at append time instead.
+  ▶ Edit scenario.py
+  ▶ timeout 500 python3 -m tools.emu.scenario final_locked 2>&1 | grep -v "^  bank" | head -24
+  ▶ Read player.js +165
+The port matches the ROM for both routines (`web/src/game/obj/player.js:168`, `:180`), so no web change is needed. Next I'll update the docs: labels first.
+  ▶ Grep "^15,(B8FD|B728|B8EE|B947),|^27,BB6E" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ grep -n "^26,9D81\|^26,9FD2" labels.csv && tail -3 labels.csv
+  ▶ python3 - <<'EOF' 2>/dev/null || echo need-tool
+  ▶ Read labels.csv +876
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Both routines now run, and I've added the labels. Now I'm writing the session-128 findings into the REVERSE.md task.
+  ▶ Read REVERSE.md +2448
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ timeout 600 python3 -m tools.emu.scenario conveyor mp_fail_area 2>&1 | grep "^\[\|newly run\|end:"
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario --list | tail -3
+I took the top unchecked Next Tasks item, the Ph6 scenario-leftovers task. Two of its routines, `PlayerConveyor` and `PlayerMoveLocked`, had never run in any emulator test. Both now run in new scenarios and both can happen in normal play. The web port already matches the ROM for both (`web/src/game/obj/player.js:168` and `:180`), so I made no web changes.
+
+- **`PlayerConveyor` `26:9FD2`:** conveyor tiles exist in areas `$20 $21 $28 $29 $40 $41 $42 $60`.
+  - **New scenario `conveyor`:** drops the player onto the conveyor strip in area `$20` and holds DOWN.
+  - **Result:** `PlayerConveyor` runs from frame 12 and carries the player down, speeding up as it goes.
+  - **Placement fix:** writing the position at controller-read time doesn't work, because the game writes the old position back the same frame. The new `place_player()` hook sets it at the start of `PlayerMove` instead.
+- **`PlayerMoveLocked` `26:9D81` (player AI `$02`):** the only code in the ROM that sets AI `$02` is the end of the final-scene object's phase 1 (AI `$70`, after messages `$1B.05-07`).
+  - **Spawners:** phase 1 is object type `$B3`. Only two places spawn it: the area-`$A6` boss-defeat hook `15:B8FD` and the reward object `15:B728`.
+  - **Area `$5F`:** its final-scene object starts at phase 2, which is why the earlier area-`$5F` runs never reached phase 1.
+  - **New scenario `final_locked` (area `$A6`, boss-defeat object spawned, HP held up, A tapped):** the hook runs, then phase 1 and the three messages. The player's AI becomes `$02` at frame 649 and `PlayerMoveLocked` runs from frame 760. After the move to area `$58`, its area-`$58` branch runs at frame 1078.
+  - **Also run for the first time:** `BossDefeated` for the `$A6` record, and `FarCall_D354`.
+
+**Records:**
+- **`scenario.py`:** besides the two scenarios and `place_player()`, there are two new options. `pcs` logs the first hit of chosen addresses from power-on, including the area-entry wait. `peek` adds RAM values to the end-of-run line.
+- **REVERSE.md:** the two items are struck through and a session-128 note is added. The task stays unchecked, as the rules say for low-priority leftovers tasks.
+- **labels.csv:** two new labels, `BossHookA6` `15:B8FD` and `AiReward6C` `15:B728`, plus updated comments on the two routines.
+
+**Not done:** `docs/emu_scenarios.txt` is still not regenerated (the full run takes about 55 minutes). Still open in the task: pits, the warp pick, the burst, hit rules, the final boss, reveals, the transform, the shot eater, type `$64` and the ending labels.
+
+SESSION_SUMMARY: Session 128: PlayerConveyor and PlayerMoveLocked now run in new scenarios conveyor (area $20) and final_locked (area $A6 boss-defeat hook 15:B8FD spawns type $B3 = AI $70 phase 1, whose end sets player AI $02); port already matches; added place_player and the pcs/peek options to scenario.py and labels BossHookA6/AiReward6C; scenario-leftovers task stays open.

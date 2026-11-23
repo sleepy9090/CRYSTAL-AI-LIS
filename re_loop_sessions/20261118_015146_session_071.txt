@@ -1,0 +1,112 @@
+  ▶ Grep "^- \[ \]" REVERSE.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^#+ |^- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +1985
+  ▶ wc -c re_loop_sessions/20261118_015146_session_0{69,70,71}.txt dead_ends.md; tail -c 1500 re_loop_sessions/20261118_0151
+  ▶ Read 20261118_015146_session_071.txt
+  ▶ Read dead_ends.md
+Picked the top open task, the Ph5 save leftovers. Next I'm checking the last session log, then tracing the new-game path.
+  ▶ tail -c 1200 re_loop_sessions/20261118_015146_session_070.txt; echo; tail -c 600 re_loop_sessions/20261118_015146_sessio
+  ▶ Read REVERSE.md +1309
+  ▶ Read REVERSE.md +1567
+  ▶ python3 tools/dis.py 30 C9B0 0x50; python3 tools/xref.py C9DA; python3 tools/xref.py C9C8
+  ▶ python3 tools/dis.py 30 C960 0x52; grep -n "MainState\|C9[0-9A-F][0-9A-F]" labels.csv | head -40
+  ▶ python3 tools/dis.py 30 C957 0xA; python3 tools/search_bytes.py "a9 00 85 40"; python3 tools/search_bytes.py "a9 08 85 4
+  ▶ python3 tools/dis.py 19 A6C0 0xE0
+  ▶ python3 tools/xref.py A6F9; python3 tools/search_bytes.py "f9 a6"; python3 tools/search_bytes.py "f8 a6"
+Found it: new game goes through state 0, not through the `23:BE00` template. Now checking the name-entry exit at `19:A582`.
+  ▶ python3 tools/dis.py 19 A552 0x34
+  ▶ python3 tools/xref.py 6410; for a in 6478 6479 647A 647B 647C 647D 647E 647F; do python3 tools/xref.py $a | tail -n +2; 
+  ▶ python3 tools/xref.py 6410; python3 tools/xref.py 6478; python3 tools/xref.py 6479; python3 tools/xref.py 647A; python3 
+  ▶ python3 tools/dis.py 15 BCE0 0x50; python3 tools/xref.py BCE0 | head; python3 tools/dis.py 17 A3F0 0x30
+  ▶ Grep "^(15,B[C-F]|17,A[34]|\*,64(1|2)|16,9[89A])" labels.csv
+  ▶ python3 tools/dis.py 16 9890 0x80; python3 tools/dis.py 16 9A30 0x40
+Bank 16 `$6478` looks like shop price words. Decoding the tables to confirm.
+  ▶ python3 tools/dis.py 16 9878 0x18; python3 tools/decode_tables.py 16:9DA4 11 u8x4; python3 tools/decode_tables.py 16:9DD
+  ▶ python3 tools/decode_tables.py --help 2>&1 | head -20; python3 tools/xref.py 988A; python3 tools/xref.py 646D | head -20
+  ▶ python3 tools/dis.py 16 9550 0x50; python3 tools/dis.py 16 9953 0x20; python3 tools/decode_tables.py 16:9DA4 11 hex4; py
+  ▶ python3 tools/decode_tables.py 16:9F54 33 u8 --per-line 33; python3 tools/decode_tables.py 16:9F75 33 u8 --per-line 33; 
+  ▶ Grep "\$18|\$19|9500|shop" REVERSE.md
+  ▶ Grep "6470|6474|6478|646D|9F54|9DA4" REVERSE.md
+Confirmed `$6470-$647F` is shop state, and new game never uses the template. Writing this to REVERSE.md now, then I'll run the emulator check.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/xref.py 6480 | grep -E "^  (18|19):" ; python3 tools/xref.py 6580 | grep -E "^  (18|19):"; python3 tools/s
+  ▶ ls tools/emu/ tools/emu/states/ 2>&1; grep -n "def \|add_argument" tools/emu/__main__.py | head -60
+  ▶ Grep "def call|def load_state|def set_bank|def write|def read|prg_bank|def cpu_write" tools/emu
+  ▶ Read nes.py +1
+  ▶ Grep "CANON|canonical|KEYS\s*=" tools
+Writing `tools/emu/save_probe.py`: one routine-level SaveGame/LoadGame check, plus a canonical run that watches reads of `$6480-$667F`.
+  ▶ Read web_compare.py +20
+  ▶ python3 tools/decode_tables.py 23:BF00 256 u8 --per-line 32
+  ▶ Write save_probe.py
+  ▶ Grep "^def " tools/emu/state.py
+  ▶ Edit save_probe.py
+  ▶ python3 -m tools.emu.save_probe npc
+  ▶ Read routine_capture.py +140
+  ▶ Edit save_probe.py
+  ▶ python3 -m tools.emu.save_probe npc
+Confirmed in the emulator: only `npc_state[0]` survives a save/load. Now running the boot/new-game read-watch probe.
+  ▶ time python3 -m tools.emu.save_probe boot --frames 2460 > /tmp/save_probe_boot.txt 2>&1; tail -40 /tmp/save_probe_boot.t
+  ▶ python3 -m tools.emu.save_probe boot --frames 2460
+No reads of `$6480-$667F` between the boot copy (f214) and new game (f2321). Checking the CONTINUE path too, by pressing SELECT before the title START.
+  ▶ Edit save_probe.py
+  ▶ Edit save_probe.py
+  ▶ Edit save_probe.py
+  ▶ Edit save_probe.py
+  ▶ python3 -m tools.emu.save_probe boot --frames 1900 --keys "1250:START 1400:START 1600:START 1690:SELECT 1700:START"
+  ▶ python3 -m tools.emu.save_probe boot --frames 1900 --keys "1250:START 1400:START 1600:START 1700:SELECT 1720:START"
+  ▶ Edit save_probe.py
+  ▶ python3 -m tools.emu.save_probe boot --frames 2330
+Title menu is live f1420-1600. CONTINUE = SELECT at f1500, then START at f1600.
+  ▶ python3 -m tools.emu.save_probe boot --frames 1800 --keys "1250:START 1400:START 1500:SELECT 1600:START"
+Both paths confirmed. Updating REVERSE.md, labels and the task.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the task checkbox and the tools table.
+  ▶ Edit REVERSE.md
+  ▶ Grep "player_probe\.py|routine_capture\.py`" REVERSE.md
+  ▶ grep -n "^| \`tools/emu/player_probe.py\|^| \`tools/emu/[a-z_]*.py" REVERSE.md | head; sed -n '1847p' REVERSE.md | cut -
+  ▶ Grep "^\| `?tools/emu/" REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^(\*,64(1[0-9A-F]|6[0-9A-F]|7[0-9A-F])|16,(98|99|9A|9D|9E|9F)|19,A6F9|19,A78B)" labels.csv
+Renaming the auto labels and adding the new ones.
+  ▶ sed -i \
+  ▶ Read labels.csv +759
+  ▶ Edit labels.csv
+  ▶ Grep "wram_646D|wram_6470|wram_6474|wram_6475|wram_6478|ShopArmorGoods|StartNewGame" 
+  ▶ Grep "wram_64|StartNewGame|ShopArmorGoods" tools/save_dump.py
+  ▶ Read save_dump.py +45
+Updating the field names in `save_dump.py`, then I'll regenerate its report.
+  ▶ Edit save_dump.py
+  ▶ Edit save_dump.py
+  ▶ python3 tools/save_dump.py > docs/save_layout.txt && git diff --stat docs/save_layout.txt
+  ▶ python3 tools/save_dump.py --help
+  ▶ Grep "sys.argv|open\(|def main" tools/save_dump.py
+  ▶ python3 tools/save_dump.py --out docs/save_layout.txt
+Fixing the template note: the goods bytes are `$FF`, so the snapshot was a tool-shop visit followed by a new-game init.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 16 9DA4 4 | head -3; git status --short | head
+I finished the top open task (the Ph5 save leftovers from session 31) and checked both findings that needed it in the emulator. Nothing is committed yet; the changes are in `REVERSE.md`, `labels.csv`, `tools/save_dump.py`, `docs/save_layout.txt` and the new `tools/emu/save_probe.py`.
+
+**How a new game starts.** It never uses the `23:BE00` template. After name entry, the game goes to state 0 (`MainStateNewGame` `30:C957`), which sets up RAM directly: inventory/selection bytes to `$FF`, story flags and NPC state to 0, area 0, MP 34. Choosing CONTINUE goes to state 8 and `LoadGameAndInit`. On a fresh power-on that loads the template, so the template is really the "empty save" that CONTINUE falls back on.
+
+**The boot copy that lands one page off (`31:F3A2`) is harmless.** States 0 and 8 are the only two ways into gameplay, and both rewrite `$6480-$667F`. In the emulator I watched every read of that range from power-on:
+- **New game:** no reads between the boot copy (frame 214) and state 0 (frame 2321).
+- **Continue:** SELECT at frame 1500, START at 1600. The first read comes at frame 1603, after the save image has been loaded.
+
+**`$6410`** is the upper tile row of the player's name. The status screen (`15:BD01`) and the ending (`17:A40C`) draw it together with the 6-character name.
+
+**`$6470-$647F`** is shop state in bank 16:
+- `16:9953` looks up the area in a 33-entry table at `16:9F54` to get a shop number (0-10).
+- The armor and tool shop setups then copy 4 item ids and 4 prices for that shop.
+- `16:9A37` picks the price of the item under the cursor.
+- The template's 30/40/60/50 are tool shop 0's prices. Its item bytes are `$FF`, exactly what a new game leaves, so the template looks like memory saved from a development playthrough.
+
+**NPC state is lost on save/load: confirmed.** I ran the real save and load routines on a filled NPC table. Only the first NPC's byte survives; the other 255 come back as 0.
+
+I added 17 labels and renamed 5 automatic ones, added `save_probe.py` to the tools table, and regenerated `docs/save_layout.txt` with the new field names.
+
+SESSION_SUMMARY: Session 71 finished the Ph5 save leftovers: new game = state 0 `MainStateNewGame` (template only feeds CONTINUE), the boot copy is shown harmless and NPC-state loss is confirmed in tools.emu (`tools/emu/save_probe.py`), `$6410` = name upper tile row, `$6470-$647F` = shop goods/prices (bank 16 shop tables); 17 labels added, 5 renamed.

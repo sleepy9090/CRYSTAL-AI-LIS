@@ -1,0 +1,113 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## Next Tasks" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +792
+  ▶ Read 20261115_175121_session_019.txt
+  ▶ Read 20261115_175121_session_020.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 1500 re_loop_sessions/20261115_175121_session_018.txt; git 
+Task: "text follow-ups 9". Starting with the small session-19 items ($0743, `$4B` b6, `$643B`/`$0711`), then (f).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/xref.py 0743 2>&1 | head -40; echo ---; python3 tools
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D9FC 24; echo ---; python3 tools/dis.py 30 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "CADE\|SubstateTable\|sub_state.*8\b" labels.csv | head; py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CB62 40 --stop; grep -n "^\*,0*8,\|^\*,08,"
+  ▶ Grep "`\$08`|sub_state` 8|substate 8|sub_state 8" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +510
+Clarifying `$0743` (Opel revive consume flag) and then checking `$4B` b6 at `26:9B45`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 9B30 40; grep -n "^\*,4B,\|^\*,0*4[89A],\|^
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/xref.py 4B 2>&1 | head -30; python3 tools/xref.py 9B4
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "AD 16 40" --disasm --context 4 2>&1 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "16 40" --disasm --context 8 2>&1 | g
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "16 40" --disasm --context 8 2>&1 | h
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 FEF0 0x60; python3 tools/xref.py FF09 2>&1 
+Found the controller reader at `31:FF28` (this also closes part of the "controller read" task); reading its head now.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 FEC0 0x30; python3 tools/xref.py FEC0 2>&1|
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 FE7E 0x42; python3 tools/xref.py FEE0 2>&1|
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "CB62\|^31,FE80\|^31,FEE0\|^31,FF17\|^31,FF28\|^\*,4[3-9DF]
+Controller routine decoded. Writing labels now.
+  ▶ Read labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l labels.csv; tail -n 3 labels.csv | od -c | tail -n 3; grep -r
+  ▶ Edit labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat >> labels.csv <<'EOF'
+  ▶ Read labels.csv +408
+  ▶ Edit labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 FE80 6; python3 tools/xref.py 4D 2>&1 | gre
+Now REVERSE.md: correcting the `$0743` note and adding a controller section.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now a "Controller input" section. Finding where to put it:
+  ▶ Grep "^#{2,4} " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +286
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the `$643B+Y` Crystalis read — checking the inventory layout.
+  ▶ Grep "\$6430|\$6438|\$643C|\$6440" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -40 gfx/items.txt; python3 tools/xref.py 0711 2>&1 | head -30
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 16 82E8 0x18; python3 tools/dis.py 16 8326 0x1
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 14 82C3 0x20; python3 tools/dis.py 14 82A8 0x1
+Crystalis pickup clears all balls/bracelets and sets `$0711`=5. Checking whether the charge-cap code special-cases Crystalis:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 9DFC 0x40
+  ▶ Edit REVERSE.md
+Now part (f): object types. Checking existing dumps.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls gfx/*.txt; python3 tools/objtype_dump.py --help 2>&1 | head -15
+  ▶ Grep "^type \$(32|38|53|54|55|73|88|9E|DE|DF|E2) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -20 gfx/obj_ai.txt; grep -n "AI ids\|ObjAiTable\|27:A314\|AI t
+Note: `ObjAiTable` maps AI `$01` (type `$04`) to `26:9B45` — so that's the **player update**, not just a quick-use check. Verifying:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 9B56 0x60
+Confirmed: `26:9B45` is the player AI (status effects, metasprite). Renaming it.
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the (f) object types. Checking what REVERSE.md already says about them:
+  ▶ Grep "type `\$(32|38|53|54|55|88|9E|DE|DF|E2)`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 B0B5 0x50
+Most of these types already have notes. Reading them to see what's missing:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "" 2>/dev/null; grep -no 'type `\$\(3
+  ▶ Grep "type `\$(32|38|53|54|55|88|9E|DE|DF|E2)`.{0,170}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Spawn contexts are known; the AI behaviour is not. Disassembling the handlers:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 AE31 0x40 --stop; echo ----; python3 tools/
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 AE66 0xA0 --stop; python3 tools/decode_tabl
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 AE7B 0x89; python3 tools/decode_tables.py 2
+  ▶ Grep "^ai \$(30|32|20|28|40|E7|EB|FF|14|2B) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 27:AF04 16 u16 | tail -8; python3 to
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 B39E 0x30 --stop; echo ----; python3 tools/
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 9B07 0x3E --stop; echo ----; python3 tools/
+Writing up the object-type findings now (AI handlers for `$38`, `$DE`, `$DF`, `$55`, `$88`, `$9E`).
+  ▶ Read REVERSE.md +583
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+Now updating Next Tasks: mark this one done, tick the controller-read task, and queue the leftovers.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Checking that the new labels load cleanly:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 ADD4 6; python3 tools/dis.py 30 D49E 6; pyt
+I finished part of "text follow-ups 9". The session-19 add-ons are done, plus part of (f). Items (c), (h) and the rest of (f) are in a new "text follow-ups 10" task. Everything is static analysis only, with no emulator check, and nothing is committed.
+
+**Controller input:** I found the pad-reading code, which also finishes the separate "identify controller read routine" task.
+- `ReadPadRaw` `31:FF28` reads both pads. The button bits are A=b7, B=b6, Select=b5, Start=b4, then Up, Down, Left, Right. `ReadPadStable` `31:FF17` reads each pad until two reads agree.
+- `31:FE80` was labelled `ColdInitSub2`, but it is the per-frame gameplay pad read, now `ReadPads`. It sets:
+  - `$43` previous buttons
+  - `$4B` newly pressed buttons
+  - `$49` an 8-way direction, from the table at `31:FED0`
+  - `$4D` new presses plus two hold bits: A held for 31+ frames, and a B pulse every 32 frames
+- `ReadPadsMenu` `31:FEE0` is the menu version. A held d-pad repeats after 12 frames, then every 3 frames.
+
+**Session-19 questions:**
+- **`$4B` bit 6 is "B newly pressed".** `26:9B45` turned out to be the player's update routine (the AI for object type `$04`), now labelled `PlayerUpdate`. Its first check means pressing B uses the selected item.
+- **`$0743` is the Opel Statue revive flag (`opel_revive`).** You can't use the statue from the menu: the game just returns to normal play (sub_state 8) with no message. It is only used up by the revive when you die with it selected.
+- **`$643B`+Y read in `SwordPowerLevel`:** if no ball or bracelet is equipped, having the bracelet for the sword's element still gives power level 1.
+- **Crystalis:** picking it up clears all four ball/bracelet slots and sets `$0711`=5, but leaves the equipped ball/bracelet value (`$0718`) as it was. So with nothing equipped, its charge level depends on whether the first consumable's item id is odd or even. Other code that reads `$0711` may handle Crystalis separately; that check is queued.
+
+**Object AI handlers, part (f):** documented in a new table in REVERSE.md.
+- **`$38`:** the creature the Shell Flute summons. It follows a scripted path (`AiPathWalk` `27:AE31`, 16 paths at `27:AF04`). Special end codes make it hand its path to slots 13/14, turn into a talkable NPC, or despawn.
+- **`$DE`:** no AI at all; it only exists to be talked to.
+- **`$DF`:** a countdown timer.
+- **`$55`:** wanders in 16 directions, picked from its position.
+- **`$88` and `$9E`:** both go through a shared boss phase dispatcher, `15:A400`.
+
+I added 22 labels to `labels.csv`, renamed `ColdInitSub2` and updated its two mentions in REVERSE.md.
+
+SESSION_SUMMARY: Session 20 — text follow-ups 9 (partial): controller input decoded (ReadPadRaw 31:FF28, ReadPadStable FF17, ReadPads FE80 (was ColdInitSub2), ReadPadsMenu FEE0, pad vars $43-$4F); 26:9B45 = PlayerUpdate, B uses the selected item; $0743 = opel_revive (Opel Statue can't be used from the menu); bracelet/Crystalis SwordPowerLevel quirks; AI handlers for types $38 (AiPathWalk path walker), $DE, $DF, $55, $88/$9E (BossPhaseDispatch 15:A400); 22 labels; (c)/(h)/rest of (f) moved to "text follow-ups 10".

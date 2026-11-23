@@ -1,0 +1,116 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls re_loop_sessions | tail -4; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions; wc -c *_20[89].txt *_210.txt *_211.txt; tail -c 50
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "Main-loop pass cost" REVERSE.md | head; sed -n '1,60p' too
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat web/test/pass_count.mjs tools/pass_fit.py; sed -n 60,200p tools
+  ▶ Grep "objUpdateAll|cameraTick|objSpriteDraw|spriteDraw\(|objCollideAll|collideAll" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Read play.js +30
+  ▶ Grep "runFrame|nmi\w*\(|irq\w*\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/machine.js
+  ▶ Read machine.js +160
+  ▶ Edit play.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat tools/pass_cost_stats.py | head -30; python3 -m tools.emu.pass_
+Now the per-stage counter in pass_count.mjs.
+  ▶ Write pass_count.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; K=$(python3 tools/keyseq.py 2505:DOWN:2 '2569:DOWN:6,+6:B:4*26/16')
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/keyseq.py 2505:DOWN:2 '2569:DOWN:6,+6:B:4*26/16' > /t
+  ▶ python3 tools/keyseq.py 2505:DOWN:2 '2569:DOWN:6,+6:B:4*26/16'
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 24,70p web/test/group81_check.mjs
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages --out /tmp/s81.txt 2506:DOWN:2 2569:DOWN:7 2576:
+Collecting the per-stage counts for area $81. I'm moving the scratch output into the project directory because the sandbox blocked reads from /tmp.
+  ▶ mkdir -p gfx/passfit && node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages --out gfx/passfit/s81.tx
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages 2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:DOWN:7 259
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages --out /tmp/s81.txt 2506:DOWN:2 2569:DOWN:7 2576:
+Now a general n-feature least-squares mode in pass_fit.py.
+  ▶ Write pass_fit.py
+  ▶ python3 tools/pass_fit.py /tmp/c81.txt /tmp/s81.txt --stages --worst 6
+  ▶ sed -n 1,40p web/src/game/obj/collide.js && sed -n 442,520p web/src/game/obj/collide.js
+  ▶ Grep "export function cpuRd" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/prg.js
+  ▶ grep -n "constructor\|this.frame = 0" web/src/game/machine.js | head
+  ▶ Read machine.js +58
+  ▶ Edit machine.js
+  ▶ Edit prg.js
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+Editing pass_count.mjs so the third bucket value is ROM reads (PPU writes were always 0 because row draws go through the queue).
+  ▶ Edit pass_count.mjs
+  ▶ Edit pass_count.mjs
+  ▶ Edit pass_count.mjs
+  ▶ sed -i 's/\*ppu + {c\[3\]/*rom + {c[3]/; s/c\*ppu + d/c*rom + d/' tools/pass_fit.py && node web/test/pass_count.mjs web/
+  ▶ Edit pass_fit.py
+  ▶ Edit pass_fit.py
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages --out /tmp/s81.txt 2506:DOWN:2 2569:DOWN:7 2576:
+  ▶ Edit pass_fit.py
+  ▶ python3 tools/pass_fit.py /tmp/c81.txt /tmp/s81.txt --stages --show col | head -30
+  ▶ awk '{for(i=1;i<=NF;i++) if($i=="col") c=$(i+1); print $1, "col", c, $0 ~ /end/ ? substr($0, index($0,"end"), 14) : ""}'
+The ObjCollideAll spikes look like HUD-IRQ time that lands in the stage when a pass runs long. I'm checking that against each pass's end line.
+  ▶ Edit pass_cost_stats.py
+  ▶ Edit pass_fit.py
+  ▶ python3 tools/pass_fit.py /tmp/c81.txt /tmp/s81.txt --stages --show col | sort -t'L' -k3 -n | tail -25
+  ▶ python3 tools/pass_fit.py /tmp/c81.txt /tmp/s81.txt --stages --show col
+  ▶ grep -in "irq" labels.csv | head -20; grep -n "def on_exec\|cycles\b\|def irq\|def nmi\|in_irq\|vector" tools/emu/nes.py
+  ▶ Read cpu.py +76
+  ▶ Read nes.py +125
+  ▶ Read pass_cost.py +20
+  ▶ Edit pass_cost.py
+  ▶ Read pass_cost.py +80
+  ▶ Edit pass_cost.py
+  ▶ Edit pass_cost.py
+  ▶ Edit pass_cost.py
+Adding interrupt splitting to pass_cost. Tidying the docstring first.
+  ▶ Read pass_cost.py
+  ▶ Edit pass_cost.py
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group81.state 100 --split-int --out /tmp/c81.txt --keys 2505:DOWN:2 2569
+Splitting out the interrupts fixes the per-stage fits: rms is 4 to 65 cycles per stage. The total's residual is now just the interrupt time. Next I'm modelling that from the pass length.
+  ▶ Edit pass_cost_stats.py
+  ▶ grep -n "len(STAGES)\|r\['st'\]\|\['st'\]" tools/pass_cost_stats.py tools/pass_fit.py
+  ▶ Edit pass_cost_stats.py
+  ▶ Edit pass_fit.py
+  ▶ python3 tools/pass_fit.py /tmp/c81.txt /tmp/s81.txt --stages --worst 4 --show int
+  ▶ grep -n "KEYS\|LAST =\|keys\b" web/test/group5c_check.mjs | head; grep -n "group59\|group_59" web/test/group5c_check.mjs
+  ▶ python3 tools/pass_fit.py /tmp/c81.txt /tmp/s81.txt --stages --worst 0 --save /tmp/coef81.json >/dev/null && node web/te
+  ▶ Read pass_fit.py +52
+  ▶ Edit pass_fit.py
+  ▶ Edit pass_fit.py
+  ▶ node web/test/pass_count.mjs web/test/states/group5a.json 2599 --stages --out /tmp/s5a.txt 2520:UP:40 2560:B:4 2576:B:5 
+  ▶ Edit pass_fit.py
+  ▶ Edit pass_fit.py
+  ▶ python3 tools/pass_fit.py /tmp/c81.txt,/tmp/c59.txt /tmp/s81.txt,/tmp/s59.txt --stages --skip-lag --worst 3 --save /tmp/
+  ▶ python3 tools/pass_fit.py /tmp/c81.txt,/tmp/c59.txt /tmp/s81.txt,/tmp/s59.txt --stages --skip-lag --worst 3 --save /tmp/
+  ▶ timeout 3000 python3 tools/run_checks.py 2>&1 | tail -25
+All 52 checks pass. Now the write-up: the Verification Log row and the task's (c) text.
+  ▶ Edit REVERSE.md
+Now the task's (c) remaining text (it stays unchecked, since this is the low-priority leftovers task):
+  ▶ Edit REVERSE.md
+  ▶ grep -n "s210 lag study" CLAUDE.md
+  ▶ Read CLAUDE.md +103
+  ▶ Edit CLAUDE.md
+  ▶ grep -n "^30,C919\|^30,CB62\|^26,8F6E" labels.csv
+I spent session 211 on the one open part of the low-priority leftovers task, (c): CPU overruns (lag frames). I got the cycle-cost model a lot closer, but it still isn't accurate enough to switch on in the port. The task stays unchecked, with what's left written into its (c) text.
+
+**What changed the picture.** s210's per-stage cycle counts included interrupt time. Every pass has a fixed 202 cycles of interrupts. When a pass runs past about line 190, it also takes the HUD IRQ and its sound work, 1,349 to 2,434 cycles. That lands in whichever stage happens to be running, which explains most of s210's large miss.
+
+**Tool changes:**
+- `tools/emu/pass_cost.py --split-int` takes interrupt cycles out of the stage they fell into and shows them in a separate `int` column.
+- `web/test/pass_count.mjs --stages` counts the port's reads, writes and ROM-table reads per main-loop stage.
+- `tools/pass_fit.py --stages` fits each stage on its own. It can fit several runs together, skip lag passes, and save coefficients or reuse saved ones.
+
+**Port changes (counting only):** `states/play.js` now records which stage is running (`m.passStage`), and `prg.js` counts its ROM reads (`m.romRd`). Behaviour is unchanged: all 52 checks pass.
+
+**Results** (fitted on areas $81 + $59, 199 non-lag passes):
+
+| | rms (cycles) | max (cycles) |
+|---|---|---|
+| s210 (whole pass, area $81) | 672 | 2,496 |
+| s211, in sample | 161 | 437 |
+| s211, out of sample (area $5A) | 214 | 732 |
+
+The window between "lags" and "doesn't lag" is only about 500 cycles. At this accuracy some passes would be put on the wrong side of it. A wrong guess adds a lag frame and breaks checks that pass today, so I didn't apply the model in the port.
+
+**What's left in (c):**
+- **ObjSpriteDraw:** a feature for sprite entries / meta records. Area $5A shows a steady offset of about 160 cycles.
+- **Top stage:** a feature for the occasional pass that costs about 1,710 cycles instead of about 1,330.
+- **HUD IRQ:** add its cost when the estimate runs past line 190.
+- **Then (c2):** apply the model in the port and extend `group81_check.mjs` / `group5c_check.mjs` past their first lag frame.
+
+REVERSE.md's Verification Log row "Main-loop pass cost" and CLAUDE.md's tool notes are updated. There were no new addresses, so labels.csv is unchanged. Nothing is committed.
+
+SESSION_SUMMARY: s211 found that s210's stage costs included interrupt time (a fixed 202 cycles per pass plus a 1,349-2,434-cycle HUD IRQ after ~L190), added interrupt splitting to pass_cost and per-stage counting/fitting to pass_count/pass_fit, and brought the cycle model from rms 672 to 161 in sample / 214 out of sample on area $5A; still too coarse for the ~500-cycle lag window, so it is not applied in the port and (c) stays open with the sprite-draw, top-stage and HUD-IRQ terms listed.

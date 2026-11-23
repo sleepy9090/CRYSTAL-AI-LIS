@@ -1,0 +1,125 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## \|^### " REVERSE.md | tail -30
+  ▶ Read dead_ends.md
+  ▶ grep -n "^- \[ \]" REVERSE.md | head; wc -c re_loop_sessions/20261119_230117_session_100.txt re_loop_sessions/20261119_2
+  ▶ tail -c 3000 re_loop_sessions/20261119_230117_session_099.txt; echo ----; tail -c 2500 re_loop_sessions/20261119_180130_
+  ▶ ls web/src/game/obj/ && wc -l web/src/game/obj/*.js && head -60 gfx/obj_ai.txt && grep -n "AI_TABLE" -r web/src | head
+  ▶ sed -n 60,200p gfx/obj_ai.txt; grep -ohE "^\s*0x[0-9A-Fa-f]{2}\s*:" web/src/game/obj/*.js | tr -d ' :' | sort -u | tr '\
+Picked the top open task (boss AI port, bank 15 bosses); now checking which AI ids the port already has.
+  ▶ grep -nE "export const AI_[A-Z]+|^\s*\[?0x[0-9A-F]{2}\]?\s*:" web/src/game/obj/*.js | head -80
+  ▶ grep -n "Boss phase bodies\|BossPhaseTable\|AI \`\$70\` final-scene phases" REVERSE.md | head
+  ▶ Grep "Boss phase bodies|BossPhaseTable|final-scene phases \(session 97\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1179
+  ▶ Read ai_final.js
+  ▶ Read util.js
+  ▶ Grep "_fix_final|EFFECT_AIS|FINAL_|def _fuzz|ROUTINES = |PPU_ROUTINES|Ai70PhaseDispatch|fuzz_final" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/routine_capture.py
+Reading the capture tool's case generators to set up tests for the first bank-15 bosses.
+  ▶ Read routine_capture.py +100
+  ▶ Read objects.js
+  ▶ python3 tools/dis.py 30 CCF0 0x40; python3 tools/dis.py 14 A400 0x13; python3 tools/dis.py 14 A477 0x180
+  ▶ python3 tools/dis.py 15 A400 0x13; python3 tools/dis.py 15 A477 0x1F8
+  ▶ head -30 gfx/boss_phases.txt; python3 tools/dis.py 15 A66E 8; python3 tools/dis.py 15 BB29 0x40 --stop
+  ▶ grep -n "export function" web/src/game/playsound.js web/src/game/prg.js; grep -n "AI_FINAL\|ai_final" web/test/obj_check
+  ▶ Read obj_check.mjs
+Writing the port of boss AI `$E0` + homing shot; first disassembling boss `$E3` and its rock shot so they can go in the same module.
+  ▶ python3 tools/dis.py 15 A95D 0x27D 2>&1 | cut -c1-80
+  ▶ sed -n 25,50p web/src/game/prg.js; python3 tools/dis.py 26 8C0E 0x30 --stop; grep -rn "8C0E\|8c0e" web/src | head
+Now writing `web/src/game/obj/ai_boss.js` (BossPhaseDispatch, ClearEnemySlots, AI `$E0`/`$61`/`$E3`/`$64`).
+  ▶ Write ai_boss.js
+  ▶ sed -n 12,26p web/src/game/prg.js; grep -n "export function paletteBuildRom" -A14 web/src/game/states/death.js
+  ▶ python3 - <<'EOF' 2>/dev/null || echo "inline python not allowed; use Edit"
+  ▶ Edit objects.js
+  ▶ Edit objects.js
+Now the capture side: boss cases need R6=`$1A`, R7=`$0F` as ObjUpdateAll leaves them.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ grep -n "bank" tools/emu/routine_capture.py | grep -v "^\s*#" | head -20; ls web/test/obj_frames/; grep -n "fuzz_final" 
+  ▶ Read README.md +40
+Capturing 150 cases per boss routine and adding them to `obj_check.mjs`.
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ time python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 150 --routine BossA
+All 600 match on the first run. Checking that the cases actually reach the interesting paths (phase changes, shots, teleports).
+  ▶ python3 tools/obj_case_stats.py --help 2>&1 | head -20
+  ▶ Read obj_case_stats.py
+  ▶ python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_boss.json --col 0600 --col 0070 --col 0360 --col 04A0=10 --col 
+Coverage is thin for the E3 slam/sweep shots; doubling the case count (it's only a few seconds).
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine BossAiE0,B
+Also adding the boss ids to the `ObjUpdateAll` case pool, so the loop's `SetR7($0F)` path is tested too.
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 --routine ObjMoveSli
+The capture hit an out-of-range boss phase (jumps into RAM). Keeping boss slots' `obj_phase` inside their own range in the `ObjUpdateAll` cases.
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 --routine ObjMoveSli
+  ▶ grep -n "STACK_SCRATCH" tools/emu/routine_capture.py | head -3; node -e "const j=require('./web/test/obj_frames/fuzz_upd
+  ▶ Write case_slots.py
+  ▶ python3 tools/case_slots.py web/test/obj_frames/fuzz_update.json 'ObjUpdateAll#184'
+  ▶ Grep "STACK_SCRATCH|sp - 15|sp-15" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ sed -i 's/^STACK_SCRATCH = 15$/STACK_SCRATCH = 32                 # s100: was 15; ObjUpdateAll -> boss -> SpawnShot -> f
+Using Edit instead of sed.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 --routine ObjMoveSli
+All 6200 pass. Running the other regression checks.
+  ▶ for t in core_check ppu_check sprite_check serve_check world_check; do node web/test/$t.mjs > /tmp/$t.log 2>&1; echo "$t
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/sprite_check.mjs 
+All regression checks pass. Now documentation: checking which bank-15 addresses still lack labels.
+  ▶ Grep "^15,(A4|A5|A6|A9|AA|AB|AD86|BB29)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv; wc -l labels.csv
+  ▶ Read labels.csv +1226
+  ▶ Edit labels.csv
+Now REVERSE.md: Verification Log row, a short section, and the task update.
+  ▶ Grep "Equipment / item menu \(web port\)|^#### AI `\$70` final-scene phases|^\*\*AI `\$EB` `AiBowOfTruth9E`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ awk 'NR>=166 && NR<=172 {print NR": "substr($0,1,200)}' REVERSE.md; awk 'NR>=1236 && NR<=1250 {print NR": "substr($0,1,1
+  ▶ Read REVERSE.md +1238
+Inserting the port notes after the bank-15 boss bodies (before the "Boss shot / part AIs" paragraph).
+  ▶ Edit REVERSE.md
+  ▶ Grep "^\| AI `\$70`|^\| Equipment / item menu" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +168
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit README.md
+  ▶ Edit README.md
+  ▶ Read architecture_web.md +60
+  ▶ Edit architecture_web.md
+  ▶ Grep "^\| AI `\$70` `Ai70PhaseDispatch`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+Finishing the docs: mapping row, then marking the task done and filing what's left.
+  ▶ Edit architecture_web.md
+  ▶ Read REVERSE.md +2393
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I ported the first four bank-15 boss AIs to the web port, and every routine test matches the emulator: 6200 of 6200 cases, including 1200 new boss cases, with none reaching unported code.
+
+**What's ported** (new file `web/src/game/obj/ai_boss.js`, added to the AI table):
+- **Shared boss code:** the phase dispatcher `BossPhaseDispatch` (`15:A400`) and `ClearEnemySlots`. All bosses share one phase table, so a phase past one boss's range runs the next boss's handler, as in the ROM. If that handler isn't ported yet, the port logs it.
+- **AI `$E0`, the teleporting boss:** all 8 phases, plus its smoke ring and two-shot attack.
+- **AI `$61`, its homing shot.**
+- **AI `$E3`, the slam / flame-sweep boss:** all 5 phases.
+- **AI `$64`, the rock shot:** its random offset comes from reading bytes out of a random ROM bank, which the port copies through the real banks.
+
+**Tests**
+- New `fuzz_boss.json`: 300 random cases each for the 4 routines, all identical. They cover every phase, the shot spawns, the slam, the attack rolls and the intro message.
+- The boss ids are now also in the main object-loop test (`fuzz_update.json`, regenerated): 200/200.
+- The core, PPU, sprite (552/552), serve and world checks all still pass.
+
+**Test tool changes** (these change existing behaviour):
+- Random boss phases made the capture tool jump into RAM and crash, so boss slots now always get a phase inside that boss's own range.
+- The boss call chain writes 16 bytes below the stack area the tests ignored, which caused one false failure. The ignored window is now 32 bytes instead of 15, in both `routine_capture.py` and `obj_check.mjs`. The port doesn't model the stack, so this hides no real difference.
+- New `tools/case_slots.py` prints one test case's stack pointer and active objects.
+
+**Findings that correct the session-78 notes:**
+- During the boss intros, the frozen object is the player, not the boss: the code writes slot 0's freeze timer.
+- Boss `$E3`'s retreat, the end of its slam and the end of its sweep all return to phase 1. Phase 2 is only entered from the close-range branch.
+- The dispatcher's Y register (phase index × 2) is passed on to `PlaySound` in the slam.
+
+**Docs:** REVERSE.md has a new section "Bank 15 bosses (web port, session 100)" and a Verification Log row, and the task is marked done. `labels.csv` has 18 new labels; `docs/architecture_web.md` and the test README are updated.
+
+**Not done yet:** I filed one low-priority task at the end of RE Investigation for the rest. It covers the other bosses: `$E6`, `$E7`, `$E8`, `$E9`, `$EA`, `$E5`, `$6C-$6F`, and then the two that redraw the background, `$E2` and the final boss. It also includes the enemy death chains and drops, the AI ids still missing, the per-frame enemy comparisons, and `ShowMessage`.
+
+Nothing is committed.
+
+SESSION_SUMMARY: Session 100: ported bank-15 bosses AI $E0 (8 phases), $61 homing shot, $E3 (5 phases) and $64 rock shot plus BossPhaseDispatch/ClearEnemySlots in new obj/ai_boss.js; fuzz_boss.json 1200/1200 and all routine cases 6200/6200 (boss ids added to ObjUpdateAll cases, test stack window 15→32); found the intros freeze the player and E3's phase exits all return to phase 1; the remaining bosses, death chains and frame scenarios filed as one new last task.

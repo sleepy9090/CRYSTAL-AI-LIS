@@ -1,0 +1,95 @@
+  ▶ Read dead_ends.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## |^### |- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2340
+  ▶ Glob re_loop_sessions/*_session_09[3-5]*
+  ▶ wc -c re_loop_sessions/20261119_180130_session_09*.txt && tail -c 3000 re_loop_sessions/20261119_180130_session_095.txt;
+  ▶ which chromium chromium-browser google-chrome google-chrome-stable firefox epiphany midori xvfb-run fceux 2>/dev/null; l
+  ▶ which chromium chromium-browser google-chrome google-chrome-stable firefox xvfb-run fceux
+I'm on the top task in the queue: checking `web/catalog.html` in a real browser. Firefox is installed, so I'm checking whether headless Firefox can render the catalog's tabs.
+  ▶ wc -l web/catalog.html && ls web/ web/src | head -40
+  ▶ Read catalog.html
+  ▶ wc -l web/catalog.js && grep -n "hash\|location\|fetch(\|addEventListener\|AudioContext\|function " web/catalog.js | hea
+  ▶ Read catalog.js
+  ▶ node --version && grep -n "createServer\|listen\|argv" web/test/serve_check.mjs | head; ls tools | grep -i -E "serve|bro
+  ▶ file /usr/bin/firefox && head -c 600 /usr/bin/firefox | strings | head -20; ls gfx/chr | head; ls gfx/chr | wc -l; ls gf
+  ▶ file /usr/bin/firefox
+  ▶ Glob gfx/chr/*
+  ▶ Glob web/data/*
+  ▶ Grep "^def (read_png|load_png|png_read|write_png)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ Grep "chr_\{|chr_%|gfx/chr" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ Read render_compare.py
+I'm writing `tools/browser_check.py`. It drives headless Firefox through Marionette using only the Python standard library, so it can open each catalog tab and check what the page actually shows.
+  ▶ Read render_compare.py +60
+  ▶ Write browser_check.py
+  ▶ Edit browser_check.py
+  ▶ timeout 600 python3 tools/browser_check.py --areas 5 2>&1 | tail -30
+  ▶ Edit browser_check.py
+  ▶ timeout 600 python3 tools/browser_check.py --areas 5 2>&1 | tail -30
+  ▶ Edit browser_check.py
+  ▶ timeout 600 python3 tools/browser_check.py --areas 5 2>&1 | tail -30
+The first run passes. Now the full run over every sprite area, then I'll look at the screenshots.
+  ▶ sed -i 's/ ms incl. sound.json)/ ms after the click)/' tools/browser_check.py && time timeout 900 python3 tools/browser_
+  ▶ Edit browser_check.py
+  ▶ timeout 900 python3 tools/browser_check.py 2>&1 | tail -15
+  ▶ python3 tools/json_peek.py 2>/dev/null | head -1; ls tools | grep -i json
+  ▶ head -20 tools/json_peek.py
+  ▶ python3 tools/json_peek.py gfx/sprites.json areas.25 --depth 3 --items 12; python3 tools/json_peek.py gfx/sprites.json m
+  ▶ Edit browser_check.py
+  ▶ Edit browser_check.py
+Now the tail of that function:
+  ▶ Read browser_check.py +186
+  ▶ Read browser_check.py +210
+  ▶ Edit browser_check.py
+  ▶ Edit browser_check.py
+  ▶ Read browser_check.py +20
+  ▶ Edit browser_check.py
+  ▶ timeout 900 python3 tools/browser_check.py 2>&1 | tail -15
+One cell is still flagged: area `$A0`, metasprite `$B2`+`$40`. I'm looking at its frame data.
+  ▶ python3 tools/json_peek.py gfx/sprites.json metasprites.B2.frames.0 --depth 2 --items 12; python3 tools/json_peek.py gfx
+  ▶ python3 tools/json_peek.py gfx/sprites.json areas.A0 --depth 3 --items 6 | head -40
+  ▶ python3 tools/json_peek.py gfx/sprites.json metasprites.B2 --depth 3 --items 12 | grep -v "^\s*\[list len 4\]$" | head -
+  ▶ python3 tools/json_peek.py gfx/sprites.json metasprites.B2 --depth 4 --items 10
+I'm tightening `drawable()` so it also checks that the non-blank pixels land inside the 64×64 cell, the way `drawSprCell` places them.
+  ▶ Edit browser_check.py
+  ▶ timeout 900 python3 tools/browser_check.py 2>&1 | tail -6
+  ▶ Read tab_chr.png
+  ▶ Read tab_spr.png
+  ▶ Read tab_snd.png
+  ▶ Read REVERSE.md +121
+  ▶ Grep "catalog\.html|catalog\.js" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Adding the tool to the output-files table and a Verification Log row. First I'll find the end of the log table:
+  ▶ Grep "^\| Pause / status screen \(web port\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ awk 'NR>=160 && NR<=167 {print NR": "substr($0,1,90)}' REVERSE.md
+  ▶ Grep "^\| [^|]{0,60}\|" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Next I'll mark the task done and move the FCEUX part (b) to the end of RE Investigation:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Last, I'll check whether `docs/architecture_web.md` lists the catalog tests, so the new tool goes there too:
+  ▶ Grep "catalog" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Glob gfx/browser/*
+I checked the asset catalog page (`web/catalog.html`) in a real browser, and every tab passes. Earlier sessions had no browser available, so it had only been tested against a fake page setup.
+
+**How:** Firefox is installed, so I wrote `tools/browser_check.py`. It runs Firefox with no window, uses Firefox's built-in automation, serves the repo locally, and opens each tab in turn. It only needs the Python standard library and deletes its temporary Firefox profile when it finishes. The full run ends with **RESULT OK** and the script exits 1 if anything fails.
+
+| Tab | Result |
+|---|---|
+| CHR | All 128 banks read back from the page match `gfx/chr/chr_NNN.png` pixel for pixel |
+| Palettes | 256 palette slots and the 64-colour master palette all present |
+| Sprites | All 213 areas load their `gfx/sprites/area_NNN.png` sheet at the right size. Each of the 2,138 sprite previews is drawn or blank exactly as `gfx/sprites.json` predicts |
+| Areas / Screens | All 702 images listed in the catalog manifest load |
+| Sound | A real click on music `$01` plays: audio is running at 48 kHz and the output is not silent |
+| Text | All 511 messages shown |
+
+I also looked at screenshots of the CHR, Sprites and Sound tabs and they look right. All seven tab screenshots are in `gfx/browser/tab_*.png`.
+
+**One display limit:** the Sprites tab draws each sprite in a 64×64 box and cuts off larger ones. In area `$A0`, sprite `$B2`+`$40` lies entirely outside its box, so it shows as blank. This only affects the catalog view, not the port.
+
+**Not done:** the other half of this task is to re-run FCEUX for real reference screenshots, and it needs your approval. I moved it to the end of the task list as a separate optional item. The screens it covers already match on a state comparison (8/8).
+
+**Docs:** `REVERSE.md` has a new Verification Log row ("Asset catalog in a real browser"), the new tool in the output-files table, and the task marked done. `docs/architecture_web.md` mentions the new check. Nothing is committed.
+
+SESSION_SUMMARY: Session 95 — `web/catalog.html` checked in headless Firefox with new `tools/browser_check.py`: CHR 128/128 pixel-identical to `gfx/chr/`, all 213 sprite areas correct, 702/702 images load, Sound tab plays; FCEUX pixel rerun (needs approval) moved to the end of the list as an optional task.

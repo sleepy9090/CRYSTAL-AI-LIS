@@ -1,0 +1,49 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*}
+  ▶ Grep "^## " REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +270
+  ▶ Read 20261115_112834_session_005.txt
+  ▶ Read 20261115_131127_session_006.txt
+  ▶ Grep "Object sprite pass" REVERSE.md
+  ▶ Read REVERSE.md +60
+  ▶ Glob tools/*.py
+  ▶ python3 tools/search_bytes.py "8D 00 80" --disasm --context 4 --max 60 2>&1 | head -150
+  ▶ python3 tools/dis.py 31 F870 0x60 | head -40; python3 tools/xref.py 07F2; python3 tools/xref.py 5A
+  ▶ python3 tools/dis.py 30 C0A0 0x80; python3 tools/dis.py 30 DCC0 0x30; python3 tools/dis.py 30 DD60 0x30
+  ▶ python3 tools/xref.py 07F4; python3 tools/xref.py 07F5; python3 tools/search_bytes.py "8D F4 07" --disasm --context 6 --
+  ▶ python3 tools/dis.py 31 E160 0x30
+  ▶ Grep "^def |^class |^    def |^[A-Z_]+ =" tools/nesrom.py
+  ▶ Read nesrom.py
+  ▶ Write meta_dump.py
+  ▶ python3 tools/meta_dump.py text 0 1 2 3 && python3 tools/meta_dump.py text | grep -c empty && python3 tools/meta_dump.py
+  ▶ Read metasprites.png
+  ▶ Grep "^(\*,(7F[0-5]|5[8-9A-D]|713|711|7E[5-7]),|31,(F883|E16D|F651),)" labels.csv
+  ▶ tail -3 labels.csv; python3 tools/xref.py F883 | tail -4; python3 tools/dis.py 31 F640 0x14
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ Edit REVERSE.md
+Appending with Edit instead:
+  ▶ Read labels.csv +1
+  ▶ Grep "snd_chn_shadow" labels.csv
+  ▶ Edit labels.csv
+Now I'll mark the task done, add a follow-up task, and list the tool.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I wrote `tools/meta_dump.py`, ran it, and marked the task done. It renders all 256 sprite ids from `28:845C`/`855C` into `gfx/metasprites.png`. It has two modes: `text [ids]` prints the decoded records, and `png [out] [--chr R2,R3,R4,R5]` draws them as a 16×16 grid with frames side by side.
+
+**What I checked:** ids 0–7 (the player: 4 facings plus 4 sword/attack poses) render as clean, coherent figures. That supports the record format worked out last session, including the `FF` mirrored redirect (id 3 is a mirrored id 1). Only 4 of the 256 ids are empty. Nothing has been compared against an emulator yet.
+
+**What doesn't render right yet:** enemy and object ids that use tiles `$80` and up look scrambled. Those tiles come from two sprite graphics banks (R4/R5) that change per area. The default I used (`$50,$51`) is a placeholder guess.
+
+**How the game picks sprite graphics** (from the disassembly):
+- The sprite graphics banks are kept in two sets of shadow copies: `$07F0-$07F5`, written to the mapper by `31:F883`, and `$58-$5D`, written by `31:F64F` inside an interrupt handler.
+- Player bank R2 = `$40`, or `$41` when `$0713` is nonzero (`30:C0B8`). R3 = `$41` + `$0711` clamped to 1–5, so `$42`–`$46`.
+- R4/R5 are loaded per area by `31:E16D`, which reads a record through a table at `$9300`. The bank 15 code that swaps in boss music (`$12`) also writes R4/R5.
+
+**Recorded:**
+- 15 new labels in `labels.csv`.
+- A "Sprite CHR banks" section and a tool entry in `REVERSE.md`.
+- A new task to decode the `$9300` area table, so each enemy set can be rendered with its real graphics banks.
+
+My first attempt to add the labels with a shell append was blocked by a permission prompt, so I added them with an edit instead. Nothing was committed.
+
+SESSION_SUMMARY: Session 6 wrote and ran `tools/meta_dump.py` (all 256 sprite ids → `gfx/metasprites.png`; player ids 0-7 render clean) and found the sprite graphics bank shadows `$07F0-$07F5`/`$58-$5D` (player R2=`$40/$41`, R3=`$42-$46`, R4/R5 loaded per area by `31:E16D`); labels, `REVERSE.md` and a follow-up task for the `$9300` area table added.

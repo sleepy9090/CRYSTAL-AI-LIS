@@ -1,0 +1,64 @@
+  ▶ ls; ls re_loop_sessions | tail -5; wc -l REVERSE.md dead_ends.md 2>/dev/null; ls rom
+  ▶ Read dead_ends.md
+  ▶ Grep "^## |^### |- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +908
+  ▶ ls tools gfx; wc -c re_loop_sessions/*_02[123].txt; tail -c 1500 re_loop_sessions/20261116_093455_session_022.txt; tail 
+  ▶ Grep "PaletteBuild|palette record|3F00|page tail|\$07E0" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Picked task Ph4 assets 1/5 (CHR tile dump + palette renderer). Reading the palette code now.
+  ▶ Read REVERSE.md +300
+  ▶ python3 tools/dis.py 26 8C0E 160; python3 tools/search_bytes.py "A9 3F 8D 06 20" --context 0
+  ▶ python3 tools/dis.py 26 8CAF 30; python3 tools/dis.py 31 F8C8 60; python3 tools/dis.py 31 F995 40
+  ▶ python3 tools/dis.py 31 F8CB 240 --stop | sed -n '1,200p' | grep -v "^$" | head -90; python3 tools/xref.py F8CB; grep -i
+  ▶ python3 tools/dis.py 31 F901 180 --stop; python3 tools/xref.py F8CB
+  ▶ python3 tools/dis.py 31 F3F8 30; python3 tools/xref.py 6140 ; python3 tools/xref.py 6040
+  ▶ Grep "^def |^[A-Z_]+ =" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/nesrom.py
+  ▶ Read font_dump.py
+  ▶ Grep "def (tile_pixels|write_png)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/meta_dump.py
+Writing `tools/extract_tiles.py` and `tools/palette_dump.py` now; checking `area_dump.py`'s API for per-area palette ids.
+  ▶ Grep "^def |^    return|07E|p0|R0" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/area_dump.py
+  ▶ Read area_dump.py +116
+  ▶ Write extract_tiles.py
+  ▶ time python3 tools/extract_tiles.py
+  ▶ Read chr_all.png
+CHR sheet looks right (BG banks 0–63, sprite banks 64–127). Now the palette tool.
+  ▶ Write palette_dump.py
+  ▶ python3 tools/palette_dump.py
+Some areas decode to None; skip them.
+  ▶ Edit palette_dump.py
+  ▶ python3 tools/palette_dump.py
+  ▶ Read palettes.png
+Output looks right: BG slots are in rows 0–A, and sprite slots ($B0+) mostly start with $FF (the transparent colour). Now recording findings.
+  ▶ Grep "^31,F8[89ABCD]|^\*,6140|^\*,6040|^26,8C6E" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read REVERSE.md +843
+Now update REVERSE.md: fix the slot count, add the upload path, list the outputs, and mark the task done.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ printf '31,F8CB,PaletteUpload,NMI (31:F40F X=0): skip if $51 b7; PPUMASK=0; $3F00 <- pal_buf $6140-$615F (backdrop $6140
+  ▶ Read labels.csv +150
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 31 F40D 5
+Session 23 finished task **Ph4 assets 1/5 (tiles + palettes)**. Both new tools ran without errors, and I checked the two output images by eye.
+
+**New tools and outputs**
+- **`tools/extract_tiles.py`** dumps all 128 CHR 1KB banks to `gfx/chr/chr_000-127.png` (16×4 tiles, grayscale, 4× scale) plus one combined sheet, `gfx/chr_all.png`. It takes about 3 seconds. No bank is blank. Banks 0–63 are background art (including the font, HUD and end-screen letters) and banks 64–127 are sprite art.
+- **`tools/palette_dump.py`** renders every palette record from banks 2/3 to `gfx/palettes.png` and `gfx/palettes.json`. It uses the common NES colour table (the one starting `7C7C7C 0000FC`, from the NESdev wiki "PPU palettes" page); the tool notes that it is an approximation. The JSON also lists which areas use each record as a background or sprite palette. This also covers the palette tool asked for in the older "area follow-ups 3" task.
+
+**Findings**
+- **Correction:** there are **256** palette slots, not 512 as REVERSE.md said. Sprite palette ids are offset by +`$B0` with 8-bit wrap-around, so sprite ids `$50`–`$FF` reuse background slots `$00`–`$4F`.
+- **Palette data:**
+  - All 256 slots hold valid colour values (none above `$3F`).
+  - 144 bytes are `$FF`, meaning "use the background colour", and 17 slots are entirely `$FF`.
+  - Areas use 178 slots: 131 as background palettes and 48 as sprite palettes.
+- **Upload to the PPU:** the only routine that writes palette memory (`$3F00`) is the new `PaletteUpload` at `31:F8CB`, called once per frame from the NMI at `31:F40F`.
+  - It does nothing while bit 7 of `$51` is set.
+  - It copies the background colour into the first entry of every 4-colour group, so the bytes at `$6144/48/…/5C` in the buffer are never sent to the PPU.
+  - It finishes by resetting PPUADDR to `$3F00` and then `$0000`.
+
+**Records updated**
+- REVERSE.md: the "Palette ids" section, the output-files table, and the task marked done.
+- labels.csv: one new label, `PaletteUpload`.
+
+**Still open:** sprite palettes 0/1 (`$07E4/$07E5`, used by the player and shared sprites) are not set per area and haven't been traced yet.
+
+SESSION_SUMMARY: Session 23 — Ph4 assets 1/5 done: new extract_tiles.py (128 CHR banks → gfx/chr/*.png + chr_all.png) and palette_dump.py (256 palette slots → gfx/palettes.png/.json with per-area references); corrected the palette slot count from 512 to 256 (sprite ids +$B0 wrap); found the only $3F00 writer, PaletteUpload 31:F8CB (called from NMI, skipped when $51 b7 is set, background colour forced into every group); 1 label.

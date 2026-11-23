@@ -1,0 +1,187 @@
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | head -60 && grep -n
+  ▶ cat dead_ends.md && tail -c 2500 re_loop_sessions/20261116_193142_session_035.txt && tail -c 2500 re_loop_sessions/20261
+  ▶ Grep "name.entry|NameEntry|State3ModeTable|pad_dir|render_compare" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +425
+  ▶ Glob tools/render_compare.py
+  ▶ python3 -m tools.emu --help | head -60; sed -n 1,40p tools/emu/shots.py
+Getting a save state at the name-entry screen, then reading its input handler.
+  ▶ mkdir -p tools/emu/states && python3 -m tools.emu --frames 2300 --keys 1250:START 1400:START --save-state tools/emu/stat
+  ▶ python3 -m tools.emu --frames 2300 --keys 1250:START 1400:START --save-state tools/emu/states/name_entry.state --dump-sc
+  ▶ Write hexpeek.py
+  ▶ Read name_entry.png
+  ▶ python3 tools/emu/shots.py gfx/emu/s38 1500,1700,1900,2100,2300 --press 1250:START --press 1400:START --press 1600:START
+  ▶ Read frame_1700.png
+  ▶ Read frame_1500.png
+  ▶ Read frame_2300.png
+The title is reached at f1500; START there starts an intro cut-scene. Now finding the press that skips it to name entry.
+  ▶ python3 -m tools.emu --frames 1500 --keys 1250:START 1400:START --save-state tools/emu/states/title.state --dump-screen 
+  ▶ python3 tools/emu/shots.py gfx/emu/s38b 1900,2100,2300 --press 1600:START --press 1800:START
+  ▶ python3 -m tools.emu --load-state tools/emu/states/title.state --frames 1300 --keys 1600:START --watch 6F0
+  ▶ python3 -m tools.emu --load-state tools/emu/states/title.state --frames 1300 --keys 1600:START --watch 6F3; python3 tool
+  ▶ python3 -m tools.emu --load-state tools/emu/states/title.state --frames 600 --keys 1600:START 1700:START --watch 6F0 --s
+  ▶ Read ne_2100.png
+  ▶ python3 -m tools.emu --load-state tools/emu/states/tmp_ne.state --frames 900 --watch 6F0 --dump-screen gfx/emu/s38/ne_30
+Skipping the intro lands on a "CONDITION" status screen (mode 4, `19:A176`) that waits for input; reading that handler now.
+  ▶ python3 tools/dis.py 19 A176 0xC0
+  ▶ python3 -m tools.emu --load-state tools/emu/states/tmp_ne.state --frames 300 --watch 6F1 --dump-ram gfx/emu/s38/ram.bin
+  ▶ python3 tools/hexpeek.py gfx/emu/s38/ram.bin 6F0 10
+  ▶ python3 tools/dis.py 19 A3F6 0x190
+Name-entry logic found: A types, B backs up, START finishes (an empty name gets a default). Checking the d-pad cursor routine `19:A585`.
+  ▶ python3 tools/dis.py 19 A585 0x90
+  ▶ python3 -m tools.emu --load-state tools/emu/states/tmp_ne.state --frames 1500 --keys 2300:START --watch 40 --dump-screen
+  ▶ Read after_name_3600.png
+Gameplay reached (`$40`=1 at f2322, HUD at bottom). Finding the first frame where the player responds to input.
+  ▶ Grep "^\| `\$00?7[0-9A-F]`|obj_x|player x|zp_70" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 -m tools.emu --load-state tools/emu/states/tmp_ne.state --frames 900 --keys 2300:START 2330:DOWN:670 --watch 70 
+  ▶ Read down_3000.png
+Walking DOWN exits the start room into an outdoor area (area transition) and triggers dialogue. Writing a probe to find the exact first controllable frame.
+  ▶ grep -n "def \|^class " tools/emu/nes.py tools/emu/state.py tools/emu/pads.py | head -50; grep -n "obj_y" labels.csv | h
+  ▶ Read nes.py +36
+  ▶ Write first_control.py
+  ▶ grep -n "self.ram\b\|self.ram =\|self.wram =" tools/emu/memory.py | head; python3 -m tools.emu --load-state tools/emu/st
+  ▶ python3 tools/emu/first_control.py tools/emu/states/tmp_2322.state 2322 2420 --dir DOWN --hold 8
+  ▶ python3 tools/emu/first_control.py tools/emu/states/tmp_2322.state 2350 2370 --dir DOWN --hold 1
+Probe says input first matters inside f2350–2357; narrowing with a 2-frame hold.
+  ▶ python3 tools/emu/first_control.py tools/emu/states/tmp_2322.state 2350 2370 --dir DOWN --hold 2
+  ▶ python3 tools/emu/first_control.py tools/emu/states/tmp_2322.state 2345 2370 --dir DOWN --hold 4
+Movement shows up only after a few frames of holding, so I'm adding a settle period after the hold before comparing.
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit first_control.py
+  ▶ Edit first_control.py
+  ▶ Edit first_control.py
+  ▶ Edit first_control.py
+  ▶ python3 tools/emu/first_control.py tools/emu/states/tmp_2322.state 2340 2370 --dir DOWN --hold 2 --settle 10
+  ▶ python3 tools/emu/first_control.py tools/emu/states/tmp_2322.state 2340 2370 --dir DOWN --hold 6 --settle 4
+First controllable frame ≈ f2351 (a direction must be held ~6 frames before the player moves). Now locating the area transition when walking DOWN.
+  ▶ python3 -m tools.emu --load-state tools/emu/states/tmp_2322.state --frames 400 --keys 2360:DOWN:300 --watch 6C
+  ▶ Grep "area_id|cur_area|,area" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 -m tools.emu --load-state tools/emu/states/tmp_2322.state --frames 680 --keys 2360:DOWN:640 --watch 6C --watch-a
+  ▶ python3 tools/emu/shots.py gfx/emu/s38c 2380,2400,2420,2450,2500,2600 --press 1250:START --press 1400:START --press 1600
+  ▶ Read frame_2380.png
+  ▶ Read frame_2600.png
+  ▶ Read d3000.png
+Walking from f2360 didn't leave the room, but the f2330 run did; comparing area-id writes in that run.
+  ▶ python3 -m tools.emu --load-state tools/emu/states/tmp_2322.state --frames 680 --keys 2330:DOWN:670 --watch 6C --dump-ra
+  ▶ python3 -m tools.emu --load-state tools/emu/states/tmp_2322.state --frames 200 --keys 2360:DOWN:640 --watch B1
+  ▶ python3 -m tools.emu --load-state tools/emu/states/tmp_2322.state --frames 100 --keys 2330:DOWN:670 --watch B1
+  ▶ python3 -m tools.emu --load-state tools/emu/states/tmp_2322.state --frames 300 --keys 2400:DOWN:200 --watch B1 --dump-sc
+DOWN pressed after ~f2360 never moves the player, so control is lost again. Watching the substate `$41` for the no-input run.
+  ▶ python3 -m tools.emu --load-state tools/emu/states/tmp_2322.state --frames 300 --watch 41; python3 -m tools.emu --load-s
+  ▶ python3 -m tools.emu --load-state tools/emu/states/tmp_2322.state --frames 100 --keys 2330:DOWN:670 --watch 41; python3 
+Substate `$13` (set at f2351) waits for any held button before entering `$08` gameplay. Checking why a press after f2360 doesn't release it.
+  ▶ python3 tools/dis.py 30 CAAE 0x10; grep -n "SubstateHandlerTable\|SubstateBankTable" labels.csv
+  ▶ python3 tools/decode_tables.py CADE 20 ptr16; python3 tools/decode_tables.py CB2E 20 u8
+  ▶ python3 tools/dis.py 30 D9B6 0x60; grep -in "D9B6\|D8C7" labels.csv REVERSE.md | head
+  ▶ python3 tools/dis.py 20 9400 0x60; sed -n 150,165p REVERSE.md | cut -c1-300
+  ▶ python3 -m tools.emu --load-state tools/emu/states/tmp_2322.state --frames 2000 --watch 41 --dump-screen gfx/emu/s38/noi
+Without input the cut-scene runs f2351–2855, then gameplay starts. Canonical script: hold DOWN from f2340 (skips the cut-scene, walks out, area 0→1 at f2392). Saving the states now.
+  ▶ K="1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80"; python3 -m tools.emu --frames 2352 --keys $K --
+  ▶ python3 -m tools.emu --frames 2352 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --save-sta
+  ▶ python3 -m tools.emu --load-state tools/emu/states/gameplay_first.state --frames 98 --keys 2340:DOWN:80 --watch 6C --sav
+  ▶ Read area1_enter.png
+  ▶ Read gameplay_first.png
+First-control frame is still faded to black (expected); area 1 renders with HUD. Now checking the HUD IRQ split lines.
+  ▶ python3 tools/emu/shots.py gfx/emu/s38d 2385,2450 --press 1250:START --press 1400:START --press 1600:START --press 1700:
+HUD split confirmed: IRQ at line 190 sets MASK=$08, PPUADDR=$2B00, scroll 0, so the HUD starts at line 192. Now the static-renderer comparison.
+  ▶ sed -n 1,30p tools/render_level.py; sed -n 1,25p tools/render_screen.py; ls gfx/areas | head -5; ls gfx/rects | head -20
+  ▶ Grep "def (read_png|load_png|write_png)|zlib.decompress" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ Grep "^ *1 |^area 1|^001|^  1" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/areas/index.txt
+Writing `tools/render_compare.py` (stdlib PNG reader + pixel diff with crop/offset).
+  ▶ Write render_compare.py
+  ▶ Read meta_dump.py +113
+  ▶ python3 tools/render_compare.py gfx/emu/area1_enter.png gfx/areas/area_001.png --crop 0,0,256,184 --diff gfx/emu/cmp_are
+  ▶ Read area_001.png
+Layout matches but looks vertically scrolled; searching the offset on a small crop.
+  ▶ python3 tools/render_compare.py gfx/emu/area1_enter.png gfx/areas/area_001.png --crop 0,40,64,64 --search 20
+Best fit: offset (0,−4) with only the left-8px column differing (PPUMASK=$18 blanks it). Full compare at that offset:
+  ▶ python3 tools/render_compare.py gfx/emu/area1_enter.png gfx/areas/area_001.png --crop 8,4,248,184 --offset 0,-4 --diff g
+  ▶ Read cmp_area1.png
+BG matches exactly; all 894 mismatches are sprites. But the emulator picture sits 4 px lower than the static render, so checking the game's Y scroll value.
+  ▶ Grep "scroll" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/hexpeek.py gfx/emu/area1_ram.bin 0 10; python3 tools/hexpeek.py gfx/emu/area1_ram.bin 30 10; python3 tools
+  ▶ python3 tools/dis.py 31 F750 0x14; python3 tools/dis.py 31 F7D8 0x10
+  ▶ python3 tools/dis.py 31 F455 0x70
+The 4-px shift needs the vblank scroll writes, which `--splits` doesn't show. Checking shots.py's split logging so I can extend it.
+  ▶ Read shots.py +38
+  ▶ Grep "split_log" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/ppu.py
+  ▶ Edit ppu.py
+  ▶ Edit ppu.py
+  ▶ Edit shots.py
+  ▶ Edit shots.py
+  ▶ Edit shots.py
+  ▶ Edit shots.py
+  ▶ Edit shots.py
+  ▶ python3 tools/emu/shots.py gfx/emu/s38d 2450 --press 1250:START --press 1400:START --press 1600:START --press 1700:START
+Y scroll is `$EC` (written at line 250), so the 4-px shift is the game's own camera offset, not an emulator bug. Next: the title screen against the static rect renders.
+  ▶ Glob gfx/rects/*
+  ▶ Grep "title" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/render_rects.py
+  ▶ Read index.txt
+Title used R0=$1C/R1=$1E → static `screen_19_A662`. Comparing, and dumping the name-entry frame for `screen_19_A0C9`.
+  ▶ python3 tools/render_compare.py gfx/emu/title.png gfx/rects/screen_19_A662.png --diff gfx/emu/cmp_title.png; python3 -m 
+  ▶ Read cmp_title.png
+  ▶ Read screen_19_A662.png
+  ▶ Read name_entry.png
+  ▶ python3 tools/render_compare.py gfx/emu/title.png gfx/rects/screen_19_A662.png --crop 16,24,64,64 --search 10; python3 t
+  ▶ python3 tools/render_compare.py gfx/emu/title.png gfx/rects/screen_19_A662.png --crop 0,0,256,232 --offset 0,8 --diff gf
+  ▶ Read cmp_name_entry.png
+  ▶ Read cmp_title.png
+  ▶ python3 tools/render_compare.py gfx/emu/s38d/frame_2385.png gfx/areas/area_000.png --crop 8,40,64,64 --search 12
+  ▶ cp gfx/emu/s38d/frame_2385.png gfx/emu/area0_start_room.png; python3 tools/render_compare.py gfx/emu/area0_start_room.pn
+  ▶ python3 tools/render_compare.py gfx/emu/s38d/frame_2385.png gfx/areas/area_000.png --crop 8,4,248,184 --offset 0,-4 --di
+Start room: BG matches; the 269 mismatches are the player sprite. Last check: the name-entry cursor with DOWN (session 36's open question).
+  ▶ python3 -m tools.emu --load-state tools/emu/states/name_entry.state --frames 30 --keys 2260:DOWN 2270:RIGHT --watch 8B; 
+Cursor works (`$8B` 16→18 on DOWN, `$8A` 3→4 on RIGHT). Now recording findings: checking which labels already exist.
+  ▶ Grep "^(19,(A3F6|A585|ABEA|A176|A4E3|A4BF|B15C|A79F|ABB4)|30,(D9B6|CA5F|CAA2)|20,9400|\*,(06F0|06F1|06F3|008A|008B|6420|0002|0005))," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +680
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ tail -3 labels.csv
+  ▶ Edit labels.csv
+Labels added. Now REVERSE.md: the state 2/3 notes, the canonical keys script, output files, and the task.
+  ▶ Edit REVERSE.md
+  ▶ Grep "emu 4/6|tools/emu/state" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '1370,1376p' REVERSE.md | cut -c1-200
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/emu/test_ppu.py --rom 2>&1 | tail -2; python3 tools/emu/test_cli.py 2>&1 | tail -2
+I finished task **Ph5.5 emu 5/6 (boot to gameplay)**. The emulator now has a scripted route from power-on to the first playable frame and on into a second area. Its title, start-room and second-area screens match the static renderers exactly once the sprites (characters and cursors) are discounted.
+
+**Button script (power-on to gameplay):** `--keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80`
+
+| Frame | Press | What happens |
+|---|---|---|
+| 1250, 1400 | START | leaves the attract demo for the title menu |
+| 1600 | START | new game; the intro story starts |
+| 1700 | START | skips the intro; the green status screen comes up, then name entry |
+| 2300 | START | accepts the default name; gameplay starts at f2322 |
+| 2340 | hold DOWN | skips the wake-up cut-scene and walks out of the start room; the area changes from 0 to 1 at f2392 |
+
+**Things learned from the code:**
+- **Name entry** (`19:A3F6`): A types a letter, B moves back, START finishes, and an empty name gets a default. The cursor routine (`19:A585`) works fine. Session 36's "cursor doesn't move" came from pressing DOWN on the status screen before name entry was active.
+- **Wake-up cut-scene:** if any button is held on the first frame of a new game (f2351), the game skips the cut-scene and goes straight to play (`30:CA5F`). Otherwise the cut-scene runs from f2351 to f2855. It is the bank-10 routine that the bank table still listed as "TBD", now identified as `30:D9B6` → `20:9400`.
+- **Walking** only starts after a direction has been held for about 6 frames.
+
+**Saved states** in `tools/emu/states/`:
+- `title.state` (f1500)
+- `name_entry.state` (f2250)
+- `gameplay_first.state` (f2352, the first frame the player can move; the screen is still black from the fade-in)
+- `area1_enter.state` (f2450)
+
+**Screen comparisons** (new tool `tools/render_compare.py`):
+- **Title:** background matches exactly at an 8-pixel vertical offset (the game scrolls the title by 8 px). The only differences are the cursor and the sword-hilt sprite.
+- **Start room and area 1:** background matches exactly at a 4-pixel offset. The game's own Y scroll (`$EC`) causes that offset, so it is not an emulator bug. The only differences are the sprites.
+- **Name entry:** the panel matches. The letter grid and caption differ because the game writes them as text at runtime, which the static renderer doesn't draw.
+- **HUD split:** the split fires at line 190 and the HUD starts at line 192, as expected.
+
+There is no reference emulator, so all of this is checked only against our own emulator. No discrepancies needed new tasks.
+
+**Other changes:**
+- New `tools/emu/first_control.py`, which finds the first frame the player responds to a direction.
+- New `tools/hexpeek.py`, a hex viewer for RAM dumps.
+- `shots.py --vblank`, which also logs the scroll and register writes made between frames.
+
+The PPU (18/18) and CLI (9/9) test suites still pass. REVERSE.md and labels.csv are updated (8 new code labels, 3 RAM labels renamed). There are no new dead ends and nothing is committed.
+
+**Scratch files to delete** (I didn't remove them myself): `tools/emu/states/tmp_ne.state`, `tools/emu/states/tmp_2322.state`, the folders `gfx/emu/s38`, `s38b`, `s38c` and `s38d`, and `gfx/emu/name_entry_ram.bin`.
+
+SESSION_SUMMARY: Session 38 — Ph5.5 emu 5/6 done: button script from power-on to gameplay and an area change, 4 save states, new `render_compare.py`; title, area 0 and area 1 backgrounds match the static renders exactly (all differences are sprites), HUD split checked at line 190/192, name-entry and new-game/wake-up cut-scene flow decoded (8 new labels).

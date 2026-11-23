@@ -1,0 +1,112 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; gr
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions; wc -c 20261122_104601_session_19[0-3].txt; tail -c
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "group_88\|group_84b\|def place_player\|def _group" tools/e
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/area_dump.py spawns 0x6E 2>&1 | head -40; sed -n 240,
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/enemy_catalog.py --out /tmp/cat.txt >/dev/null 2>&1; 
+I'm working on the leftover enemy-group checks. Next up is AI `$3A` in area `$6E`, and I'm looking it up in the enemy catalog now.
+  ▶ python3 tools/enemy_catalog.py --out gfx/enemy_catalog.txt
+  ▶ Grep "ai=?\s*\$?3A|\b3A\b.*6E|^#|type" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/enemy_catalog.txt
+  ▶ Grep "AI `\$3A`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -n -B2 -A3 "6E" gfx/enemy_catalog.txt | head -30; grep -o ".\{200\}AI \`\$3A\`.\{400\}" REVERSE.md | head -3
+  ▶ Grep "6E" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/enemy_catalog.txt
+  ▶ Grep ".{150}AI `\$3A`.{350}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep ".{0,120}\$3A`? .{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1388
+I'm building the area-`$6E` frame check from the existing `npc_reveal` scenario: three sword hits make the NPC talk, then it turns into boss `$7D`.
+  ▶ Grep "npc_reveal" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Read group88_check.mjs
+Now I'll add the `group_6E` scenario next to `group_88`.
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_6E 12 --out web/test/states/group6e.json --save-state tools/emu/st
+State exported at f2508. Now I'll plan the keys: B swings every 24 frames, watching slot `$0E`'s phase and AI.
+  ▶ python3 tools/emu/group_probe.py -h 2>&1 | head -30
+  ▶ Read group_probe.py
+  ▶ timeout 900 python3 tools/emu/group_probe.py tools/emu/states/group6e.state --slots 0D,0E,0F --changes --seg NONE:4 'B:4
+Three hits at f2543 / f2616 / f2712 and the reveal to AI `$E6` at f2859, with no player damage. Next I'll check tools.emu for lag frames.
+  ▶ K=$(python3 tools/keyseq.py '2512:B:4*19/24'); echo $K; timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/gro
+  ▶ python3 tools/keyseq.py '2512:B:4*19/24'
+  ▶ timeout 1200 python3 -m tools.emu.pass_probe tools/emu/states/group6e.state 480 --keys 2512:B:4 2536:B:4 2560:B:4 2584:B
+  ▶ timeout 1200 python3 -m tools.emu.pass_probe tools/emu/states/group6e.state 480 --keys 2512:B:4 2536:B:4 2560:B:4 2584:B
+tools.emu shows 9 lag frames, around the message boxes and the swings after the third message. I'll build the reference and see whether the port reproduces them.
+  ▶ mkdir -p gfx/group6e && timeout 1700 python3 tools/web_state_compare.py --state tools/emu/states/group6e.state --web web
+  ▶ mkdir -p gfx/group6e
+  ▶ timeout 1700 python3 tools/web_state_compare.py --state tools/emu/states/group6e.state --web web/test/states/group6e.jso
+The differences start where key timing matters, so I'll first derive the port's key frames from tools.emu's pad writes, as in earlier groups.
+  ▶ timeout 1200 python3 -m tools.emu --load-state tools/emu/states/group6e.state --frames 480 --watch 0043 --keys 2512:B:4 
+  ▶ Grep "add_argument" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/web_state_compare.py
+No separate port-key option, so I'll write the check itself with the port keys and compare against the trimmed ref.
+  ▶ python3 tools/csv_trim.py gfx/group6e/emu.csv web/test/group6e_ref.csv --frames 2509-2987
+  ▶ Write group6e_check.mjs
+  ▶ node web/test/group6e_check.mjs -v 2>&1 | awk '{print $2, $3}' | sort | uniq -c | sort -rn | head; node web/test/group6e
+  ▶ node web/test/group6e_check.mjs
+Down to 18 cells: the reveal frame is the known +1 group_probe offset (f2858), and the rest are `oam_crc` while B is held to close each message. I'll compare the OAM at those frames.
+  ▶ timeout 900 python3 -m tools.emu.oam_dump tools/emu/states/group6e.state 2586,2587,2589,2590 --keys 2512:B:4 2536:B:4 25
+  ▶ node web/test/oam_dump.mjs 2>&1 | head -5; sed -n 1,30p web/test/oam_dump.mjs
+  ▶ node web/test/oam_dump.mjs web/test/states/group6e.json 2586,2587,2589,2590 --keys 2513:B:3 2536:B:4 2587:B:9 2609:B:4
+  ▶ sed -n 1,40p web/test/group11_check.mjs
+Same mechanism as group11's listed cells: ShowMessage's close loop runs the next sprite pass in vblank, so tools.emu's row mixes OAM from f and f+1. I'll reuse group11's mixed-row acceptance code.
+  ▶ sed -n 40,120p web/test/group11_check.mjs
+The extra entries sit at Y `$4C` (≤ `$58`), which matches group11's pre-`OamClipTop` case. I'll look for a port row where the sword is drawn unclipped.
+  ▶ node web/test/oam_dump.mjs web/test/states/group6e.json 2594,2595,2596,2597,2598 --keys 2513:B:3 2536:B:4 2587:B:9 2609:
+  ▶ node web/test/group6e_check.mjs -v 2>&1 | grep -c oam_crc; node web/test/group6e_check.mjs -v 2>&1 | grep -o "f[0-9]*: o
+  ▶ cat > /dev/null <<'EOF'
+Now the edits to the check:
+  ▶ Edit group6e_check.mjs
+  ▶ Edit group6e_check.mjs
+  ▶ Edit group6e_check.mjs
+  ▶ Edit group6e_check.mjs
+  ▶ node web/test/group6e_check.mjs
+The mixes don't match yet. I'll check how `oam_crc` is computed in the harness.
+  ▶ Grep "oam_crc" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/harness.mjs
+  ▶ Grep "crc32|0x200" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/harness.mjs
+The port's crc is the same at every failing frame, so bytes that `oam_dump` hides (entries with Y ≥ `$F0`) may differ. I'll compare the full 256 bytes.
+  ▶ sed -n 1,25p tools/emu/oam_dump.py
+  ▶ sed -n 25,45p tools/emu/oam_dump.py; sed -n 30,45p web/test/oam_dump.mjs
+I'll add an `--all` option to both OAM dump tools (prints hidden entries too, plus the port's crc).
+  ▶ Edit oam_dump.py
+  ▶ Edit oam_dump.py
+  ▶ Edit oam_dump.mjs
+  ▶ Edit oam_dump.mjs
+  ▶ Edit oam_dump.mjs
+  ▶ Edit oam_dump.mjs
+  ▶ node web/test/oam_dump.mjs web/test/states/group6e.json 2586,2587,2588 --all --keys 2513:B:3 2536:B:4 2587:B:9 2609:B:4
+  ▶ timeout 900 python3 -m tools.emu.oam_dump tools/emu/states/group6e.state 2586,2587,2588 --all --keys 2512:B:4 2536:B:4 2
+  ▶ Edit group6e_check.mjs
+  ▶ node web/test/group6e_check.mjs
+The check passes: 479 rows, 18 PARTIAL cells. I'll remove the now-unused `sub` map, then run the full suite in the background while I update the docs.
+  ▶ sed -i 's/const rows = new Map(), oam = new Map(), sub = new Map();/const rows = new Map(), oam = new Map();/; /  sub.se
+  ▶ Edit group6e_check.mjs
+  ▶ Edit group6e_check.mjs
+  ▶ Edit group6e_check.mjs
+  ▶ timeout 3000 python3 tools/run_checks.py
+Now the docs. I'll find the s192 Verification Log row to add one after it.
+  ▶ Grep "^\| AI `\$4E` `AiTurret`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +222
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the task note: strike `$3A` from the leftovers list.
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+Docs are updated. Waiting for the full check suite to finish.
+  ▶ Read b4onuc11n.output
+  ▶ ToolSearch max_results query
+The check suite is still running in the background. I'll report its result when it finishes, then wrap up the session.
+  ▶ tail -15 /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/719c20dc-776e-4e39-9434-9bffb03beab5/tasks/b4
+I checked AI `$3A` (`AiNpcBossReveal`) in area `$6E` frame by frame against tools.emu, and the web port matches it with no code changes. The new `web/test/group6e_check.mjs` passes all 479 rows (f2509-2987) at shift 0, sound included. 18 OAM cells match only as a known sampling artifact (explained below), and the check accepts them only in that form. The full suite passes 46 of 47 checks. The one failure is `world_check` on areas `$3C`, `$3D` and `$BC`, the known gap (j).
+
+**What the run shows:**
+- **The hidden object:** slot `$0E` (type `$2A`) is invisible and sits on top of the slot-`$0D` NPC.
+- **Hits and messages:** with sword 1, B swings every 24 frames hit it at f2543, f2616 and f2712. Each hit brings up one of messages `$10.$10`, `$10.$11`, `$10.$12`, and the next B closes it.
+- **The reveal:** at f2858 slots `$0D` and `$0F` switch off and slot `$0E` becomes boss type `$7D` (AI `$E6`). Its intro phase lasts past the end of the window, so no boss shots or player hits are covered.
+- **Lag frames:** tools.emu drops 9 frames while drawing the message boxes, and the port drops the same 9. No new lag model was needed.
+- **The 18 OAM cells:** they fall on the frames where B is held to close a message. tools.emu samples OAM mid sprite pass, before the clip that hides the sword sprites under the message box. So its row is the port's row plus the next row's unclipped sword entries.
+
+**Changes:**
+- New files: the `group_6E` scenario in `tools/emu/scenario.py`, the state files `web/test/states/group6e.json` and `tools/emu/states/group6e.state`, the reference `web/test/group6e_ref.csv`, and the check itself.
+- Both OAM dump tools (`tools/emu/oam_dump.py` and `web/test/oam_dump.mjs`) take a new `--all` flag that also prints hidden entries. I needed it to find that the 18 mismatches were only the two sword entries' Y bytes. The port dump now prints the crc too.
+- REVERSE.md has a new Verification Log row, and the task note strikes `$3A`. Still left: `$41` (area `$B2`) and `$5C` (areas `$59`-`$5B`). CLAUDE.md lists the new check.
+
+The task stays open because it is the low-priority leftovers task. Nothing is committed.
+
+SESSION_SUMMARY: Session 193 checked AI $3A AiNpcBossReveal in area $6E with the new group_6E scenario: web/test/group6e_check.mjs passes 479/479 rows at shift 0 including sound, with 18 accepted close-loop oam_crc cells, the 9 tools.emu lag frames reproduced and no port change; oam_dump gained --all; 46/47 checks pass (world_check is the known gap (j)).

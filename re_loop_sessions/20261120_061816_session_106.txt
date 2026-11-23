@@ -1,0 +1,127 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; gr
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat dead_ends.md; for f in re_loop_sessions/20261119_230117_session
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 3000 re_loop_sessions/20261119_230117_session_105.txt; echo
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -c 3000 re_loop_sessions/20261119_230117_session_105.txt; echo
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; git diff HEAD~1 -- web/src/game/mainloop.js | head -90; grep -n "pa
+Working on the top priority task: the `pal_buf` mismatch at f214. Next I'll dump the f214 state from tools.emu and the web port, then diff them.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "dump-ram\|dump-wram\|frame0\|args\.\|case '--" web/test/ru
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; mkdir -p /tmp/s106; python3 -m tools.emu --frames 278 --compare /tm
+  ▶ python3 -m tools.emu --frames 278 --compare gfx/compare/s106_emu.csv --dump-wram gfx/compare/s106_emu_w.bin --dump-ram g
+  ▶ node web/test/run.mjs --frames 64 --compare gfx/compare/s106_web.csv --dump-wram gfx/compare/s106_web_w.bin --dump-ram g
+  ▶ python3 tools/compare_frames.py gfx/compare/s106_emu.csv gfx/compare/s106_web.csv --cols pal --frames 214-277 | head -20
+  ▶ python3 -m tools.emu --frames 214 --dump-wram gfx/compare/s106_emu_w214.bin --dump-ram gfx/compare/s106_emu_r214.bin && 
+Only frame 214 still differs (frames 215+ already match). I'm diffing the RAM/WRAM dumps at that frame to find the cause.
+  ▶ ls tools/ | grep -i -E "diff|bin|dump" 
+  ▶ head -30 tools/mem_diff.py
+  ▶ cd gfx/compare; python3 ../../tools/mem_diff.py s106_emu_w214.bin s106_web_w0.bin 6140-615F; echo ---215/1; python3 ../.
+  ▶ python3 tools/mem_diff.py gfx/compare/s106_emu_w214.bin gfx/compare/s106_web_w0.bin 6000-7FFF
+  ▶ python3 tools/mem_diff.py gfx/compare/s106_emu_r214.bin gfx/compare/s106_web_r0.bin 0000-07FF
+  ▶ python3 tools/mem_diff.py gfx/compare/s106_emu_r215.bin gfx/compare/s106_web_r1.bin 0000-07FF; python3 tools/mem_diff.py
+Found the differing groups at the first frame: `pal_buf`, the OAM shadow, the fade target `$06D0+`, the save image `$6480+` and its slots, plus some zero-page. Now reading the port's reset code.
+  ▶ grep -n "reset\|6140\|0x6200\|0x6480\|BootSave\|bootSave" web/src/game/machine.js | head -40; grep -rln "bootSaveCheck\|
+  ▶ Read machine.js +40
+  ▶ grep -n "bootSaveCheck\|export" web/src/save.js | head; grep -rn "bootSaveCheck\|save.js" web/src --include=*.js | grep 
+  ▶ grep -rn "F0A4\|bootSave\|BootSave" web/src | head; grep -n "BootSaveCheck" REVERSE.md | cut -c1-700 | head -5; sed -n 2
+  ▶ Read REVERSE.md +1855
+The save-boot logic is already documented, so I'll port it. First the exact code:
+  ▶ python3 tools/dis.py 31 F0A4 0x1FF
+  ▶ python3 tools/dis.py 31 F2A4 0x14C
+  ▶ grep -rn "prgR6\|prgR7" web/src | grep -v "^web/src/game/machine.js:8[23]" | head -20; python3 tools/compare_frames.py g
+  ▶ grep -n "ttl_ctr\|oam_crc" tools/emu/compare.py | head; grep -n "ttl_ctr\|oam_crc" web/test/harness.mjs | head
+  ▶ Read compare.py
+  ▶ node web/test/run.mjs --frames 2 --dump-wram gfx/compare/s106_web_w2.bin --dump-ram gfx/compare/s106_web_r2.bin && pytho
+Lining up the right emu/web frame pair before patching reset.
+  ▶ node web/test/run.mjs --frames 2 --dump-wram gfx/compare/s106_web_w2.bin --dump-ram gfx/compare/s106_web_r2.bin
+  ▶ python3 tools/mem_diff.py gfx/compare/s106_emu_r215.bin gfx/compare/s106_web_r2.bin 0000-01FF
+  ▶ python3 tools/mem_diff.py gfx/compare/s106_emu_r215.bin gfx/compare/s106_web_r2.bin 0300-07FF
+  ▶ python3 -m tools.emu.web_state --help 2>&1 | head -30
+  ▶ python3 -m tools.emu --frames 300 --break 30:C900 --dump-ram gfx/compare/s106_emu_rC900.bin --dump-wram gfx/compare/s106
+  ▶ ls -la gfx/compare/ | grep C900; python3 -m tools.emu --frames 300 --break 30:C900 2>&1 | head -8
+  ▶ python3 tools/mem_diff.py gfx/compare/s106_emu_rC900.bin gfx/compare/s106_web_r0.bin 0000-07FF | grep -v -E "^\\\$02[0-9
+Got a clean emu dump at the first MainLoop entry (`30:C900`). Diffing it against the port's reset state now.
+  ▶ python3 tools/mem_diff.py gfx/compare/s106_emu_rC900.bin gfx/compare/s106_web_r0.bin 0000-01FF; python3 tools/mem_diff.p
+  ▶ grep -n "irq_mode\|0x51\b\|0x06D0\|0x6FF\|0x06FF\|R.title_ctr\|ppumask_shadow\|0x0200\|oam" web/src/game/states/title.js
+  ▶ Read title.js +170
+  ▶ Read mainloop.js +28
+  ▶ python3 tools/dis.py 31 F7C5 0x16; grep -n "F7C5\|NmiMode5" REVERSE.md | cut -c1-400 | head -6
+  ▶ python3 tools/dis.py 31 F691 0x1C; grep -n "^function\|^export function\|^const\|irqHandlers\[" web/src/game/mainloop.js
+  ▶ Read mainloop.js +74
+  ▶ grep -n "irqMsgWindow\|irqHandlers\[\|import" web/src/game/machine.js; sed -n 117,140p web/src/game/machine.js
+  ▶ Read prg.js
+  ▶ grep -n "chr_r0_play\|chr_r0_alt\|ppumask_shadow\|frame_ready\|irq_mode\|tmp_16\|save_reset" web/src/game/ram.js
+Writing the boot module (BootSaveCheck + the intro's lasting state):
+  ▶ Write boot.js
+  ▶ Edit boot.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+Now NmiMode5 and IRQ handler 6:
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ grep -n "readStatus" web/src/nes/ppu.js | head -2; node web/test/run.mjs --frames 0 --dump-wram gfx/compare/s106_web_w0.
+WRAM now matches exactly at MainLoop entry. RAM:
+  ▶ python3 tools/mem_diff.py gfx/compare/s106_emu_rC900.bin gfx/compare/s106_web_r0.bin 0000-07FF
+Only stale stack bytes below S=`$FF` remain, and nothing reads those. Now the frame compare and the test suite:
+  ▶ node web/test/run.mjs --frames 64 --compare gfx/compare/s106_web.csv; python3 tools/compare_frames.py gfx/compare/s106_e
+The port is now one frame ahead: MainState2 finishes inside frame 214. Checking `waitFrameReady`:
+  ▶ grep -rn -A8 "export function\* waitFrameReady" web/src/game | head -14; python3 tools/dis.py 18 9FCC 0x14
+  ▶ python3 tools/dis.py 18 8198 0x9; python3 tools/dis.py 30 C900 0x31
+  ▶ Edit boot.js
+  ▶ node web/test/run.mjs --frames 64 --compare gfx/compare/s106_web.csv; python3 tools/compare_frames.py gfx/compare/s106_e
+All 117 columns match on f214-277. Next: the longer title-range compare, plus the check suite.
+  ▶ python3 -m tools.emu --frames 1460 --keys 1250:START 1400:START --compare gfx/compare/s106_emu_t.csv --dump-screen gfx/c
+One diff, `ttl_wait` at f1419. Checking whether it was there before my change:
+  ▶ git stash push web/src/game/machine.js web/src/game/mainloop.js && node web/test/run.mjs --frames 1246 --keys 1250:START
+  ▶ Grep "1419|ttl_wait" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 158p REVERSE.md | grep -o -E ".{300}(1419|ttl_wait).{300}"; python3 tools/csv_rows.py gfx/compare/s106_emu_t.csv 
+The f1419 `ttl_wait` diff is already explained in the s82 Verification Log row (main-loop work between the NMI and the tools.emu row point), so it's not new. Running the check suite:
+  ▶ node web/test/core_check.mjs 2>&1 | tail -3; node web/test/ppu_check.mjs 2>&1 | tail -2; node web/test/serve_check.mjs 2
+  ▶ node web/test/world_check.mjs 2>&1 | tail -2; node web/test/sprite_check.mjs 2>&1 | tail -2; node web/test/obj_check.mjs
+All checks pass: core, ppu, serve, sound (130/130), apu, world, sprite (552/552) and obj (7100/7100). Now updating the docs. First, where the section notes and verification rows live:
+  ▶ grep -n "### Web Port Fixes\|^## Verification Log\|pal_buf. at f214\|Web fix: .pal_buf" REVERSE.md | cut -c1-200; grep -
+  ▶ Read architecture_web.md +36
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Now REVERSE.md: mark the task done, add a Verification Log row, and add a note to the Web Port Fixes section.
+  ▶ Read REVERSE.md +2263
+  ▶ Read REVERSE.md +2435
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the Verification Log row, placed after the title row (line 158). I'll also update that row's "differ only at f214" note:
+  ▶ sed -n 155,157p REVERSE.md | cut -c1-200; sed -n 159p REVERSE.md | cut -c1-200
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^| Title side, main states 2/3 (web port)" REVERSE.md | cut -c1-20
+  ▶ Read REVERSE.md +159
+  ▶ Edit REVERSE.md
+Cleaning up my scratch dumps:
+  ▶ rm gfx/compare/s106_*
+  ▶ Glob gfx/compare/s106_*
+  ▶ cd gfx/compare && rm s106_emu.csv s106_emu_r.bin s106_emu_w.bin s106_web_r.bin s106_web_w.bin s106_emu_r214.bin s106_emu
+  ▶ rm gfx/compare/s106_emu.csv gfx/compare/s106_emu_r.bin gfx/compare/s106_emu_w.bin gfx/compare/s106_web_r.bin gfx/compare
+I fixed the top priority task: the web port's state at frame 214 now matches the emulator. All 117 compared columns are equal for f214–277.
+
+**What was wrong:** only the f214 row still differed (`pal_crc`, `ttl_ctr`, `oam_crc`). The port starts after the cold-boot intro, which it doesn't run, and it didn't recreate what the intro leaves behind. Diffing RAM and WRAM at the first MainLoop entry (`30:C900`) turned up:
+- **Intro leftovers:** the palette buffer ends faded to black (`$0F`×32), all sprites are hidden, `$06FF`=`$F0`, `irq_mode` is still 5 (the intro's NMI mode), and the bank registers point at 18/19. There were also a few CHR/IRQ variables.
+- **A bigger gap:** the port never ran `BootSaveCheck`. On a fresh save file the ROM writes the new-save template into both save slots and the current image; the port left them all zero.
+
+**What changed:**
+- New `web/src/game/boot.js`, called from `Machine.reset`:
+  - `introLeftovers` restores the intro's end state.
+  - It ports `ColdSaveInit`, the full `BootSaveCheck` and `CopySramBlock`. That covers slot checks, resets, checksum repair copies, and the known checksum-seed bug at `$16`.
+- `mainloop.js` gains NMI mode 5 (`31:F7C5`) and IRQ handler 6 (`31:F691`), so the f214 NMI no longer hits unported code.
+- **Timing detail:** the ROM actually enters MainLoop with `frame_ready`=1. But its state-2 setup runs past that frame's NMI and only finishes in f215. The port keeps `frame_ready`=0 instead, which is the same at frame level; copying the ROM value put the port one frame ahead.
+
+**Results:**
+- At MainLoop entry, WRAM matches byte for byte. RAM differs only in 12 stale stack bytes that nothing reads.
+- The title run (f214–1459) shows only the one-row `ttl_wait` difference at f1419. It is a timing artifact of where the emulator takes its per-frame snapshot, already noted in session 82. The f1460 screenshot is 0 px off.
+- All web checks pass: core, ppu, serve, sound (130/130), apu, world, sprite (552/552) and obj (7100/7100).
+
+The task is marked done in REVERSE.md, with a new Verification Log row ("Boot → first MainLoop") and a note under Web Port Fixes; `docs/architecture_web.md` is updated. No new labels were needed.
+
+Two loose ends:
+- I left session 105's half-finished NMI mode 1 / message-window IRQ code in `mainloop.js` as it was. It still isn't hooked up to the IRQ handler table, which is harmless since shops can't be reached yet.
+- The cleanup `rm` of my scratch files `gfx/compare/s106_*` (dumps, CSVs and PNGs) was denied, so they're still there. `gfx/` is untracked, so they're safe to delete.
+
+SESSION_SUMMARY: Session 106: fixed the f214 web-port mismatch with new web/src/game/boot.js (intro end state + ColdSaveInit/BootSaveCheck/CopySramBlock) and NmiMode5/IrqHandler6; f214-277 all 117 columns equal, WRAM identical at the first MainLoop, all web checks pass.

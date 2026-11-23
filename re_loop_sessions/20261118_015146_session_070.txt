@@ -1,0 +1,96 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -4; wc -l dead_ends.md REVERSE.md; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for f in re_loop_sessions/*_06[789].txt; do echo "== $f"; tail -c 1
+  ▶ tail -c 1200 re_loop_sessions/20261117_205123_session_067.txt && tail -c 1200 re_loop_sessions/20261117_205123_session_0
+  ▶ ls tools/ | head -100; ls gfx/*.txt | head -50; grep -n "def \|^[A-Z_]* =" tools/npc_script_check.py | head -40
+  ▶ Read npc_script_check.py
+  ▶ head -40 gfx/spawn_params.txt; echo ===; head -40 gfx/npc_scripts.txt; echo ===; head -30 gfx/presence.txt; echo; grep -
+Picked the top task (text leftovers c/h): joining spawn params with NPC scripts/presence/triggers, and dumping menu glyphs. Checking existing report formats now.
+  ▶ grep -n "^h[1-9]\|^;" gfx/spawn_params.txt | awk -F'type' '{print $1}' | cut -c1-12 | sort | uniq -c | sort -rn | head; 
+  ▶ Grep "^;|^h[2-9]|p=\$C3" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/spawn_params.txt
+  ▶ Grep "HitFlagParams|spawn_params|npc_scripts\.txt|font_dump|menu glyph" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -o "^h[0-9] p=\$[0-9A-F]* [a-zA-Z/=]*" gfx/spawn_params.txt | cut -c1-2,9- | sort | uniq -c; grep -c "" gfx/spawn_p
+  ▶ Grep "HitFlagParams" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Read spawn_params.txt +160
+  ▶ Grep "handler 2|h2 |handlers 0-4|spawn handler|\$0D/\$0E|NpcScriptPtrs|presence list" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +700
+Understanding the spawn-handler semantics so the join is correct; then I'll write the join tool.
+  ▶ Grep "[Tt]rigger.{0,80}(param|handler 2|h2)|HitFlag" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '879p;1274p' REVERSE.md | cut -c1-2500
+  ▶ Grep "[Tt]rigger" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "A17A|def |^HANDLER|h2|h3|h4" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ Read flag_sites.py
+  ▶ Read area_dump.py +1
+  ▶ Read presence_dump.py
+  ▶ Read area_dump.py +170
+Writing `tools/param_report.py` to join placements (area_dump), NPC scripts, presence lists, hook-2 triggers, chest items and `HitFlagParams`.
+  ▶ Grep "^def |^    return|'areas'" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/npc_script_dump.py
+  ▶ Grep "^def |^N_|^USE_" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/item_dump.py
+  ▶ python3 tools/dis.py 30 D3EB 0x30
+  ▶ Write param_report.py
+  ▶ python3 tools/param_report.py --out gfx/param_report.txt > /dev/null && wc -l gfx/param_report.txt
+  ▶ Grep "^==|^p=\$(C3|26|27|5E|6C|7E)|HitFlag|^immune|^unplaced|^h[034]:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/param_report.txt
+Report works. Verifying whether the `HitFlagParams` lookup is gated by handler (affects which placements count).
+  ▶ python3 tools/dis.py 26 9011 0x34 --stop
+  ▶ python3 tools/dis.py 26 8FC4 0x4D
+  ▶ Edit param_report.py
+  ▶ python3 tools/param_report.py --out gfx/param_report.txt | sed -n '/^== HitSetFlag/,/^immune/p'
+  ▶ python3 tools/param_report.py --out gfx/param_report.txt > /dev/null; echo $?
+  ▶ Read param_report.txt +640
+  ▶ python3 tools/param_report.py --out gfx/param_report.txt > /dev/null
+  ▶ Read param_report.txt +642
+Checking whether F058/F059 have any other setter.
+  ▶ Grep "^F05[89] " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/flag_sites.txt
+F058/F059 have no live tester or setter, so the dead path is harmless. Now part (h): menu glyph tiles — finding the menu's CHR banks.
+  ▶ Grep "font_dump|menu.{0,60}(R0|R1|CHR bank)|(R0|R1).{0,40}menu" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read font_dump.py
+  ▶ Grep "R0|R1|chr|CHR" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/menu_dump.py
+  ▶ Grep "^#+ .*[Mm]enu" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '1289,1306p' REVERSE.md | cut -c1-900
+  ▶ ls tools/emu/states gfx/compare/screens 2>&1 | head -40; grep -n "chr\|R0\|bank_regs\|regs" tools/emu/probe_screens.py |
+  ▶ Grep "^\*,[0-9A-F]+,(chr|mmc3|r[0-7]_)|CHR shadow|chr_bank" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/search_bytes.py "85 58" --disasm | head -30; python3 tools/search_bytes.py "8d f0 07" --disasm | head -30
+Found the bank-16 menu CHR setup sites (`16:8205`, `16:9D69`); reading them for the R0/R1 values.
+  ▶ python3 tools/dis.py 16 81F8 0x18; python3 tools/dis.py 16 8232 8; python3 tools/dis.py 16 9D60 0x14
+Menu CHR = R0 `$3C` + R1 from `16:8232`[`$6424`] = `3E 3A 3A 38`; save/load uses `3C/38`. Dumping those.
+  ▶ python3 tools/font_dump.py 0x3C 0x3E --out gfx/font_menu_3C_3E.png --scale 2 && python3 tools/font_dump.py 0x3C 0x3A --o
+  ▶ Read font_menu_3C_3E.png
+  ▶ Read font_menu_3C_3A.png
+Glyphs all live in R0 `$3C` (same as the dialogue font); R1 only swaps the shop backdrop pattern. Now recording findings in REVERSE.md and labels.csv.
+  ▶ Grep "^16,(8232|821F|81FE|8203)|^26,(8FC4|9058)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv; grep -n "flag_sites.py\` \|presence_dump.py\` " REVERSE.md | head
+  ▶ Read REVERSE.md +1774
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the label, the `$C3` note, and marking the task done.
+  ▶ printf '%s\n' '16,8232,MenuChrR1,s70: 4 bytes 3E 3A 3A 38 = chr_r1_alt per menu kind $6424 (R0 always $3C)' >> labels.cs
+  ▶ Grep "^16,9C7A" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +845
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 16 8203 0x10
+  ▶ grep -n "^#" REVERSE.md | awk -F: '$1<1275' | tail -2
+  ▶ Grep "^#{2,4} " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+I finished the top unchecked task, the session-28 text leftovers (c) and (h), and marked it done in REVERSE.md. Nothing is committed. The changes are in `REVERSE.md`, `labels.csv`, the new `tools/param_report.py`, and new files under `gfx/`.
+
+**(c) One report per spawn param**
+- `tools/param_report.py` writes `gfx/param_report.txt`. For every param an area places, it lists where it is placed and what it does:
+  - **NPCs and bosses (handler 1):** presence conditions and a script summary.
+  - **Chests (handler 2, param < `$80`):** the item after `ItemRemapTable` and the flags it sets.
+  - **Event triggers (handler 2, param ≥ `$80`):** the matching `EventTriggerTable` entry.
+  - It also lists the 17 triggers no area places.
+- **The `$C3` puzzle:** the "areas" column in `npc_scripts.txt` is the script's own area→state list, not where the param is placed. `$C3` is a boss (type `$70`, area `$43`, present while `!F103`) whose list is empty.
+- **New finding (from the disassembly, not emulator-checked):** the hit handler at `26:8FC4` only reaches the flag lookup for objects placed by handler 1. It checks the immune list first and returns on a match.
+  - `$26` and `$27` are in both lists, so **F058 and F059 are never set**. F059 has no other site, and F058 is only cleared by junk scripts, so nothing depends on them.
+  - The handler-0 and handler-2 placements that reuse these param numbers never set a flag either.
+  - Seven params do set their flag: `$5E $5F $62 $6D $6C $34 $25`.
+
+**(h) Menu glyph tiles**
+- The bank 16 menu sets CHR bank R0 to `$3C`, and R1 from `16:8232`[`$6424`] = `3E 3A 3A 38`. Save/load uses `3C/38`, the same pair as the dialogue box.
+- So every menu glyph is in R0 `$3C`, which the dialogue font also uses. R1 only changes the backdrop pattern for each menu kind.
+- The dumps are `gfx/font_menu_3C_3E.png` and `gfx/font_menu_3C_3A.png`; `3C/38` is the existing `gfx/font.png`. The glyph map in "Menu strings" confirms tiles `3C 3D 3E 5B` spell "Bracelet", as session 14 guessed. I read the map by eye from the images rather than checking each tile.
+- I added the label `MenuChrR1` (`16:8232`).
+
+SESSION_SUMMARY: Session 70 finished the Ph3 text leftovers: `param_report.py` → `gfx/param_report.txt` joins spawn placements with NPC scripts, presence, chests, triggers and HitFlagParams (F058/F059 can never be set: `$26`/`$27` are immune and the flag only applies to handler-1 objects; `$C3` explained); menu CHR is R0 `$3C` + `MenuChrR1` `16:8232`, glyph map recorded, dumps `gfx/font_menu_*.png`; 1 label.

@@ -1,0 +1,94 @@
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read REVERSE.md +1647
+  ▶ Read dead_ends.md
+  ▶ grep -n "^- \[ \]" REVERSE.md | head -10; tail -c 3000 re_loop_sessions/20261117_105117_session_046.txt; echo ----; tail
+  ▶ grep -n "^#### \|^##### " REVERSE.md | sed -n '1,200p'; ls tools | head -100
+  ▶ Read REVERSE.md +760
+Reading the enemy AI tables now (task: Ph3 gameplay 3/3 — enemies).
+  ▶ wc -l gfx/obj_ai.txt gfx/objtypes.txt && head -80 gfx/obj_ai.txt && head -30 gfx/objtypes.txt
+  ▶ Read REVERSE.md +1198
+  ▶ Read REVERSE.md +1327
+  ▶ Read objtype_dump.py
+  ▶ sed -n 80,102p gfx/obj_ai.txt
+  ▶ sed -n 1,40p tools/area_dump.py; ls docs gfx | head -80
+  ▶ head -20 gfx/area_spawns.txt; grep -n "def \|h0\|handler" tools/area_dump.py | head -40
+  ▶ Read area_dump.py +44
+Writing an enemy catalogue tool (per-type stats + spawning areas).
+  ▶ Write enemy_catalog.py
+  ▶ python3 tools/enemy_catalog.py --out docs/enemies.txt && cat docs/enemies.txt
+Catalogue written (`docs/enemies.txt`). Now disassembling the shooter AIs `$21/$25/$26/$27/$2E`.
+  ▶ python3 tools/dis.py 27 A969 0xEE
+  ▶ python3 tools/dis.py 27 B714 0x14; echo; python3 tools/dis.py 27 AA57 0xEB
+  ▶ python3 tools/dis.py 27 B725 0x20; echo; python3 tools/dis.py 26 8409 0x77; grep -i "^26,84\|^26,97D\|^26,972D\|^27,B7" 
+  ▶ python3 tools/decode_tables.py 2>&1 | head -5; grep -n "^26,8[0-3]\|DirTo\|26,8409" labels.csv | head
+  ▶ python3 tools/decode_tables.py 26:97E4 64 hex1 --per-line 16; python3 tools/decode_tables.py 26:8000 32 hex1 --per-line 
+Writing first findings to REVERSE.md before continuing.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 27 AB42 0x97; echo; python3 tools/dis.py 27 ABF8 0x68
+  ▶ python3 tools/dis.py 27 ABD9 0x1F; echo; python3 tools/dis.py 27 AC60 0x79; grep -E "^type \\$(60|79|54|67|73|4D) " gfx/
+  ▶ python3 tools/dis.py 27 ABD9 0x1F; echo; python3 tools/dis.py 27 AC60 0x79
+  ▶ Grep "^type \$(60|79|54|67|73|4D|82|98) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ grep -n "TrapChest\|27:B79F\|0620.*slot 0\|obj_timer2_s0\|\$0620\` (slot 0" REVERSE.md labels.csv | head; grep -n "^\*,6
+  ▶ Grep "TrapChest|27:B79F|B79F|\$0620` \(slot 0|slot 0's `\$0620" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ python3 tools/dis.py 27 B79F 0x40 --stop
+Writing AIs `$22 $28 $29 $2A $2B $2C` to REVERSE.md.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 27 B339 0x65; echo; python3 tools/dis.py 27 B436 0x84
+  ▶ python3 tools/dis.py 27 B769 0x36 --stop; echo; python3 tools/dis.py 27 B4BA 0xA0
+  ▶ python3 tools/dis.py 27 B73E 0x2B; python3 tools/decode_tables.py 26:84BC 16 hex1 --per-line 16; python3 tools/decode_ta
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 27 B595 0x95
+  ▶ python3 tools/dis.py 27 B626 0xEE
+  ▶ Edit REVERSE.md
+Generic enemy AIs documented; now decoding `SpawnShot` / `ShotTable`.
+  ▶ python3 tools/dis.py 26 972D 0xAA
+  ▶ python3 tools/dis.py 26 98B9 0x20 --stop
+  ▶ Write shot_dump.py
+  ▶ python3 tools/shot_dump.py --out docs/shots.txt && cat docs/shots.txt
+  ▶ python3 tools/dis.py 27 B0A2 0x14
+  ▶ Edit REVERSE.md
+Now labels.csv.
+  ▶ Grep "^(26,(8000|8409|98B9)|27,(A969|A9B4|A9D2|A9DB|A9E4|AA57|AAFA|AB42|AB61|AB9E|ABF8|AC40|ACC0|B0A8|B339|B436|B4BA|B595|B5D9|B5F3|B626|B690|B6AA|B714|B73E|B769|B79F)|20,(BC00|BD80))," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv && cat >> labels.csv <<'EOF'
+  ▶ wc -l labels.csv
+  ▶ Read labels.csv +846
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 27 A9E4 6 && grep -n "^### Web Port Fixes" REVERSE.md
+Labels load fine. Updating the task list now.
+  ▶ Read REVERSE.md +1832
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "docs/bg_coll.txt" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+I finished the enemies task ("Ph3 gameplay 3/3") as static analysis only and marked it done in REVERSE.md. None of the new behaviour has been run in the emulator yet. Nothing is committed.
+
+**What's new**
+- **Enemy catalogue:** a new tool, `tools/enemy_catalog.py`, writes `docs/enemies.txt`. It lists every enemy type grouped by its AI, with HP, attack, defence, hit flags, shot id, speed, collision box, death type, element/gold-drop class, XP and the areas that spawn it. Normal field enemies are types `$50-$9A`. Bosses are left out of the file because their collision is set by their own phase code; they are already covered in "Object update + boss defeat".
+- **Shared helpers** used by many enemies:
+  - `DirToTarget` `26:8409` gives the direction (8-way) and distance (in 16 px steps) to a target, using a 32×32 lookup grid at `26:8000`.
+  - `AiShootCheck` `27:B714` starts an attack once every 32 frames, with a 1-in-8 chance, if the player is within 80 px.
+  - Two smaller helpers: one halves the AI rate while offscreen, the other turns a flying enemy's heading toward the player one step at a time.
+- **Field-enemy AIs:** 23 AI ids now have a row each:
+  - movement: chase with wall-follow detour, dormant then chase, dasher, homing flyer, drifter, orbiter
+  - shooting: walking shooter, chasing shooter, aimed shooter, lunger, two turrets including a 3-shot fan
+  - special: burrower, shell-on-hit, burst, patrol gunner, wait-until-guards-dead, and the trap-chest monster
+  
+  Two findings stand out:
+  - The burrower (AI `$29`) can't touch or be touched while the player is in the air.
+  - The shell enemy (AI `$41`) is invulnerable for 63 frames after every hit.
+  
+  One point is a guess: the patrol gunner (AI `$5C`) seems to be immune while patrolling and hurtable only while attacking.
+- **Enemy shots:** the shot table at `20:BC00`/`BD00` is decoded by a new `tools/shot_dump.py` into `docs/shots.txt`. Each record holds a slot range, object type and count. Shot ids `$40-$5F` are the enemy projectiles (object types `$E0-$FF`). The file also has the per-shooter spawn offsets and which enemy uses which shot.
+- **labels.csv:** 31 new labels and the `ShotTable` comment updated; `dis.py` loads them fine.
+
+**Still open:** one low-priority task at the end of RE Investigation covers the rest:
+- the boss phase bodies in bank 15
+- how player hits damage enemies, including whether the element bits make an enemy immune
+- AI `$31`, the move-step routine and the fast speed tables
+- an emulator check of one chaser and one shooter
+
+SESSION_SUMMARY: Session 47 — Ph3 gameplay 3/3 done (static RE): enemy_catalog.py → docs/enemies.txt (per-type stats/XP/areas by AI), 23 field-enemy AIs + shared helpers DirToTarget/AiShootCheck/SteerToward documented, ShotTable/ShotOffsets decoded (shot_dump.py → docs/shots.txt), 31 new labels; boss phases, hit handlers and emulator checks filed as one low-priority leftover task.

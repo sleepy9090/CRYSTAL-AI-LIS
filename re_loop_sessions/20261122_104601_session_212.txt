@@ -1,0 +1,122 @@
+  ▶ ls re_loop_sessions | tail -3 && wc -l dead_ends.md REVERSE.md && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md | 
+  ▶ Read REVERSE.md +2406
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_21[012].txt && tail -c 6000 re_loop_sessions/20261122_104601_session_211.txt
+  ▶ Grep "Main-loop pass cost" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 184p REVERSE.md | fold -w 400
+  ▶ wc -l tools/pass_fit.py web/test/pass_count.mjs tools/emu/pass_cost.py && ls /tmp/*.txt /tmp/*.json 2>/dev/null | head -
+Picking up Ph7 task (c): I'm reading the pass-cost fit tools to add the sprite-draw and top-stage features.
+  ▶ Read pass_fit.py
+  ▶ Read pass_count.mjs
+  ▶ grep -o "pass_cost tools/emu/states/[^ ]*.state [0-9]* .*\|pass_count.mjs web/test/states/[^ ]* [0-9]* .*" re_loop_sessi
+  ▶ Glob gfx/passfit/*
+  ▶ Grep "KEYS|keys" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test
+  ▶ Read group5c_check.mjs +14
+  ▶ Read group81_check.mjs +14
+  ▶ Write passfit_runs.sh
+  ▶ sh tools/passfit_runs.sh 2>&1 | tail -30
+Running the baseline fit script to reproduce s211's numbers before adding features.
+  ▶ sh tools/passfit_runs.sh
+  ▶ python3 tools/keyseq.py 2505:DOWN:2 '2569:DOWN:6,+6:B:4*26/16'
+  ▶ mkdir -p gfx/passfit
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group81.state 100 --split-int --out gfx/passfit/c81.txt --keys 2505:DOWN
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group59.state 106 --split-int --out gfx/passfit/c59.txt --keys 2510:UP:4
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group5a.state 85 --split-int --out gfx/passfit/c5a.txt --keys 2520:UP:40
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group81.state 100 --split-int --out /tmp/c81.txt --keys 2505:DOWN:2 2569
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group59.state 106 --split-int --out /tmp/c59.txt --keys 2510:UP:40 2550:
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group5a.state 85 --split-int --out /tmp/c5a.txt --keys 2520:UP:40 2560:B
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages --out /tmp/s81.txt 2506:DOWN:2 2569:DOWN:7 2576:
+  ▶ python3 tools/pass_fit.py /tmp/c81.txt,/tmp/c59.txt,/tmp/c5a.txt /tmp/s81.txt,/tmp/s59.txt,/tmp/s5a.txt --stages --skip-
+Baseline reproduced (rms 161 in sample, 213 out of sample). Now finding which passes have the ~1710-cycle `top` stage.
+  ▶ python3 tools/pass_fit.py /tmp/c81.txt,/tmp/c59.txt,/tmp/c5a.txt /tmp/s81.txt,/tmp/s59.txt,/tmp/s5a.txt --stages --skip-
+  ▶ Grep "top +1[4-9]\d\d|top +1[0-2]\d\d " /tmp/top.txt
+  ▶ python3 tools/pass_fit.py /tmp/c81.txt,/tmp/c59.txt,/tmp/c5a.txt /tmp/s81.txt,/tmp/s59.txt,/tmp/s5a.txt --stages --skip-
+  ▶ Grep "ReadPads" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 31 FE80 96
+  ▶ python3 tools/dis.py 31 FF17 48
+  ▶ wc -l web/src/game/obj/sprites.js; grep -n "function \|cpuRd\|0x200\|oam" web/src/game/obj/sprites.js | head -60
+  ▶ Read sprites.js +30
+  ▶ Grep "romRd|passStage" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Edit sprites.js
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages --out /tmp/s81.txt 2506:DOWN:2 2569:DOWN:7 2576:
+  ▶ grep -rn "m\.data\.[a-zA-Z0-9]*\[" web/src/game --include=*.js | grep -v "^web/src/game/obj/sprites.js" | sed 's/:.*m\.d
+  ▶ Grep "m\.data\.\w+\[" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ python3 tools/pass_fit.py /tmp/c5a.txt /tmp/s5a.txt --stages --skip-lag --worst 0 --coef /tmp/coef.json --show upd | sor
+Counting the sprite pass's ROM reads cut its out-of-sample error from rms 161 to 32. `ObjUpdateAll` is now the largest error, so I'm adding a sort option to the fit tool to rank its passes.
+  ▶ Edit pass_fit.py
+  ▶ python3 tools/pass_fit.py /tmp/c5a.txt,/tmp/c81.txt /tmp/s5a.txt,/tmp/s81.txt --stages --skip-lag --worst 0 --coef /tmp/
+  ▶ Grep "export function objUpdateAll|AI_TABLE|aiTable|function dispatch" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj/objects.js
+  ▶ grep -n "slots" tools/emu/pass_cost.py | head -30; grep -n "def parse" -A30 tools/pass_cost_stats.py
+  ▶ Read pass_cost.py +95
+  ▶ python3 tools/dis.py 30 CCCC 100
+  ▶ Read objects.js +60
+  ▶ Read pass_cost.py +36
+  ▶ Edit objects.js
+  ▶ Edit pass_count.mjs
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group81.state 100 --split-int --slots --out /tmp/c81.txt --keys 2505:DOW
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages --out /tmp/s81.txt 2506:DOWN:2 2569:DOWN:7 2576:
+  ▶ Read s81.txt
+  ▶ Read c81.txt
+  ▶ Edit pass_count.mjs
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages --out /tmp/s81.txt 2506:DOWN:2 2569:DOWN:7 2576:
+  ▶ Read s81.txt
+  ▶ Edit pass_fit.py
+  ▶ Edit pass_cost_stats.py
+Both sides now give per-dispatch data. Writing the `--ai` fit mode: each AI id gets its own fit, and the leftover `ObjUpdateAll` loop overhead gets a separate one.
+  ▶ Edit pass_fit.py
+  ▶ python3 tools/pass_fit.py /tmp/c81.txt,/tmp/c59.txt /tmp/s81.txt,/tmp/s59.txt --stages --ai --skip-lag --worst 3 --save 
+  ▶ Edit pass_fit.py
+  ▶ python3 tools/pass_fit.py /tmp/c5a.txt /tmp/s5a.txt --stages --ai --skip-lag --worst 0 --coef /tmp/coef.json --show col 
+  ▶ python3 tools/pass_fit.py /tmp/c5a.txt,/tmp/c81.txt,/tmp/c59.txt /tmp/s5a.txt,/tmp/s81.txt,/tmp/s59.txt --stages --ai --
+  ▶ Read pass_cost.py +1
+Adding a pad-retry counter to `pass_cost` so the fit can tell the `ReadPadStable` re-reads apart.
+  ▶ Edit pass_cost.py
+  ▶ Edit pass_cost.py
+  ▶ Edit pass_cost.py
+  ▶ Edit pass_cost_stats.py
+  ▶ Read pass_fit.py +104
+  ▶ Edit pass_fit.py
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group81.state 100 --split-int --slots --out /tmp/c81.txt --keys 2505:DOW
+  ▶ timeout 3000 python3 tools/run_checks.py
+  ▶ Write passfit_runs.sh
+Now updating the pass_fit docstring, then REVERSE.md.
+  ▶ Edit pass_fit.py
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now CLAUDE.md's tool note and labels.csv (`ReadPadStable` comment).
+  ▶ Edit CLAUDE.md
+  ▶ Grep "^31,FF17," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+I worked on the one open part of the low-priority leftovers task, (c) CPU overruns (lag frames). The cycle model is now about three times more accurate, but it is still not switched on in the port. The task stays unchecked, with what's left written into its (c) text. All 52 web checks pass.
+
+**Three fixes to the model:**
+1. **Sprite pass:** `obj/sprites.js` read its sprite data from ROM without counting the reads, so the fit had no ROM term for that stage. It now counts them, and that stage's error out of sample dropped from rms 161 to 32 cycles.
+2. **The ~1,710-cycle `top` passes:** these are `ReadPadStable` (`31:FF17`) re-reading the pad. It reads until two reads agree, and tools.emu changed the key between the two reads. Each re-read costs 381 cycles. `pass_cost` now reports it as `padretry`. This comes from when tools.emu changes the keys; in real play it would hit only about 1% of presses. So the port model leaves it out, and the fit treats it separately.
+3. **`ObjUpdateAll` per AI:** the port now counts memory accesses for each AI call. The new `pass_fit.py --ai` fits each AI on its own (error ≤ 14 cycles rms each), plus a separate fit for the loop overhead.
+
+**Results** (error of the predicted pass cost against tools.emu):
+
+| | rms (cycles) | max (cycles) |
+|---|---|---|
+| s211, fitted areas ($81 + $59) | 161 | 437 |
+| s212, fitted areas ($81 + $59) | 56 | 292 |
+| s211, unseen area ($5A) | 214 | 732 |
+| s212, unseen area ($5A) | 66 | 421 |
+
+The gap between "lags" and "doesn't lag" is about 500 cycles. The one remaining large miss is a single `ObjCollideAll` pass in area $5A (+392).
+
+**What's left in (c):**
+- A per-record term for `ObjCollideAll`.
+- The HUD-IRQ cost when a pass runs past about line 190.
+- A term for the line each pass starts on.
+- Then (c2): apply the model as `m.overrun` and extend `group81_check.mjs` / `group5c_check.mjs` past their first lag frame.
+
+**Files changed:**
+- Port (counting only, no behaviour change): `obj/sprites.js`, `obj/objects.js`.
+- Tools: `pass_count.mjs`, `pass_cost.py`, `pass_cost_stats.py`, `pass_fit.py`, and a new `tools/passfit_runs.sh` that reruns the whole study.
+- Notes: REVERSE.md (task (c) text and the Verification Log row "Main-loop pass cost"), CLAUDE.md, and the `ReadPadStable` comment in labels.csv.
+
+I couldn't run `passfit_runs.sh` itself because the permission prompts weren't approved. Its steps passed when I ran them one by one. Nothing is committed.
+
+SESSION_SUMMARY: s212 cut the lag-model error from rms 161/214 to 56/66 cycles (in / out of sample) by counting the sprite pass's ROM reads, identifying the ~1710-cycle top passes as 381-cycle ReadPadStable re-reads (tools.emu key-timing artifact, new `padretry`), and adding per-AI dispatch fits (`pass_fit.py --ai`); still not applied in the port, (c) left open with the ObjCollideAll, HUD-IRQ and start-line terms.

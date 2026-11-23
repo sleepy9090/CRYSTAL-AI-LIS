@@ -1,0 +1,68 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## |^### " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md && grep -n "^- \[ \]" REVERSE.md | head -5
+  ▶ Read dead_ends.md
+  ▶ for f in re_loop_sessions/20261119_230117_session_100.txt re_loop_sessions/20261119_230117_session_099.txt re_loop_sessi
+  ▶ tail -c 1500 re_loop_sessions/20261119_230117_session_100.txt; tail -c 1200 re_loop_sessions/20261119_230117_session_099
+  ▶ cat docs/ref_compare.txt | head -60; ls ref | head -50; wc -l tools/compare_ref.py
+I'm on the top task (FCEUX OSD rows in the ref screenshots); checking the ref PNG for overlay text now.
+  ▶ ls tools | grep -i ref; grep -n "PIXELS" docs/ref_compare.txt
+  ▶ ls ref/*.png; ls tools/ref; grep -n "^== " docs/ref_compare.txt
+  ▶ Read frame_2409.png
+Confirmed: FCEUX's "Snapshot Saved." overlay. Now the compare code.
+  ▶ Grep "PIXELS|def |png|snapshot|gdscreenshot" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/ref/compare_ref.py
+  ▶ Grep "snap|gdscreenshot|message" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/ref/fceux_capture.lua
+  ▶ Read fceux_capture.lua +80
+  ▶ Read compare_ref.py +100
+  ▶ sed -n 1,48p tools/ref/compare_ref.py; grep -rn "^PALETTE\|^NES_PAL\|^PAL\b\|^NTSC" tools/emu/*.py tools/*.py | head
+  ▶ Write osd_probe.py
+  ▶ python3 tools/ref/osd_probe.py
+The tools/dis.py shadowing issue — use the same stdlib-first import trick as compare_ref.py.
+  ▶ Edit osd_probe.py
+  ▶ python3 tools/ref/osd_probe.py
+  ▶ Read frame_0120.png
+"Power on" / "Snapshot Saved." overlays, bottom-left. I'll add an OSD mask to `compare_ref.py` that only triggers when the ref has overlay-only colours in a small bottom-left box.
+  ▶ Edit compare_ref.py
+  ▶ Edit compare_ref.py
+  ▶ cp docs/ref_compare.txt /tmp/ref_compare_old.txt && time python3 tools/ref/compare_ref.py --out docs/ref_compare.txt; ec
+  ▶ cp docs/ref_compare.txt /tmp/ref_compare_old.txt && python3 tools/ref/compare_ref.py --out docs/ref_compare.txt; grep -n
+The old report is already in git history-free territory but its numbers are recorded in the task text, so no backup needed.
+  ▶ python3 tools/ref/compare_ref.py --out docs/ref_compare.txt; grep -n "^==\|PIXELS\|FOLD" docs/ref_compare.txt
+All OSD diffs are gone; only the known tile-row-23 diffs remain. Checking the screen comparisons aren't affected:
+  ▶ python3 tools/ref/compare_ref.py --screens 2>&1 | grep -v "^$" | head -30
+  ▶ python3 tools/ref/compare_ref.py --screens
+Checking the `--tamper` self-test block isn't inside the would-be mask region:
+  ▶ Grep "tamper" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/ref/compare_ref.py
+Tamper block is at (64,64), outside the mask. Now updating REVERSE.md.
+  ▶ Grep "ref_compare|line-191|triage \(g\)|OSD" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1611
+  ▶ Read REVERSE.md +121
+  ▶ Grep "^\| Reference pixels" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^\| (Reference|FCEUX|Ref)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Adding a Verification Log row after that one, a triage note, and marking the task done.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Checking whether COMPARISON.md cites the old OSD numbers:
+  ▶ Grep "818|427|rows? 26|OSD" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ sed -n 141p REVERSE.md | cut -c1-900
+Unrelated. Done.
+
+**Session 101 — top task: the FCEUX OSD rows in the reference screenshots**
+
+- **Cause confirmed.** `ref/frame_2409.png` shows FCEUX's message box ("Snapshot Saved.") at the bottom left, and `ref/frame_0120.png` shows "Power on". `gui.gdscreenshot()` keeps this overlay, so it was causing the 427-818 px diffs in tile rows 26-27. I did not relaunch FCEUX.
+- **New tool `tools/ref/osd_probe.py`.** For each reference screenshot it lists the colours that appear only below line 200 and draws a box around them. The overlay sits at x1-78, y211-221 in f120, f1500 and f2352-2460. f600, f1200, f1450 and f2250 have no overlay.
+- **Change to `tools/ref/compare_ref.py`.** A new `osd_box()` masks the overlay, and the report line now says `FCEUX OSD masked xA-B yC-D` when it does. It only masks when all of these hold:
+  - at least 64 pixels in the bottom 40 lines use colours found nowhere higher on the screen;
+  - those pixels sit in a box left of x128 and at most 16 lines high.
+  So a real picture difference elsewhere is still reported.
+- **Results:**
+  - `docs/ref_compare.txt` was rerun. Rows 26-27 are now 0 px on all 12 frames.
+  - The only pixel diffs left are in tile row 23: 17-37 px at f2352-2460. That is the screen line-191 difference already explained in triage item (g), so it isn't a game-logic problem.
+  - `--screens` still gives 8/8 screens at 0 px. The mask never triggers there, because those screens' bottom-only colours span x8-255.
+  - The `--tamper` self-test's test block (at 64,64) is outside any possible mask area. I didn't rerun that self-test.
+- **Docs:** REVERSE.md has a new Verification Log row, a new triage item (m), and the task is marked done.
+
+Nothing is committed.
+
+SESSION_SUMMARY: Session 101: the tile-row 26-27 reference pixel diffs were FCEUX's on-screen message ("Snapshot Saved."/"Power on") in the screenshots; added `osd_box` masking to `compare_ref.py` and the new `tools/ref/osd_probe.py`, so all 12 reference frames are now 0 px there and only the known line-191 stripe (row 23, 17-37 px) remains; logged in the Verification Log and as triage item (m).

@@ -1,0 +1,134 @@
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \[ \
+  ▶ sed -n 2155,2301p REVERSE.md | grep -n "\[ \]" ; cat dead_ends.md; tail -60 re_loop_sessions/20261119_080140_session_085
+  ▶ awk 'NR>=2155 && /^- \[ \]|^##/ {print NR": "substr($0,1,400)}' REVERSE.md
+  ▶ Grep "^(- \[ \]|##)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2296
+Picking the top open task: the Ph3 enemy/boss leftovers from session 78 (static RE). I'll start by reading the existing enemy docs.
+  ▶ Read REVERSE.md +1030
+Context loaded. Starting with (b), the boss shot AIs in bank 27.
+  ▶ python3 tools/dis.py 27 B094 0x9E && echo ---- && python3 tools/dis.py 27 B2C5 0x30 --stop
+  ▶ python3 tools/dis.py 27 B12D 0x80 && grep -n -i -E "B0A2|B11B|B12D|B0F6|B094|B2C5|^ *(\\\$)?1[0-9A-F] " gfx/obj_ai.txt |
+  ▶ python3 tools/dis.py 27 B12D 0x80
+  ▶ Grep "B0A2|B11B|B12D|B0F6|B094|B2C5|B099" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ Grep "^26,(98A8|8480|9861|9897|98C7|98CD|9824|9A30),|^27,B[0-2]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 27 B2D4 0x18
+  ▶ Grep "27:B174|27:B1|types (C0|FC|CA|CD|BF|C2)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ python3 tools/dis.py 27 A40C 0x14
+  ▶ Glob {gfx,docs,web/src/game}/*objtype*
+Decoded AIs $16/$1B/$1E/$14 and found $C2's AI $3F just sets `irq_mode`=7. Now checking the type records for those shots.
+  ▶ Grep "^(type )?\$?(C0|C2|CA|CD|FC|FE|BF|EB|F3)\b|^#|^type" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ Grep "^type \$(C0|C2|CA|CD|FC|FE|BF|EB|F3|C1|BC) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+Writing (b) findings now before moving on.
+  ▶ Edit REVERSE.md
+  ▶ sed -i 's/SpawnShot(\$5C)` = type `\$FC` (AI `\$16` `27:B0F6`, not traced)/SpawnShot($5C)` = type `$FC` (AI `$16` `AiCur
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+(b) written. Now (a): checking what's already documented for the speed tables / move step.
+  ▶ Grep "84BC|9947|AE16|AiWander|\$40` wanderer" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1004
+  ▶ python3 tools/dis.py 26 8480 0x3C --stop; python3 tools/decode_tables.py 26:84BC 48 u8 2>&1 | head -20
+Speeds `$0B-$0F` use a `$20` dx offset = 4 directions ahead, i.e. they are 16-direction tables (`$A0` bytes each). Checking whether an existing tool already dumps them.
+  ▶ Grep "84BC|84bc|0x84BC|step_tab" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ Read player_dump.py +1
+Extending `player_dump.py` so speeds 11-15 are dumped as 16-direction tables.
+  ▶ Edit player_dump.py
+  ▶ Edit player_dump.py
+  ▶ python3 tools/player_dump.py > docs/player_tables.txt && git diff --stat docs/player_tables.txt; python3 tools/player_du
+  ▶ python3 tools/player_dump.py > docs/player_tables.txt; git status --short docs/player_tables.txt
+  ▶ Grep "^speed (1[0-5])|^   [0-9A-F]  sum" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/player_tables.txt
+  ▶ python3 tools/player_dump.py | grep -E "^speed (1[0-5])|^   [0-9A-F]  sum"
+Speeds 11-15 are 16-direction tables (radius per 8 frames: 56/14/20/24/16). Updating the docs.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the `$31` NPC alternate mode at `27:AE16`.
+  ▶ python3 tools/dis.py 27 AE16 0x70
+  ▶ Grep "^ai \$(30|31|40) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ python3 tools/dis.py 27 ACD9 0x20
+  ▶ python3 tools/search_bytes.py "A931 9DA004" ; python3 tools/search_bytes.py "A9B1 9DA004"; python3 tools/search_bytes.py
+  ▶ python3 tools/dis.py 27 B39E 0x98
+(a) AI `$40` decoded. Recording (a) so far, then checking `obj_flags` b3 on the chaser types.
+  ▶ Grep "^type \$(51|56|5F|63|69|72|5A|65|71|58|78|7B|8C|6A|74|75|86|91|99|9A|55|7C) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ Grep "obj_flags` b3|b3 = |`\$0380`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/search_bytes.py "BD8003 2908"; python3 tools/search_bytes.py "B98003 2908"; python3 tools/search_bytes.py 
+  ▶ python3 tools/dis.py 27 A9E4 0x56
+b3 is read only at 5 sites, all in the chase AIs: it marks a **single-pose** (non-directional) sprite. Writing (a) now.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+(a) written. Now (c): `ThunderTransform` `26:9229`.
+  ▶ python3 tools/dis.py 26 9229 0x30 --stop
+  ▶ Grep "^type \$(50|53|0E|7E|2E|23) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ Grep "SpawnH0`? `?31|SpawnH0 " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^31,E2|^31,E3" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Confirmed via `SpawnH0` (type = p+`$50`, `$0560` = p): params 0/3 are exactly types `$50` and `$53`. Checking where those spawn.
+  ▶ Grep "^\s*(type )?\$?(50|53|5F|69)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/enemies.txt
+  ▶ Read enemies.txt
+  ▶ Grep "equip_sword` (=|values|1-4|0-5)|equip_sword`\s*\$0711" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Now which object sits in slot `$0C` (`HitHandler3`). Checking the shot table.
+  ▶ Grep "0C|slot" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/shots.txt
+  ▶ Grep "^type \$(20|21|22) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ Grep "type `?\$2[012]`?|shot `?\$1[012]`?|SpawnShot\(\$1[012]\)|slot `\$0C`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1228
+Slot `$0C` is the magic slot: magic 2 → type `$20` (phase 0 = freeze), magic 6 → type `$21` (phase 1 = shot eater), and magic 1 → type `$22` (`obj_coll` 0, never hits). Writing (c).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now (d): the area of boss type `$7D`.
+  ▶ Grep "^  7D |7D" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/enemies.txt
+  ▶ Glob tools/area_*.py
+  ▶ python3 tools/area_dump.py --help 2>&1 | head -20
+  ▶ Read area_dump.py +1
+  ▶ python3 tools/area_dump.py params 0 4 | grep -iE "\b(2D|7D)\b"; python3 tools/area_dump.py indirect | grep -iE "\b7D\b"
+  ▶ Grep "(04C0|06E0|06C0)=7D|type 7D" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ python3 tools/search_bytes.py "A97D" --disasm 2>&1 | head -60; grep -n "type 7D\|7D x" docs/shots.txt
+  ▶ python3 tools/dis.py 27 A540 0x36; python3 tools/xref.py 27:A56D 2>&1 | head; python3 tools/xref.py A540 2>&1 | head
+Found a `ObjInit(self, $7D)` at `27:A56D`. Locating which AI owns that code.
+  ▶ Grep "-> 27:A[45]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ Grep "^27,A[45]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 27 A519 0x3C; python3 tools/dis.py 27 A576 0x30 --stop; python3 tools/area_dump.py params 4 | grep 
+  ▶ python3 tools/dis.py 27 A519 0x3C; python3 tools/dis.py 27 A576 0x30 --stop; python3 tools/area_dump.py params 4 | grep 
+Type `$2A` (AI `$3A`) is spawned only in area `$6E`, slot `$0E`. Checking that area's full spawn list.
+  ▶ python3 tools/area_dump.py spawns 0x6E; python3 tools/dis.py 27 A58B 0x40 --stop
+  ▶ Grep "^type \$(29|2A|7D) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ Grep "^27,(A414|A519|A555|AE16|B094|B0A2|B0F6|B11B|B12D|B40E|B41E)|^26,(9229|885C)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Writing (d) and the AI `$39` arena trigger I found along the way.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "\| `\$05A0`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ tail -3 labels.csv
+  ▶ Read labels.csv +1
+  ▶ Edit labels.csv
+Everything in (a)-(d) is now documented. Marking the task done and adding the emulator checks to the existing scenario task.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Quick check that the new labels load cleanly.
+  ▶ python3 tools/dis.py 27 B0F6 6 && python3 tools/dis.py 27 A555 3 && git diff --stat
+I took the top open task, the Ph3 enemy/boss leftovers from session 78, and finished all four parts. It was static disassembly only: none of it has been run in the emulator yet.
+
+**(a) Enemy movement**
+- **Stationary NPC (`27:AE16`, also AI `$31`):** this is the NPC flagged as solid. It never moves, can play an idle animation, and goes back to its base pose once a conversation ends.
+- **AI `$40` (types `$55`, `$7C`):** it repeats a 208-frame cycle. It aims at the player with a little random wobble, lunges at speed `$0E` for 80 frames, then flutters at speed `$0C` for 127 frames using a 16-entry direction table. It ignores walls.
+- **Speed tables `$0B-$0F`:** these hold 16 directions, not 8 as the docs said. In pixels per 8 frames they are 56, 14, 20, 24 and 16. I corrected the doc row and extended `tools/player_dump.py` to print them. One quirk: the "sinking" flag subtracts 2 from the speed, which would send speeds 12/13 into the 8-direction tables.
+- **`obj_flags` bit 3:** it marks a sprite with a single pose. Only 5 places read it, all in the chase AIs: they skip the facing pose, and the shooter takes its shot direction from the movement direction instead.
+- The move step `26:9947` was already documented in session 46.
+
+**(b) Boss shots**
+- **`$16`:** curves 22.5° every 16 frames, turning one way for even slots and the other for odd. Together with the known "aim − 2" bug in that boss's volley, half its shots curve toward the player.
+- **`$1B`:** bounces off walls for about 255 frames, then flies straight through everything until it leaves the screen.
+- **`$1E`:** the final boss's mouth shot, which only lasts 18 frames.
+- **`$14`:** the smoke ring puffs, 16 frames each.
+- **Body part `$C2`:** its AI only keeps the boss screen-split mode (`irq_mode` 7) on; the boss code moves it.
+
+**(c) Thunder sword and slot `$0C`**
+- A thunder-sword hit turns enemy type `$50` into `$5F` and `$53` into `$69` (HP 90). No area places `$5F` or `$69`, so this transform is the only way they appear.
+- Slot `$0C` holds three magic spells: magic 2's freeze shot, magic 6's barrier that deletes enemy shots, and magic 1's heal sparkle, which never collides with anything.
+
+**(d) Boss `$7D` is in area `$6E`**
+- An invisible object sits on top of an NPC there. Each of the first 3 sword hits makes the NPC speak a line, and after the third it becomes boss `$7D`, which flees when beaten rather than dying.
+- I also found `AiArenaLock` (`27:A519`), the trigger that locks the camera in five boss rooms.
+- The existing label `obj_timer_s1F,X` here really reads the active flag of the slot below, so it is misleading in this code.
+
+I added 12 labels to labels.csv and marked the task done. The emulator checks for the area-`$6E` reveal, the thunder transform and the shot-eating barrier are added to the existing "Ph6 scenario leftovers" task. Nothing is committed.
+
+SESSION_SUMMARY: Session 86: finished the Ph3 enemy/boss leftovers (static RE): the stationary NPC, AI `$40`'s lunge/drift cycle, speeds `$0B-$0F` are 16-direction tables, `obj_flags` b3 = single-pose sprite, boss shot AIs `$14/$16/$17/$1B/$1E/$1F` + body part `$C2`, the thunder-sword transform (`$50`→`$5F`, `$53`→`$69`), slot `$0C` = magic 2/6/1, boss `$7D` revealed by 3 sword hits on an NPC in area `$6E`, plus `AiArenaLock`; 12 labels.

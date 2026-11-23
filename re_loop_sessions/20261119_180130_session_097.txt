@@ -1,0 +1,125 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; gr
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^- \[ \]" REVERSE.md | head; for f in re_loop_sessions/202
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^- \[ \]" REVERSE.md | head; for n in 094 095 096; do f=re
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 1500 re_loop_sessions/20261119_180130_session_094.txt; echo
+  ▶ Read REVERSE.md +2355
+Picked the top task (line 2363): port AI `$70` `Ai70PhaseDispatch` (final-scene phases) to the web port, then bosses if time. Reading the docs and existing JS first.
+  ▶ Grep "Ai70PhaseDispatch|JmpTable27_BA40|BA2E" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 894p REVERSE.md | cut -c1-3000; ls web/src/game web/src/game
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 BD63 0x120 --stop | head -120
+  ▶ Read ai_effect.js
+  ▶ Read objects.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -rnoE "export (function\*?|const) \w+" web/src/game | sed 's/:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 BD89 0x80 | sed -n '1,80p'; python3 tools/d
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "EFFECT\|_fix_effect\|def _fix\|^ROUTINES\|'update'\|fuzz_u
+  ▶ Read routine_capture.py +100
+Plan: new `obj/ai_final.js` for AI `$70` (13 phases); most helpers (spawnShot, fadeIn, hudHpBar, ppuQueueBlock, farObjInit) already exist. Reading the remaining code pieces.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 BE08 0x100 | awk '/RTS|JMP/{print; n++; if(
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 BE08 0x90; python3 tools/dis.py 26 9B07 0x4
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -nE "^26,(9824|9897|98A8|8C0E|8C49|8CC0|972D|9B07)," labels.cs
+Now the existing JS helpers I'll reuse.
+  ▶ Read pause.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,80p web/src/game/states/death.js; grep -n "^export\|^funct
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 100,185p web/src/game/states/death.js; sed -n 115,160p web/s
+I have the full picture of the 13 phases. Checking register state at a few call boundaries (Y after FarCall_C25D / FadeIn matters for the following `LDA tbl,Y` and PlaySound's saved Y).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 FF80 0x10 --stop; grep -n "RestoreBanks" la
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 8C0E 0x30; python3 tools/dis.py 31 FFDB 0x1
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 8C6E 0x50 --stop
+Y is preserved by `ObjInit` (PLA/TAY) and is 4 after `PaletteBuild`, so I know every `PlaySound` Y. Writing `obj/ai_final.js`.
+  ▶ Write ai_final.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -i "s|unported(m, 'ShowMessage 30:D354 (AI \$70 phase 1)');|unp
+Using the Edit tool instead.
+  ▶ Edit ai_final.js
+  ▶ Edit pause.js
+  ▶ Edit objects.js
+  ▶ Edit objects.js
+  ▶ Read obj_check.mjs +1
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "export function runNow" -A8 web/src/game/world/bgstream.js
+Capture-side next: add an `Ai70PhaseDispatch` routine + steer to `routine_capture.py`, and a RUN entry in `obj_check.mjs`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls web/test/obj_frames; grep -n "fuzz_effect\|fuzz_update" -B1 -A3 
+Now the capture steer.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.routine_capture --load-state tools/emu/states/
+  ▶ Edit ai_final.js
+  ▶ Edit ai_final.js
+  ▶ Edit routine_capture.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.routine_capture --load-state tools/emu/states/
+199/200. The remaining case has slot X+anim>>4 = `$20` (beyond the 31 slots); the ROM's ObjInit wrote slot 0 while the port wrote slot `$20`. Checking ObjInit's slot handling.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C25D 0x30; sed -n 1,40p web/src/game/obj/ob
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C28D 0x70 | grep -v "^$" | head -50
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C28D 0x6B
+  ▶ Read objinit.js +22
+  ▶ Edit objinit.js
+  ▶ Edit objinit.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/obj_check.mjs 2>&1 | tail -3; for t in core_check ppu
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/obj_check.mjs 2>&1 | tail -3; node web/test/core_chec
+**5000/5000** routine cases identical (was 4799/4800 + 1 gap), all other checks pass. Quick phase coverage of the new cases:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/obj_case_stats.py --help 2>&1 | head -15
+  ▶ Read obj_case_stats.py
+I'll add a `--by COL` option (cases grouped by an input slot column, e.g. obj_phase) so phase coverage is visible.
+  ▶ Edit obj_case_stats.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_final.json
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^PPU_ROUTINES" tools/emu/routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.routine_capture --load-state tools/emu/states/
+All 10 window-wipe cases now captured with nametables compared: **5000/5000**. Now docs and labels. Checking which bank-27 addresses already have labels.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -nE "^27,(BA5A|BA71|BAA2|BAB8|BA9A|BAF5|BB79|BBCE|BBE7|BC0C|BC
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "Boss / effect AIs (s93)\|AiMpDrain\b" REVERSE.md | head -8
+  ▶ Grep "Boss / effect AIs|ai_effect\.js|Verification Log" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +121
+  ▶ Grep "^\| (Effect|Boss / effect|Ending \(web)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 161p REVERSE.md | cut -c1-400; sed -n 155,175p REVERSE.md | 
+  ▶ Grep "^\| Asset catalog in a real browser" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Writing the REVERSE.md updates now (new Verification Log row, phase-table correction, task status).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 168p REVERSE.md | cut -c1-120; sed -n 620p REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the phase section after that table. Finding the table's end.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "" REVERSE.md | sed -n '621,660p' | cut -c1-90
+  ▶ Edit REVERSE.md
+Now labels.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -3 labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat >> labels.csv <<'EOF'
+Using Edit to append instead.
+  ▶ Edit labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 BDA9 6 --stop
+The comma in two comments splits the CSV field; quoting them.
+  ▶ Edit labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 BDA9 3 --stop; python3 tools/dis.py 26 9B07
+Labels load correctly. Updating the obj_frames README, architecture_web.md, and the task list.
+  ▶ Edit README.md
+  ▶ Edit README.md
+  ▶ Grep "ai_effect" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Now marking the task and filing the leftovers (b)/(c) as one low-priority task at the end of RE Investigation.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I ported the final-scene object (AI `$70`) to the web port and it matches the ROM on every test case. All the other web checks still pass. Nothing is committed.
+
+**What changed**
+- **New `web/src/game/obj/ai_final.js`:** ports `Ai70PhaseDispatch` `27:BA2E`, all 11 phases that have code. They cover the window wipe, gathering the objects with the end-of-scene messages, restoring the screen, the palette fades, the shot patterns, the bank-11 picture copy, the hand-off to `SubstFinalSceneReset`, and the follower phase. It also ports the shared hit-flash palette routine `HitFlashPal` `26:9B07`, which the bank-15 bosses use too. The AI is now in `AI_TABLE`.
+- **Two ROM facts that were wrong before:**
+  - `27:BDA9` is `LDY obj_param2,X`. The old listing started one byte late and read it as `LDY #6`, so phase 12 checks a "leader" slot, not slot 6. The test cases caught this.
+  - The ROM's `ObjInit` writes the object record to slot `$10 & $1F`, because its clear loop wraps. The web `objInit` used `$10` as given, which only goes wrong for slot `$20`. I fixed it.
+- **Tests:** `routine_capture.py` has a new `Ai70PhaseDispatch` case generator. It runs as a PPU routine, so the window wipe finishes in one call and the nametable bytes are compared too. `obj_check.mjs` runs it. `tools/obj_case_stats.py` has a new `--by COL` option to count cases per phase.
+
+**Results**
+- `fuzz_final.json`: **200/200** cases identical, spread over all 10 testable phases, including 10 full window wipes.
+- All routine cases: **5000/5000**, with no gaps left. Before this, 4799/4800 matched and 1 case hit the unported AI; that case now passes.
+- `core_check`, `ppu_check`, `sprite_check` (552/552), `serve_check` and `world_check` all pass.
+
+**Not tested**
+- **Phase 3:** three fade-ins, which take real frames, so the single-call test can't run it. It is built from the existing `fadeIn` port, which was already verified.
+- **The end of phase 1:** it calls the message box `ShowMessage`, which isn't ported yet, so the port logs it as unported there.
+
+**Docs:** `REVERSE.md` has a new section "AI `$70` final-scene phases (session 97)", a Verification Log row, and the task marked done. `labels.csv` has 21 new labels, and `docs/architecture_web.md` and the `obj_frames` README are updated. The rest of the task (bank-15 bosses, death chains, per-frame enemy scenarios, the two untested paths above) is one new low-priority task at the end of RE Investigation.
+
+SESSION_SUMMARY: Session 97 — AI $70 final-scene object ported (`obj/ai_final.js`, 11 phases + HitFlashPal 26:9B07): fuzz_final 200/200, all routine cases 5000/5000 with 0 gaps; found 27:BDA9 = LDY obj_param2,X and fixed web objInit slot wrap ($10 & $1F); bosses / death chains / frame scenarios filed as one low-priority task.

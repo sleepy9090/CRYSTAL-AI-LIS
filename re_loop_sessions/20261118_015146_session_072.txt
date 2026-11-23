@@ -1,0 +1,225 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls re_loop_sessions | tail -4; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions; for f in 20261118_015146_session_069.txt 20261118_
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions && tail -c 1200 20261118_015146_session_069.txt && 
+  ▶ Grep "Pointer tables \+ bank references|ItemAuxPtrs|Wram6000InitTable|15:BEB7|16:8B1F|18:8F3B|20:9767|20:9A6A" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1648
+I'm on task Ph5 pointer-table leftovers (session 32), starting with (a): the `14:9C82` ItemAuxPtrs consumer.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM && python3 tools/dis.py 14 85A0 0x50 && python3 tools/xref.py 85C0 |
+  ▶ python3 tools/xref.py 85BF; python3 tools/dis.py 14 8135 0x30; grep -n "NpcFlagTest\|ItemAux\|85BF" labels.csv
+  ▶ python3 tools/dis.py 31 E375 0x30; grep -n "SpawnH2\|handler 2\|handler-2" REVERSE.md | head -20
+  ▶ Grep "A106|85BF|trigger presence|TriggerPresence" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Grep "def (flag_ref|decode_flag|flagref|cond)|NpcFlagRef" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ Grep "presence|0x8167|F%03X|F\{" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+Found that `ItemAuxPtrs` is really the handler-2 trigger presence list (OR of flag conditions); writing a decoder now.
+  ▶ Read npc_script_dump.py
+  ▶ Grep "param_index|import area_dump|def .*\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/param_report.py
+  ▶ Read param_report.py +88
+  ▶ Write chest_presence_dump.py
+  ▶ python3 tools/chest_presence_dump.py --out gfx/chest_presence.txt | head -140
+  ▶ ls gfx/*.txt docs/*.txt | head -50; grep -l "F0AA" gfx/*.txt docs/*.txt 2>/dev/null
+Decoded (a): 114 chest presence records. Now checking which code sets those chest flags.
+  ▶ grep -n "F0AA\|F0E7\|F05F" gfx/items.txt gfx/flag_sites.txt | head; grep -n "^ *1D\b\|item \$1D\|^\$1D\|p=\$1D" gfx/item
+  ▶ Grep "F0AA|F0E7|F05F\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx
+Confirmed: each chest's flag is the one its item's `ItemGetTable` set-list sets. Recording this now.
+  ▶ grep -n "^14,85BF\|^14,9C82\|^15,A106\|^31,E375" labels.csv
+  ▶ Read labels.csv +805
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 16 86C0 0x40 && python3 tools/dis.py 16 8B1F 0x20
+  ▶ python3 tools/dis.py 16 86FD 0x30 --stop; python3 tools/xref.py 86D3; python3 tools/search_bytes.py "20 d3 86"
+Working on 16:8B1F — it's the menu sprite (cursor) shape table; checking caller indices.
+  ▶ python3 tools/dis.py 16 8520 0x12; python3 tools/dis.py 16 8680 0x30; python3 tools/dis.py 16 9828 0x0F; python3 tools/d
+  ▶ python3 tools/decode_tables.py 16:8B27 1 hex 2>&1 | head -3; python3 tools/decode_tables.py --help 2>&1 | head -15
+  ▶ python3 tools/decode_tables.py 16:8B27 52 u8 --per-line 17
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^16,8B1F\|^16,86D3\|^18,8F3B\|^18,80F5\|^20,9767\|^20,9A6A\|^20,973F\|^20,94CB" labels.csv
+  ▶ sed -i 's/^16,8B1F,MenuPtrTable_8B1F,.*/16,8B1F,MenuSprShapes,s72 (was MenuPtrTable_8B1F): .dw[4] menu sprite shapes (co
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 18 80D8 0x48
+Checking 18:8F3B (cut-scene metasprite table, already partly labelled in s69): bounding its count.
+  ▶ python3 tools/decode_tables.py 18:8F3B 12 ptr16 --per-line 12; python3 tools/decode_tables.py 18:8F51 8 u8
+  ▶ python3 tools/search_bytes.py "85 72" --context 2 --disasm 2>&1 | head -60
+  ▶ Grep "State3PtrTable_8F3B|TextPtrTable_9767|TextPtrTable_9A6A|PtrTable15_BEB7|MenuPtrTable_8B1F|ItemAuxPtrs" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Edit labels.csv
+  ▶ Grep "State3PtrTable_8F3B" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ sed -i 's/(State3PtrTable_8F3B\[/(SceneMetaPtrs[/' labels.csv && sed -i 's/| `18:8F3B` `State3PtrTable_8F3B` | 11 | data
+Sed needs approval; using Edit instead.
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the bank 20 tables (`20:9767`, `20:9A6A`).
+  ▶ python3 tools/dis.py 20 9725 0x42; python3 tools/xref.py 9725; python3 tools/decode_tables.py 20:9767 40 ptr16 --per-lin
+  ▶ python3 tools/xref.py 973D; python3 tools/dis.py 20 9500 0x50 --stop; grep -n "^20,9[45]" labels.csv
+These are the WakeCutscene (`20:9400`) sprite frames. Checking 94CB and the drawer body.
+  ▶ python3 tools/dis.py 20 94B8 0x48; python3 tools/dis.py 20 9524 0x30 --stop; python3 tools/decode_tables.py 20:9A6A 14 p
+Both decoded: `9767` = 34 sprite-frame pointers, `9A6A` = 12 palette-set pointers (not text). Recording.
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now `15:BEB7`, the suspected mis-trace.
+  ▶ python3 tools/dis.py 15 BE60 0x60; python3 tools/xref.py BE78; grep -n "^15,BE" labels.csv
+  ▶ python3 tools/xref.py BE7A; python3 tools/search_bytes.py "7a be"; grep -n "^06,\|^07," labels.csv | head; grep -n "bank
+  ▶ python3 tools/dis.py 15 BD40 0x30; python3 tools/nes_header.py 2>&1 | grep -i "^ *6 \|bank  *6\|^  6"
+The consumer is in the status screen (`15:BD01`): per equip slot it copies 16 bytes from bank 6 into the PPU queue. Dumping those bank-6 rows.
+  ▶ for a in 80F0 81F0 82F0 83F0 84F0 85F0 86F0 8EF0 8FF0 97F0 98F0; do python3 tools/decode_tables.py 06:$a 1 hex16; done; 
+  ▶ Write equip_name_dump.py
+  ▶ python3 tools/equip_name_dump.py 9
+Resolved: `15:BEB7` is real. It holds the 4 base pointers for the status screen's equipment-name rows in bank 6 (sword / magic / armor / shield). Recording.
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+(a) is done. Now (b): who reads the `$6000` page copied from `11:BE00`.
+  ▶ python3 tools/decode_tables.py 11:BE00 256 u8 --per-line 32; python3 tools/dis.py 30 CC4D 0x60 --stop; python3 tools/xre
+  ▶ python3 tools/dis.py 30 CCAD 0x40 --stop; python3 tools/dis.py 19 BE40 0x40 --stop
+The page is a source buffer for PPU queue blocks `$3E-$43` and `$45`. Looking up those block descriptors.
+  ▶ Grep "PpuQueueBlock" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -n "C482" labels.csv; python3 tools/dis.py 30 C482 0x40 --stop
+  ▶ python3 tools/dis.py 30 C4C1 0x58 --stop; python3 tools/dis.py 30 C43E 0x30 --stop
+Block record = PPU addr hi/lo, length, source offset into `$6000`, rows (b7 = no wait). Writing a dumper to see which page bytes blocks `$3E-$45` read.
+  ▶ Write ppu_block_dump.py
+  ▶ python3 tools/ppu_block_dump.py --count 0x48
+Table bound: 70 blocks (`$00-$45`), ending at `$C675`, just before `WaitPpuQueue` `30:C676`. Checking code references to `$60E0-$60FF`.
+  ▶ Grep "(LDA|LDX|LDY|ADC|SBC|ORA|AND|EOR|CMP|BIT|STA|STX|STY|INC|DEC) (\$60[EF][0-9A-F]|wram_60[EF][0-9A-F])" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm
+Every `$60E0-$60FF` read is in bank 16 menu or bank 20 cutscene code, and that code writes the bytes itself first. So the copied tail is dead. Recording (b).
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/search_bytes.py "a9 44 20 82 c4"; python3 tools/search_bytes.py "a9 44 85"
+  ▶ python3 tools/dis.py 27 BCE0 0x40 --stop
+  ▶ python3 tools/dis.py 27 BCF6 0x28; python3 tools/search_bytes.py "a9 42 20 82 c4"
+A third copy site turned up: `27:BCFC`, an object AI, copies the page and queues block `$44`. Updating the note.
+  ▶ Edit REVERSE.md
+  ▶ grep -n "Wram6000InitTable" labels.csv; python3 tools/dis.py 27 BCC0 0x22
+  ▶ Grep "^27,(B[89AB]|BC)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+  ▶ Grep "^30,(C518|C676)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+(b) is done. Now (c): checking the orphan runs for consumers. Writing a small checker that looks for abs operands, immediate lo/hi pairs and `.dw` words that point at each run.
+  ▶ Write orphan_check.py
+  ▶ Edit orphan_check.py
+  ▶ Edit orphan_check.py
+  ▶ grep -n -A3 "ABDC\|8006\|9EB8\|B87F\|8015\|83B7\|BAFB\|AC99\|B1A1\|9664\|B708" docs/ptr_tables.txt | head -60
+  ▶ Edit orphan_check.py
+  ▶ time python3 tools/orphan_check.py > gfx/orphan_check.txt; cat gfx/orphan_check.txt
+  ▶ python3 tools/orphan_check.py
+Too noisy: it ignores which banks can map each target. Restricting hits to the run's own 16 KB pair plus the fixed banks 30/31.
+  ▶ Edit orphan_check.py
+  ▶ Edit orphan_check.py
+  ▶ Edit orphan_check.py
+  ▶ python3 tools/orphan_check.py
+After filtering, a few candidates are left to inspect: `12:8060` ← `30:C221`, `26:8015` ← `30:CFB2`, `15:B708` ← `15:B6CC`, plus what `12:8000` is.
+  ▶ python3 tools/dis.py 30 C21C 0x0C; python3 tools/dis.py 30 CFAE 0x0A; python3 tools/dis.py 15 B6C4 0x20; grep -n "^12,8\
+  ▶ python3 tools/dis.py 15 B6A8 0x1E; python3 tools/dis.py 15 B6E3 0x26 --stop; python3 tools/decode_tables.py 15:B709 14 p
+`15:B6C1` is a second "row at `$xxF0`" consumer, this time in bank 7. Extending the dump tool to show those rows.
+  ▶ Edit equip_name_dump.py
+  ▶ python3 tools/equip_name_dump.py --bank7; python3 tools/xref.py B6C1
+  ▶ Grep "^15,B[2345]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+Two in-range hits are still unchecked: `26:9AE5` → `$8040` and `31:F325` → `$8020`.
+  ▶ python3 tools/dis.py 26 9AE0 0x0C; python3 tools/dis.py 31 F322 0x08; python3 tools/dis.py 30 C003 0x05; python3 tools/d
+All three are false: data bytes, plus a `JSR $8020` that runs under another bank pair. Writing up (c).
+  ▶ Edit REVERSE.md
+(c) is done. Now (d): a per-bank context override in `disasm_all.py` (bank 16 → 16/23), and marking `27:A8A2` as data.
+  ▶ Grep "ctx|context|DATA_RANGES|def |JUMP_TABLES =|NOT_CODE|data_ranges" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/disasm_all.py
+  ▶ Read disasm_all.py +60
+  ▶ Read disasm_all.py +300
+  ▶ Grep "bank 16 runs with|16/23|SetR7\(\$17\)|SetR7\(23\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Confirmed: bank 16 is always entered as 16/23. Adding a per-bank default-context override plus a data-range mechanism for `27:A8A2`.
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+  ▶ Read disasm_all.py +252
+  ▶ Read disasm_all.py +628
+  ▶ Grep "self\.data\b|mark_data_labels\(\)|\.seed\(\)|\.run\(\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/disasm_all.py
+  ▶ Read disasm_all.py +148
+There's already a `KNOWN_DATA` list, so I'll use that instead of a new `DATA_RANGES`.
+  ▶ Grep "KNOWN_DATA" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+Now rerunning the disassembler and bank-ref check, saving the old coverage header first for comparison.
+  ▶ cp disasm/coverage.txt /tmp/cov_before.txt && sed -n '773,800p' tools/disasm_all.py
+  ▶ Read disasm_all.py +782
+  ▶ Read coverage.txt
+  ▶ grep -c "" disasm/coverage.txt && grep -n "A8A\|16:9BC6\|16:9BD6\|16:9C4B\|16:9C64\|^## " disasm/coverage.txt | head -30
+  ▶ python3 tools/disasm_all.py && sed -n '14,46p;70,200p' disasm/coverage.txt
+Three things to fix: `MenuSprShapes` and `EquipNameBase` are now classified as code labels (their suffixes aren't in `DATA_NAME_RE`), and two new rejects appeared at `16:9DA4`/`9DD0`.
+  ▶ Grep "^16,9D[A-D]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ git stash list | head -2; git show HEAD:disasm/coverage.txt 2>/dev/null | grep -n "9DA4\|9DD0" ; python3 tools/xref.py 9
+Those are session-71 shop labels (`ShopArmorGoods`/`ShopArmorPrices`) that also miss the regex. Adding all five suffixes.
+  ▶ Edit disasm_all.py
+  ▶ python3 tools/disasm_all.py && sed -n '18,20p;28,36p' disasm/coverage.txt && sed -n '/## rejected/,$p' disasm/coverage.t
+  ▶ python3 tools/disasm_all.py
+Round-trip is OK and the rejects are gone. Checking that bank 16's `$BC00` calls now resolve, and rerunning the bank-reference check.
+  ▶ Grep "; 9BC6|; 9BD6|; 9C4B|; 9C64|## rejected" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm
+  ▶ python3 tools/check_bank_refs.py; echo "exit=$?"
+  ▶ Edit disasm_all.py
+  ▶ python3 tools/disasm_all.py | tail -3
+  ▶ Grep "; 9BC6|; 9C4B|sub_17_BC0|## rejected|## warnings" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm
+Bank 16 now resolves to bank 23 (`SaveJumpTable`). Running the bank-reference check.
+  ▶ python3 tools/check_bank_refs.py | head -30
+All 2383 calls are OK now (session 32 had 5 misses) and CODE-READ dropped from 4 to 3. Checking the new OUTWIN entries.
+  ▶ Grep "OUTWIN" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/bank_refs.txt
+The new OUTWIN is `27:BD03`, the third `$6000` copy site from (b), so it's consistent. Writing up (d) and updating the bank-reference numbers.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/find_ptr_tables.py | tail -3
+Pointer report regenerated. Now adding the four new tools to the tools table and marking the task done.
+  ▶ Grep "^\| `tools/(save_probe|param_report|visited_scan)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1841
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2034
+  ▶ grep -n "^- \[ \] Ph5 (low priority) pointer-table leftovers" REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Wrapping up: one last check that the labels file loads cleanly, then the summary.
+  ▶ python3 tools/dis.py 14 85BF 4 && python3 tools/dis.py 15 BE7A 3
+A `labels.csv` comment got cut off at a comma. Several of my new comments contain commas, so I'm replacing those with `;`.
+  ▶ grep -n "s72" labels.csv | awk -F, 'NF>4 {print $1","$2","$3}'
+  ▶ Grep "^[^,]*,[^,]*,[^,]*,.*s72.*," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 15 BE7A 2 && python3 tools/disasm_all.py | tail -1
+I finished the session-32 pointer-table leftovers task, parts (a)–(d), and marked it done in REVERSE.md. Everything is static analysis; I ran nothing in the emulator this session. The results are written up in REVERSE.md under "Session 72 leftovers check", in the "Pointer tables + bank references" section.
+
+**(a) The unknown tables**
+- **`14:9C82` is not an item table.** It holds the chest presence lists, one per chest (114 entries). When a chest spawns, the game hides it if the flag set by taking its item is already set. I confirmed the chest-to-item flag match for only 3 chests. Unused entries and the trap chest share a condition that is never true, so those chests always appear. Renamed `ChestPresencePtrs`.
+- **`16:8B1F`** (`MenuSprShapes`) has 4 menu sprite shapes: frame-corner cursor, arrow, 16×16 icon and a 4-tile strip.
+- **`18:8F3B`** (`SceneMetaPtrs`) has exactly 11 entries.
+- **The two bank 20 "text" tables are wake-up cut-scene data, not text:** 34 sprite-frame pointers and 12 palette fade steps.
+- **`15:BEB7` is real, not a mis-trace.** It is `EquipNameBase`, the status screen's name rows for sword, magic, armor and shield, read from bank 6.
+
+**(b) The `$6000` page copied from `11:BE00`**
+- It is the tile source for screen-redraw blocks `$3E-$45`.
+- There is a third copy site the earlier session missed: `27:BD03`, in the final-scene object code.
+- Bytes `$60E0-$60FF` are copied but never read.
+- The block table holds exactly 70 records.
+
+**(c) Orphan runs**
+- Only `15:B708` is a real table. It actually starts one byte later, at `15:B709`, and points to two 14×15-tile background pictures of a boss in bank 7.
+- `12:8006-8074` lies inside the already-decoded sound-effect pointer table.
+- The rest have no consumer and look like plain byte data. The search can't see reads through pointers built at runtime or reads under an unusual bank mapping.
+
+**(d) `disasm_all.py` fixes**
+- **Bank 16:** now always traced with bank 23 at `$A000`, so its save calls resolve correctly.
+- **`27:A8A2`:** marked as data.
+- **Data-label suffixes:** more are recognised, so the session-71 shop tables and the new tables are no longer traced as code.
+- **Rerun:** the full disassembly round-trips cleanly for all 32 banks. The bank-reference check reports 2383/2383 calls OK; session 32 had 5 misses. One warning is left and expected: the tracer can't tell that a branch just before `27:A8A2` is always taken.
+
+**Files**
+- **New tools:** `chest_presence_dump.py`, `equip_name_dump.py`, `ppu_block_dump.py`, `orphan_check.py`.
+- **Labels:** 9 new and 6 renamed. I also replaced commas in my label comments, because the disassembler cuts a comment off at the first comma.
+- **Regenerated outputs:** `gfx/chest_presence.txt`, `disasm/*`, `docs/bank_refs.txt`, `docs/ptr_tables.txt`.
+- Nothing is committed.
+
+SESSION_SUMMARY: Session 72 finished the Ph5 pointer-table leftovers: ItemAuxPtrs is really ChestPresencePtrs (114 chest presence lists), MenuSprShapes/SceneMetaPtrs/Wake* tables bounded, EquipNameBase confirmed (bank-6 status names), the `$6000` page feeds PPU blocks `$3E-$45` from 3 copy sites with `$60E0-$60FF` never read, only `15:B709` BossBgStripPtrs is a real orphan, and disasm_all now has BANK_CTX 16→16/23 plus `27:A8A2` as data (2383/2383 calls OK); 4 tools, 9 new labels, 6 renamed.

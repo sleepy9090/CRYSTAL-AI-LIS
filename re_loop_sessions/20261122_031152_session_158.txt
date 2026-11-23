@@ -1,0 +1,87 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls re_loop_sessions | tail -4 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.md |
+  ▶ Read dead_ends.md
+  ▶ sed -n 2309,2325p REVERSE.md && for f in re_loop_sessions/*_15[567].txt; do echo "== $f"; tail -c 2500 "$f"; done
+  ▶ Read REVERSE.md +2309
+  ▶ tail -c 2500 re_loop_sessions/20261122_031152_session_157.txt; echo ===; tail -c 1500 re_loop_sessions/20261122_031152_s
+  ▶ awk 'NR>=2322 && /^- \[ \]/ {print NR": "substr($0,1,120)}' REVERSE.md
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Picking the top open task, the boss AI port. Next up are bosses `$6C-$6E` (`15:B728`). I'm reviewing the earlier port notes first.
+  ▶ Grep "B728|Session 157|BossDefeated" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '1025,1045p;1088p;1284p;1308p;1317p' REVERSE.md | cut -c1-3000
+  ▶ Grep "\$6C|\$6D|\$6E|BossReward|B728" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^15,B[6-9A-F]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 15 B728 230 | head -120
+  ▶ wc -l web/src/game/obj/ai_boss.js && grep -n "^export\|^const\|^function\|AI_BOSS\|BOSS_PHASES\|0x65\|0x6a" web/src/game
+  ▶ grep -n ",8C0E,\|,8C0E," labels.csv; python3 tools/dis.py 14 8C0E 40 | head -20; sed -n 785,816p web/src/game/obj/ai_bos
+  ▶ grep -rn "paletteBuild\|farCallObjInit\|objInit(" web/src/game/obj/*.js | head -15; grep -n "6C\|6D\|6E\|6F" gfx/obj_ai.
+  ▶ sed -n 1,60p web/src/game/obj/objinit.js; grep -n "objInitFar\|import" web/src/game/obj/ai_boss.js | head -20; grep -n "
+Plan: port the routine as `aiReward6C`. Decoding the phase table next.
+  ▶ python3 tools/decode_tables.py B7C1 70 u8 2>&1 | head -20; python3 tools/decode_tables.py --help 2>&1 | head -15
+  ▶ python3 tools/decode_tables.py 15:B7C1 14 hex5
+Table decoded: 14 records indexed by `obj_phase` (= boss record index). Writing the port now.
+  ▶ grep -n "farObjInit" -B3 -A3 web/src/game/obj/ai_static.js | head -20; sed -n 18,25p web/src/game/obj/ai_boss.js; grep -
+Now adding the routine to `ai_boss.js`.
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+Now adding it to the capture harness. Looking at how `$65` was set up there.
+  ▶ grep -n "BOSS_AIS\|AiTalkEventE5\|_fix_boss\|0x65\|ABDA" tools/emu/routine_capture.py | head -30; grep -n "fuzz_boss\|Ai
+  ▶ sed -n 245,270p tools/emu/routine_capture.py; sed -n 600,680p tools/emu/routine_capture.py; sed -n 115,126p web/test/obj
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+Running the capture for `fuzz_boss.json` with the new routine included.
+  ▶ time python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine BossA
+  ▶ node web/test/obj_check.mjs web/test/obj_frames/fuzz_boss.json 2>&1 | tail -8
+All 17200 cases match. Checking that the reward cases actually hit the apply and `$B3` paths.
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -i "reward\|boss.json"; ls tools/case_bytes.py && python3 tools/case_bytes.py --
+I'm writing a small tool that counts which paths the reward cases took.
+  ▶ sed -n 1,60p tools/case_bytes.py
+  ▶ Write case_paths.py
+  ▶ python3 tools/case_paths.py web/test/obj_frames/fuzz_boss.json AiReward6C 0041 07E7 07F5 06C3 0102 col:04A0 col:0620 col
+Every path is covered: the `$B3` transform, the music step and the record apply. Adding `$6E` to the ported list changes the `ObjUpdateAll` pool, so I'm recapturing `fuzz_update.json` too.
+  ▶ grep -n "fuzz_update" -B2 web/test/obj_frames/README.md | grep -v "^--" | head
+  ▶ grep -n "out web/test/obj_frames/fuzz_update.json" -B2 web/test/obj_frames/README.md
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 --routine ObjMoveSli
+Checks pass. Now the docs. Finding the s157 entries to add next to.
+  ▶ grep -n "AiTalkEventE5" REVERSE.md docs/architecture_web.md web/test/obj_frames/README.md | cut -c1-200
+  ▶ sed -n 198p REVERSE.md; sed -n 227p docs/architecture_web.md; sed -n 76,79p web/test/obj_frames/README.md
+  ▶ cat > /tmp/s158_edit.py <<'EOF'
+I'll use the Edit tool for the doc changes instead.
+  ▶ Edit architecture_web.md
+  ▶ Edit README.md
+  ▶ Edit README.md
+Now REVERSE.md: the Verification Log row, the session note, and the task text.
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +1310
+  ▶ Edit REVERSE.md
+Now updating the task text in place.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 15 B766 3 | head -2 && python3 tools/dis.py 15 B7BB 2 | head -1 && node web/test/obj_check.mjs 2>&1
+I ported the boss reward drop AI (`$6C-$6E`, `AiReward6C` `15:B728`) to the web port. Its 300 new test cases match the emulator, and so do all 17200 routine cases. `core_check` passes too.
+
+**What the routine does:**
+- Only one object type uses it: `$0F`, the reward item a boss leaves behind (with AI `$6E`). Its `obj_phase` is the boss's index in `BossAreaList`.
+- If spawn param bit 7 is set, the object turns into type `$B3` (AI `$70` phase 1) through `FarCall_C25D`.
+- Otherwise it waits until every other object in slots `$0D-$1E` is gone or is one of a few harmless kinds (AI `$78`/`$70`/`$7F`/`$30`/`$39`).
+- Then it restarts the area music once, sets the drop's collision and sprite, and applies a 5-byte record for that boss from a new table, `RewardRecs` `15:B7C1` (14 records).
+- Each record sets sprite palette 3, sprite CHR bank R5, the tile offset and a pending message, and rebuilds the palette.
+- The three bosses that flee instead of dying (areas `$28`, `$6E`, `$F2`) are the only ones that queue a message here.
+- Two quirks: phase 3 belongs to the unused `$FF` list entry and would re-apply its record every frame; and every path except the `$B3` one keeps the camera locked for `$10` frames.
+
+**Port and tests:**
+- **Port:** `aiReward6C` in `web/src/game/obj/ai_boss.js`, registered for ids `$6C`, `$6D` and `$6E`.
+- **Test capture:** the routine is in `BOSS_AIS` in `tools/emu/routine_capture.py`, with settings that make cases reach each branch. I recaptured `fuzz_boss.json` and `fuzz_update.json`, and added it to `obj_check.mjs`.
+- **New tool:** `tools/case_paths.py` counts how many cases changed each given byte. It shows every branch ran: 128 cases took the `$B3` path, 36 applied a record, and 11 set the message state.
+
+**Docs:**
+- **REVERSE.md:** a "Session 158" note in the boss port section, a new Verification Log row, and the task text updated in place.
+- **labels.csv:** 3 new labels, and an updated comment on `AiReward6C`.
+- **Other files:** the boss row in `docs/architecture_web.md` and the capture command in `web/test/obj_frames/README.md`.
+
+I didn't commit anything. The boss task stays unchecked because it is a low-priority leftovers task. Still open in its text: `$6F` `BossDefeated`, `$62`, `$6B`, death chains, drops, missing ids, scenarios and `ShowMessage`.
+
+SESSION_SUMMARY: Session 158 ported AI $6C-$6E AiReward6C (15:B728, boss reward drop + RewardRecs 15:B7C1) to obj/ai_boss.js; its 300 cases and all 17200 routine cases match tools.emu, new tools/case_paths.py shows every branch ran, docs and 3 labels were added, and the low-priority boss task stays open for $6F/$62/$6B and the rest.

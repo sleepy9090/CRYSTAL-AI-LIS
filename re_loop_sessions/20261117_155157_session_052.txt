@@ -1,0 +1,70 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### \|- \[ \]" REVERSE.md | head -80
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_05[012].txt && tail -c 3500 re_loop_sessions/20261117_155157_session_051.txt; ls web web/src we
+  ▶ ls web/src/game web/src/nes web/data | head -40; wc -l web/src/game/*.js web/src/nes/*.js web/src/*.js web/test/*.mjs to
+  ▶ Read machine.js
+  ▶ Read __main__.py
+  ▶ Read compare.py
+  ▶ Read serve_check.mjs
+Now the data loader, key parser, and the PNG/compare helpers.
+  ▶ Read core_check.mjs
+  ▶ Read data.js
+  ▶ Grep "def parse_keys|^BUTTONS|^NAMES|def mask|frame_no|def rev8" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ Read render_compare.py
+  ▶ Read debug.py +165
+  ▶ Read main.js
+  ▶ cat tools/emu/png.py; grep -n "dump_screen\|def palette\|NES_PAL\|RGB" tools/emu/nes.py tools/emu/ppu.py | head; grep -r
+  ▶ grep -n "def parse_buttons" -A12 tools/emu/debug.py; grep -n "212 frames\|intro (bank 18\|main_state = 2\|Boot" REVERSE.
+  ▶ Grep "parse_buttons" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ Read input.js
+  ▶ Read ram.js
+Working on Ph7 web 3/8 (the Node test harness). Writing the shared harness library first.
+  ▶ Write harness.mjs
+  ▶ Write run.mjs
+  ▶ Write compare_frames.py
+Cleaning up two sloppy spots (obj group match, and `--diff OUT.png` being mistaken for an input file).
+  ▶ Edit compare_frames.py
+  ▶ Edit compare_frames.py
+  ▶ Edit compare_frames.py
+Now run both sides over the same window and diff them.
+  ▶ mkdir -p /tmp/h52 && node web/test/run.mjs --frames 100 --keys 250:START 260:A+RIGHT:3 --compare /tmp/h52/web.csv --dump
+  ▶ mkdir -p /tmp/h52 && node web/test/run.mjs --frames 100 --keys 250:START 260:A+RIGHT:3 --compare /tmp/h52/web.csv --dump
+  ▶ node web/test/run.mjs --frames 100 --keys 250:START 260:A+RIGHT:3 --compare /tmp/h52_web.csv --dump-screen /tmp/h52_web.
+  ▶ python3 -m tools.emu --frames 314 --compare /tmp/h52_emu.csv --dump-screen /tmp/h52_emu.png
+  ▶ python3 tools/compare_frames.py /tmp/h52_emu.csv /tmp/h52_web.csv --cols core,pal --max 5
+State/sub align frame-for-frame from f214 with `--frame0 214`; only `pal_crc` differs (title palette not ported yet — expected). Now the PNG path:
+  ▶ python3 tools/compare_frames.py /tmp/h52_emu.png /tmp/h52_web.png --diff /tmp/h52_diff.png; python3 tools/compare_frames
+Both paths work. Now docs: CLAUDE.md, REVERSE.md, and checking architecture_web.md for run.mjs references.
+  ▶ Grep "run\.mjs|compare_frames" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Read architecture_web.md +74
+  ▶ Edit architecture_web.md
+  ▶ Read CLAUDE.md
+  ▶ Edit CLAUDE.md
+Now REVERSE.md: mark the task done and add an Intermediate Output Files row.
+  ▶ grep -n "core_check.mjs" REVERSE.md | cut -c1-200
+  ▶ Read REVERSE.md +1686
+  ▶ Edit REVERSE.md
+Now replace the task line with a done entry.
+  ▶ Read REVERSE.md +1815
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ node web/test/core_check.mjs | tail -1; node web/test/serve_check.mjs | tail -1; node web/test/run.mjs --help | head -3;
+I finished task Ph7 web 3/8: there is now a headless test runner for the web port, plus a tool that diffs its output against the emulator. The existing checks (`core_check.mjs`, `serve_check.mjs`) still pass. Nothing is committed.
+
+**What I added**
+- **`web/test/run.mjs`** runs the port in Node without a browser. It takes the same `--keys` scripts as `tools.emu` and writes the same per-frame CSV with `--compare`. It can also save a screenshot (`--dump-screen`, `--scale`) and dump RAM or WRAM. It runs at about 20,000 frames per second.
+- **`--frame0` (default 214)** lines up frame numbers with the emulator. The port skips the 212-frame startup intro, and the emulator reaches the game's first main-loop pass at frame 214. With this default, key scripts and CSV frame numbers match `tools.emu` directly.
+- **Button names need no bit reversal.** The emulator stores A in the lowest bit and the port stores it in the highest. Names like `A+RIGHT` map straight to the port's order, so only raw numeric emulator masks need converting (`rev8()` does it).
+- **`web/test/harness.mjs`** is shared code: the key-script parser, the CSV row builder (column for column the same as `tools/emu/compare.py`), and a small PNG writer.
+- **`tools/compare_frames.py`** diffs two CSVs by frame number. It can limit the check to column groups (`core`, `snd`, `pal`, `obj`) or a frame range, and can shift frames. It also diffs two PNGs using `render_compare.py`. It exits 1 on any difference.
+
+**Test against the emulator** (port 100 frames vs `tools.emu` 314 frames)
+- Main state, substate, area, position, camera and music match on every frame from 214 to 313. The switch from state 2 to state 3 happens on the same frame in both, so the frame alignment is right.
+- The palette checksum differs on every frame. That's expected: the title screen isn't ported yet, so the port's palette buffer still holds its startup fill.
+- The final screenshots differ in 0.78% of pixels (two rows of title graphics the port doesn't draw yet). Comparing a screenshot with itself gives 0 differences, so the PNG writer and reader agree.
+
+**Not done:** the runner can't load emulator save states, because those are Python-only files. Task 5/8 needs save-state scenarios, so I added a note there: export the emulator state to JSON and add `--load-state` to `run.mjs`.
+
+**Docs:** `CLAUDE.md` has a new "Web port tests" section with usage. `REVERSE.md` has the task marked done and a new row in its output-files table. `docs/architecture_web.md` has its file list updated.
+
+SESSION_SUMMARY: Session 52 — Ph7 web 3/8 done: `web/test/run.mjs` headless port runner + `web/test/harness.mjs` (key scripts, compare-CSV rows, PNG writer) and `tools/compare_frames.py` (CSV/PNG diff); state/sub match `tools.emu` frame for frame from f214 (only the palette checksum differs, title not ported yet); CLAUDE.md "Web port tests" section; save-state loading noted under 5/8.

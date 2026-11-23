@@ -1,0 +1,136 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls re_loop_sessions | tail -4; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/*_19[234].txt; tail -c 5000 re_loop_sessions
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/enemy_catalog.py --out /tmp/cat.txt >/dev/null 2>&1; 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/enemy_catalog.py --out /tmp/cat.txt; grep -n "5C" /tm
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/area_dump.py spawns 59; python3 tools/area_dump.py sp
+  ▶ python3 tools/area_dump.py spawns 0x59 0x5A 0x5B 2>&1 | head -80
+  ▶ python3 tools/enemy_catalog.py --out /tmp/cat.txt && grep -n "5C" /tmp/cat.txt
+Checking the last enemy group (AI `$5C`, areas `$59-$5B`); looking up its enemy type now.
+  ▶ python3 tools/enemy_catalog.py --out gfx/enemy_catalog.txt && head -3 gfx/enemy_catalog.txt
+  ▶ Grep "^group_B2|def .*group_B2|'group_B2'|"group_B2"" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Grep "AI \$5C|^ *\$?a?[0-9A-F]{2}.*\b(59|5A|5B)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/enemy_catalog.txt
+  ▶ Read scenario.py +680
+  ▶ Grep "B626|AI `\$5C`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read enemy_catalog.txt +140
+  ▶ Read groupb2_check.mjs
+  ▶ Edit scenario.py
+  ▶ sed -n '1,60p' tools/emu/group_probe.py | grep -n "add_argument\|usage\|^#\|\"\"\"" | head -30
+  ▶ timeout 600 python3 -m tools.emu.scenario_state group_59 12 --out web/test/states/group59.json --save-state tools/emu/st
+Probing the area-`$59` layout to plan the run's keys.
+  ▶ Read area_089.png
+  ▶ python3 tools/emu/group_probe.py tools/emu/states/group59.state --slots 13,14,16 --seg RIGHT:60 UP:4 'B:4,NONE:12*24' --
+  ▶ python3 tools/emu/group_probe.py tools/emu/states/group59.state --slots 13,14,16 --seg RIGHT:60 UP:4 'B:4,NONE:12*24' --
+  ▶ python3 tools/emu/group_probe.py tools/emu/states/group59.state --slots 13,14,16 --seg DOWN:16 RIGHT:120 NONE:100 --ever
+  ▶ grep -n "def place_player" -A12 tools/emu/scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario_state group_59 12 --out web/test/states/group59.json --save-state tools/emu/st
+Tracking the gunner (`AiPatrolGunner` only takes damage while attacking) to plan the sword hits.
+  ▶ python3 tools/emu/group_probe.py tools/emu/states/group59.state --slots 14,16 --seg RIGHT:30 UP:2 'B:4,NONE:8*36' --chan
+  ▶ python3 tools/emu/group_probe.py tools/emu/states/group59.state --slots 14,16 --seg DOWN:20 LEFT:20 RIGHT:30 --every 5 2
+  ▶ sed -i 's/exec=\[place_player(0x0370, 0x034E, cam=True)\]/exec=[place_player(0x0300, 0x034E, cam=True)]/' tools/emu/scen
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario_state group_59 12 --out web/test/states/group59.json --save-state tools/emu/st
+  ▶ Read scenario.py +260
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario_state group_59 12 --out web/test/states/group59.json --save-state tools/emu/st
+The gunner patrols a ledge 58 px above the walkway, out of sword reach, but its aimed shots hit the player. Checking a full 480-frame run for HP changes.
+  ▶ python3 tools/emu/group_probe.py tools/emu/states/group59.state --slots 14,16 --seg NONE:4 UP:40 'B:4,NONE:12*27' --chan
+Six aimed-shot hits on the player in 480 frames and no death. Generating the tools.emu reference and comparing the port.
+  ▶ K=$(python3 tools/keyseq.py 2510:UP:40 '2550:B:4*27/16') && echo $K && timeout 1200 python3 tools/web_state_compare.py -
+  ▶ python3 tools/keyseq.py 2510:UP:40 '2550:B:4*27/16'
+  ▶ timeout 1200 python3 tools/web_state_compare.py --state tools/emu/states/group59.state --web web/test/states/group59.jso
+Diverging from f2612; first I'll fix the port key frames with the `$43` pad watch, as the earlier group checks did.
+  ▶ ls gfx/group59/ && grep -n "keys\|watch\|load" tools/pad_watch_keys.py | head -12; grep -n "tools.emu" web/test/group6e_
+  ▶ grep -n "load-state\|add_argument" tools/emu/__main__.py | head -20
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group59.state --frames 480 --watch 0043 --keys 2510:UP:40
+  ▶ grep -n "add_argument" tools/web_state_compare.py
+  ▶ grep -n "'--" web/test/run.mjs | head -20
+  ▶ node web/test/run.mjs --load-state web/test/states/group59.json --frames 480 --quiet --compare gfx/group59/webk.csv --ke
+Real divergence at f2612 in slots `$17`-`$1E`; inspecting those rows.
+  ▶ python3 tools/compare_frames.py gfx/group59/emu.csv gfx/group59/webk.csv 2>&1 | head -12; python3 tools/csv_cols.py gfx/
+Port runs one frame ahead from f2612, which suggests a tools.emu lag frame. Checking with `pass_probe`.
+  ▶ timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/group59.state 480 --keys 2510:UP:40 2550:B:4 2566:B:4 2582:
+tools.emu drops 11 frames to CPU overruns in this run (gap (c), the same as area `$81`). The port already matches through f2611, so I'm checking how it handled the f2601 lag frame.
+  ▶ grep -rn "lag" web/src/game/mainloop.js | head -30
+  ▶ grep -rn "overrun" web/src/game/*.js web/src/game/**/*.js | grep -v "^\s*//" | head -20
+  ▶ Read ai_effect.js +105
+  ▶ Edit scenario.py
+  ▶ for a in 5A 5B; do timeout 600 python3 -m tools.emu.scenario_state group_$a 12 --out /dev/null --save-state tools/emu/st
+  ▶ timeout 600 python3 -m tools.emu.scenario_state group_5A 12 --out gfx/group59/g5a.json --save-state tools/emu/states/gro
+Areas `$5A`/`$5B` have no lag frames when idle (`$59` had 3). Probing `$5A`'s layout.
+  ▶ python3 tools/emu/group_probe.py tools/emu/states/group5A.state --slots 13,14,16,19 --seg NONE:480 --every 40 2>&1; pyth
+`$5A` has the same gunner patrol (x 585-737, y 540) with both lungers far away (x 344 / 968). I'll place the player on the walkway below it (660, 598).
+  ▶ Edit scenario.py
+  ▶ rm -f tools/emu/states/group5B.state gfx/group59/g5a.json gfx/group59/g5b.json && timeout 600 python3 -m tools.emu.scena
+  ▶ timeout 600 python3 -m tools.emu.scenario_state group_5A 12 --out web/test/states/group5a.json --save-state tools/emu/st
+  ▶ python3 tools/emu/group_probe.py tools/emu/states/group5a.state --slots 13,14,16 --seg NONE:4 UP:40 'B:4,NONE:12*27' --e
+The player takes `$38` hits from something other than the gunner's shots. Checking slots `$0D-$12`.
+  ▶ python3 tools/emu/group_probe.py tools/emu/states/group5a.state --slots 0D,0F,11,17,18 --seg NONE:4 UP:40 --every 4 2>&1
+Slot `$0F` is an invisible AI-`$5E` record at (656, 572) right above the placed player, so the hits are contact plus its falling shots. Moving the placement to x 720.
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario_state group_5A 12 --out web/test/states/group5a.json --save-state tools/emu/st
+Player survives, with hits from shots and AI `$5D` (slot `$17`). Checking lag frames with the planned keys.
+  ▶ python3 tools/keyseq.py 2520:UP:40 '2560:B:4*27/16'
+  ▶ timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/group5a.state 480 --keys 2520:UP:40 2560:B:4 2576:B:4 2592:
+Seven lag frames here too. Running the comparison to see which ones the port already reproduces.
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/group5a.state --frames 480 --watch 0043 --keys 2520:UP:40
+  ▶ timeout 1200 python3 tools/web_state_compare.py --state tools/emu/states/group5a.state --web web/test/states/group5a.jso
+The port matches through f2600, then runs a frame ahead. Comparing tools.emu's pass timing at f2579 (reproduced) and f2600 (missed).
+  ▶ timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/group5a.state 100 --from 2577 --to 2603 --keys 2520:UP:40 2
+  ▶ timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/group5a.state 100 --from 2577 --to 2603 --keys 2520:UP:40 2
+  ▶ Read group81_check.mjs
+I'll write one check covering both areas. First, trimming the refs.
+  ▶ sed -n '1,12p' tools/csv_trim.py
+  ▶ python3 tools/csv_trim.py gfx/group59/emu.csv web/test/group59_ref.csv --cols core,snd,pal,obj,oam_crc --frames 2507-298
+Now the check itself, with both areas in one file.
+  ▶ Write group5c_check.mjs
+  ▶ node web/test/group5c_check.mjs
+Passes in both areas: 105 + 84 rows at shift 0, with the attack countdown `$0636` running `$20`→0 and skipping one step on each player-hit frame. Trimming the output to the attack starts.
+  ▶ Edit group5c_check.mjs
+  ▶ Edit group5c_check.mjs
+  ▶ python3 - <<'EOF' 2>/dev/null; true
+Using the Edit tool instead.
+  ▶ Edit group5c_check.mjs
+  ▶ Edit group5c_check.mjs
+  ▶ Edit group5c_check.mjs
+  ▶ node web/test/group5c_check.mjs
+Check passes. Starting the full suite in the background, then cleaning up my stray probe files.
+  ▶ timeout 3000 python3 tools/run_checks.py > gfx/group5a/run_checks.txt 2>&1
+  ▶ rm tools/emu/states/group5A.state tools/emu/states/group5B.state gfx/group59/g5a.json gfx/group59/g5b.json
+The deletion wasn't approved, so I'll leave those 4 files and mention them in the report. Running the suite without redirecting its output.
+  ▶ timeout 3000 python3 tools/run_checks.py
+  ▶ Grep "^\| AI `\$41` `AiShellOnHit`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +224
+  ▶ Edit REVERSE.md
+Now the task text: striking `$5C` and moving the overrun into gap (c) of the gameplay-leftovers task.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^- \[ \] Ph7 (low priority) boss AI port" REVERSE.md | cut -c1-80
+  ▶ Edit REVERSE.md
+  ▶ Grep "^  `group81_check.mjs`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CLAUDE.md
+  ▶ Edit CLAUDE.md
+  ▶ Edit REVERSE.md
+  ▶ until grep -q "passed\|FAIL\|checks" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/c5d0f3ef-545f-435
+The suite is still running in the background; I'll wait for its completion notification.
+  ▶ Read b6orhsjp2.output
+Still running; waiting for the notification.
+  ▶ grep -v "^ok" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/c5d0f3ef-545f-435a-aced-316929ed4a8f/tas
+  ▶ Grep "^[1-9]|FAIL" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/c5d0f3ef-545f-435a-aced-316929ed4a8f/tasks/b6orhsjp2.output
+I checked AI `$5C` (`AiPatrolGunner`, enemy type `$A2`), the last enemy group left in the task. The port matches tools.emu with no code changes, but only up to the frame where tools.emu's CPU first overruns in each area. The new `web/test/group5c_check.mjs` passes. The full suite passes 48 of 49 checks; the one failure is `world_check` on areas `$3C`, `$3D` and `$BC`, the known gap (j) that was already failing.
+
+**What the runs show** (two new scenarios, `group_59` and `group_5A`, each with the player placed on the walkway):
+- **No sword hits on the gunner:** it patrols a ledge 58 px above the walkway, where the sword can't reach it. So the check covers its patrol, its attack and its aimed shots, not damage to it.
+- **Attack timer:** `$0636` is set to `$20` when the gunner attacks (f2589 in area `$59`, f2567 in `$5A`) and counts down by 1 per frame.
+- **Shot hits:** the player is hit at f2602 (HP `$C0` → `$A7`) and f2580 (`$C0` → `$92`). Each hit costs one frame of game logic in tools.emu, and the port reproduces it.
+- **Rows matched:** area `$59` f2507-2611 (105 rows) and area `$5A` f2517-2600 (84 rows), at shift 0 with sound included and no exceptions listed.
+
+**Why the check stops early:** the shots from the gunner and from the invisible enemies that drop shots fill up to 20 object slots. tools.emu then runs out of CPU time and skips frames: 11 times in area `$59` (first at f2611) and 6 in `$5A` (first at f2600). The port has no general model of CPU time (gap (c)), so after that point it runs one frame ahead. This is the same situation as the area `$81` check. I kept the full 480-frame references (`web/test/group59_ref.csv`, `group5a_ref.csv`) so they can test a frame-skip model later.
+
+**Docs:** REVERSE.md has a new Verification Log row, a note in the AI table, and the frame-skip cases added under gap (c). I marked the boss-AI task done, because every enemy AI that an area places now has a run; the skipped-frame part now sits in gap (c) of the gameplay-leftovers task. CLAUDE.md lists the new check.
+
+**One trap worth knowing:** `place_player`'s y value is a screen row plus an offset within it (240 lines per row), not a pixel y. My first two placements went wrong because of this.
+
+**Cleanup:** four leftover files from my probing weren't deleted because the delete wasn't approved. They are `tools/emu/states/group5A.state`, `tools/emu/states/group5B.state`, `gfx/group59/g5a.json` and `gfx/group59/g5b.json`. The ones the check uses are the lowercase `group5a.*` files. Nothing is committed.
+
+SESSION_SUMMARY: Session 195 checked AI $5C AiPatrolGunner (type $A2) in areas $59/$5A (scenarios group_59/group_5A): web/test/group5c_check.mjs matches tools.emu at shift 0 including sound for f2507-2611 and f2517-2600, up to tools.emu's first skipped frame from CPU overrun (gap (c)), with no port change; the boss-AI task is marked done; 48/49 checks pass (world_check is the known gap (j)).

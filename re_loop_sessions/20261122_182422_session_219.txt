@@ -1,0 +1,78 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; gr
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions; wc -c *219* *218* *217*; tail -c 3000 20261122_182
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat tools/passfit_runs.sh; ls gfx/group84 gfx/group88 gfx/ | head -
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "LAG_COEF\|coef\|'\$\|^const\|^export" web/src/game/lagmode
+  ▶ Read lagmodel.js
+Picked the last open item: per-AI lag-model fits for AIs `$34` / `$4E` / `$40`. Next I'm collecting the port's per-stage counts for the group84 / group88 runs.
+  ▶ Grep "gfx/group8[48]/cost" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -o "s217[^|]*" REVERSE.md | grep -i "group84\|pass_count" | head -5 | cut -c1-1500
+Now get the port keys from the two checks.
+  ▶ grep -n "KEYS\|keys\|LAST\|json" web/test/group84_check.mjs web/test/group88_check.mjs | head -30
+  ▶ Read group84_check.mjs +28
+  ▶ Read group88_check.mjs +30
+  ▶ K84=$(python3 tools/keyseq.py 2525:UP:40 '2596:B:4*10/12' 2716:B:4 '2728:B:4*11/12' 2860:B:3 '2871:B:4*9/12') && echo "$
+  ▶ python3 tools/keyseq.py 2525:UP:40 2596:B:4*10/12 2716:B:4 2728:B:4*11/12 2860:B:3 2871:B:4*9/12; python3 tools/keyseq.p
+  ▶ node web/test/pass_count.mjs web/test/states/group84.json 2984 --stages --out /tmp/s84.txt 2525:UP:40 2596:B:4 2608:B:4 
+  ▶ Grep "coef|fit.new|lagmodel" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/pass_fit.py
+Port counts are in; now I need a coefficient file in `pass_fit.py`'s format to fit only the missing AI ids.
+  ▶ Glob **/*coef*
+  ▶ Read pass_fit.py +60
+  ▶ Grep "LAG_COEF" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Write lag_coef_dump.mjs
+  ▶ node web/test/lag_coef_dump.mjs /tmp/lagcoef.json && python3 tools/pass_fit.py gfx/group84/cost.txt,gfx/group88/cost.txt
+New fits for `$07 $34 $40 $4E $7B $7D` (rms 0-4). Comparing against the old `ai*` fallback:
+  ▶ python3 tools/pass_fit.py gfx/group84/cost.txt,gfx/group88/cost.txt /tmp/s84.txt,/tmp/s88.txt --stages --ai --skip-lag -
+  ▶ python3 tools/pass_fit.py gfx/group84/cost.txt,gfx/group88/cost.txt /tmp/s84.txt,/tmp/s88.txt --stages --ai --skip-lag -
+All-stage rms 100 → 61 (max 309 → 281). Reading the new coefficients:
+  ▶ Read lagcoef_new.json
+Adding these to `LAG_COEF`:
+  ▶ Edit lagmodel.js
+Those AIs (`$7B` coin, `$7D` puff) show up in many areas, so I'm running the full check suite:
+  ▶ python3 tools/run_checks.py 2>&1 | tail -15
+52/52 pass. Re-checking the LAG decisions and margins on group88 with the new fits:
+  ▶ node web/test/lag_probe.mjs web/test/states/group88.json 2984 --all --out /tmp/p88.txt 2509:RIGHT:7 2516:B:4 2528:B:4 25
+  ▶ python3 tools/lag_model_check.py /tmp/p88.txt gfx/group88/cost.txt | head -8; echo ---; python3 tools/lag_model_check.py
+Bias +115 → −22; rms is about the same (165 vs 159). The two big outliers are passes ending right at L189, where a small estimate change flips whether the HUD IRQ is counted. Checking group84:
+  ▶ node web/test/lag_probe.mjs web/test/states/group84.json 2984 --all --out /tmp/p84.txt 2525:UP:40 2596:B:4 2608:B:4 2620
+  ▶ wc -l /tmp/p84.txt gfx/group84/probe.txt && sed -n '1,3p' gfx/group84/probe.txt | cut -c1-300 && sed -n '1,3p' /tmp/p84.
+  ▶ Read probe.txt
+  ▶ Read p84.txt
+  ▶ Grep "^f285[0-4]" /tmp/p84.txt
+  ▶ Grep "^f285[0-4]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/group84/probe.txt
+The old probe was written without `--all` (no rows for the hit-stop waits, which print `est 0`). Re-running it the same way:
+  ▶ node web/test/lag_probe.mjs web/test/states/group84.json 2984 --out /tmp/p84.txt 2525:UP:40 2596:B:4 2608:B:4 2620:B:4 2
+  ▶ python3 tools/lag_stage_diff.py /tmp/p88.txt gfx/group88/cost.txt | head -8; echo ---; python3 tools/lag_stage_diff.py g
+group88 `upd` bias +154 → +23, rms 166 → 59. Saving the new run files next to the s217 tables, then updating the docs.
+  ▶ cp /tmp/s84.txt gfx/group84/counts.txt && cp /tmp/p84.txt gfx/group84/probe_s219.txt && cp /tmp/s88.txt gfx/group88/coun
+Copying into `gfx/` needs approval, so I'll leave the run files in /tmp and write down the commands that regenerate them. Updating the task text:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding the new tool to CLAUDE.md:
+  ▶ Edit CLAUDE.md
+I added the last missing per-AI lag-model fits (`$34`, `$4E`, `$40`, plus `$07`, `$7B` and `$7D`) to `web/src/game/lagmodel.js`. All 52 checks pass, and the model still makes the same lag-frame calls as tools.emu in both test areas.
+
+**What I did**
+- I added `web/test/lag_coef_dump.mjs`, which writes the port's current coefficients in the format `pass_fit.py --coef` reads.
+- I ran the port's per-stage counts for the group84 and group88 runs, using the keys from their checks. Then I fitted only the AI ids that had no fit of their own, against the tools.emu cost tables from s217. No existing coefficient changed.
+
+**Results**
+
+| What was measured | Before | After |
+|---|---|---|
+| Per-AI error for the six new ids (rms) | 11–26 cycles | 0–4 cycles |
+| All-stage error, 954 passes (rms) | 100 | 61 |
+| Area `$88` object-update stage: bias / rms | +154 / 166 | +23 / 59 |
+| Area `$88` whole-pass estimate: bias | +115 | −22 |
+| Area `$84` whole-pass estimate: worst miss | 1287 | 528 |
+
+- Neither area disagrees with tools.emu on any lag frame. The closest pass to the lag boundary is still 1040 cycles below it.
+- The `$88` whole-pass rms went slightly up, 159 → 165. Two passes that end right at line 189 now land just short of the HUD interrupt in the estimate, so its cost is not added. That all-or-nothing HUD term is now the largest error left.
+
+**Notes**
+- Run `lag_probe.mjs` without `--all` before `lag_model_check.py`. With `--all`, the probe prints `est 0` rows for hit-stop waits, and the check stops joining at the first one: I got 347 passes instead of 475 and a false disagreement at f2852.
+- Copying the new run files into `gfx/group84/` and `gfx/group88/` needed your approval, so they are only in /tmp. The commands to regenerate them are in the new Verification Log row.
+
+REVERSE.md has a new Verification Log row and updated task text, and CLAUDE.md lists the new tool. The task stays unchecked because only `irq_mode` 2 remains of it, and I filed no new task. Nothing is committed.
+
+SESSION_SUMMARY: s219 added per-AI lag-model fits for AIs `$34` / `$4E` / `$40` / `$07` / `$7B` / `$7D` (all-stage rms 100 → 61, `$88` update-stage bias +154 → +23, still 0 lag-frame disagreements) plus `lag_coef_dump.mjs` for fitting only new AI ids; 52/52 checks pass; only `irq_mode` 2 remains of gap (c).

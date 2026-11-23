@@ -1,0 +1,56 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls re_loop_sessions | tail -4 && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md | 
+  ▶ Read REVERSE.md +2405
+  ▶ Read dead_ends.md
+  ▶ tail -c 2500 re_loop_sessions/20261122_182422_session_216.txt; echo ----; tail -c 1500 re_loop_sessions/20261122_182422_
+  ▶ cat tools/passfit_runs.sh; sed -n 1,60p web/test/group84_check.mjs; ls web/test/states | grep -i "84\|88"
+  ▶ sed -n 1,40p tools/lag_model_check.py; sed -n 1,30p web/test/lag_probe.mjs; grep -n "KEYS\|parseKeys(" web/test/group88_
+  ▶ sed -n 1,25p tools/emu/pass_cost.py | head -30; python3 tools/keyseq.py '2595:B:4*32/12'; sed -n 30,40p web/test/group88
+  ▶ mkdir -p /tmp/lagx && (python3 -m tools.emu.pass_cost tools/emu/states/group84.state 480 --split-int --slots --out /tmp/
+  ▶ mkdir -p /tmp/lagx && python3 -m tools.emu.pass_cost tools/emu/states/group88.state 480 --split-int --slots --out /tmp/l
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group84.state 480 --split-int --slots --out /tmp/lagx/c84.txt --keys 252
+  ▶ mkdir -p /tmp/lagx && python3 -m tools.emu.pass_cost tools/emu/states/group88.state 480 --split-int --slots --out /tmp/l
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group84.state 480 --split-int --slots --out /tmp/lagx/c84.txt --keys 252
+Using a directory inside the project instead.
+  ▶ mkdir -p gfx/lagx && python3 -m tools.emu.pass_cost tools/emu/states/group88.state 480 --split-int --slots --out gfx/lag
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group84.state 480 --split-int --slots --out gfx/lagx/c84.txt --keys 2525
+  ▶ Glob gfx/group8*/*.csv
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group88.state 480 --split-int --slots --out gfx/group88/cost.txt --keys 
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group84.state 480 --split-int --slots --out gfx/group84/cost.txt --keys 
+Now the port's lag probe with the checks' port keys.
+  ▶ node web/test/lag_probe.mjs web/test/states/group88.json 2984 --out gfx/group88/probe.txt 2509:RIGHT:7 2516:B:4 2528:B:4
+  ▶ node web/test/lag_probe.mjs web/test/states/group84.json 2984 --out gfx/group84/probe.txt 2525:UP:40 2596:B:4 2608:B:4 2
+  ▶ Grep "LAG" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/group84/cost.txt
+  ▶ Grep "f285[0-4]|LAG" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/group84/probe.txt
+  ▶ grep -n "def parse" -A30 tools/pass_cost_stats.py | head -45; sed -n 40,80p tools/lag_model_check.py
+  ▶ Write lag_stage_diff.py
+  ▶ python3 tools/lag_stage_diff.py gfx/group84/probe.txt gfx/group84/cost.txt --slots --worst 3; python3 tools/lag_stage_di
+  ▶ wc -l web/src/game/lagmodel.js && grep -n "ai\b\|AI\|'ai\|ai:" web/src/game/lagmodel.js | head -40
+Cross-check runs are done: both areas show 0 lag-frame disagreements. Now looking at why area `$88`'s object-update stage is ~154 cycles high (AIs `$34` / `$4E` / `$7B` use the generic fit).
+  ▶ Read lagmodel.js +1
+  ▶ grep -n "Main-loop pass cost" REVERSE.md | head -3 && grep -n "^| Main-loop pass cost" REVERSE.md | cut -c1-80
+  ▶ Grep "^f(2604|2890) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx
+  ▶ Grep "^f(2605|2891) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx
+  ▶ Edit REVERSE.md
+Now the task text (c4): mark the cross-check done, keep the NMI-modes part open.
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+  ▶ python3 tools/run_checks.py group84 group88
+I ran the lag-model cross-check in two areas whose enemies have no cycle fits of their own (`$84` and `$88`). The model gets every lag frame right there with no changes. The leftovers task stays unchecked because one part of (c4) is still open.
+
+**Results** (from new 480-frame tools.emu cost tables compared with the port's lag probe):
+- **Area `$84`** (AI `$40` ×3, `$21`, `$7D`): 475 passes compared, 0 lag-frame disagreements. The port's cycle estimate is off by 113 cycles on average (rms).
+- **Area `$88`** (turrets AI `$4E`, `$34` ×7, `$10` shots, `$7B`): 479 passes, 0 disagreements, off by 159 on average (rms).
+- **`$84`'s two tools.emu lag frames** (a contact hit at f2851 and a knockback at f2860) come from waits the port already reproduces, so the model doesn't judge them.
+- **A new tool, `tools/lag_stage_diff.py`,** breaks the error down by stage:
+  - In `$88` the object-update stage is about +154 cycles high: AIs `$34` and `$4E` use the shared fallback fit, which runs about 20 cycles high per call.
+  - The sprite stage is −36 in both areas.
+  - The two largest single errors are HUD-interrupt cases: a frame with heavy sound work (`$88` f2605, −1858) and a pass that ended on line 189 just before the HUD interrupt (`$84` f2891, +1287).
+- **Limit of this test:** no pass in either area came within about 780 cycles of the lag threshold. So it shows the model gives no false lags here, but says nothing new about how accurate it is right at the threshold.
+
+The `group84`, `group84b` and `group88` checks still pass; I didn't rerun the full suite because the port code didn't change.
+
+**Still open in (c4):** the lag model only runs in NMI mode 0 (`irq_mode` 0); the other modes need their own fits before it can be widened. Separate fits for AIs `$34`, `$4E` and `$40` are optional; the new tables in `gfx/group84/` and `gfx/group88/` can be used for them.
+
+I recorded this in REVERSE.md (the Verification Log row "Main-loop pass cost" and the task text) and added the new tool to CLAUDE.md. Nothing is committed.
+
+SESSION_SUMMARY: s217 did part of (c4): cross-checked the s215 lag model in areas `$84` / `$88` (AIs without their own fits) against new 480-frame `pass_cost` tables: 0 lag-frame disagreements (rms 113 / 159), per-stage residuals from new `tools/lag_stage_diff.py`; the other NMI modes remain.

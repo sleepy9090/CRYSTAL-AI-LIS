@@ -1,0 +1,58 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*,REVERSE.md}
+  ▶ Grep "^## Next Tasks" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +229
+  ▶ wc -c re_loop_sessions/*; tail -c 1500 re_loop_sessions/20261115_112834_session_004.txt; tail -c 1500 re_loop_sessions/2
+  ▶ Grep "Sound data format|SndOp|vibrato|86AA|854D|SFX|music \$" REVERSE.md
+  ▶ Read REVERSE.md +120
+Now the investigation: duty op and vibrato.
+  ▶ python3 tools/dis.py 24 854D 0x38; echo ----; python3 tools/dis.py 24 8685 0x90
+  ▶ python3 tools/decode_tables.py 24:8714 16 u8; python3 tools/decode_tables.py 24:8724 0x41 s8 | head -80; python3 tools/x
+  ▶ python3 tools/dis.py 24 82E4 0x10; python3 tools/decode_tables.py 24:8764 0x42 s8; python3 tools/decode_tables.py 12:800
+Writing the duty/vibrato/SFX-null findings now.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^24,\(86AA\|8714\|8724\|854D\)" labels.csv; tail -3 labels.csv
+  ▶ cat >> labels.csv <<'EOF'
+I'll use the Edit tool instead.
+  ▶ Read labels.csv +48
+  ▶ Edit labels.csv
+Now the music-id callers.
+  ▶ python3 tools/dis.py 30 D090 0x30; echo; python3 tools/dis.py 30 D41C 0x20; echo; python3 tools/dis.py 15 B300 0x18; ech
+  ▶ Read nesrom.py
+  ▶ python3 tools/dis.py 24 8584 0x73
+Now writing `tools/sound_dump.py`.
+  ▶ Write sound_dump.py
+  ▶ cd tools && python3 sound_dump.py music '$00' && python3 sound_dump.py music '$13' --max 80 && python3 sound_dump.py sfx
+  ▶ python3 tools/sound_dump.py music 0x13 --max 120
+New tools need run approval (same as `sound_ids.py`/`bank_calls.py`), so I'll check the music headers with `decode_tables.py` instead.
+  ▶ python3 tools/decode_tables.py 24:8C0C 32 ptr16 | grep -n "\[ *\(12\|18\|19\)\]"
+  ▶ python3 tools/decode_tables.py 24:9F4B 9 hex9; python3 tools/decode_tables.py 25:A5DB 9 hex9; python3 tools/decode_table
+  ▶ Grep "14/15|n=\$07|n=7\b" REVERSE.md
+  ▶ python3 tools/dis.py 15 A680 0x14; python3 tools/dis.py 15 B178 0x14
+Writing the music-naming results, tool entry, and marking the task done.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I finished the sound follow-up task and marked it done in REVERSE.md. One part is untested: the new `tools/sound_dump.py` couldn't run because running a new tool needs your approval, the same as `sound_ids.py` and `bank_calls.py` earlier.
+
+**What I found:**
+- **Duty command (`9x`, `24:854D`):**
+  - On the triangle channel, x becomes the high nibble of the `$4008` shadow register.
+  - On the square and noise channels, bit 0 of x turns on constant volume and bits 1–2 set the duty; the length-halt bit is always set. When bit 0 is 0, the channel's software envelope is switched off.
+- **Vibrato (`24:86AA`):** the full per-frame algorithm is now in REVERSE.md, including both lookup tables (`24:8714` and `24:8724`, one row of pitch offsets per octave). A few behaviours a web port needs to copy exactly:
+  - Only the low byte of the period is changed, and only when the high byte would stay the same.
+  - The base pitch is never changed, so the wobble doesn't drift.
+  - An odd depth runs at half speed.
+  - When an envelope is active, vibrato waits until the envelope reaches its last step.
+- **Bug in the original game:** the vibrato table lookup is off by one entry. With depth 0 or 1 in octave 0, the offsets cycle 0, −4, 0, +8 instead of evening out. At octave 7 with depth 6 or 7, it reads 2 bytes past the table end and gets +256. The port should reproduce this.
+- **Empty sound-effect slots:** I checked all 88 entries. The new empty ones are `$59 $70 $71 $73 $77`, making 14 in total.
+- **Music tracks, named by what calls them:**
+  - **`$13` is a short jingle (about 2.5 s) that interrupts the current music.** The caller first marks the current track to be restarted, so the previous music resumes when the jingle ends. It plays instead of sound effect `$29` or `$3F` in two special cases, so it's likely an item or achievement fanfare.
+  - **`$12` is a full looping track** started by 8 handlers in the entity-logic bank (bank 15), only when `$07D5` is non-zero. It's likely boss or encounter music.
+  - **`$0C`** has a single caller, an event handler at `15:B310`; what it's for is still unknown.
+- I added labels for `SndVibratoTick`, `SndVibStepTable` and `SndVibOffsetTable`, and rewrote the `SndOpDuty` label.
+
+**New tool:** `tools/sound_dump.py` prints a music track or sound effect as readable commands; `all` lists every header. On its first run, check that `music 0x13` matches the bytes quoted in REVERSE.md.
+
+SESSION_SUMMARY: Decoded the exact duty and vibrato behaviour, including an off-by-one in the original game's vibrato table, finished the sound-effect empty-slot check, identified music `$13` (interrupting jingle), `$12` (looping entity/boss track) and `$0C` (event theme) from their callers, and wrote `tools/sound_dump.py`, which hasn't run yet because it needs approval.

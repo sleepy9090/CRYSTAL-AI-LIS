@@ -1,0 +1,94 @@
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Glob **/dead_ends.md
+  ▶ Read dead_ends.md
+  ▶ Grep "^#{2,3} " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1860
+  ▶ Read REVERSE.md +1885
+  ▶ for f in re_loop_sessions/20261117_205123_session_06{0,1,2}.txt; do echo "== $f"; tail -c 1500 "$f"; done
+Checking the latest session logs, then I'll start the top task (tracing the 6 main states).
+  ▶ for f in re_loop_sessions/20261117_205123_session_060.txt re_loop_sessions/20261117_205123_session_061.txt re_loop_sessi
+  ▶ Read 20261117_205123_session_062.txt
+Now check what's already documented about the main states.
+  ▶ Grep "C957|CAB6|C931|C939|C944|C94C|main_state" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^30,(C9[0-9A-F]{2}|CA[0-9A-F]{2})" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read REVERSE.md +1649
+  ▶ Read REVERSE.md +526
+States 0-3 are already named; states 4/5 are the gap. Disassembling them and finding who writes `main_state` = 4/5.
+  ▶ python3 tools/dis.py 30 C931 0x26 && echo ==== && python3 tools/dis.py 16 A000 0x40 && echo ==== && python3 tools/dis.py
+Bank pair 8 puts `$A000` in bank 17 — redoing with the right bank.
+  ▶ python3 tools/dis.py 17 A000 0x60 && echo ==== && python3 tools/dis.py 17 A100 0x50 && echo ==== && grep -n "^1[67]," la
+State 4 = init (ends `INC main_state` → 5), state 5 = per-frame dispatcher on `$0602`. Recording that now, then finding the writer of `main_state`=4.
+  ▶ python3 tools/search_bytes.py "a9 04 85 40" --context 0; python3 tools/search_bytes.py "a9 05 85 40" --context 0; python
+  ▶ python3 tools/dis.py 19 BF90 0x58; echo ====; python3 tools/xref.py BF90 2>&1 | head; python3 tools/xref.py BFA0 2>&1|he
+The writer is inside a bank-19 routine; checking whether it's the substate-30 handler at `19:BDF2`.
+  ▶ Grep "^19,(B[D-F]|BC)|BDF2|substate 30|\| 30 \|" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ python3 tools/dis.py 19 BDF2 0x19E --stop | tail -n +1 | grep -nE "JSR|JMP|RTS|STA (main|sub)|BF8C|BE|BF" | head -80
+The final scene (substate 30) runs straight into `19:BFC4` → `main_state`=4. Confirming no exit in between, and looking at what state 5's modes do.
+  ▶ python3 tools/dis.py 19 BEBD 0x10C | grep -E "RTS|JMP|JSR|STA main" ; echo ====; python3 tools/dis.py 17 A14A 0x40; echo
+  ▶ (python3 tools/search_bytes.py "85 40" --context 0; python3 tools/search_bytes.py "e6 40" --context 0; python3 tools/sea
+  ▶ python3 tools/search_bytes.py "85 40" --context 0 | grep -E "^1[67]:" ; python3 tools/search_bytes.py "e6 40" --context 
+Only `17:A04E` (INC) writes `main_state` in banks 16/17. Checking the fixed banks for other writers so I can say whether state 5 ever exits.
+  ▶ python3 tools/search_bytes.py "85 40" --context 0 | grep -E "^(30|31|18|19):" ; python3 tools/search_bytes.py "e6 40" --
+Checking the values written at the unexplained writers `19:A78D`, `19:B9AD`, `30:C977`, `30:C9F5`.
+  ▶ python3 tools/dis.py 19 A787 8; python3 tools/dis.py 19 B9A7 8; python3 tools/dis.py 30 C971 8; python3 tools/dis.py 30 
+`19:A78B` would write 8 (out of range) and `B9AB`/`C9F3` look misaligned; verifying from proper instruction starts.
+  ▶ python3 tools/dis.py 19 A779 0x18; echo ===; python3 tools/dis.py 30 C978 0x84 | grep -nE "C9E|C9F|RTS|JMP" ; echo ===; 
+Two more real writers: `19:B9AB` (→ state 2, back to title) and `30:C9F3` (→ state 1 + substate 1, a load path); `19:A78B` writes 8, past the 6-entry table. Checking those.
+  ▶ python3 tools/dis.py 30 C91F 0x12; python3 tools/dis.py 19 A790 0x10; python3 tools/xref.py C9DA | head; python3 tools/x
+  ▶ Grep "^(19,(B900|A77|A78)|30,(C9DA|C957|C9FF|C931|C939|C944|C94C|CAB6))|zp_82|^\*,82," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/xref.py A77D | head -5; python3 tools/search_bytes.py "85 82" --context 0 | grep -E "^(17|19):"; python3 t
+`SetR7($17)` maps bank 23 at `$A000`, so the call is `23:BC06` (the save/load module). Checking its label and the `$82` title logic.
+  ▶ grep -nE "^23,BC0|^30,C9FF|^30,BA65|^19,BA65|^19,A6|^19,A7" labels.csv; python3 tools/dis.py 19 A715 0x6A
+  ▶ python3 tools/dis.py 30 C9FF 0x2F; python3 tools/dis.py 23 BC00 9; grep -n "LoadGameAndInit\|BC06" REVERSE.md | head -5
+Enough evidence. Writing findings to REVERSE.md and labels.csv now.
+  ▶ Grep "^31,C25D|^30,C25D|^\*,00(82|8C),|^\*,0602|^\*,060E|^\*,0604|^\*,0605" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the main State Machine section entry.
+  ▶ Edit REVERSE.md
+Adding labels (checking for name collisions first).
+  ▶ Grep "MainState|Ending|GameStartObjs|title_menu_sel|^30,C9DA|^17,A1(00|4A|66)|^17,AA(74|AD)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +786
+  ▶ wc -l labels.csv && tail -3 labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ cat >> labels.csv <<'EOF'
+Appending via Edit instead.
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 30 C944 6 && python3 tools/dis.py 17 A106 0x14 && python3 tools/dis.py 30 C9DA 3
+Labels load. Checking whether `docs/architecture_exe.md` lists the old 6-state table so it stays consistent.
+  ▶ Grep "C94C|C9DA|state 4|States 4/5|17:A000" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_exe.md
+  ▶ Read architecture_exe.md +82
+  ▶ Edit architecture_exe.md
+  ▶ Edit REVERSE.md
+Adding one low-priority leftover task at the end of RE Investigation.
+  ▶ Grep "^### Web Port Fixes" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '1940p' REVERSE.md | cut -c1-200
+  ▶ Read REVERSE.md +1940
+  ▶ Edit REVERSE.md
+I finished the top task, "trace the 6 main states". The main finding is that the state table has **9 entries, not 6**. All of this comes from reading the disassembly; I haven't confirmed it in the emulator, because no recorded run gets as far as the ending or uses continue.
+
+**What I found**
+- **Table size:** `MainStateTable` (`30:C91F`) is 9 words. Entries 6 and 7 are empty (`$0000`). Entry 8 is `30:C9DA`, the **continue-from-save** state. It sets up the objects, loads the save (`LoadGameAndInit`, bank 23), builds the screen, then switches to gameplay at substate 1.
+- **Names:** 0 = new game, 1 = gameplay, 2 = title init, 3 = title, **4 = ending init (`17:A000`)**, **5 = ending (`17:A100`)**, 8 = continue.
+- **Every write to `main_state` (`$40`):**
+  - Reset sets 2.
+  - Game over (`PlayerDeath` `19:B9AD`) sets 2, so it goes back to the title.
+  - Name entry sets 0.
+  - On the title menu, SELECT flips `$82` between the two choices. START with `$82`=1 sets 8 (continue); otherwise it starts a new game.
+  - `19:BFC4`, the end of the final cut-scene (substate 30), sets 4. It is the only way into the ending.
+  - The ending init steps to 5, and nothing ever leaves state 5. The game stays there until reset.
+- **State 5 per frame:** it has three modes chosen by `$0602`: run the scene, fade in, or fade out. The scene mode works through a list of 20 or more steps.
+- **Corrections to earlier notes:**
+  - `30:C9DA` was wrongly called "state-5 entry"; it is state 8.
+  - The note that `C9DA` was the only way into gameplay was wrong; the new-game state 0 also leads there.
+
+**Files changed**
+- `REVERSE.md`: new "Main states (session 63)" table under State Machine, with each state's name and every setter. Also the two corrections above, the task marked done, and one low-priority leftover task added at the end of RE Investigation. That task covers tracing the ending scene steps one by one, checking states 4, 5 and 8 in the emulator, and adding them to the web port.
+- `labels.csv`: 19 new labels, plus `MainStateTable` and `EndingModeTable` updated. The disassembler loads them.
+- `docs/architecture_exe.md` §2.2: updated with the full state list and how the game moves between states.
+
+Nothing was committed.
+
+SESSION_SUMMARY: Session 63 — traced the main states: MainStateTable has 9 entries (6/7 null, 8 = 30:C9DA continue-from-save via title START with $82=1); named all of them (0 new game, 1 gameplay, 2/3 title, 4/5 ending in bank 17, entered only from 19:BFC4 at the end of the final cut-scene and never left), listed every $40 setter, added 19 labels and updated architecture_exe.md §2.2; static only.

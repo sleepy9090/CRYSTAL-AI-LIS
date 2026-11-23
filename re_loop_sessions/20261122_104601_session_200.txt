@@ -1,0 +1,55 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -4 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ sed -n 2396,2410p REVERSE.md | cut -c1-300 && cat dead_ends.md | cut -c1-400 && tail -c 3500 re_loop_sessions/20261122_1
+  ▶ grep -n "EventActionTable\|TalkActionTable" REVERSE.md | cut -c1-200 | head -30; grep -n "EVENT_ACTIONS\|not ported\|^co
+  ▶ sed -n 905,1000p REVERSE.md && sed -n 270,370p web/src/game/states/giveitem.js
+  ▶ Read b0kjss57l.txt +10
+  ▶ Read giveitem.js +276
+Picking up the low-priority leftovers task: porting more EventActionTable acts (19/20/21, 23, 9). Disassembling them now.
+  ▶ python3 tools/dis.py 30 D718 0x74 && python3 tools/dis.py 30 D88B 0x10 && python3 tools/dis.py 30 D791 0x26
+  ▶ grep -rn "B14_800E\|14:800E\|waitSfxDone\|D88B" web/src | head; grep -n "export function\* waitFrames\|export const SPIN
+  ▶ sed -n 1255,1275p web/src/game/obj/ai_boss.js; sed -n 20,50p web/src/game/states/death.js; sed -n 1,30p web/src/game/pla
+  ▶ sed -n 1,40p web/src/game/obj/objinit.js; grep -n "farRestore\|spriteDraw" web/src/game/states/equip.js | head -3; pytho
+  ▶ python3 tools/dis.py 30 D659 0x4F
+  ▶ python3 tools/dis.py 30 C25D 0x80 | grep -n "TYA\|TAY\|PHA\|PLA\|RTS\|LDY\|STY" ; sed -n 40,70p web/src/game/obj/objinit
+Writing the port of acts 9, 19, 20, 21 and 23 now.
+  ▶ Edit giveitem.js
+  ▶ Edit giveitem.js
+Checking the dispatcher's Y value and the act-9 table, then running the checks.
+  ▶ python3 tools/dis.py 30 D552 0x11 && python3 tools/decode_tables.py 30:D6A8 45 u8 --per-line 5 2>&1 | head -12; grep -n 
+Y = $22·2 as assumed. Now looking at how s199 fuzz-checked acts 24/27 so I can add act 9 the same way.
+  ▶ grep -n "follow\|D75E\|D7CE" tools/emu/routine_capture.py web/test/obj_check.mjs web/test/obj_frames/README.md | head -3
+  ▶ sed -n 330,375p tools/emu/routine_capture.py; grep -n "MakeFollower13\|EvAct\|^const RUN\|EVENT_ACTIONS" web/test/obj_ch
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --seed 200 --routine
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -i "type38\|fail\|total\|ok" | head
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -iv "^ok " | head; node web/test/obj_check.mjs 2>&1 | grep -i type38
+Act 9 matches on all 300 cases. Running the full check suite for regressions.
+  ▶ python3 tools/run_checks.py 2>&1 | tail -4
+Now the docs: REVERSE.md task text, the README capture command, and labels.
+  ▶ grep -n "^30,\(D659\|D6A8\|D718\|D71F\|D746\|D791\|D88B\)," labels.csv
+Labels already exist. Updating the README and the REVERSE.md task text.
+  ▶ Edit README.md
+  ▶ Edit REVERSE.md
+  ▶ Edit giveitem.js
+I ported five more event actions this session (acts 9, 19, 20, 21 and 23). All 50 checks pass. Act 9 is checked against tools.emu; the other four have no test yet. The leftovers task stays open, as the rules say for a low-priority leftovers task.
+
+**What the ported actions do** (all in `web/src/game/states/giveitem.js`)
+- **Act 9** (`30:D659`): spawns object type `$38` in slot `$1E`, unless the player is flashing or that slot is already in use. Its position comes from a 5-byte record table at `30:D6A8`. Areas `$64` and `$68` use fixed records; every other area picks the record from its entry number. It then plays sound `$48`.
+- **Acts 19 and 20** (`30:D718` / `D71F`): clear slot 13 or 14, play sound `$6B` and wait for it to finish. If both slots are then empty, they set `$07D7` = `$7F` and spawn slot 15.
+- **Act 21** (`30:D746`): plays sound `$6B`, stops the music, waits, then spawns type `$9E` in slot 13.
+- **Act 23** (`30:D791`): one sprite pass, then the four wise-men history messages (22.0, 22.2, 22.4 and 22.6) in a row.
+- New helper `waitSfxDone` (`30:D88B`), shared by acts 19-21.
+
+**How it's checked**
+- **Act 9:** I added random-RAM test cases for it to `tools/emu/routine_capture.py` and saved 300 of them in `web/test/obj_frames/fuzz_type38.json`. All 300 match tools.emu in `obj_check.mjs`.
+- **Acts 19-21 and 23:** these wait for frames (for the sound to finish, or for the message window), so this kind of single-routine test can't cover them. They have no run-level test either.
+
+**Docs:**
+- In REVERSE.md, leftovers item (i) now lists only acts 1, 6, 7, 14 and 17 as unported.
+- I added the capture command to `web/test/obj_frames/README.md`.
+- The labels for all of these addresses were already in labels.csv.
+
+Nothing is committed.
+
+SESSION_SUMMARY: Session 200 ported EventActionTable acts 9/19/20/21/23 and WaitSfxDone 30:D88B; act 9 matches tools.emu on 300/300 fuzz cases (fuzz_type38.json), acts 19-21/23 wait frames and have no test yet; all 50 checks pass; leftovers (i) now lists acts 1, 6, 7, 14, 17.

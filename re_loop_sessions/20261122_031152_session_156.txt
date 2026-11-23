@@ -1,0 +1,84 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -4; wc -l dead_ends.md REVERSE.md; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for f in re_loop_sessions/*_15[345].txt; do echo "== $f"; tail -c 2
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 2000 re_loop_sessions/20261122_031152_session_153.txt; echo
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "BossAiE9\|B0B6\|BossAiEA\|15:B130" REVERSE.md labels.csv |
+  ▶ Read REVERSE.md +1255
+  ▶ Read ai_boss.js
+  ▶ Read routine_capture.py +240
+Picking the top task (boss AI port leftovers); this session I'm porting AI `$69` (statues) and, if it fits, `$6A`. Disassembling them now.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 B0B6 0x7A
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 B130 0x1AA; python3 tools/decode_tables.py 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "8480\|9861\|98A8\|9897\|^export function" web/src/game/obj
+Writing the two ports into `ai_boss.js`.
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+Now the capture side: adding the two AIs to `BOSS_AIS` and checking `_fix_boss`.
+  ▶ Read routine_capture.py +598
+  ▶ Read routine_capture.py +647
+Adding the two AIs and a steer block for their edges (statue anim `$24`/`$20`/0, slot `$0D`, EA's y edges and timer2 `$20`/`$21`/1, area `$A6`).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 - <<'EOF' 2>/dev/null || true
+I'll use Edit directly instead.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Grep "fuzz_boss|def _slot" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Edit routine_capture.py
+  ▶ Read README.md +65
+  ▶ Read routine_capture.py +112
+Now checking how `obj_check.mjs` maps boss case names, then regenerating `fuzz_boss.json`.
+  ▶ Grep "BossAiE8|AI_BOSS|ai_boss" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -i 's|  BossAiE8: (m, r) => { B.bossAiE8(m, r.x); },|  BossAiE8
+  ▶ Edit obj_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; time python3 -m tools.emu.routine_capture --load-state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/obj_check.mjs 2>&1 | tail -25
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/obj_check.mjs 2>&1 | grep -i "boss\|fail\|FAIL"; pyth
+  ▶ Edit routine_capture.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.routine_capture --load-state tools/emu/states/
+Now 55/45 shot spawns, all match. Recapturing `fuzz_update.json` too, since `$69`/`$6A` now join the `ObjUpdateAll` pool.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.routine_capture --load-state tools/emu/states/
+All green. Updating docs: the README regenerate line, REVERSE.md, and the architecture_web row.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "Bank 15 bosses (web port" REVERSE.md; grep -n "Bank 15 bos
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; awk 'NR>1291 && NR<1300 {print NR": "substr($0,1,160)}' REVERSE.md;
+  ▶ Grep "fuzz_boss|Session 104" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1298
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cut -c1-400 REVERSE.md | sed -n '195,196p'
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n '196p' REVERSE.md | cut -c400-
+Now writing the REVERSE.md entries (section note, Verification Log row, task text).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the task text (low-priority leftovers task: update in place, leave unchecked).
+  ▶ Edit REVERSE.md
+  ▶ Edit README.md
+  ▶ Edit README.md
+Last: the architecture_web.md row and labels for the new handler addresses.
+  ▶ Edit architecture_web.md
+  ▶ Grep "^15,(B0C5|B0F4|B105|B12C|B14F|B1A5|B203|B215|B22C|B278|B2D2)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +554
+  ▶ Edit labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 B0F4 6 | head -3
+I ported boss AIs `$69` `BossAiE9` (the statues, `15:B0B6`) and `$6A` `BossAiEA` (`15:B130`) to the web port. Every recaptured routine case matches the emulator: `fuzz_boss.json` 2700/2700 and `fuzz_update.json` 400/400 (16600/16600 across all routine files), with no unported AI reached. `core_check` also passes. I didn't commit; `re_loop.sh` does that.
+
+**Port** (`web/src/game/obj/ai_boss.js`): 3 phase handlers for the statues and 4 plus the fire routine for `$EA`, added to the phase dispatch table and to `AI_BOSS`.
+
+**Test capture**:
+- Both AIs are in `BOSS_AIS` in `tools/emu/routine_capture.py`, with extra settings so the test cases reach the edge conditions.
+- The first capture fired a shot in only 4 and 6 cases. Most cases had an invalid shot id, so I set it to their real shots `$31`/`$32`. That brought it up to 55 and 45 cases.
+- The new cases are in `obj_check.mjs`.
+
+**Details the earlier notes missed** (now in REVERSE.md):
+- The statue's "same screen half" test compares against slot 1's x (`$71`), not the player's main object in slot 0.
+- The statue's shot direction isn't limited to the 16 normal directions.
+- `$EA`'s intro doesn't clear the enemy slots, so its music call gets Y = `$4E` rather than the `$0C` the other bosses pass.
+- `$EA`'s distance check is off by one for negative x distance (it computes −dx − 2). It therefore starts its dive from up to 9 px left of the player but only 7 px right.
+
+**Docs**:
+- **REVERSE.md:** a "Session 156" note in the bank 15 boss port section, a new Verification Log row, and the task text updated in place.
+- **labels.csv:** 12 new labels for the handlers and tables.
+- **Other files:** the regenerate command and history in `web/test/obj_frames/README.md`, and the boss row in `docs/architecture_web.md`.
+
+The task stays unchecked because it is a low-priority leftovers task. Still open in its text: `$65`, `$6C-$6F`, `$62`, `$6B`, death chains, drops, missing ids, per-enemy scenarios, and `ShowMessage`.
+
+SESSION_SUMMARY: Session 156 ported boss AIs $69 BossAiE9 (statues) and $6A BossAiEA to obj/ai_boss.js; fuzz_boss.json 2700/2700 and all 16600 routine cases match tools.emu, docs and 12 labels added, and the low-priority boss task stays open for $65/$6C-$6F/$62/$6B and the rest.

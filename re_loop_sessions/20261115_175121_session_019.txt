@@ -1,0 +1,113 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*}
+  ▶ Grep "^## |^- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +778
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l re_loop_sessions/20261115_175121_session_01*.txt; tail -c 250
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D9D8 80 --stop; echo ----; python3 tools/di
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D9FC 60 --stop; echo; grep -n "^\*,\(4\|04\
+Working on session 19's task (text follow-ups 8): tracing `30:D9D8`, `30:C17D` and `$0715` first.
+  ▶ Grep "^\*,(0*4|0*10|711|718|715|563|643B|6430|0563)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 DA06 40 --stop; echo ---; python3 tools/dis
+  ▶ Grep "\$07(11|18|19|15)\b|\$0563" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +495
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/xref.py 0719 --data 2>/dev/null | head -30; python3 t
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 8D70 24; echo ---; python3 tools/dis.py 26 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 DB0E 26; echo ---; python3 tools/dis.py 30 
+Found the `$0715` encoding (selected item id − `$1C`). Now checking item names to label the menu checks.
+  ▶ Grep "^\s*(\$|id )?(24|26|27|28|31|3C)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/items.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 B8E8 30; echo ---; python3 tools/dis.py 19 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/xref.py B900 2>/dev/null|head; python3 tools/dis.py 1
+  ▶ Grep "^(19|18),|^30,(C176|D9D8|C17D|DB0E|D497)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "00 B9" 2>/dev/null | grep -E "^ *(1[
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CC9C 16; echo; python3 tools/dis.py 30 CADE
+Substate 3 (handler `19:B900`) is the player-death path, and it includes the Opel Statue revive. Next I'll write these findings to REVERSE.md and labels.csv.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Checking the two `$0719` readers before I commit to those names.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 26:9D7E 3 u8 2>&1|head; python3 tool
+  ▶ Edit REVERSE.md
+Now the labels:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -5 labels.csv; grep -c "" labels.csv; grep -n "^\*,07\(11\|15\
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat >> labels.csv <<'EOF'
+  ▶ Read labels.csv +394
+  ▶ Edit labels.csv
+Labels added. Next I'll check why `flag_sites` says F100 is set by the `$38`/`$DD` NPC scripts.
+  ▶ Grep "F100" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx
+  ▶ Grep "^(NPC|npc|param|=+|#).*\b(38|DD)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/npc_scripts.txt
+  ▶ Grep "p=\$(38|DD)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/spawn_params.txt
+  ▶ Read npc_scripts.txt +371
+  ▶ Grep "NPC script VM|section A|sections A/B|bogus" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +408
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l tools/npc_script_dump.py tools/flag_sites.py; grep -n "def \|
+  ▶ Read npc_script_dump.py +80
+Writing a small checker to find NPC script chains that start inside another entry, which would mean the decode is misaligned.
+  ▶ Write npc_script_check.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/npc_script_check.py 38 DD 45 --flag F100
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -i "s/or 'area state'/or 'chain fallthrough or area state'/" to
+  ▶ Edit npc_script_check.py
+  ▶ python3 tools/npc_script_check.py | grep "^param"
+Most scripts decode cleanly. Only `$38`, `$45` and `$74/$7E` among real/placed params have misaligned chains. Looking at `$38` in detail:
+  ▶ python3 tools/npc_script_check.py 38 | head -8; python3 tools/npc_script_check.py 7E; python3 tools/dis.py 14 8F91 1 >/d
+Raw bytes show the B section is packed back-to-back. I'll add a linear-scan mode: decode entries one after another and flag any `next` that doesn't land on an entry start.
+  ▶ Edit npc_script_check.py
+  ▶ Edit npc_script_check.py
+  ▶ sed -n 63,68p tools/npc_script_dump.py && python3 tools/npc_script_check.py linear 38 2>&1 | head -60
+  ▶ Edit npc_script_check.py
+  ▶ python3 tools/npc_script_check.py linear 38 2>&1 | head -64
+  ▶ Edit npc_script_dump.py
+  ▶ python3 tools/npc_script_check.py | grep "^param"
+$38 is now clean. Checking `$45` and `$7E`, which are both placed in areas:
+  ▶ python3 tools/npc_script_check.py linear 7E; python3 tools/npc_script_check.py linear 45 | head -40; grep -n "^param \$4
+  ▶ python3 tools/npc_script_check.py linear 7E 45
+  ▶ python3 tools/decode_tables.py 14:92FB 72 u8 && python3 tools/npc_script_dump.py 45
+  ▶ Edit npc_script_dump.py
+  ▶ Edit npc_script_dump.py
+  ▶ python3 tools/npc_script_check.py | grep "^param"; python3 tools/npc_script_check.py 7E
+  ▶ python3 tools/npc_script_dump.py 126 && python3 tools/decode_tables.py 14:9836 40 u8
+  ▶ python3 tools/dis.py 14 8000 0x78
+  ▶ python3 tools/dis.py 14 8078 0x25 && python3 tools/dis.py 14 8112 0x56
+  ▶ sed -n 1,30p tools/flag_sites.py | grep -n "usage\|json\|txt\|argv" ; python3 tools/npc_script_dump.py --out gfx/npc_scr
+  ▶ git diff --stat gfx/ ; head -3 gfx/flag_sites.txt; python3 tools/flag_sites.py --out gfx/flag_sites.txt; head -2 gfx/fla
+  ▶ Grep "^Story|^F100|npc (38|DD|45) .*F100|^F100 \(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/flag_sites.txt
+`$38` and `$45` no longer show up as F100 setters. The remaining `$DD` lines come from unplaced params with junk pointers. Next I'll make `flag_sites.py` move those to a separate list.
+  ▶ Grep "npc|unplaced|def " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/flag_sites.py
+  ▶ Read flag_sites.py +1
+  ▶ Edit flag_sites.py
+  ▶ Edit flag_sites.py
+  ▶ Edit flag_sites.py
+  ▶ Edit flag_sites.py
+  ▶ python3 tools/flag_sites.py --out gfx/flag_sites.txt > /dev/null; head -1 gfx/flag_sites.txt; grep -n -A6 "^F100 \|^unpl
+  ▶ Edit flag_sites.py
+  ▶ python3 tools/flag_sites.py --out gfx/flag_sites.txt > /dev/null; head -1 gfx/flag_sites.txt; grep "^unplaced-only" gfx/
+Now 232 real flags, with 193 that only come from unplaced triggers or junk scripts. Writing up the script-decode findings:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "496 flags|F091 and F09F" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -o ".\{200\}496 flags.\{200\}" REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 30 D8F7 6 && python3 tools/dis.py 19 B9B0 3 && git status --short | head
+Session 19 is done. I finished the session-18 add-ons from "text follow-ups 8". I moved the bigger leftovers (c), (f) and (h) into a new "text follow-ups 9" task. Nothing is committed.
+
+**What the new routines and variables do:**
+- **`$0715`** holds the selected item's id minus `$1C` (0 = nothing selected). `SelectedUseItem` `30:DB0E` sets it from the consumable or key-item selection. So `$0563` is the real item id. The checks in the item-use menu are Warp Boots (`$08`), Opel Statue (`$0A`), Kirisa Plant (`$20`) and the three flutes (`$0B/$0C/$15`).
+- **Opel Statue revive:** substate 3 is `PlayerDeath` `19:B900`. If the Opel Statue is selected, `OpelRevive` `19:B9B0` plays SFX `$68`, refills HP 4 per frame up to max, and sets `sub_state` to 6.
+- **`30:D9D8` is `SwordPowerLevel`.** It returns 0, 1 or 2 and stores it in `$0719`. The value is 1 for a ball and 2 for a bracelet, but only if its element matches the equipped sword (`$0711`). It caps the sword charge (`26:9D7E` = `08 10 18`) and picks which HUD charge meter to draw.
+- **`30:C17D` is `OamClipTop`.** It hides sprites that sit under the top window during text and cutscenes.
+
+**Why F100 looked set by NPC scripts `$38`/`$DD`:** it was a bug in the decoder, not the game. I checked the VM disassembly at `14:8000`, and it stops reading a chain at the first true condition. The dumper followed every `next` byte instead. That decoded junk in two places:
+- `$38`'s last entry can never be true, so its `next=FF` is never used. The dumper followed it into bytes past the end of the script.
+- `$45`'s chain ends at an `F030`/`!F030` pair with no end bit. The bytes after it belong to the next script.
+
+I fixed both cases in `tools/npc_script_dump.py`. A new `tools/npc_script_check.py` finds overlapping or misaligned entries. `tools/flag_sites.py` now moves flags from junk scripts to the "unplaced-only" list. Junk scripts are params whose pointer is the VM code itself, or that no area places and that decode misaligned.
+
+I regenerated `gfx/npc_scripts.*` and `gfx/flag_sites.txt`. 232 flags now have a real site (it was 496); 193 come only from unplaced triggers or junk scripts. F100 is now set only by the Rabbit Boots pickup, and its only test is the presence check for boss param `$C0`.
+
+**Not yet confirmed in an emulator:** param `$7E` (Kensu) really does have overlapping bytes. In area `$EF`, talking to Kensu applies a set-list made of the bytes of two later entries, which clears F00A among other things. That is how the ROM decodes, but it is static analysis only and is listed in the new task for an emulator check.
+
+I added 12 labels to `labels.csv`, and the new notes are in REVERSE.md under "Decode fixes + junk scripts" and "GiveItem / item-use dispatch".
+
+SESSION_SUMMARY: Session 19 — text follow-ups 8 (session-18 add-ons): $0715 = selected use-item id−$1C (SelectedUseItem 30:DB0E); substate 3 = PlayerDeath 19:B900 with Opel Statue auto-revive 19:B9B0; 30:D9D8 SwordPowerLevel → $0719 (caps charge via 26:9D7E, picks the HUD charge meter); 30:C17D OamClipTop; the F100 "NPC sets" were decoder junk (sentinel next / exhaustive chains) — fixed npc_script_dump.py, new npc_script_check.py, flag_sites.py drops junk scripts (232 real flags, was 496); $7E has a real overlapping set-list (needs emulator check); 12 labels; (c)/(f)/(h) → text follow-ups 9.

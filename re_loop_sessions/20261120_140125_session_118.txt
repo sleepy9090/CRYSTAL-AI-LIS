@@ -1,0 +1,62 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## |^### |- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +2267
+  ▶ Glob re_loop_sessions/*session_11[4-7]*
+  ▶ Read dead_ends.md
+  ▶ for f in re_loop_sessions/20261120_140125_session_11{5,6,7}.txt; do echo "== $f"; tail -c 2500 $f; done
+  ▶ Read 20261120_140125_session_117.txt
+  ▶ Grep "C765|MarkScreenVisited|markScreenVisited" 
+Picking the gameplay task's "visited marking `30:C765`" leftover; checking where `MarkScreenVisited` is called in the ROM vs the port.
+  ▶ python3 tools/xref.py C75C; python3 tools/xref.py C765; python3 tools/dis.py 30 C75C 48
+  ▶ Grep "ST[AXY] visited_map|visited_map,[XY]" disasm
+  ▶ Read REVERSE.md +543
+  ▶ Read ai_effect.js +140
+The visited marking (`30:C765` is inside `MarkScreenVisited` `30:C75C`) was already ported in s114. Checking the other `visited_map` writers in bank 27 to see whether any are unported.
+  ▶ python3 tools/dis.py 27 A430 0x40; python3 tools/dis.py 27 A4A8 0x20; python3 tools/dis.py 27 BA88 0x14
+  ▶ Grep "0x62F[0-9A-B]" web/src
+  ▶ grep -n "^27,A[34]" labels.csv; grep -n "A41A\|A3F\|A40" docs/architecture_web.md REVERSE.md | head -20
+  ▶ python3 tools/decode_tables.py 27:A314 128 ptr16 2>&1 | grep -n "A4[0-9A-F][0-9A-F]\|A41" 
+AI `$5F` (`27:A41A`) and `$60` (`27:A477`) write `visited_map`. Checking whether the port has them.
+  ▶ grep -n "0x5[fF]\b\|0x5F:\|0x60:\|0x33:\|A41A\|A477\|A4C6" web/src/game/obj/*.js | head; grep -n "A41A\|A477\|A4C6\|AI \
+  ▶ Grep "A41A|A477|A4C6|0x5F:|0x60:|0x33:" web/src/game/obj
+  ▶ Grep "27:A41A|27:A477|27:A4C6|AI `\$5F`|AI `\$60`" REVERSE.md
+  ▶ python3 tools/dis.py 27 A41A 0xAC
+AI `$5F` (`27:A41A`) is a floor-reveal AI that isn't ported or documented. Checking which object types and areas use it.
+  ▶ Grep "\$5F|AI 5F|ai=5F|5F\b" gfx/obj_ai.txt
+  ▶ python3 tools/area_dump.py --help 2>&1 | head -20
+  ▶ Read area_dump.py +235
+  ▶ python3 tools/area_dump.py spawns 0x5A 0x5B 0x5C 0x5D 0x5E 2>&1 | grep -v "skip"
+Type `$DA` (AI `$5F`) sits in areas `$5A`/`$5B`/`$5C`. Checking whether any other area places it.
+  ▶ python3 tools/area_dump.py spawns 2>&1 | grep -B0 -E "^ *[0-9]+ \\$|p=\\$DA" | grep -B1 "p=\$DA"
+  ▶ python3 tools/area_dump.py spawns > /tmp/s118_spawns.txt 2>&1; grep -c 'p=.DA ' /tmp/s118_spawns.txt
+  ▶ python3 tools/area_dump.py spawns > /tmp/s118_spawns.txt
+  ▶ Grep "^ *\d+ \$|p=\$DA" /tmp/s118_spawns.txt
+  ▶ python3 tools/area_dump.py spawns > gfx/s118_spawns.txt
+  ▶ Grep "p=\$DA" gfx/s118_spawns.txt
+  ▶ python3 tools/area_dump.py spawns | grep -E "^ *[0-9]+ |p=.DA " | grep -B1 "p=.DA "
+Type `$DA` appears only in areas `$59`-`$5C` (one per area, a tower stack). Recording the findings, then porting. First, I'll check how the port does `WaitFrame`/`FullScreenDraw` inside AIs.
+  ▶ Grep "fullScreenDraw|waitFrame" web/src/game
+  ▶ Read bgstream.js +236
+  ▶ Read ai_effect.js
+  ▶ Grep "fullScreenDraw\(" web/src/game
+  ▶ Grep "FSD_LAG" web/src/game
+Writing the AI `$5F` findings to REVERSE.md now. First I'll find the s117 note to place the new one after it.
+  ▶ Grep "s117|session 117" REVERSE.md
+  ▶ Read REVERSE.md +2504
+  ▶ Edit REVERSE.md
+Correction: at the `PlaySound` call Y is `$1F` (the scan loop's exit value), not id·2.
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^27,A4\|^27,A41\|inventory\|^\*,6430" labels.csv | head; grep -n "AI_EFFECT\|ai_effect" web/src/game/obj/object
+Moving `FSD_LAG` into `bgstream.js` (avoids an import cycle), then adding the AI.
+  ▶ Edit bgstream.js
+  ▶ Edit areaenter.js
+  ▶ Edit areaenter.js
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+Checking how `objUpdateAll` detects generator AIs.
+  ▶ Grep "GeneratorFunction|isGen|yield\*|aiMpDrain" web/src/game/obj/objects.js
+Now a check. Looking at how `routine_capture.py` handles generator AIs that wait for frames (AI `$08`, AI `$70`).
+  ▶ Grep "AiScreenRedraw08|Ai70PhaseDispatch|PLATFORM_AIS|_fix_platform|ppu=|frames=" tools/emu/routine_capture.py
+  ▶ Read routine_capture.py +200
+  ▶ Read routine_capture.py +690
+You've hit your 5-hour limit · resets 7pm (America/New_York)

@@ -1,0 +1,73 @@
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob re_loop_sessions/*session_16[6-9]*
+  ▶ sed -n '2533p' REVERSE.md | cut -c1-3000; echo ----; sed -n '2534p' REVERSE.md | cut -c1-1500
+  ▶ sed -n '2533p' REVERSE.md | cut -c3000-6000; tail -40 re_loop_sessions/20261122_104601_session_169.txt
+  ▶ wc -l dead_ends.md && grep -n "^##\|^###" dead_ends.md | tail -30; grep -c "" re_loop_sessions/20261122_104601_session_1
+Reading context done; I'm continuing the low-priority boss-AI task (8 AI ids left). Checking which ids are missing and their addresses.
+  ▶ python3 tools/ai_missing.py; wc -l web/src/game/obj/*.js
+  ▶ python3 tools/dis.py 27 A24A 0x60 --stop; echo ====; python3 tools/dis.py 27 A519 0x60 --stop; echo ====; python3 tools/
+  ▶ python3 tools/dis.py 27 A519 0x50; echo ====; python3 tools/dis.py 27 B318 0x86
+  ▶ grep -rn "972D\|97D7\|ram_07D5\|0x7d5\|0x7D5\|boss_cam_lock\|0x7d7\|0x7D7" web/src/game | head -20; grep -n "^export" we
+Now look at ai_shot.js around line 140-160 for the structure, and the AI table registration.
+  ▶ Read ai_shot.js +1
+  ▶ grep -rn "aiShotEmitter\|AiShotEmitter\|fuzz_effect2\|AiDeathPuff\|DeathPuff" web/src web/test/*.mjs tools/emu/routine_c
+  ▶ sed -n 220,250p tools/emu/routine_capture.py; sed -n 500,530p tools/emu/routine_capture.py; sed -n 580,610p tools/emu/ro
+  ▶ python3 tools/dis.py 27 B39E 0x70; echo ====; python3 tools/dis.py 27 AE31 0x80
+  ▶ sed -n 1,22p web/src/game/obj/util.js; grep -rn "B769\|aiOffscreenHalf\|AiOffscreenHalf" web/src/game | head; python3 to
+  ▶ Read ai_field.js
+Porting AIs `$34`, `$39`, `$40` into `obj/ai_field.js` now.
+  ▶ grep -n "^export const\|^  0x" web/src/game/obj/ai_field.js | tail -12; sed -n 129,135p web/src/game/obj/util.js; sed -n
+  ▶ sed -n 380,395p web/src/game/obj/ai_field.js
+  ▶ Edit ai_field.js
+  ▶ sed -i 's|phase 0: phase = \$CF, heading = DirToTarget(player)\*2|phase 0: phase = $CF, heading = DirToTarget(Y = 1)*2|'
+  ▶ Edit ai_field.js
+  ▶ Grep "AiCoin|AiDasher|import \* as" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/obj_check.mjs
+  ▶ Grep "def _fix_field|_fix_field\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/routine_capture.py
+  ▶ sed -n 439,450p tools/emu/routine_capture.py; sed -n 530,560p tools/emu/routine_capture.py
+Wiring the three new AIs into the capture tool and `obj_check.mjs`, then capturing fuzz cases.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine AiPeriodic
+All 900 match. Checking branch coverage and that the AIs are now in the dispatch table.
+  ▶ python3 tools/ai_missing.py | tail -6; python3 tools/case_paths.py --help 2>&1 | head -8
+  ▶ python3 tools/case_paths.py web/test/obj_frames/fuzz_field2.json AiArenaLock 07D7 05A0 col:04A0 col:0600; python3 tools/
+Coverage is fine (every branch hit). Now the docs: labels, README, REVERSE.md.
+  ▶ grep -n "^27,B318\|^27,A519\|^27,B39E\|^27,B336" labels.csv; grep -n "s169: AI \`\$06\`\|Session 169\|\*\*s169" REVERSE.
+  ▶ Grep "^27,(B318|A519|B39E|B336)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "s169" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read labels.csv +510
+  ▶ Read labels.csv +1236
+  ▶ Read REVERSE.md +1361
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Now the task text and the test README.
+  ▶ Edit REVERSE.md
+  ▶ Edit README.md
+  ▶ Edit ai_field.js
+Running the regression checks.
+  ▶ for t in core_check finalboss_check bosse2_check bossa6_check world_check; do echo "== $t"; node web/test/$t.mjs 2>&1 | 
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/finalboss_check.mjs 2>&1 | tail -1; node web/test/bosse2_chec
+I ported 3 more of the missing enemy AIs into the web port: `$34`, `$39` and `$40`. All 900 new test cases match the emulator exactly, and the existing checks still pass. The low-priority boss-AI task stays open as the rules require, with 5 ids left: `$07 $0B $12 $13 $32`.
+
+**What the new AIs do** (all in `web/src/game/obj/ai_field.js`)
+- **`$34` `AiPeriodicShot` (`27:B318`, type `$8F`):** every 8th frame, while it is on screen, it fires its shot. It fires in direction 6 when its x position is `$80` or more, otherwise direction 2.
+- **`$39` `AiArenaLock` (`27:A519`, type `$29`):** it locks the camera when it comes on screen. If the object in the slot before it is gone, it removes itself and releases the lock.
+  - Until the camera has finished centring, it also writes 5 to the player's `obj_freeze`. The store has no slot index, so it always hits slot 0.
+- **`$40` `AiWander16` (`27:B39E`, types `$55 $7C`):** it repeats a cycle of about 167 frames:
+  - It picks a direction from `DirToTarget` with Y = 1, plus a small random offset. That aims at slot 1, not at the player.
+  - It moves that way for 40 frames (`obj_flags2` `$0E`).
+  - It then wanders for 127 frames using a fixed direction table (`obj_flags2` `$0C`).
+
+**Checks**
+- New test file `web/test/obj_frames/fuzz_field2.json`: 300 cases per AI. `obj_check.mjs` passes 25,600/25,600 overall.
+- Every branch was exercised. The weakest is `$39`'s switch from phase 0 to phase 1, hit in only 5 cases.
+- `core_check`, `finalboss_check`, `bosse2_check`, `bossa6_check` and `world_check` still pass. `ai_missing.py` now reports 96/101 ported.
+
+**Docs:** I added a findings paragraph under "Boss shot / part AIs" in REVERSE.md and updated the task's remaining-id list. In `labels.csv` I added `AiPeriodicShot` `27:B318` and `Wander16Aimed` `27:B422`, and updated `AiWander16` and `AiArenaLock`. The capture setup and steering went into `tools/emu/routine_capture.py`, and the regenerate command into `web/test/obj_frames/README.md`. Nothing is committed.
+
+SESSION_SUMMARY: Session 170 ported AI $34 AiPeriodicShot, $39 AiArenaLock and $40 AiWander16 into obj/ai_field.js; fuzz_field2.json 900/900 match the emulator, 5 ObjAiTable ids remain ($07 $0B $12 $13 $32), and the low-priority boss-AI task stays open with that list.

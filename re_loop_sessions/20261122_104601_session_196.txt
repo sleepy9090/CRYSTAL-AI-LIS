@@ -1,0 +1,31 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls re_loop_sessions | tail -4; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for f in re_loop_sessions/*_19[345].txt; do echo "== $f"; tail -c 3
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 3000 re_loop_sessions/20261122_104601_session_193.txt; echo
+  ▶ Grep "07E6|3C \$3D|gap \(j\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "world_check" REVERSE.md | cut -c1-400; ls web/test/world_f
+Picking gap (j) of the top task (world_check fails on areas `$3C $3D $BC`); running the check now.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/world_check.mjs 2>&1 | tail -15; grep -n "07E6\|07e6\
+  ▶ Read world_check.mjs +40
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/world_check.mjs 2>&1 | grep FAIL | head -20; grep -n 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 E222 40; sed -n 55,90p web/src/game/world/s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls web/data | head -30; grep -n "handler\|spawns" web/src/game/worl
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,45p web/src/game/world/spawn.js; grep -o '"3c": *{[^}]*}[^
+The port matches the ROM's `SpawnH4_Item` palette override; the check's expectation is stale. Inspecting the area record format to fix the check.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node -e 'const a=JSON.parse(require("fs").readFileSync("web/data/ar
+  ▶ Grep ""3C": \{"record": \{.{0,300}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/data/areas.json
+  ▶ Grep ""record": \{[^}]{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/data/areas.json
+  ▶ Grep ""e6".{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/data/areas.json
+  ▶ Edit world_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/world_check.mjs 2>&1 | tail -5; echo exit=$?
+  ▶ python3 tools/run_checks.py world_check
+world_check now passes. Updating REVERSE.md to close gap (j).
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/run_checks.py 2>&1 | tail -4
+I fixed gap (j) of the gameplay-leftovers task. It was a bug in the check, not in the port. `world_check.mjs` now passes all 213 areas plus the 2 emulator frames, and the full suite passes 49 of 49 checks.
+
+- **Cause:** the failures had grown from 3 areas to 29 by now. Every failing area places a flag item. When the ROM spawns a flag item (`SpawnH4_Item`, `31:E239`), it overwrites the sprite palettes `$07E6/$07E7` from the area record with (area & 7) + 9. The port's `spawnH4` in `web/src/game/world/spawn.js` already does this; the check was still expecting the record's raw values.
+- **Fix:** in `web/test/world_check.mjs`, areas whose record has a handler-4 spawn with a param of `$4x` now expect the overridden value. No code in the port changed.
+- **Docs:** REVERSE.md strikes (j) in the task text and records the cause. The task itself stays open because it is the low-priority leftovers task; items (a)-(i) remain. Nothing is committed.
+
+SESSION_SUMMARY: Session 196 fixed gap (j) of the Ph7 gameplay leftovers task: world_check.mjs wanted the raw record palette bytes for the 29 areas with a flag-item spawn, but SpawnH4_Item 31:E239 overrides them with ($6C&7)+9, as the port already does; the check now expects that, 213/213 areas pass and all 49 checks pass.

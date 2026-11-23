@@ -1,0 +1,175 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks\|^### \|- \[ \]" REVERSE.md | h
+  ▶ cat dead_ends.md | cut -c1-300; for f in re_loop_sessions/*_session_14[345].txt; do echo "== $f"; tail -c 2500 $f; done
+  ▶ Read dead_ends.md
+  ▶ tail -c 3000 re_loop_sessions/20261121_221108_session_144.txt; tail -c 1500 re_loop_sessions/20261121_171522_session_143
+  ▶ wc -c re_loop_sessions/20261121_221108_session_145.txt && tail -c 1500 re_loop_sessions/20261121_221108_session_145.txt;
+  ▶ Grep "DD6B|SubstTelepathy|DE04" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+I'm on task 21 (`SubstTelepathySelect` `30:DD6B`) and reading what REVERSE.md already has on it.
+  ▶ Read REVERSE.md +785
+  ▶ python3 tools/dis.py 30 DD6B 0x160
+  ▶ wc -l web/src/game/states/*.js && grep -n "teleport\|SUBSTATES\|^import" web/src/game/states/play.js | head -40
+  ▶ Read teleport.js
+  ▶ Read play.js +195
+  ▶ grep -rn "DF8F\|DFCE\|DFFD\|C1AE\|ObjSlot1FDraw\|OamClipTail\|C188\|PpuQueueAttrAll\|C739\|816F\|telepathy" web/src --in
+  ▶ python3 tools/dis.py 30 DF8F 0x90; python3 tools/decode_tables.py E0A8 16 u8 2>&1 | head; python3 tools/dis.py 31 E0A8 0
+  ▶ python3 tools/dis.py 30 DFFD 0x30; python3 tools/dis.py 31 E000 0x20; python3 tools/decode_tables.py E088 32 u8; python3
+Mapped the telepathy routines (select `30:DD6B`, reply `30:DE04` and their helpers); now checking which helpers the port already has.
+  ▶ grep -rn "C874\|DF8F\|export function\*\? \?\(waitPpuQueue\|textWindowOpen\|textPrintBox\|oamClipTop\|oamClipTail\|objSl
+  ▶ python3 tools/dis.py 14 816F 0xA4; grep -n "^export\|^function" web/src/game/states/talk.js web/src/game/states/pause.js
+  ▶ Read talk.js +20
+  ▶ Read talk.js +286
+  ▶ python3 tools/dis.py 14 8222 0xD; python3 tools/dis.py 26 8C0E 0x8; python3 tools/dis.py 30 DB4F 0x12; sed -n 40,60p web
+  ▶ grep -rn "ppuQueueBlock(m, 0x2B\|0x6150\|hideOam0\|oamClip(m, 0xF0\|export function queueAttrAll\|export function\* stat
+  ▶ Read player.js +80
+  ▶ Read teleport_check.mjs
+Writing the port module now; first a quick look at `PadNewButtonIndex`'s Y on no-press (it feeds `PlaySound`'s saved Y) and whether sub_state 22 is ever stored directly.
+  ▶ python3 tools/dis.py 30 C210 0x12; python3 tools/search_bytes.py "a9 16 85 41"; python3 tools/search_bytes.py "a9 15 85 
+  ▶ python3 tools/dis.py 31 FEE0 0x40 --stop; python3 tools/dis.py 30 C676 0x10 --stop; grep -n "export function readPadsMen
+  ▶ Write telepathy.js
+  ▶ sed -i "s/^import { textWindowOpen, textPrintBox, oamClipTop } from '.\/talk.js';/import { textWindowOpen, textPrintBox,
+I'll use Edit instead.
+  ▶ Edit telepathy.js
+  ▶ Edit teleport.js
+  ▶ Read pause.js +1
+  ▶ Edit pause.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+Port written and wired in as entry 21. Next I'm exporting a tools.emu state at the telepathy entry to compare against.
+  ▶ timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/town02_enter.state --frames 10 --poke 64DE=E0 6
+  ▶ timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/town02_enter.state --frames 10 --poke 64DE=E0 -
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/telepathy_magic.state --web web/test/states/tele
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/telepathy_magic.state --web web/test/states/tele
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/telepathy_magic.state --web web/test/states/tele
+No unported paths logged. Now looking at where the frames first diverge (palette at f2555, OAM from f2557).
+  ▶ python3 tools/compare_frames.py /tmp/telep/emu.csv /tmp/telep/web.csv --cols core --frames 2545-2560 ; python3 tools/com
+  ▶ python3 tools/dis.py 30 C1AE 0x5A --stop; grep -n "o1F\|_ai\b\|'ai'\|ai:" web/test/harness.mjs | head
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/telepathy_magic.state --web web/test/states/tele
+  ▶ Glob /tmp/telep2/*2560*
+  ▶ Read pair_2560.png
+  ▶ Read pair_2640.png
+The reply text matches tools.emu. One bug: `30:DFFD` doesn't end at `$E001`. It runs on into the fixed bank at `$E002` and builds a whole sprite record at `$6000`. Disassembling the rest:
+  ▶ python3 tools/dis.py 31 E01E 0x20 --stop; grep -n "^31,E00\|^30,DFFD\|^31,E01" labels.csv; python3 tools/xref.py E002 | 
+  ▶ python3 tools/dis.py 31 E026 0x30 --stop; python3 tools/xref.py DFFD
+`30:DFFD` builds the player's figure record (x `$84`, y `$A0`, meta `$CD`, or the `$CC` casting pose while `$1F` ≠ 0). Fixing the port:
+  ▶ Edit telepathy.js
+  ▶ Edit telepathy.js
+Also fixing the module header comment, then re-running the compare.
+  ▶ Edit telepathy.js
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/telepathy_magic.state --web web/test/states/tele
+  ▶ python3 tools/compare_frames.py /tmp/telep/emu.csv /tmp/telep/web.csv --cols oam_crc,pal_crc --frames 2550-2640 2>&1 | h
+The OAM differs only every 8th frame (the cursor blink), so the port is one frame behind after the window opens. Checking the palette sequence around f2555 to find the extra frame:
+  ▶ python3 tools/csv_trim.py --help 2>&1 | head -15
+  ▶ cd /tmp/telep && python3 /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/csv_trim.py emu.csv e.csv --cols pal_crc
+  ▶ python3 tools/csv_trim.py /tmp/telep/emu.csv /tmp/telep/e.csv --cols pal_crc,oam_crc,sub --frames 2545-2566
+  ▶ python3 tools/csv_trim.py /tmp/telep/web.csv /tmp/telep/w.csv --cols pal_crc,oam_crc,sub --frames 2545-2566
+  ▶ paste -d'|' /tmp/telep/e.csv /tmp/telep/w.csv
+  ▶ Read e.csv
+  ▶ Read w.csv
+The port reaches the `30:C874` palette blackout one frame late (f2556 vs f2555). Checking whether the message print itself is already a frame behind:
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/telepathy_magic.state --web web/test/states/tele
+  ▶ python3 -m tools.emu.pass_probe --help 2>&1 | head -20
+  ▶ timeout 600 python3 -m tools.emu.pass_probe --state tools/emu/states/telepathy_magic.state --frames 14 --pc 20:8528 30:C
+  ▶ Read death.js +15
+  ▶ Grep "SPIN|NO_NMI|VBLANK|'spin'" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/machine.js
+  ▶ Read machine.js +120
+  ▶ Grep "SPIN|afterNmi|postNmi|vblank" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ python3 tools/compare_frames.py /tmp/telep/emu.csv /tmp/telep/web.csv --frames 2555-2721 --shift 1 2>&1 | tail -12; pyth
+  ▶ python3 tools/compare_frames.py /tmp/telep/emu.csv /tmp/telep/web.csv --frames 2555-2721 --shift 1 --cols oam_crc,pal_cr
+With the shift, the select phase matches except a few OAM frames, but the reply phase's blink is now 2 frames off. Probing the reply's frame timing in tools.emu:
+  ▶ timeout 600 python3 -m tools.emu.pass_probe --state tools/emu/states/telepathy_magic.state --frames 105 --keys 2600:RIGH
+  ▶ python3 tools/compare_frames.py /tmp/telep/emu.csv /tmp/telep/web.csv --frames 2712-2730 --shift 1 --cols core,pal,snd 2
+  ▶ python3 tools/csv_trim.py /tmp/telep/emu.csv web/test/_e.csv --cols sub,o00_x,o00_y,pal_crc --frames 2716-2730 && python
+  ▶ Read _e.csv
+  ▶ Read _w.csv
+  ▶ Grep "sub_state, 7\)|SUB_STATE, 7\)|0x41, 7\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read collide.js +340
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/telepathy_magic.state --web web/test/states/tele
+At f2722 the RAM differs only in timing bytes: tools.emu has already restored `irq_mode` and run one play pass. So the port's exit is one frame slow. Looking at the port's `statRecalc`:
+  ▶ Read death.js +108
+  ▶ timeout 600 python3 -m tools.emu.pass_probe --state tools/emu/states/telepathy_magic.state --frames 180 --keys 2600:RIGH
+  ▶ python3 tools/dis.py 26 94A2 0x14 --stop
+  ▶ Write _dbg_telepathy.mjs
+  ▶ node web/test/_dbg_telepathy.mjs 2726
+  ▶ Grep "wr\(0x08,|wr\(0x0008|R\.frame_ctr|frame_count" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read play.js +228
+  ▶ Edit play.js
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/telepathy_magic.state --web web/test/states/tele
+Still entering GiveItem, and `$08` now matches pass for pass. Re-running the debug trace:
+  ▶ node web/test/_dbg_telepathy.mjs 2727 && timeout 600 python3 -m tools.emu.pass_probe --state tools/emu/states/telepathy_
+tools.emu calls `TalkProbeItemUse` on every pass as well, so it must also go to 7 and come straight back. Probing GiveItem in tools.emu:
+  ▶ timeout 600 python3 -m tools.emu.pass_probe --state tools/emu/states/telepathy_magic.state --frames 182 --keys 2600:RIGH
+  ▶ for r in "2546-2554 0" "2555-2629 1" "2630-2719 0" "2630-2719 1" "2720-2721 0" "2723-2843 1"; do set -- $r; python3 tool
+  ▶ Write phase_compare.py
+  ▶ python3 tools/phase_compare.py /tmp/telep/emu.csv /tmp/telep/web.csv --cols core,snd,pal,obj 2546-2554:0 2555-2629:1 263
+  ▶ python3 tools/phase_compare.py /tmp/telep/emu.csv /tmp/telep/web.csv --cols snd,pal,obj 2723-2843:0 2723-2843:1 2723-284
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/telepathy_magic.state --web web/test/states/tele
+The end state lands on mixed pass timing, so I'm diffing at f2700 (inside the reply) instead:
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/telepathy_magic.state --web web/test/states/tele
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/telepathy_magic.state --web web/test/states/tele
+Everything that differs here is scratch from tools.emu sampling mid-`ObjSlot1FDraw`. The message id, MP and RNG match. One more diff at f2620 (select phase) to check the bank registers:
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/telepathy_magic.state --web web/test/states/tele
+Select phase matches apart from the 1-frame shift. Exporting a second state with level 16 (`0421=10`) for the hint path:
+  ▶ timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/town02_enter.state --frames 10 --poke 64DE=E0 -
+  ▶ timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/town02_enter.state --frames 10 --poke 64DE=E0 -
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/telepathy_hint.state --web web/test/states/telep
+  ▶ python3 tools/csv_trim.py /tmp/telep/emu.csv web/test/telepathy_ref.csv --cols core,pal,obj --frames 2546-2843 && rm web
+  ▶ python3 tools/csv_trim.py /tmp/telep/emu.csv web/test/telepathy_ref.csv --cols core,pal,obj --frames 2546-2843
+  ▶ Write telepathy_check.mjs
+  ▶ Edit telepathy_check.mjs
+  ▶ node web/test/telepathy_check.mjs
+297 rows match. The printed values are the ones the `--ram-diff` runs showed equal to tools.emu: Zebu 19.19 and Kensu 19.4 (both row 3, the blessing), and hint 29.21. Filling them in:
+  ▶ Edit telepathy_check.mjs
+  ▶ node web/test/telepathy_check.mjs; for t in core_check ppu_check wake_check giveitem_check itemuse_check pause13_check t
+  ▶ node web/test/telepathy_check.mjs && node web/test/core_check.mjs | tail -1 && node web/test/ppu_check.mjs | tail -1 && 
+Everything passes. Removing my temporary debug files:
+  ▶ rm web/test/_dbg_telepathy.mjs web/test/_e.csv web/test/_w.csv
+The deletion needs your approval, so I'll list those files at the end. Now the docs. First, which of the new addresses already have labels:
+  ▶ Grep "^(30|31),(DF8F|DFCE|DFFD|E002|DE51|DE72|DE7E|DDCD|DDED|C874|E088|E0A8|DEA1|DD9A|DDE1|DDE5)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "^30,DD6B|^30,DE04|^30,DB28" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +355
+  ▶ Edit labels.csv
+Now REVERSE.md: the substate table rows, the Verification Log and the task note. Reading the table rows and an existing Verification Log row for format:
+  ▶ grep -n "^| 20 \|^| 21 \|^| 22 \|Teleport menu (s143\|^| Teleport" REVERSE.md | cut -c1-400
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +172
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2306
+Now the task note (keeping the task open: 22-28 and 30 remain):
+  ▶ Edit REVERSE.md
+  ▶ Grep "teleport_check|teleport\.js" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ grep -n -o ".\{0,200\}teleport.js.\{0,250\}" docs/architecture_web.md; grep -n -o ".\{0,100\}teleport_check.\{0,100\}" d
+  ▶ Grep ".{0,120}teleport\.js.{0,300}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit CLAUDE.md
+Quick sanity check that `labels.csv` still loads:
+  ▶ python3 tools/dis.py 30 DFCE 6 && node web/test/telepathy_check.mjs | tail -1
+I've ported the telepathy spell (magic 3, sub_states 21/22) to the web port. It matches tools.emu, apart from the timing offsets below. The new `web/test/telepathy_check.mjs` passes, and so do the other checks I re-ran: core, ppu, wake, giveitem, itemuse, pause13, teleport and serve. The "remaining gameplay substates" task stays open; next is 23 `SubstChangeForm` `30:DEC1`. Nothing is committed.
+
+**What's in the port**
+- **New file `web/src/game/states/telepathy.js`:**
+  - **Select screen (`30:DD6B`):** the "With whom will you speak?" window, a black background, the player and the 4 sage faces, and a blinking cursor. LEFT/RIGHT picks a sage; B, SELECT or START cancels.
+  - **Reply (`30:DE04`):** the bank-14 `Telepathy` routine picks the message: MP too low, MP restored, refusal, blessing, or a progress hint once the player's level is high enough.
+  - **Exit:** puts everything back and returns to play.
+- **Wiring:** registered as entry 21 in `play.js`. Entry 22 is never stored in `sub_state` (the select screen jumps straight into it), so it has no entry.
+- **Small changes:** exported two existing helpers from `teleport.js` and `pause.js` so the new file can reuse them.
+
+**Two findings along the way**
+- **`30:DFFD` crosses the bank boundary.** It doesn't end where the disassembler shows an `RTS` at `31:E001`; it carries on into the fixed bank (`31:E000-E037`) and builds the player's on-screen figure. My first version missed this, and the screenshots showed it.
+- **A state saved at a handler's first instruction needs an `ENTRY_POINTS` entry.** Without one, loading it runs the dispatch twice and decrements the frame counter `$08` twice. That flipped which object pairs get collision-checked on each frame. Fixed for `30:DD6B`, and noted in CLAUDE.md.
+
+**Check results**
+- **Against tools.emu:** all 297 frames of the Zebu run match. The reply messages also match for Zebu (19.19), Kensu (19.4) and the level-16 hint (29.21), as do MP (`$60` → `$58`) and the random counter.
+- **Cancel:** B in the select keeps the MP and puts the IRQ mode back.
+
+**Known differences (the port has no CPU cycle timing)**
+- **One frame behind:** the select and reply screens run one frame behind tools.emu (f2555-2718). The ROM does some work right after the vblank interrupt, and tools.emu counts that in the same frame while the port counts it in the next. The check compares that stretch with a 1-frame offset.
+- **Not compared:** sprite slot `$1F` (tools.emu records it in the middle of the sprite draw) and the music note values (a few note changes land one frame apart).
+
+**Other files**
+- **New tool:** `tools/phase_compare.py` compares frame ranges, each with its own offset.
+- **Added:** test states `web/test/states/telepathy_{magic,hint}.json` (plus the matching tools.emu `.state` files) and the reference `web/test/telepathy_ref.csv`.
+- **Updated:** 15 labels in `labels.csv`; in REVERSE.md, substate rows 21/22, a Verification Log row and the task note; plus CLAUDE.md and `docs/architecture_web.md`.
+
+Three temporary debug files are left because deleting them needed your approval: `web/test/_dbg_telepathy.mjs`, `web/test/_e.csv` and `web/test/_w.csv`. They're safe to remove.
+
+SESSION_SUMMARY: Session 145 ported magic-3 telepathy (sub_state 21 SubstTelepathySelect 30:DD6B + reply 30:DE04 + Telepathy 14:816F) as web states/telepathy.js; found that 30:DFFD runs on across the bank seam into 31:E000 (caster record) and that a handler-entry state needs an ENTRY_POINTS entry (double DEC $08); new telepathy_check.mjs passes 297/297 rows with per-phase shifts plus reply/hint/cancel cases; the task stays open, next is 23 SubstChangeForm.

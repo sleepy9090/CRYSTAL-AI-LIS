@@ -1,0 +1,73 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*,REVERSE.md}
+  ▶ Read dead_ends.md
+  ▶ Read 20261115_131127_session_007.txt
+  ▶ Read 20261115_131127_session_008.txt
+  ▶ Grep "^## " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +200
+  ▶ python3 tools/dis.py 30 C25D 0x60 --stop; echo ---; python3 tools/xref.py 07E6; echo; python3 tools/xref.py 07E7; echo; 
+  ▶ python3 tools/dis.py 30 C264 0x50; echo ---; python3 tools/search_bytes.py "?? E? 07" --max 200 | grep -iE "(bd|b9|be|bc
+Tracing `ObjInit`'s type table now; `$07E6/$07E7` have only writers, so I'm checking for indexed reads from a nearby base.
+  ▶ for b in E0 E1 E2 E3 E4 E5; do for op in BD B9 BE BC; do python3 tools/search_bytes.py "$op $b 07" --disasm 2>/dev/null 
+  ▶ Read search_bytes.py
+I'll write a small tool for indexed reads whose base lies below a target.
+  ▶ Write near_reads.py
+  ▶ python3 tools/near_reads.py 07E7 16; echo ---; python3 tools/dis.py 30 C2B4 0x60
+  ▶ python3 tools/dis.py 30 C313 0x140 --stop | awk '{print $1,$4,$5,$6,$7,$8}' ; echo ---; python3 tools/dis.py 26 8C10 0x3
+  ▶ python3 tools/dis.py 30 C313 0x140 --stop; echo ---; python3 tools/dis.py 26 8C10 0x30
+$07E0-$07E7 looks like 8 sub-palette ids (Y = X>>2 over 32 palette bytes). Checking `26:8C6E`.
+  ▶ python3 tools/dis.py 26 8BF8 0x18; echo ---; python3 tools/dis.py 26 8C6E 0x40 --stop; echo ---; python3 tools/xref.py 2
+  ▶ python3 tools/dis.py 26 8CAF 0x30 --stop; echo ---; python3 tools/xref.py 26:8C0E; python3 tools/xref.py 07E8; python3 t
+Palette mechanism found. Writing it up before continuing.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 31 E16D 0x30; echo ---; python3 tools/xref.py 6C | grep -E "STA|STX|STY|INC|DEC"
+  ▶ python3 tools/dis.py 31 F883 0x30 --stop; for a in C960 CBD0 D5BC DAA0 DC86; do :; done; python3 tools/dis.py 30 C962 0x
+  ▶ python3 tools/dis.py 31 F883 0x30 --stop; python3 tools/dis.py 30 C962 0x10; python3 tools/dis.py 30 CBCC 0x12; python3 
+  ▶ python3 tools/dis.py 31 F8B4 0x14; python3 tools/decode_tables.py 30:CBEC 16 hex1; python3 tools/dis.py 30 DAA2 0x10; py
+  ▶ python3 tools/dis.py 31 EB09 0x80 --stop; echo ---; python3 tools/dis.py 30 DAAD 0x30
+  ▶ python3 tools/dis.py 31 EB5F 0x30 --stop; echo ---; python3 tools/dis.py 30 C7A5 0x40 --stop; echo ---; python3 tools/di
+Found the area-transition path: exit lists come from a per-area subtable in banks 10/11. Writing that up now.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 31 E140 0x2E; echo ---; python3 tools/dis.py 31 E1AE 0x12
+  ▶ python3 tools/dis.py 14 8DD0 0x40
+  ▶ python3 tools/dis.py 12 9B55 0x10; python3 tools/dis.py 12 9C6B 0x10; python3 tools/dis.py 13 A6E6 0x10; python3 tools/d
+No code reads `$18` after `AreaLoad` (every hit in banks 12/13/14 is data). Last part: decode the bank 4/5 indirect spawn records by adding a mode to `area_dump.py`.
+  ▶ Read area_dump.py
+  ▶ Edit area_dump.py
+  ▶ python3 tools/area_dump.py indirect
+Decoded all 137 handler-1 params. Now I'll write it up and add the labels.
+  ▶ Grep "^(\*,(7E[0-8]|6140|6040|6D|18),|26,8C|30,C7A5|31,EB09|13,AC00|30,CBEC|30,C25D)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "7E6|7E7|area_id" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit area_dump.py
+Quick check that the new labels load and appear in the disassembly:
+  ▶ python3 tools/dis.py 26 8C0E 0x10 && python3 tools/dis.py 31 E175 6
+One correction: `8C0E` itself sets `$11`=0, so that entry builds the palette with no fade. The A=fade entry is `8C10`, which has no direct callers. Fixing that.
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+Session 8 is done: I finished the "area follow-ups" task and marked it `[x]` in REVERSE.md. Everything below comes from static disassembly; none of it has been checked in an emulator.
+
+**What I found**
+- **`$07E6/$07E7` are palette ids for sprite sub-palettes 2 and 3** (the enemy colours). `$07E0-$07E7` holds 8 palette ids: 4 for the background, then 4 for sprites. `PaletteBuild` (`26:8C0E`, 18 callers) turns them into a 32-byte palette buffer at `$6140`.
+  - The colour data is stored as 4-byte entries in the last 16 bytes of every 256-byte page of banks 2/3.
+  - A colour byte of `$FF` copies the background colour.
+  - `$07E8` is a mask of which palettes skip the fade.
+  - The "flag item" handler's override value `($6C&7)+9` therefore picks sprite palettes `$B9-$C0`.
+- **R4/R5 = `$FF` is not a "keep" marker.** It is written to the CHR bank registers without any check, so it selects CHR bank 127.
+- **`ObjInit` (`30:C25D`):** each object type points (via a table at `13:AC00`) to a record: an optional sound id, then 4 bitmask groups. Each set bit fills the next field of the slot in the object arrays `$0300-$06E0`.
+- **What sets `$6C` (the current area):** each area has a list of exits, looked up through `AreaSubTable` (`30:C7A5`, banks 10/11). Each exit is `x-cell y-cell new-area entry-point`, ending with `FF`. `ExitLookup` (`31:EB09`) compares the player's 16-pixel cell against this list and, on a match, sets `$6C`/`$6D` and starts the area load. Other writers include new game (area 0) and a 16-entry warp/continue table at `30:CBEC`.
+- **`$18` is never read.** The flag that `AreaLoadA/B` writes appears to be a dead write; every apparent read in banks 12/13/14 turned out to be data.
+- **The indirect spawn records in banks 4/5:** 137 are used across all areas.
+  - Params `$00-$8E` create one generic object type (`$30`) whose sprite id is in the record; these are probably props or NPCs.
+  - Params `$C0-$CC` point straight to a unique object type, one per area; these are probably bosses.
+
+**Tools**
+- `tools/area_dump.py` has a new `indirect` mode that lists those spawn records. I ran it.
+- New `tools/near_reads.py` finds indexed table reads (like `LDA $07E0,Y`) that `xref.py` misses; that is how the palette code turned up. I ran it.
+
+I added 13 labels to labels.csv and renamed the two old placeholders to `pal_id_spr2/3`. I also added a follow-up task to REVERSE.md: the other per-area tables, what `$6D` means, a palette dump tool, an object-type dump, and what `$0680/$06A0` mean in type `$30` objects. Nothing needed recording in dead_ends.md.
+
+SESSION_SUMMARY: Session 8 — finished area follow-ups: `$07E0-$07E7` are palette ids (`PaletteBuild` 26:8C0E, colour data in bank 2/3 page tails), R4/R5 `$FF` = CHR bank 127, `ObjInit` decoded, `$6C` set by per-area exit lists (`AreaSubTable` 30:C7A5 / `ExitLookup` 31:EB09), `$18` never read, bank 4/5 spawn records listed with `area_dump.py indirect`; new `near_reads.py`.

@@ -1,0 +1,69 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks\|^### \|- \[ \]" REVERSE.md | h
+  ▶ Read REVERSE.md +2273
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_13[2-5].txt && tail -c 2500 re_loop_sessions/20261121_000129_session_134.txt
+  ▶ Grep "Warp Boots|warp pick|magic 4|magic-4|MagicTeleport|Teleport" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -n "SubstTeleportMenu\|did not pick\|teleport" REVERSE.md | cut -c1-600 | head -30
+  ▶ python3 tools/dis.py 30 DB28 0x150 && grep -n "teleport\|warp" tools/emu/scenario.py | head -30
+Checking the teleport menu: picking needs exactly one new button, so I'm looking at why the s85 DOWN+A scenario did not pick.
+  ▶ python3 tools/dis.py 30 DC79 0x50 && sed -n 110,145p tools/emu/scenario.py && grep -n "mp_teleport\|use_warp" docs/emu_s
+  ▶ python3 tools/dis.py 30 DD58 0x30 && sed -n 200,215p docs/emu_scenarios.txt && sed -n 255,265p docs/emu_scenarios.txt &&
+  ▶ grep -n "64DE\|64DF\|F2F5\|F2F0" REVERSE.md labels.csv | cut -c1-400; python3 tools/xref.py 64DE | head; python3 tools/x
+  ▶ Read REVERSE.md +1522
+  ▶ grep -n "silent\|\$A6-\$AC" REVERSE.md | cut -c1-600; ls gfx | grep -i "trig\|flag\|event"
+  ▶ Grep "silent|F2F[5-9A-F]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ grep -n "^def magic" -A8 tools/emu/scenario.py && grep -n "watch\b\|'watch'\|pcs=" tools/emu/scenario.py | head
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario warp_pick mp_teleport_pick 2>&1 | tail -40
+Both picks now work. Checking whether the Warp Boots get used up and whether the save runs:
+  ▶ sed -i "s/keys=\['20:B', '100:DOWN', '140:A'\], frames=500, watch=\[0x6C, 0x6D\]),/keys=['20:B', '100:DOWN', '140:A'], f
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario warp_pick 2>&1 | head -25
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario warp_pick 2>&1 | head -25
+  ▶ python3 tools/dis.py 30 D497 0x90 | head -60; python3 tools/dis.py 14 8354 0x50
+  ▶ python3 tools/dis.py 14 831E 0x36; grep -n "ItemUseHook" REVERSE.md | cut -c1-500 | head -5
+  ▶ python3 tools/dis.py 14 83E1 2 ; python3 tools/dis.py 14 9B48 2; python3 tools/dis.py 14 9C2A 2
+Tracing what happens to the Warp Boots after the warp (item-use handler for item `$24`).
+  ▶ python3 tools/dis.py 14 8564 0x20; python3 tools/decode_tables.py 14:9EDD 4 u8 2>&1 | head; python3 tools/decode_tables.
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario warp_pick 2>&1 | head -22
+The boots are now used up after the warp (`$6440` ← `$FF`, `$0715` ← 0), and the save that follows has them removed. Writing this up in REVERSE.md.
+  ▶ Read REVERSE.md +928
+  ▶ Edit REVERSE.md
+Now updating the task entry, and checking whether the web port has this menu:
+  ▶ Grep "DB28|DC70|DD58|eleport" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^30,DC70\|^30,DC64\|^14,8564\|^14,9EDD\|^14,A084" labels.csv; grep -n "^30,DB28\|^30,DD58" labels.csv
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ Read labels.csv +1
+  ▶ Grep "TalkReinitSlot14" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +1383
+Adding the three new labels, then running a quick check.
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 30 DC64 4 | head -3
+  ▶ Edit REVERSE.md
+I worked through the teleport-pick item from the Ph6 scenario leftovers task. Session 85 thought pressing DOWN then A in the teleport menu "did not pick"; the keys were fine and the test setup was the problem.
+
+**Why nothing was picked**
+- Picking a town with A (`30:DC70`) works out an index from the cursor (row × 3 + column) and only accepts it if that town's flag F2F5+index is set (checked by `TestFlagF2F0`). The 11 flags live in `$64DE` bits 5-7 and `$64DF` bits 0-7.
+- If the flag is clear, the press is ignored and the menu keeps waiting. A new game has none of these flags set, so the old `use_warp` and `mp_teleport` scenarios could never leave the menu.
+- These flags are the "silent one-shot triggers" already listed in the Flags table. They are the teleport menu's town unlocks, set when the player first reaches each town.
+
+**Emulator runs** (`python3 -m tools.emu.scenario warp_pick mp_teleport_pick`, both new, all 11 flags set)
+- **Warp Boots** (`warp_pick`): area `$03` to `$D5`. The area changes at f141, the game saves at f206, and normal play resumes at f283. At f349 the boots are used up and the game saves again in the same frame, so the saved game no longer has them.
+- **Boots are a one-use item:** the boots are item `$24`, which belongs in the one-use item slots `$6440-$6447`. Its use handler `14:8564` is a bare RTS, so after the warp the usual item-use routine removes it. The old `use_warp` had put the boots in key-item slot `$6450`. That slot is outside the item's range, so the remove step found nothing.
+- **Magic 4** (`mp_teleport_pick`): area `$03` to `$18` through the same pick code. It costs `$14` MP (`$60` to `$4C`) and uses up nothing.
+
+**Gap in the web port:** the port has neither the teleport menu nor the item-use menu path (`30:D497`). Magic 4 only sets the state number. I logged this as a port gap in the task note rather than filing a new task.
+
+**Records**
+- REVERSE.md: a note on the item-menu entry for the Warp Boots, the Flags table row, and an s135 note on the Ph6 leftovers task, with the teleport item struck through.
+- labels.csv: `TeleportMenuExit` `30:DC64`, `TeleportMenuPick` `30:DC70`, `UseWarpBoots` `14:8564`.
+- `tools/emu/scenario.py`: the two new scenarios.
+
+The leftovers task stays open (it is low priority). Still to do there: the hit rules with sword pokes, the final boss from a live fight, the ending labels, and the ~55-minute rerun of `docs/emu_scenarios.txt`.
+
+SESSION_SUMMARY: Session 135: the teleport-menu pick needs town flag F2F5+index ($64DE/$64DF, the town unlocks), which a new game lacks, so s85's DOWN+A runs never picked; new scenarios warp_pick/mp_teleport_pick warp 03→D5/18; Warp Boots ($24) are a one-use item removed after the warp (second SaveGame follows), magic 4 costs $14 MP; 3 labels added; the web port has no teleport menu (noted in the task); leftovers task stays open.

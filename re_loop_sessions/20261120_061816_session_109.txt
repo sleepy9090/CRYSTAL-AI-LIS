@@ -1,0 +1,42 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | head -50
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +2266
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '2266,2275p;2436,2454p' REVERSE.md | cut -c1-3000
+  ▶ for f in re_loop_sessions/*_session_10[678].txt; do echo "== $f"; wc -c $f; tail -c 2500 $f; done; wc -c re_loop_session
+I'm reading the last three session logs, then I'll start the top open task: the SELECT-menu shop/pawn leftovers.
+  ▶ tail -c 2000 re_loop_sessions/20261120_061816_session_106.txt; echo ====; tail -c 2000 re_loop_sessions/20261120_061816_
+  ▶ wc -l web/src/game/states/*.js && grep -n "07DD\|not ported\|logOnce\|81B4\|8613\|8631\|846C\|8347\|CC4D" web/src/game/s
+  ▶ Read equip.js
+  ▶ python3 tools/dis.py 16 81A0 0x60 && echo ---- && python3 tools/dis.py 16 8342 0x20 && echo ---- && python3 tools/dis.py
+  ▶ python3 tools/dis.py 16 815C 0x18 && echo ---- && python3 tools/dis.py 16 8613 0x50 && echo ---- && python3 tools/dis.py
+  ▶ python3 tools/dis.py 30 D9AD 0x40 && echo ---- && grep -n "D9AD\|9509\|SubstPawnShop\|07DD" labels.csv | head; grep -rn 
+Disassembled the shop branches of the menu; now checking who writes `$07DD` and what the pawn shop at `16:9509` does.
+  ▶ python3 tools/xref.py 07DD 2>&1 | head -20; grep -rln "shopWalkIn\|ShopWalkIn\|9509" web/src | head
+  ▶ python3 tools/dis.py 16 9509 0x60 && echo ---- && python3 tools/dis.py 16 96B0 0x30 && grep -n "^16,9[5-6]" labels.csv |
+  ▶ grep -rn -i "shop" web/src --include=*.js | grep -v "^.*//.*equip" | head -20; grep -n "Shop (\|### Shop\|shops (web" RE
+  ▶ grep -n "Save / load page" REVERSE.md | head -3; python3 tools/web_state.py --help 2>&1 | head -40
+  ▶ python3 -m tools.emu.web_state --help 2>&1 | head -40; ls tools/emu/states/ | grep -i "equip\|save"; ls web/test/states/
+  ▶ python3 tools/web_state_compare.py --help 2>&1 | head -50; grep -n "equip_s98\|equip.json" REVERSE.md | head -3 | cut -c
+  ▶ grep -n "poke\|until\|frames\|def \|json" tools/emu/web_state.py | head -60
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/equip_s98.state --poke 07DD=FF --until 30:D8C7 --max-frames
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/equip_s98.state --poke 07DD=FF --until 30:D8C7 --max-frames
+  ▶ sed -n '175p' REVERSE.md | cut -c600-2600
+State exported (same f2470 entry, `$07DD`=`$FF`). Now checking the menu strings used by the shop branches (`$06 $0B $0C $0D $2C $31 $33 $34`) for the notes.
+  ▶ grep -n "MenuStrings" REVERSE.md | head -5 | cut -c1-400; ls tools | grep -i "menu\|string\|text" 
+  ▶ python3 tools/menu_dump.py --help 2>&1 | head; python3 tools/menu_dump.py 2>&1 | grep -E "^ *(\\\$)?(06|0B|0C|0D|0E|2C|3
+  ▶ python3 tools/menu_dump.py 2>&1 | head -80
+  ▶ grep -rn "8E46\|FFA9" web/src --include=*.js | head; grep -n "export function\* hudRedraw" -A30 web/src/game/states/deat
+  ▶ grep -n "export function cpuRd\|export function farRestore\|export function setR6" -A10 web/src/game/prg.js | head -45; 
+  ▶ python3 tools/dis.py 26 8EC5 0x60 2>&1 | head -40; grep -n "HudElemTable" REVERSE.md | head -3 | cut -c1-500
+  ▶ python3 tools/dis.py 26 8F13 6
+Record `$0D` of `HudElemTable` = `$6474` (`shop_price_sel`, 16-bit) drawn at `$2A99`, right after the "$" of strings `$33/$34`. I have what I need; porting the shop branches into `equip.js` now.
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+You've hit your 5-hour limit · resets 9am (America/New_York)

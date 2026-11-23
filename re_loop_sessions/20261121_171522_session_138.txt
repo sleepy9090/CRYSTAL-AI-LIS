@@ -1,0 +1,138 @@
+  ▶ ls -t re_loop_sessions | head -5 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ tail -c 3000 re_loop_sessions/20261121_000129_session_137.txt; echo ----; tail -c 2000 re_loop_sessions/20261121_000129_
+  ▶ grep -n "^- \[ \]" REVERSE.md | head -5; git log --stat -3 | head -40
+The top task is porting the wake-up cut-scene (substate `$13`). Let me look at the port's substate machinery.
+  ▶ ls web/src web/src/* | head -60 && wc -l web/src/states/*.js && grep -n "SUBSTATES\|not ported\|function\*\|^export\|^im
+  ▶ wc -l web/src/game/states/*.js web/src/game/*.js && grep -n "SUBSTATES\|not ported\|function\*\|^export\|^import" web/sr
+  ▶ Read play.js
+  ▶ grep -n -i "WakeCutscene\|SubstWakeCutscene\|WakeSpr\|WakePal" REVERSE.md labels.csv | head -30
+Now disassemble the cut-scene.
+  ▶ python3 tools/dis.py 30 D9B6 16 && python3 tools/dis.py 30 D91F 0x40 && python3 tools/dis.py 20 9400 0x100
+  ▶ python3 tools/dis.py 20 9500 0x267
+The cut-scene is fully readable. Now the port's frame-wait conventions:
+  ▶ grep -n "export function\* waitFrame\|export function\* waitFrames\|frameReady\|frame_ready" -A8 web/src/game/states/dea
+  ▶ Read mainloop.js
+  ▶ grep -rn "LSR\b\|lsrWait\|frameReadyWait" web/src --include=*.js | head; grep -n "SwitchBank16\|D8BE" -i web/src/game/st
+  ▶ sed -n 40,52p web/src/game/states/talk.js; sed -n 700,732p web/src/game/states/equip.js; grep -n "^import" web/src/game/
+  ▶ Read playsound.js
+  ▶ grep -n "0x13\|CAA2\|substNewGameInit" web/src/game/states/areaenter.js | head; grep -n "export function\* statRecalc" -
+Still on the wake-up cut-scene port: the ROM routine is fully disassembled, and I'm now writing it as `states/wake.js`.
+  ▶ Read areaenter.js +85
+Writing the port module now.
+  ▶ Write wake.js
+Now wire it in: export `lsrWait` and register substate 19.
+  ▶ sed -i 's/^function\* lsrWait(m) {/export function* lsrWait(m) {/' web/src/game/states/talk.js && grep -n "lsrWait(m) {"
+  ▶ Read talk.js +43
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit talk.js
+Now the comparison run. Let me find the canonical keys.
+  ▶ Grep "2340:DOWN" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ mkdir -p /tmp/wake && (time python3 -m tools.emu --frames 3150 --keys 1250:START 1400:START 1600:START 1700:START 2300:S
+  ▶ mkdir -p /tmp/wake && python3 -m tools.emu --frames 3150 --keys 1250:START 1400:START 1600:START 1700:START 2300:START -
+  ▶ node web/test/run.mjs --frames 2936 --keys 1250:START 1400:START 1600:START 1700:START 2300:START --compare /tmp/wake/we
+The port ran to completion without errors. I'll write outputs inside the project instead of /tmp.
+  ▶ python3 -m tools.emu --frames 3150 --keys 1250:START 1400:START 1600:START 1700:START 2300:START --compare gfx/compare/w
+  ▶ node web/test/run.mjs --frames 2936 --keys 1250:START 1400:START 1600:START 1700:START 2300:START --compare gfx/compare/
+  ▶ python3 -m tools.emu --frames 3150 --keys 1250:START 1400:START 1600:START 1700:START 2300:START --compare gfx/compare/w
+  ▶ python3 tools/compare_frames.py gfx/compare/wake_emu.csv gfx/compare/wake_web.csv --cols core,obj,pal,snd --frames 2300-
+  ▶ python3 tools/compare_frames.py gfx/compare/wake_emu.csv gfx/compare/wake_web.csv --cols core,obj,pal,snd --frames 2300-
+Before the cut-scene starts there are already diffs at f2320-2346. Checking whether the canonical run has them too (i.e. they're older and not mine):
+  ▶ grep -n "f2320\|2320\b" REVERSE.md | head -5; ls gfx/compare/*.csv 2>/dev/null | head
+Known: the port reacts to the f2300 START one row earlier than tools.emu, so prior sessions ran the port with `2301:START`. Rerunning that way:
+  ▶ node web/test/run.mjs --frames 2936 --keys 1250:START 1400:START 1600:START 1700:START 2301:START --compare gfx/compare/
+Timing lines up (same change frames), but the web palette shows the previous step's colours — looks like an upload-gating issue. Checking `paletteUpload`:
+  ▶ Read palette.js
+  ▶ grep -n "pal_crc\|pal" web/test/harness.mjs | head -10; grep -rn "pal_crc" tools/emu/*.py | head -5
+  ▶ Glob tools/csv*.py
+  ▶ sed -n 1,15p tools/csv_rows.py
+  ▶ python3 tools/csv_rows.py gfx/compare/wake_emu.csv gfx/compare/wake_web.csv --cols sub,pal_crc --frames 2318-2362,2850-2
+Every palette diff is a 1-frame offset: the ROM writes right after the NMI, which tools.emu's row catches in row N and the port in N+1 (the documented s107 class). Checking with `--shift`:
+  ▶ python3 tools/compare_frames.py --help 2>&1 | grep -i shift; python3 tools/compare_frames.py gfx/compare/wake_emu.csv gf
+With the shift, core/obj/pal/snd all match across f2351-3148. OAM is the one left; OAM DMA happens in the NMI, so it should line up unshifted:
+  ▶ python3 tools/compare_frames.py gfx/compare/wake_emu.csv gfx/compare/wake_web.csv --cols oam --frames 2351-3149 2>&1 | t
+  ▶ python3 tools/compare_frames.py gfx/compare/wake_emu.csv gfx/compare/wake_web.csv --cols oam --frames 2351-3149 2>&1 | h
+The OAM diffs at f2986-3004: the emu's first rise step lasts 2 frames and the port's lasts 3. Looking closer:
+  ▶ python3 tools/csv_rows.py gfx/compare/wake_emu.csv gfx/compare/wake_web.csv --cols oam_crc,snd --frames 2982-3008,3052-3
+  ▶ sed -n 1,40p tools/emu/compare.py | grep -n "oam\|row\|point\|captured" ; grep -n "oam_crc" -B2 -A3 web/test/harness.mjs
+  ▶ grep -n "dump-screen\|screen-at\|--png\|argv\|opts\." web/test/run.mjs | head -20; python3 -m tools.emu --help 2>&1 | gr
+  ▶ python3 -m tools.emu --frames 3400 --keys 1250:START 1400:START 1600:START 1700:START 2300:START --compare gfx/compare/w
+  ▶ python3 -m tools.emu --frames 2700 --keys 1250:START 1400:START 1600:START 1700:START 2300:START --dump-screen gfx/compa
+  ▶ K="1250:START 1400:START 1600:START 1700:START 2301:START"; node web/test/run.mjs --frames 3186 --keys $K --compare gfx/
+  ▶ node web/test/run.mjs --frames 3186 --keys 1250:START 1400:START 1600:START 1700:START 2301:START --compare gfx/compare/
+The port now runs from the cut-scene into gameplay with nothing unported. While the emu runs finish, I'll add the regression check. Looking at how the existing web checks are organised:
+  ▶ ls web/test/; grep -ln "run.mjs\|states/.*json" web/test/*.mjs | head
+  ▶ sed -n 1,60p web/test/core_check.mjs; ls -la web/test/core_trace.json
+  ▶ sed -n 54,110p web/test/run.mjs; grep -n "^export" web/test/harness.mjs
+  ▶ sed -n 1,27p web/test/run.mjs | grep -n "shot"
+  ▶ sleep 1; cat /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/c94781d2-be33-463f-b4fa-055d7f6c7f6c/task
+Both emu runs are still going (~2-3 min each). I'll write the regression check while they finish.
+  ▶ sed -n 15,92p web/test/harness.mjs; grep -n "def read\|def load\|^def " tools/compare_frames.py | head
+  ▶ Read compare_frames.py +30
+  ▶ Write csv_trim.py
+Now the check script:
+  ▶ Write wake_check.mjs
+  ▶ sleep 60; cat /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/c94781d2-be33-463f-b4fa-055d7f6c7f6c/tas
+The background runs will notify when done; meanwhile I'll write the REVERSE.md notes. Reading the task line context and the s38 note to update:
+  ▶ Read REVERSE.md +2274
+Waiting on the emu runs; I'll check them now.
+  ▶ cat /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/c94781d2-be33-463f-b4fa-055d7f6c7f6c/tasks/b8i69vq
+  ▶ ToolSearch max_results query
+  ▶ Monitor command description timeout_ms
+While that runs, updating REVERSE.md's s38 new-game note with the decoded timeline.
+  ▶ Edit REVERSE.md
+Adding labels for the routines decoded this session:
+  ▶ grep -n "^20,9\(4[89A-F]\|5[0-9A-F]\|6\|7[45]\)" labels.csv; tail -2 labels.csv
+  ▶ Read labels.csv +1
+  ▶ wc -l labels.csv && tail -c 200 labels.csv | od -c | tail -3
+  ▶ Read labels.csv +1388
+  ▶ Edit labels.csv
+  ▶ python3 tools/compare_frames.py gfx/compare/wake_emu_2700.png gfx/compare/wake_web_2700.png --diff gfx/compare/wake_diff
+The f2700 cut-scene screenshot matches except 27 px on scanline 191 (the known HUD split line). Let me look at it.
+  ▶ Read wake_web_2700.png
+The cut-scene renders correctly. Waiting for the f3400 emu run.
+  ▶ until [ -s gfx/compare/wake_emu_3400.png ]; do sleep 3; done; echo ok
+  ▶ python3 tools/compare_frames.py gfx/compare/wake_emu_3400.png gfx/compare/wake_web_3400.png 2>&1 | tail -2; python3 tool
+Every failure is two columns in the same row off by different row-point amounts (pal one row late, OAM on time). I'll make the tolerance per column.
+  ▶ Edit wake_check.mjs
+  ▶ Edit wake_check.mjs
+  ▶ node web/test/wake_check.mjs
+f2351 just lacks a previous row in the reference; extending it back to f2350.
+  ▶ python3 tools/csv_trim.py gfx/compare/wake_emu.csv web/test/wake_ref.csv --cols core,snd,pal,obj,oam_crc --frames 2350-3
+Passing. Fixing the frame range in the check's header comment, then running the other web checks for regressions.
+  ▶ Edit wake_check.mjs
+  ▶ Edit wake_check.mjs
+  ▶ for t in core_check ppu_check obj_check sprite_check sound_check world_check serve_check; do echo "== $t"; node web/test
+  ▶ node web/test/core_check.mjs 2>&1 | tail -2; node web/test/obj_check.mjs 2>&1 | tail -2; node web/test/sprite_check.mjs 
+All existing checks pass. Now the records: marking the task done, plus a Verification Log row and CLAUDE.md's check list.
+  ▶ sed -n 121,126p REVERSE.md | cut -c1-300; grep -n "^| " REVERSE.md | sed -n '1,200p' | awk -F: '$1<219' | tail -2 | cut 
+  ▶ Grep "^\| (Check|What|Item)|^\| \*\*Per-frame lag" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 121,125p REVERSE.md | cut -c1-250; sed -n 205,218p REVERSE.md | cut -c1-120
+  ▶ Grep "\| 1[1-3][0-9] \|$" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 176,178p REVERSE.md | cut -c1-80; sed -n 176p REVERSE.md | tail -c 120
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+Nearly done; checking whether `docs/architecture_web.md` lists the state modules and needs `wake.js` added.
+  ▶ Grep "talk\.js|sub_state 19|\$13" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ sed -n 50p docs/architecture_web.md | grep -o ".\{200\}talk\.js.\{200\}"; sed -n 167p docs/architecture_web.md | grep -o
+  ▶ Grep ".{0,160}(talk\.js|sub_state \$13|\$13\b).{0,160}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Edit architecture_web.md
+I ported the wake-up cut-scene, so a new game with no button held after name entry now plays the scene and carries on into gameplay instead of hanging on a black screen. The new check and all the existing web checks pass.
+
+**What the cut-scene does:** it runs about 857 frames, not the ~504 the notes said. The routine sets "gameplay mode" (sub_state 8) about 505 frames in, but keeps running its second half for another ~350 frames. Normal play (`SubstPlay`) only starts at f3211.
+
+**Port:** the new file `web/src/game/states/wake.js` holds the whole routine: the sprite drawing, the palette fades and colour cycle, the sounds, and the tail that recalculates stats and returns to gameplay. It's hooked up as substate 19 in `states/play.js`. I also exported the existing `lsrWait` frame-wait helper from `talk.js` so both can use it. One piece of bank-20 code (`20:9685`/`9693`) is never called, so I left it out.
+
+**Comparison with tools.emu** (canonical keys without the DOWN hold, port using `2301:START` as earlier sessions did), f2350-3399:
+- 968 frames match exactly.
+- In each remaining frame, every column that differs equals tools.emu's value from the frame before. tools.emu records its row while the game is still mid-frame (sometimes it even shows a half-drawn sprite table at f3055). The port finishes the whole frame first, so it can't reproduce that. This is the same timing artefact already logged for the title screens.
+- Every frame after gameplay starts at f3211 matches exactly.
+- Screenshots at f2700 and f3400 differ only on scanline 191 (27 and 30 px), the known HUD split line.
+
+**New regression check:** `node web/test/wake_check.mjs` runs a new game with no held button and compares it against a trimmed tools.emu reference in `web/test/wake_ref.csv`. I wrote `tools/csv_trim.py` to make that file. The check fails if the cut-scene is skipped, never ends, or any gameplay frame after it differs.
+
+**Records:** I added the full timeline to REVERSE.md's "New game (session 38)" note, added a Verification Log row, and marked the task done. I also added 12 labels to `labels.csv` and listed the new check in CLAUDE.md and `docs/architecture_web.md`. I didn't commit anything. The scratch CSVs and PNGs from the comparison runs are in `gfx/compare/wake_*`.
+
+SESSION_SUMMARY: Session 138 ported the new-game wake-up cut-scene (substate $13, `states/wake.js`). It matches tools.emu apart from the known recording-timing frames, gameplay from f3211 matches exactly, and the new `wake_check.mjs` plus all existing web checks pass.

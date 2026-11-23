@@ -1,0 +1,144 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; gr
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/*_10[4567].txt; tail -c 5000 re_loop_session
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls web/src/game web/src/game/states; wc -l web/src/game/states/*.js
+  ▶ Read title.js
+  ▶ Read REVERSE.md +660
+Picked the top task (title modes 1-4: story, status, name entry). Now disassembling the ROM routines to port them.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 ABB4 0x8B; python3 tools/decode_tables.py 1
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 AC3F 0x523 > /tmp/s107_story.txt; wc -l /tm
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 AC3F 0x2AA
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 AEEA 0x278; python3 tools/dis.py 18 80DF 8
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 18 80E7 0x8D
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 A085 0x1A0
+Still disassembling the status/name-entry steps (19:A224 onward) before writing the port.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 A224 0x1D2
+  ▶ Read mainloop.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "SPIN" -B3 -A10 web/src/game/states/death.js | head -60; gr
+  ▶ Read ppuqueue.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 A3F6 0x25D
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 A6F9 5; python3 tools/decode_tables.py 19:A
+Now writing the port of modes 1-4 into `states/title.js`. First checking the canonical key script used by the comparisons.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "KEYS\|keys" tools/web_compare.py | head; grep -n "^| Title
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "CANON_KEYS *=" -A3 tools/compare_ref.py
+  ▶ Grep "CANON_KEYS\s*=" tools
+Writing the code now.
+  ▶ Edit title.js
+  ▶ Edit title.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^import" web/src/game/states/death.js web/src/game/pads.js
+Now the main block of new code.
+  ▶ Edit title.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "wr(" web/src/game/machine.js | head -5
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 - <<'EOF' 2>/dev/null || echo "inline python blocked; use E
+  ▶ Edit title.js
+  ▶ Edit title.js
+  ▶ Edit title.js
+  ▶ Edit title.js
+Code written. Now running tools.emu and the port over the canonical keys to f2330 to compare.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; K="1250:START 1400:START 1600:START 1700:START 2300:START"; (time p
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu --frames 2330 --keys 1250:START 1400:START 160
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --frames 2116 --keys 1250:START 1400:START 16
+Port reaches `main_state` 0 with nothing logged as unported. While the emulator runs, updating the file header.
+  ▶ Edit title.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; until [ -s gfx/compare/s107_emu.csv ] && ! pgrep -f "tools.emu --fr
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/s107_emu.csv gfx/compar
+Story step 0 is a lag frame in the ROM (port is 1 frame ahead from f1603). Finding where the NMI lands with a trace.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu --help 2>&1 | grep -i -A2 "trace\|state" | hea
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu --frames 1605 --keys 1250:START 1400:START 160
+  ▶ Write csv_stalls.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -1 gfx/compare/s107_emu.csv | cut -c1-200; python3 tools/csv_s
+`tools/dis.py` shadows the stdlib `dis` module, which breaks argparse. Switching the tool to plain `sys.argv` parsing.
+  ▶ Edit csv_stalls.py
+  ▶ Edit csv_stalls.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_stalls.py gfx/compare/s107_emu.csv gfx/compare/s1
+Only two real lag frames: story step 0 (f1604) and the status init (f1703); the later ones are the same stalls shifted by those 2 frames. Tracing the status-init one from the saved state.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu --load-state gfx/compare/s107_f1605.state --fr
+Here the NMI is lost entirely: the 2nd blit runs through vblank with NMI off and re-enables it at line 27 of the next frame, so f1702 has no NMI. Checking whether the port already models a lost NMI.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -rn -i "lost\|skipNmi\|noNmi\|nmiSkip\|LOST" web/src/game/*.js
+  ▶ Read machine.js +120
+I'll add a `NO_NMI` yield marker: the generator signals a lost NMI, `runFrame` skips `nmiWork` once, and the next `mainStep` resumes the routine even though `frame_ready` is still 0.
+  ▶ Edit death.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit machine.js
+Now applying both lag points in `title.js`.
+  ▶ Edit title.js
+  ▶ Edit title.js
+  ▶ Edit title.js
+  ▶ Edit title.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --frames 2116 --keys 1250:START 1400:START 16
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/s107_emu.csv gfx/compar
+Down to 31 differing frames. Checking what the `cam_y` column reads for the f1701 one-row diff.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "cam_y\|oam_crc\|'state'\|ttl_s3" tools/emu/compare.py | he
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n -i "ReadPadsMenu\|^\*,4016\|,ReadPads," labels.csv | head -
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu --load-state gfx/compare/s107_f1605.state --fr
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "'--" web/test/run.mjs | head -20; python3 -m tools.emu.web
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "add_argument('--dump\|add_argument('--save\|add_argument('
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu --load-state gfx/compare/s107_f1605.state --fr
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --frames 2097 --keys 1250:START 1400:START 16
+WRAM differs only in `name_entry_frames` ($6423: emu 35, web 34), so one step-5 pass is missing somewhere. Looking at the step 3→4→5 transitions.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_rows.py gfx/compare/s107_emu.csv gfx/compare/s107
+Both CSVs agree on every step transition, but WRAM shows the emu ran one more step-5 pass. I need to know where the emu's step body runs relative to its row point at the 4→5 transition.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu --load-state gfx/compare/s107_f1605.state --fr
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --frames 2097 --keys 1250:START 1400:START 16
+With START at 2301: WRAM byte-identical, OAM identical, and only 2 rows differ (both known row-timing artifacts). Checking the handoff to `main_state` 0 at the end.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --frames 2116 --keys 1250:START 1400:START 16
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_rows.py gfx/compare/s107_emu.csv gfx/compare/s107
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_compare.py --help 2>&1 | head -20
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/comparison.py report 2>&1 | tail -3; for t in core pp
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/comparison.py report 2>&1 | tail -3; node web/test/co
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/apu_check.mjs 2>&1 | tail -2; node web/test/world_che
+All checks pass (core, ppu, serve, sound 130/130, apu, world, sprite 552/552, obj 7100/7100). Now the labels: checking which of the new routine addresses are already named.
+  ▶ Grep "^(18,80DF|19,(A0A5|A1A1|A26B|A27C|A28C|A3DD|A448|A4BF|A4D0|A4E3|A53B|A56C|A0B5|AC3F|ACE9|ACF9|AD27|AD5E|ADFF|AE06|AE3D|AEEA|AF14|AFCB|AFD2|B009|B092|B0FB|9908|B7C3|B7C7|A349|A4B3))," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -3 labels.csv; grep -c "" labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat >> labels.csv <<'EOF'
+The shell append was blocked, so I'll add the labels with Edit instead. (The stopped background job was an old wait loop I no longer need.)
+  ▶ Edit labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 A4E3 2 | head -2; python3 tools/dis.py 18 8
+Labels load. Now REVERSE.md: the task line, a Verification Log row, and notes. Reading the Web Port Fixes section first.
+  ▶ Read REVERSE.md +2436
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +159
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2265
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding the new tool to the REVERSE.md tools table and a note in "Main states 2/3".
+  ▶ Grep "^\| `tools/csv_rows.py`|csv_rows.py`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now `docs/architecture_web.md`: finding where the title states and frame model are described.
+  ▶ Grep "title\.js|SPIN|not ported|modes 1-4" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Docs updated. Cleaning up my scratch files.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/compare && rm -f s107_emu.csv s107_web.csv s107_web2.csv s107_tr
+I finished the top task: the web port now runs the whole title side. That covers the story, the status screen and name entry, and it hands off to `main_state` 0. At the task's target frames, f1500 and f2250 now match the emulator exactly in `COMPARISON.md` §6 (0 px different, palette equal). All the web checks pass: core, ppu, serve, sound 130/130, apu, world, sprite 552/552, obj 7100/7100.
+
+**What changed**
+- **`web/src/game/states/title.js`:** I ported the four missing title modes from the ROM.
+  - Mode 1 resets the screen for the story.
+  - Mode 2 is the story: all 16 real steps plus the wait/fade fillers.
+  - Mode 3 draws the status screen.
+  - Mode 4 runs the status screen's 7 steps: the animations, the text typed out one character at a time, the full name entry (including the default name when you enter nothing), and the switch to `main_state` 0.
+- **Two timing fixes:**
+  - Story step 0 is a lag frame. The port now waits a frame after its second screen draw, as the ROM does.
+  - The status-screen setup loses a whole NMI: it draws long enough that NMIs are still off when vblank ends, so frame 1702 has none. I added a `yield NO_NMI` marker (`death.js`, `mainloop.js`, `machine.js`) that skips that frame's NMI and resumes the routine in the next one.
+- **New tool `tools/csv_stalls.py`:** lists the frames where the title frame counter stalls in each comparison run. That found both lag frames in one pass. It parses its arguments by hand because `tools/dis.py` hides Python's own `dis` module, which `argparse` needs.
+
+**Remaining differences**
+These are explained in REVERSE.md and are not port bugs:
+- **Emulator snapshot timing (frames 1419, 1701 and 2320):** work the ROM does right after an NMI shows up in the emulator's row for that frame, but in the port's row for the next frame.
+- **The START at frame 2300:** on the status screen the ROM reads the pads near the end of a frame, after the emulator has taken its row for that frame. So the emulator reacts one frame later than the port. FCEUX reacts at f2300, like the port. If I move the port's key to 2301, battery RAM is byte-identical at f2310 and the only rows left differing are f1419 and f1701.
+
+**Docs and labels**
+- REVERSE.md: the task is marked done, with a new Verification Log row "Title side, modes 1-4", a note under "Main states 2/3", a Web Port Fixes entry and the new tool's table row.
+- 31 new labels in `labels.csv`.
+- `docs/architecture_web.md` updated.
+
+**Left open**
+- I didn't port the continue path (`main_state` 8, `30:C9DA`). It needs the save loading and the area load, so I moved it into the next task, "Web fix: gameplay frames". The port now stops in the stub for `main_state` 0 at f2321.
+- Deleting my scratch files (`gfx/compare/s107_*`) was blocked by the permission prompt, so they're still there. `gfx/` is untracked, so they're safe to delete.
+
+SESSION_SUMMARY: Session 107: ported title modes 1-4 (story, status screen, name entry → main_state 0) in states/title.js with a story lag frame and a new NO_NMI lost-NMI marker; f1500/f2250 0 px, f214-2319 differ only in explained emulator-timing rows, battery RAM identical with the key shifted to 2301, all web checks pass; new tools/csv_stalls.py.

@@ -1,0 +1,56 @@
+  ▶ Glob {dead_ends.md,REVERSE.md,re_loop_sessions/*}
+  ▶ Read dead_ends.md
+  ▶ Grep "^## |^### |^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/20261117_1*; tail -c 1500 re_loop_sessions/2
+  ▶ Read REVERSE.md
+  ▶ Read REVERSE.md
+Reading REVERSE.md's Architecture section to synthesize `docs/architecture_exe.md` (the top unchecked task).
+  ▶ Read REVERSE.md +149
+  ▶ Grep "^\*\*[^*]+\*\*|^### " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +337
+  ▶ Read REVERSE.md +760
+  ▶ Read REVERSE.md +1201
+  ▶ Read REVERSE.md +1384
+  ▶ Read REVERSE.md +1515
+  ▶ Grep "SubstPlay` `30:CB|State 0|state 0 |`C957`|state 4|HudRedraw` `|SubstateHandlerTable` `30:CADE` .*substate" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C931 0x90 | head -60; python3 tools/dis.py 
+Gathering the substate table and label names, then I'll write the doc.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 30:CADE 20 ptr16 2>&1 | head -30; py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 30:CB06 20 ptr16 2>&1 | head -22; gr
+  ▶ Grep "E0B8|C67D|\$0B` \+= 4|PpuQueue|irq_mode` `\$51` =|JmpTable31_F6C2\[" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 E0B8 0x28; python3 tools/dis.py 30 C67D 0x2
+Writing `docs/architecture_exe.md` now from the documented findings.
+  ▶ Write architecture_exe.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 30:CB42 20 u8 2>&1; grep -E "^(\*,(6
+  ▶ Edit architecture_exe.md
+  ▶ Edit architecture_exe.md
+  ▶ Edit architecture_exe.md
+Now labels, then REVERSE.md updates.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 200 labels.csv | od -c | tail -3; printf '30,C67D,PpuQueueF
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l labels.csv
+  ▶ Read labels.csv +877
+  ▶ Edit labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 E0B8 3; python3 tools/dis.py 30 C67D 2
+Now update REVERSE.md: mark the task done, update the State Machine section and Intermediate Output Files.
+  ▶ Read REVERSE.md +1591
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I wrote `docs/architecture_exe.md`, so the first of the two required architecture docs now exists. Today's task, the top unchecked item in Next Tasks, is marked done in REVERSE.md.
+
+It is a summary built from REVERSE.md, and each part names the REVERSE.md section it came from. It has five parts:
+- **Binary layout:** a table of all 32 PRG banks with file offsets, what each bank holds, how it gets mapped in, and how much of it is code.
+- **Call graph:** from Reset, the main loop, NMI and IRQ, with file offsets. It covers the 6 main states, the full gameplay substate table, the gameplay frame, the IRQ handlers, the sound driver, the far-call routines and other entry points.
+- **Per-frame flow:** the order things run in a gameplay frame, from the main-loop work through the line-190 HUD split to the NMI.
+- **Data flow:** which ROM tables are read by which routines, where the results land in RAM, and how they reach the PPU and APU.
+- **Shared RAM/WRAM:** the main memory regions and who uses them.
+
+**New findings this session:**
+- I decoded the bank table for gameplay substates 20-39. Substates 3, 24-27 and 30 run from bank 19, and substate 26 is the sword-raise cut-scene. Substates 12/13 run from bank 15.
+- I added two labels:
+  - `PpuQueueFlush` at `30:C67D`: the NMI step that sends queued graphics writes to the PPU.
+  - `SubstPlayTail` at `31:E0B8`: the end of each gameplay frame. Every 16 frames it checks one enemy slot and, if the slot is empty, re-reads the area's spawn data. I read this from the code only; it is not checked in the emulator.
+
+I updated the State Machine section and the output-files table in REVERSE.md. I didn't commit anything; the changes are in the working tree.
+
+SESSION_SUMMARY: Session 48 — wrote docs/architecture_exe.md (bank map, call graph, frame flow, data flow, RAM regions), decoded the substate bank table, added labels PpuQueueFlush 30:C67D and SubstPlayTail 31:E0B8, and marked the Ph7 prereq task done.

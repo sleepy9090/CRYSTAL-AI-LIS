@@ -1,0 +1,91 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks\|^### \|- \[ \]" REVERSE.md | h
+  ▶ Read REVERSE.md +2273
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_13[3-6].txt && tail -c 1500 re_loop_sessions/20261121_000129_session_135.txt; tail -c 800 re_lo
+  ▶ Grep "clink|level gate|HitElemWall|coin value|drop class|phase-5" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1165
+Working on the Ph6 leftovers task (top unchecked): this session I'll run the hit rules (level gate, element walls) as tools.emu scenarios.
+  ▶ Grep "thunder_transform|def follow_enemy|def place_player|^SCENARIOS|^def |'kill'|"kill"" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Read scenario.py +1
+  ▶ Read scenario.py +330
+  ▶ Grep "`obj_hitflags`|`obj_defense`|`obj_attack` \||GoldDropTable` `26" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/dis.py 26 90AA 0xB0 | head -90; grep -n "obj_hitflags\|obj_defense\|obj_attack\|obj_elem_drop" labels.csv 
+  ▶ time python3 -m tools.emu.scenario kill 2>&1 | tail -40
+  ▶ python3 tools/dis.py 26 946D 0x43; python3 tools/dis.py 26 9094 0x16; python3 tools/dis.py 26 9160 0x30
+Adding hit-rule scenarios (level gate, element walls, gold class) to `tools/emu/scenario.py`.
+  ▶ Edit scenario.py
+  ▶ python3 tools/dis.py 26 91EF 0x5C
+  ▶ Edit scenario.py
+  ▶ mkdir -p /tmp/s136 && (python3 -m tools.emu.scenario hit_level_gate hit_defense > /tmp/s136/a.txt 2>&1 &) ; (python3 -m 
+  ▶ python3 -m tools.emu.scenario hit_level_gate hit_defense > /tmp/s136_a.txt 2>&1
+  ▶ python3 -m tools.emu.scenario gold_class_0 gold_class_3 gold_class_6 gold_class_9 gold_class_F > /tmp/s136_b.txt 2>&1
+  ▶ python3 -m tools.emu.scenario wall_D0_s1 wall_D0_s4 wall_D1_s1 wall_D1_s4 wall_D2_s1 wall_D2_s4 wall_D3_s1 wall_D3_s4 > 
+Using a path inside the repo instead.
+  ▶ python3 -m tools.emu.scenario hit_level_gate hit_defense > gfx/s136_a.txt 2>&1
+  ▶ python3 -m tools.emu.scenario gold_class_0 gold_class_3 gold_class_6 gold_class_9 gold_class_F > gfx/s136_b.txt 2>&1
+  ▶ python3 -m tools.emu.scenario wall_D0_s1 wall_D0_s4 wall_D1_s1 wall_D1_s4 wall_D2_s1 wall_D2_s4 wall_D3_s1 wall_D3_s4 > 
+  ▶ python3 -m tools.emu.scenario hit_level_gate hit_defense gold_class_0 gold_class_3 gold_class_6 gold_class_9 gold_class_
+  ▶ python3 -m tools.emu.scenario wall_D0_s1 wall_D0_s4 wall_D1_s1 wall_D1_s4 wall_D2_s1 wall_D2_s4 wall_D3_s1 wall_D3_s4 2>
+The tap reaches `HitElemWall` and is ignored; the charged shot never shows up. Adding a per-hit logger to see which shot hits the wall.
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario wall_D0_s1 2>&1 | grep -v "^  bank"
+  ▶ Read bzno884ka.output
+Results are in: level gate, defence borrow and gold classes behave as documented, and class 0 drops no coin. Writing this down before the wall rerun.
+  ▶ python3 tools/dis.py 26 98B0 0x30; grep -n "ChestHop\|,98CC\|AiDeathPuff\|7D death" labels.csv | head
+  ▶ Grep "AI `\$7D`|AiDeathPuff|coin.*\$0B|type `\$0B`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -n "^[0-9]*,[0-9A-F]*,AI_7D\|7D,\|death puff" labels.csv | head; grep -n "7D" gfx/obj_ai.txt | head -5
+  ▶ python3 tools/dis.py 27 B9AA 0x40
+  ▶ sed -i 's/spawn=\[(10, 0x0E, _t, 14, 0)\]/spawn=[(10, 0x0E, _t, 40, 0)]/; s/element wall spawned at +10 (dx 14)/element 
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+Rerunning two wall cases with the wall moved out of sword reach.
+  ▶ python3 -m tools.emu.scenario wall_D0_s1 wall_D1_s1 2>&1 | grep -v "^  bank"
+  ▶ Grep "CollPairTable`? `26" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1806
+  ▶ Read REVERSE.md +1812
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario wall_D0_s1 2>&1 | grep -v "^  bank"
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario wall_D0_s1 2>&1 | grep -v "^  bank"
+Full-charge shot (AI `$12`, hitflags 3) broke the `$D0` wall with the wind sword. Running the full 4-wall × 2-sword matrix.
+  ▶ python3 -m tools.emu.scenario wall_D0_s1 wall_D0_s4 wall_D1_s1 wall_D1_s4 wall_D2_s1 wall_D2_s4 wall_D3_s1 wall_D3_s4 2>
+  ▶ python3 tools/dis.py 26 8FC4 0x94 | head -60
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario freeze_shot freeze_shot_b5 2>&1 | grep -v "^  bank"
+All runs done. Writing findings to REVERSE.md.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "GOLD_DROP|GoldDrop|hitElemWall|0x8BDE|freeze.*0xFF|0xff.*freeze" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj/collide.js
+Port has all three paths. Now the task note: strike the hit rules (all but the final-boss part) and add the s136 note.
+  ▶ grep -c "the hit rules with sword pokes (\`HitHandler3\` \`26:8FC4\`, level gate → clink, element walls \`\$D0-\$D3\`, c
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "the hit rules with sword pokes" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^26,(9125|9093|913B|8FF1)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv
+Adding labels for the hit outcomes, then a final check that the scenario list parses.
+  ▶ Read labels.csv +1
+  ▶ Edit labels.csv
+  ▶ python3 -m tools.emu.scenario --list | grep -cE "hit_|gold_class|wall_D|freeze_shot"; python3 tools/dis.py 26 9123 6
+I ran the remaining hit rules from the Ph6 leftovers task in tools.emu this session. All of them work in real play, and the web port already has every one of these paths (`obj/collide.js`).
+
+**Results** (17 new scenarios in `tools/emu/scenario.py`, about 25 s each):
+- **Level gate** (`hit_level_gate`): at level 1, an enemy that needs level 5 makes every swing miss: the sword shot is removed and the "clink" sound plays. After the level is set to 5, the swings do damage and the enemy dies.
+- **Defence** (`hit_defense`): with defence forced to `$FF` every hit misses the same way. Once it goes back to 0, hits do damage.
+- **Gold per drop class** (`gold_class_0/3/6/9/F`): the gold gained is 0, 4, 30, 200 and 500, which matches `GoldDropTable`. Class 0 drops no coin at all. For the other classes the coin keeps the class the enemy had.
+- **Element walls** (`wall_D0..D3_s1/s4`): `$D0` breaks only to the wind sword and `$D3` only to the thunder sword. "Charged shot" means a **full** charge only. The level-8 charged shots count the same as a tap and do nothing to a wall. The first runs, with the wall 14 px from the player, never hit it with the charged shot; moving it to 40 px fixed that.
+- **Freeze shot** (`freeze_shot`, `freeze_shot_b5`): the magic-2 shot freezes an enemy for 255 frames (about 4.25 s), and casting again restarts the count. An enemy with bit 5 of its hit flags is immune; the shot is still used up.
+
+**Records**
+- **REVERSE.md:** notes under "Handler 0" (items 5 and 7) and "Handler 3", plus an s136 note on the task. The hit-rules item is struck through.
+- **labels.csv:** `HitNoEffect` `26:9093`, `HitMiss` `26:9125`, `HitDamage` `26:913B`, `FreezeTarget` `26:8FF1`.
+- **New scenario helpers:** `hit_logger` and `obj_logger` print the fields of each hit; `_hit_each` forces fields on the enemy in the `kill` setup.
+
+The task is low priority, so it stays open. Still to do: the final boss (only vulnerable in phase 5) from a live fight, the ending labels, and the ~55-minute regeneration of `docs/emu_scenarios.txt`.
+
+SESSION_SUMMARY: Session 136: ran the hit rules in tools.emu with 17 new scenarios (level gate and defence miss, gold per class = GoldDropTable with class 0 dropping no coin, walls $D0/$D3 broken only by a full-charge shot of the matching sword, freeze shot 255 frames blocked by hitflags b5); 4 labels added; the port already covers all of it; leftovers task stays open (final boss, ending labels, emu_scenarios.txt rerun).

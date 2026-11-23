@@ -1,0 +1,91 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | grep -A8 "Next Task
+  ▶ Read dead_ends.md
+  ▶ for f in re_loop_sessions/*_session_12{2,3,4}.txt; do echo "== $f"; tail -c 2500 "$f"; done; grep -n "^- \[ \]" REVERSE.
+  ▶ for n in 122 123 124; do f=$(ls re_loop_sessions/*_session_$n.txt); echo "== $f"; tail -c 2000 "$f"; done; grep -n "^- \
+  ▶ tail -c 2000 re_loop_sessions/20261120_190200_session_122.txt; echo; echo ====; tail -c 2000 re_loop_sessions/20261120_1
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2272
+  ▶ sed -n '2447,2451p' REVERSE.md; grep -n "^- \[ \]" REVERSE.md | cut -c1-200
+  ▶ Grep "pause5f|f2692" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ sed -n '172p' REVERSE.md; grep -rn "pause5f" re_loop_sessions/*.txt | cut -c1-400 | head -20
+  ▶ sed -n '105,135p' re_loop_sessions/20261120_190200_session_120.txt | cut -c1-600
+Rerunning the s120 pause comparison to reproduce the f2692 difference.
+  ▶ ls tools/emu/states/pause5f_s120.state web/test/states/pause5f.json && mkdir -p gfx/compare/s125 && timeout 900 python3 
+  ▶ timeout 900 python3 tools/web_state_compare.py --help 2>&1 | head -40
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/pause5f_s120.state --web web/test/states/pause5f
+  ▶ ls gfx/compare/s125/ | head -30
+  ▶ Read pair_2692.png
+  ▶ Read emu_2691.png
+  ▶ Read emu_2693.png
+  ▶ grep -n "" web/src/game/states/pause.js | head -120
+I've reproduced it: at f2692 the port already shows the empty pause window, while the emulator still shows the game screen. From f2693 on, both match. Next I'm reading the port's `pauseScreen`.
+  ▶ Read pause.js +120
+  ▶ head -1 gfx/compare/s125/emu.csv | tr ',' '\n' | grep -n "" | tr '\n' ' '; echo; grep -E "^(2690|2691|2692|2693|2694)," 
+  ▶ python3 tools/dis.py 31 F3B6 120 | head -70
+  ▶ python3 tools/dis.py 31 F6AD 140 | head -60
+  ▶ Grep "irq_mode|NMI_MODES|nmiMode0|function nmi" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/mainloop.js
+  ▶ Read mainloop.js +60
+  ▶ python3 tools/decode_tables.py C518 21 bytes 2>&1 | head -30
+  ▶ python3 tools/decode_tables.py --help 2>&1 | head -20; grep -n "C518" labels.csv
+  ▶ python3 tools/decode_tables.py 30:C518 10 hex5
+  ▶ ls web/src web/src/*/ | head -40; grep -rn "writeReg(r\|writeReg =\|writeReg(" web/src/ppu*.js web/src/*/ppu*.js 2>/dev/
+  ▶ Read ppu.js
+  ▶ Grep "renderFrame|nmiWork\(|frameStep|step\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/machine.js
+  ▶ Read machine.js +95
+  ▶ Edit ppu.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit ppu.js
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/pause5f_s120.state --web web/test/states/pause5f
+With the fix, f2692 differs only on the known split line (tile row 23). Now running all web checks and the canonical screen comparison to look for regressions.
+  ▶ for t in core_check ppu_check serve_check world_check sprite_check obj_check sound_check apu_check; do echo "$t: $(timeo
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/serve_check.mjs 2
+  ▶ node web/test/sprite_check.mjs 2>&1 | tail -1; node web/test/obj_check.mjs 2>&1 | tail -1; node web/test/sound_check.mjs
+  ▶ timeout 1500 python3 tools/web_compare.py 2>&1 | tail -25
+  ▶ grep -o "web_state_compare.py[^|;]*" REVERSE.md | sort -u | head -30
+  ▶ ls tools/emu/states/ | grep -i -E "pause|equip|death|ending|shop|inn|restore" ; grep -o "web_state_compare.py --state S 
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/restore5f_s120.state --web web/test/states/resto
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/pause5f_s120.state --web web/test/states/pause5f
+  ▶ timeout 1200 python3 tools/web_state_compare.py --state tools/emu/states/equip_s98.state --web web/test/states/equip.jso
+  ▶ timeout 1200 python3 tools/web_state_compare.py --state tools/emu/states/armorshop_s122.state --web web/test/states/armo
+Many armor-shop frames differ. I need to see whether that's the known differences (town NPCs and the walk timing) or a regression, so I'm looking at where they start.
+  ▶ timeout 1200 python3 tools/web_state_compare.py --state tools/emu/states/armorshop_s122.state --web web/test/states/armo
+  ▶ timeout 1200 python3 tools/web_state_compare.py --state tools/emu/states/armorshop_s122.state --web web/test/states/armo
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/armorshop_s122.state --web web/test/states/armorshop.json --
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/armorshop_s122.state --web web/test/states/armorshop.json --
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/armorshop_s122.state --web web/test/states/armorshop.json --
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/armorshop_s122.state --web web/test/states/armorshop.json --
+The armor-shop differences are the ones known since s122: the walk timing, then town NPC slots `$0D-$10`, whose AIs aren't ported. The fix causes no regression. Now updating REVERSE.md.
+  ▶ grep -n "Still open here: the one-frame-early pause window" REVERSE.md | cut -c1-20; grep -n "f2692 (one pause-build fra
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 15 BC40 400 | grep -n -B3 "STA ppuctrl_shadow" | head; python3 tools/dis.py 30 C4BE 8
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the Verification Log row (line 172) and the regression results.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/comparison.py report 2>&1 | tail -3; git status --short | head
+  ▶ Edit ppu.js
+I fixed the one-frame-early pause window in area `$5F` (f2692 in `pause5f.json`), the last open item of the SELECT-menu leftovers task, so that task is now marked done. All 8 web checks pass. Nothing is committed.
+
+**Cause:** the PPU frame timing in the port, not the ported game code.
+- While building the window, `PauseScreen` switches the nametable shadow to nametable 2 (`15:BCEC`). The next `PpuQueueBlock` writes PPUCTRL from that shadow (`30:C4BE`), thousands of cycles after the NMI.
+- On real hardware that write comes too late to move the next frame vertically, because the vertical scroll bits are copied at the pre-render line, about 20 lines after the NMI.
+- The port copied all of the scroll register after the main code had run, so f2692 showed nametable 2 still drawn with the game's tile graphics. The emulator only switches to the window one frame later, together with the window's tile graphics.
+- I only saw this in area `$5F`. The area-1 pause run from session 94 has no such frame; I didn't check why.
+
+**Fix:**
+- `web/src/nes/ppu.js`: new `latchVert()`. `renderFrame` now takes the vertical scroll bits from the value saved after the last NMI and the horizontal bits from the current register.
+- `web/src/game/machine.js`: `runFrame` saves that value after the NMI, and `loadState` saves it too.
+
+**Results:**
+- **Pause run in area `$5F`:** f2692 now differs only on the known split line (tile row 23), and every frame through f2741 matches apart from that row. From f2742 the differences come from the final boss's AI `$6B`, which isn't ported yet (already documented).
+- **Regression checks:**
+  - The canonical screen comparison is unchanged (title frames 0 px; gameplay frames only differ on the split line).
+  - Area-`$5F` restore run and equip menu (0 of 474 frames differ outside the HUD rows): no new differences.
+  - Armor shop: only the differences already known from session 122 (up to 7 px in tile row 1, the walk timing, and the town NPCs whose AIs aren't ported).
+  - I refreshed COMPARISON.md.
+
+**Records:** REVERSE.md has the task marked done with the cause and fix, and the Verification Log row for `SubstRestoreScreen` is updated. No new addresses, so labels.csv is unchanged.
+
+SESSION_SUMMARY: Session 125: fixed the one-frame-early area-$5F pause window (f2692): port PPU timing let a mid-frame PPUCTRL write (30:C4BE, from PauseScreen's nametable-2 switch at 15:BCEC) move the next frame vertically; new Ppu.latchVert keeps the vertical bits from after the NMI; pause5f matches through f2741 apart from the split line; all 8 web checks pass, no regressions in the canonical/equip/restore/armor-shop compares; SELECT-menu leftovers task marked done.

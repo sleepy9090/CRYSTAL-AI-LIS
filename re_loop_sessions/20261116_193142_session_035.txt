@@ -1,0 +1,53 @@
+  ▶ Grep "^## |^### |^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/20261116_193142_session_03*.txt re_loop_sessions/20261116_163435_session_033.txt && tail -c 2500 
+  ▶ wc -l tools/emu/*.py && cat tools/emu/memory.py tools/emu/loader.py tools/emu/__init__.py
+Now look at the CPU's IRQ interface and the ROM smoke test.
+  ▶ grep -n "irq\|nmi\|def \|stall" tools/emu/cpu.py | head -60; grep -n "rom\|def test_reset\|SwitchBank\|C40E" tools/emu/t
+  ▶ Read test_cpu.py +1
+  ▶ Read test_cpu.py +350
+  ▶ sed -n 1,30p tools/emu/cpu.py && python3 tools/dis.py 30 C40E 40 && python3 tools/dis.py 31 F2A4 80
+  ▶ python3 tools/dis.py 31 F2F4 120 | grep -v "^$" | head -60
+  ▶ python3 tools/dis.py 31 F2F4 120
+Top unchecked task is **Ph5.5 emu 2/6 — MMC3 mapper**. Writing `tools/emu/mapper.py`.
+  ▶ Write mapper.py
+Now wire it into the bus.
+  ▶ python3 - <<'EOF' 2>/dev/null || echo "inline python not allowed; use Edit"
+  ▶ Edit memory.py
+  ▶ Edit memory.py
+  ▶ Read test_cpu.py +330
+Now the mapper test file.
+  ▶ Write test_mapper.py
+  ▶ python3 tools/emu/test_mapper.py; python3 tools/emu/test_cpu.py --rom | tail -3
+Test bug (the `$8000=0` write also clears inversion, so R0 lands in slots 0-1). Fix the assertion:
+  ▶ Edit test_mapper.py
+  ▶ python3 tools/emu/test_mapper.py | tail -2
+All pass. Now update `__init__.py` and REVERSE.md.
+  ▶ Edit __init__.py
+  ▶ Grep "tools/emu|emu 2/6" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1366
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I finished task **Ph5.5 emu 2/6**: the emulator now has the game's bank-switching chip (MMC3). All 9 new tests pass (`python3 tools/emu/test_mapper.py`), and the 24 CPU tests from session 34 still pass with the new mapper in place.
+
+**New `tools/emu/mapper.py`:**
+- **Bank switching:** the 8 bank registers and both layouts for the code area, `$8000-$FFFF` (mode 0 or mode 1). Graphics banks can be laid out either way round (2KB+1KB or the swapped halves). Bank numbers wrap at 32 code banks and 128 graphics banks.
+- **Screen mirroring** (`$A000`): horizontal or vertical. A helper turns a screen address into its offset in the console's 2KB of video RAM.
+- **Save RAM gate** (`$A001`): turns the battery RAM on or off and can make it read-only. The memory bus now respects this; when the RAM is off, reads return whatever was last on the bus.
+- **Scanline interrupt** (`$C000-$E001`): the line counter that lets the game change the picture partway down the screen. The graphics chip (emu 3/6) can drive it in two ways:
+  - **Simple:** call `clock_scanline()` once per line.
+  - **Exact:** report each low-to-high change on PPU address line A12 to `ppu_a12(level, dot)`. A change only counts after the line has been low for about 3 CPU cycles, which is how the real chip filters them.
+- **Save-states:** `state()` and `load_state()` capture and restore the chip's settings, for emu 4/6.
+- **Bus wiring:** creating the memory bus with a cartridge now builds the MMC3 automatically. The temporary stand-in mapper is kept only for CPU-only tests.
+
+**ROM test:** starting from Reset (`31:F2A4`), the CPU reaches `SwitchBank16` after 261 instructions and `$8020` after 20 more. At that point:
+- banks 24 and 25 sit at `$8000` and `$A000`, with 30 and 31 fixed above them;
+- the game's bank copies in RAM hold `$6E=$18`, `$6F=$19` and `$50=6`, matching the chip's own registers;
+- mirroring is horizontal, save RAM is on, and the scanline interrupt is off.
+
+This also gives the exact order of Reset's writes to the chip: `A000=01 A001=80 E000=80 8000=00`, then `8000=07 8001=19 8000=06 8001=18`. So the bank for `$A000` is set before the one for `$8000`, and the startup layout settings are confirmed.
+
+REVERSE.md has the task marked done and a new entry under Intermediate Output Files. No new ROM addresses came up, so `labels.csv` is unchanged, and I added no follow-up tasks or dead ends. Nothing is committed.
+
+SESSION_SUMMARY: Session 35 — Ph5.5 emu 2/6 done: new `tools/emu/mapper.py` (MMC3 bank switching, mirroring, save RAM gate, scanline interrupt with A12 filter, save-states), wired into the memory bus; `test_mapper.py` 9/9 incl. Reset → `$8020` with banks 24/25 and `$6E/$6F/$50` bank copies checked; `test_cpu.py --rom` still 24/24.

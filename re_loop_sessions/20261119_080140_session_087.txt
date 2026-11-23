@@ -1,0 +1,103 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*}
+  ▶ Grep "^## Next Tasks|^- \[ \]|^### " REVERSE.md
+  ▶ Read REVERSE.md +2300
+  ▶ Read dead_ends.md
+  ▶ Read 20261119_080140_session_086.txt
+  ▶ Read 20261119_080140_session_087.txt
+  ▶ Glob web/src/game/obj/*.js
+  ▶ Grep "WALK_AIS|PORTED_AIS|def _fix_walk|^ROUTINES|^def |'fuzz_walk'|fuzz_update" tools/emu/routine_capture.py
+  ▶ Read routine_capture.py
+  ▶ Read ai_walk.js
+I'm working on the top open task, the enemy port leftovers. This session I'll port the seven field-enemy AIs in part (b) to the web port and check them against the emulator.
+  ▶ Grep "AiDasher|AiHomingFlyer|AiOrbiter|AiPatrolGunner|AiDrifter|AiWaitClear|AiTrapChest|SteerToward" REVERSE.md
+  ▶ Grep "^2[67],.*(AiDasher|AiHomingFlyer|AiOrbiter|AiPatrolGunner|AiDrifter|AiWaitClear|AiTrapChest|SteerToward|TrapChest)" labels.csv
+  ▶ python3 tools/dis.py 27 B436 0x390
+  ▶ grep -n "^export" web/src/game/obj/util.js web/src/game/obj/move.js web/src/game/obj/ai_static.js web/src/game/obj/objec
+  ▶ Read util.js
+  ▶ Read ai_static.js
+  ▶ Read objects.js
+Now writing the port of the bank-27 field AIs (`$44 $45 $48 $58 $5C $5D $5E $2B` + coin `$7B`, which shares `ChestHop`).
+  ▶ Write ai_field.js
+  ▶ grep -n -E "^ai \\\$(7B|14|16|1B|1F|70|76) " gfx/obj_ai.txt; grep -n -E "^\s*wr\(|wr\(a, v\)|  wr\b" web/src/game/*.js |
+  ▶ Grep "^ai \$(7B|14|16|1B|1F|70|76) " gfx/obj_ai.txt
+  ▶ Grep "RUN|fuzz_walk|ai_walk|import" web/test/obj_check.mjs
+  ▶ Glob web/test/obj_frames/*
+  ▶ Read obj_check.mjs
+  ▶ Read README.md
+Now the capture side: add the field AIs to `routine_capture.py` with steering for their rare paths.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ Edit objects.js
+  ▶ Edit objects.js
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 --routine AiTrapChes
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -E "fuzz_field|FAIL"
+All 900 identical on the first run. Checking that the rare paths were actually exercised:
+  ▶ python3 tools/obj_case_stats.py --help 2>&1 | head -20
+  ▶ Read obj_case_stats.py
+  ▶ python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_field.json --col 0340 --col 0620=20 --col 04A0=2A --col 04A0=0 
+Good path coverage (dash 10, chest opens 15, gunner bursts 18, wake-ups 31, coin deaths 3). Now recapturing `fuzz_update.json` with the new ids in `PORTED_AIS`:
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 --routine ObjMoveSli
+Gaps dropped 11 → 8; the rest are the effect/shot AIs `$14 $16 $17 $1B $1E $1F $70 $76` from the same item (b). Let me look at their size.
+  ▶ python3 tools/dis.py 27 B094 0xE0; python3 tools/dis.py 27 B2C5 0x20 --stop; python3 tools/dis.py 27 BA2E 0x60 --stop; p
+The shot AIs are small and share the `AiStraightMover` tail, so I'll port them too. Checking what follows `AiCountdown` at `B2D4`:
+  ▶ python3 tools/dis.py 27 B2D4 0x18
+Now refactoring `ai_static.js` to export the shared tail, and adding the shot AIs.
+  ▶ Edit ai_static.js
+  ▶ Write ai_shot.js
+  ▶ Edit objects.js
+  ▶ Edit objects.js
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ Edit routine_capture.py
+Steering for the shot AIs (anim near 0/sign, timer multiples of 16, bounce walls):
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 --routine AiTrapChes
+4500/4500 identical; `ObjUpdateAll` gaps went from 11 → 2 (only `$57` and `$76` remain). Now the docs. Finding the s81 Verification Log row to match its format:
+  ▶ Grep "fuzz_walk" REVERSE.md
+  ▶ Read REVERSE.md +155
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "\| `\$45` \| `27:B4BA`" REVERSE.md
+  ▶ sed -n '1059,1061p' REVERSE.md | cut -c1-900
+  ▶ grep -n -c '| `\$48` |' REVERSE.md; grep -n "B55A" REVERSE.md labels.csv | cut -c1-200
+Updating the docs: checking whether AI `$48` already has a row or a label.
+  ▶ Grep "B55A|\| `\$48` \|" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+Not documented. I'm adding the `$48` row, the `$45` quirk note, and the label.
+  ▶ Edit REVERSE.md
+  ▶ Read labels.csv +920
+  ▶ Edit labels.csv
+  ▶ Grep "^27,(B4E5|B50E|B55A|B65F)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+There are no duplicates. Next I'm updating the obj_frames README, then the task list.
+  ▶ Edit README.md
+  ▶ Edit README.md
+Marking the task done for (b) and moving (c)/(d) plus the last AIs `$57/$70/$76` into one low-priority task at the end of RE Investigation:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Final check: the whole obj suite plus the label load.
+  ▶ node web/test/obj_check.mjs | tail -1; echo "exit=$?"; python3 tools/dis.py 27 B55A 3 | head -3
+  ▶ node web/test/obj_check.mjs > /tmp/objcheck.txt; echo "exit=$?"
+  ▶ python3 tools/dis.py 27 B55A 3
+I took the top open task, the enemy port leftovers, and finished part (b). The web port now has 15 more enemy behaviours ("AIs"), and every one gives byte-identical RAM to the emulator.
+
+- **Field enemies, new file `web/src/game/obj/ai_field.js`:**
+  - `$2B`: trap chest
+  - `$44`: dasher
+  - `$45`: homing flyer
+  - `$48`: homing shooter. No enemy type uses it; I ported it anyway because it shares code with `$45`.
+  - `$58`: orbiter
+  - `$5C`: patrol gunner
+  - `$5D`: drifter
+  - `$5E`: wait-for-guards-to-die
+  - `$7B`: coin
+- **Boss shots and effects, new file `web/src/game/obj/ai_shot.js`:** `$14 $16 $17 $1B $1E $1F`. To share the ending of the straight-mover routine, I split it out as `aiStraightMoverTail` in `ai_static.js`.
+- **How it was checked:** I added these AIs to `tools/emu/routine_capture.py`, with steering so the rare paths actually happen. The new `fuzz_field.json` (100 random cases per AI) matched **1500/1500**, and `tools/obj_case_stats.py` confirmed the rare paths were hit: dashes, chest openings, gunner bursts, wake-ups, wall bounces and coin expiry.
+- **Whole object loop:** I recaptured `fuzz_update.json` with the new AIs. It now matches 198/198, and only 2 cases (was 11) reach an AI the port still lacks: `$57` and `$76`. All 4500 object cases match with 0 failures. I didn't rerun the other web checks; the only change outside the new files is the tail split in `ai_static.js`, which `obj_check.mjs` covers.
+- **One new ROM quirk:** the homing flyer's speed is meant to go up when it is on course and down when it turns. The ROM tests this against the new heading, so some turns count as "on course" and speed it up anyway.
+- **Docs:** I added a Verification Log row for session 87, a table row for `$48` and the quirk note on `$45` in `REVERSE.md`, 4 labels (`HomingSteer`, `HomingMove`, `AiHomingShooter`, `PatrolStep`), and the new case file to the `obj_frames` README.
+
+The rest of the task (AIs `$57 $70 $76`, the bank 15 bosses, death chains, and the per-frame emulator-vs-port runs) is now one low-priority task at the end of RE Investigation. The per-frame runs still need the gameplay web fix first. Nothing is committed.
+
+SESSION_SUMMARY: Session 87: ported the field AIs `$2B $44 $45 $48 $58 $5C $5D $5E $7B` (`obj/ai_field.js`) and the boss shot/effect AIs `$14 $16 $17 $1B $1E $1F` (`obj/ai_shot.js`), 1500/1500 fuzz cases identical to the emulator; unported-AI cases in the object loop down from 11 to 2; bosses and `$57/$70/$76` moved to one new low-priority task.

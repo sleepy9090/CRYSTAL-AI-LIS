@@ -1,0 +1,81 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -3 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ sed -n 2355,2370p REVERSE.md && grep -n "^- \[ \]" REVERSE.md && cat dead_ends.md && tail -c 3000 re_loop_sessions/20261
+  ▶ grep -n "^- \[ \]" REVERSE.md | cut -c1-200; cat dead_ends.md | cut -c1-400; tail -c 2500 re_loop_sessions/20261122_1046
+  ▶ python3 tools/ai_missing.py 2>&1 | tail -20; grep -n "Boss shot / part AIs" REVERSE.md | head
+  ▶ grep -in "27,\(A85F\|A24A\|B174\|B235\|AE31\)" labels.csv; python3 tools/dis.py 27 B174 0xC8 | head -120
+Picking the top task (boss AI port, 5 missing ids left); disassembling AI `$12`/`$13` now to port them.
+  ▶ grep -n "B174\|B235\|AI \`\$12\`\|AI \`\$13\`" REVERSE.md | cut -c1-600 | head; python3 tools/dis.py 27 B235 0x60 --stop
+  ▶ Grep "B174|B235|AI `\$1[23]`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/dis.py 27 B235 0x60 --stop
+  ▶ python3 tools/dis.py 27 B250 0x30; python3 tools/search_bytes.py "1206" 2>/dev/null | head -0; awk 'NR==1206' REVERSE.md
+  ▶ python3 tools/dis.py 27 B250 0x30
+  ▶ Read REVERSE.md +1206
+  ▶ Grep "0x1[0-4]\b|B0BE|98C7|98A8|9861|9897|9824|8480" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj
+Let me look at ai_field.js (the most recent pattern) and AI_TABLE.
+  ▶ ls web/src/game/obj/ && wc -l web/src/game/obj/ai_field.js web/src/game/obj/ai_shot.js
+  ▶ Read ai_field.js
+  ▶ grep -n "^export function\|^function\|98C7\|9824\|^export const\|0x1[0-4]:" web/src/game/obj/util.js web/src/game/obj/ai
+Now AI `$32` and `$07`:
+  ▶ python3 tools/dis.py 27 AE31 0xC0 | head -90
+  ▶ python3 tools/dis.py 27 AEEF 0x16; python3 tools/decode_tables.py 27:AF04 16 word 2>&1 | head -20
+  ▶ python3 tools/dis.py 27 A85F 0x60 --stop; python3 tools/dis.py 27 A24A 0x80 --stop
+  ▶ python3 tools/dis.py 27 A8C0 0x50
+  ▶ Read util.js
+  ▶ grep -n "field2\|0x34\|0x39\|0x40\b\|FIELD2\|def _fix_\|^def \|^[A-Z_]* = " tools/emu/routine_capture.py | head -80; cat
+Disassembly of `$07 $12 $13 $32` is done; now reading the fuzz-capture setup so I can add them.
+  ▶ Read routine_capture.py +205
+  ▶ Read routine_capture.py +441
+Now writing the four ports into `ai_field.js`.
+  ▶ Edit ai_field.js
+  ▶ Edit ai_field.js
+  ▶ Edit ai_field.js
+  ▶ Edit ai_field.js
+Now the capture side: obj_check.mjs `RUN` map and routine_capture entries.
+  ▶ Grep "AiPeriodicShot|AiWander16|_slot\(r\)|^def _slot" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ grep -n "FIELD_AIS\|_fix_field(" tools/emu/routine_capture.py | head; sed -n 55,66p web/test/obj_frames/README.md
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine AiElementW
+  ▶ node web/test/obj_check.mjs 2>&1 | grep field3; python3 tools/case_paths.py 2>&1 | head -3; python3 tools/ai_missing.py 
+1200/1200 identical on the first run. Checking branch coverage:
+  ▶ F=web/test/obj_frames/fuzz_field3.json; python3 tools/case_paths.py $F AiPathWalk col:04A0 04AD 04A0 0070 0620 05A0; pyt
+  ▶ python3 tools/case_paths.py web/test/obj_frames/fuzz_field3.json AiPathWalk col:04A0 04AD 04A0 0070 0620 05A0 && python3
+Two branches uncovered (path `$FD`, wall spawn → meta_dir). Adding steers:
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine AiElementW
+All pass with the `$FD`/`$FC` paths now hit (75/6 cases); the wall spawn path is hit once. Running regression checks:
+  ▶ for t in core_check world_check finalboss_check bosse2_check; do echo "== $t: $(node web/test/$t.mjs 2>&1 | tail -1)"; d
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/world_check.mjs 2>&1 | tail -1; node web/test/finalboss_check
+All green. Now docs: labels, README, REVERSE.md.
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ Read labels.csv +509
+  ▶ Edit labels.csv
+  ▶ Edit README.md
+Now REVERSE.md: findings paragraph near the s170 one, and the task text.
+  ▶ Grep "s170.*AiPeriodicShot|Session 170" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 1362,1364p REVERSE.md | cut -c1-200
+  ▶ Read REVERSE.md +1363
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I ported 4 more of the missing enemy AIs into the web port: `$07`, `$12`, `$13` and `$32`. All 1,200 new test cases match the emulator exactly, and the existing checks still pass. The low-priority boss-AI task stays open as the rules require, with one id left: `$0B`.
+
+**What the new AIs do** (all in `web/src/game/obj/ai_field.js`)
+- **`$07` `AiElementWall` (`27:A85F`, types `$D0-$D3`, the element walls):**
+  - Outside areas `$A8` and `$8F` the wall is invisible. Inside them it runs a 62-frame countdown and fires a shot in a random direction at the `$30` mark.
+  - It removes itself once its screen is marked visited.
+  - It can only be hit while its on-screen position is inside a box picked by its phase (table at `27:A8FC`).
+- **`$12` `AiWiggleShot` (`27:B174`, the wind charged shot):** on its first frame it applies a start offset taken from a table indexed by its slot number. After that it wiggles using a 32-entry offset table (`27:B1F5`) on top of its normal straight step.
+- **`$13` `AiSpiralShot` (`27:B235`):** it spirals outward. It turns one step at a time, and the gap between turns doubles every 16 turns. It despawns when its turn counter (`$06C0`) reaches 0.
+- **`$32` `AiPathWalk` (`27:AE31`):** it holds the player still and follows a scripted path, one direction byte per 16 steps.
+  - The path ends with `$FC` (restart slots `$0D`/`$0E`), `$FD` (start the duel), `$FE` (remove itself) or `$FF` (turn into AI `$30`).
+  - In area `$D4` it carries the player along with it.
+
+**Checks**
+- New test file `web/test/obj_frames/fuzz_field3.json`: 300 cases per AI. `obj_check.mjs` passes 26,800/26,800 overall.
+- I added test steering so the path end codes and the wall's shot are actually exercised. Every branch is now hit, but the wall's shot only fires in 1 of 300 cases, because most shots find no free slot.
+- `core_check`, `world_check`, `finalboss_check` and `bosse2_check` still pass. `ai_missing.py` now reports 100/101 ported.
+
+**Docs:** I added a findings paragraph under "Boss shot / part AIs" in REVERSE.md and updated the task's remaining-id list. In `labels.csv` I added 5 labels (`AiElementWall`, `ElementWallBox`, `AiWiggleShot`, `WiggleOffsets`, `AiSpiralShot`) and updated `AiPathWalk`. The capture setup went into `tools/emu/routine_capture.py`, and the regenerate command into `web/test/obj_frames/README.md`. Nothing is committed.
+
+SESSION_SUMMARY: Session 171 ported AI $07 AiElementWall, $12 AiWiggleShot, $13 AiSpiralShot and $32 AiPathWalk into obj/ai_field.js; fuzz_field3.json 1200/1200 match the emulator, only AI $0B AiPlayerDuel remains, and the low-priority boss-AI task stays open with that one id.

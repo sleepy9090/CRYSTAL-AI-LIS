@@ -1,0 +1,130 @@
+  ▶ wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; grep -n "## Next Tasks" REVERSE.md; grep -n "^- \[ \]" 
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +1700
+  ▶ wc -c re_loop_sessions/*05[1-4]*; tail -c 5000 re_loop_sessions/20261117_155157_session_053.txt
+  ▶ Read REVERSE.md +1713
+  ▶ awk 'NR>=1713 && NR<=1859 {print NR": "substr($0,1,260)}' REVERSE.md
+  ▶ Grep "^(#|- \[ \])" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Reviewing the task list now: the top open item is Ph7 web 5/8 (objects + player). Checking the web/ layout and the prerequisite note from session 53.
+  ▶ Grep "^- \[ \] (Ph7 web 4/8 runtime|.*runtime leftovers|.*PPU write queue)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob web/**/*.{js,mjs,md}
+  ▶ sed -n '1845,1853p' REVERSE.md | cut -c1-1500; wc -l web/src/game/*.js web/src/game/world/*.js web/test/run.mjs web/test
+  ▶ Read machine.js
+  ▶ Read mainloop.js
+  ▶ Read harness.mjs
+  ▶ Read README.md
+  ▶ Grep "sprite pass|SpritePass|ObjDrawMeta|draw order|half-hide|orbit ring" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ ls tools/emu tools/emu/states; grep -n "add_argument" tools/emu/__main__.py | cut -c1-200
+  ▶ Read __main__.py
+Plan: port the sprite pass (`28:800E`) as the first 5/8 piece and check it against emulator RAM captured at the pass's entry and after it returns. Reading the documented algorithm now.
+  ▶ Read REVERSE.md +294
+Now disassembling the pass itself to port it instruction-accurately.
+  ▶ python3 tools/dis.py 28 800E 0x1AC
+  ▶ python3 tools/dis.py 28 81B9 0x220 | sed -n '1,400p' | grep -v "^\s*$" | head -170
+  ▶ python3 tools/dis.py 28 822E 0x1AA
+Key quirks noted (x written before the wrap check, sink-stop leaves y/attr written, HFlip uses `~dx-8`). Now checking the emulator hook API so I can capture RAM at the pass entry and exit.
+  ▶ Grep "def (on_exec|on_write|on_frame|call|run_frames)|self\.bus\.ram|cpu\.s\b|self\.s =" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ Read nes.py +1
+The emulator has what I need (`on_exec` + `call`). Checking how the port reads PRG data before writing the capture tool.
+  ▶ Read data.js
+  ▶ Read ram.js
+  ▶ Read world_check.mjs
+  ▶ ls -la web/data | head -40; grep -n "prg\|bank" tools/gen_web_data.py | head -30
+  ▶ Grep "metasprites|raw bank|design rule|sprites\.js|objects/" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Read architecture_web.md +1
+Design rule 2 says tables the ROM walks by address stay as raw blobs at CPU addresses, so I'll export banks 28/29 as `$8000-$BFFF` (like `metatiles.bin`). Looking at the generator.
+  ▶ Read gen_web_data.py +255
+  ▶ Edit gen_web_data.py
+  ▶ python3 tools/gen_web_data.py 2>&1 | tail -5; ls -la web/data/sprites_b28.bin
+  ▶ Grep "canonical (input|run|script)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ grep -o "canonical[^|]\{0,300\}" REVERSE.md | head -5; grep -n "STATES\|frame_no\|\.state" tools/emu/state.py | head
+  ▶ Grep "canonical.{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Write sprite_capture.py
+  ▶ time python3 -m tools.emu.sprite_capture real --load-state tools/emu/states/name_entry.state --frames 260 --keys 2300:ST
+Captured 52 real and 300 fuzz cases. Now writing the port, `web/src/game/obj/sprites.js`, which follows the 6502 code line by line and keeps the ZP temps in RAM so whole-RAM diffs line up.
+  ▶ Write sprites.js
+Removing two leftover scratch lines from the emit loop before testing.
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+Now the check script that replays every captured case through the port and diffs the whole RAM.
+  ▶ Write sprite_check.mjs
+  ▶ node web/test/sprite_check.mjs
+  ▶ Edit sprite_capture.py
+  ▶ Edit sprite_capture.py
+  ▶ Edit sprite_check.mjs
+  ▶ Edit sprite_check.mjs
+  ▶ python3 -m tools.emu.sprite_capture fuzz --load-state tools/emu/states/gameplay_first.state --cases 500 --out web/test/s
+489/500 fuzz cases match. The 11 failures all hit a read outside `$8000-$BFFF`, so some meta ids must point outside banks 28/29. Writing a small tool to list those ids.
+  ▶ Write meta_ptr_check.py
+  ▶ grep -n "^def " tools/nesrom.py | head; python3 tools/meta_ptr_check.py
+  ▶ Read nesrom.py +19
+  ▶ Edit meta_ptr_check.py
+  ▶ python3 tools/meta_ptr_check.py
+Only id `$9A` is bad: its pointer is `$0000`, so the 6502 reads the record from zero-page RAM. The port will do the same, reading RAM for `$0000-$1FFF` and still throwing for register/WRAM addresses.
+  ▶ Edit sprites.js
+  ▶ node web/test/sprite_check.mjs
+  ▶ Edit sprite_capture.py
+  ▶ Edit sprite_capture.py
+  ▶ python3 -m tools.emu.sprite_capture fuzz --load-state tools/emu/states/gameplay_first.state --cases 500 --out web/test/s
+All 552 cases are byte-identical. Now a negative test: I'll temporarily change the mirrored x to the documented `-dx-8` and confirm the check catches it.
+  ▶ cp web/src/game/obj/sprites.js /tmp/sprites_bak.js && sed -i 's/(((dx ^ 0xFF) - 8) \& 0xFF)/((0x100 - dx - 8) \& 0xFF)/'
+  ▶ Edit sprites.js
+  ▶ node web/test/sprite_check.mjs
+The fuzz set catches the 1 px error (250 failures). The real run doesn't, because its 52 frames apparently draw no mirrored records, which is why the fuzz set matters. Restoring the correct line.
+  ▶ Edit sprites.js
+  ▶ node web/test/sprite_check.mjs | tail -1 && node web/test/core_check.mjs | tail -1 && node web/test/world_check.mjs | ta
+All checks pass: sprite 552/552, core, world, serve, and ppu. Now the docs: a README for the capture files, then the REVERSE.md updates.
+  ▶ Write README.md
+  ▶ Read REVERSE.md +1819
+Updating the task line, then fixing the `-dx-8` error in the metasprite format docs and adding the findings.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the s54 port notes in the sprite-pass section (after the Object RAM line):
+  ▶ Edit REVERSE.md
+Now the leftover task, appended at the end of `### RE Investigation`:
+  ▶ Grep "^### Web Port Fixes" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1865
+  ▶ Edit REVERSE.md
+  ▶ Grep "^\| `web/test/(world_check|run)\.mjs" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1702
+  ▶ Edit REVERSE.md
+Now labels.csv (the `$9A` note on the pointer table) and the CLAUDE.md / architecture_web.md mentions.
+  ▶ Grep "^28,(845C|855C|83D8|81BA|81DA)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "world_check|sprites\.js|obj/sprites" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Edit labels.csv
+  ▶ Read CLAUDE.md +26
+  ▶ Edit CLAUDE.md
+  ▶ Read architecture_web.md +80
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Final check run after the doc edits:
+  ▶ node web/test/sprite_check.mjs | tail -1 && node web/test/core_check.mjs | tail -1 && node web/test/serve_check.mjs | ta
+I ported the object sprite pass (`28:800E`) to the web port, and it matches the emulator byte for byte on 552 of 552 test cases. That's only one part of task Ph7 web 5/8. As the rules require, I marked 5/8 done and put the rest of it (object table, spawns, player, collision, `--load-state`) into one task at the end of RE Investigation, noted as needed before 6/8. Nothing is committed.
+
+**What I added**
+- **`web/src/game/obj/sprites.js`**: `spriteDraw()` ports the sprite pass and its three sub-routines (metasprite draw, hiding unused sprites, orbit ring/burst) instruction by instruction. It writes the same zero-page temps the ROM does, so the whole RAM can be compared.
+- **`web/data/sprites_b28.bin`**: PRG banks 28-29 exported by `tools/gen_web_data.py`. The port reads the draw-order tables and metasprite records from it by CPU address, the way the ROM does.
+- **`tools/emu/sprite_capture.py`**: records RAM when the pass starts and when it returns. `real` mode hooks a normal run; `fuzz` mode fills camera, orbit state, OAM and all 32 object slots with random values, then calls the routine.
+- **`web/test/sprite_check.mjs`**: replays every case through the port and diffs all 2KB of RAM, except the stack bytes the 6502 uses for calls. It exits 1 on any difference.
+- **`tools/meta_ptr_check.py`**: lists metasprite ids whose pointer leaves banks 28/29.
+
+**How it's checked**
+- 52 real passes from the canonical run and 500 fuzz cases all give identical RAM.
+- As a negative test, I swapped in the mirrored-x formula REVERSE.md used to document. 250 of the 500 fuzz cases failed, but 0 of the 52 real ones did, because the real run never draws a mirrored sprite. The fuzz set is what covers mirroring, overlays, sinking, OAM overflow and the burst ring.
+- The core, world, serve and ppu checks still pass.
+
+**Findings (written to REVERSE.md)**
+- **Doc correction:** mirrored records place x at (~dx)−8 = −dx−9, not −dx−8.
+- **Meta id `$9A`** points to `$0000`, so drawing it reads a "record" from zero page. It's the only such id. The port reproduces this, and the fuzzer avoids it because random zero-page bytes then send the read anywhere.
+- **Byte-level quirks:**
+  - A sprite skipped for wrapping off the screen edge still leaves its x byte in OAM.
+  - A sinking object stops at its "lower part" sprite after writing only y and attr.
+  - When OAM fills up, every later object is skipped.
+  - The burst ring uses the timer value after it is decremented, and writes x before it checks y.
+  - The orbit tile index is not clamped.
+  - On a player overlay, the hit flash only recolours the main sprite.
+
+I also updated labels.csv, CLAUDE.md, `docs/architecture_web.md`, the output-files table, and added `web/test/sprite_frames/README.md` with the regenerate commands. One thing to know before committing: `web/test/sprite_frames/fuzz.json` is about 3 MB. Cutting it to around 300 cases would roughly halve that if you'd rather keep the repo small.
+
+SESSION_SUMMARY: Session 54 — Ph7 web 5/8 sprite pass ported (`obj/sprites.js` + `sprites_b28.bin`), checked by `sprite_capture.py` (real + fuzz) / `sprite_check.mjs` at 552/552 whole-RAM identical; corrected the mirror x to −dx−9, found meta id `$9A` → `$0000`, documented byte-level quirks; the rest of 5/8 is one leftover task at the end of RE Investigation (needed before 6/8).

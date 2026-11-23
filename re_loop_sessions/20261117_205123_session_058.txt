@@ -1,0 +1,84 @@
+  ▶ wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; grep -n "^## \|^### " REVERSE.md | tail -30; grep -n "\
+  ▶ cat dead_ends.md; tail -60 re_loop_sessions/20261117_205123_session_057.txt; wc -l re_loop_sessions/20261117_205123_sess
+  ▶ Read REVERSE.md +1820
+  ▶ head -60 COMPARISON.md; grep -n "^#\|web" COMPARISON.md | head -40; wc -l COMPARISON.md tools/comparison.py; grep -n "we
+  ▶ sed -n 1,60p web/test/run.mjs; ls tools/emu/ tools/emu/states/ ref/ | head -80; grep -n "canonical" REVERSE.md | head -1
+Comparing the web port to tools.emu at the 12 reference frames so I can fill the web-port column. First, finding the canonical keys script.
+  ▶ cat ref/capture.txt | head; grep -n "keys\|KEYS" tools/comparison.py | head; ls tools/emu/states/ 2>/dev/null; ls tools/
+  ▶ Read comparison.py +1
+  ▶ Read comparison.py +340
+  ▶ Read run.mjs +60
+  ▶ python3 - <<'EOF' 2>&1 | head -3 || true
+  ▶ Grep "nesRgb|NES_RGB" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/gen_web_data.py
+Same RGB table on both sides, so pixels compare exactly. Adding a multi-frame screenshot option to `run.mjs`.
+  ▶ python3 tools/edit_helper.py 2>/dev/null; true
+  ▶ Edit run.mjs
+  ▶ Edit run.mjs
+  ▶ Edit run.mjs
+  ▶ grep -n "^def \|^COLS\|^[A-Z_]* = " tools/emu/compare.py tools/compare_frames.py; grep -n "CANON_KEYS =" tools/ref/compa
+  ▶ Read compare_frames.py +20
+Now the comparison tool.
+  ▶ Write web_compare.py
+  ▶ time python3 tools/web_compare.py 2>&1 | tail -25
+  ▶ python3 - 2>/dev/null; true
+  ▶ Edit web_compare.py
+  ▶ Edit web_compare.py
+Also fixing the docstring path, then rerunning.
+  ▶ Edit web_compare.py
+  ▶ rm -f gfx/compare/web_0*.png; python3 tools/web_compare.py 2>&1 | tail -22
+  ▶ python3 tools/web_compare.py > gfx/compare/web_compare.txt 2>&1; tail -22 gfx/compare/web_compare.txt
+  ▶ python3 tools/web_compare.py
+  ▶ Read web_1450.png
+The port's title screen is black because state 3 is still a stub, as expected. Now I'll make `comparison.py` fill the Web port column from `web.json` and add a §6 summary.
+  ▶ grep -n "'|  |\| |  | \|f'{pair} |  |\|) |  | " tools/comparison.py
+Editing `report()` row by row.
+  ▶ Edit comparison.py
+  ▶ Edit comparison.py
+  ▶ Edit comparison.py
+  ▶ Edit comparison.py
+  ▶ Edit comparison.py
+  ▶ Edit comparison.py
+  ▶ Edit comparison.py
+  ▶ Edit comparison.py
+  ▶ python3 tools/comparison.py report && git diff --stat COMPARISON.md && grep -n "^## 6" -A 30 COMPARISON.md && sed -n 1,3
+COMPARISON.md is filled. Now REVERSE.md: the task note, fix tasks, and an output-files row.
+  ▶ grep -n "comparison.py\|^| \`web/test/run.mjs\|Ph7: web port pixel" REVERSE.md | head; sed -n 1700,1712p REVERSE.md | cu
+  ▶ Grep "tools/comparison.py`|web/test/run.mjs`, |Ph7: web port pixel" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1704
+  ▶ Grep "pal_crc" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/compare.py
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding a note at the Ph7 checkpoint and a CLAUDE.md tool line, then a final check that run.mjs and the existing checks still pass.
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+  ▶ node web/test/run.mjs --frames 50 --quiet; node web/test/core_check.mjs | tail -1; node web/test/serve_check.mjs 2>&1 | 
+I ran the comparison for Ph7 web 8/8 and filled in the web-port column of `COMPARISON.md`, but **none of the 3 required states match**, so I left the Ph7 checkpoint unticked. Every mismatch comes from screens the port doesn't build yet.
+
+**What I added:**
+- **`tools/web_compare.py`** runs tools.emu and the web port with the same button script from power-on. It compares the full 256×240 frame at the 12 frames the FCEUX reference capture used, and checks the per-frame state, sound, palette and object columns for the first frame where each group differs. Both sides use the same colour table, so a pixel match is exact. It writes a three-panel image per frame to `gfx/compare/web_NNNN.png`: tools.emu, the port, then the differing pixels.
+- **`web/test/run.mjs --shots F,F,... DIR`** saves the port's screen at each listed frame.
+- **`tools/comparison.py report`** now uses those results to fill the "Web port" column in §1-§5 and adds a §6 summary to `COMPARISON.md`.
+
+**Results:**
+
+| State | Frames | Result |
+|---|---|---|
+| Title / name entry | f600-f2250 | 18-89 % of pixels differ. The port's screen stays black because main state 3 (title) is still a stub. |
+| First gameplay frame | f2352 | 51 % differs. tools.emu is in gameplay; the port is still on the title. |
+| Area 1 | f2385-f2460 | 51-85 % differs, same reason. f2409 is identical only because both screens are blank (area-load frame). |
+
+The column checks show where the two runs first part ways:
+- **Palette buffer:** differs from the very first frame (f214). The port skips the startup intro, which seems to be what leaves that buffer set up.
+- **Sound:** differs from f279, where the title music starts.
+- **Camera:** differs from f889 (title scroll).
+- **Objects:** differ from f2322 (new game starts).
+
+**Fix tasks filed** under `### Web Port Fixes` in REVERSE.md:
+1. Make the palette buffer match at f214: reproduce what the skipped intro leaves behind, or document why the difference is harmless.
+2. Port the title and name-entry screens (already queued as "Ph7 web 7/8 leftovers" (a)).
+3. Port gameplay: the existing 4/8, 5/8 and 7/8 (b) leftovers. Done when f2352 and f2450 are pixel-identical.
+
+The existing checks I re-ran still pass (`run.mjs`, `core_check`, `serve_check`). I also noted the new tool in CLAUDE.md and REVERSE.md. No ROM addresses were involved, so `labels.csv` is unchanged.
+
+SESSION_SUMMARY: Ph7 web 8/8 done: new `tools/web_compare.py` + `run.mjs --shots` compare the port with tools.emu at the 12 reference frames, and the COMPARISON.md web column + §6 are filled; 0/3 states match (title and gameplay not ported, palette buffer differs from f214), so the Ph7 checkpoint stays unticked and 3 fix tasks are filed.

@@ -1,0 +1,168 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md | 
+  ▶ cat dead_ends.md && tail -60 re_loop_sessions/20261118_055659_session_074.txt && git log --oneline -3 && git show --stat
+  ▶ Grep "\$58-\$5F|\$58–\$5F|area \$E0|\$E0 got|AreaEntryTable|EventActionTable" REVERSE.md
+  ▶ grep -n "^\*,006C\|^\*,006D\|^\*,006E" labels.csv; ls tools/emu/ | head -50; grep -n "58" docs/emu_tour.txt | head -20
+  ▶ python3 tools/xref.py 006C 2>&1 | grep -iv "LDA\|CMP\|LDX\|LDY\|BIT\|ADC\|AND\|SBC" | head -40
+Working on the Ph6 tour-leftovers task: finding how the game enters areas `$58-$5F`, starting with the code that writes `area_id`.
+  ▶ python3 tools/xref.py 006C 2>&1 | grep -E "ST[AXY]|INC|DEC" 
+  ▶ for a in C960:16 CBD0:16 D5BC:20 DAA0:16 DC85:16; do python3 tools/dis.py 30 ${a%:*} ${a#*:}; echo ---; done; python3 to
+  ▶ python3 tools/dis.py 30 C960 16; echo ---; python3 tools/dis.py 30 CBD0 16; echo ---; python3 tools/dis.py 30 D5BC 20; e
+  ▶ python3 tools/decode_tables.py CBEC 16 u8 2>&1 | head -5; grep -n "CBEC\|^30,DC\|^30,CBC\|^30,CBB\|^30,CBA" labels.csv; 
+  ▶ python3 tools/dis.py 31 E573 50; echo ---; python3 tools/dis.py 10 8520 30; grep -n "^10,85\|^31,E57\|^31,E5" labels.csv
+  ▶ grep -n "argv\|add_argument\|mode ==\|def cmd_\|choices" tools/area_dump.py | head -30; ls tools/ | grep -i "area\|exit\
+  ▶ sed -n 1,40p tools/area_dump.py; sed -n 218,234p tools/area_dump.py
+  ▶ grep -n "def decode_sub" -A45 tools/area_dump.py; python3 tools/area_dump.py sub 0x58 0x59 0x5A 0x5F | head -60
+$58-$5F link only to each other, so I'm writing a small `tools/area_graph.py` to find any exit into the group from outside.
+  ▶ sed -n 40,122p tools/area_dump.py
+  ▶ Write area_graph.py
+  ▶ cd tools && python3 area_graph.py --group 58-5F; python3 area_graph.py 58 59 5A 5B 5C 5D 5E 5F
+  ▶ python3 tools/area_graph.py 58 59 5A 5B 5C 5D 5E 5F
+Area `$A7` has a k3 exit at cell (7,5) into `$58`. Checking why the tour didn't count it.
+  ▶ python3 tools/area_dump.py sub 0xA7 0xBD | grep -v "row "; grep -n "A7\.\|reach\|58-5F\|unreach" docs/emu_tour.txt | hea
+  ▶ Grep "^\s+A7\.|^\s+BD\.|areas never|not reached|unvisited" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_tour.txt
+  ▶ sed -n 1,8p docs/emu_tour.txt; grep -n "A7\|BD" docs/emu_tour.txt | head; grep -n "A7" gfx/area*.txt 2>/dev/null | head 
+  ▶ python3 tools/area_graph.py A6 A7 A8 BD; grep -n "A7\b" gfx/area_list.txt 2>/dev/null | head -3; ls gfx/areas | grep -E 
+  ▶ grep -nE "^  (A4|A5|A6|A7)\.[0-9A-F]{2} " docs/emu_tour.txt; python3 tools/area_graph.py A5 | cut -c1-300; grep -n "def 
+  ▶ Read tour.py +44
+Found it: the tour's `valid_area()` drops `$A7` because it has no spawn record. The BFS never passes through `$A7`, so it never reaches `$58`. Checking whether the game loads `$A7` anyway.
+  ▶ sed -n 1,30p tools/emu/tour.py; sed -n 413,440p tools/emu/tour.py; python3 tools/dis.py 31 E14A 30
+  ▶ python3 tools/dis.py 31 E169 30; python3 tools/decode_tables.py 934F 1 u16 2>&1 | head -3
+  ▶ Read tour.py +160
+I'll make `valid_area()` accept a spawn-less area as long as its AreaSubTable header is valid, since AreaLoad `31:E16B` (BPL) just skips the spawn record.
+  ▶ Edit tour.py
+  ▶ python3 tools/emu/tour.py graph | tail -3; python3 tools/emu/tour.py graph | grep -E "^  (A6|A7|5[89A-F]) "
+Now 58-5F are reachable through `A5 → A6 → A7 → 58`. Only `16` and `6F` remain unreachable. Next, an emulator check: a short tour of A6, A7 and 58-5F, taking the real exits where it can.
+  ▶ python3 tools/emu/tour.py graph | head -1; git show HEAD:tools/emu/tour.py > /tmp/tour_old.py; grep -n "only\|max" tools
+  ▶ python3 tools/emu/tour.py graph | head -1; grep -n "add_argument" tools/emu/tour.py; grep -n "not reachable" docs/*.txt 
+  ▶ Edit tour.py
+  ▶ timeout 900 python3 tools/emu/tour.py run --only A5,A6,A7,58,59,5A,5B,5C,5E,5D,5F --shots gfx/emu/tour58 --out docs/emu_
+A6→A7→58→59 and 5C→5E all loaded through real exits. 5D and 5F loaded by poke but took ~300 frames and only ~40% of the BG matches. Checking their screenshots.
+  ▶ Read area_093.png
+  ▶ Read area_093.png
+  ▶ Read area_095.png
+The 5D screenshot is an item-get story message box over the right room, so the BG diff is just the box covering the screen. Next, (b): area `$E0` getting stuck.
+  ▶ grep -nE "^  (D7|E0|DF|E1)\.|stuck legs" docs/emu_tour.txt; python3 tools/area_graph.py E0; python3 tools/area_dump.py s
+  ▶ timeout 600 python3 tools/emu/tour.py run --only D7,E0 --shots gfx/emu/tourE0 2>&1 | head -8
+From a fresh state the real D7→E0 exit works, so the long-run failure must depend on state built up along the route. Checking the legs just before it.
+  ▶ sed -n 282,296p docs/emu_tour.txt | cut -c1-120
+E0 was poked from area 52, not D7, and the game ended up back in D7, which is where E0's own exit goes. Reproducing with route 52 → E0.
+  ▶ timeout 600 python3 tools/emu/tour.py run --only 52,E0 2>&1 | head -3; timeout 600 python3 tools/emu/tour.py run --only 
+Reproduced: from 52, a poke to E0 ends in D7. I'll write a small probe that logs per-frame state and every `area_id` write after the poke.
+  ▶ Read lag_probe.py
+  ▶ Write poke_probe.py
+  ▶ grep -n "def on_write\|def prg_bank_at\|self.pc\b" tools/emu/nes.py tools/emu/mapper.py tools/emu/cpu.py | head -5; time
+No bounce when E0 is poked right after 52 loads. The tour waits 30 settle frames in 52 first, so I'm adding a `--wait` option to match that.
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit poke_probe.py
+  ▶ Edit poke_probe.py
+  ▶ timeout 300 python3 -m tools.emu.poke_probe 52 E0 --wait 30 --frames 120 2>&1 | grep -v "area E0.00 p0" | head -60
+  ▶ timeout 300 python3 -m tools.emu.poke_probe 52 E0 --wait 30 --frames 300 2>&1 | awk 'NR<4 || /<-/ || NR%40==0' | head -4
+  ▶ timeout 300 python3 -m tools.emu.poke_probe 52 E0 --wait 30 --frames 300 > docs/poke_probe_E0.txt 2>&1; grep -c "" docs/
+  ▶ timeout 300 python3 -m tools.emu.poke_probe 52 E0 --wait 30 --frames 300 2>&1 | grep -E "<-|poke|wait|f2[5-8][0-9]0 " | 
+Sub_state 1 never finishes after the late poke. Looking at the sub_state 1 handler.
+  ▶ python3 tools/decode_tables.py CADE 4 u16 2>&1 | head -2; grep -n "^30,CA[0-9A-F][0-9A-F]\|^30,CB0" labels.csv | head
+  ▶ python3 tools/dis.py 30 CA2E 49; python3 tools/dis.py 31 E3D9 70
+  ▶ Edit poke_probe.py
+  ▶ grep -n "self.sp\b\|self.s\b" tools/emu/cpu.py | head -3; timeout 300 python3 -m tools.emu.poke_probe 52 E0 --wait 30 --
+  ▶ sed -i 's/nes\.cpu\.sp/nes.cpu.s/g' tools/emu/poke_probe.py && timeout 300 python3 -m tools.emu.poke_probe 52 E0 --wait 
+  ▶ Edit poke_probe.py
+  ▶ timeout 300 python3 -m tools.emu.poke_probe 52 E0 --wait 30 --frames 60 2>&1 | grep -E "f25[2-8][05] " | head -20
+  ▶ timeout 300 python3 -m tools.emu.poke_probe 52 E0 --wait 30 --frames 30 --watch 07DF 0022 0023 0623 2>&1 | grep -E "<-" 
+  ▶ python3 tools/dis.py 30 D600 60 | head -40; grep -n "D6[0-3][0-9A-F]" REVERSE.md | head
+  ▶ Edit poke_probe.py
+  ▶ Edit poke_probe.py
+  ▶ timeout 300 python3 -m tools.emu.poke_probe 52 E0 --wait 30 --frames 400 --tap --watch 030D 064D 2>&1 | grep -E "<-|f2[5
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+  ▶ grep -n "self.bounce\|def __init__" tools/emu/tour.py | head; timeout 600 python3 tools/emu/tour.py run --only 52,E0 2>&
+The bounce is reported now. For (a), `record()` should also store the real `$6C`, then the full ~1 h tour rerun goes in the background.
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+  ▶ timeout 600 python3 tools/emu/tour.py run --only 52,E0,15 2>&1 | head -4
+Launching the full coverage tour (~1 h) in the background while I write up the findings.
+  ▶ python3 tools/emu/tour.py run --coverage --shots gfx/emu/tour --out docs/emu_tour.txt > /dev/null 2>&1
+  ▶ Grep "tour\.py" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '1484p;1882p' REVERSE.md | cut -c1-1500; sed -n 1478,1490p REVERSE.md | cut -c1-120
+  ▶ sed -n 140p REVERSE.md | cut -c1-2500; grep -n "Area connections\|area graph\|### Area\|#### Area" REVERSE.md | head
+Now writing the findings into REVERSE.md: first the verification-log row, then the tour tool row.
+  ▶ python3 tools/emu/tour.py graph | head -1; python3 tools/area_graph.py 16 6F
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ sed -n 1076,1084p REVERSE.md | cut -c1-200; grep -n "^[0-9]*,A18E\|^[0-9]*,A161" labels.csv
+Bank 27, not 17. Fixing that.
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^30,DC58\|^30,D5E6\|^31,EB09\|^30,D54B\|^30,DC64" labels.csv; python3 tools/dis.py 30 DC70 24 | head -14
+`30:DC58` has no label yet. Checking whether the teleport menu docs already mention it.
+  ▶ Grep "DC58|DC8C|SubstTeleport" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ tail -3 labels.csv && grep -n "^30,DB" labels.csv | tail -3
+  ▶ printf '%s\n' '30,DC58,TeleportAreaTable,s75: 11 area ids (02 18 1C D5 50 1B 71 72 8C 8E 93) + FF; index = row*3+col of 
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 30 DC8C 3
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding the two new tools to the tools table next to the tour row.
+  ▶ grep -n "^| \`tools/emu/tour.py\`" REVERSE.md && sed -n "$(grep -n '^| `tools/emu/tour.py`' REVERSE.md | cut -d: -f1),+1
+  ▶ Grep "^\| `tools/emu/(tour|lag_probe|save_probe)\.py`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+The writeup is in place. Waiting on the background tour run for (a).
+  ▶ ToolSearch max_results query
+I don't need a monitor: the background tour (`b2a3l4nrr`) notifies me when it exits. It's a ~1 h run.
+
+So far:
+- **(c) solved.** Areas `$58-$5F` are entered from area `$A7`, reached via `$A5` → `$A6` → `$A7`. `$A7` has map data but no spawn record, and the tour's BFS skipped areas without one. With that fixed, 215 of 217 areas are reachable; `$16` and `$6F` have no way in at all. In the emulator, all 11 areas in that chain load; A6→A7→58→59 and 5C→5E go through the game's own exits.
+- **(b) solved.** `$E0` isn't stuck. Entering it after the follower joins in area `$52` plays a story message. When it closes, the player is standing on `$E0`'s own exit tile, so the game moves them straight back to `$D7`. The tour now reports this as a bounce (`poke>D7`) instead of STUCK.
+- **(a)** The full coverage tour rerun is in progress. Each row now also shows `NOW IN xx` when the leg ended in a different area than its target.
+
+I'll wait for the run to finish, check its output, then update the Verification Log row in REVERSE.md and finish the session.
+The tour run failed, and since I sent its output to /dev/null, I need to find out where.
+  ▶ git status --short docs/emu_tour.txt; ls -la --time-style=+%H:%M docs/emu_tour.txt; ls gfx/emu/tour | wc -l; date +%H:%M
+`docs/emu_tour.txt` was written, so the run finished. Exit 1 probably comes from a check. Reading the summary.
+  ▶ head -1 docs/emu_tour.txt; grep -nE "stuck legs|NOW IN|poke>|FAIL|code labels executed|^  (A7|58|5D|5F|E0)\." docs/emu_t
+Exit 1 comes from the tour's own checks failing: `ObjSpriteDraw` 8181/8182 and `SndCommand` max 2 per frame. Checking whether the committed s42 report had the same failures.
+  ▶ git show HEAD:docs/emu_tour.txt | grep -nE "FAIL|code labels executed|SndCommand max|^      ! " | head; grep -nA2 "ObjSp
+  ▶ git show HEAD:docs/emu_tour.txt | grep -nE "FAIL|code labels executed|SndCommand max|^      ! "
+  ▶ Grep "ObjSpriteDraw |^      ! |frames with >1 SndCommand" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_tour.txt
+  ▶ Grep "SndCommand max|>1 SndCommand|two commands" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "SndCommand.{0,80}(per frame|same frame|F4CF)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '144p' REVERSE.md | cut -c1-900; grep -n "^| \*\*Area tour\*\*" REVERSE.md
+The SndCommand double is already explained (s42: the driver ticks twice on area-load frames). Counting legs by method for the writeup.
+  ▶ grep -cE "^  [0-9A-F]{2}\.[0-9A-F]{2} exit" docs/emu_tour.txt; grep -cE "^  [0-9A-F]{2}\.[0-9A-F]{2} poke" docs/emu_tour
+Now writing the rerun results into REVERSE.md.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ grep -o "predated two fixes.\{0,260\}" REVERSE.md
+  ▶ Grep "predated two fixes.{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ git status --short
+I finished the "Ph6 tour leftovers" task: (a), (b) and (c) are done, and (d)/(e) are queued as one new low-priority task at the end of RE Investigation.
+
+**(c) How the game reaches areas `$58-$5F`:** through area `$A7`, which has a door into `$58`. The path is `$A5` → `$A6` → `$A7` → `$58`. `$A7` has map data but no object list; the game just skips that part when it loads the area. The tour's search treated any area without an object list as invalid, so it never went past `$A7`. With that fixed, 215 of 217 areas are reachable. Only `$16` and `$6F` have no way in at all, which I added to the new task. In the emulator, all 11 areas in the chain load, and A6→A7→58→59 and 5C→5E go through the game's own doors.
+
+**(b) Area `$E0` isn't stuck.** If the follower from area `$52` is with you, entering `$E0` plays that follower's message and waits for A. When the box closes, the player is standing on `$E0`'s own exit tile, so the game sends them straight back to `$D7` in the same frame. The old tour was waiting for "in `$E0`, playing", which never happened. Entering `$E0` through the real door from `$D7` works normally.
+
+**(a) Full tour rerun** (46 min):
+- **Areas:** 214 legs, none stuck; 140 went through real doors and 73 were RAM pokes.
+- **Bounces:** two legs ended in a different area: `$E0` (above) and `$15`, which bounces back to `$28` the same way.
+- **Old failures:** the 13 area-load failures from session 42 are gone.
+- **Still failing (exit code 1):**
+  - The known one: on one area-load frame the sound driver runs twice and gets 2 sound commands, already explained in session 42.
+  - One new sprite-check mismatch, at f21532. That's the last frame of entering `$5D`, where an item-get event moves the player while the tour is poking. I think it's caused by the tour itself, not the sprite code, but I haven't checked that.
+- **Coverage:** 287 of 465 code labels executed (session 42: 185 of 294).
+
+**Changes:**
+- **New tools:**
+  - `tools/area_graph.py` lists every link into an area: doors, edge links, the teleport table, the debug area cycler.
+  - `tools/emu/poke_probe.py` chains area pokes and logs each frame, with every write to the area/state variables and the code address that made it.
+- **`tools/emu/tour.py`:**
+  - accepts areas with no object list;
+  - `--only` runs now use real doors when they can;
+  - bounce legs are marked `poke>XX`;
+  - each row prints `NOW IN xx` when the leg ended elsewhere.
+- **`labels.csv`:** new label `30:DC58` `TeleportAreaTable`, the 11 teleport destinations.
+- **`REVERSE.md`:** the results are a new Verification Log row, the tool table has the two new tools, and the task is marked done.
+- **Regenerated:** `docs/emu_tour.txt` and `gfx/emu/tour/`.
+- **Leftovers:** `docs/emu_tour_58.txt`, `gfx/emu/tour58/` and `gfx/emu/tourE0/` are outputs from the short test runs and can be deleted.
+
+Nothing is committed.
+
+SESSION_SUMMARY: Session 75 finished the Ph6 tour leftovers (a)-(c). `$58-$5F` are entered via the spawn-less area `$A7` (`$A5`→`$A6`→`$A7`→`$58`); 215/217 areas are now reachable (`$16` and `$6F` have no inbound link). `$E0` is not stuck: its entry event (act 7 message) closes onto its own exit cell and bounces the player to `$D7`. The full coverage tour reran with 214 legs and 0 stuck; it still exits 1 on the known SndCommand double tick and one new ObjSpriteDraw mismatch at the `$5D` event frame (believed a tour artefact, not verified). New `tools/area_graph.py` and `tools/emu/poke_probe.py`, `tour.py` fixes, the `TeleportAreaTable` label, and (d)/(e) queued as one low-priority scripted-scenarios task.

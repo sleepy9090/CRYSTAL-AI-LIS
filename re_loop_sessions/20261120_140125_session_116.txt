@@ -1,0 +1,99 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## Next Tasks|^- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +2267
+  ▶ Glob re_loop_sessions/*_session_11*
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/20261120_140125_session_11*.txt && tail -c 2500 re_loop_sessions/20261120_140125_session_115.txt;
+  ▶ ls web/src web/src/game web/src/game/* web/test | head -80 && wc -l web/src/game/*/*.js
+  ▶ Grep "AreaPitFall|AreaEdgeLink|E544|E573|C765" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+I'm starting the remaining gameplay-port item: porting `AreaPitFall` (`31:E544`) / `AreaEdgeLink` (`31:E573`) into the web port's area-entry code.
+  ▶ sed -n '1440,1450p;1470,1476p' REVERSE.md | cut -c1-2500; python3 tools/dis.py 31 E544 0x60
+  ▶ python3 tools/dis.py 31 E5A5 0x80; python3 tools/dis.py 31 E611 0x10
+  ▶ Read areaenter.js
+  ▶ python3 tools/dis.py 31 E3E9 0x78; python3 tools/dis.py 26 9861 0x40; python3 tools/dis.py 31 C7A5 0x30
+  ▶ Grep "export (function\*?|const) (areaSubTable|loadAreaMap|objPosToTemp|tempAddStep|tempAddOffset|objBgProbe|tempToObjPos|fadeIn|fadeOut)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read camera.js +150
+  ▶ Read util.js +160
+I'm porting the pit-fall/edge-link path; checking how `AreaSubTable` leaves the bank mapping before writing the JS.
+  ▶ python3 tools/dis.py 30 C7A5 0x2A; sed -n '40,70p' web/src/game/states/death.js; grep -n "export function\* statRecalc\|
+  ▶ python3 tools/dis.py 30 C7D0 0x10
+  ▶ python3 tools/dis.py 10 8C49 0x30
+  ▶ sed -n '1,40p' tools/web_state.py; ls tools/emu/ | head -50; grep -n "poke\|load-state\|loadState" web/test/run.mjs | he
+  ▶ sed -n '1,60p' tools/emu/web_state.py; sed -n '1,30p' tools/emu/poke_probe.py
+  ▶ ls tools/emu/states/ web/test/states/ 2>/dev/null; sed -n '30,120p' tools/emu/poke_probe.py
+Now writing the port code; first a small tools.emu helper to build a pit-fall scenario state for verification.
+  ▶ grep -n "^def " tools/emu/state.py; sed -n '60,110p' tools/emu/web_state.py
+  ▶ Write area_state.py
+  ▶ mkdir -p gfx/compare && python3 -m tools.emu.area_state 6A --out gfx/compare/s116_a6a.state && python3 -m tools.emu.web_
+  ▶ python3 -m tools.emu.area_state 6A --out gfx/compare/s116_a6a.state && python3 -m tools.emu.web_state --load-state gfx/c
+  ▶ grep -rn "not ported" web/src/game/states/play.js web/src/game/states/talk.js | head -5; grep -n "indY" web/src/game/wor
+  ▶ grep -rn "not ported" web/src/game/states/play.js web/src/game/states/talk.js | head -5; grep -n "indY" web/src/game/wor
+Writing the `AreaPitFall` / `AreaEdgeLink` port into `areaenter.js` now.
+  ▶ python3 - "$@" <<'EOF'
+  ▶ Edit areaenter.js
+  ▶ Edit areaenter.js
+  ▶ Edit areaenter.js
+  ▶ Edit areaenter.js
+  ▶ Edit areaenter.js
+Now comparing the port against tools.emu from the pit-fall state.
+  ▶ python3 -m tools.emu --load-state gfx/compare/s116_pit.state --frames 120 --compare gfx/compare/s116_emu.csv > /dev/null
+  ▶ python3 tools/compare_frames.py gfx/compare/s116_emu.csv gfx/compare/s116_web.csv --cols core,obj 2>&1 | sed -n '20,60p'
+  ▶ python3 tools/compare_frames.py gfx/compare/s116_emu.csv gfx/compare/s116_web.csv --cols core,obj --frames 2545-2634 2>&
+  ▶ head -1 gfx/compare/s116_emu.csv | tr ',' '\n' | grep -n "frm\|cnt\|08\|ctr" | head; python3 tools/dis.py 30 CAB6 0x20
+  ▶ sed -n '1,40p' web/test/run.mjs | grep -n "dump"; python3 -m tools.emu --help 2>&1 | grep -i "dump\|save-state" ; sed -n
+  ▶ python3 -m tools.emu --load-state gfx/compare/s116_pit.state --frames 55 --dump-ram gfx/compare/s116_emu.ram >/dev/null 
+  ▶ head -1 gfx/compare/s116_emu.csv | cut -c1-400; ls tools/ | grep -i "trace_summary\|csv_stalls\|lag"
+  ▶ python3 tools/csv_stalls.py 2>&1 | head -5; python3 tools/compare_frames.py gfx/compare/s116_emu.csv gfx/compare/s116_we
+  ▶ python3 -m tools.emu --load-state gfx/compare/s116_pit.state --frames 62 --dump-ram gfx/compare/s116_emu.ram >/dev/null 
+  ▶ grep -n "^3[01],C9[0-9A-F][0-9A-F],Main\|MainLoop" labels.csv | head -5; grep -n "mainStep\|C900\|C90" web/src/game/main
+  ▶ sed -n '30,60p' web/src/game/mainloop.js; python3 tools/dis.py 30 C900 0x1F
+  ▶ python3 -m tools.emu.web_state --load-state gfx/compare/s116_a6a.state --poke 0070=78 --poke 0071=78 --poke 0090=05 --po
+The `$08` hypothesis is confirmed: with the export at `MainLoop`, the shake and spawn differences are gone. Checking the remaining `o18_y` and `pos_y` rows:
+  ▶ python3 tools/compare_frames.py gfx/compare/s116_emu.csv gfx/compare/s116_web.csv --cols o18,pos --frames 2514-2560 2>&1
+  ▶ head -1 gfx/compare/s116_emu.csv | tr ',' '\n' | grep -n "o18_ai"; sed -n '2,4p' gfx/compare/s116_emu.csv | cut -d, -f88
+  ▶ python3 -m tools.emu --load-state gfx/compare/s116_pit.state --frames 100 --dump-screen gfx/compare/s116_emu.png > /dev/
+  ▶ python3 -m tools.emu --load-state gfx/compare/s116_pit.state --frames 100 --dump-screen gfx/compare/s116_emu.png > /dev/
+  ▶ node web/test/core_check.mjs 2>&1 | tail -2; node web/test/ppu_check.mjs 2>&1 | tail -2; node web/test/world_check.mjs 2
+The checks pass. The screenshot differs on tile rows 9-12 and on the HUD rows 23-29, so I'll look at the diff image:
+  ▶ Read s116_diff.png
+  ▶ Read s116_emu.png
+  ▶ Read s116_web.png
+  ▶ python3 -m tools.emu --load-state gfx/compare/s116_pit.state --frames 140 --dump-screen gfx/compare/s116_emu.png > /dev/
+  ▶ Read s116_diff.png
+The playfield now matches; only the HUD box differs. To see whether that comes from the pit code or from load-state scenarios in general, I'll run the same area `$6A` state without the pit pokes:
+  ▶ python3 -m tools.emu.web_state --load-state gfx/compare/s116_a6a.state --until 30:C904 --out gfx/compare/s116_nopit.json
+That control run, with no pit, shows the same HUD rows 23-29 difference, so it comes from load-state scenarios in general, not from the new code. Now updating REVERSE.md, labels.csv and the docs.
+  ▶ grep -n "^### Web Port Fixes\|^- \*\*s115\|session 115\|^### Verification Log\|^## Verification" REVERSE.md | head; grep
+  ▶ sed -n '2470,2480p' REVERSE.md | cut -c1-300
+  ▶ awk 'NR>2470 && /^- \*\*|^#/ {print NR": "substr($0,1,80)}' REVERSE.md | head -5; wc -l REVERSE.md
+  ▶ Grep "^(- \*\*|#)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2492
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Updating the task text in Next Tasks, then labels and the docs.
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^31,E603\|^31,E60E\|^31,E44A" labels.csv; grep -n "AreaEnter\|areaenter" docs/architecture_web.md | head -5
+  ▶ sed -i 's/`E533`; `E544` pit fall not ported), `AreaEnterCommon` `31:E439`,/`E533`\/`E544`), `AreaPitFall` `31:E544` + `
+  ▶ Read architecture_web.md +167
+  ▶ Read labels.csv +225
+  ▶ Edit architecture_web.md
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 31 E600 6 | head -4 && node web/test/core_check.mjs 2>&1 | tail -1
+I ported the pit fall and the area link it leads to into the web port. In the test scenario it matches the emulator apart from known frame-sampling offsets, and all web checks pass. The gameplay task stays unchecked under the leftovers rule, with what's left listed in its text.
+
+**What changed:** `web/src/game/states/areaenter.js` now has `areaPitFall` (`31:E544`) and `areaEdgeLink` (`31:E573`). Before this, the port threw an error whenever the player stepped onto a pit. Now the player drops 8 px per frame through the pit, the game looks up the linked area, loads it, and the player falls in from above with the landing thud and camera shake. The port copies the ROM's quirks, including the record scan that has no terminator and the Y +16 with no carry.
+
+**Correction to REVERSE.md:** reading the code shows that when no link record matches, the ROM does not fade back in as the docs said. The routine that reads the link table (`AreaSubTable`) leaves a different memory bank mapped, so the jump at `31:E60E` lands in level data (bank 10). This can only happen on the pit cells of areas `$91`/`$B9`/`$BA`, which have no link table. The port just logs that path. I didn't run it in the emulator to see what the real hardware does.
+
+**Check:** I built a scenario in area `$6A` with the player poked onto the pit column (`web/test/states/pitfall.json`) and compared 150 frames against tools.emu:
+- The fall, the switch to area `$69`, the fall-in arc and the landing shake all match.
+- The remaining differences are 1-frame sampling offsets. Each fall step runs right after the NMI, so the emulator's row already includes it.
+- One enemy (slot `$18`) is 1 px off because its AI `$38` isn't ported yet.
+- At f2654 the screenshots differ only in the HUD box (tile rows 23-29). A run in the same area without the pit shows the same difference, so it comes from load-state scenarios in general, not from the pit code. I added it to the task as an open item.
+- All web checks pass (core, ppu, world, sprites 552/552, routines 14300/14300).
+
+One thing to know for future scenarios: export the state at the main-loop entry (`--until 30:C904`), not inside the gameplay state (`30:CA2E`). The inner stop point comes after the frame counter `$08` is decremented, and the port then runs that step again. In my first attempt that shifted the landing shake and created a phantom slot `$17` enemy.
+
+**Records:** a session-116 note under "Web Port Fixes", the corrected pit-fall paragraph, the updated task text, 2 new labels plus an updated comment in labels.csv, and `docs/architecture_web.md`. New tool: `tools/emu/area_state.py` (loads a chosen area and saves a play state). Scratch files you can delete: `gfx/compare/s116_*`, except `s116_a6a.state`, which the session note refers to. Nothing is committed.
+
+SESSION_SUMMARY: Session 116: ported AreaPitFall 31:E544 + AreaEdgeLink 31:E573 into web/src/game/states/areaenter.js; the area-$6A pit scenario (web/test/states/pitfall.json, new tools/emu/area_state.py) matches tools.emu apart from 1-frame sampling rows and unported AI $38, all web checks pass; corrected REVERSE.md (the no-match JMP $8C49 runs with bank 10 mapped and lands in level data); the gameplay task stays open for its other leftovers.

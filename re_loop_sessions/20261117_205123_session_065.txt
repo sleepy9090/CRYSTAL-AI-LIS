@@ -1,0 +1,64 @@
+  ▶ wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +1814
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Top unchecked under Next Tasks is line 1930.
+  ▶ Read REVERSE.md +1920
+  ▶ tail -c 3500 re_loop_sessions/20261117_205123_session_064.txt; echo ====; tail -c 1500 re_loop_sessions/20261117_205123_
+Task: decode IRQ handlers 1-7. Let me see what's already documented.
+  ▶ Grep "IrqHandlerTable|IrqHandler[0-9]|NMI tail in full" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Read REVERSE.md +320
+Now disassemble all handlers.
+  ▶ python3 tools/dis.py 31 F443 0x26A
+Handlers decoded in one pass. Now the NMI-mode arming code (for latch/`$57` arithmetic) and `SetIrqHandler` callers.
+  ▶ python3 tools/dis.py 31 F6D6 0xFF | head -120; python3 tools/xref.py F424; python3 tools/xref.py F60E
+Key facts gathered. Quick check of the intro's `$58-$5A` values (handler 6 input) and menu's `$5E/$5F` (handler 7):
+  ▶ python3 tools/dis.py 18 8028 0x60 | grep -n -B3 -A1 "chr_r[012]_alt\|zp_5E\|zp_5F\|irq_mode\|STA \$5[89A]"; echo ===; py
+  ▶ python3 tools/zp_writers.py 58 59 5A 5E 5F 2>&1 | head -60
+  ▶ for z in 59 5A 5E 5F; do echo "== $z"; python3 tools/zp_writers.py $z; done 2>&1 | head -70
+  ▶ python3 tools/zp_writers.py 59; python3 tools/zp_writers.py 5A; python3 tools/zp_writers.py 5E; python3 tools/zp_writers
+Enough to write. Updating REVERSE.md: fix two cells in the mode table, then add the handler table.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^31,(F4E5|F54B|F5A1|F5E1|F60E|F61A|F455|F691|F7B5)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Now labels: add new ones and update the three existing comments.
+  ▶ tail -c 1 labels.csv | od -c | head -1 && cat >> labels.csv <<'EOF'
+  ▶ Read labels.csv +10
+  ▶ Read labels.csv +805
+  ▶ Read labels.csv +944
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 31 F5DE 0x8 --stop; python3 tools/dis.py 31 F5FC 0x4
+Labels load. Ticking the task.
+  ▶ Edit REVERSE.md
+I decoded all 8 IRQ handlers and the task is marked done. This was all read from the disassembly; I didn't check any of it in the emulator.
+
+**What each screen uses**
+| Screen | Split sequence |
+|---|---|
+| Gameplay | optional handler 0 (vertical wrap) → handler 1 (HUD at line 190) |
+| Message box | H2 at the first tile-row boundary: shows nametable 2, message font. 72 lines later, H3 goes back to the playfield (and its graphics bank) → [H0] → H1 |
+| Pause/status | whole screen from nametable 2 → H1 |
+| Title / menus / ending | no IRQ |
+| Cold-boot intro | H6 at line 137 switches to nametable 2, row 0 (`$58`=`$89`, `$59/$5A`=`$2800`) |
+| Equipment menu | H7 at line 119 switches the background graphics to banks `$3C/$38` → H1 |
+
+**How the screen is laid out:** the playfield lives only in nametable 0. Nametable 2 holds the message window (rows 0-8) and the HUD (rows 24-29). Handler 0 exists because when the playfield scrolls past row 29, the PPU would otherwise continue into nametable 2.
+
+**Corrections to the session 64 notes**
+- Handler 0 sets the HUD split at `$BC`−`$57`, not `$BE`. The 2 lines make up for the counter reload, so the HUD still starts at line 190.
+- Handler 5 (`F60E`) is never selected through `SetIrqHandler`. It only runs at the end of handler 4's chain, and it calls `SoundUpdate`, so mode 4 does play music after all.
+- Mode 4 (the disabled shop-door effect) squashes and stretches the picture vertically; it does not swap graphics banks. `$58` is the number of lines between splits and `NmiMode4R1Table` is the row count, not a graphics bank.
+- New `NtRowAddrTable` at `31:F5A1`: 32 entries, `$2000`-`$23E0`, the row addresses in nametable 0.
+
+**Files changed**
+- `REVERSE.md`: new "IRQ handlers in full" table and chain summary, two cells fixed in the NMI mode table, task marked done.
+- `labels.csv`: 7 new labels, and the comments on `IrqHandler0`, `IrqHandler6` and `NmiMode4R1Table` updated. The disassembler loads them.
+
+Nothing was committed.
+
+SESSION_SUMMARY: Session 65 — decoded all 8 IRQ handlers (static only) and which split chain each screen uses (gameplay, message box, pause, intro at line 137, equipment menu at line 119); playfield is in nametable 0 only, nametable 2 holds the message window and HUD; new NtRowAddrTable 31:F5A1; corrected H0's HUD line, handler 5 (only reached from H4, runs SoundUpdate) and mode 4 (vertical squash/stretch); 7 labels added and 3 updated.

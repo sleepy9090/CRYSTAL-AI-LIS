@@ -1,0 +1,114 @@
+  ▶ Grep "^## |^### |^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Read REVERSE.md +2295
+  ▶ Glob re_loop_sessions/*session_14[4-7]*
+  ▶ awk 'NR>=2295 && /^- \[ \]/ {print NR": "substr($0,1,300)}' REVERSE.md | head -20; wc -c dead_ends.md; for f in re_loop_
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2297
+Picked the task: port sub_state 25 `SubstFormRevert` `19:BB9D`. Reading context now.
+  ▶ Grep "FormRevert|BB9D" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Read bank_19.asm +2530
+  ▶ Read cure.js
+  ▶ Grep "OamClipTop|C17D|oamClipTop" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web
+  ▶ Read cure_check.mjs
+  ▶ python3 tools/dis.py 30 C17D 40
+  ▶ Read death.js +180
+  ▶ Grep "substCureMagic|ENTRY_POINTS|cure" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/play.js
+  ▶ Read play.js +200
+Writing `states/formrevert.js` (close sibling of cure.js), then a state export + check.
+  ▶ Write formrevert.js
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Read changeform_check.mjs
+  ▶ timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/changeform.state --frames 400 --keys 2600:RIGHT
+  ▶ python3 -m tools.emu.web_state --help 2>&1 | head -40
+Exporting a tools.emu state at the revert entry (fixing the `--frames` arg).
+  ▶ timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/changeform.state --frames 0 --keys 2600:RIGHT 2
+Now the tools.emu reference run and the port compare.
+  ▶ python3 tools/web_state_compare.py --help 2>&1 | head -30
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/formrevert.state --web web/test/states/formrever
+Only `sub` differs from f2798. Looking at those rows:
+  ▶ python3 tools/compare_frames.py /tmp/fr/emu.csv /tmp/fr/web.csv --cols sub --frames 2794-2819 2>&1 | head -40
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/formrevert.state --web web/test/states/formrever
+  ▶ Grep "^\*,(0043|0045|004A|0026|0028)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Emu keeps A held (`pad_prev` $80) from the exported state; the port doesn't. Giving both runs the same key:
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/formrevert.state --web web/test/states/formrever
+  ▶ python3 tools/compare_frames.py /tmp/fr3/emu.csv /tmp/fr3/web.csv 2>&1 | tail -30
+  ▶ Grep "sub_state, 0?x?0?7\b|R\.sub_state, 7|0x41, 0x07|0x41, 7\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Grep "sub_state.*(0x07|\b7\b)|giveItemStart|= 7;" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Grep "sub_state|0x41," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj/collide.js
+  ▶ python3 tools/search_bytes.py "A9 07 85 41" --disasm --context 12 2>&1 | head -60
+Handler itself matches tools.emu; chasing a post-revert `sub` 8→7 difference (town trigger). Checking the trigger code at `26:94A0`:
+  ▶ python3 tools/dis.py 26 9490 48
+  ▶ Write fr_dbg.mjs
+  ▶ node /tmp/fr_dbg.mjs 2>&1 | tail -15
+  ▶ node /tmp/fr_dbg.mjs
+  ▶ cp /tmp/fr_dbg.mjs /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/_fr_dbg.mjs && cd /home/sleepy9090/Download
+  ▶ Read fr_dbg.mjs
+  ▶ Write _fr_dbg.mjs
+  ▶ node web/test/_fr_dbg.mjs
+Port's `TalkProbeHit` re-triggers GiveItem every frame after the revert (player stands on the town trigger). Checking that tools.emu runs GiveItem passes then too (the known s140 timing gap):
+  ▶ python3 tools/pass_probe.py --help 2>&1 | head -12
+  ▶ python3 -m tools.emu.pass_probe --help 2>&1 | head -15
+  ▶ timeout 300 python3 -m tools.emu.pass_probe --state tools/emu/states/formrevert.state --frames 45 --pc 30:D3EB 26:94AB 3
+  ▶ python3 tools/csv_trim.py --help 2>&1 | head; python3 tools/compare_frames.py /tmp/fr/emu.csv /tmp/fr/web.csv --frames 2
+  ▶ python3 tools/csv_trim.py --help; python3 tools/compare_frames.py /tmp/fr/emu.csv /tmp/fr/web.csv --frames 2761-2797
+Without keys, `oam_crc` also differs on 6 rows (8-frame cadence) and RAM `$08` ended 1 apart. Checking if the cure handler shows the same (to tell whether it's mine):
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/cure.state --web web/test/states/cure.json --fra
+Same 8-frame `oam_crc` pattern in the existing cure run, so it's a known sampling artifact (cure_ref leaves out `oam_crc` too). RAM diff right at the handler end:
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/formrevert.state --web web/test/states/formrever
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/formrevert.state --web web/test/states/formrever
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/formrevert.state --web web/test/states/formrever
+  ▶ python3 tools/csv_trim.py /tmp/fr/emu.csv web/test/formrevert_ref.csv --cols core,pal,obj --frames 2761-2797 && rm web/t
+  ▶ python3 tools/csv_trim.py /tmp/fr/emu.csv web/test/formrevert_ref.csv --cols core,pal,obj --frames 2761-2797
+  ▶ rm web/test/_fr_dbg.mjs
+  ▶ timeout 300 python3 -m tools.emu.pass_probe --state tools/emu/states/formrevert.state --frames 3 --peek 0714 0710 0381 0
+Now the check script:
+  ▶ Write formrevert_check.mjs
+  ▶ node web/test/formrevert_check.mjs; node web/test/cure_check.mjs; node web/test/changeform_check.mjs; node web/test/tele
+Field assertions fail while the CSV matches. Dumping those bytes per frame to see why:
+  ▶ Write _fr_dbg.mjs
+  ▶ node web/test/_fr_dbg.mjs
+Those f2795 values are already StatRecalc's (the countdown ends at f2794), so the assertions belong at f2790:
+  ▶ sed -i 's/f === 2795) mid/f === 2790) mid/; s/at f2795 = /at f2790 = /; s|/\*\* during the animation (f2795: RAM = tools
+  ▶ Edit formrevert_check.mjs
+  ▶ Edit formrevert_check.mjs
+  ▶ Edit formrevert_check.mjs
+  ▶ node web/test/formrevert_check.mjs
+Passing. Quick regression sweep over the other checks:
+  ▶ for t in core_check obj_check giveitem_check itemuse_check teleport_check pause13_check wake_check; do node web/test/$t.
+  ▶ node web/test/core_check.mjs | tail -2 && node web/test/obj_check.mjs | tail -2 && node web/test/giveitem_check.mjs | ta
+All pass. Now the docs: substate table row 25, Verification Log, the task note, CLAUDE.md.
+  ▶ Grep "^\| Cure|^\| 24 \|" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +175
+  ▶ Read REVERSE.md +299
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+Sub_state 25 `SubstFormRevert` (`19:BB9D`) is now ported and matches tools.emu on every compared row.
+
+**What changed**
+- **New file `web/src/game/states/formrevert.js`:** a straight port of the ROM routine. It blacks out the background, puts back the human sprite graphics (the bank depends on whether a shield is equipped), clears the changed-form bits, and plays SFX `$39`. Then it runs the 31-frame revert animation, recalculates stats, and returns to sub_state 8.
+  - Unlike the cure handler, it doesn't save and restore slot 1's sprite and shows no message.
+  - The `LDA #$F0` before `OamClipTop` does nothing, because `30:C17D` reloads A.
+- **`states/play.js`:** the handler is wired in as `SUBSTATES` entry 25 and as a load-state entry point for `19:BB9D`.
+- **New test state `web/test/states/formrevert.json`** (plus `tools/emu/states/formrevert.state`). It is exported from the existing change-form state by picking a form and then pressing A (magic) again.
+
+**Test results**
+- The new `web/test/formrevert_check.mjs` passes: 37/37 rows (f2761–2797) match tools.emu at shift 0 on `core,pal,obj`, with nothing skipped.
+- RAM and WRAM are identical at f2795, apart from the stack page and the `$10-$1F` scratch bytes.
+- The shield and no-shield cases both give the right graphics bank, and the form bits clear as expected.
+- The other checks all still pass: core, obj, giveitem, itemuse, teleport, pause13, wake, cure, changeform and telepathy.
+
+**Not compared**
+- **After f2797:** the player is standing on the town trigger, so the game re-enters GiveItem every frame. tools.emu finishes that pass within the same frame; the port does it one frame later. This is the known no-cycle-model gap (c), not a problem in this handler.
+- **`oam_crc` and some `snd*_period` rows:** these differ on the same sampling-artifact rows as the existing cure run. The cure reference CSV leaves them out as well.
+
+**Docs:** REVERSE.md now has substate table row 25, a new Verification Log row "Form revert", and the task note updated (next is 26 `SwordRaisePose` `19:BC04`). CLAUDE.md lists the new check. The substates task stays open.
+
+**Cleanup needed:** I couldn't delete the debug script `web/test/_fr_dbg.mjs` because the shell `rm` wasn't approved. It's safe to remove.
+
+SESSION_SUMMARY: Session 148 — ported sub_state 25 SubstFormRevert 19:BB9D (states/formrevert.js + formrevert_check.mjs, 37/37 rows vs tools.emu at shift 0, RAM equal at f2795); next is 26 SwordRaisePose.

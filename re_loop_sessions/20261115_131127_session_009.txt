@@ -1,0 +1,77 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*}
+  ▶ Grep "^## |^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +180
+  ▶ wc -l re_loop_sessions/20261115_131127_session_00{7,8,9}.txt && tail -c 1500 re_loop_sessions/20261115_131127_session_00
+  ▶ Read 20261115_131127_session_009.txt
+  ▶ tail -n 25 re_loop_sessions/20261115_131127_session_008.txt; tail -n 8 re_loop_sessions/20261115_131127_session_007.txt
+Picked the top task: area follow-ups 2 (other `AreaSubTable` sub-tables, `$6D`, palette dump, object-type dump). Starting with the sub-table callers.
+  ▶ python3 tools/xref.py C7A5 && python3 tools/dis.py 30 C7A5 40 && python3 tools/xref.py 6D
+  ▶ python3 tools/dis.py 30 C765 64 && echo ---- && python3 tools/dis.py 31 E56C 0xC0 && echo ---- && python3 tools/dis.py 3
+  ▶ python3 tools/dis.py 31 E71E 0x50 && echo ---- && python3 tools/dis.py 31 E628 0x50 && echo --- && python3 tools/dis.py 
+  ▶ python3 tools/dis.py 31 E44A 0x70 && echo --- && python3 tools/dis.py 31 E900 0x50
+  ▶ Read area_dump.py
+  ▶ python3 tools/xref.py E573 && python3 tools/xref.py E5E8 && python3 tools/decode_tables.py 10:8300 8 ptr16 && python3 to
+Decoded sub-tables 0/1/2/4/5 from their callers; now checking E573's trigger, then writing findings and a `sub` dump mode.
+  ▶ python3 tools/dis.py 31 E530 0x43 && python3 tools/dis.py 10 84F8 0x40
+  ▶ python3 tools/dis.py 31 EBC0 0x30 && python3 tools/dis.py 31 EA72 0x30
+Writing these findings to REVERSE.md now.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now adding the `sub` mode to `area_dump.py`.
+  ▶ Edit area_dump.py
+  ▶ python3 tools/area_dump.py sub 0 1 2 0x4A 0xC2
+  ▶ python3 tools/dis.py 31 EB09 0x40 && python3 tools/dis.py 10 8566 8
+  ▶ Edit area_dump.py
+  ▶ python3 tools/area_dump.py sub stats
+  ▶ python3 tools/area_dump.py list 0xBD 0xCA 0xCC 0xDB 0xE6 0xEA 0xBC && python3 tools/area_dump.py sub 0x6A 0xBD | head -3
+  ▶ Edit area_dump.py
+  ▶ python3 tools/area_dump.py sub > /tmp/area_sub.txt; python3 tools/area_dump.py sub 0x6D 0x6E 0x6F 0x8A 0x9F 0xA2 0xA5 0x
+Verifying the 6th sub-table (edge links) across the 11 areas that have one.
+  ▶ python3 tools/area_dump.py sub > /tmp/area_sub.txt; python3 tools/area_dump.py sub 0x6D 0x6E 0x6F 0x8A 0x9F 0xA2 0xA5 0x
+  ▶ Grep "^ *\d+ \$|k0|k5" /tmp/area_k5.txt
+  ▶ python3 tools/area_dump.py sub 0x6D 0x6E 0x6F 0x8A 0x9F 0xA2 0xA5 0xAE 0xAF 0xB4
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ tail -n 15 labels.csv && python3 tools/dis.py 31 E5E8 1 | head -2
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Grep "area_entry|^30,C7A5|^\*,003[4-7]|^\*,62F|^\*,6300|^31,E6" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Adding labels for the new addresses, then updating the task list.
+  ▶ Read labels.csv +175
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit area_dump.py
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 31 E6B9 12
+Session 9 is done. I decoded the area header sub-tables (`10:8300`, read by `AreaSubTable` `30:C7A5`) and worked out what `$6D` means. The task item also asked for three more things, which I didn't do: I moved them into a new task. None of this has been checked in an emulator.
+
+**What I found**
+- **Header layout:** most area headers hold 5 pointers (sub-tables 0–4), with the data right after. Only 10 areas have a 6th pointer: `6A 6D 6E 8A 9F A2 A5 AE AF B4`.
+- **Sub-table 0** (`AreaLoadMap` `31:E628`) holds:
+  - the area's music id, passed to `PlaySound`;
+  - the width and height in screens (`$62FC`/`$62FD`);
+  - two flag bytes, `$62FE` and `$62FF` (what they do is still unknown);
+  - a grid of screen ids copied into `$6300` (up to 8 wide × 16 high). `$80` means "no screen".
+- **Sub-table 1** (`31:E6B9`) holds the background palette ids (`$07E0-$07E2`; `$07E3` is always `$7F`), two values `$67`/`$69`, and the background CHR banks R0/R1.
+- **Sub-table 2 and `$6D`:** `$6D` is the index of a 4-byte entry in this table, and that entry sets the starting camera position (`$34-$37`, X lo/hi and Y lo/hi). `$6D`=`$FF` means no entry, and `$2x` keeps the current camera position.
+- **Sub-table 4:** pairs of (flag, screen). When the player enters a screen, it is marked in a visited-screens bitmap (`$62F0-$62FB`, 8×12, probably for a map display). Screens on this list also set a saved flag in `$64C0`, so they stay marked visited after the player leaves the area and comes back.
+- **Sub-table 5** (`31:E573`, only the 10 areas above): links from a position in one area to a position in another. They are probably for falling down a pit into a lower area.
+
+**Tools and records**
+- I added `sub [areas]` and `sub stats` modes to `tools/area_dump.py` and ran them on the whole table.
+- I added 22 labels to `labels.csv`.
+- REVERSE.md has the full write-up under "Area header sub-tables".
+
+**Not done (split into a new task, "area follow-ups 3"):**
+- `tools/palette_dump.py`
+- a dump of the object type table (`13:AC00`)
+- what `$0680/$06A0` mean in type `$30` objects
+- `$62FE`, `$67/$69` and which bank holds the screen layouts
+
+Nothing needed recording in `dead_ends.md`.
+
+SESSION_SUMMARY: Session 9 — decoded area header sub-tables `10:8300` (k0 music + screen grid → `$6300`, k1 BG palettes/CHR, k2 camera entry points via `$6D`, k4 saved visited-screen flags, k5 pit links in 10 areas); added `area_dump.py sub` (run) and 22 labels; palette/object-type dumps split into "area follow-ups 3".

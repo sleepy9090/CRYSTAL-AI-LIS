@@ -1,0 +1,79 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md | 
+  ▶ Read dead_ends.md
+  ▶ for f in re_loop_sessions/*_19[678].txt; do echo "== $f"; tail -c 2500 $f; done; wc -c re_loop_sessions/*_199.txt
+  ▶ tail -c 2500 re_loop_sessions/20261122_104601_session_196.txt; echo ====; tail -c 2500 re_loop_sessions/20261122_104601_
+  ▶ Grep "E60E|no-k5" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Grep "EventActionTable|EVENT_ACTS" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+Reading the event-action handlers to pick one unported act for this session.
+  ▶ Read REVERSE.md +905
+  ▶ Read giveitem.js +270
+  ▶ python3 tools/dis.py 30 D75E 0x2E; echo; python3 tools/dis.py 30 D7CE 0x37; echo; python3 tools/dis.py 30 D6D5 3; python
+  ▶ Grep "makeFollower13|areaLoadB|AreaLoadB|export function\*? ?(npcVanish|farObjInit)|^import" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Grep "makeFollower|areaLoadB|D23F|E148|TALK_ACTIONS = |^  6:|^  24|^  27" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read talk.js +400
+  ▶ python3 tools/decode_tables.py 30:D123 32 word 2>&1 | head -20; python3 tools/dis.py 30 D5D6 0x10 --stop
+Porting the follower-making event acts (24, 27, 28, 2); checking the talk-act helpers they reuse.
+  ▶ python3 tools/dis.py 30 D21D 0x22 --stop; grep -n "D21D\|D23F\|TalkGiveParam2" REVERSE.md | head
+  ▶ Grep "TALK_ACTIONS|from './talk.js'|^const (ACTIVE|TALK_SLOT|SPAWN_P|FREEZE)|^function\* giveItem|^export function\* giveItem" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read talk.js +489
+  ▶ Read giveitem.js +395
+  ▶ grep -n "ROUTINES\|^    '[A-Za-z0-9_]*': *(\|def \|argparse\|add_argument" tools/emu/routine_capture.py | head -60; grep
+  ▶ Read routine_capture.py +1
+  ▶ sed -n 1,36p web/test/obj_check.mjs; grep -n "json\|argv" web/test/obj_check.mjs | head; sed -n 250,330p tools/emu/routi
+Adding fuzz capture entries for the new event acts, then the port code.
+  ▶ grep -n "^ROUTINES\[\|^def main\|^if __name__\|ROUTINES\[.*\] = (None" tools/emu/routine_capture.py | tail -15; ls web/t
+  ▶ Read routine_capture.py +356
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 150 --seed 199 --routine
+Now the port code. In talk.js:
+  ▶ Edit talk.js
+  ▶ Edit talk.js
+  ▶ python3 tools/decode_tables.py 2>&1 | head; python3 tools/dis.py 30 D123 0x40 2>&1 | head -3
+  ▶ python3 tools/decode_tables.py 30:D123 32 ptr16 --per-line 8
+  ▶ Edit giveitem.js
+  ▶ Edit giveitem.js
+  ▶ sed -i 's/^const EVENT_ACTIONS = {/export const EVENT_ACTIONS = {/' web/src/game/states/giveitem.js && sed -i "s#^import
+Using Edit instead.
+  ▶ Edit giveitem.js
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ node web/test/obj_check.mjs 2>&1 | tail -6
+  ▶ node web/test/obj_check.mjs 2>&1 | grep follow
+  ▶ python3 tools/run_checks.py 2>&1 | tail -6
+  ▶ grep -o "(a) \`TalkActionTable\` entries [^;]*;" REVERSE.md; grep -o "(d) the no-k5 no-match jump into bank-10 data \`31
+I'll edit directly with the fragments seen earlier.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the obj_frames README capture command.
+  ▶ Read README.md +168
+  ▶ Edit README.md
+  ▶ Grep "^30,(D5D6|D21D|D225|D75E|D7CE|D7FD|D23F)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ printf '30,D5D6,EvActSlot13GiveFollow,s199: event act 2: $0623=13; TalkGiveParam2; $030D=$88; JMP MakeFollower13 (ported
+  ▶ Read labels.csv +1502
+  ▶ Edit labels.csv
+I ported four more event actions and four more NPC talk actions this session, and closed one leftover item. All 50 checks pass. The leftovers task stays open because it's the low-priority leftovers task.
+
+**What the ported actions do**
+- **Event act 24** (`30:D75E`): turns slots 13 and 14 into followers (type `$32`) and clears the trigger.
+- **Event act 27** (`30:D7CE`): turns any active slot 13 or 14 that isn't already a follower and isn't frozen (`$05A0` = 0) into one.
+- **Event act 2** (`30:D5D6`): slot 13 hands over its item, then becomes a follower.
+- **Event act 28** (`30:D7FD`): gives the Gas Mask, then makes slot 13 a follower.
+- **Talk acts 6 and 13**: both run the shared "make slot 13 a follower" helper (`30:D23F`), now `makeFollower13` in `web/src/game/states/talk.js`.
+- **Talk acts 3 and 17** (`30:D225` / `30:D21D`): give the NPC's item. They're in `web/src/game/states/giveitem.js`, along with the event acts.
+
+**How it's checked**
+- The follower helper and acts 24 and 27 are checked against tools.emu with random-RAM test cases. I added them to `tools/emu/routine_capture.py` and saved 450 cases in `web/test/obj_frames/fuzz_follow.json`. All 450 match in `obj_check.mjs`.
+- Acts 2 and 28 and talk acts 3 and 17 have no test yet. They only combine the item-give routine, which was checked against tools.emu in s139, with the new follower helper.
+
+**Item (d) closed without porting:** the jump into bank-10 data at `31:E60E` can't be reached in play (shown in s129), and in the ROM it just runs area data as code. The port keeps logging it as "not ported".
+
+**Docs:**
+- In REVERSE.md, item (a) now lists only talk acts 10, 16, 19-22 and 24-26 as unported. Talk acts 1 and 8 were already ported, so that list was out of date.
+- Item (i) now lists event acts 1, 6, 7, 9, 14, 17, 19-21 and 23.
+- I added one label to labels.csv (`30:D5D6`) and the capture command to `web/test/obj_frames/README.md`.
+
+Still open: (a), (c), (e), (f), (g) and (i). Nothing is committed.
+
+SESSION_SUMMARY: Session 199 ported EventActionTable acts 2/24/27/28 and talk acts 3/6/13/17 (makeFollower13 30:D23F, talkGiveParam 30:D21D/D225); MakeFollower13 and acts 24/27 match tools.emu on 450 fuzz cases (fuzz_follow.json), acts 2/28 and talk 3/17 have no run-level test yet; leftovers (d) closed as unreachable; all 50 checks pass.

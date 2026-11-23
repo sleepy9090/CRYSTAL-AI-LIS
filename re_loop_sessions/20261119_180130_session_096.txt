@@ -1,0 +1,117 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_session_09[3456].txt && tail -c 3000 re_loop_sessions/20261119_180130_session_095.txt && tail -
+  ▶ Read REVERSE.md +2199
+  ▶ awk 'NR>=2199 {print NR": "substr($0,1,160)}' REVERSE.md | grep -v "^\S*: - \[x\]" 
+  ▶ Grep "^(#+ |- \[ \])" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Reading the queue: the top open task is the Ph6 scenario leftovers (line 2355). Next I'll look at the scenario tool and the s92 log to see how scenarios are written.
+  ▶ wc -l tools/emu/scenario.py docs/emu_scenarios.txt && grep -n "^def \|^SCENARIOS\|^    '[a-z_0-9]*':\|^    \"[a-z_0-9]*\
+  ▶ Read scenario.py
+  ▶ grep -n -A40 "^union:" docs/emu_scenarios.txt
+  ▶ Grep "GiveItemFull|TrapChest|TelepathyHint|UseBowCheck|UseFindSlotObj|ShopDoorOpen|AiShopEmpty|SubstShopEmpty|ShopPriceSel" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+`ShopDoorOpen`/`ShopDoorClose` are dead code (stubbed out by an RTS), so no scenario can reach them. Now checking the chest/give-item path in REVERSE.md:
+  ▶ grep -n -o ".\{0,300\}\(TrapChest\|GiveItemFull\|D47C\|ShopPriceSel\|SubstShopEmpty\|UseBowCheck\|TelepathyHint\b\).\{0,
+  ▶ Grep ".{0,250}(TrapChest|GiveItemFull|ShopPriceSel|SubstShopEmpty|UseBowCheck|TelepathyHint\b).{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Item `$70`'s chest record is unreachable, so `TrapChest` can only run if I force it. Disassembling the GiveItem dispatch to choose the hook points:
+  ▶ python3 tools/dis.py 30 D390 0x100 | head -110
+  ▶ grep -n -i "chest" tools/emu/tour.py docs/emu_tour.txt | head -20; grep -n "GiveItem\b\|D3EB" docs/emu_tour.txt | head
+The tour does run `GiveItem`. Finding its caller and the tour's chest pickup:
+  ▶ python3 tools/xref.py D3EB; grep -n "06C\b\|chest\|Chest" tools/emu/tour.py | head; grep -rn "obj_spawn_param\|0560" too
+  ▶ python3 tools/dis.py 30 D22B 0x14; python3 tools/dis.py 30 D700 0x18; grep -n "D22B\|GiveItemA\|D715" labels.csv
+  ▶ Grep "^\|.*`GiveItem`|GiveItemA`.*talk act|talk act.*GiveItemA" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+`event_act(15)` reaches `GiveItem` through `30:D70D` with param `$41`, so I'll reuse that path. Checking how a full inventory is detected (`$23` bit 7):
+  ▶ Read REVERSE.md +851
+  ▶ python3 tools/xref.py 81D1; python3 tools/dis.py 14 8180 0x60
+  ▶ Edit scenario.py
+  ▶ time python3 -m tools.emu.scenario give_full trap_chest mp_telepathy_hint use_bow 2>&1 | grep -v "^  bank" | head -80
+  ▶ grep -n "^ *\(41\|3E\|3e\|24\|27\)\b\|\$41\b\|\$3E\b" gfx/items.txt | head; grep -n "0715" labels.csv docs/ram_map.txt |
+  ▶ Grep "^\s*(\$)?(41|3E|24|27)\b|use_item_sel|0715" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/items.txt
+  ▶ Grep "0715" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Item `$41` (Refresh) goes into `$6458+8`, not `$6450`. `$0715` holds the item id minus `$1C`, so the Bow of Moon needs `$22`. Fixing both:
+  ▶ sed -i 's/key items \$6450-57 full -> GiveItemFull/magic slots $6458-5F full -> GiveItemFull/; s/{0x6450 + i: 0x30 + i f
+Switching to direct edits:
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario give_full use_bow 2>&1 | grep -v "^  bank\|26:98E0\|26:99FD"
+  ▶ Grep ".{0,200}(ShopWalkIn|type `\$4E`|shop area|ShopEnter|SubstShop\b).{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/area_dump.py --help 2>&1 | head -20
+  ▶ Read area_dump.py +1
+  ▶ python3 tools/area_dump.py spawns > /tmp/spawns.txt 2>&1; grep -n -i "type 4[2E8]\b\|type \$4[2E8]\b\|t=4[2E8]\b" /tmp/s
+  ▶ python3 tools/area_dump.py spawns --out gfx/area_spawns_s96.txt
+  ▶ Read area_spawns_s96.txt
+Types come through indirect records, so the spawn dump won't name shopkeepers directly. Checking the shop data notes near `REVERSE.md:1829` for how a shop is selected per area:
+  ▶ Read REVERSE.md +1826
+  ▶ python3 tools/decode_tables.py 16:9F54 33 u8 2>&1 | head -12; python3 tools/dis.py 30 D985 0x50
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario shop_armor shop_tool shop_empty 2>&1 | grep -v "^  bank\|26:98E0\|26:99FD"
+  ▶ python3 tools/dis.py 27 A5B0 0x30
+`AiSetSubstate` (`27:A5C5`) copies the keeper's `$0620` into `sub_state`. I'll force `sub_state` at its RTS (`27:A5CA`) for the tool-shop and empty-shop variants, and drop the useless timed poke:
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario shop_tool shop_empty 2>&1 | grep -v "^  bank\|26:98E0\|26:99FD"
+  ▶ python3 -m tools.emu.scenario --out docs/emu_scenarios.txt > /dev/null 2>&1; echo exit $?
+  ▶ python3 -m tools.emu.scenario --out docs/emu_scenarios.txt > /dev/null 2>&1
+While that runs, updating REVERSE.md. First the verification-log entry that lists what is still not run:
+  ▶ python3 tools/show_lines.py REVERSE.md 179 185 2>/dev/null || ls tools | grep -i line
+  ▶ Read REVERSE.md +180
+  ▶ ToolSearch max_results query
+While the report runs, I'll write the per-scenario findings, which don't depend on the union count:
+  ▶ Edit REVERSE.md
+Next, trimming the finished items out of the leftover task:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep ".{0,120}`irq_mode` 4/7/9,.{0,60}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Two lines match. Line 2358 looks like a second copy of this task, so checking how it starts:
+  ▶ Grep "^.{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Line 2358 is the finished session-92 entry (history), so I'll only edit the open task at 2362:
+  ▶ Edit REVERSE.md
+  ▶ until test -s docs/emu_scenarios.txt && grep -q "^union:" docs/emu_scenarios.txt && test docs/emu_scenarios.txt -nt tool
+  ▶ until grep -q "^union:" docs/emu_scenarios.txt && test docs/emu_scenarios.txt -nt tools/emu/scenario.py; do sleep 15; do
+That was only the first wait loop hitting its time limit. The report job and the second wait loop are still running.
+  ▶ Read b203ud4y1.output
+Output is redirected to the report file, so the job log stays empty until the job exits. I'll wait for the completion notice.
+  ▶ until grep -q "^union:" docs/emu_scenarios.txt && test docs/emu_scenarios.txt -nt tools/emu/scenario.py; do sleep 15; do
+About 40 minutes have passed, which is longer than the expected ~30. Checking that the report job is still alive:
+  ▶ pgrep -af "tools.emu.scenario" ; ls -la --time-style=+%T /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_scena
+The job is alive and still working (the report is only written at the end). I'll wait for its completion notice.
+  ▶ until ! pgrep -f "tools.emu.scenario --out" >/dev/null; do sleep 20; done; grep -A20 "^union:" /home/sleepy9090/Download
+  ▶ Grep "^union:|^  bank|CRASH" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_scenarios.txt
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2363
+Following the pattern of earlier sessions: mark this task done for the part covered, and add the rest once as a new last task in RE Investigation.
+  ▶ Edit REVERSE.md
+  ▶ Grep "^- \[ \] Ph6 \(optional, needs user approval\).*$" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+Removing the spawn dump I wrote only for this lookup (`area_dump.py spawns` can regenerate it):
+  ▶ rm /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/area_spawns_s96.txt
+I ran the chest, give-item, telepathy, bow and shop part of the Ph6 scenario leftovers task in the emulator. Each new scenario ran the code the notes predicted. Coverage of the labels the tour never runs is up from **114 to 122 of 178**, after a full rerun of the report (about 45 minutes).
+
+New scenarios in `tools/emu/scenario.py`:
+
+| Scenario | Setup | What ran |
+|---|---|---|
+| `give_full` | Gives item `$41` with the magic inventory (`$6458-5F`) really full; nothing forced | `GiveItemFull` `30:D47C` |
+| `trap_chest` | Item `$70`'s chest record can't be reached in play, so the item is forced to `$70` at `GiveItem` entry | `TrapChest` turns the chest into a type-`$73` monster; `AI_TrapChest` and `ChestHop` run |
+| `mp_telepathy_hint` | Telepathy at level 16 | `TelepathyHint` `14:81D1` |
+| `use_bow` | Bow of Moon with the camera-lock flag set | `UseBowCheck` → `UseFindSlotObj` → "Nothing happens." (area `$03` has no target for the bow) |
+| `shop_armor` / `shop_tool` / `shop_empty` | Area `$C4`; the shopkeeper starts the armor shop itself on the first frame, and the other two override that | `ShopPriceSel` (bought for 100 and 30 gold) and `SubstShopEmpty` |
+
+**Findings**
+- **Shop door effect:** `ShopDoorOpen`/`ShopDoorClose`, `NmiMode4` and `irq_mode` 4 are dead code, because the shop walk-in/walk-out only call empty stubs. No scenario can reach them, so 3 of the 56 labels still not run are unreachable.
+- **Empty shop:** confirmed what the notes said: its `sub_state`=`$24` is overwritten by the walk-out's 1.
+- **Item mapping:** the item record decides which inventory range has to be full. `$0715` holds the item id minus `$1C`.
+
+**Docs**
+- `REVERSE.md` has a new Verification Log entry for these scenarios.
+- The task is marked done for this part, and the rest (bosses, k5 pits, platforms, sound ops, chaser/shooter AIs, hit rules and the other leftovers) is one new low-priority task at the end of RE Investigation.
+- `docs/emu_scenarios.txt` is regenerated. No new `labels.csv` rows were needed; every address involved already had a label.
+
+**Not done**
+- `AiShopEmpty` `27:A5C0` itself still hasn't run; it needs an area with a real type-`$4E` shopkeeper.
+- I couldn't delete the scratch file `gfx/area_spawns_s96.txt` because the delete needed your approval. It's safe to remove (`tools/area_dump.py spawns` regenerates it).
+- Nothing is committed.
+
+SESSION_SUMMARY: Session 96 — 8 new tools.emu scenarios (give_full, trap_chest, mp_telepathy_hint, use_bow, shop_armor/tool/empty) ran GiveItemFull, TrapChest + chest AI, TelepathyHint, UseBowCheck/UseFindSlotObj, ShopPriceSel and SubstShopEmpty as documented; coverage 114→122 of 178, shop door / irq_mode 4 confirmed dead, rest filed as one low-priority task.
+That notice is from a spare wait loop I'd left running. It hit its time limit after the scenario report had already finished, so nothing was lost and there's nothing to rerun. The 122-of-178 result above is final.
+
+SESSION_SUMMARY: Session 96 — 8 new tools.emu scenarios (give_full, trap_chest, mp_telepathy_hint, use_bow, shop_armor/tool/empty) ran GiveItemFull, TrapChest + chest AI, TelepathyHint, UseBowCheck/UseFindSlotObj, ShopPriceSel and SubstShopEmpty as documented; coverage 114→122 of 178, shop door / irq_mode 4 confirmed dead, rest filed as one low-priority task.

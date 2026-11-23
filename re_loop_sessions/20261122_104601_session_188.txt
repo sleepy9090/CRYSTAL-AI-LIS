@@ -1,0 +1,105 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; gr
+  ▶ Read REVERSE.md +2375
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/*_session_18[5-8].txt; tail -c 6000 re_loop_
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/area_dump.py spawns 28 2>&1 | head -40; python3 tools
+  ▶ python3 tools/area_dump.py spawns 28
+  ▶ python3 tools/enemy_catalog.py --out gfx/enemy_catalog.txt
+I'm on the next enemy group: AI `$2A` in area `$28`. I'm reading that area's spawn list now (the first dump used the wrong number base).
+  ▶ python3 tools/area_dump.py spawns 40
+  ▶ Grep "\$2A|^ *(ty|type|id)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/enemy_catalog.txt
+  ▶ grep -n -B2 -A6 "AI \$2A" gfx/enemy_catalog.txt; grep -n " 28\b\|\$28" gfx/enemy_catalog.txt | head
+  ▶ Read enemy_catalog.txt
+  ▶ Grep "group_(40|7C|6B)|def place_player|SwordElemBit" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Grep "SwordElemBit" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read scenario.py +600
+  ▶ Read scenario.py +240
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_28 12 --out web/test/states/group28.json --save-state tools/emu/st
+I've exported the area `$28` start state. Next I'm probing where the player and the three type-`$64` enemies are, to plan the key presses.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12,16 --every 20 --seg NONE:200 2
+  ▶ Grep "27:ABF8" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ ls gfx/areas | grep -i "040" ; wc -l gfx/areas/area_040_coll.txt
+  ▶ Read area_040_coll.txt
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_28 12 --out web/test/states/group28.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --every 6 --seg NONE:40 LEFT:8
+Swings so far miss the lunger (it sits ~20-40 px above the player). I'm checking the probe's options so I can line the player up with it.
+  ▶ python3 tools/emu/group_probe.py --help
+  ▶ Read group_probe.py
+  ▶ Read REVERSE.md +1222
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --every 4 --seg NONE:40 LEFT:1
+The first lunger stays above a contact-knockback zone, but the second (slot `$12`) walks along the player's row. I'm now trying right-facing swings at it.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --every 12 --seg NONE:40 RIGHT
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --every 12 --seg NONE:40 RIGHT
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --every 12 --seg NONE:40 RIGHT
+  ▶ Grep "\*$|RIGHT" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/group28_probe.txt
+I'm adding a `--changes` option to `group_probe.py`, so long swing sequences print only the frames where HP or the active state changes.
+  ▶ Edit group_probe.py
+  ▶ Edit group_probe.py
+  ▶ Edit group_probe.py
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --changes --seg NONE:40 RIGHT:
+One hit landed at f2719 (slot `$12` HP 22 → 10). I'm extending the swings to get the kill.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --every 24 --seg NONE:40 RIGHT
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --every 100 --seg NONE:40 RIGH
+The player keeps getting bounced between slot `$11`'s contact and slot `$12`. After the first hit, I'm trying a step right toward `$12` before the next swings.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --every 100 --seg NONE:40 RIGH
+Slot `$12` dies at f2779 (2 hits, death puff AI `$7D`), and slot `$11`'s lunge shots (AI `$10`) reuse the slot afterwards. Next I'm pulling the exact s187 commands for the ref/check pipeline.
+  ▶ Grep "▶ .*(web_state_compare|--watch 0043|--watch 03D4|csv_trim)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions/20261122_104601_session_187.txt
+  ▶ Read group7c_check.mjs
+Probe row F maps to tools.emu `--keys` F−1. Before fixing the keys, I'm checking whether a turn left at the end can also hit slot `$11`.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --changes --seg NONE:40 RIGHT:
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_28 12 --out web/test/states/group28.json --save-state tools/emu/st
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group28.state --frames 480 --watch 03C1 --watch 03D2 --ke
+Lower defences change the run (the hit moves to f2930 and there's no kill), so I'm re-planning on the new state with the probe.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --every 30 --seg NONE:40 RIGHT
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --changes --seg NONE:40 RIGHT:
+The probe matches tools.emu, but taking damage changes the knockback path, so the f2719 hit is gone. I'm re-planning the swings: wait for slot `$12` to approach, then step right and swing.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --every 12 --seg NONE:40 RIGHT
+First hit at f2671 knocks slot `$12` back to x≈1193. Next I'm stepping right again as it comes back and swinging for the kill.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group28.state --slots 11,12 --every 20 --seg NONE:40 RIGHT
+  ▶ Edit scenario.py
+  ▶ timeout 1500 python3 tools/web_state_compare.py --state tools/emu/states/group28.state --web web/test/states/group28.jso
+Those differences are expected, because that run feeds tools.emu key frames to the port. Next I'm getting the port's key frames from the pad writes and confirming the hits.
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/group28.state --frames 480 --watch 0043 --watch 03D2 --wa
+  ▶ python3 tools/csv_trim.py gfx/group28/emu.csv web/test/group28_ref.csv --frames 2507-2984 && wc -l web/test/group28_ref.
+  ▶ Write group28_check.mjs
+  ▶ node web/test/group28_check.mjs 2>&1 | tail -35
+All 478 rows match on the first run. I'm checking the slot-`$12` timeline claims in the comment against the ref.
+  ▶ python3 tools/csv_cols.py web/test/group28_ref.csv web/test/group28_ref.csv o12_ai 2805-2880 2>&1 | head -80
+The comment is correct. I'm starting the full check suite in the background while I update the docs.
+  ▶ timeout 3000 python3 tools/run_checks.py > /tmp/s188_checks.txt 2>&1; tail -50 /tmp/s188_checks.txt
+  ▶ Grep "^\| Area-`\$7C` enemy group" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ timeout 3000 python3 tools/run_checks.py 2>&1 | tail -50
+  ▶ Read REVERSE.md +217
+  ▶ Edit REVERSE.md
+Now the task note and the remaining-AI list.
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+I'm checking whether the AI `$2A` addresses are already in labels.csv.
+  ▶ Grep "^(\*,0640|27,ABF8|27,AC40)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Labels are already covered. I'm waiting for the full suite now.
+  ▶ Read bqfi63j92.output
+  ▶ ToolSearch max_results query
+The new area `$28` check passes (478/478 rows) and the docs are updated. The full check suite is still running in the background, and I'll report its result when it finishes.
+  ▶ Read bqfi63j92.output
+I checked area `$28`'s enemy group against tools.emu, and the web port matches it with no code changes. The new `web/test/group28_check.mjs` passes all 478 rows (f2507-2984) at shift 0, sound included, with no excused cells.
+
+**Setup.** The area has three type-`$64` enemies (AI `$2A`, `AiLunger`). The new `group_28` scenario puts the player between two of them with `place_player`, because the normal entry point is about 800 px away. It uses sword 1, since the enemy's element 6 blocks swords 2 and 3.
+
+**What the run showed:**
+- **Defence pokes.** With s187's maximum defences (`$0401 = $40`, `$0400 = $30`), the enemy's attack of `$30` does 0 damage and only knocks the player back. I used mid values (`$28` / `$20`) instead, so its hits cost HP. That change also moves the knockback, so the keys had to be planned with the final pokes in place.
+- **Sword hits.** The enemy in slot `$12` takes two hits: HP `$16` → `$0A` at f2670, then the kill at f2807. It leaves a death puff and drops nothing.
+- **Player hits.** Slot `$11` hits the player four times, by contact and with its lunge shots: HP `$60` → `$58` → `$50` → `$48` → `$40`. Its shots reuse slot `$12` from f2876. Slot `$11` is never hit itself, and slot `$16` stays frozen offscreen.
+
+**Full suite:** 40 of 41 checks pass. The one failure is `world_check` on areas `$3C`, `$3D` and `$BC`, which is the known gap (j).
+
+**Changes:**
+- `tools/emu/group_probe.py` has a new `--changes` option that prints only the frames where HP or the active state changes.
+- REVERSE.md has a new Verification Log row ("Area-`$28` enemy group, AI `$2A`"). The task has an s188 note, and `$2A` is struck from its list of remaining AIs. The task stays open because it is the low-priority leftovers task.
+- CLAUDE.md lists the new check. The AI `$2A` labels were already in `labels.csv`.
+
+New files are `web/test/group28_check.mjs`, `web/test/group28_ref.csv`, `web/test/states/group28.json` and `tools/emu/states/group28.state`; the scenario itself is in `tools/emu/scenario.py`. Nothing is committed.
+
+SESSION_SUMMARY: Session 188 checked area $28's enemy group (AI $2A AiLunger, type $64 x3, sword 1) with the new group_28 scenario (place_player, mid defences $0401/$0400 = $28/$20); web/test/group28_check.mjs: 478/478 rows equal at shift 0 including sound (2 hits, slot $12 killed at f2807, 4 player hits), no port change; group_probe.py gained --changes; 40/41 checks pass (world_check is the known gap (j)).

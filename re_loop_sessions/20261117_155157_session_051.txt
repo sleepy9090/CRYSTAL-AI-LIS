@@ -1,0 +1,148 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -4; wc -l dead_ends.md REVERSE.md; ls we
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 2500 re_loop_sessions/20261117_122220_session_048.txt; echo
+  ▶ Grep "^- \[ \]|^## Next Tasks|^### " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1805
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; git status --short | head; git diff --stat; node web/test/ppu_check
+Picking up Ph7 web 2/8 (core). Session 50 got cut off with ppu.js mostly done: title matches pixel-for-pixel, and the remaining diffs are on mid-line PPU writes. I'm reading those files now.
+  ▶ Read ppu_check.mjs
+  ▶ Read ppu_lines.py
+  ▶ Read ppu.js
+The frame snapshots were made before session 50 added the mid-line tracking, so I'm regenerating them.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; time python3 -m tools.emu.ppu_lines --all && node web/test/ppu_chec
+  ▶ Write ppu_frame_writes.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/emu/ppu_frame_writes.py web/test/ppu_frames/name_entr
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "def run_frame" -A22 tools/emu/nes.py; grep -n "def _next_l
+  ▶ Read ppu.py +255
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat > /tmp/ppu_lines_patch.py <<'EOF'
+Using Edit instead.
+  ▶ Edit ppu_lines.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.ppu_lines --all && node web/test/ppu_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.ppu_lines --all && node web/test/ppu_check.mjs
+  ▶ Grep "^#|\.js|index\.html|60\.09|MainState|input|stub" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Read architecture_web.md +10
+  ▶ Read architecture_web.md +86
+  ▶ Read architecture_web.md +194
+I have the module layout. Now getting the ROM facts the main loop, NMI, pads and palette-upload code needs from REVERSE.md and labels:
+  ▶ Grep "MainLoop|NMI \(|NmiMode0|ReadPads|PaletteUpload|frame_ready|\$07D8|scroll copy" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C900 0x60 --stop; python3 tools/dis.py 31 F
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 F8D0 0x40 --stop; python3 tools/dis.py 31 F
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 F92B 0x40 --stop; python3 tools/dis.py 31 F
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 F97F 0x30 --stop; python3 tools/dis.py 31 F
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 F705 0x2C --stop; python3 tools/dis.py 31 F
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 F71B 0x16 --stop; python3 tools/dis.py 31 F
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 FEE0 0x37 --stop; python3 tools/dis.py 31 F
+Next I'm writing the web core modules: pads, mainloop/NMI skeleton, machine, data loader, input, main.js and index.html. Checking how tables.json is structured first:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/emu/json_keys.py web/data/tables.json 2>/dev/null || 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -20 tools/json_peek.py; python3 tools/json_peek.py web/data/ta
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/json_peek.py web/data/tables.json --depth 1 2>&1 | he
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 EB6D 0x30 --stop; grep -n "EB6D\|,0001,\|,0
+  ▶ Grep "^31,(F71B|EB6D|FF17|FF28|FEE0|F8CB),|^\*,(0009|0040|0041|0043|0045|0047|0049|004B|004D|004F|0051|0057|07D8)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/json_peek.py web/data/palettes.json --depth 2 | head 
+  ▶ Grep ""chr.bin": \{[^}]*\}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/data/manifest.json
+Writing the modules now. First the data loader and RAM:
+  ▶ Write data.js
+  ▶ Write ram.js
+  ▶ Edit ram.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^\*,\(0002\|0003\|0004\|0005\|07F0\|6140\|0200\),\|^\*,000
+`$01` is labelled `tmp_01`, but NmiMode0 and the NMI use it as the PPUMASK shadow. I'm renaming it in labels.csv.
+  ▶ Edit labels.csv
+Now pads, palette upload, and the main loop/NMI:
+  ▶ Write pads.js
+  ▶ Write palette.js
+Checking the exact tail of PaletteUpload before relying on it:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 F9AE 0x10 --stop; python3 tools/dis.py 31 F
+The tail is `$3F`, `$00`, `$00`, `$00` (four PPUADDR writes, not six). Fixing that:
+  ▶ Edit palette.js
+Now the main loop, NMI and NMI-mode skeleton:
+  ▶ Write mainloop.js
+Now the Machine and the IRQ split hookup into ppu.js:
+  ▶ Write machine.js
+Now the browser side: input, main.js, index.html.
+  ▶ Write input.js
+  ▶ Write main.js
+  ▶ Write index.html
+Removing the opposite-direction filter. PadDirTable already maps U+D and L+R to `$FF`, so the ROM handles those inputs itself.
+  ▶ Edit input.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/gen_web_data.py 2>&1 | tail -3; python3 tools/gen_web
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "def \|exec_hooks\|frame_hooks" tools/emu/nes.py | head -40
+  ▶ Read nes.py +20
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "self\.[a-z_]* *=" tools/emu/mapper.py | head -30; ls tools
+  ▶ Read pads.py
+The emulator's pad mask puts A in b0, and the ROM byte is that mask bit-reversed (A in b7). The trace has to convert. Writing it:
+  ▶ Write core_trace.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "self.ram\b\|self.ram *=\|self.wram\|def " tools/emu/memory
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; time python3 -m tools.emu.core_trace && ls -la web/test/core_trace.
+  ▶ Edit core_trace.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; time python3 -m tools.emu.core_trace && ls -la web/test/core_trace.
+23 NMIs captured. Now the Node check that compares the JS against these traces:
+  ▶ Write core_check.mjs
+Removing a leftover unused variable before running it:
+  ▶ Edit core_check.mjs
+  ▶ Edit core_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/core_check.mjs
+Everything passed on the first run, so I want proof the full comparison actually ran for the mode-0 NMIs. Adding a count:
+  ▶ Edit core_check.mjs
+  ▶ Edit core_check.mjs
+  ▶ Edit core_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/core_check.mjs | grep NMI; node web/test/ppu_check.mj
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for f in web/src/main.js web/src/input.js; do node --check "$f" && 
+  ▶ Write serve_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node --check web/src/main.js && node --check web/src/input.js && ec
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/serve_check.mjs
+  ▶ node --check /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/main.js
+  ▶ node --check /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/input.js
+`node --check` needs approval I don't have. Instead, serve_check will import both browser modules under minimal DOM stubs. That proves they parse and link.
+  ▶ Edit serve_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/serve_check.mjs
+  ▶ Edit serve_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/serve_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^31,\(EB6D\|F71B\|F705\|F6DF\)," labels.csv; tail -3 label
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; printf '%s\n' '31,EB6D,PpuScrollWrite,s51: PPUSCROLL <- $07D8 then 
+  ▶ Read labels.csv +905
+  ▶ Read labels.csv +882
+  ▶ Edit labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 F6D6 0x10 | head -4; python3 tools/dis.py 3
+Labels load. Now REVERSE.md: marking task 2/8 done, and adding the pad bit-order fact to task 3/8 since its `--keys` harness needs it.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+The unported NMI-mode routines and IRQ handler bodies fit the existing world/camera task (4/8), so I'm merging them there rather than adding a new task:
+  ▶ Edit REVERSE.md
+  ▶ Read architecture_web.md +88
+Updating the design doc's frame pseudocode to match the implemented (ROM-correct) order:
+  ▶ Edit architecture_web.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/core_check.mjs | tail -1; node web/test/ppu_check.mjs
+I finished task Ph7 web 2/8 (the web port's core), which session 50 had started, and marked it done in REVERSE.md. All three Node checks pass. The one gap: I haven't seen it run in a real browser, because none is available here. Nothing is committed.
+
+**What was left from session 50**
+- `ppu.js` matched only the title screen. The other three test frames failed because of two bugs in the snapshot tool (`tools/emu/ppu_lines.py`), not in `ppu.js`:
+  - Line 0 was recorded a few pixels late. It's now recorded at the start of the line.
+  - Bank switches for program code were counted as mid-line picture changes. Only graphics bank writes count now.
+- All 4 test frames now match the emulator pixel for pixel. The only pixels not compared are on line 191, where the emulator changes the scroll partway through the line for the HUD; the port applies such changes between lines, as the design doc says.
+
+**What I added**
+- `web/index.html` and `web/src/main.js`: draws to a canvas at whole-number scale and runs a fixed 60.0988 Hz loop. P pauses, and a hidden tab also pauses.
+- `web/src/input.js`: keyboard and gamepad, turned into the same button byte the ROM builds.
+- `web/src/data.js`: loads every file listed in `web/data/manifest.json` and checks its size.
+- `web/src/game/`, ported directly from the ROM code:
+  - the main loop and frame handshake;
+  - the vblank (NMI) routine, including palette upload and the gameplay scroll and HUD-split timing;
+  - both controller-read routines.
+
+**What is still a stub**
+- Main states 0, 1, 4 and 5 only count their calls. State 2 just advances to state 3, and state 3 reads the pad, so the screen stays black for now.
+- The other vblank modes (the title screen uses mode 3) and the split-screen handlers only log "not ported yet". I added these to the next task (4/8) rather than creating a new one.
+
+**How it's checked** (each run with `node`)
+- `web/test/core_check.mjs` compares the JS against the real ROM code running in the emulator:
+  - Both controller routines match over 160 frames of input, including long button holds.
+  - The vblank routine matches in all 23 recorded cases. The 12 gameplay cases match in full. In the 11 title-screen cases, the not-yet-ported mode 3 part isn't compared.
+  - The reference comes from a new tool, `tools/emu/core_trace.py`.
+- `web/test/serve_check.mjs` serves the repo over HTTP, loads every module, and runs `main.js` for 60 frames with a fake page standing in for the browser.
+
+**Other changes**
+- The design doc's frame outline had the frame-ready test backwards. The ROM runs the game state when the flag is non-zero. I corrected `docs/architecture_web.md`.
+- Labels: `$01` is now `ppumask_shadow` (was `tmp_01`). New: `PpuScrollWrite` `31:EB6D`, `NmiScrollSet` `31:F71B`, `NmiMode0HudIrq` `31:F705`.
+- I added a note to task 3/8: the emulator's controller value has A in bit 0, while the port uses the ROM's order (A in bit 7), so test input scripts must be bit-reversed.
+
+SESSION_SUMMARY: Session 51 — finished Ph7 web 2/8 core (index.html, main.js loop/blit, input.js, data.js, game/{ram,machine,mainloop,pads,palette}.js with MainLoop/NMI/NmiMode0/ReadPads ported from the ROM); fixed ppu_lines.py so all 4 ppu_check frames match pixel for pixel; new core_trace.py + core_check.mjs (pads and 23 NMIs match the ROM) and serve_check.mjs; corrected architecture_web.md §2.1; 4 label changes.

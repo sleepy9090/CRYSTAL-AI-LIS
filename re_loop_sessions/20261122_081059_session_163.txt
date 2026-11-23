@@ -1,0 +1,153 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; gr
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "\- \[ \]" REVERSE.md | head -10; tail -c 3000 re_loop_sess
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "BossAiE2\|A675\|Sessions 161-162\|Session 156\|Session 159
+Task: port `$62` `BossAiE2` `15:A675`. Let me read its notes.
+  ▶ Read REVERSE.md +1282
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l web/src/game/obj/ai_boss.js; grep -n "^export\|^function\|^co
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 A675 0x2E8 2>&1 | head -400
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -rn "8C49\|8C3D\|export function\*\? *fade\|B14_800E\|farSprit
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -rn "fadeIn\|fadeOut\|function\* *fade\|8C3D\|8c3d" web/src/ga
+  ▶ Read ai_boss.js +1
+  ▶ Read ai_boss.js +836
+Porting `BossAiE2` (`15:A675`) into `obj/ai_boss.js`; checking the util helpers' semantics (Rand64 carry, SpawnShot result, 26:9861) first.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,140p web/src/game/obj/util.js; grep -n "export function\*\
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 97D7 13; sed -n 58,80p web/src/game/states/
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 A400 19; grep -n "export function hitFlashP
+  ▶ Read ai_boss.js +719
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 8C0E 4; grep -n "export function\*\? *\(wai
+Now writing the port.
+  ▶ Edit ai_boss.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; f=web/src/game/obj/ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+Now the check harness: look at `BOSS_AIS` / `_fix_boss` in routine_capture.py.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "BOSS_AIS\|def _fix_boss\|_id\b\|'BossAiEA'\|BossAiEA\|PPU_
+  ▶ Read routine_capture.py +248
+  ▶ Read routine_capture.py +612
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "add_argument\|fuzz_boss\|def main" tools/emu/routine_captu
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 95,125p web/test/obj_check.mjs; grep -rn "fuzz_boss" REVERSE
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 95,125p web/test/obj_check.mjs; ls web/test/obj_frames/
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "boss\|update" web/test/obj_frames/README.md | head -20
+  ▶ Read README.md +105
+Adding `BossAiE2` to the capture (phase steering + fuzz) and to obj_check.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "function runNow" -A5 web/test/obj_check.mjs; grep -n "fuzz
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -rn "runNow" web/test/obj_check.mjs | head -3; grep -rn "expor
+  ▶ Edit obj_check.mjs
+Running the capture with BossAiE2 added (full fuzz_boss regen).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; time timeout 1200 python3 -m tools.emu.routine_capture --load-state
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/obj_check.mjs 2>&1 | tail -15
+300/300 on first run. Checking path coverage.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/obj_check.mjs 2>&1 | grep -i "e2\b\|BossAiE2"; python
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/case_paths.py web/test/obj_frames/fuzz_boss.json Boss
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/case_paths.py web/test/obj_frames/fuzz_boss.json Boss
+Fuzz covers the walk/attack/minion paths. Now a frame-level check of the intro (fades + BG redraw) using scenario `boss_e2`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "'boss_e2'" -A14 tools/emu/scenario.py; sed -n 1,40p tools/
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.scenario_state boss_e2 30 --out we
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+Nearly identical. Two 1-frame timing differences (fade steps, and the parts' placement at f2707). Inspecting.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -1 /tmp/e2/emu.csv | tr ',' '\n' | grep -n "pal\|frame\|o0D_x\
+  ▶ Grep "^(frame|25[45]\d|270\d)," /tmp/e2/emu.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py /tmp/e2/emu.csv /tmp/e2/web.csv --c
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -rn "overrun" web/src/game --include=*.js | grep -v "^\s*//" |
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,25p tools/emu/lag08_probe.py
+  ▶ Read lag08_probe.py +25
+  ▶ Write e2_intro_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.e2_intro_probe tools/emu/states/bo
+  ▶ Edit e2_intro_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.e2_intro_probe tools/emu/states/bo
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "export function\* waitFrame\b\|export function\* waitFrame
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "export function nmiWork" -A30 web/src/game/*.js | head -45
+The existing `SPIN` yield gives exactly the overrun semantics (NMI sees `frame_ready`≠0 → no OAM DMA, then resume next frame). Locating the NMI point precisely relative to the sprite pass.
+  ▶ Edit e2_intro_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.e2_intro_probe tools/emu/states/bo
+NMI lands inside the sprite pass (no DMA that frame either way), so the `SPIN` goes after `farSpritePass`.
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py /tmp/e2/emu.csv /tmp/e2/web.csv 2>&
+Fade timing mostly fixed; residual diffs at f2552, f2707, the f2786+ fade and the fight from f2910. Writing a small column dumper to look at both CSVs side by side.
+  ▶ Write csv_cols.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_cols.py /tmp/e2/emu.csv /tmp/e2/web.csv pal_crc,o
+f2552 is a mid-`PaletteBuild` sample (emu's frame ends while the fade step is building `$6140`), the known finalscene class. Checking f2707 and f2786+.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_cols.py /tmp/e2/emu.csv /tmp/e2/web.csv pal_crc,o
+All four are the same partial-routine sampling class. Now the fight divergence from f2910.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_cols.py /tmp/e2/emu.csv /tmp/e2/web.csv pos_x,pos
+From f2909 tools.emu shows lag frames in the busy fight (shots stall a frame; `pos` scratch sampled mid-frame) — the generic CPU-overrun gap (c). Checking RAM equality just before that.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+RAM matches except end-of-run scratch bytes. But the port logged one "unported" — finding it.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "load-state\|unported" web/test/run.mjs | head; 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --load-state web/test/states/bosse2.json --fr
+  ▶ Grep "\$3F|3F " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 A414 8; grep -n "A414\|AI \`\$3F\`" REVERSE
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 A414 8
+Body-part AI `$3F` `27:A414` (just `irq_mode`=7) is unported; adding it to `AI_BOSS`.
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+Now a frame check like `bossa6_check.mjs`. Reading it as the template.
+  ▶ Read bossa6_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,15p tools/csv_trim.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_trim.py /tmp/e2b/emu.csv web/test/bosse2_ref.csv 
+  ▶ Write bosse2_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/bosse2_check.mjs
+Rows all match; two of my extra assertions were wrong (`$0103` is consumed by the driver, `$6000` gets reused, and the RAM diff already showed both match tools.emu). Dropping them.
+  ▶ Edit bosse2_check.mjs
+  ▶ Edit bosse2_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/bosse2_check.mjs; for t in bossa6 bossflee core obj; 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/bosse2_check.mjs; node web/test/bossa6_check.mjs | ta
+All green. Regenerating `fuzz_update.json` too (boss ids join the `ObjUpdateAll` pool).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.routine_capture --load-state tools
+Now the docs: REVERSE.md session note, Verification Log row, task text; labels; CLAUDE.md; README; architecture_web.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "BossHookA6\` checked against\|Sessions 161-162" REVERSE.md
+  ▶ Grep "Sessions 161-162|A84D|A8FF|A73C|27:A414|bossa6_check" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+Labels already exist; I'll update their comments. REVERSE.md session note first (after line 1336).
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +1336
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +200
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2523
+Now updating the task text (stays unchecked — low-priority leftovers task).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Labels, CLAUDE.md, README, architecture_web.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/label_set.py --help 2>&1 | head -3; grep -c "" labels
+  ▶ Edit labels.csv
+  ▶ Edit CLAUDE.md
+  ▶ Edit README.md
+  ▶ Read architecture_web.md +226
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Final regression pass on checks that share fades / boss code.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/finalscene_check.mjs | tail -1; node web/test/mesia_c
+I ported the area-`$1A` boss AI `$62` (`BossAiE2`, `15:A675`) into the web port. It matches tools.emu at shift 0 from f2524 to f2907 (384 frames), apart from 8 cells explained below. The boss task stays open because it's a low-priority leftovers task. Nothing is committed.
+
+**What was ported** (`web/src/game/obj/ai_boss.js`):
+- **Phase 0, the intro:** music, CHR and palettes, the body parts (`BossBuildParts` `15:A73C`), both fades, the WRAM image, PPU blocks `$2C`/`$2D`, and the boss becoming hittable.
+- **Phase 1:** walking (`BossE2Walk`), attacking (`BossE2Attack`, shots plus the homing minion) and the shared mover `BossEBMove` `15:A8FF`. The final boss `$6B` also uses `BossEBMove` and `BossBuildParts`, so those are ready for it.
+- **AI `$3F` (`27:A414`):** the body parts run it; it only sets `irq_mode` to 7. It was the one "not ported" line the port logged during the fight.
+- **Two ROM details the port needed:**
+  - The walk timer adds the carry left by the phase dispatcher's `ASL`. `bossPhaseDispatch` now passes that carry to the handlers.
+  - The intro's first frame overruns the CPU budget. tools.emu shows the NMI landing inside its sprite pass, so every later step comes one frame late. The port now yields `SPIN` at that point, which removed the one-frame offset on every fade step. The new `tools/emu/e2_intro_probe.py` logs where that NMI falls.
+
+**Checks, all passing:**
+- **Fuzz:** 300/300 new `BossAiE2` cases in `fuzz_boss.json`, covering the minion spawn. I regenerated `fuzz_boss.json` and `fuzz_update.json`; all routine cases give 17800/17800.
+- **Frame check:** new `web/test/bosse2_check.mjs` with `bosse2_ref.csv`, from a state exported out of the `boss_e2` scenario. The 8 cells that differ are frames where tools.emu's frame ends halfway through a fade step's palette build or the second parts build. The check expects the port's previous-frame value there. At f2907 RAM is equal apart from the stack page and 7 scratch bytes.
+- **Regressions:** `bossa6`, `bossflee`, `core`, `finalscene` and `mesia` still pass.
+
+**Not covered:** from f2909 the fight's shots cause lag frames in tools.emu that the port doesn't model. That is the existing CPU-overrun gap (c). The Insect Flute frames before the exported state weren't run through the port either.
+
+I wrote the session-163 note, a Verification Log row and the task-text update in REVERSE.md, updated the labels, and added the check to CLAUDE.md, `docs/architecture_web.md` and the fuzz README. I also added `tools/csv_cols.py`, which prints columns of two frame CSVs side by side.
+
+SESSION_SUMMARY: Session 163 ported boss AI $62 BossAiE2 15:A675 (intro with fades and BG redraw, walk, attack, BossBuildParts, BossEBMove) plus body-part AI $3F; fuzz 300/300, all routine cases 17800/17800, new bosse2_check.mjs matches tools.emu at shift 0 over f2524-2907 except 8 mid-routine cells after modelling the intro's overrun frame with yield SPIN; lag frames from f2909 stay under gap (c), and the boss task stays open for $6B and the rest.

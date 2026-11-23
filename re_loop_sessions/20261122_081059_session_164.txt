@@ -1,0 +1,56 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## Next Tasks" REVERSE.md && grep -n -m3 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions && wc -c 20261122_081059_session_16[34].txt 2026112
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM && grep -n "B2DA\|BossAiEB\|\$6B\b" REVERSE.md | head -40; grep -n "
+  ▶ Grep "B2DA|BossAiEB|BossEB" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^15,(B2|B3|B4|B5|B6|A8|A9)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM && sed -n '1280,1300p' REVERSE.md | cut -c1-3000
+Picking up the top task: porting the final boss AI `$6B` (`15:B2DA`). Next I'm reading the existing E2 port to copy its structure.
+  ▶ Grep "Session 163" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^(export )?(async )?function\*? |^const [A-Z_]+ =|0xA675|0xA8FF|0xA73C|E2" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj/ai_boss.js
+  ▶ Read ai_boss.js +1
+  ▶ Read ai_boss.js +690
+  ▶ Read ai_boss.js +1110
+Now disassemble the whole final boss routine `15:B2DA`–`B727`.
+  ▶ python3 tools/dis.py 15 B2DA 0x1E8
+  ▶ python3 tools/dis.py 15 B4C2 0x266
+  ▶ Grep "^export (function\*?|const) (rand64|dirToTarget|spawnShot|objStepVector)|8409|97D7" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj/util.js
+  ▶ Grep "export function\*? (waitPpuQueue|ppuQueueBlock)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/pause.js
+  ▶ Grep "AI_TABLE\[|isGen|\.next\(|yield\* r" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Grep "B6C1|bgStrip|BgStrip|setR6\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read prg.js
+  ▶ Grep "export function\*? (fadeIn|fadeOut|paletteBuildRom)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/death.js
+  ▶ Grep "function\* (fadeIn|fadeOut)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Grep "fadeIn|fadeOut" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/death.js
+Still porting AI `$6B`; checking the `playSound` Y argument and the fade's register exit state.
+  ▶ Grep "export function playSound" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/playsound.js
+  ▶ Read death.js +12
+  ▶ python3 tools/dis.py 30 C169 0x10 && python3 tools/dis.py 26 8C3D 0x30
+  ▶ python3 tools/dis.py 26 8C0E 0x30
+  ▶ Grep "BOSS_AIS|E2|A675|_fix_boss|PPU_ROUTINES" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/routine_capture.py
+  ▶ Read routine_capture.py +245
+  ▶ Read routine_capture.py +610
+Checking how the fuzz harness treats routines that wait on the NMI (the final boss's BG strips do).
+  ▶ Grep "nmi|NMI|timeout|max_" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/routine_capture.py
+  ▶ Read routine_capture.py +765
+  ▶ Read routine_capture.py +336
+  ▶ Grep "BossAiE2|BossDefeated|Ai70PhaseDispatch|ciram" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/obj_check.mjs
+  ▶ python3 tools/dis.py 26 8C6E 0x40 --stop
+  ▶ python3 tools/dis.py 26 8CAF 0x18
+Writing the `$6B` port now: setup phase `B301`, phases 1-6, and the BG-strip, flame, and edge helpers.
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+Port written. Now wiring it into the fuzz harness (`routine_capture.py`) and `obj_check.mjs`.
+  ▶ Edit ai_boss.js
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ Grep "fuzz_boss" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test
+  ▶ Read README.md +68
+Running a quick 300-case capture of just `BossAiEB` to a scratch file first.
+  ▶ mkdir -p /tmp/eb && python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 
+  ▶ mkdir -p /tmp/eb
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine BossAiEB -
+You've hit your weekly limit · resets Nov 26, 8am (America/New_York)

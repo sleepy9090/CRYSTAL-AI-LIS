@@ -1,0 +1,48 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## Next Tasks|^- \[ \]|^### " REVERSE.md
+  ▶ wc -l re_loop_sessions/20261116_163435_session_03*.txt dead_ends.md; tail -40 re_loop_sessions/20261116_163435_session_0
+That's the current session's log. Reading dead ends and the previous logs.
+  ▶ Read dead_ends.md
+  ▶ Read 20261116_163435_session_032.txt
+  ▶ Read 20261116_163435_session_031.txt
+  ▶ Read REVERSE.md +930
+  ▶ Grep "^#{2,5} |^\*\*[A-Z][^*]{3,60}\*\*" REVERSE.md
+Now reading the source sections I need to index: sound format (173-256), sprites/metasprites/palettes (264-356), area/screen (356-390), object type (728-760).
+  ▶ Read REVERSE.md +173
+  ▶ Grep "^\*,(01[1-7][0-9A-F]|00F[0-9A-F]|F[0-9A-F])," labels.csv
+  ▶ Grep "snd_ch0|snd_zpF" 
+  ▶ Grep "snd_zpF[137]" disasm/bank_24.asm
+Renaming the sound driver's auto labels to their documented field names (session 3 semantics), then writing the index.
+  ▶ Read labels.csv +590
+  ▶ Edit labels.csv
+  ▶ python3 tools/disasm_all.py --quiet 2>&1 | tail -3; grep -i "round-trip" disasm/coverage.txt; python3 tools/ram_map.py >
+  ▶ python3 tools/disasm_all.py --quiet 2>&1 | tail -3; grep -i "round-trip" disasm/coverage.txt; python3 tools/ram_map.py -
+Disassembly still round-trips. Now writing the Data Structures index and the missing per-struct field tables.
+  ▶ Edit REVERSE.md
+Updating the RAM Map rows that still point at the old names / "Ph5 structs 4/5".
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now marking the task done.
+  ▶ Edit REVERSE.md
+  ▶ Grep "snd_ch0|snd_zpF" REVERSE.md
+I finished task Ph5 structs 5/5 (session 33), the last of the struct tasks. Nothing has been checked in an emulator yet, so every layout is still marked "static-RE only". After the label changes the full disassembly was rebuilt and still reassembles byte-for-byte, and `docs/ram_map.txt` was regenerated.
+
+**What changed in REVERSE.md `### Data Structures`**
+- **Struct index at the top:** one row per struct, giving its location, size or count, the field table to read, the sections that explain its behaviour, the tool that dumps it, and its status.
+- **New field tables:** these were previously only described in running text under Key Findings. Each is now a compact table:
+  - **Object type record** (`13:AC00`): the sparse column initialiser that `ObjInit` reads.
+  - **Area record:** sprite palettes, sprite CHR banks and 4-byte spawn entries, plus the handler-1 spawn record from banks 4/5.
+  - **Area header sub-tables k0–k5:** map, graphics, entry points, exits, persistent screens and edge links.
+  - **Screen and tile tables:** the 256-byte screen page, the metatile set, the attribute table and the visited-screen substitution table.
+  - **Metasprite record:** the mirror redirect, the empty form, frames and per-sprite records.
+  - **Palette record:** where each slot lives in banks 2/3, and how the fade and backdrop rules apply.
+  - **Sound:** the music and SFX headers, and a table of the per-channel state arrays at `$0114-$017F`.
+- The two RAM Map rows that pointed to "Ph5 structs 4/5" for the sound fields now point to the new sound table.
+
+**Labels:** I renamed 25 sound-driver labels that session 29 had generated automatically. The new names come from the field meanings worked out in session 3:
+- the zero-page bytes `$F1-$FF`: `snd_stream_ofs`, `snd_frame_end`, `snd_op`, `snd_ptr`, `snd_reg_dirty`, `snd_op_count`, `snd_fade_timer`, `snd_dmc_drum`, and others;
+- the per-channel arrays: `snd_ch_flags`, `snd_ch_ptr_lo/hi`, `snd_ch_wait`, `snd_ch_note_len`, `snd_ch_octave`, `snd_ch_env`, `snd_ch_vib`, `snd_ch_reg0`, `snd_ch_sweep`, `snd_ch_period_lo/hi`, and others.
+
+The task is marked done. I added no new follow-up tasks, because the remaining step (confirming the layouts in a memory dump) is already the Ph5 checkpoint. Nothing is committed.
+
+SESSION_SUMMARY: Session 33 — Ph5 structs 5/5 done: `### Data Structures` now opens with a struct index, with new field tables for object type, area record + k0-k5, screen page/metatile, metasprite, palette and sound, all marked static-RE only; 25 sound-driver auto labels renamed; disassembly still reassembles byte-for-byte.

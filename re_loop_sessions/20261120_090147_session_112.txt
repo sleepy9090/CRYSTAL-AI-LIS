@@ -1,0 +1,160 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "## Next Tasks" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +2267
+  ▶ grep -n "^- \[ \]" REVERSE.md | head -5 && grep -n "^###" REVERSE.md | awk -F: '$1>2267'
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2267
+Picking the top unchecked task (gameplay frames leftover). Checking last session log for what was next.
+  ▶ tail -c 3000 re_loop_sessions/20261120_090147_session_111.txt; echo ----; tail -c 1500 re_loop_sessions/20261120_090147_
+Next is (e1): the spawn handlers. Reading the REVERSE.md docs and the port's stub.
+  ▶ Grep "AreaSpawnEntry|SpawnH0|SpawnH1_Indirect|SpawnH2|SpawnH3|SpawnH4_Item|SpawnSetTileHi|SpawnCommonTail" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Grep "^#+ .*([Ss]pawn)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "E1B6|SpawnH|ChestPresence|14:80A0" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/dis.py 31 E1B6 0x223
+  ▶ Read machine.js
+  ▶ grep -n "spawnEntry\|entryFF" -r web/src web/test | grep -v "^web/src/game/machine.js"; grep -n "export function" web/sr
+  ▶ Read area.js
+  ▶ Read play.js +140
+Porting AreaSpawnEntry + handlers. Checking how LoadAreaChrRecord calls it and what areas.json provides.
+  ▶ python3 tools/dis.py 31 E16D 0x49; grep -n "spawns" tools/gen_web_data.py | head; python3 tools/dis.py 30 C25D 0x40 --st
+  ▶ python3 tools/dis.py 31 E148 0x25; grep -n "switchBank16\b\|export function switchBank16" -r web/src/game | head -5; sed
+  ▶ grep -n "export function" web/src/game/prg.js web/src/game/obj/objinit.js web/src/game/obj/util.js; grep -n "switchBank1
+  ▶ python3 tools/dis.py 14 80B6 0x40; python3 tools/dis.py 14 85BF 0x21; grep -rn "NpcFlagTest\|14:8" web/src/game --includ
+  ▶ grep -rn "8135\|flagTest" web/src | head; python3 tools/dis.py 14 8135 0x50 --stop; sed -n 1,60p web/src/game/obj/objini
+  ▶ python3 tools/dis.py 14 8148 0x40 --stop; python3 tools/dis.py 30 C3F0 0x20 --stop
+Writing `world/spawn.js` (AreaSpawnEntry, the 5 handlers, NpcHidden, ChestPresence, NpcFlagTest).
+  ▶ Write spawn.js
+Now wiring it into machine.js, area.js and play.js.
+  ▶ python3 - <<'EOF' 2>&1 || true
+  ▶ Grep "^import" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Edit play.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Read play.js +166
+  ▶ Edit play.js
+  ▶ Edit area.js
+  ▶ Edit area.js
+  ▶ Grep "spawnEntry|loadAreaChr|areaLoad" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web
+Fix the header comment, then run the canonical comparison.
+  ▶ Edit area.js
+  ▶ grep -n "canonical\|CANON" tools/web_compare.py | head; ls gfx/compare | grep -i "s111\|emu.*csv" | head
+  ▶ grep -n "CANON_KEYS\s*=" -A3 tools/compare_ref.py; grep -n "s111\|s110_emu" REVERSE.md | head -5
+  ▶ grep -rn "CANON_KEYS\s*=" tools | head -2; grep -n "s111_\|s110_emu.csv" re_loop_sessions/20261120_090147_session_111.tx
+  ▶ sed -n 31,32p re_loop_sessions/20261120_090147_session_111.txt | cut -c1-400
+  ▶ node web/test/run.mjs --frames 2247 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --compare
+The area-1 spawns now appear (slots $0D-$13 match until the player gets hit at f2439+). Checking whether the f2322/f2340 rows are new by comparing against the pre-change code.
+  ▶ git status --short web | head; git stash push web/src/game/machine.js web/src/game/world/area.js web/src/game/states/pla
+  ▶ Grep "2322|2340|2346|2413" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions/20261120_090147_session_111.txt
+  ▶ sed -n 39,40p re_loop_sessions/20261120_090147_session_111.txt | cut -c1-600
+  ▶ node web/test/run.mjs --frames 2247 --keys 1250:START 1400:START 1600:START 1700:START 2301:START 2340:DOWN:80 --compare
+Regenerating a fresh tools.emu CSV for this comparison (the s110 one may be stale).
+  ▶ python3 -m tools.emu --frames 2461 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --compare 
+  ▶ Grep "pos_x|pos_y" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ grep -o "f2322[^.]*\." REVERSE.md | head -5; grep -o ".\{200\}2340: pos_y.\{100\}" -r re_loop_sessions/*11[01]*.txt | he
+Spawns match f2409-2438. Now the port logs AI `$7F` and `$50` as unported, and o0D diverges at f2439. Checking what those AIs are.
+  ▶ grep -n "AI \`\$7F\`\|AI \`\$50\`\|\`\$7F\` \|AiTable\|ObjAiTable" REVERSE.md | head -10; grep -in ",Ai.*7F\|ai \$7f\|ai
+  ▶ Grep "AI `\$7F`|AI `\$50`|\$7F` =|\$50` =" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -o ".\{0,200\}\`\$7F\`.\{0,250\}" REVERSE.md | grep -i "ai" | head -4; echo ===; grep -o ".\{0,150\}AI \`\$50\`.\{0
+  ▶ Grep ".{0,160}AI `\$(7F|50)`.{0,260}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "AI \$\{|not ported yet|AI_TABLE|const AI" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj/objects.js
+  ▶ sed -n 80,110p web/src/game/obj/objects.js
+  ▶ python3 tools/decode_tables.py 27:A314 0x80 ptr16 2>&1 | sed -n '1,3p;80,84p;125,132p'
+  ▶ python3 tools/dis.py 27 A419 4; python3 tools/dis.py 27 A660 0x70 --stop
+  ▶ python3 tools/dis.py 27 A67A 0x50; grep -n "A660\|A419" labels.csv
+  ▶ sed -n 1,40p web/src/game/obj/ai_static.js; grep -n "export" web/src/game/obj/ai_static.js web/src/game/obj/move.js; gre
+  ▶ sed -n 62,72p web/src/game/obj/move.js; sed -n 88,110p web/src/game/obj/ai_static.js; grep -n "AI \$\|A419\|ObjAiTable" 
+  ▶ Read move.js +62
+  ▶ Read ai_static.js +86
+  ▶ Read move.js +1
+  ▶ Grep "A660|04CD|0x04C0|\$04C0" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Read REVERSE.md +974
+Adding AI `$50` / `$7F` to `ai_static.js`.
+  ▶ Edit ai_static.js
+  ▶ Edit ai_static.js
+  ▶ Edit ai_static.js
+  ▶ node web/test/run.mjs --frames 2247 --keys 1250:START 1400:START 1600:START 1700:START 2301:START 2340:DOWN:80 --compare
+  ▶ node web/test/run.mjs --frames 2247 --keys 1250:START 1400:START 1600:START 1700:START 2301:START 2340:DOWN:80 --compare
+Slot $0D now matches; the remaining diffs (slots $0F-$13 from f2440) come from slot $0D's new AI `$08`, which spawns them. Checking its size.
+  ▶ python3 tools/decode_tables.py 27:A324 1 ptr16; grep -n "^2[67],A\|^2[67],9" labels.csv | grep -i "A2\|tbl" | head -0; p
+  ▶ python3 tools/dis.py 27 B7F6 0x60 --stop; grep -n "B7F6" labels.csv
+AI `$08` (27:B7F6) is a larger screen-redraw AI (MarkScreenVisited, WaitPpuQueue, BG row render), so I'm leaving it for later. Running the web checks now.
+  ▶ for t in core ppu serve world sprite obj sound apu; do echo "== $t"; node web/test/${t}_check.mjs 2>&1 | tail -2; done
+  ▶ node web/test/core_check.mjs 2>&1 | tail -2; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/serve_check.mjs 2
+All checks pass. Now adding routine-level cases for `AreaSpawnEntry` so the paths the canonical run doesn't take (H1 NPCs, H2 chests, H4 items) get checked too.
+  ▶ Read routine_capture.py
+  ▶ grep -n "ObjInit\|PlaySound\|prgR6\|bank\|RUN\b\|const RUN" web/test/obj_check.mjs | head -30; grep -n "def call\b\|def 
+  ▶ Read routine_capture.py +590
+  ▶ Read obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+Now the capture side.
+  ▶ Edit routine_capture.py
+  ▶ Grep "def _fix_case|^    if name ==|^    elif name" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Grep "def _fix_case" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ cat web/test/obj_frames/README.md | head -40
+  ▶ grep -rn "gameplay_first.state" web/test/obj_frames/README.md tools/emu/*.py | head -3
+Capturing 500 AreaSpawnEntry + 200 AiS0DTransform cases in tools.emu.
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine AreaSpawnEntry --cases
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine AreaSpawnEntry,AiS0DTr
+  ▶ node web/test/obj_check.mjs --verbose 2>&1 | grep -v "^ok" | head -30
+  ▶ python3 tools/decode_tables.py 14:86E0 0x80 ptr16 | awk '{print $3}' | tr '\n' ' '
+  ▶ python3 tools/decode_tables.py 14:86E0 0x80 ptr16 | tail -40
+  ▶ python3 tools/decode_tables.py 14:86E0 0x40 ptr16 | head -40
+The Hi table is 0x50 entries (`$86E0-$877F`, params `$80-$CF`), and the lists start at `$8780`. Restricting H1 params to `< $D0`.
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine AreaSpawnEntry,AiS0DTr
+All 12800 routine cases are identical, including the 800 new ones. Now the docs: labels, REVERSE.md, README, architecture_web.md.
+  ▶ grep -n "^27,A660\|^27,A419\|^27,B7F6\|^14,86E0\|^14,85E0\|^14,8135\|^31,E35F" labels.csv; grep -n "world/area.js\|ai_st
+  ▶ python3 tools/label_edit.py --help 2>&1 | head -5; ls tools | grep -i label
+Editing labels.csv directly (fixing the NpcPresenceHi size and adding the new routines).
+  ▶ Read labels.csv +444
+  ▶ Edit labels.csv
+  ▶ Grep "^### Web Port Fixes" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2445
+  ▶ Edit REVERSE.md
+Now updating the task text (mark (e1) done, list what's left).
+  ▶ Edit REVERSE.md
+  ▶ Read architecture_web.md +185
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Grep "world/.*area\.js|camera\.js  " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Read architecture_web.md +48
+  ▶ Edit architecture_web.md
+  ▶ grep -n "fuzz_player.json" web/test/obj_frames/README.md | head -3; wc -l web/test/obj_frames/README.md
+  ▶ Read README.md +58
+  ▶ Edit README.md
+  ▶ Edit README.md
+Final full check run after all edits (serve_check counts modules, so the new file matters).
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/serve_check.mjs 2
+  ▶ Grep "ES modules|readdir|import\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/serve_check.mjs
+I've ported the area spawn code to the web port (part (e1) of the gameplay-frames task). All web checks pass, but the task stays unchecked because other parts are still open.
+
+**What changed**
+- **New `web/src/game/world/spawn.js`:** this is the routine that reads one 4-byte spawn entry from an area record (`AreaSpawnEntry` `31:E1B6`). All five spawn handlers are ported, along with the three bank-14 routines they call: the NPC-absent check (`NpcHidden` `14:80A0`), the chest check (`ChestPresence` `14:85BF`) and the story-flag test (`NpcFlagTest` `14:8135`). `Machine.spawnEntry` now calls it.
+- **`world/area.js`:** the area load now switches to bank pair 6 and sets the record pointer at `$10/$11`, like the ROM does at `31:E14A`. Before, it did neither. It also walks the raw ROM record instead of the pre-decoded spawn list in `areas.json`.
+- **`states/play.js`:** the respawn tick now goes through the same spawn routine.
+- **`obj/ai_static.js`:** two AIs that area 1 reaches now that spawns run:
+  - AI `$50` (`27:A660`, new label `AiS0DTransform`) turns slot `$0D` into its death type, freezes the player, then sets `sub_state` `$11`.
+  - AI `$7F` (`27:A419`) does nothing (a bare RTS).
+
+**Results**
+- **New test cases:** 800 routine-level cases in `web/test/obj_frames/fuzz_spawn.json` match tools.emu exactly. They cover random spawn entries, area ids and story flags, with chest, item and NPC parameters steered onto their special paths. The full object check is 12800/12800.
+- **Canonical new-game run:** compared against a fresh tools.emu run (with START at f2301 in the port, the known key-latency offset). The area-1 enemies (slots `$0D`–`$13`) now appear and match from f2409 to f2438, and slot `$0D` matches all the way through.
+- **What still differs from f2440:**
+  - Slots `$0F`–`$13` are spawned by slot `$0D`'s next AI, `$08` (`27:B7F6`), which isn't ported. It redraws part of the screen (marks the screen visited, waits on the PPU queue, renders a background row).
+  - The player position differs because collision (part e3) isn't ported, so the enemy hit on the player is missing.
+  - Rows f2322, f2340, f2346 and f2408–2415 differ only because of the comparison's row timing (the emulator row is captured mid-frame), as noted in earlier sessions.
+
+**ROM fact:** the high-parameter NPC table (`NpcPresenceHi` `14:86E0`) has only `$50` entries (params `$80`–`$CF`), not 128 as labels.csv said. Higher params would read list bytes as pointers; the first test run hit I/O space this way, so the test now keeps NPC params below `$D0`.
+
+**Docs:**
+- In REVERSE.md, the task text marks (e1) done and lists what's left: AI `$1A`, AI `$08` and `sub_state` `$11`. There is also a new s112 note under Web Port Fixes.
+- In labels.csv, 4 new labels and a corrected `NpcPresenceHi` size.
+- Also updated: `docs/architecture_web.md` and the `obj_frames` README.
+
+**Files to clean up:** the scratch files `gfx/compare/s112_emu.csv`, `s112_web.csv` and `s112_old.csv`, and `/tmp/s112_spawn.json` and `/tmp/s112_s0d.json`, can be deleted. `web/test/obj_frames/zz_tmp_player.json` from session 111 is still there, waiting for you to delete it.
+
+SESSION_SUMMARY: Session 112: ported AreaSpawnEntry 31:E1B6 with all 5 spawn handlers plus NpcHidden/ChestPresence/NpcFlagTest into the new web/src/game/world/spawn.js, wired into the area load (now sets $10/$11 and bank 6 like the ROM) and the respawn tick, and added AI $50 27:A660 and AI $7F; fuzz_spawn.json 800/800 identical and all web checks pass; area-1 spawns now match the emulator f2409-2438, with the remaining differences from AI $08 27:B7F6 and the unported collision; (e1) marked done in the still-open gameplay-frames task.

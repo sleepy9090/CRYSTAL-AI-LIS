@@ -1,0 +1,176 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls re_loop_sessions | tail -4 && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md | 
+  ▶ Read REVERSE.md +2401
+  ▶ Read dead_ends.md
+  ▶ Read 20261122_104601_session_207.txt
+  ▶ python3 tools/xref.py D354 2>&1 | head -40; grep -rn "showMessage" web/src --include=*.js | grep -v "^.*function" | cut 
+  ▶ grep -rn "not ported" web/src --include=*.js | cut -c1-170 | head -40; python3 tools/dis.py 31 FFC0 0x30; python3 tools/
+  ▶ python3 tools/xref.py FFCF 2>&1 | head; for a in D085 D460 D5A4 D600 D780; do grep -n "^30,$a," labels.csv; done; grep -
+I'm checking which ROM `ShowMessage` callers are already in the port, so I can close item (a) of the leftovers task.
+  ▶ python3 tools/xref.py FFCF 2>&1 | head; grep -rn "D085\|D62B\|D7A6\|D494\|D9C1\|FFCF\|D5C1\|D447" web/src/game | cut -c1
+  ▶ python3 tools/nesrom.py 2>/dev/null | head -2; grep -n "^30,D4[0-9A-F][0-9A-F],\|^30,D5[89A-F][0-9A-F],\|^30,D6[0-2][0-9
+  ▶ grep -n "F5E1\|F60E\|F782\|F7C5\|F731" REVERSE.md labels.csv | cut -c1-300 | head -30
+  ▶ grep -n "F731\|F751\|F771\|F782\|F7C5\|F7DB\|F6D6\|NMI_MODES\|nmiMode" web/src/game/mainloop.js | cut -c1-200 | head -30
+Items (a) and (f) are close to done. The NMI modes F731 and F7C5 are already ported. Only the dead `NmiMode4` `F782` and IRQ handlers 4/5 are left, and they're small, so I'll port them and close (f).
+  ▶ python3 tools/dis.py 31 F782 0x43; python3 tools/dis.py 31 F5E1 0x39
+  ▶ Read mainloop.js +100
+  ▶ grep -n "function setIrqHandler" -A14 web/src/game/mainloop.js; sed -n 140,175p web/src/game/machine.js; grep -n "irq_de
+Now I'll write the port. `NmiMode4`, handler 4 `IrqRowStretch` and handler 5 `IrqOffSound` all go into `mainloop.js`, next to the other IRQ bodies.
+  ▶ Edit mainloop.js
+  ▶ Read machine.js +1
+  ▶ python3 - <<'EOF' 2>/dev/null || echo "use edit tool"
+I'll make the `machine.js` edits directly.
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+Now a test. tools.emu never reaches mode 4 on its own, so I'll check whether `web_state.py --force` can put a gameplay state into it, which gives a real emulator reference.
+  ▶ grep -n "irq_mode\|chr_r0_alt" web/src/game/ram.js; python3 -m tools.emu.web_state --help 2>&1 | head -40; ls tools/emu/
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/town02_enter.state --frames 1 --poke 0051=04 --poke 0058=08
+  ▶ python3 tools/web_state_compare.py --state /tmp/nm4.state --web /tmp/nm4.json --frames 120 --shots 2500,2540,2600 --out-
+The `sub` difference comes from stopping inside the `GiveItem` pass (the known re-dispatch problem). I'll export at the main-loop top `30:C900` instead.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/town02_enter.state --frames 1 --poke 0051=04 --poke 0058=08
+Now only `sub` and the HUD rows differ. I'll run the same comparison without the pokes to see whether mode 4 causes either one.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/town02_enter.state --frames 1 --until 30:C900 --out /tmp/nm
+The baseline shows the same `sub` and HUD-row cells, so they belong to this state export, not to mode 4. The identical pixel counts are suspicious, though, so I'll confirm mode 4 actually stayed set.
+  ▶ head -1 /tmp/nm4/emu.csv | tr ',' '\n' | grep -n -i "irq\|mode\|snd" | head; node web/test/state_meta.mjs /tmp/nm4.json 
+  ▶ node web/test/state_meta.mjs /tmp/nm4.json; node web/test/ram_watch.mjs /tmp/nm4.json 40 0051,0059,005A 2>&1 | head -20
+No `$59`/`$5A` writes, so handler 4 never ran. I'll check whether `irq_mode` is still 4 in the exported state.
+  ▶ node web/test/run.mjs --load-state /tmp/nm4.json --frames 1 --dump-ram /tmp/nm4r.bin >/dev/null 2>&1; python3 tools/ram_
+The game resets `irq_mode` before the main-loop top, probably when the `GiveItem` message closes. I'll switch to a calmer base, `gameplay_first.state`, and use `--force` at `30:C900`.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/gameplay_first.state --frames 1 --force 30:C900:0051=04 --f
+Mode 4 holds now. Comparing 200 frames against tools.emu with screenshots:
+  ▶ python3 tools/web_state_compare.py --state /tmp/nm4.state --web /tmp/nm4.json --frames 200 --shots 2356,2400,2500 --out-
+Large differences from the first frame on. I'll look at the first differing rows and the f2356 screenshots.
+  ▶ python3 tools/compare_frames.py /tmp/nm4/emu.csv /tmp/nm4/web.csv --frames 2353-2362 2>&1 | head -14; ls /tmp/nm4 | head
+  ▶ python3 tools/compare_frames.py /tmp/nm4/emu.csv /tmp/nm4/web.csv --frames 2353-2362 2>&1 | head -14
+  ▶ Glob /tmp/nm4/*
+The player walks down in tools.emu but not in the port. That looks like a held key carried in the state, not mode 4. I'll look at the f2356 pair image.
+  ▶ Read pair_2356.png
+  ▶ python3 -m tools.emu.irq_split_probe --help 2>&1 | head -20
+  ▶ python3 -m tools.emu.irq_split_probe /tmp/nm4.state --frames 2 2>&1 | head -80
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ python3 tools/web_state_compare.py --state /tmp/nm4.state --web /tmp/nm4.json --frames 6 --shots 2354,2356 --out-dir /tm
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/gameplay_first.state --frames 1 --until 30:C900 --out /tmp/
+  ▶ python3 tools/web_state_compare.py --state /tmp/nm0.state --web /tmp/nm0.json --frames 60 --keys 2353:DOWN:30 --out-dir 
+The release is one frame off between the harnesses, and the baseline has the same offset. I'll try `--web-key-shift 1`.
+  ▶ python3 tools/web_state_compare.py --state /tmp/nm4.state --web /tmp/nm4.json --frames 240 --keys 2353:DOWN:30 --web-key
+  ▶ for v in 01 0F 00; do python3 -m tools.emu.web_state --load-state tools/emu/states/gameplay_first.state --frames 1 --for
+I'll run them one at a time instead.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/gameplay_first.state --frames 1 --force 30:C900:0051=04 --f
+  ▶ python3 tools/compare_frames.py /tmp/nm4_01/emu.csv /tmp/nm4_01/web.csv --cols snd 2>&1 | tail -2; python3 tools/csv_col
+The sound columns don't change, so this doesn't prove handler 5 ran. I'll check the probe for handler 5's `IRQOFF` write and look at the music tick in RAM.
+  ▶ python3 -m tools.emu.irq_split_probe /tmp/nm4_01.state --frames 2 2>&1 | grep -n "f2354 line \(8[4-9]\|9[0-9]\|1[0-9][0-
+  ▶ python3 -m tools.emu.irq_split_probe /tmp/nm4_01.state --frames 2 2>&1 | tail -22
+Handler 5 runs at line 89 (`IRQOFF`) and then calls `SoundUpdate`. This room is silent, so I'll diff the whole RAM to show the driver state still matches.
+  ▶ python3 tools/web_state_compare.py --state /tmp/nm4_01.state --web /tmp/nm4_01.json --frames 240 --keys 2353:DOWN:30 --w
+  ▶ python3 tools/web_state_compare.py --state /tmp/nm4_01.state --web /tmp/nm4_01.json --frames 240 --keys 2353:DOWN:30 --w
+  ▶ python3 tools/web_state_compare.py --state /tmp/nm4_01.state --web /tmp/nm4_01.json --frames 240 --keys 2353:DOWN:30 --w
+These are scratch bytes, bank shadows, `$08` and the stack, which looks like the usual end-of-run timing noise. The baseline will tell.
+  ▶ python3 tools/web_state_compare.py --state /tmp/nm0.state --web /tmp/nm0.json --frames 240 --keys 2353:DOWN:30 --web-key
+  ▶ python3 tools/dis.py 31 F424 0x11; python3 tools/dis.py 31 F3F0 0x10; grep -n "^\*,005[3-6]," labels.csv
+  ▶ python3 tools/xref.py 0053 2>&1 | head; grep -n "0x56, \|0x56)" web/src/game/mainloop.js web/src/game/*.js web/src/game/
+  ▶ python3 tools/dis.py 31 F445 0x10; grep -n "IRQ\b\|IrqEntry\|^31,F4[45]" labels.csv | head -5; python3 tools/search_byte
+  ▶ python3 tools/dis.py 31 F6AD 0x15
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+Before trusting those edits, I'll confirm that handlers 0, 3 and 7 really go through `SetIrqHandler` and don't just store `$56` directly.
+  ▶ python3 tools/xref.py F424 2>&1 | head -30; python3 tools/search_bytes.py 8556 2>&1 | head
+Handlers 0 (`F47F`), 2 (`F515` → 3), 3 (`F582`/`F598`) and 7 (`F646`) all call `SetIrqHandler`. The port's handler 2 didn't set index 3 at all, so I'll add that too.
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+Rerunning the `$58` = 1 RAM diff:
+  ▶ python3 tools/web_state_compare.py --state /tmp/nm4_01.state --web /tmp/nm4_01.json --frames 240 --keys 2353:DOWN:30 --w
+  ▶ python3 tools/web_state_compare.py --state /tmp/nm4_01.state --web /tmp/nm4_01.json --frames 240 --keys 2353:DOWN:30 --w
+`$53-$55` match now. `$52` doesn't (tools.emu has `02`, the port `82`), so something else must write `$52` after the NMI. Searching for other writers:
+  ▶ python3 tools/search_bytes.py 8552 2>&1 | head; python3 tools/search_bytes.py 8652 2>&1 | head -4; python3 tools/search_
+  ▶ python3 tools/dis.py 31 EB6D 0x22
+`PpuScrollWrite` `31:EB83` uses `$52` as a temp for the nametable bits. The port skipped that write too, so I'll add it.
+  ▶ Edit mainloop.js
+  ▶ python3 tools/web_state_compare.py --state /tmp/nm4_01.state --web /tmp/nm4_01.json --frames 240 --keys 2353:DOWN:30 --w
+Zero-page now matches the baseline (`$08`, scratch `$10-$12` and the `$6E/$6F` bank shadows are the same end-of-run timing noise as without mode 4). Next, the `$58` = 0 path (BG off, IRQ off):
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/gameplay_first.state --frames 1 --force 30:C900:0051=04 --f
+The `$58` = 0 path matches on every frame and both screens, apart from `$0049` (tools.emu `00`, port `FF`). Looking up what `$49` is:
+  ▶ grep -n "^\*,0049,\|^\*,004[89A-F]," labels.csv; grep -n "0x49\b\|R\.\w*49" web/src/game/ram.js | head
+`$49` is `pad_dir`, where `FF` means no direction. tools.emu ending with `00` is odd, so I'll watch writes to it in tools.emu.
+  ▶ python3 -m tools.emu --help 2>&1 | grep -E "load-state|watch|frames" | head
+  ▶ python3 -m tools.emu --load-state /tmp/nm4_00.state --frames 2595 --keys 2353:DOWN:30 --watch 0049 2>&1 | tail -8
+  ▶ wc -l web/test/outofmp_check.mjs web/test/pause13_check.mjs && sed -n 1,200p web/test/outofmp_check.mjs
+CSV columns don't capture the split pixels that make up this effect, so the check also needs a screen comparison. Looking for an existing PNG/screen helper in the test harness:
+  ▶ Grep "readPng|decodePng|fbCrc|screenCrc|png" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test
+  ▶ grep -n "png\|Png" web/test/world_check.mjs web/test/run.mjs | head -20
+  ▶ Read world_check.mjs +25
+  ▶ Grep "export function (fbToRgb|compareRow|parseKeys)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/harness.mjs
+The tools.emu shots should load with that reader. I'll save the states, refs and shots, then write `web/test/nmimode4_check.mjs`.
+  ▶ python3 tools/csv_trim.py --help 2>&1 | head -12
+  ▶ cp /tmp/nm4.json web/test/states/nmimode4_08.json && cp /tmp/nm4_01.json web/test/states/nmimode4_01.json && cp /tmp/nm4
+  ▶ grep -n "crc32" web/test/harness.mjs | head -3; ls tools | grep -i png
+  ▶ Write png_crc.py
+  ▶ python3 tools/png_crc.py /tmp/nm4c/emu_2356.png /tmp/nm4c/web_2356.png /tmp/nm4c/emu_2450.png /tmp/nm4_01/emu_2356.png /
+The tools.emu and port CRCs agree for f2356. Now I'll export the states into the repo and trim the reference CSVs.
+  ▶ E="python3 -m tools.emu.web_state --load-state tools/emu/states/gameplay_first.state --frames 1 --force 30:C900:0051=04 
+  ▶ python3 tools/csv_trim.py /tmp/nm4c/emu.csv web/test/nmimode4_08_ref.csv --cols core,pal,obj,snd,oam_crc --frames 2354-2
+Running the three exports one at a time:
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/gameplay_first.state --frames 1 --force 30:C900:0051=04 --u
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/gameplay_first.state --frames 1 --force 30:C900:0051=04 --u
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/gameplay_first.state --frames 1 --force 30:C900:0051=04 --u
+Before writing the check, I need to know whether `ppu.splits` still holds the chained lines after `renderFrame`:
+  ▶ Grep "splits" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/nes/ppu.js
+It persists until the next frame's `_installSplits`, so the check can read it right after `runFrame`.
+  ▶ Write nmimode4_check.mjs
+  ▶ node web/test/nmimode4_check.mjs
+The `$58` = 8 run calls `SoundUpdate` every frame even though handler 5 shouldn't run. I'll find where that call comes from.
+  ▶ Grep "soundUpdate\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ python3 -m tools.emu.irq_split_probe tools/emu/states/nmimode4_08.state --frames 2 2>&1 | grep -A3 "f2354 line 234 dot 2
+Confirmed: tools.emu writes `IRQOFF` at line 235, so handler 5 runs in both row-stretch cases. I'll fix the check's expectation and its header comment.
+  ▶ Edit nmimode4_check.mjs
+  ▶ Edit nmimode4_check.mjs
+  ▶ node web/test/nmimode4_check.mjs && python3 tools/run_checks.py 2>&1 | tail -8
+All 52 checks pass, including the whole-RAM fuzz checks that now see the `$52-$55` writes. Next is documentation: REVERSE.md (leftovers task, IRQ table, Verification Log), labels.csv and CLAUDE.md.
+  ▶ Read REVERSE.md +250
+  ▶ Read REVERSE.md +450
+Row 474 says a row changes every `$58`+1 lines, but the measurement shows `$58`+2. I'll correct that and note the port and check on rows 458/474/475 and line 255.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the Verification Log row. Finding s207's row to add one after it:
+  ▶ grep -n "^| Talk acts" REVERSE.md | cut -c1-120
+  ▶ Read REVERSE.md +181
+  ▶ Edit REVERSE.md
+Now the leftovers task: closing (a) and (f).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I haven't confirmed that every one of those callers has a run-level check (e.g. `GiveItemFull`), so I'll drop that claim.
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^\*,005[0-5],\|^31,F782,\|^31,F5E1,\|^31,F60E,\|^31,EB6D," labels.csv
+Updating labels.csv: corrected `F5E1` timing, port notes for `F782`/`F60E`/`EB6D`, and a new `$52` label.
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Last, CLAUDE.md: the new check and `tools/png_crc.py`.
+  ▶ Edit CLAUDE.md
+Session 208 closed two items of the low-priority gameplay-leftovers task, (a) and (f). The new `nmimode4_check.mjs` passes, and all 52 checks pass. Nothing is committed.
+
+**(a) message callers: nothing left to port.** All 15 places in the ROM that open a message window (12 direct calls to `ShowMessage` `30:D354` and 3 through `FarCall_D354`) were already in the port, and none logs "not ported". REVERSE.md now lists them.
+
+**(f) the last NMI mode and IRQ handlers: ported.**
+- **What it is:** a row-stretch effect, `NmiMode4` `31:F782` plus IRQ handlers 4 and 5 (`31:F5E1` / `31:F60E`). Only a disabled shop-door effect ever turns it on, so the ROM never runs it in play. It's now in `mainloop.js`, and `machine.js` handles a saved state that is already in this mode. Every NMI mode and IRQ handler in the ROM is now ported.
+- **How I tested it:** I forced the mode on with `web_state.py --force` (setting `$51` = 4 and `$58` to 8, 1 or 0) and compared 239 frames per value against `tools.emu`. Every value matches on every frame, and two screenshots per value are pixel-identical.
+- **Timing fix:** my first version repeated the row change every `$58` + 1 lines, and the screen didn't match. The emulator showed it really happens every `$58` + 2 lines, so REVERSE.md and labels.csv were wrong too. They're corrected, and the port has a one-line offset for it.
+
+**RAM side-effects the port was missing** (found through the RAM diff):
+- `$52/$53`: the NMI-mode jump address. The ROM also reuses `$52` as a scratch byte when setting the scroll.
+- `$54/$55`: the IRQ jump address. The ROM sets it every time it switches IRQ handler; the port only stored the handler number.
+- The message-window top handler never recorded its switch to the next handler at all.
+
+With these fixed, the leftover RAM differences at the end of the run are the same ones a run without the forced mode shows.
+
+**New files:**
+- `web/test/nmimode4_check.mjs`, three states in `web/test/states/`, three reference CSVs, and the matching `.state` files.
+- `tools/png_crc.py`: a CRC of a PNG's decoded pixels. The check stores the screenshots as CRCs, because copying the PNG files into the repo needed a permission I didn't have.
+
+REVERSE.md has a new Verification Log row, the corrected IRQ table and the task notes; labels.csv and CLAUDE.md are updated too. The leftovers task stays unchecked, as the rules say for a low-priority task. Items (c), (e) and (g) are still open.
+
+SESSION_SUMMARY: Session 208 closed two items of the gameplay-leftovers task: (a) every ShowMessage caller was already ported, and (f) the unused irq_mode 4 (`NmiMode4` `31:F782` + IRQ handlers 4/5) is now ported. Its rows repeat every `$58`+2 lines (REVERSE.md said +1). The new `nmimode4_check.mjs` matches tools.emu on every frame and screenshot for 3 forced states, the port now writes the `$52-$55` NMI/IRQ vectors, and all 52 checks pass.

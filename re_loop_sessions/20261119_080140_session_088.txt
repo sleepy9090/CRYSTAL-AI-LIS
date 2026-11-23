@@ -1,0 +1,92 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | grep -A12 "Next Tas
+  ▶ Read dead_ends.md
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2310
+  ▶ wc -c re_loop_sessions/*_08[5-8].txt && tail -c 3000 re_loop_sessions/20261119_080140_session_087.txt; tail -c 1500 re_l
+  ▶ cat re_loop_sessions/20261119_080140_session_088.txt; find web/src -name '*.js' | xargs wc -l | sort -n | tail -40; grep
+Picked the top open task (menu / death screens port). Reading the relevant REVERSE.md notes and the title state port next.
+  ▶ Grep "PlayerDeath|SaveLoadPage|F751|F7DB|sub_state` 9|SubstPause|SubstMenu|StatusScreen" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read mainloop.js
+  ▶ Read machine.js
+  ▶ grep -n "load-state\|loadState\|dump-ram\|dump-wram" -r web/test/*.mjs tools/emu/*.py | head -20; ls tools/emu/ tools/em
+  ▶ sed -n '1498,1512p;2200,2212p' REVERSE.md | cut -c1-2500; sed -n '60,95p' tools/emu/scenario.py
+  ▶ python3 tools/dis.py 19 B900 0x150
+  ▶ grep -n "^export\|^function\|^const\|^import\|8C3D\|8C49\|8C0E\|C188\|C008\|C176\|800E" web/src/game/states/title.js web
+  ▶ wc -l tools/emu/state.py tools/emu/ppu.py tools/emu/nes.py tools/emu/mapper.py web/nes/ppu.js 2>/dev/null; sed -n '1,80p
+  ▶ sed -n '1,80p' web/src/nes/ppu.js; grep -n "def state\|def load_state" -A12 tools/emu/mapper.py | head -40; sed -n '1,80
+  ▶ python3 tools/dis.py 30 CAB6 0x30; python3 tools/dis.py 30 C008 0x20 --stop; python3 tools/dis.py 30 C169 0x40; python3 
+  ▶ python3 tools/dis.py 30 C008 0x60 --stop; python3 tools/dis.py 30 CC2E 0x30 --stop; python3 tools/dis.py 26 8C0E 0x30 --
+  ▶ python3 tools/dis.py 30 C063 0x40 --stop; sed -n '25,62p' web/src/game/states/title.js; grep -n "export" web/src/game/pa
+  ▶ python3 tools/dis.py 30 C08A 0x9B; grep -n "^30,C0\|^30,C1[0-2]" labels.csv
+Still on the death-screen port. `PlayerDeath` first calls the stat recalc at `30:C008`, which redraws the HUD, so I'm checking how big the HUD routines are.
+  ▶ python3 tools/dis.py 26 8CC0 0x186 | grep -v "^\s*$" | head -150; python3 tools/dis.py 30 C676 8; grep -rn "8E46\|8CC0\|
+  ▶ python3 tools/dis.py 26 8CC0 0x186; python3 tools/dis.py 30 C676 8
+  ▶ cat web/src/game/world/ppuqueue.js; python3 tools/dis.py 26 8E46 0x7F; python3 tools/dis.py 30 C8B2 0x10 --stop
+  ▶ python3 tools/dis.py 26 8F2B 0x45 --stop; python3 tools/decode_tables.py 26:8EC5 7 "u16,u16,u8,u8" 2>&1 | head -12; grep
+  ▶ python3 tools/dis.py 26 8F5D 0x18; python3 tools/decode_tables.py --help 2>&1 | head -15; grep -n "HudElemTable\|8F2B\|8
+  ▶ python3 tools/decode_tables.py 26:8EC5 7 hex6; python3 tools/decode_tables.py 26:8F64 5 u16
+  ▶ cat web/src/game/prg.js; sed -n '1,61p' web/src/game/pads.js; python3 tools/dis.py 30 C72B 0xE --stop; python3 tools/dis
+  ▶ sed -n '1,60p' tools/emu/scenario.py; grep -n "def \|hook\|add_exec\|on_exec" tools/emu/scenario.py | head -40; grep -n 
+  ▶ sed -n '55,182p' tools/emu/nes.py; sed -n '95,120p' tools/emu/ppu.py; sed -n '1,40p' tools/emu/compare.py; grep -n "area
+Now writing the emulator-side exporter: run tools.emu to the exact instruction where `PlayerDeath` starts, then dump RAM/WRAM/PPU/mapper as JSON for the port plus a `.state` for the reference run.
+  ▶ grep -n "trace" tools/emu/cpu.py | head; grep -n "mirroring" tools/emu/mapper.py | head -5; sed -n '1,60p' web/test/harn
+  ▶ Write web_state.py
+  ▶ mkdir -p web/test/states && python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --frames 10 -
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --frames 10 --poke 03C1=00 --until 19:B90
+  ▶ python3 -m tools.emu --load-state /tmp/death.state --frames 520 --compare /tmp/emu_death.csv --dump-screen /tmp/emu_deat
+  ▶ grep -n "except" tools/emu/cpu.py tools/emu/nes.py tools/emu/ppu.py | head; python3 -m tools.emu --load-state tools/emu/
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --frames 150 --poke 03C1=00 --until 19:B9
+  ▶ Read scenario.py +151
+The area-1 start state opens with a dialogue, so the exporter needs to tap A until play starts (like scenario.py does). Adding that.
+  ▶ Edit web_state.py
+  ▶ Edit web_state.py
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --poke 03C1=00 --un
+  ▶ Grep "def prg_bank_at" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/mapper.py
+  ▶ Edit web_state.py
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --poke 03C1=00 --un
+  ▶ python3 tools/decode_tables.py 30:CADE 8 ptr16; python3 tools/decode_tables.py 30:CB2E 8 u8
+Bug in my exporter: I parsed the bank number as hex. Fixing.
+  ▶ Edit web_state.py
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --poke 03C1=00 --un
+Exporter works: `PlayerDeath` starts at tools.emu frame 2460, and the reference run is captured. Now writing the port side (`states/death.js`).
+  ▶ grep -rn "playSound\|paletteBuild(" web/src --include=*.js | grep -v "^web/src/game/playsound.js" | head; python3 tools/
+  ▶ python3 tools/dis.py 26 8CB3 0xD --stop; python3 tools/dis.py 19 BA45 0x20 | head -3; python3 tools/decode_tables.py 19:
+  ▶ Write death.js
+Now the state-1 dispatcher (`30:CAB6`) and the SPIN handling in `mainStep`.
+  ▶ Write play.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit play.js
+  ▶ Edit machine.js
+Now `run.mjs --load-state`.
+  ▶ python3 - <<'EOF' 2>/dev/null || echo "use Edit"
+  ▶ Edit run.mjs
+  ▶ Edit run.mjs
+  ▶ Edit run.mjs
+  ▶ node web/test/run.mjs --load-state web/test/states/death.json --frames 560 --compare /tmp/web_death.csv --dump-screen /t
+  ▶ Grep "4061910005|2403289446|1796919453|100445382" /tmp
+The port's first fade step lands one frame early (every later step keeps the right 11-frame spacing). Watching the PPU-queue read index in tools.emu to see how long the HUD queue wait really takes.
+  ▶ python3 -m tools.emu --load-state /tmp/death.state --frames 4 --watch 000A --watch 000B --watch 0009 2>&1 | head -30
+The main-loop work after the hook actually runs in tools.emu frame 2461 (the state was taken in vblank at line 254). Trying `--frame0 2461`.
+  ▶ node web/test/run.mjs --load-state web/test/states/death.json --frame0 2461 --frames 559 --compare /tmp/web_death.csv --
+  ▶ python3 tools/compare_frames.py /tmp/emu_death.csv /tmp/web_death.csv --cols core,pal,obj,oam_crc 2>&1 | grep -v "^  o[0
+  ▶ Grep "frame_no \+=|frame_no = |on_frame\(|nmi_count \+=" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/ppu.py
+  ▶ python3 -m tools.emu --load-state /tmp/death.state --frames 30 --watch 0017 --watch 0102 --watch 0100 2>&1 | head -30
+  ▶ node web/test/run.mjs --load-state web/test/states/death.json --frames 560 --compare /tmp/web_death.csv --dump-screen /t
+  ▶ for k in 60 200 420; do python3 -m tools.emu --load-state /tmp/death.state --frames $k --dump-screen /tmp/emu_d$k.png >/
+I'll make that a reusable tool instead: `tools/web_state_compare.py` runs tools.emu and the port from the same exported state and diffs CSV columns and screenshots.
+  ▶ sed -n '1,40p' tools/compare_frames.py; grep -n "def \|--shots\|shots" tools/web_compare.py | head -30
+  ▶ Read web_compare.py +20
+  ▶ Write web_state_compare.py
+  ▶ sed -n '92,101p' tools/web_compare.py; python3 tools/web_state_compare.py --state /tmp/death.state --web web/test/states
+Shot 2470 differs only in tile rows 23-29, the HUD area, which needs the unported IRQ split. Fixing the tuple/list bug and rerunning.
+  ▶ Edit web_state_compare.py
+  ▶ python3 tools/web_state_compare.py --state /tmp/death.state --web web/test/states/death.json --frames 560 --shots 2470,2
+  ▶ Read pair_2850.png
+  ▶ Read pair_2530.png
+Remaining pixel diffs are inside the death animation (2530, 2700) and the final GAME OVER fade (2850). Checking a run of consecutive frames to see whether they are 1-frame shifts.
+  ▶ python3 tools/web_state_compare.py --state /tmp/death.state --web web/test/states/death.json --frames 400 --shots 2526,2
+The mismatch is one frame in every 8, exactly where the death pose switches animation frames, so it is not just row timing. Dumping the OAM shadow from both sides at one of those frames.
+  ▶ Glob tools/*{diff,ram}*.py
+You've hit your 5-hour limit · resets 1pm (America/New_York)

@@ -1,0 +1,151 @@
+  ▶ ls re_loop_sessions | tail -4; wc -l dead_ends.md REVERSE.md; grep -n "## Next Tasks" REVERSE.md; grep -n "^- \[ \]" REV
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_19[456].txt; tail -c 2500 re_loop_sessions/20261122_104601_session_196.txt; tail -c 2000 re_loo
+  ▶ Grep "CD8A|snd_saved_y|010F" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ grep -n 'AI `\$1A`\|\$1A` (30:CD8A\|CD8A' REVERSE.md | cut -c1-600
+  ▶ Grep "CD8A|AI `\$1A`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Picking item (b) of the leftovers task: porting AI `$1A` (`30:CD8A`). Reading its notes now.
+  ▶ python3 tools/grep_lines.py REVERSE.md 'CD8A' 2>/dev/null || awk 'NR==1384||NR==1934||NR==2390||NR==2391||NR==2535{print
+  ▶ Read REVERSE.md +1384
+  ▶ Read REVERSE.md +1934
+Now the disassembly of `30:CD7F`/`CD8A`.
+  ▶ python3 tools/dis.py 30 CD70 0x90; python3 tools/xref.py CD8A
+  ▶ python3 tools/dis.py 30 CDFF 0x80; python3 tools/dis.py 26 972D 0x30 --stop
+  ▶ Grep "ai[ =]+\$?1A\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ python3 tools/dis.py 30 CE80 0xC7; python3 tools/dis.py 26 8C0E 0x10
+  ▶ Grep "type `\$1F`|`\$1F` type|shot `\$1F`|ShotTable" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/line_snip.py REVERSE.md 201 1355 2>/dev/null; ls tools | grep -i -E "snip|line|shot|spawn"
+  ▶ python3 tools/show_line.py REVERSE.md 201 2>&1 | head -c 3000; echo; python3 tools/show_line.py REVERSE.md 1355 | head -
+Finding which shot id spawns object type `$1F` (AI `$1A`).
+  ▶ python3 tools/shot_dump.py 2>&1 | head -5; python3 tools/shot_dump.py 2>&1 | grep -i -E "type[= ]*\\\$?1F\b| 1F " | head
+  ▶ python3 tools/shot_dump.py > /tmp/shots.txt 2>&1; head -8 /tmp/shots.txt
+  ▶ python3 tools/shot_dump.py
+  ▶ python3 tools/search_bytes.py "a9 0f 20 2d 97" --disasm; python3 tools/xref.py 972D | tail -40
+  ▶ python3 tools/dis.py 26 9C30 0x30
+  ▶ python3 tools/dis.py 26 9C9A 0x60
+  ▶ Grep "\$0F` .{0,80}(type|shot)|charge level 3|orbit_level" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read objects.js
+  ▶ python3 tools/dis.py 30 CCCC 0x64
+Now looking at how the port exposes the helpers this routine needs (SpawnShot, WaitPpuQueue, PpuQueueBlock, PaletteBuild, WaitFrame in a generator).
+  ▶ Grep "export (function\*?|const) (spawnShot|waitPpuQueue|ppuQueueBlock|paletteBuild|waitFrame|playSound)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ sed -n 1,60p web/src/game/states/death.js; sed -n 1,45p web/src/game/states/pause.js; sed -n 120,175p web/src/game/obj/u
+  ▶ Grep "^\*,(0008|0051|0058|6060|6070|6078|6088|6090|0600|0380|0381)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "0x08[,:]|\$08 =|`\$08`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/ram.js
+  ▶ Grep "rd\(0x08\)|R\.\w+ *= *0x08|0x0008" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+The routine is clear. Now the 106-entry step table at `30:CF47` (3 bytes per phase).
+  ▶ python3 tools/decode_tables.py 30:CF47 106 3b 2>&1 | head -120
+  ▶ python3 tools/decode_tables.py 2>&1 | head -20
+  ▶ python3 tools/decode_tables.py 30:CF47 106 hex3 --per-line 8
+  ▶ python3 tools/dis.py 30 C169 0x18
+  ▶ Grep "irq_mode\) === 2|irq_mode, 2\)|0x51, 2\)|chr_r0_alt|0x58," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+WaitFrame keeps Y, so `PlaySound($43)`'s Y = (3·phase) & `$FF`. Now writing the port. First, the existing check pattern to build a test from (groupb2 uses sword 4).
+  ▶ sed -n 1,80p web/test/groupb2_check.mjs; grep -n "group_B2" -A25 tools/emu/scenario.py | head -50
+Now how the charge level is built (what makes shot id `$0F` possible: sword 4, level 3).
+  ▶ python3 tools/dis.py 26 9C6E 0x2C; python3 tools/decode_tables.py 26:8BD2 5 u8; python3 tools/decode_tables.py 26:8BD8 5
+  ▶ python3 tools/show_line.py REVERSE.md 1162; python3 tools/show_line.py REVERSE.md 1174
+  ▶ Grep "orbit_level.{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^\*,(0708|0719|06C0|0710|0716)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+The test path: sword 4 + `sword_power` 2 + MP > `$28`, charge to `orbit_level` `$18`, release. Checking existing obj modules' imports from `states/` (to avoid a cycle) before writing the port.
+  ▶ Grep "^import .*states/" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj
+Writing the port module.
+  ▶ Write ai_thunder.js
+Hooking it into `objUpdateAll`.
+  ▶ Edit objects.js
+  ▶ Edit objects.js
+  ▶ Edit objects.js
+Checking that the bolt type `$1B` (spawned each step) has a ported AI.
+  ▶ Grep "^type \$(1B|1F) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ Grep "0x14:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj
+Port compiles into the loop. Now a test: load the `groupb2` state (sword 4, MP `$C0`) and hold B to charge. Checking the test tools' options first.
+  ▶ sed -n 1,30p web/test/ram_watch.mjs; node web/test/state_meta.mjs web/test/states/groupb2.json
+  ▶ node web/test/ram_watch.mjs web/test/states/groupb2.json 160 06C0,04A4,0719 --keys 2512:B:120 2>&1 | grep -v "06C0=0[0-9
+  ▶ node web/test/ram_watch.mjs web/test/states/groupb2.json 130 06C0,0719,0708 --keys 2512:B:120 2>&1 | tail -8
+Capped at `$08` (sword_power 0). Finding how `sword_power` is derived so the scenario can set it legitimately.
+  ▶ Grep "SwordPowerLevel|sword_power" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 30 D9D8 0x30 --stop
+Sword 4 + ball `$08` gives `sword_power` 2. Adding a scenario (group_B2 + those two pokes) so tools.emu and the port start from the same state.
+  ▶ Edit scenario.py
+  ▶ mkdir -p gfx/thunder && python3 -m tools.emu.scenario_state thunder_B2 12 --out web/test/states/thunder.json --save-stat
+  ▶ python3 -m tools.emu.scenario_state thunder_B2 12 --out web/test/states/thunder.json --save-state tools/emu/states/thund
+  ▶ node web/test/ram_watch.mjs web/test/states/thunder.json 300 04A4,0051 --keys 2512:B:120
+The port runs the whole 106-step sequence (f2632-~2807). Now the tools.emu reference over the same keys.
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/thunder.state --web web/test/states/thunder.json --frames 32
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/thunder.state --web web/test/states/thunder.json --frames 32
+The port is 1 frame early (the known key-frame offset for these load-state runs). Rerunning with `--web-key-shift 1`.
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/thunder.state --web web/test/states/thunder.json --frames 32
+  ▶ python3 tools/csv_cols.py gfx/thunder/emu.csv gfx/thunder/web.csv pal_crc,o04_ai,o05_ai,o06_ai,o06_x,o06_y,o0600 2632-26
+The port lags tools.emu by 1 frame on some steps. Comparing when `obj_phase` (`$0604`) advances in each.
+  ▶ python3 -m tools.emu --load-state tools/emu/states/thunder.state --frames 160 --keys 2512:B:120 --watch 0604 2>&1 | head
+tools.emu writes even phases at line 252 (in vblank, right after a short SPIN-wait NMI), so its row F already holds work the port puts in row F+1. Classifying every differing cell:
+  ▶ python3 tools/cell_class.py gfx/thunder/emu.csv gfx/thunder/web.csv 2>&1 | tail -30
+The 25 PARTIAL cells are the flash palette (crc 2435520836), which the port's rows never show. Checking whether the port writes the flash at all.
+  ▶ node web/test/ram_watch.mjs web/test/states/thunder.json 150 6141,0008 --keys 2513:B:120 | sed -n '1,400p' | grep -E "fr
+  ▶ Grep "pal_crc" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/harness.mjs
+  ▶ Grep "crc32\(|palette" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/harness.mjs
+  ▶ sed -n 1,30p tools/cell_class.py
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/thunder.state --web web/test/states/thunder.json --frames 34
+  ▶ python3 tools/csv_trim.py gfx/thunder/emu.csv web/test/thunder_ref.csv --frames 2508-2845; python3 tools/cell_class.py g
+The sequence runs ~270 frames (to about f2900), so I'm extending the run to cover its end.
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/thunder.state --web web/test/states/thunder.json --frames 44
+  ▶ python3 -m tools.emu --load-state tools/emu/states/thunder.state --frames 440 --keys 2512:B:120 --watch 04A4 --watch 005
+Both end the sequence at the same point (tools.emu f2892 L252 = port f2893). Reading the rest of `groupb2_check.mjs` to reuse its row-compare loop.
+  ▶ Read groupb2_check.mjs +80
+  ▶ Write thunder_check.mjs
+Cleaning up the leftovers in that draft: a no-op write hook, env-var counts, and a crude Y detector. The new detector records `$010F` when id `$43` enters the sound FIFO.
+  ▶ Edit thunder_check.mjs
+  ▶ Edit thunder_check.mjs
+  ▶ Edit thunder_check.mjs
+  ▶ Edit thunder_check.mjs
+The `sndY` declaration must come before the hook; moving it, then writing the ref and running.
+  ▶ Edit thunder_check.mjs
+  ▶ python3 tools/csv_trim.py gfx/thunder/emu.csv web/test/thunder_ref.csv --frames 2508-2945; node web/test/thunder_check.m
+  ▶ Edit thunder_check.mjs
+  ▶ python3 -m tools.emu --load-state tools/emu/states/thunder.state --frames 440 --keys 2512:B:120 --watch 010F 2>&1 | tail
+  ▶ python3 -m tools.emu --load-state tools/emu/states/thunder.state --frames 440 --keys 2512:B:120 --watch 010F 2>&1 | tail
+  ▶ node web/test/thunder_check.mjs
+The check passes. Running a negative test: a deliberately wrong flash colour (`$31` instead of `$30`) must make it fail.
+  ▶ sed -i 's/R.pal_buf + i + j, 0x30)/R.pal_buf + i + j, 0x31)/' web/src/game/obj/ai_thunder.js && node web/test/thunder_ch
+  ▶ Edit ai_thunder.js
+  ▶ node web/test/thunder_check.mjs
+  ▶ Edit ai_thunder.js
+  ▶ python3 tools/run_checks.py 2>&1 | tail -6
+All 50 checks pass. Now the docs: labels first.
+  ▶ tail -3 labels.csv; python3 tools/show_line.py REVERSE.md 2563 | head -c 300
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ Edit labels.csv
+Now REVERSE.md: a section for the routine, placed after the AI `$15-$1C` shot note (line 1384).
+  ▶ Edit REVERSE.md
+Updating the s80 note that still calls the path unported, then the task text and Verification Log.
+  ▶ Edit REVERSE.md
+  ▶ Grep "^\| AI `\$41`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +224
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now CLAUDE.md's check list.
+  ▶ Edit CLAUDE.md
+I ported item (b) of the gameplay-leftovers task, AI `$1A` (`30:CD8A`). It is the sword-4 shot at full charge, and the port now matches tools.emu over a real run of it. All 50 checks pass, including the new one.
+
+**What it is:** when you release a level-3 charge with sword 4, the release builds shot id `$0F`. That creates type `$1F` in slot 4 with AI `$1A`, and the routine runs 106 steps from the table at `30:CF47`, one per object pass. Each step drops a bolt on one of the enemy slots, even an empty one. The steps also send tile rows to the screen with a white flash, ramp the palettes, and play sound `$43` three times. The routine waits on frames inside the object loop itself.
+
+Level 3 is only reachable with sword 4 and ball `$0718` = 8, which gives `sword_power` 2, and more than `$28` MP.
+
+**ROM quirk:** at `30:CDCC` an `ORA #$10` meant for slot 0's `obj_flags` has no store after it, so only slot 1 gets the flag. The port copies that.
+
+**Port:** the routine is in the new `web/src/game/obj/ai_thunder.js`. `objUpdateAll` in `obj/objects.js` now runs it instead of logging "not ported".
+
+**Test:** I added scenario `thunder_B2` (`group_B2` plus ball 8) to `tools/emu/scenario.py`. The new check, `web/test/thunder_check.mjs`, compares 438 rows (f2508-2945) at shift 0, sound included. It also checks that the effect runs f2633-2893, ends at phase `$6A`, and plays the sound with the same Y values as tools.emu (`$24`/`$7E`/`$DE`).
+
+It accepts two kinds of mismatch, and only between f2633 and f2893:
+- **240 cells one frame late:** after a short wait, tools.emu's pass carries on in vblank before its row is sampled, so its row already shows the start of the next step.
+- **29 palette rows written halfway:** tools.emu samples while the palette is still being rewritten. The check rebuilds each one byte for byte from the port's rows f and f+1.
+
+The counts are fixed, so any extra mismatch fails. As a negative test, using flash colour `$31` instead of `$30` failed more than 30 rows.
+
+**Docs:**
+- REVERSE.md has a new "AI `$1A` ThunderStorm" section and a Verification Log row, and (b) is struck in the task text.
+- labels.csv has 7 new labels.
+- CLAUDE.md lists the new check.
+
+The task stays open because it is the low-priority leftovers task; (a) and (c)-(i) remain. Nothing is committed.
+
+SESSION_SUMMARY: Session 197 ported AI $1A 30:CD8A, the sword-4 charge-level-3 shot $0F (type $1F, 106 steps from 30:CF47), into web/src/game/obj/ai_thunder.js; thunder_check.mjs (new scenario thunder_B2) matches tools.emu on 438 rows at shift 0 including sound, with 240 one-frame-late cells and 29 mid-palette-write cells accepted; leftovers item (b) is struck and all 50 checks pass.

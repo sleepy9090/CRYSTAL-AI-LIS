@@ -1,0 +1,123 @@
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Read REVERSE.md +2495
+  ▶ Glob re_loop_sessions/*session_15[6-9]*
+  ▶ Read REVERSE.md +2495
+  ▶ Read REVERSE.md +2502
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md; tail -c 3000 re_loop_sessions/20261122_031152_s
+I'm checking whether the port's `talk.js` already has a `showMessage` that the unported `BossFleeSpeech` hook can use.
+  ▶ Grep "showMessage|BossFleeSpeech|D354" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Read dead_ends.md
+`showMessage` is already ported, so the `BossFleeSpeech` hook can be done now. Next I'll read the hook code in `ai_boss.js` and disassemble the routine in the ROM.
+  ▶ Read ai_boss.js +780
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 BA98 120 --stop; grep -n "BA98\|BossFleeSpe
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 BB5B 60 --stop; python3 tools/dis.py 15 98A
+Those `$98xx` calls land in bank 14 (the low half of the 16 KB pair), so I'm disassembling them there.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 14 98A8 80 --stop; python3 tools/dis.py 14 989
+  ▶ Grep "98A8|9897|9861|R6.*boss|SetR7" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+The helpers are bank 26 (`ObjPosToTemp` / `TempToObjPos` / `TempAddStep`). Next I'm checking the flee record bytes and how the port names these helpers.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 15:BB1A 15 u8 2>&1 | head -20; pytho
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 18,40p web/src/game/obj/ai_boss.js; grep -rn "export functio
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 35,60p web/src/game/states/death.js; sed -n 140,150p web/src
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 150,200p web/src/game/states/death.js; sed -n 40,70p web/src
+Next I'm checking whether `StatRecalc` and `PlaySound` keep X, because the hook saves X into `$1F` right after them.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C0DA 40 --stop; python3 tools/dis.py 30 C12
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat tools/emu/shot_eater_probe.py | head -60; grep -n "boss_flee" -
+There's already a `boss_flee` scenario for this hook. I'm writing a small probe that logs the registers and key RAM at each step of `BossFleeSpeech`.
+  ▶ Write flee_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 300 python3 -m tools.emu.flee_probe 2>&1 | tail -60
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,40p tools/web_state_compare.py; sed -n 1,50p tools/emu/web
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,60p web/test/finalscene_check.mjs; grep -n "save_state\|de
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l tools/emu/web_state.py; sed -n 1,32p tools/emu/web_state.py; 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 271,300p web/src/game/states/play.js; grep -n "loadState" -A
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "loadState(s" -A30 web/src/game/machine.js | head -45; pyth
+  ▶ Read web_state.py +32
+I'm building a saved state of the `boss_flee` scenario just before the boss slot runs, so the web port and tools.emu can be compared frame by frame.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 760,800p tools/emu/scenario.py; grep -n "^def spawn_obj" -A2
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C904 6; grep -n "C904" labels.csv
+Now I'm moving the export into a reusable `export()` in `web_state.py`.
+  ▶ Edit web_state.py
+  ▶ Write scenario_state.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 300 python3 -m tools.emu.scenario_state boss_flee 11 --out 
+The export landed after the hook had already finished, because my frame offset is one frame later than the scenario's own. I'm rerunning with offset 10.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 300 python3 -m tools.emu.scenario_state boss_flee 10 --out 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "C904\|MainLoop" labels.csv | head; python3 tools/xref.py C
+Both hooks sit on `30:C904`, so one probably overwrites the other. I'm merging them into a single hook.
+  ▶ Edit scenario_state.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for o in 10; do timeout 300 python3 -m tools.emu.scenario_state bos
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 300 python3 -m tools.emu.scenario_state boss_flee 10 --out 
+Still frame 2752, so I'm adding a debug print of the frames where the hook actually fires.
+  ▶ Edit scenario_state.py
+  ▶ Edit scenario_state.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 300 python3 -m tools.emu.scenario_state boss_flee 10 -v --o
+The whole `BossDefeated` + hook runs inside the main-loop pass that starts at f2503, so offset 9 is the right point.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 300 python3 -m tools.emu.scenario_state boss_flee 9 --out w
+  ▶ Edit scenario_state.py
+  ▶ Edit scenario_state.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 300 python3 -m tools.emu.scenario_state boss_flee 9 --out w
+The state now starts with slot `$0F` = AI `$6F`. Next I'm porting the hook into `ai_boss.js`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^import" web/src/game/states/talk.js web/src/game/states/d
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+Now the comparison: tools.emu vs the port from the new state, with the scenario's A taps (scenario f0 = 2494, so A at 2694, 2734, …).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 40,75p tools/web_state_compare.py | grep add_argument
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/web_state_compare.py --state tools/emu/st
+With key shift 1, only row f2537 differs: the work after `StatRecalc`'s PPU-queue wait shows one frame late, the known LATE pattern. Next I'm running the RAM diff.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/web_state_compare.py --state tools/emu/st
+The end RAM differs in only 8 bytes. I'm checking what `$53`/`$54`/`$07FF` are, to see whether these are the usual end-of-run scratch bytes.
+  ▶ Grep "^\*,(0053|0054|07FF|0009)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,25p tools/csv_trim.py | grep -i "usage\|argv\|add_arg" ; c
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_trim.py /tmp/bf/emu.csv web/test/bossflee_ref.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_trim.py /tmp/bf/emu.csv /tmp/bf/sub.csv --cols su
+  ▶ Read sub.csv +48
+The reference CSV is written. Now I'm writing `web/test/bossflee_check.mjs`.
+  ▶ Write bossflee_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/bossflee_check.mjs
+  ▶ Edit bossflee_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/bossflee_check.mjs && node web/test/obj_check.mjs 2>&
+All checks pass. Now the docs: REVERSE.md (session note, Verification Log row, task text), labels, CLAUDE.md and `architecture_web.md`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "Session 159\|s159" REVERSE.md | cut -c1-200; grep -n "BB8F
+  ▶ Read REVERSE.md +1312
+  ▶ Read REVERSE.md +200
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Next, labels.
+  ▶ Read labels.csv +463
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat > /tmp/labels_patch.py 2>/dev/null; ls tools | grep -i label
+I'll edit `labels.csv` directly instead.
+  ▶ Edit labels.csv
+Now CLAUDE.md's check list and `architecture_web.md`.
+  ▶ Edit CLAUDE.md
+  ▶ Read architecture_web.md +227
+  ▶ Edit architecture_web.md
+  ▶ Grep "ai_boss.js" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Edit architecture_web.md
+Last, a quick test that the refactored `web_state.py` still exports.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 300 python3 -m tools.emu.web_state --load-state tools/emu/s
+I ported `BossFleeSpeech` (`15:BA98`), the boss-defeat hook for areas `$28`/`$6E`/`$F2` that the port only logged in s159. I tested area `$28` against tools.emu; areas `$6E`/`$F2` use the same code with different record bytes and weren't run through the port.
+
+**What the routine does** (`bossFleeSpeech` in `web/src/game/obj/ai_boss.js`; `showMessage` already existed):
+- It waits 32 frames, resets some player fields, recalculates stats and plays sound `$80`.
+- It puts a type `$2B` figure in slot `$1F` on top of the reward drop.
+- It reads a 5-byte record from `BossFleeRecPtrs` `15:BAFE`, which gives the figure's sprite and the message. Area `$28` shows msg 6.1, `$6E` msg 16.19, `$F2` msg 25.5. Byte 0 of each record is never read.
+- It clears the enemy slots, plays sound `$29` and shows the message.
+- In the walk-off (`15:BB5B`) the figure rises 3 px per frame and sways left and right, using a 32-byte table at `15:BB8F`. It disappears once it has gone above the top of the screen.
+- I logged it in tools.emu: the X register stays the drop slot through the stat recalculation, so the record is read for the right slot.
+
+**Test result:** with keys shifted by one frame, as in the other message checks, 298 of 299 frames match exactly. The one exception is f2537, where 13 cells show one frame late in the port. That's the same timing gap already accepted in the other checks: the port doesn't count CPU cycles. At the end of the run, 8 RAM bytes differ, all temporary values; s134's talk comparison ended with the same kind of leftover. The new `web/test/bossflee_check.mjs` passes, and so do `obj_check` (17500/17500), `core_check`, `finalscene_check` and `teleport_check`.
+
+**New tools:**
+- `tools/emu/scenario_state.py SCENARIO OFF` turns any scenario run into a state the port can load. If the scenario spawns an object that frame, the spawn is done first. To support it, I moved the export code into a reusable `export()` in `web_state.py` and checked that the old usage still works.
+- `tools/emu/flee_probe.py` traces the registers through the routine.
+- Saved states and reference: `web/test/states/bossflee.json`, `tools/emu/states/bossflee.state`, `web/test/bossflee_ref.csv`.
+
+I updated REVERSE.md (a "Session 160" note, a Verification Log row and the task text), CLAUDE.md, `docs/architecture_web.md`, and `labels.csv` (2 new labels, 2 comments updated). The boss task stays unchecked because it's a low-priority leftovers task. Still open there: checking the area-`$A6` hook against a real defeat (the new export tool and the `final_locked` scenario can do this), bosses `$62`/`$6B`, the death chains and drops, missing ids, the per-enemy-group scenarios, and AI `$70` phase 1's three messages. Nothing is committed.
+
+SESSION_SUMMARY: Session 160 ported BossFleeSpeech 15:BA98 + BossFleeWalkOff 15:BB5B (the area $28/$6E/$F2 boss-defeat hook) to obj/ai_boss.js, verified area $28 frame by frame against tools.emu (298/299 rows equal, f2537 one frame late) with the new tools/emu/scenario_state.py export, bossflee_check.mjs + ref CSV, and updated docs/labels; the low-priority boss task stays open.

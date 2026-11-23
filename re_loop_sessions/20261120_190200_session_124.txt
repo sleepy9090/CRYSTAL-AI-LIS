@@ -1,0 +1,75 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ for f in re_loop_sessions/*_session_12[123].txt; do echo "== $f"; tail -c 2500 $f; done
+  ▶ grep -n "^- \[ \]" REVERSE.md | head -5
+  ▶ Read REVERSE.md +2245
+  ▶ ls -t re_loop_sessions | head -5; tail -c 3000 re_loop_sessions/20261120_190200_session_123.txt; echo ====; tail -c 1500
+Top unchecked Next Task is the SELECT-menu leftovers (line 2446); the remaining item is `SubstShopEmpty` `30:D9C1` (sub_state 36). Let me look at the ROM routine and the existing port.
+  ▶ python3 tools/dis.py 30 D980 0x80 && grep -n "D9C1\|ShopEmpty" REVERSE.md labels.csv | cut -c1-400
+  ▶ wc -l web/src/game/states/shop.js && grep -n "export\|function\|substInn\|showMessage\|import" web/src/game/states/shop.
+  ▶ Read shop.js +1
+  ▶ Read shop.js +395
+  ▶ Read play.js +195
+  ▶ Read talk.js +280
+Port is straightforward: `ShopWalkIn`, msg `$11`/group `$20`, `ShowMessage`, `sub_state`=`$24`, `ShopWalkOut`.
+  ▶ grep -n "^import\|^const MSG\|^const GROUP\|text_msg_id\|text_group" web/src/game/states/talk.js web/src/game/ram.js | h
+  ▶ cat >> web/src/game/states/shop.js <<'EOF'
+  ▶ Edit shop.js
+  ▶ Edit shop.js
+  ▶ sed -i "s/^import { substPawnShop, substArmorShop, substToolShop, substInn } from '.\/shop.js';/import { substPawnShop, 
+The append failed; use Edit instead.
+  ▶ Edit shop.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+Now find the test workflow used for the inn (Verification Log row "Inn").
+  ▶ grep -n "^| Inn\|^| \*\*Inn\|Inn\*\* |" REVERSE.md | cut -c1-3000
+  ▶ python3 -m tools.emu.web_state --load-state gfx/compare/s121_keeper.state --frames 0 --poke 0041=24 --until 30:D9C1 --ou
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/shopempty_s124.state --web web/test/states/shopempty.json --
+Only the known one-frame-late walk positions and fade `pal_crc` rows so far. Let me check what the 2 "unported" logs are and look at the shots.
+  ▶ ls /tmp/web_state_compare/ && grep -n "unported\|not ported" tools/web_state_compare.py | head
+  ▶ Glob /tmp/web_state_compare/*
+  ▶ Read pair_2600.png
+  ▶ Read pair_2740.png
+Message screen matches exactly. At f2740 (back in town) the player sprite differs. Let me check with obj columns and an end RAM diff.
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/shopempty_s124.state --web web/test/states/shopempty.json --
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/shopempty_s124.state --web web/test/states/shopempty.json --
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/shopempty_s124.state --web web/test/states/shopempty.json --
+Slots `$0D-$10` (town NPCs, AIs not ported) differ from f2700 as in s121-s123. Check whether player position diffs persist after the exit.
+  ▶ python3 tools/compare_frames.py /tmp/web_state_compare/emu.csv /tmp/web_state_compare/web.csv --cols pos_,sub,area,o01 -
+Player position matches after the area reload. One oddity: at f2659 the port shows `pos_x` 119 before 120. Let me look at the raw rows.
+  ▶ python3 tools/compare_frames.py /tmp/web_state_compare/emu.csv /tmp/web_state_compare/web.csv --cols pos_x,sub_state,irq
+  ▶ python3 tools/compare_frames.py /tmp/web_state_compare/emu.csv /tmp/web_state_compare/web.csv --cols pos_x,sub,pad --fra
+  ▶ python3 tools/compare_frames.py /tmp/web_state_compare/emu.csv /tmp/web_state_compare/web.csv --cols pos_x,sub --frames 
+With `--shift 1` the walk-out matches exactly: the same one-frame-late walk artifact as in s121-s123. Now run the web checks.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test && for t in core_check ppu_check serve_check world_check sp
+  ▶ node web/test/core_check.mjs | tail -2; node web/test/ppu_check.mjs | tail -2; node web/test/serve_check.mjs | tail -2; 
+All 8 checks pass. Now record it in REVERSE.md: a Verification Log row, the substate row, and the task text.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+The scenario-leftovers task also lists the `SubstShopEmpty` exit question, which this run answered; I'll mark that item in place.
+  ▶ Edit REVERSE.md
+I ported the empty shop (sub_state 36, `SubstShopEmpty` `30:D9C1`) to the web port. It matches tools.emu apart from differences that were already known, and all 8 web checks pass. The task (SELECT-menu leftovers, low priority) stays unchecked because one item is still open. Nothing is committed.
+
+**What changed**
+- **`web/src/game/states/shop.js`:** new `substShopEmpty`. It does what the ROM does: the shared walk in, the "Nobody's here." message (msg `$11`, group `$20`) through the existing `showMessage` in `talk.js`, sets `sub_state` to `$24`, then the shared walk out.
+- **`play.js`:** wired in as `SUBSTATES[36]`, plus an entry point `'30:D9C1'` so a saved test state can start there.
+
+**Results against tools.emu** (new test state `web/test/states/shopempty.json`, emulator state `tools/emu/states/shopempty_s124.state`)
+- **Message window:** identical apart from the split line (tile row 23) and 1 pixel in tile row 1.
+- **Walks:** player position is one frame late during both walks, as in s121. With `--shift 1` the walk-out matches exactly. After the town reloads, player position, `sub_state` and area all match.
+- **After the exit (from f2700):** only the town NPCs in slots `$0D-$10` differ, along with their sprites and RAM. Their AIs (`$30`/`$78`) aren't ported yet, the same as in s121-s123.
+- **Open question from s103:** this also explains why the s103 test never saw `sub_state` leave `$24`. The routine only gets there after the full walk-in and an A/B press on the message.
+
+**Records**
+- **REVERSE.md:**
+  - a new Verification Log row "Empty shop" with the exact commands;
+  - a port note on the sub_state 36 row;
+  - the task text is updated;
+  - the s103 empty-shop question is marked answered in the scenario-leftovers task.
+- **labels.csv:** no new addresses.
+
+**Still open in the task:** the pause window that opens one frame early in area `$5F`.
+
+SESSION_SUMMARY: Session 124: ported SubstShopEmpty 30:D9C1 (sub_state 36) into states/shop.js using talk.js showMessage; matches tools.emu apart from the known walk-timing and unported-town-NPC differences; all 8 web checks pass; only the area-$5F pause timing is left in the SELECT-menu task.

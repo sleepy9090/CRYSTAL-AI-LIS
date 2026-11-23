@@ -1,0 +1,133 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ grep -n "^- \[ \]" REVERSE.md; wc -c re_loop_sessions/*_07[5-8].txt; tail -c 2500 re_loop_sessions/20261118_055659_sessi
+  ▶ grep -n "Enemies — catalogue\|^#### \|boss_phases\|BossPhaseTable" REVERSE.md | head -80; wc -l gfx/boss_phases.txt docs
+  ▶ Read REVERSE.md +884
+  ▶ Read boss_phases.txt
+  ▶ grep -n "CollPairTable\|HitHandlerTable\|90AA\|94B0\|906C\|907C\|9357" REVERSE.md | head -30; grep -n "^26,\(90\|91\|92\
+Picking the top task (enemy leftovers); starting with part (b), the hit handlers in bank 26.
+  ▶ python3 tools/dis.py 26 8F6E 0x150 --stop; python3 tools/dis.py 26 90AA 0xB0
+  ▶ python3 tools/dis.py 26 8FBB 0xEF; python3 tools/dis.py 26 9229 0x22
+  ▶ Read REVERSE.md +1551
+  ▶ python3 tools/dis.py 26 94B0 0x110 --stop; grep -n "equip_sword" REVERSE.md | head -5; grep -in "a7\b\|\$87\|ai 87\| 87 
+  ▶ python3 tools/dis.py 26 94B0 0x110 --stop
+  ▶ Grep "equip_sword.*(=|values)|sword 4|Sword of Thunder" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read obj_ai.txt
+  ▶ python3 tools/dis.py 26 94CB 0xF5
+Decoding the talk-probe handler (slot 3 → `26:94B0`); checking whether NPC talk via slot 3 is already documented.
+  ▶ Grep "slot 3|94B0|94A2|_s03" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/dis.py 26 9480 0x30
+  ▶ python3 tools/dis.py 26 9152 0xA8; python3 tools/dis.py 26 946D 0x14; python3 tools/decode_tables.py 26:8BDE 16 u16
+  ▶ python3 tools/dis.py 26 91FA 0x2F; python3 tools/objtype_dump.py 0B 7D
+  ▶ Grep "ai \$(76|7D|7B|78|6E|52|07|30) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ python3 tools/dis.py 27 B9AA 0x40 --stop; python3 tools/dis.py 27 A4DC 0x60 --stop; python3 tools/dis.py 27 B778 0x28 --
+  ▶ python3 tools/dis.py 27 B9D1 0x60; python3 tools/dis.py 27 B99E 0x0C
+  ▶ Grep "^\s*\$?3F|id 3F|\b3F\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/shots.txt
+  ▶ python3 tools/decode_tables.py 26:8BFE 16 u8; python3 tools/objtype_dump.py 7B 0C
+  ▶ python3 tools/objtype_dump.py 08 09 0A 10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F 20 21 22 | cut -c1-200
+  ▶ python3 tools/objtype_dump.py D0 D1 D2 D3 4F | cut -c1-230; grep -n "7B\b" docs/enemies.txt | head -5
+  ▶ Grep "equip_sword|player_level,|obj_act_timer_s03|obj_timer2_s03|obj_phase_s03" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Hit handlers decoded. Writing (b) to REVERSE.md now.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^(26,(90AA|9229|9082|9094|906C|907C|94B0|94A2|9508|9535|8BDE|8BFE)|27,(B9AA|B778|A4DC))," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv && cat >> labels.csv <<'EOF'
+  ▶ wc -l labels.csv
+  ▶ Read labels.csv +1031
+  ▶ Edit labels.csv
+(b) is written up and labelled. Next is (a): the boss phase bodies, starting with boss AI `$E0`.
+  ▶ python3 tools/dis.py 15 A477 0x177 > /tmp/e0.txt; wc -l /tmp/e0.txt
+  ▶ python3 tools/dis.py 15 A477 0x177
+  ▶ python3 tools/dis.py 15 A50B 0x1A; python3 tools/decode_tables.py 15:A4FB 16 u8; grep -n "^  *3[BC] \|^3[BC] \|^4[0-9A-F
+  ▶ python3 tools/objtype_dump.py 57 A5 C0 C1 BC | cut -c1-260; grep -n "ai \$6[0-4] \|ai \$7F" gfx/obj_ai.txt
+  ▶ python3 tools/objtype_dump.py 57 A5 C0 C1 BC
+  ▶ Grep "ai \$(6[0-9A-F]|7F|E.) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+Boss `$E0` is a teleporter. Now its shot AI `$61` (`15:A5EE`).
+  ▶ python3 tools/dis.py 15 A5EE 0x87
+Writing `$E0` + `$61` to REVERSE.md before going on.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 15 A95D 0x1E1
+  ▶ python3 tools/objtype_dump.py 68 8B && python3 tools/decode_tables.py 15:AD86 16 s8
+  ▶ Grep "^(3[0-9A-F]|2[0-9A-F]) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/shots.txt
+  ▶ python3 tools/dis.py 15 AB3E 0x9C; python3 tools/objtype_dump.py C5 C7
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/decode_tables.py 26:97E4 64 u8
+`$E3` done. Next: `$E6` (`15:AC7B`).
+  ▶ python3 tools/dis.py 15 AC7B 0x159; python3 tools/objtype_dump.py 90
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 15 ADD4 0x174; python3 tools/objtype_dump.py 88 93
+  ▶ Grep "^5[0-9A-F] " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/shots.txt
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 15 AF48 0x16E; python3 tools/objtype_dump.py 97
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 15 B0B6 0x7A; python3 tools/objtype_dump.py 9C 9D CB
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 15 B130 0x1AA; python3 tools/objtype_dump.py 9B CC
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 15 B2DA 0x2A6; python3 tools/objtype_dump.py 9E CD CE
+Final boss `$EB` is the biggest; reading its remaining phases and helpers.
+  ▶ python3 tools/dis.py 15 B581 0x1A7
+  ▶ python3 tools/dis.py 15 A8FF 0x5E; python3 tools/dis.py 15 A73C 0x20
+  ▶ Edit REVERSE.md
+Now boss `$5E` (AI `$7F`), the last item in (a).
+  ▶ python3 tools/objtype_dump.py 5E C3 && python3 tools/dis.py 27 A419 0x4 && python3 tools/dis.py 26 93A8 0x2C
+  ▶ python3 tools/search_bytes.py "c9 7f" --context 0 && python3 tools/search_bytes.py "a9 5e 85 11" --context 0
+  ▶ python3 tools/dis.py 15 A760 0x20 && python3 tools/dis.py 15 A675 0x40
+  ▶ python3 tools/search_bytes.py "a9 e2 9d a0 04" --context 0 && python3 tools/search_bytes.py "a9 62 9d a0 04" --context 0
+  ▶ python3 tools/dis.py 14 84B0 0x30
+  ▶ python3 tools/xref.py 84B4 && python3 tools/search_bytes.py "b4 84" --context 0
+Tracing which item use starts the area-`$1A` boss (`14:84CA` sets slot `$0D` AI `$E2`).
+  ▶ python3 tools/search_bytes.py "b3 84" --context 0 && python3 tools/search_bytes.py "b2 84" --context 0 && python3 tools/
+  ▶ python3 tools/dis.py 14 83D9 0x26
+  ▶ Grep "ItemUseHandlers" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "ItemUseHandlers.*\|" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^\s*\$?27\b|item \$27|\b27 " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/items.txt
+Already recorded: the Insect Flute (item `$27`) wakes it. Now the `$E2` phase bodies.
+  ▶ python3 tools/dis.py 15 A6B4 0x88
+  ▶ python3 tools/dis.py 15 A87E 0x81
+  ▶ python3 tools/dis.py 15 A840 0x3E; python3 tools/decode_tables.py 15:A80C 8 u8
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now boss labels, then the task bookkeeping.
+  ▶ Grep "^15,(A5D5|A5A2|A4FB|A5EE|A665|AA89|AB3E|AB25|AF28|AEBA|B02B|B4C8|B618|B71D|A8FF|A73C|A84D|A602|B623|B6A3)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+Labels added. Now marking the task done and filing the leftovers.
+  ▶ grep -n "^### Web Port Fixes\|Ph3 (low priority) enemy leftovers\|Ph6 (low priority) scripted scenarios" REVERSE.md
+  ▶ Read REVERSE.md +2213
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 26 90AA 0x10 && python3 tools/dis.py 15 B618 0x4
+I finished parts (a) and (b) of the top task (the session-47 enemy leftovers) and marked it done. Everything here comes from reading the code only; none of it has been run in the emulator yet.
+
+**(b) How player shots damage enemies (`26:90AA`), plus the other hit handlers**
+- **Level gate:** the low bits of an enemy's hit flags are the player level needed to hurt it. Below that level, the shot just bounces off with a "clink" sound. The old guess that this was the enemy's own level was wrong.
+- **Damage:** player attack + shot attack − enemy defence. A shot that does damage keeps flying; a shot that misses is removed.
+- **Elements:** an enemy's element bits list the sword elements it is immune to. The patrol gunner's `$0F` therefore means it can only be hurt while it is attacking. The four breakable walls (`$D0`–`$D3`) each break only to a charged shot of one particular sword. Crystalis has no element, so nothing blocks it.
+- **Special cases:**
+  - Type `$7B` turns into a hidden enemy (`$4F`) when hit by a fully charged shot.
+  - With the thunder sword, some targets turn into a different object type. I couldn't tell which targets this is meant for.
+- **Slot 3** is the talk / item-use box in front of the player. It starts NPC talks, pushes the player back off solid NPCs, and handles using an item on event objects.
+- **Slot `$0C`** freezes whatever it hits and sets that object's flag. A variant of it destroys enemy shots instead.
+- **Gold drop:** a killed enemy leaves a death puff, which spawns a coin (type `$0C`). Coin values by drop class are 0, 1, 2, 4, 8, 16, 30, 50, 100, 200, 400, then big coins worth 50, 100, 200, 400 and 500.
+
+**(a) Boss phase bodies (bank 15):** all 10 boss AIs are written up phase by phase, with their shots and minion AIs. The notable findings:
+- **Boss `$5E` (area `$1A`)** sits dormant and can't be hit until the player uses the Insect Flute, which switches it to AI `$E2`.
+- **Final boss:** its face is drawn in the background and animated by redrawing strips. It can only be hurt while its mouth is open (phase 5); the rest of the time it is immune to all four swords.
+- **AI `$A5`'s HP is reset to `$FF` every frame in area `$A6`**, so that fight can't be won by damage.
+- **Teleporting boss `$E0`** waits less between teleports as its HP drops. The bouncing boss `$E7` does the same with its bounce time.
+- **Two quirks the web port must copy:**
+  - Boss `$E7`'s volley always fires 45° off the player because of a masking bug.
+  - The rock shots of boss `$E3` (AI `$64`) take their random offsets from bytes in ROM banks 0–7, so the port must read those banks.
+
+**Files:** REVERSE.md has two new sections ("Hit handlers 0 / 2 / 3 + gold drop" and "Boss phase bodies, bank 15"), and I corrected the field descriptions for hit flags and element/drop. `labels.csv` has 34 new labels.
+
+**Leftovers:**
+- Part (c) and the newly found untraced shot AIs went into one new low-priority task at the end of RE Investigation.
+- Part (d) went into the existing "Ph6 scripted scenarios" task, together with emulator checks for the new hit rules.
+
+Nothing is committed.
+
+SESSION_SUMMARY: Session 78 decoded the hit handlers (level gate, damage formula, element immunity, element walls, talk probe, freeze shot, coin drops) and all 10 bank-15 boss AIs phase by phase (Insect Flute wakes boss `$5E`, final boss only hurt with its mouth open, `$E7` volley aims 45° off, `$64` uses ROM bytes as random numbers). 34 labels added; leftovers filed as one new task plus emulator checks in the Ph6 task; static RE only, nothing emulator-checked or committed.

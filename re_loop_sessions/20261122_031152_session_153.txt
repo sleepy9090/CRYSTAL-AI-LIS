@@ -1,0 +1,117 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -4 && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \
+  ▶ cat dead_ends.md; tail -c 5000 re_loop_sessions/20261121_221108_session_152.txt; echo ----; cat re_loop_sessions/2026112
+  ▶ sed -n '2310p' REVERSE.md | fold -w 400 | tail -n 8; git show --stat HEAD | head -30; ls web/src/game/states/ web/test/s
+So the port exists; verification remains. Let me read the port and the disassembly.
+  ▶ Read finalscene.js
+  ▶ python3 tools/dis.py 19 BDF2 0x1E0; grep -n "BDF2" REVERSE.md | cut -c1-600
+  ▶ grep -n "web_state\|KEYS=" re_loop_sessions/20261121_221108_session_152.txt | cut -c1-900; ls web/test/*ref*.csv | head 
+  ▶ sed -n 25,40p re_loop_sessions/20261121_221108_session_152.txt | cut -c1-1500; python3 tools/web_state_compare.py --help
+  ▶ grep -o '"frame[0-9]*":[0-9]*' web/test/states/finalscene.json; mkdir -p /tmp/fs && KEYS=$(for f in $(seq 2640 40 3500);
+  ▶ grep -o '"frame[0-9]*":[0-9]*' web/test/states/finalscene.json; mkdir -p /tmp/fs; for f in $(seq 2640 40 3500); do print
+  ▶ Grep ""frame0?":\d+" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/states/finalscene.json
+Checking the start frame of the exported state so I can run tools.emu and the port side by side.
+  ▶ head -c 300 web/test/states/finalscene.json; echo; grep -o '"frame[^,]*' web/test/states/finalscene.json | head
+  ▶ timeout 1500 python3 tools/web_state_compare.py --state tools/emu/states/finalscene.state --web web/test/states/finalsce
+  ▶ timeout 1500 python3 tools/web_state_compare.py --state tools/emu/states/finalscene.state --web web/test/states/finalsce
+  ▶ mkdir -p gfx/compare/finalscene && timeout 1500 python3 tools/web_state_compare.py --state tools/emu/states/finalscene.s
+  ▶ grep -n "web_state_compare" re_loop_sessions/20261121_221108_session_150.txt re_loop_sessions/20261121_221108_session_15
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/finalscene.state --web web/test/states/finalscene.json --fra
+The side-by-side compare is running (about 1000 frames of tools.emu). In the meantime I'm running the port alone to check that the scene reaches the ending state.
+  ▶ node web/test/run.mjs --help 2>&1 | head -30
+  ▶ node web/test/run.mjs --load-state web/test/states/finalscene.json --frames 1000 --compare gfx/compare/fs_web.csv --keys
+  ▶ head -1 gfx/compare/fs_web.csv | cut -c1-400; sed -n '2p;50p;100p;200p;300p;400p;600p;800p;1000p' gfx/compare/fs_web.csv
+  ▶ node web/test/run.mjs --load-state web/test/states/finalscene.json --frames 1100 --compare gfx/compare/fs_web.csv --keys
+  ▶ grep -n "^3[0-9]*,[45]," gfx/compare/fs_web.csv | head -2 | cut -c1-60
+Port reaches `main_state` 4 at f3604 (then 5 = EndingInit). Waiting on the tools.emu side for comparison.
+  ▶ grep -n "Mesia reunion\|Out of MP" REVERSE.md | cut -c1-400
+  ▶ Read bauxosxm8.output
+The running compare stops at f3550, before the scene ends at f3604, so I'm restarting it with 1080 frames.
+  ▶ ToolSearch max_results query
+  ▶ TaskStop task_id
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/finalscene.state --web web/test/states/finalscene.json --fra
+  ▶ tail -c 4000 /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/38b1cce3-15b5-43dd-8cdf-01471ae66a5a/task
+The first run shows only one-frame-late cells: the x/y steps after `WaitFrame`, the known gap (c). Reading the rest of `mesia_check.mjs` to reuse its LATE rule in a new check.
+  ▶ Read mesia_check.mjs +60
+  ▶ python3 tools/csv_trim.py --help
+  ▶ sleep 1; tail -c 3000 /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/38b1cce3-15b5-43dd-8cdf-01471ae6
+While the compare runs, checking how the other checks feed pad input to the `Machine`.
+  ▶ Grep "runFrame|KEYS|parseKeys|pad" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/cure_check.mjs
+  ▶ Read cure_check.mjs
+Now waiting on the compare result before writing the check.
+  ▶ ToolSearch max_results query
+I'll draft the check now and tune it when the reference arrives.
+  ▶ Write finalscene_check.mjs
+  ▶ tail -c 2500 /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/38b1cce3-15b5-43dd-8cdf-01471ae66a5a/task
+  ▶ Read b4p8j16q7.output +450
+  ▶ Read b4p8j16q7.output +30
+  ▶ Read b4p8j16q7.output
+Only one-frame-late cells, and the hand-off to EndingInit is one frame apart at f3606. Cutting the reference CSV and running the new check.
+  ▶ python3 tools/csv_trim.py /tmp/web_state_compare/emu.csv web/test/finalscene_ref.csv --cols core,pal,obj --frames 2551-3
+The final loop (BF8C) runs one frame *early* in the port. Looking at where it starts in both runs.
+  ▶ python3 tools/compare_frames.py /tmp/web_state_compare/emu.csv /tmp/web_state_compare/web.csv --cols sub,o00_y,o0E_y,pal
+  ▶ python3 tools/compare_frames.py /tmp/web_state_compare/emu.csv /tmp/web_state_compare/web.csv --cols state,sub,o00_y,o0E
+  ▶ grep -E "^328[5-9]|^329[0-2]" /tmp/web_state_compare/emu.csv | cut -d, -f1-3,15-21,57-59; echo; grep -E "^328[5-9]|^329[
+  ▶ cp /tmp/web_state_compare/emu.csv gfx/compare/fs_emu.csv && cp /tmp/web_state_compare/web.csv gfx/compare/fs_web.csv
+  ▶ Grep "^32(8[5-9]|9[0-2])," /tmp/web_state_compare
+  ▶ python3 tools/dis.py 19 BDDC 0x16; python3 tools/compare_frames.py /tmp/web_state_compare/emu.csv /tmp/web_state_compare
+  ▶ Edit finalscene_check.mjs
+  ▶ Edit finalscene_check.mjs
+  ▶ Edit finalscene_check.mjs
+  ▶ node web/test/finalscene_check.mjs
+Four fade-out step rows remain. Checking whether tools.emu's sample there is another mid-rebuild CRC.
+  ▶ Grep "^(350[3-5]|353[6-8]|360[2-4])," /tmp/web_state_compare
+  ▶ python3 tools/compare_frames.py /tmp/web_state_compare/emu.csv /tmp/web_state_compare/web.csv --cols pal_crc --frames 34
+Each fade step (every 33 frames) is the same mid-`PaletteBuild` sample: tools.emu's next row equals the port's row. Adding that rule.
+  ▶ Edit finalscene_check.mjs
+  ▶ Edit finalscene_check.mjs
+  ▶ Edit finalscene_check.mjs
+  ▶ node web/test/finalscene_check.mjs
+The check passes. Running the neighbouring checks to catch regressions from the `mesia.js` export and the `play.js` wiring.
+  ▶ node web/test/mesia_check.mjs && node web/test/swordraise_check.mjs && node web/test/outofmp_check.mjs && node web/test/
+All pass. Now the docs: substate table row 30, a Verification Log row, the task note, and CLAUDE.md's check list.
+  ▶ Read REVERSE.md +179
+  ▶ Read REVERSE.md +309
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the task note. Checking whether the town NPC AIs `$30`/`$78` named in the task are already done.
+  ▶ sed -n '2311p' REVERSE.md | grep -o '.\{200\}\$30.\{200\}\|.\{150\}\$78.\{250\}' | head -5; grep -rn "0x30\]\|0x78\]\|ai
+  ▶ Grep "AI `\$(30|78)`.{0,160}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Both AIs were done in s140, and with sub_state 30 every substate entry is now ported. The remaining work is the unported EventActionTable acts, so I'm checking which are still missing.
+  ▶ Grep "not ported|EVENT_ACTS|^\s+(0x)?[0-9A-Fa-f]+: |act \d+" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/giveitem.js
+Acts 1, 2, 6, 7, 9, 14, 17, 19-21, 23, 24, 27 and 28 are still unported. Checking whether a queued task already covers them.
+  ▶ Grep "^- \[ \].*(EventAction|event act)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^###? " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2479
+Task 2480 (gameplay port leftovers) already covers `TalkActionTable`. I'll merge the event acts into it as item (i) and tick the substate task.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now ticking the task and adding the check to CLAUDE.md.
+  ▶ sed -i '2311s/^- \[ \] Web fix: remaining gameplay substates/- [x] Web fix: remaining gameplay substates/' REVERSE.md &&
+  ▶ Edit CLAUDE.md
+  ▶ Edit REVERSE.md
+Adding a label for the unnamed message helper `19:BFC9`.
+  ▶ Grep "^19,(BFC4|BFC9|BFE8)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit finalscene.js
+  ▶ Grep "git (add|commit)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop.sh
+The loop script commits after the session, so I'm leaving that to it. Running the new check one last time:
+  ▶ node web/test/finalscene_check.mjs
+I've finished and verified the sub_state 30 port (`SubstFinalSceneReset`, `19:BDF2`). Session 152 wrote the port but was cut off before testing it. With it in, every non-null `SubstateHandlerTable` entry is now ported (4 is the debug entry, skipped), so I ticked that task.
+
+**Result:** the new check `web/test/finalscene_check.mjs` passes. All 1055 rows (f2551–3605) match tools.emu, and the scene reaches `main_state` 4 at f3604 in both. Some cells only match with a one-frame offset, which the check accepts only in these cases:
+- **622 cells one frame late:** the walk loops move right after `WaitFrame`, and tools.emu's L255 sample already includes that move. This is the known no-cycle-model gap (c).
+- **373 cells one frame early:** the exit loop (BF8C, from f3289) moves *after* its sprite pass, so the move lands after tools.emu's sample. The first message's `sub` at f2928 is the same case.
+- **36 flash and fade rows:** tools.emu samples inside `PaletteBuild`, so its row shows a half-built palette. The check requires the port's neighbouring row to show the finished palette (all-`$16` for the flashes, tools.emu's next row for the 4 fade steps).
+
+I also ran `mesia_check`, `swordraise_check`, `outofmp_check` and `core_check`; all still pass.
+
+**Not matched yet:** RAM at f3629 differs in 22 bytes once the ending starts. `EndingInit` runs one frame early in the port (f3606), which accounts for `$45`, `$52-$54` and `$8C`. The rest are scratch bytes, `$07FF`, and two OAM records in swapped order. I left these out of the check.
+
+**Docs and data:**
+- **REVERSE.md:** notes on substate table row 30, a new Verification Log row "Final scene", and the task note.
+- **Leftover work:** the unported EventActionTable acts (1, 2, 6, 7, 9, 14, 17, 19–21, 23, 24, 27, 28) are now item (i) of the existing "gameplay port leftovers" task, not a new task.
+- **Other files:** new label `19:BFC9 FinalSceneMsg` in labels.csv, new reference `web/test/finalscene_ref.csv`, and the check is listed in CLAUDE.md.
+
+I didn't commit; `re_loop.sh` does that after the session.
+
+SESSION_SUMMARY: Verified the sub_state 30 SubstFinalSceneReset port with new finalscene_check.mjs (1055/1055 rows vs tools.emu, main_state 4 at f3604); every substate entry is now ported, task ticked, unported event acts merged into the gameplay leftovers task.

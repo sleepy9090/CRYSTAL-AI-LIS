@@ -1,0 +1,2 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \
+You've hit your 5-hour limit · resets 12am (America/New_York)

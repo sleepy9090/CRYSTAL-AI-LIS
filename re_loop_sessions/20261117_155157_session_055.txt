@@ -1,0 +1,149 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +1726
+  ▶ Read REVERSE.md +1726
+  ▶ Read REVERSE.md +1800
+  ▶ Read REVERSE.md +1826
+Reading recent session logs before picking the task.
+  ▶ wc -c re_loop_sessions/*_05[345].txt && tail -c 3000 re_loop_sessions/20261117_155157_session_054.txt; echo ----; tail -
+  ▶ grep -n "^##" REVERSE.md | sed -n '1,200p' | grep -in -E "enem|object|AI|gameplay|world inter|player" ; wc -l tools/emu/
+  ▶ Read REVERSE.md +892
+  ▶ Read sprite_capture.py
+  ▶ grep -n "def call\|def on_exec\|def clear_hooks" -A12 tools/emu/nes.py | head -60; grep -n -i "ObjUpdateAll\|ObjAiTable\
+  ▶ python3 tools/dis.py 30 C25D 200 --stop
+  ▶ python3 tools/dis.py 30 C264 220; grep -n "ObjInit" REVERSE.md | head
+  ▶ python3 tools/dis.py 30 C340 120 --stop; python3 tools/dis.py 30 C40E 40; python3 tools/dis.py 30 C125 40 --stop
+  ▶ python3 tools/dis.py 30 C3B7 90 --stop; python3 tools/dis.py 30 C13D 60 --stop; grep -n "playSound\|spawnEntry\|entryFF"
+  ▶ Read sprites.js
+  ▶ Read sprite_check.mjs
+  ▶ cat web/data/manifest.json | head -60; sed -n 1,80p web/src/game/machine.js
+Progress: I've read the ObjInit/PlaySound/SetR7 code. Next I'm adding a PRG export to the web data so the object code can read ROM tables by bank:address.
+  ▶ grep -n "sprites_b28\|def add_bin\|def bin_\|files\[" tools/gen_web_data.py | head -20; grep -n "spritesB28\|sprites_b28
+  ▶ sed -n 250,300p tools/gen_web_data.py; grep -n "bin" web/src/data.js | head -20
+  ▶ Edit gen_web_data.py
+  ▶ python3 tools/gen_web_data.py 2>&1 | tail -5 && python3 tools/gen_web_data.py --check 2>&1 | tail -3; sed -n 1,40p web/s
+  ▶ python3 tools/dis.py 26 972D 200 --stop; python3 tools/dis.py 26 97D7 13 ; python3 tools/dis.py 26 98B9 20 --stop
+  ▶ python3 tools/dis.py 26 9773 100 --stop; python3 tools/dis.py 26 98C5 3; 
+  ▶ python3 tools/dis.py 31 FF80 40; python3 tools/dis.py 26 9897 34 ; python3 tools/dis.py 26 9824 50 --stop
+  ▶ python3 tools/dis.py 26 9850 20 --stop; python3 tools/dis.py 31 FFDB 12 --stop; python3 tools/dis.py 26 8409 90 --stop
+  ▶ python3 tools/dis.py 26 8462 40 --stop; python3 tools/dis.py 27 B714 120 --stop
+  ▶ python3 tools/dis.py 27 B736 8 ; python3 tools/dis.py 27 B595 100 --stop; python3 tools/dis.py 27 B5D9 30 --stop
+  ▶ python3 tools/dis.py 27 B5B0 41; python3 tools/dis.py 27 ACC0 40 --stop; python3 tools/dis.py 27 B0A8 13
+  ▶ python3 tools/dis.py 27 B0B5 80 --stop; grep -n "ObjStepVector\|ObjMoveSlide\|ObjMoveStep" labels.csv
+Still working: disassembled the shot chain and the turret/burst AIs; now reading the straight-mover and its step-vector helper, then I'll write the JS.
+  ▶ python3 tools/dis.py 27 B0C6 80 --stop; python3 tools/dis.py 26 8480 60 --stop; python3 tools/dis.py 26 98C7 6
+  ▶ python3 tools/dis.py 27 B0CE 60 --stop; python3 tools/dis.py 26 98CD 12 --stop
+  ▶ python3 tools/dis.py 27 B0E2 30 --stop; python3 tools/dis.py 26 9861 60 --stop
+  ▶ python3 tools/dis.py 26 9885 30 --stop; python3 tools/dis.py 27 B0F3 10 ; python3 tools/dis.py 26 9A30 400 --stop | head
+  ▶ python3 tools/dis.py 26 9A4D 200 --stop
+  ▶ ls tools/emu/states; cat web/test/sprite_frames/README.md; sed -n 1,60p web/src/game/ram.js | grep -n "rd\|wr\|wram" 
+Still on it: all routine bodies read; now checking the last branch of `TempAddStep`, then writing the JS modules.
+  ▶ python3 tools/dis.py 26 9890 8 --stop; grep -n "r6\|r7\|cur_bank16\|mapper" web/src/game/machine.js | head
+  ▶ grep -n "self.ram\|self.wram\|prg_ram\|def read" tools/emu/memory.py tools/emu/mapper.py | head; grep -n "spawn_param\|o
+Writing the JS modules now: `prg.js` (banked ROM reads), `playsound.js`, `obj/objinit.js`, `obj/util.js`, `obj/ai_static.js`.
+  ▶ Write prg.js
+  ▶ Write playsound.js
+  ▶ Edit playsound.js
+  ▶ Write objinit.js
+  ▶ Write util.js
+  ▶ Read ram.js +33
+  ▶ Write ai_static.js
+Now the Machine mapping fields and the Python capture tool.
+  ▶ Edit machine.js
+  ▶ Write routine_capture.py
+  ▶ time python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 150 --out web/test/
+  ▶ sed -n 128,160p tools/emu/nes.py
+  ▶ python3 tools/dis.py 30 CCCC 90 --stop
+  ▶ python3 tools/dis.py 30 CD06 80 --stop
+  ▶ python3 - <<'EOF' 2>/dev/null; true
+  ▶ Grep "def _push|def step" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/cpu.py
+Now updating the capture tool to use a two-level call.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ time python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 150 --out web/test/
+31 MB is too big for the repo. Switching the format to one shared WRAM base plus per-case RAM and sparse WRAM diffs.
+  ▶ grep -n "'before': (bytes(ram)\|'after': _diff\|json.dump\|return cases\|JSON: {\|\"after\": \[\[addr\|addr < \$800\|\$0
+  ▶ Read routine_capture.py +170
+  ▶ Edit routine_capture.py
+  ▶ Read routine_capture.py +222
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 --out web/test/obj_f
+Capture is 4.7 MB for 1000 cases. Now the JS replay check.
+  ▶ Edit ai_static.js
+  ▶ Write obj_check.mjs
+  ▶ node web/test/obj_check.mjs 2>&1 | tail -40
+  ▶ cp web/src/game/obj/util.js /tmp/util.js.bak && sed -i 's/const oy = ((m.rd(BEHAV + n) << 4)/const oy = ((m.rd(BEHAV + x
+  ▶ Edit util.js
+  ▶ node web/test/obj_check.mjs | grep -v "regs" 
+The negative test fails 192 cases, which confirms the offset row comes from the **new** object's `obj_behav`. Reverting the edit.
+  ▶ Edit util.js
+Adding a per-routine count of "popped" returns to the check output, so the fan-turret quirk is visibly covered.
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ node web/test/obj_check.mjs | tail -11; for t in core_check sprite_check world_check serve_check ppu_check; do node web/
+  ▶ node web/test/obj_check.mjs | tail -11 && node web/test/core_check.mjs | tail -2 && node web/test/sprite_check.mjs | tai
+All checks pass, but the fan-turret "popped" path was hit 0 times: the trigger needs 5 conditions at once. I'm adding targeted pokes so that path is actually covered.
+  ▶ Grep "^def " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/nesrom.py
+  ▶ Read nesrom.py +1
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 --out web/test/obj_f
+  ▶ Grep "^(26,(9824|9861|98A8|9897|98C7|97E4|9AE0|9A30)|27,(B5CF|B0B5|B5D3)|30,(CD28|CD06)|31,FFDB)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ Edit labels.csv
+Now the REVERSE.md corrections in the enemy/shot section.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +897
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^\*\*\`ObjInit\` \`30:C25D\` (session 8)" REVERSE.md && sed -n 388,397p REVERSE.md | cut -c1-300
+  ▶ Read REVERSE.md +387
+  ▶ Edit REVERSE.md
+Now the task entry and the leftover task.
+  ▶ Grep "sprite_capture" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the leftover task, added at the end of RE Investigation.
+  ▶ Edit REVERSE.md
+  ▶ Write README.md
+Updating CLAUDE.md's check list and the web architecture doc.
+  ▶ Edit CLAUDE.md
+  ▶ Edit CLAUDE.md
+  ▶ Grep "sprites\.js|sprite_check" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Read architecture_web.md +55
+The planned layout puts PlaySound in `src/game/sound/playsound.js`, so I'm moving it there to match.
+  ▶ mkdir -p web/src/game/sound && mv web/src/game/playsound.js web/src/game/sound/playsound.js
+I don't have permission to move files, so `playsound.js` stays at `web/src/game/playsound.js` and the doc will record where it actually is.
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Read architecture_web.md +186
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+I took the top item, **Ph7 web 6/8 (enemies + bosses)**. The object runtime (`ObjUpdateAll`, spawns, player) isn't ported yet, so a frame-by-frame save-state compare wasn't possible. I checked each ROM routine on its own instead, the same way as the sprite pass. Ten routines are now ported to the web port and all match the emulator. Nothing is committed.
+
+**What's ported**
+- **Shot chain:** `ObjInit`, the queue side of `PlaySound`, `SpawnShot` and its helpers (`Rand64`, `ObjFindFree`, `DirToTarget`, `ObjStepVector`, the position helpers, `ObjBgProbe`, `ObjBecomeNext`).
+- **Enemy AIs:** the six static and projectile AIs (`$10` straight mover including its wall test, `$11` directional shot, `$2C` burst, `$4C/$4D` fan turret, `$4E` turret) plus the shared `AiShootCheck`.
+- **ROM access:** a new `web/data/prg.bin` holds all of PRG ROM, and `web/src/game/prg.js` reads it by bank and address the way the 6502 does.
+- **Check:** `tools/emu/routine_capture.py` fills RAM and WRAM with random values and runs one routine in the emulator. `node web/test/obj_check.mjs` runs the JS on the same memory and compares every byte, plus how the routine returned. **1000/1000 cases are identical** (100 per routine). The core, sprite, world, serve and ppu checks still pass.
+
+**Findings (in REVERSE.md and labels.csv)**
+- **Correction:** a shot's spawn offset comes from the *spawned* object's `obj_behav`, not the shooter's. As a negative test, the old reading fails 192 of the 1000 cases.
+- **Fan-turret quirk:** its idle path jumps into `AiShootCheck` instead of calling it. So when an attack starts, `AiShootCheck` drops `ObjUpdateAll`'s own return address, `ObjUpdateAll` returns early, and every later slot misses its AI update that frame. All 37 cases that hit this path match.
+- `DirToTarget` doesn't clamp distances: for objects more than a screen apart it uses the high byte as the distance, so direction and distance come out wrong. This only affects offscreen objects.
+- `ObjInit` leaves bank 13 mapped (the far-call wrapper restores the banks), and type `$FF` only clears the slot.
+- The two position-add helpers handle the y carry differently.
+
+**Left for later:** I marked the task done and added one leftover task at the end of RE Investigation. It covers the walking and chasing AIs (these need `ObjMoveSlide`), the dasher, flyer, orbiter, gunner and trap chest, the bank 15 bosses and death chains, and the frame-level compare once `ObjUpdateAll` exists. I also updated CLAUDE.md, `docs/architecture_web.md` and added `web/test/obj_frames/README.md`.
+
+**Things to know:**
+- I wasn't allowed to move files, so `playsound.js` is at `web/src/game/playsound.js` rather than the planned `web/src/game/sound/`. The docs list where it actually is.
+- `web/test/obj_frames/fuzz_static.json` is about 4.7 MB; capturing fewer cases would shrink it.
+
+SESSION_SUMMARY: Session 55 — Ph7 web 6/8 done: object-code base (`prg.bin`/`prg.js`, PlaySound, ObjInit, SpawnShot + bank-26 helpers, ObjBgProbe) and AIs $10/$11/$2C/$4C-$4E + AiShootCheck ported, `routine_capture.py` + `obj_check.mjs` 1000/1000 RAM+WRAM identical; findings: ShotOffsets row uses the spawned object's obj_behav, fan-turret JMP quirk makes ObjUpdateAll return early, DirToTarget has no clamp; remaining AIs/bosses in one leftover task.

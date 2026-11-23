@@ -1,0 +1,101 @@
+  ▶ ls re_loop_sessions/ | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +733
+  ▶ wc -c re_loop_sessions/20261115_175121_session_01[678].txt && ls tools/ gfx/ | head -80
+  ▶ Read 20261115_175121_session_017.txt
+  ▶ Read 20261115_175121_session_016.txt
+  ▶ Grep "GiveItem|D40C|D3DA|D51C|18:BC04" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+I'm on session 18, task "text follow-ups 7". Starting with part (e): the `GiveItem` path at `30:D3DA`.
+  ▶ Read REVERSE.md +410
+  ▶ python3 tools/dis.py 30 D3DA 0x70 && python3 tools/decode_tables.py 30:D40C 0x30 u8 --per-line 16
+  ▶ python3 tools/dis.py 30 D44A 0x50 && python3 tools/decode_tables.py 30:D45C 0x30 u8 --per-line 16 && python3 tools/objty
+  ▶ python3 tools/dis.py 30 D44A 0x50 && python3 tools/decode_tables.py 30:D45C 0x30 u8 --per-line 16 && python3 tools/objty
+  ▶ grep -n "D40C\|D45C\|D3DA" labels.csv; grep -n "^ *70 \|item 70\|\$70 " gfx/items.txt | head; grep -n "2B" gfx/obj_ai.tx
+I'll use Grep instead.
+  ▶ Grep "D40C|D45C|D3DA" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "^\s*(70|\$70)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/items.txt
+  ▶ Grep "\$2B|AI 2B|^ *2B" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ python3 tools/dis.py 27 AC60 0x60 --stop
+  ▶ Grep "p=\$70\b|item 70|\b70\b.*Medical" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/spawn_params.txt
+  ▶ Read spawn_params.txt
+  ▶ python3 tools/dis.py 27 AC8C 0x50
+  ▶ Grep "next 70|-> 70|\+70" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/items.txt
+  ▶ Grep "next" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/items.txt
+  ▶ python3 tools/dis.py 30 D497 0xC0
+  ▶ Grep "^  (08|0A|0B|0C|15|20) |act +[1-9]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/items.txt
+Found it: item `$70` is a trap chest that becomes object type `$73`. Item-use results go through `EventActionTable`, which explains the "unused" event acts. Writing this to REVERSE.md now.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^-- 32\.(19|15|12) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Read text.txt +2428
+Now the new subsection after the Item hooks section.
+  ▶ Edit REVERSE.md
+  ▶ tail -n 3 labels.csv && wc -l labels.csv
+  ▶ Read labels.csv +285
+  ▶ Edit labels.csv
+  ▶ printf '27,AC60,AI_TrapChest,AI $2B (type $73): phase0 meta $AA wait; phase1 meta $90 wander with $0620 timer\n' >> labe
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 18 BC04 0x60 --stop
+Data, not code. `SwitchBank16(9)` maps banks 18/19, and `$BC04` falls in the `$A000` half, so the real target is `19:BC04`.
+  ▶ python3 tools/dis.py 19 BC04 0x80 --stop
+  ▶ python3 tools/xref.py BC04; python3 tools/dis.py 30 C17D 0x12; python3 tools/dis.py 30 C008 0x6
+  ▶ grep -n "18:BC04" REVERSE.md | cut -c1-120
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+(e) and (i) are done. Next is (b): merging the other flag sources into `tools/flag_sites.py`.
+  ▶ Read flag_sites.py
+  ▶ Grep "^def |^[A-Z_]+ = |return " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/item_dump.py
+  ▶ Grep "^def |^[A-Z_]+ = |return " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/presence_dump.py
+  ▶ Read flag_code_sites.txt
+  ▶ Grep "\| *F[0-9A-F]{3}|^(15|26|27|30|31):" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/flag_code_sites.txt
+  ▶ Read item_dump.py +1
+  ▶ Read presence_dump.py
+  ▶ Grep "^def |params" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/area_dump.py
+  ▶ Read area_dump.py +173
+I'll extend `flag_sites.py` with four new sources (item get/use, presence, code sites) and an unplaced-trigger filter.
+  ▶ Edit flag_sites.py
+  ▶ Edit flag_sites.py
+  ▶ Edit flag_sites.py
+  ▶ python3 tools/flag_sites.py --out gfx/flag_sites.txt > /dev/null; echo rc=$?; wc -l gfx/flag_sites.txt
+  ▶ python3 tools/flag_sites.py --out gfx/flag_sites.txt > /dev/null && wc -l gfx/flag_sites.txt
+  ▶ Grep "^Story flag sites|^unplaced-only|^F05C|^F066|^F100|^F053" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/flag_sites.txt
+The merge works: 496 flags now, and only F05C, F05D, F091 and F092 come from unplaced triggers alone. Updating docs and the task list.
+  ▶ Grep "flag_sites" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read flag_sites.txt +2999
+Correcting F092 → F09F in the note, then the task list.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now add the follow-up task after it.
+  ▶ Edit REVERSE.md
+Quick check that the new labels load:
+  ▶ python3 tools/dis.py 30 D3DA 3 && python3 tools/dis.py 19 BC04 3
+The CSV comment got cut at a comma. Fixing the three new labels that contain commas:
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Session 18 is finished. I did parts (b), (e) and (i) of "text follow-ups 7" and marked the task done; parts (c), (f) and (h) moved to a new "text follow-ups 8" task. Nothing is committed.
+
+**(e) Item pickup and use:**
+- **The pickup routine sees the real item id.** `GiveItem` passes the raw id to `ItemGetHook`, so ids `$00-$6F` each use their own record and flags. The `$50-$6F` remap runs afterwards and only changes the item name shown in the "You now have…" message.
+- **The remap table's label was misleading.** It is labelled at `30:D40C`, but the code always indexes it with `$50` or more, so the bytes actually read are `30:D45C-D47B`.
+- **Item `$70` is a trap chest.** `TrapChest` `30:D3DA` turns the chest into object type `$73`, a chest monster (AI at `27:AC60`). It first sits as metasprite `$AA`, then wanders as `$90` and turns around when blocked. It is placed in 9 chests across areas `4A 54 6B 85 89 A3`. Its pickup record (Medical Herb, flag F0DD) can never be reached.
+- **Item-use results run through `EventActionTable`.** This explains event acts 2, 12-14, 16, 19-21 and 28, which no event trigger uses. They are the use effects, e.g. Kirisa Plant → Bow of Moon and Statue of Onyx → Gas Mask + follower.
+- **Item-use edge cases:** a failed use shows message 32.19 "Nothing happens." with SFX `$4E`. Teleporting from the item menu saves the game (`JMP 23:BC00`).
+
+**(i) Sword of Thunder cutscene:** the old `18:BC04` address was a bank-numbering slip. `$BC04` falls in the `$A000` half of the window, so the routine is in bank 19 (the bytes at `18:BC04` are tile data). `SwordRaisePose` `19:BC04` shows the player raising the sword (metasprite `$B8`), plays jingle `$93`, and holds for 127 frames.
+
+**(b) Flag cross-reference:** `tools/flag_sites.py` now also merges:
+- item pickup/use flags
+- the `NpcHidden` presence conditions for NPCs that areas actually place
+- the decoded direct code sites
+
+Triggers that no area places are moved to a separate list at the end. I ran it and regenerated `gfx/flag_sites.txt`: 496 flags. Only F05C, F05D, F091 and F09F come solely from unplaced triggers.
+
+The flag report still shows F100 being set by NPC `$38`/`$DD` scripts, which looks wrong. I've added that check to the new task along with `30:D9D8`, `30:C17D` and the meaning of `$0715`.
+
+**Files:** REVERSE.md has a new "GiveItem / item-use dispatch" section and the corrected bank 19 address. `labels.csv` has 7 new labels plus a fix to `ItemRemapTable`; I removed commas from the new label comments, since they were cutting the comments short in `dis.py`.
+
+SESSION_SUMMARY: Session 18 — text follow-ups 7 (b, e, i): GiveItem passes raw ids to ItemGetHook (the $50-$6F remap at 30:D45C only changes the displayed name); item $70 = TrapChest 30:D3DA → type $73 chest monster (AI 27:AC60); item-use results run through EventActionTable (covers the "unused" acts), use fail = msg 32.19, teleport saves the game; Sword of Thunder cutscene is 19:BC04 SwordRaisePose (not 18:BC04); flag_sites.py now merges item/presence/code sites and separates unplaced triggers (496 flags); 7 labels; leftovers → "text follow-ups 8".

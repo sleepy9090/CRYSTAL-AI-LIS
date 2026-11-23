@@ -1,0 +1,50 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls -t re_loop_sessions | head -5; wc -l dead_ends.md REVERSE.md; gr
+  ▶ Read REVERSE.md +2301
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions; wc -c 20261122_031152_session_15[345].txt; tail -c
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l tools/emu/scenario.py tools/emu/ending_probe.py docs/emu_scen
+  ▶ Read ending_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -8 docs/emu_scenarios.txt; sed -n 230,240p tools/emu/scenario.
+  ▶ Edit scenario.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; time python3 -m tools.emu.scenario ending > /tmp/ending_scen.txt 2>
+  ▶ python3 -m tools.emu.scenario ending --out gfx/compare/ending_scen.txt
+The run gets stuck in the final scene (sub_state `$1E` from f432 on). It probably needs A presses for its 5 messages, so I'm checking which keys the s153 check used.
+  ▶ Grep "keys|KEYS|load-state|\.json" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/finalscene_check.mjs
+The check pressed A every 40 frames. I'm adding the same presses to the scenario.
+  ▶ Read scenario.py +629
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario ending --out gfx/compare/ending_scen.txt | head -60
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario --out docs/emu_scenarios.txt > /tmp/scen_all.log 2>&1
+  ▶ python3 -m tools.emu.scenario --out docs/emu_scenarios.txt > gfx/compare/scen_all.log 2>&1
+  ▶ python3 -m tools.emu.scenario --out docs/emu_scenarios.txt
+While that runs, I'm writing the ending result into REVERSE.md.
+  ▶ Grep "Ending sequence, bank 17" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2104
+The regeneration takes about an hour; I'll finish the docs once it completes.
+  ▶ ToolSearch max_results query
+I don't need the monitor: the background task notifies me when the regeneration finishes. It's still running (about an hour). After that I'll record the new "still never run" count and the ending's final step in REVERSE.md, and decide whether the Ph6 checkpoint can be ticked.
+  ▶ grep -n "^\[ending\]" -A3 docs/emu_scenarios.txt; grep -n "^union" -A20 docs/emu_scenarios.txt; grep -c "^\[" docs/emu_s
+All 22 labels still unrun are the ones s126/s127 classified as dead code, data, or run by another check, so no gap is left. One scenario reports a CRASH; I'm checking whether that's new.
+  ▶ sed -n 680,688p docs/emu_scenarios.txt; git show HEAD:docs/emu_scenarios.txt | grep -n -B7 "CRASH" | head; git show HEAD
+That `event_30` crash is the same one the previous file recorded (a forced act that jumps into RAM), so it isn't new. Next I'm updating REVERSE.md.
+  ▶ Read REVERSE.md +2286
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^- \[ \] Ph6 (low priority) scenario leftovers" REVERSE.md | cut -c1-80; grep -c "Still open: the ending labels
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I closed the last open RE leftovers task by adding a scenario that plays from the final boss kill to the end of the game. With that, the Ph6 checkpoint ("full game session played, no major logic gaps found") is now ticked.
+
+- **New `ending` scenario** in `tools/emu/scenario.py`: it reuses the `boss_fade` setup (final boss killed in area `$5F`) and keeps going into the bank-17 ending, which reaches its last step (29).
+  - It needs A pressed every 40 frames for the final scene's 5 messages. Without that, the scene waits forever.
+  - It runs all 10 ending labels that nothing had run before, including `MainStateEndingInit`, `MainStateEnding`, `FinalSceneToEnding` and the 7 bank-17 routines.
+- **Full suite rerun:** `docs/emu_scenarios.txt` is regenerated for the first time since s103 (124 scenarios, about an hour).
+  - Of the 178 labels the canonical tour never ran, 156 now run (136 before).
+  - Earlier sessions (s123, s126, s127) already explained all 22 that still never run: dead code, data tables read by code that does run, or code another check runs (the inn fade). So no logic gap is left.
+  - The suite has one CRASH line, in `event_30`. It is the same as in the s103 file: that scenario forces an event action that jumps into RAM, so it isn't a new problem.
+- **REVERSE.md:** I ticked the Ph6 checkpoint (with the full list of 22) and the leftovers task, added the ending timeline to the task note, and put a pointer to the new scenario in "Ending sequence, bank 17".
+
+I didn't commit.
+
+SESSION_SUMMARY: Session 155 added an `ending` scenario that runs from the final boss kill to ending step 29 (all 10 ending labels now run) and regenerated the 124-scenario suite (156/178 never-run labels now run; all 22 left were already explained in s123/s126/s127), so the Ph6 leftovers task and the Ph6 checkpoint are ticked.

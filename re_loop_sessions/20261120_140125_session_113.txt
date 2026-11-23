@@ -1,0 +1,136 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls re_loop_sessions | tail -4 && grep -n "## Next Tasks" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +2267
+  ▶ Grep "^- \[ \]|^###? " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '2269,2276p;2441,2457p' REVERSE.md | cut -c1-3000
+  ▶ sed -n '2441p' REVERSE.md | cut -c3000-
+  ▶ grep -n "^- \[ \] Web fix: gameplay frames, rest after s108" REVERSE.md | cut -c1-20; awk 'NR==2440' REVERSE.md | cut -c
+Reading the open task text now (top unchecked item: "Web fix: gameplay frames, rest after s108").
+  ▶ Grep "^- \[ \] Web fix: gameplay frames, rest after s108.*" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "AI `\$08` `27:B7F6`.*" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob tools/*task*.py
+  ▶ Write show_line.py
+  ▶ python3 tools/show_line.py REVERSE.md 2275 2900
+  ▶ ls -la re_loop_sessions | tail -5 && tail -c 2500 re_loop_sessions/20261120_090147_session_113.txt; echo ----; tail -c 2
+Picking up (e3), the collision port (`ObjCollideAll` `26:8F6E`), which the cut-off earlier session 113 had started. Reading the existing notes on it.
+  ▶ grep -n "ObjCollideAll\|8F6E" REVERSE.md | cut -c1-250 | head -30; grep -n -i "collid\|8F6E\|HitPlayer\|^26,8F\|^26,9[0-
+  ▶ sed -n '1395,1434p;1798,1830p' REVERSE.md | cut -c1-1500
+  ▶ ls web/src/game web/src/game/obj web/src/game/states web/src/game/world && wc -l web/src/game/obj/*.js web/src/game/stat
+Now the full disassembly of the collision module.
+  ▶ python3 tools/dis.py 26 8F6E 0x14D
+  ▶ python3 tools/dis.py 26 90BB 0x1C3
+  ▶ python3 tools/dis.py 26 927E 0x242
+  ▶ python3 tools/dis.py 26 94C0 0x1D1
+Now the tables and the existing port conventions.
+  ▶ Read play.js
+  ▶ Read objects.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game && grep -rn "statRecalc\|export function\*\? *hudRedraw
+  ▶ Read death.js +1
+  ▶ Read death.js +160
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM && python3 tools/dis.py 26 8E46 0x80 | head -60; python3 tools/dis.p
+  ▶ python3 tools/dis.py 26 8EB9 0x0C; python3 tools/dis.py 31 FF80 0x18; python3 tools/dis.py 30 C25D 0x10; python3 tools/d
+Disassembly covered. Now the test harness conventions (routine_capture + obj_check).
+  ▶ grep -n "AreaSpawnEntry\|PLAYER_AIS\|^ROUTINES\|^def _fix\|^[A-Z_]* = \[\|^[A-Z_]* = {\|def main\|argparse\|add_argument
+  ▶ grep -n "AreaSpawnEntry\|PLAYER_AIS\|^ROUTINES\|^def _fix\|^[A-Z_]* = \[\|^[A-Z_]* = {\|def main\|add_argument" tools/em
+  ▶ Read routine_capture.py +1
+  ▶ Read routine_capture.py +540
+  ▶ ls web/test/obj_frames/ && grep -n "spawn\|player" web/test/obj_frames/README* | head; sed -n 27,60p web/test/obj_check.
+  ▶ sed -n 85,100p web/test/obj_frames/README.md; grep -n "PORTED_AIS\|NULL_AIS\|HIT_FLAG_PARAMS\|PPU_ROUTINES" tools/emu/ro
+Writing `obj/collide.js` now: a faithful instruction-level port of `26:8F6E`-`26:9690`.
+  ▶ Write collide.js
+Wiring it into `SubstPlay`, then adding fuzz capture + check entries.
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Grep "export function runNow" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/world/bgstream.js
+  ▶ Read routine_capture.py +196
+Adding the collision capture routines.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ time python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 150 --routine ObjCo
+Now the obj_check RUN entries.
+  ▶ grep -n "^import \* as P" web/test/obj_check.mjs
+  ▶ Edit collide.js
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -i "collide\|FAIL\|identical,"
+  ▶ python3 tools/dis.py 30 C8B2 0x14; python3 tools/dis.py 30 C67D 0x80 | grep -n "LDY\|TAY\|INY\|DEY\|RTS\|JMP" 
+  ▶ grep -n "export function ppuQueueFlush" -A40 web/src/game/world/ppuqueue.js | head -60; python3 tools/dis.py 30 C67D 0x6
+  ▶ grep -rn "return yield\* hud\|= yield\* hud\|return yield\* statRecalc\|= yield\* statRecalc\|ppuQueueFlush(m)\|queueFlu
+  ▶ sed -n 20,25p web/src/game/world/ppuqueue.js
+Collision port passes 4 of 6 routine fuzz sets; fixing the last two diff sources now (the Y register that `HudRedraw` leaves behind after an immediate flush, and a `HitPlayer` slot difference).
+  ▶ Edit ppuqueue.js
+  ▶ Read ppuqueue.js +38
+  ▶ python3 tools/dis.py 30 C6E7 0x28
+  ▶ sed -i '47s/      return;/      return y;/; 56s/    if (!(m.rd(0x0C) \& 0x80)) return;/    ry = y;\n    if (!(m.rd(0x0C)
+  ▶ Edit ppuqueue.js
+  ▶ Edit ppuqueue.js
+  ▶ Edit death.js
+  ▶ Edit death.js
+  ▶ Edit death.js
+  ▶ Edit collide.js
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -i "collide\|FAIL\|identical,"; ls tools/emu/case_trace.py web/test/case_trace.m
+  ▶ python3 -m tools.emu.case_trace --load-state tools/emu/states/gameplay_first.state --cases web/test/obj_frames/fuzz_coll
+Found it: `PaletteBuild` leaves Y = 4, so the stone-shot path in the ROM despawns slot 4 instead of the shot (a real ROM quirk). Porting that as is.
+  ▶ Edit collide.js
+  ▶ Edit collide.js
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -i "collide\|FAIL\|identical,"; python3 -m tools.emu.case_trace --load-state too
+All 900 collision cases match. Stress run with a different seed (temporary file, removed afterwards):
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 700 --seed 5000 --routin
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 700 --seed 5000 --routin
+  ▶ cp /tmp/s113_coll/zz_s113_tmp.json web/test/obj_frames/ && node web/test/obj_check.mjs 2>&1 | grep -E "zz_s113|^FAIL|ide
+  ▶ Edit obj_check.mjs
+  ▶ node web/test/obj_check.mjs --dir /tmp/s113_coll 2>&1 | tail -8
+Fuzz is clean (4400 cases). Now all web checks plus the canonical-run compare.
+  ▶ for t in core_check ppu_check serve_check world_check sprite_check sound_check apu_check; do printf "%s: " $t; node web/
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/serve_check.mjs 2
+  ▶ Grep "KEYS|START|keys" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/web_compare.py
+  ▶ grep -n "CANON_KEYS =" -A3 tools/compare_ref.py; grep -n "2301:START\|s112_emu\|--compare" re_loop_sessions/20261120_090
+  ▶ sed -n 51p re_loop_sessions/20261120_090147_session_112.txt; sed -n 76,78p re_loop_sessions/20261120_090147_session_112.
+  ▶ Glob gfx/compare/s11*.csv
+  ▶ node web/test/run.mjs --frames 2247 --keys 1250:START 1400:START 1600:START 1700:START 2301:START 2340:DOWN:80 --compare
+  ▶ grep -n "CollPairTable\|^26,92BF\|^26,906C\|^26,92F5\|^26,9691" labels.csv; grep -n "collide\|ObjCollideAll" docs/archit
+  ▶ sed -n 215,224p docs/architecture_web.md
+Updating the docs rows, then REVERSE.md.
+  ▶ Edit architecture_web.md
+  ▶ grep -n "ObjCollideAll" docs/architecture_web.md | cut -c1-80
+  ▶ Edit architecture_web.md
+  ▶ Read README.md +60
+  ▶ Edit README.md
+  ▶ Edit README.md
+  ▶ Read labels.csv +895
+  ▶ Edit labels.csv
+Now REVERSE.md: the task text, the s113 note, and the ROM facts.
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^- \*\*s112 (area spawns" REVERSE.md | cut -c1-40; grep -n "Area spawns\|^| Area spawn" REVERSE.md | cut -c1-12
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ node web/test/obj_check.mjs 2>&1 | tail -1; node web/test/core_check.mjs 2>&1 | tail -1; git status --short web tools do
+I ported the object-vs-object collision code (`ObjCollideAll` `26:8F6E` and everything it calls) into the web port, and it matches the emulator on every test case. The gameplay-frames task stays unchecked because other parts of it are still open.
+
+**What's new**
+- **`web/src/game/obj/collide.js`** covers:
+  - the per-frame pair loop, the hitbox overlap scan and the knockback setter;
+  - all four hit handlers: player shot or sword hitting an enemy (including enemy death, XP and level-up), an enemy touching the player (enemy shot effects, poison, the sparring duel, gold pickup, riding platforms, damage and invulnerability), the slot-3 probe that starts NPC talks and item use, and slot `$0C`'s hit handler.
+- `states/play.js` now runs it at `30:CB7E` instead of logging it as unported.
+
+**Tests**
+- New `web/test/obj_frames/fuzz_collide.json`: 900 emulator-captured cases over 6 routines. 900/900 match the port byte-for-byte, and so do 3,500 extra cases from a second seed.
+- All test files together: 13,700/13,700 routine cases identical. The other web checks (core, ppu, serve, world, sprite, sound, apu) all still pass.
+- In the main recorded test run (frames 2322-2460), collision causes no new differences. Up to f2439 the port matches apart from the known capture-timing rows. From f2440, everything that still differs is slots `$0F`-`$13`, which are spawned by AI `$08` (`27:B7F6`, not ported yet). The `pos_x`/`pos_y` differences that session 112 blamed on collision are actually slot `$0F`, so AI `$08` covers them too.
+
+**ROM behaviour the fuzz turned up**
+- **Stone-shot bug in the game itself:** when an enemy's stone shot actually stones the player, a palette rebuild leaves the Y register at 4. The shared "remove the shot" code then clears slot 4 (a player-shot slot) instead, so the stone shot stays alive. The port copies this exactly.
+- When the screen is off, the HUD redraw routine leaves Y as the queue flush set it (e.g. `$80`) rather than 2×6. This changes one byte, the saved sound Y at `$010F`. To match it, `ppuQueueFlush`, `queueFlushNow`, `hudQueue` and `hudRedraw` now return their exit Y. Nothing else used their return values.
+
+**Other changes**
+- New: `tools/show_line.py` (prints one long line of a file, wrapped), `obj_check.mjs --dir D` (runs test files from another folder), and the label `26:92F5 HitShotDespawn`.
+- Updated: the REVERSE.md task text and a new s113 note under Web Port Fixes, the `HitPlayer` notes, `docs/architecture_web.md`, and `web/test/obj_frames/README.md`.
+
+**Still open in that task:** AI `$08` and AI `$1A`, `sub_state` `$11`, the pit fall / edge link and the visited-screen marking, the remaining NMI modes and IRQ handlers 4/5, and (e5), the emulator save-state scenarios.
+
+**Scratch files you can delete:** `gfx/compare/s113_web.csv` and `/tmp/s113_coll/`. Nothing is committed.
+
+SESSION_SUMMARY: Session 113: ported ObjCollideAll 26:8F6E and all its hit handlers into web/src/game/obj/collide.js and wired it into SubstPlay; 900/900 + 3500 extra-seed collision cases identical and all web checks pass; found that the stone shot clears slot 4 instead of itself (PaletteBuild leaves Y=4); the main test run only differs from f2440 on, all of it from the unported AI $08 spawns; gameplay task stays open.

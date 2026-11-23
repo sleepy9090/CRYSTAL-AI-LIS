@@ -1,0 +1,167 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "## Next Tasks" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/20261120_190200_session_12*.txt re_loop_sessions/20261120_190200_session_119.txt re_loop_sessions
+  ▶ Read REVERSE.md +2268
+  ▶ Grep "^- \[ \]|^###" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read 20261120_190200_session_120.txt
+  ▶ sed -n 2268,2280p REVERSE.md | cut -c1-600; echo ----; sed -n 2440,2450p REVERSE.md | cut -c1-3000
+  ▶ wc -l web/src/game/states/equip.js && grep -n "07DD\|not ported\|81B4\|8613\|8631\|846C\|8347\|9509\|D9AD" web/src/game/
+I'm on the top task: the shop/pawn variants of the SELECT menu (`equip.js`). It looks partly ported already, so I'm checking what's actually missing.
+  ▶ Read equip.js +1
+  ▶ Grep "unported\(|notPorted\(|todo\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/equip.js
+  ▶ Read equip.js +410
+  ▶ git log --oneline -3 -- web/src/game/states/equip.js; git diff --stat HEAD -- web | tail -3; grep -rn "D9AD\|9509\|pawn\
+Session 109 already ported the shop-menu branch inside `equip.js`. What's missing is how the game gets there: `SubstPawnShop` (sub_state 35) and its `16:9509` entry. Checking the substate table.
+  ▶ grep -n "SUBSTATES\|35\]\|0x23\]\|substEquipMenu" web/src/game/states/*.js web/src/game/*.js | cut -c1-200 | head -20; g
+  ▶ Read play.js +190
+  ▶ Read equip.js +640
+Now the ROM side: `SubstPawnShop` `30:D9AD` and `16:9509`.
+  ▶ python3 tools/dis.py 30 D9AD 0x2C --stop; echo ----; python3 tools/dis.py 16 9509 0x80 --stop
+  ▶ python3 tools/dis.py 16 967A 0xC0 --stop; echo ----; python3 tools/dis.py 30 DA0C 0x30 --stop; echo ---; python3 tools/d
+  ▶ sed -n 290,300p REVERSE.md | cut -c1-1500; python3 tools/dis.py 16 96BE 0x40 --stop; echo ---; python3 tools/dis.py 16 9
+  ▶ grep -n "s109\|session 109" REVERSE.md | cut -c1-1200 | head -8
+  ▶ git show f2867c0 --stat | head -20; grep -n "07DD\|Shop menu\|shop variant" REVERSE.md | cut -c1-400 | head
+Session 109 saved a test state (`web/test/states/shopmenu.json`) but never tested against it. Checking where it stops.
+  ▶ head -c 400 web/test/states/shopmenu.json; echo; grep -o '"until":"[^"]*"\|"frame[a-z_]*":[0-9]*\|"note":"[^"]*"' web/te
+Session 109 tested the shop branch by forcing `$07DD` into a SELECT-menu state. I'll first check that branch against tools.emu, then port the pawn-shop entry.
+  ▶ python3 tools/web_state_compare.py --help 2>&1 | head -40; grep -n "s102\|Save / load page" REVERSE.md | grep "web_state
+Running the session 109 shop-menu state through both tools.emu and the port (cursor move, sell with confirm, B → "Anything else?").
+  ▶ mkdir -p /tmp/s121 && timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/shopmenu_s109.state --web 
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/shopmenu_s109.state --web web/test/states/shopme
+Close: only 9 rows differ (one-frame OAM timing at key presses, one palette frame) and 3 RAM bytes. Checking whether these are the known equip-menu artifacts from s98/s102.
+  ▶ sed -n 176p REVERSE.md | cut -c1-4000; sed -n 175p REVERSE.md | cut -c1500-4000
+The diffs are exactly the documented artifacts (s89 sampling blips; `$09/$45/$46` end-snapshot phase). Now I need to confirm the run really took the shop paths. Checking screenshots.
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/shopmenu_s109.state --web web/test/states/shopme
+  ▶ Read pair_2600.png
+  ▶ Read pair_2700.png
+Sell-confirm and "Anything else?" match (only HUD rows 24–29 differ, the known load-state HUD-split issue). Checking the exit frames.
+  ▶ Read pair_2790.png
+  ▶ Read pair_2880.png
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/shopmenu_s109.state --web web/test/states/shopme
+  ▶ Read pair_2720.png
+  ▶ python3 tools/dis.py 30 DA3C 0x36 --stop; echo ---; python3 tools/dis.py 30 DAB2 0x4A --stop; echo; python3 tools/dis.py
+  ▶ python3 tools/dis.py 30 DABF 0x20 --stop; echo ---; python3 tools/dis.py 26 9B45 0x50 --stop; echo; grep -n "9B45\|DABF"
+Now the bank 16 pawn screen helpers: `16:950C` rest, `9912`, `ShopIdForArea` `9953`, `9884`, `MenuHideOam` `8605`.
+  ▶ python3 tools/dis.py 16 954B 0x10 --stop; echo ---; python3 tools/dis.py 16 9912 0x41 --stop; echo ---; python3 tools/di
+  ▶ python3 tools/dis.py 16 9965 0x10 --stop; echo ---; python3 tools/dis.py 16 9A12 0x50 --stop; echo; grep -n "MenuFrameRo
+  ▶ python3 tools/dis.py 16 996C 0x12 --stop; python3 tools/decode_tables.py 16:9F54 33 u8 2>&1 | tail -3; python3 tools/dec
+Pawn path is clear. Now the port's existing pieces: `PlayerUpdate`, `spriteDraw`, `ClearOrbitSlots`, `ExitLookup`, `waitPpuQueue`.
+  ▶ grep -n "^export" web/src/game/obj/player.js web/src/game/world/camera.js web/src/game/obj/sprites.js web/src/game/state
+  ▶ Read camera.js +165
+  ▶ Read player.js +365
+Need X at `PlayerUpdate`'s RTS (`DABF` uses `obj_flags,X` right after).
+  ▶ python3 tools/dis.py 26 9B96 0x60 --stop | grep -v "^$"; sed -n 389,436p web/src/game/obj/player.js
+  ▶ python3 tools/dis.py 26 9B96 0x60 --stop
+  ▶ Read player.js +389
+In the walk loop `obj_phase` is zeroed each step, so `PlayerUpdate` returns at `9C2A` with X=1; the emulator comparison will confirm. Now finding how the s96 scenarios reached a shop.
+  ▶ grep -n "shop_armor\|shop_tool\|pawn" -A12 tools/emu/scenario.py | head -60
+Easiest route to a real pawn shop: an area that places keeper type `$43`. Searching the area data.
+  ▶ grep -rn -i "pawn" REVERSE.md docs/*.txt gfx/*.txt 2>/dev/null | cut -c1-250 | head -12; python3 tools/area_dump.py --he
+  ▶ Read area_dump.py +230
+  ▶ python3 tools/area_dump.py indirect 2>&1 | grep -i "type \$43\|type=\$43\|\$43 " | head
+  ▶ python3 tools/area_dump.py indirect > /tmp/indirect.txt 2>&1; echo $?
+  ▶ python3 tools/area_dump.py indirect --out gfx/compare/s121_indirect.txt
+  ▶ python3 tools/area_dump.py indirect
+  ▶ python3 -m tools.emu.web_state --help 2>&1 | tail -40
+Plan: load area `$C4` (the armor-shop area s96 used), stop when the keeper's `AiSetSubstate` returns (`27:A5CA`), then poke `sub_state`=`$23` so the game itself runs `SubstPawnShop`. Step 1:
+  ▶ timeout 900 python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --poke 
+  ▶ timeout 900 python3 -m tools.emu.web_state --load-state gfx/compare/s121_keeper.state --frames 0 --poke 0041=23 --until 
+Got a state at `SubstPawnShop` entry (f2503). Now reading the equip.js helpers I'll reuse and `ExitLookup`'s ROM tail, since the walk-out reads `($10),Y` itself.
+  ▶ Read equip.js +130
+  ▶ python3 tools/dis.py 31 EB09 0x40 --stop; python3 tools/dis.py 30 DAFC 0x12 --stop
+  ▶ python3 tools/dis.py 31 EB4A 0x24 --stop
+  ▶ python3 tools/dis.py 31 EB55 0x14 --stop
+I'll split `exitLookup` so the shop walk-out can get the Y it leaves (ROM: `30:DAAB LDA ($10),Y`).
+  ▶ Edit camera.js
+  ▶ Read equip.js +372
+  ▶ Read death.js +28
+Writing `states/shop.js` (ShopWalkIn/ShopWalkOut, the pawn entry `16:9509`→`967A`, `16:950C`, `16:9912`, `ShopIdForArea`, `16:9A12`) and exporting the inventory helpers from equip.js.
+  ▶ sed -i 's/^function sortInventory(m) {/export function sortInventory(m) {/; s/^function selToIds(m) {/export function se
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ python3 tools/dis.py 16 9A2A 0x20 --stop; grep -n "^export function \(readPadsMenu\|setR6\|switchBank16\|farRestore\)" w
+  ▶ Write shop.js
+Wiring it into `play.js` (sub_state 35 + entry point for the saved state).
+  ▶ grep -n "export function indY" web/src/game/prg.js; grep -n "^import" web/src/game/states/play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+First comparison: pawn shop → NO → walk out → area reload (A at f2600, any key at f2650).
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/pawnshop_s121.state --web web/test/states/pawnsh
+Close already. Positions run one step behind in the port during the walk-in, and 2 things are logged as unported. Looking at the start of the diff.
+  ▶ python3 tools/compare_frames.py gfx/compare/s121c/emu.csv gfx/compare/s121c/web.csv --cols pos_x,pos_y,sub_state,irq_mod
+  ▶ python3 tools/compare_frames.py gfx/compare/s121c/emu.csv gfx/compare/s121c/web.csv --cols pos_x,pos_y --frames 2503-251
+  ▶ Glob tools/*{csv,col,show}*.py
+  ▶ python3 tools/csv_rows.py --help 2>&1 | head -8; python3 tools/csv_rows.py gfx/compare/s121c/emu.csv gfx/compare/s121c/w
+  ▶ Read pair_2590.png
+The pawn screen matches. Checking the post-exit frame (rows 13–16 differ).
+  ▶ Read pair_2760.png
+Exit and area reload match; the remaining object diffs are town NPCs whose AIs `$30`/`$78` aren't ported (gameplay-leftovers task). Checking the 8 `pal_crc` rows.
+  ▶ python3 tools/csv_rows.py gfx/compare/s121c/emu.csv gfx/compare/s121c/web.csv --cols pal_crc,irq_mode --frames 2680-2700
+  ▶ python3 tools/csv_rows.py gfx/compare/s121c/emu.csv gfx/compare/s121c/web.csv --cols pal_crc,core --frames 2680-2694
+Palette rows are the documented one-frame fade sampling blips; core columns are equal. Now the YES path with a sale, with a whole-RAM diff while still inside the menu.
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/pawnshop_s121.state --web web/test/states/pawnsh
+  ▶ Read pair_2740.png
+The menu's lower half uses the wrong CHR in the port: `$5E/$5F` (CHR values the menu IRQ split loads) end as `$21/$40` vs the emulator's `$3C/$3A`. Finding what writes them.
+  ▶ Grep "wr\(0x5[EF]|0x5E \+|0x5A \+ |zp_5E|0x005E" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read mainloop.js +195
+  ▶ Grep "irqHandlers|irq_mode\) &|IRQ_MODE|function irqSetup|irqModeTable|F43B|F5A1" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read machine.js +120
+  ▶ grep -n "NMI_MODES\s*=\|^  [0-9]*: nmi\|^const NMI_MODES" -A12 web/src/game/mainloop.js | head -30
+  ▶ Grep "^(export )?function (nmiMode1|nmiMode6)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/mainloop.js
+In mode 1 the message-window IRQ (handler 2) overwrites `$5E/$5F` in both machines. So the emulator must restore them later and the port doesn't. Reading equip.js's `menuPalette`, which writes them.
+  ▶ Read equip.js +300
+  ▶ grep -n "runIrqsNow\|splitsNow\|irqEarly\|earlyIrq\|flushSplits\|runSplits" -r web/src/game | head; sed -n 145,175p web/
+  ▶ Edit equip.js
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/pawnshop_s121.state --web web/test/states/pawnsh
+  ▶ Read pair_2802.png
+Sale verified (gold 70, armor gone). Last run: the full loop through "Please come again", the walk-out and the area reload.
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/pawnshop_s121.state --web web/test/states/pawnsh
+The whole pawn-shop loop matches on all core columns except the one-frame position rows. After the exit, only the unported town-NPC AIs differ. Running the full web check suite.
+  ▶ for t in core_check ppu_check serve_check world_check sprite_check obj_check sound_check apu_check; do printf "%s: " $t;
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/serve_check.mjs 2
+  ▶ node web/test/sprite_check.mjs 2>&1 | tail -1; node web/test/obj_check.mjs 2>&1 | tail -1; node web/test/sound_check.mjs
+All 8 checks pass. Quick regression on the s98 SELECT-menu scenario, since I touched `setupGrid`.
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/equip_s98.state --web web/test/states/equip.json
+Regression passes with the s98 exit pattern (`$08`, `$10-$12`, `$43/$4F`, `$6E/$6F`), and the old SFX-queue bytes now match too. Now the records, starting with labels.
+  ▶ Grep "^(16,(950[0-9C]|9912|9A12|967A|9878|9884|9953)|30,(DABF|D9AD|DA0C|DA72))," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv
+  ▶ Read labels.csv +1370
+  ▶ Read labels.csv +1361
+  ▶ Edit labels.csv
+Now REVERSE.md: the substate row 35, a Verification Log row, and the task text.
+  ▶ grep -n "^| \`SubstRestoreScreen\`\|^| SubstRestoreScreen" REVERSE.md | cut -c1-120; sed -n 121,125p REVERSE.md | cut -c
+  ▶ Grep "^\| .?SubstRestoreScreen" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 172p REVERSE.md | cut -c1-200; sed -n 173p REVERSE.md | cut -c1-120
+  ▶ Edit REVERSE.md
+Now the sub_state 35 row and the equip.js header comment.
+  ▶ Edit REVERSE.md
+  ▶ Edit equip.js
+Updating the task (a low-priority leftovers task: stays unchecked with what's left in its own text).
+  ▶ Edit REVERSE.md
+  ▶ Glob gfx/compare/s121_*
+I ported the pawn shop (sub_state 35) to the web port, and it matches tools.emu from the walk-in through the area reload after the exit. All eight web checks pass. The task (SELECT-menu leftovers, low priority) stays unchecked because the other shops and one pause-timing issue are still open. Nothing is committed.
+
+**What changed**
+- **New `web/src/game/states/shop.js`:** ports the walk into the shop, the pawn shop screen (`16:967A`, "Is there anything you wish to sell?" YES/NO, then the item menu in shop mode), and the walk back out. It's wired in as sub_state 35, with an entry point for saved emulator states. The walk-in and walk-out are exported so the armor, tool and inn shops can reuse them.
+- **`world/camera.js`:** split `exitLookup` into a new `exitScan` plus the old logic, because the shop walk-out does the exit lookup outside normal play and reads the exit record itself.
+- **Bug fix in `equip.js` `setupGrid`:** in the port the menu's lower half was drawn with the wrong graphics (CHR banks `$21/$40` instead of `$3C/$3A`). Opening the menu from the pawn shop leaves one frame where the shop screen's interrupt handler (`IrqMsgWindowTop`) still runs, and it writes `$5E/$5F`. On the real hardware that interrupt fires while the inventory is being sorted, so the menu's own values land after it. The port runs a frame's game code before drawing it, so the handler overwrote them. `setupGrid` now re-applies its values right after that one interrupt, and only in that case.
+- **Shop-mode menu code from session 109:** it had never been tested; it now has been, and it matches.
+
+**Results against tools.emu**
+- **Shop menu, session 109 test state:** price line, sell → NO, "Anything else?" → YES, sell → YES and the "Please come again." exit all match. Only the bottom HUD rows differ, which is the known issue for runs started from a saved state.
+- **Pawn shop, new test state** (`web/test/states/pawnshop.json`, made in the armor-shop area `$C4` by switching the keeper to the pawn shop):
+  - Answering NO, and YES then selling an item (gold 0 → 70, the armor removed and the list re-sorted), both match.
+  - Through the full loop to the walk-out and the reload of area `$02`, the core state columns are equal.
+  - The player position columns run one frame behind during the walks. That's the usual timing artifact for values written right after the frame wait; the sprite data (`oam_crc`) is equal on every frame.
+- **After the exit:** two town NPCs differ because their AIs (`$30`, `$78`) aren't ported yet; the boss/AI task already covers missing AIs.
+- **Regression:** the session 98 SELECT-menu run is unchanged.
+
+**Records**
+- **REVERSE.md:** a new Verification Log row "Pawn shop" with the exact commands, the sub_state 35 row filled in, and the task text updated with what's done and what's left: the armor, tool and inn shop screens (32–34), the empty shop (36), and the pause window that opens one frame early in area `$5F`.
+- **labels.csv:** 7 new labels (`ShopWalkStep`, `ShopScreenSetup`, `PawnShopBody`, `MenuWaitAnyKey`, `MenuWaitPad`, `ShopWindow`, `ShopSprPalette`).
+
+Three scratch files are left in `gfx/compare/`: `s121_tmp.json` and `s121_indirect.txt` can be deleted. `s121_keeper.state` is the saved state where the shop keeper has just set the sub_state, which is a convenient starting point for the other shops.
+
+SESSION_SUMMARY: Session 121: ported SubstPawnShop 30:D9AD (states/shop.js: ShopWalkIn/ShopWalkOut/PawnShopBody 16:967A, new exitScan), verified the s109 shop-mode menu, fixed a setupGrid $5E/$5F clobber by the mode-1 IRQ handler 2; pawn shop matches tools.emu through the exit apart from known artifacts and the unported town-NPC AIs; all web checks pass; other shop bodies and the area-$5F pause timing remain in the task.

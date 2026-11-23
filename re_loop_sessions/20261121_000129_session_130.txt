@@ -1,0 +1,73 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ Read REVERSE.md +2272
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/20261121_000129_session_1{28,29,30}.txt && tail -c 2500 re_loop_sessions/20261121_000129_session_
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions && wc -c 20261121_000129_session_128.txt 20261121_0
+  ▶ Grep "ThunderTransform|HitShotEater|BurstRadius|HitRevealA7|HitElemWall" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Picked the top task, the Ph6 scenario leftovers. I'm now adding an emulator scenario for `ThunderTransform` (area `$06`, type `$69`).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM && grep -n "^def \|^    '[a-z_0-9]*': *dict\|^    \"[a-z_0-9]*\"\|^S
+  ▶ Read scenario.py +20
+  ▶ Grep "ThunderTransform|area `\$06`.*\$69|type `\$69`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -o ".\{300\}ThunderTransform.\{500\}" REVERSE.md | sed -n '1,4p'
+  ▶ python3 tools/xref.py 9229 --bank 26; sed -n '1168p' REVERSE.md | cut -c1-1800
+  ▶ ls tools | grep -i area_dump; python3 tools/area_dump.py spawns 2>&1 | grep -i -A12 "area 06\b\|^06\|area \$06" | head -
+  ▶ python3 tools/area_dump.py --help 2>&1 | head -20; python3 tools/dis.py 26 90A0 30
+Found the hook: `ThunderTransform` is called from `HitByPlayerShot` `26:90BB`. Next I'm checking which slot holds a type-`$53` blob in area `$06`, so a scenario can park it at the sword.
+  ▶ python3 tools/area_dump.py spawns 6 2>&1 | head -40
+  ▶ Read scenario.py +250
+  ▶ Grep "^\*,(3[0-9A-F]{2}|6[0-9A-F]{2}|4[0-9A-F]{2}),obj_" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "obj_(type|behav|hp|active)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario thunder_transform 2>&1 | tail -40
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario thunder_transform 2>&1 | sed -n '3,60p' | grep -v "^  bank"
+  ▶ grep -n "PlayerInvuln\|HitKnockbackSet" labels.csv; python3 tools/dis.py 26 9144 20
+  ▶ python3 - <<'EOF' 2>/dev/null; sed -i 's/each=follow_enemy(0x0D, 14, hp=None): (/each=follow_enemy(0x0D, 14, hp=1): (/; 
+  ▶ Read scenario.py +314
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario thunder_transform 2>&1 | sed -n '3,60p' | grep -v "^  bank"
+I'm checking why the transformed `$69` never dies even at 1 HP. It's likely the damage formula or an element immunity in `HitByPlayerShot`.
+  ▶ python3 tools/dis.py 26 90BE 140 | head -60
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario thunder_transform 2>&1 | sed -n '3,12p'
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario thunder_transform 2>&1 | sed -n '3,40p' | grep -v "^  bank"
+  ▶ Grep "obj_elem_drop" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ grep -n -o ".\{200\}sword.\{0,40\}element.\{300\}" REVERSE.md | head -5
+  ▶ Grep "element bit|elem(ent)? nibble.{0,80}sword|sword.{0,60}\$0500" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '1176p;1180p' REVERSE.md | cut -c1-1500
+The thunder sword's element bit 8 is in the `$69`'s immunity nibble `$E`, so only sword 1 (bit 1) can hurt it. I'm switching to sword 1 after the transform to confirm.
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario thunder_transform 2>&1 | sed -n '3,40p' | grep -v "^  bank"
+Confirmed. With sword 1 the `$69` dies at f204 for XP +20 (`$14`) and 8 gold. Now I'm writing this up in REVERSE.md and labels.csv.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ grep -n -o '.\{120\}the area-`\$6E` reveal (type `\$7D`); `ThunderTransform`' REVERSE.md
+  ▶ Grep ".{100}the area-`\$6E` reveal \(type `\$7D`\); `ThunderTransform`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/label_edit.py --help 2>&1 | head -5; ls tools | grep -i label
+  ▶ Edit labels.csv
+  ▶ python3 tools/labels_fix_commas.py --check 2>&1 | tail -3; git status --short | head
+The `--check` flag isn't a dry run: `labels_fix_commas.py` rewrote 22 lines. I'm checking that diff.
+  ▶ git diff --stat labels.csv && git diff labels.csv | head -30
+That diff only swaps stray commas in old comments for semicolons, which keeps the CSV at 4 columns. It's harmless, so I'm keeping it. Last check: does the port implement the transform?
+  ▶ Grep "9229|thunderTransform" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+I covered one item of the top task, the Ph6 scenario leftovers. `ThunderTransform` now runs in the emulator and behaves as the session-86 analysis predicted. The task stays unchecked, as the rules require for a leftovers task.
+
+**New scenario `thunder_transform`** (in `tools/emu/scenario.py`, 500 frames, run with `python3 -m tools.emu.scenario thunder_transform`):
+- **Setup:** area `$06` with the thunder sword equipped (`$0711`=4). Slot `$0D` holds a type `$53` blob, which is kept 14 px in front of the player.
+- **Transform:** the first thunder swing goes `HitByPlayerShot` `26:90BB` → `26:923E` → `ObjInit` at f36. The blob becomes type `$69`: AI `$24`, HP `$5A`, `obj_spawn_param` 1 (so it can't transform again), element byte `$4E`.
+- **New finding:** the transformed enemy can't be hurt by the thunder sword. Its element nibble `$E` blocks sword bits 2, 4 and 8, so every later thunder hit misses at `26:9125`, even with attack raised to `$20`. Only sword 1 damages it. After switching to sword 1 at +200 it dies at f204, giving XP +20 and 8 gold.
+- **Knockback:** its high attack pushed the player out through the area exit to area `$09` within 2 frames. The scenario therefore also holds the player's HP, invulnerability timer and attack every frame.
+- **Helper change:** `follow_enemy` got an `hp=` argument for the enemy HP cap.
+
+**Records:**
+- **REVERSE.md:** the result is added to the `ThunderTransform` item in "Hit handlers" (it said "Not emulator-checked"). The item is struck through in the task, with an s130 note at the end.
+- **labels.csv:** the `ThunderTransform` comment is updated. I ran `labels_fix_commas.py` expecting a check. It rewrote 22 old comments, but only swapped stray commas for semicolons, so I kept the change.
+- **Web port:** no change needed. It already has the transform (`obj/collide.js` `thunderTransform`).
+
+**Not done:** `docs/emu_scenarios.txt` is still not regenerated (about 55 minutes). Still open in the task: the warp pick, the burst, hit rules, the final boss, reveals, the shot eater, type `$64` and the ending labels.
+
+SESSION_SUMMARY: Session 130: new scenario thunder_transform runs ThunderTransform in area $06 (type $53 → $69 at f36); the $69 (elem $4E) is immune to the thunder sword and only sword 1 kills it (XP +20, gold 8); added an hp= cap argument to follow_enemy; scenario-leftovers task stays open.

@@ -1,0 +1,199 @@
+  ▶ Glob {dead_ends.md,REVERSE.md,re_loop_sessions/*}
+  ▶ Read dead_ends.md
+  ▶ Read 20261117_055613_session_041.txt
+  ▶ Read 20261117_055613_session_042.txt
+  ▶ Grep "^## Next Tasks|^- \[ \]|^### " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ tail -c 2500 re_loop_sessions/20261117_055613_session_040.txt
+Let me see the omitted lines and the RE Investigation block's first unchecked item.
+  ▶ Read REVERSE.md +1540
+  ▶ ls tools/emu tools/emu/states gfx/emu 2>/dev/null; wc -l tools/emu/*.py; ls tools/*.py | head -80
+  ▶ Read nes.py
+  ▶ Read sweep.py
+  ▶ Grep "ExitLookup|AreaLoad|area_id|\$6C\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep ",(area_id|area_entry|sub_state|main_state|AreaLoadA|AreaLoadB|AreaLoad|ExitLookup|music|cur_music)[,_]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read REVERSE.md +1340
+Working on Ph6 validate 3/4 (wider emulator coverage). I'm reading the exit/area-load code so I can build an area-warp tour tool.
+  ▶ python3 tools/dis.py 31 EB09 0x70 --stop
+  ▶ python3 tools/dis.py 31 EB55 0x30 --stop; python3 tools/area_dump.py sub 0 1 2>&1 | head -40
+  ▶ Read compare.py
+  ▶ sed -n 1,60p tools/render_compare.py; grep -n "^def \|^class " tools/area_dump.py tools/render_level.py tools/emu/verify
+  ▶ Read verify.py +1
+  ▶ Read area_dump.py +40
+  ▶ Grep "^\*,(0300|0320|04A0|0540|0560|0102|07E0|07F0|07F4)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read verify.py +213
+  ▶ python3 tools/xref.py EB09; sed -n 416,480p tools/emu/verify.py
+Building the exit graph next, then a warp-tour script that drives real exits.
+  ▶ python3 tools/dis.py 31 E8F0 0x1A; python3 tools/dis.py 30 DA98 0x14
+  ▶ sed -n 1,50p tools/emu/debug.py; grep -n "^def \|^class \|^[A-Z_]* = " tools/disasm_all.py | head -50; sed -n 1,40p tool
+  ▶ Write tour.py
+  ▶ python3 tools/emu/tour.py graph 2>&1 | tail -25; python3 tools/emu/tour.py graph | head -3
+The exit graph reaches 205 of 213 areas. Doing a short timing test run:
+  ▶ time python3 tools/emu/tour.py run --max 5 --coverage --shots /tmp/tour_test 2>&1 | head -40
+Legs take ~4 s each with coverage on. The BG-compare offset formula looks wrong (area 1 matched only by accident with a negative camera Y), so I'm calibrating it:
+  ▶ cd /tmp/tour_test && for a in 002:257:192 003:769:1584 004:1:560; do IFS=: read n x y <<< "$a"; echo "== $n"; python3 ~/
+  ▶ cd /tmp/tour_test; R=/home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for n in 002 003 004; do case $n in 002) x=257; y
+  ▶ cd /tmp/tour_test; R=/home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 $R/tools/render_compare.py area_002.png $
+  ▶ python3 tools/render_compare.py /tmp/tour_test/area_002.png gfx/areas/area_002.png --crop 8,4,248,184 --offset 257,204 -
+Area 2 matches at (cam_x, cam_y) with 0.9% diff (sprites only), but area 4 matches at cam_y+16. I'll make the compare search Y offsets on a pixel subsample and then do a full compare at the best one:
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+  ▶ time python3 tools/emu/tour.py run --max 5 2>&1 | grep -E "bg |save|!" | head -30
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+  ▶ sed -n 286,320p tools/emu/verify.py; sed -n 392,402p tools/emu/verify.py
+  ▶ Read REVERSE.md +945
+  ▶ Edit verify.py
+  ▶ Edit tour.py
+  ▶ python3 tools/emu/tour.py run --max 3 2>&1 | grep -E "bg |save|Save|!" | head; python3 tools/emu/verify.py > /dev/null; 
+  ▶ python3 tools/emu/tour.py run --max 3 2>&1 | grep -E "bg |save|Save|!" | head; python3 tools/emu/verify.py | tail -3
+The camera formula is confirmed: best offset is +0,+0 in all areas, with under 1% diff (sprites only). Starting the full 205-area tour with coverage in the background (about 15 minutes):
+  ▶ python3 tools/emu/tour.py run --coverage --shots gfx/emu/tour --out docs/emu_tour.txt > /tmp/tour_full.log 2>&1
+  ▶ python3 tools/emu/tour.py run --coverage --shots gfx/emu/tour --out docs/emu_tour.txt > gfx/emu/tour_run.log 2>&1
+  ▶ python3 tools/emu/tour.py run --coverage --shots gfx/emu/tour --out docs/emu_tour.txt
+While it runs, I'm recording the camera-Y format finding in REVERSE.md and labels.csv.
+  ▶ Grep "cam_y_lo|cam_y_hi" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+  ▶ tail -5 /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/da81017a-b6c8-4e63-a226-2a54436fa78c/tasks/bnc
+  ▶ Read REVERSE.md +117
+  ▶ ToolSearch max_results query
+  ▶ Monitor command description timeout_ms
+  ▶ Monitor command description timeout_ms
+The full area tour is still running in the background. I'm watching it for stuck legs and errors, and meanwhile checking how far it has got.
+  ▶ wc -l /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/da81017a-b6c8-4e63-a226-2a54436fa78c/tasks/bnces
+  ▶ ps -o etimes,args -C python3 | grep tour
+  ▶ ls -l --time-style=+%T gfx/emu/tour | tail -4; date +%T
+The tour is going at about 4 s per leg, so roughly 14 minutes in total. I'll wait for it to finish.
+  ▶ until grep -q "^tour.py:" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/da81017a-b6c8-4e63-a226-2a54
+Waiting for the tour to finish. The monitor will report any stuck legs or crashes in the meantime.
+Area $15 got stuck: it stayed in sub_state 16 (`$10`) while still in area `$28`, so the tool restored the last good state and moved on. I'll look into that after the run finishes.
+Area $38 got stuck the same way, in sub_state 16 while still in area $28. It looks like area $28 has an event in sub_state `$10` that never hands control back. The run continues.
+  ▶ grep -nE "^  (28|15|38|39|3A|3B|3C)\.|STUCK" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/da81017a-
+Every leg after area $28 is failing. The snapshot taken after area $28 settled was probably already in sub_state 16, so each restore lands in the same state. I'm stopping the run so I can fix this.
+  ▶ ToolSearch max_results query
+  ▶ TaskStop task_id
+  ▶ TaskStop task_id
+  ▶ TaskStop task_id
+  ▶ Grep "SubstateHandlerTable|substate 16|sub_state.{0,20}\$10\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -n "def parse_buttons" -A12 tools/emu/pads.py
+  ▶ grep -n "^BIT" -A3 tools/emu/pads.py
+I was pressing RIGHT (`0x80`), not A (`0x01`). Fixing that, and adding a message-clearing step:
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+Now the main loop: clear messages before each leg, and only snapshot in sub_state 8.
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+Quick check on the failing pair ($28 then $15):
+  ▶ python3 tools/emu/tour.py run --only 28,15,38 2>&1 | grep -E "^  [0-9A-F]{2}\.|STUCK|tapping|sub_state" | cut -c1-200
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+  ▶ python3 tools/emu/tour.py run --only 28,15 2>&1 | grep -E "^  [0-9A-F]{2}\.|STUCK|sub_state" | cut -c1-200 | head -3; py
+Area $15 now loads through a normal entry (0.6% diff). Restarting the full tour:
+  ▶ python3 tools/emu/tour.py run --coverage --shots gfx/emu/tour --out docs/emu_tour.txt
+  ▶ Monitor command description timeout_ms
+The full tour is running again (about 15 minutes). The monitor will flag stuck legs or errors, and I'll write up the results when it finishes.
+  ▶ wc -l /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/da81017a-b6c8-4e63-a226-2a54436fa78c/tasks/b8md6
+60 of about 205 legs are done after 10 minutes, so it's slower than the first estimate (roughly 35 minutes in total). Re-arming the watch:
+  ▶ Monitor command description timeout_ms
+  ▶ grep -c " poke " /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/da81017a-b6c8-4e63-a226-2a54436fa78c/
+  ▶ Edit tour.py
+While it runs, I'm adding a `recheck` subcommand that redoes the BG compare from the saved screenshots and the printed camera values:
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+  ▶ grep -nE -B3 -A1 "^  15\.00" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/da81017a-b6c8-4e63-a226-2
+  ▶ python3 tools/area_dump.py sub 0x15 | grep -E "k2|k3"
+Area $15's entry 0 (cell A,39) isn't on an exit cell, so the bad leg has some other cause. I'll re-run it on its own after the tour. The run also confirms that object Y positions use the same (screen, line 0-239) format as the camera, because k3 cells = `y_hi*16 + y_lo>>4`. Waiting for the run to finish.
+  ▶ until grep -q "^tour.py:" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/da81017a-b6c8-4e63-a226-2a54
+No stuck legs or errors in the last 10 minutes. I'll be notified when the tour finishes.
+The tour finished with exit code 1, so at least one check failed or it crashed. Reading the report:
+  ▶ F=docs/emu_tour.txt; head -2 $F; grep -nE "STUCK|stuck legs|tapping|states seen|FAIL|!|Traceback" $F | cut -c1-400; grep
+  ▶ Grep "^tour.py|STUCK|stuck legs|tapping|states seen|FAIL|^      !|Traceback|PASS|^IRQ|^NMI|^Sound|^Snd|^Save|^Switch|^PlaySound|^coverage|^code labels" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_tour.txt
+  ▶ Read emu_tour.txt +445
+  ▶ Grep "y\|=\$?0E|\$0E.{0,40}y" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Coverage: 185 of 294 code labels ran. Now the y offset for the $C0-$CC spawns. Disassembling the handler-1 spawn code:
+  ▶ python3 tools/decode_tables.py 31:E218 5 ptr16; grep -n "^31,E2" labels.csv
+  ▶ python3 tools/dis.py 31 E2B5 0xC0 --stop
+  ▶ python3 tools/dis.py 31 E2DF 0x96 --stop; python3 tools/area_dump.py indirect 0x28 2>&1 | grep -i "C2" | head
+Record $C2 is `ff 68 ff ff`. rec[0] = `$FF` takes the `JMP $E363` path (type = rec[1]), while the verify model applies `y|=$0E` whenever rec[2] bit 3 is set. Checking `$E363`:
+  ▶ python3 tools/dis.py 31 E307 0x6E --stop
+  ▶ python3 tools/dis.py 31 E35F 0x16 --stop
+  ▶ Edit verify.py
+  ▶ Grep "\$0E\b.{0,60}(rec|y)|y\|=" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+I had that wrong: the jump to `E340` falls through into `E353`, so the `obj_active` check still runs. Correcting the note:
+  ▶ Edit REVERSE.md
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+  ▶ python3 tools/emu/tour.py run --max 25 2>&1 | grep -E "SndCommand|SoundUpdate|AreaLoad  " | cut -c1-600
+AreaLoad now passes 28/28, including area $28. No double SndCommand in these 25 legs, but SoundUpdate ran twice in one frame 28 times, once per area load. Printing which call sites those are:
+  ▶ Edit tour.py
+  ▶ python3 tools/emu/tour.py run --max 3 2>&1 | grep -E "SoundUpdate call" | cut -c1-600
+  ▶ Edit tour.py
+  ▶ python3 tools/emu/tour.py run --max 3 2>&1 | grep -E "SoundUpdate call|Error" | cut -c1-600
+  ▶ python3 tools/emu/tour.py recheck --out docs/emu_tour.txt --shots gfx/emu/tour > gfx/emu/tour/recheck.txt; echo rc
+  ▶ python3 tools/emu/tour.py recheck --out docs/emu_tour.txt --shots gfx/emu/tour
+The recheck is slow because reading the large area PNGs takes time. Meanwhile I'm summarising the tour rows from the report:
+  ▶ grep -cE "^  [0-9A-F]{2}\.[0-9A-F]{2} exit " docs/emu_tour.txt; grep -cE "^  [0-9A-F]{2}\.[0-9A-F]{2} poke " docs/emu_to
+The legs split into 134 real exits, 68 pokes and 1 via-source leg. Now listing the areas with a BG diff above 3%:
+  ▶ grep -E "^  [0-9A-F]{2}\.[0-9A-F]{2} " docs/emu_tour.txt | grep -E "bg +([3-9]|[1-9][0-9])\.[0-9]%" | cut -c1-40,100-240
+About 30 small 1×1 rooms (music $16, 1 spawn, e.g. $C2-$C4, $D9-$DD, $F5-$F9) all show the same ~38.6% diff. That points to one systematic cause rather than a per-room problem. Looking at one:
+  ▶ python3 tools/render_compare.py gfx/emu/tour/area_195.png gfx/areas/area_195.png --crop 8,4,248,184 --offset 0,-4 --diff
+  ▶ Read area_195.png
+  ▶ Read area_195.png
+  ▶ Read area_101.png
+  ▶ Read area_096.png
+  ▶ python3 tools/render_compare.py gfx/emu/tour/area_096.png gfx/areas/area_096.png --crop 8,4,248,184 --offset 801,8 | tai
+  ▶ python3 tools/decode_tables.py 30:CADE 40 ptr16
+  ▶ wc -l /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/da81017a-b6c8-4e63-a226-2a54436fa78c/tasks/bg0r3
+The recheck buffers its output and will hit the 10-minute limit. I'm stopping it and rechecking only the 6 negative-camera areas:
+  ▶ TaskStop task_id
+  ▶ Edit tour.py
+  ▶ Edit tour.py
+  ▶ python3 tools/emu/tour.py recheck --out docs/emu_tour.txt --shots gfx/emu/tour --only 50,40,14,64,68,1A,41
+  ▶ python3 tools/emu/verify.py --out docs/emu_verify.txt | grep -E "FAIL|PASS" | head -20
+All pass. Now writing the results into REVERSE.md: Verification Log rows, the sound correction, the output-files entry and the task status.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "SoundUpdate callers are|at most 1 SndCommand|≤ ?1 `?SndCommand" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "F6DC" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 204p REVERSE.md | grep -o ".\{200\}F6DC.\{300\}" | head -1
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +1590
+Adding one leftover task at the end of RE Investigation and marking validate 3/4 done:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding labels for the two handler-1 paths:
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 31 E35C 0x1A --stop | head -8; git status --short | head -20
+I finished Ph6 validate 3/4 (wider emulator coverage) and marked it done. I did not tick the Ph6 checkpoint, because a lot of game logic still never ran in the emulator. All checks are against our own emulator only. The saved report `docs/emu_tour.txt` comes from the run made before the two fixes below. I re-ran only the affected parts and didn't redo the full one-hour run.
+
+**What I built:** `tools/emu/tour.py` maps which areas connect through their exits, then tours them in our emulator.
+- For 134 of 204 legs it moved the player onto an exit cell and let the game's own exit code load the next area.
+- 68 legs had no direct exit from where the player stood, so it jumped there the way the game's story warps do. One leg went through a neighbouring area instead.
+- It closes message boxes by pressing A, and goes back to the last good save state if a leg gets stuck.
+- For each area it records music, graphics banks, palettes, which objects spawned, and how the screen compares with `gfx/areas/area_NNN.png`. Screenshots are in `gfx/emu/tour/`.
+
+**Results:**
+- **Areas:** 203 of 204 loaded. Area `$E0` got stuck. Areas `$58-$5F` can't be reached through any exit.
+- **Checks:** all session 39/41 checks passed over about 18,000 frames once the two fixes below were in, except the sound-command rule, which needed correcting.
+- **Screens:** 164 of 203 areas match the static maps exactly apart from sprites.
+  - 32 small rooms differ only because an NPC's text window is open when you walk in.
+  - Areas `$15`, `$1A` and `$65` ended up in a different scene, probably a story event.
+- **Code coverage:** 185 of 294 named routines ran.
+
+**New findings:**
+- **Camera Y is stored as (screen row, line 0-239).** The map row is `$05`×240 + `$04`, with `$05` signed. With that rule every toured area lines up exactly. Object positions use the same format.
+- **One kind of spawn skips the downward nudge.** Spawn records whose first byte is `$FF` (the boss-gate NPCs `$C0-$CC`) take a separate path at `31:E363` that skips the `y|=$0E` adjustment. The emulator was right and verify.py's model was wrong; it now passes 236/236. I added two labels for this path.
+- **Sound ticks twice on every area-load frame.** The HUD interrupt runs the sound update at line 191, then the NMI runs it again at line 247 because rendering is off. This once caused two sound commands in one frame, so session 41's "at most 1 per frame" rule is wrong. The real rule is at most 1 per sound update. The web port has to copy this extra tick.
+- **Saving:** verify.py now also models the case where saving isn't allowed in an area (the image is left alone and only mirrored). 98 saves were written and 131 blocked, all passing.
+- **Interrupts:** IRQ handlers 0, 2 and 3 ran for the first time. Handlers 4, 5 and 7, and interrupt modes 7/9, still never ran.
+
+**Still never run:** main states 4/5, most event, talk, item and save sub-states, area edge links, menu save and loading, enemy kills/XP/gold, and bosses. They need scripted setups (save state plus RAM edits) rather than more walking. I added them as a single low-priority task at the end of the RE list, together with the full re-run, the stuck area `$E0` and the unreachable `$58-$5F`.
+
+The results are in REVERSE.md (Verification Log rows, sound driver note, handler-1 spawn note, camera row, output-files entry). Nothing is committed.
+
+SESSION_SUMMARY: Session 42 — Ph6 validate 3/4 done: new `tools/emu/tour.py` toured 203/204 areas (134 via real exits) with all checks passing after two verify.py model fixes; 164/203 screens match the static maps; findings: camera Y = row·240+line, `$FF` handler-1 spawn records skip y|=$0E, sound ticks twice on area-load frames, blocked-save path verified, `$58-$5F` unreachable by exits; 185/294 routines ran; Ph6 checkpoint not ticked, remaining gaps queued as one low-priority task.

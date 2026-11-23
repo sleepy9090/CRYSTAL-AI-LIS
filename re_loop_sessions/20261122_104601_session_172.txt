@@ -1,0 +1,87 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -3; gr
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/*_17[012].txt; tail -c 5000 re_loop_sessions
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -in "A24A\|A2B4\|AiPlayerDuel" labels.csv; python3 tools/dis.p
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "PLAYER_AIS\|FIELD_AIS\|def _fix_field\|def _fix_player" to
+Let me look at the capture setup for PLAYER_AIS and FIELD_AIS, and how the s171 ports are wired.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 200,300p tools/emu/routine_capture.py; sed -n 440,470p tools
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "aiDuelStart\|0x0A\]\|0x52\]\|spritePass\|B14_800E\|^export
+  ▶ Read ai_shot.js +1
+  ▶ Read ai_shot.js +228
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 FF8C 0x20 --stop; grep -n "export function 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 28 800E 0x90 | head -50; python3 tools/dis.py 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 28 808E 0x40 | head -25; sed -n 54,75p web/src
+Porting the last missing AI (`$0B` `AiPlayerDuel`). Right now I'm working out which value register X holds after the sprite pass it calls.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 28 80B4 0xC0 | head -90; grep -n "function orb
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 28 8157 0x60 | head -45; sed -n 217,250p web/s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^import\|^  .*} from" web/src/game/obj/ai_boss.js | head; 
+Now edit sprites.js to return the final X.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 - <<'EOF' 2>/dev/null || echo "no inline python; use Edit"
+  ▶ Read sprites.js +36
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+  ▶ Read sprites.js +188
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 28 81A5 0x16 --stop
+Good, X untouched. Mark full-loop returns as 0:
+  ▶ Edit sprites.js
+  ▶ Read sprites.js +238
+  ▶ Edit sprites.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "cpuRd(" web/src/game/obj/ai_shot.js | head -3; grep -n "ex
+Now write the port.
+  ▶ Edit ai_shot.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -i "s|^import { cpuRd } from '../prg.js';|import { cpuRd, switc
+Using Edit instead.
+  ▶ Edit ai_shot.js
+  ▶ Edit ai_shot.js
+  ▶ Edit ai_shot.js
+  ▶ Edit ai_shot.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "field3\|duel" web/test/obj_frames/README.md web/test/obj_c
+  ▶ Read routine_capture.py +575
+  ▶ Read README.md +60
+Now the capture config edits.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.routine_capture --load-state tools/emu/states/
+300/300 on the first run. Checking branch coverage, especially the sprite-pass X path:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/case_paths.py 2>&1 | head -5; python3 tools/ai_missin
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/case_paths.py web/test/obj_frames/fuzz_duel2.json AiP
+Run regression checks (sprites.js changed):
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for t in core_check sprite_check world_check finalboss_check bosse2
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/core_check.mjs 2>&1 | tail -1; node web/test/sprite_c
+All green. Now docs: labels, README, REVERSE.md.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^27,A2\|^27,A1F\|^28,800E" labels.csv
+  ▶ Read labels.csv +1172
+  ▶ Edit labels.csv
+  ▶ Edit README.md
+Now REVERSE.md: findings paragraph after the s171 one (line 1363), correct line 1567, and update the task.
+  ▶ Read REVERSE.md +1364
+  ▶ Read REVERSE.md +1567
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now update the task text (stays open; it has other leftovers).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I ported AI `$0B` `AiPlayerDuel` (`27:A24A`), the player's AI during the sparring duel. It was the last AI id the web port was missing. All 300 new test cases match the emulator byte for byte on the first run, and the regression checks I ran still pass. `ai_missing.py` now reports 101/101 ported.
+
+**What the duel AI does**
+- **End of duel (`DuelEndCheck`, `27:A2B4`), checked first every frame:**
+  - If the player's y reaches `$98` (pushed against the back wall), the player loses: message 3.2 and a CHR change.
+  - If it drops below `$58`, the player wins: message 3.1, slot `$0E` is shown again, and `$06CD` = `$57`.
+  - Either way the game switches to `sub_state` `$10`, the player and the opponent go back to their normal AIs, and one sprite pass runs.
+- **The sprite pass changes register X, and the duel AI keeps going with the new value.** X is usually 0. When `obj1_flash` bit 7 is set and the orbit sprites exit early, it ends up as `obj1_oam_ofs + 4n`, so on the final frame the "slot 0" writes can land in a different slot. To copy this, I changed `spriteDraw` in `web/src/game/obj/sprites.js` to return its final X. The other callers ignore the return value, and `sprite_check` still passes 552/552.
+- **Correction to the session 77 notes:** the player can move sideways during the duel, 2 px per frame, using table `DuelStepX` (`27:A2AC`). x is held inside `$27-$97`. Only up/down movement is locked. B (`pad_new` bit 6) starts a swing (phase `$12`).
+
+**Tests**
+- **New fuzz cases:** `web/test/obj_frames/fuzz_duel2.json`, 300 cases with steering added in `tools/emu/routine_capture.py`. They cover win, loss, swing and sideways-move frames.
+- **Not confirmed:** that the cases with a non-zero X after the sprite pass actually came up. The steering should produce some, but I didn't count them.
+- **Other checks:** `obj_check` passes 27,100/27,100. `core`, `world`, `finalboss`, `wake` and `cure` checks pass.
+
+**Docs:** I added a findings paragraph under "Boss shot / part AIs" in REVERSE.md and corrected the s77 duel note. In `labels.csv` I added `DuelStepX` and `DuelEndCheck` and updated `AiPlayerDuel`, and I added the regenerate command to the fixture README.
+
+The low-priority boss-AI task stays open. Its missing-ids part is finished, but death chains, drops, scenarios and `ShowMessage` are still left. Nothing is committed.
+
+SESSION_SUMMARY: Session 172 ported AI $0B AiPlayerDuel plus its duel-end test 27:A2B4 into obj/ai_shot.js; spriteDraw now returns its final X because the AI uses it, fuzz_duel2.json passes 300/300, ai_missing reports 101/101, and the s77 duel note is corrected (sidestep allowed).

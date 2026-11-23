@@ -1,0 +1,64 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ grep -n "\- \[ \]" REVERSE.md | head -10; wc -c re_loop_sessions/20261122_104601_session_16[567].txt
+  ▶ Read 20261122_104601_session_166.txt
+  ▶ python3 tools/ai_missing.py; grep -n "Boss shot / part AIs" REVERSE.md | head -3; ls web/src/game/obj/
+  ▶ python3 tools/dis.py 27 A5C0 0x56 && echo ---- && python3 tools/dis.py 27 B02C 0x6A
+Picked the top task (missing AI ids). Porting a batch of small ones: `$0C $0D $0E $0F $1D $2F $36`. Checking the existing port helpers now.
+  ▶ Read ai_shot.js
+  ▶ grep -n "^export function\|^ \*\|^/\*\*\|26:9[0-9A-F]\{3\}" web/src/game/obj/util.js | head -80
+  ▶ Read util.js +1
+  ▶ head -20 web/src/game/obj/ai_static.js; grep -n "AI_STATIC\|AI_SHOT\|export const AI_" web/src/game/obj/*.js; grep -n "p
+  ▶ Read routine_capture.py +210
+  ▶ Read routine_capture.py +470
+  ▶ Read README.md
+  ▶ python3 - <<'EOF' 2>/dev/null; python3 tools/dis.py 26 972D 8; grep -n "0x0561\|0x0641\|obj_spawn_param_s01\|player_bg_a
+  ▶ python3 tools/dis.py 26 972D 8; grep -n ",561,\|,641,\|,6C3,\|,6E3," labels.csv | head
+Writing the port code for the 7 AIs in `ai_shot.js`.
+  ▶ Edit ai_shot.js
+  ▶ Edit ai_shot.js
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ grep -n "def _fix_field\|_fix_field(" tools/emu/routine_capture.py; sed -n 90,100p web/test/obj_check.mjs; grep -n "^imp
+  ▶ Edit obj_check.mjs
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine AiShopEmpt
+All 2100 new cases match. Quick path-coverage check (did spawns actually happen?):
+  ▶ python3 tools/obj_case_stats.py --help 2>&1 | head -15
+  ▶ Read obj_case_stats.py
+  ▶ python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_misc.json --col 04A0=0 --col 04A0=30 --col 04A0=0D --abs 0041=1
+  ▶ python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_misc.json --col 04A0 --col 0300=4C --abs 0010 | sed -n '3p;7p';
+  ▶ python3 tools/decode_tables.py 20:BC50 4 u8 2>&1 | head -3
+Shot `$14` record (`20:BC50` = `2E 00 01 41`) looks like garbage (start slot `$2E`, type `$01`, count `$41`), but the port matches the emulator on it too. Now the docs.
+  ▶ grep -n "s166\b\|Session 166\|(s166)" REVERSE.md | cut -c1-200; grep -n "AiTrailShot\|AiShopEmpty\|AiSetSubstate\|^27,A5
+  ▶ Read REVERSE.md +1358
+  ▶ Read labels.csv +1500
+  ▶ Edit labels.csv
+Now REVERSE.md: a findings paragraph after the s166 one, and the task text.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit README.md
+Running the regression checks.
+  ▶ python3 tools/ai_missing.py | tail -1; for t in core_check finalboss_check bosse2_check world_check; do echo "== $t"; no
+  ▶ python3 tools/ai_missing.py | tail -1; node web/test/core_check.mjs 2>&1 | tail -2; node web/test/finalboss_check.mjs 2>
+I ported 7 more of the enemy AIs the web port was missing. All 2,100 new test cases match the emulator, and the existing checks still pass. The boss-AI task stays open as the rules require: 19 ids are left (`$06 $07 $0A $0B $12 $13 $32 $33 $34 $39 $40 $51-$55 $77 $79 $7D`).
+
+**What the new AIs do** (all added to `web/src/game/obj/ai_shot.js`)
+- **`$0E` and `$0F`** (shop objects) only set `sub_state`.
+- **`$0C` → `$0D`** (no object type uses them) form one sequence:
+  - The object stays invisible on top of the player while `$0561` or `$0641` is nonzero.
+  - Once both are zero it waits 16 more frames.
+  - Then it queues message 12.4 (12.5 in area `$68`), sets `sub_state` to `$10`, and turns into a walking NPC (`$30`).
+- **`$1D`** fires a shot on every odd count of its frame counter until the count runs out, then removes itself.
+- **`$2F`** falls a little faster each frame, up to 8 px per frame, and disappears once it reaches y `$C8`.
+- **`$36`** spawns shot `$14` on its first frame, moves the new object 24 px down, then flies as a normal straight shot.
+  - The ROM record for shot `$14` (`20:BC50` = `2E 00 01 41`) looks like garbage: it starts the free-slot search at slot `$2E`.
+  - The port copies this exactly. The 228 test cases where it spawned something match.
+
+**Checks**
+- New test file `web/test/obj_frames/fuzz_misc.json`: 300 random emulator cases per AI. `obj_check.mjs` passes 21,400/21,400 overall.
+- Most branches got real coverage, including the timer reaching zero, the speed cap, the despawn edge and the spawning paths.
+- `core_check`, `finalboss_check` and `bosse2_check` still pass.
+
+**Docs:** I added a findings paragraph under "Boss shot / part AIs" in REVERSE.md and updated the task's remaining-id list. I also added 5 labels to `labels.csv`, the new test cases to `routine_capture.py` with input steering, and the regenerate command to the test README. Nothing is committed.
+
+SESSION_SUMMARY: Session 167 ported AI $0C-$0F, $1D, $2F, $36 (27:A5C0-A615, 27:B02C-B093) into obj/ai_shot.js; fuzz_misc.json 2100/2100 match the emulator, 19 ObjAiTable ids remain, and the low-priority boss-AI task stays open with that list.

@@ -1,0 +1,92 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -4; wc -l dead_ends.md REVERSE.md; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/*_18[789].txt re_loop_sessions/*_190.txt; ta
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/area_dump.py spawns 2B 2>&1 | head -40; grep -n "grou
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/area_dump.py spawns 0x2B 2>&1 | head -40; python3 too
+  ▶ Read scenario.py +640
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/area_dump.py spawns 0x2B 2>&1 | head -40
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/enemy_catalog.py --out /tmp/cat.txt >/dev/null 2>&1; 
+Working on session 190: area `$2B`'s enemy group (AI `$40`) — just dumped its spawns, now looking up the enemy types.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/enemy_catalog.py --out gfx/enemy_catalog.txt
+  ▶ Grep "^\s*(\$?67|\$?55|type)|\b2B\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/enemy_catalog.txt
+  ▶ Read enemy_catalog.txt +120
+  ▶ Grep "B39E" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Read group7f_check.mjs
+  ▶ Edit scenario.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.scenario_state group_2B 12 --out w
+State for area `$2B` is saved; now probing where the player and the AI `$40` wanderer (slot `$14`) are, to plan keys.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group
+  ▶ Glob gfx/areas/*2[Bb]*
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls gfx/areas | head -5; ls gfx/areas | wc -l
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -5 gfx/areas/area_043_coll.txt; wc -l gfx/areas/area_043_coll.
+  ▶ Read area_043_coll.txt +30
+  ▶ Read area_043_coll.txt +64
+Mapping area `$2B`'s layout; the AI `$40` wanderer seems to home on the player, so checking whether it approaches on its own.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group
+  ▶ Grep "def place_player" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Edit scenario.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.scenario_state group_2B 12 --out w
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 B39E 0x90 2>&1 | head -70
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/area_dump.py spawns 0x84 2>&1 | head -20; head -1 gfx
+  ▶ Grep "^  85 |; AI" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/enemy_catalog.txt
+Area `$2B`'s wanderer floats over solid wall, out of the player's reach, so I'm switching to area `$84`. It has three type-`$55` AI `$40` wanderers in a small 2×3-screen area.
+  ▶ Edit scenario.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; rm -f web/test/states/group2b.json tools/emu/states/group2b.state; 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.scenario_state group_84 12 --out w
+The wanderers home on the player, and a contact hit at f2746 knocked the player back through the bottom exit. Checking the map so I can step away from the exit first.
+  ▶ Read area_132_coll.txt
+  ▶ Edit scenario.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.scenario_state group_84 12 --out w
+  ▶ Read group_probe.py
+I'll add a repeat syntax (`BUTTONS:N*K` = K times, e.g. `B:4,NONE:8*30`) to the probe so swing sequences don't need shell loops.
+  ▶ Edit group_probe.py
+  ▶ Edit group_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.scenario_state group_84 12 --out w
+Probe plan works: wanderer `$12` killed f2716, contact hit f2853 (HP `$60`→`$5B`), wanderer `$13` killed f2878. Now verifying with tools.emu key frames and watches.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu --load-state tools/emu/states/grou
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu -h 2>&1 | head -40
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; mkdir -p gfx/group84; timeout 900 python3 -m tools.emu --load-state
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu --load-state tools/emu/states/grou
+  ▶ Grep "\$(03C1|03D2|03D3|04B2|04B3)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/group84_watch.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu --load-state tools/emu/states/grou
+tools.emu confirms: kill of `$12` f2715, player hit f2852, kill of `$13` f2877. Building the reference CSV now.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 1500 python3 tools/web_state_compare.py --state tools/emu/s
+As expected, the web side here uses the unshifted keys (the 1-frame key timing). Trimming the ref and writing the check with the per-press port key frames.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_trim.py gfx/group84/emu.csv web/test/group84_ref.
+  ▶ Write group84_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/group84_check.mjs 2>&1 | tail -35
+All 479 rows match at shift 0 on the first run. Quickly confirming slot `$15` stays alive to the end, then running the full suite in the background while I update docs.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_cols.py web/test/group84_ref.csv web/test/group84
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 3000 python3 tools/run_checks.py 2>&1 | tail -30
+Now the docs: the Verification Log row and the task note.
+  ▶ Grep "^\| Area-`\$7F` enemy group" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +219
+  ▶ Edit REVERSE.md
+Now the task note in Next Tasks.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+Docs updated. Waiting on the full check suite.
+  ▶ ToolSearch max_results query
+The full check suite is still running in the background. I'll give the final result once it finishes.
+  ▶ Read b8cb3jlk4.output
+I checked AI `$40` (`AiWander16`, enemy type `$55`) against tools.emu, and the web port matches with no code changes. The new `web/test/group84_check.mjs` passes all 479 rows (f2506-2984) at shift 0, sound included, with no excused cells. The full suite passes 42 of 43 checks. The one failure is `world_check` on areas `$3C`, `$3D` and `$BC`, which is the known gap (j).
+
+**I used area `$84` instead of `$2B`.** The task named area `$2B`, but its only type-`$55` enemy floats over the solid block between that area's corridors, out of sword reach the whole run. Area `$84` has three of them in a small 2×3-screen area.
+
+**Setup.** The new `group_84` scenario starts at the area's entry point with level 16 and sword 1. Unlike s187-189, it does not poke the defences. With the maximum defences, a contact hit did no damage but still knocked the player out through the bottom exit, which changed the area.
+
+**What the run showed:**
+- **Homing.** The wanderers aim at the player every `$D0` frames and fly straight over walls.
+- **First kill.** Slot `$12` dies on the first hit at f2715. It leaves a death puff and no drop.
+- **Contact hit.** Slot `$13` hits the player at f2852 (HP `$60` → `$5B`), and slot `$13` dies at f2877.
+- **Not reached.** Slot `$15` and the type-`$85` enemy (AI `$21`) in slot `$11` stay out of reach all run.
+
+**Changes:**
+- `tools/emu/group_probe.py`: `--seg` now takes repeat groups like `'B:4,NONE:8*30'`, so long swing sequences no longer need shell loops.
+- REVERSE.md has a new Verification Log row ("Area-`$84` enemy group, AI `$40`"). The task has an s190 note: `$40` is struck from the remaining list and `$21` (areas `$81 $83 $84`) is added. The task stays open because it is the low-priority leftovers task.
+- CLAUDE.md lists the new check.
+
+New files are `web/test/group84_check.mjs`, `web/test/group84_ref.csv`, `web/test/states/group84.json` and `tools/emu/states/group84.state`. The abandoned area-`$2B` attempt left `web/test/states/group2b.json` and `tools/emu/states/group2b.state`; the delete command wasn't approved, so you can remove both. Nothing is committed.
+
+SESSION_SUMMARY: Session 190 checked AI $40 AiWander16 (type $55) in area $84 (area $2B's one is out of reach) with the new group_84 scenario; web/test/group84_check.mjs: 479/479 rows equal at shift 0 including sound (2 kills f2715/f2877, contact hit f2852), no port change; group_probe --seg repeat syntax; 42/43 checks pass (world_check is the known gap (j)).

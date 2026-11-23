@@ -1,0 +1,133 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \[ \
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +2095
+  ▶ Grep "^(- \[ \]|###|## )" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2236
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions && wc -c *08[0-3].txt && tail -c 1500 20261118_1211
+Picking the top task: the ending sequence (bank 17 `EndingPhaseTable`). Checking what REVERSE.md already has.
+  ▶ Grep "Ending|17:A1|06B4|19:8344" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM && sed -n '1939,1941p;2209p' REVERSE.md | cut -c1-3000
+Now disassembling the ending scene dispatcher and the phase table.
+  ▶ python3 tools/dis.py 16 A000 0x1A2 2>&1 | head -230
+Wrong bank (16 = $8000 half). Bank 17 is the $A000 half.
+  ▶ python3 tools/dis.py 17 A000 0x1A2 2>&1 | head -260
+`EndingPhaseTable` ends where `17:A1A2` starts → 30 entries. Confirming with decode_tables and reading the step bodies.
+  ▶ python3 tools/decode_tables.py --help 2>&1 | head -15; python3 tools/dis.py 17 A1A2 0x1ED 2>&1
+Writing these first findings down before going further. Let me check the helpers first so the notes are correct.
+  ▶ python3 tools/dis.py 17 A6FB 0x130 2>&1; echo ----; python3 tools/dis.py 17 AA17 0xC2 2>&1
+Writing first findings to REVERSE.md now.
+  ▶ sed -n '1925,1950p' REVERSE.md | cut -c1-200
+  ▶ Grep "^- Correction to the "Boot copy quirk" note" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+Let me check the PPU queue record format to be sure of the hi-byte flags I just described.
+  ▶ Grep "PPU queue.*(b7|b6|\$80|\$40)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "ppu_queue.*(record|entry|format)|queue record" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '341p' REVERSE.md | grep -oE '.{0,300}(hi b7|b7|\$80).{0,300}' | head -3
+  ▶ Grep ".{0,250}queue.{0,30}(b7|\+32|increment).{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "0x80|0x40|b7|b6" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/ppuqueue.js
+  ▶ Grep "ppu_queue|\$6200" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Read ppuqueue.js
+  ▶ Read ppuqueue.js +30
+Queue hi byte: b7 = chain, b6 = +32 increment. Correcting my note.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Next: steps 5–19 (`A38F`–`A603`).
+  ▶ python3 tools/dis.py 17 A38F 0x274 2>&1
+Step 19 is a script loop (table `17:A65E`), and the tiles are ASCII ("STAFF" at `17:A4E5`). Reading the rest of the steps and the sprite/text helpers.
+  ▶ python3 tools/dis.py 17 A603 0x5B 2>&1; echo; python3 tools/dis.py 17 A696 0x65 2>&1; echo ---; python3 tools/dis.py 17 
+Writing steps 5–28 to REVERSE.md before going on.
+  ▶ Edit REVERSE.md
+Now `A81C` (rest), the unread `A82C-A94B` range, and `AB1D`.
+  ▶ python3 tools/dis.py 17 A82B 0x120 2>&1; echo ---; python3 tools/dis.py 17 AB1D 0x80 --stop 2>&1
+`A81C` is a metatile picture blit (+ attributes, palette and CHR banks); `AB1D` is a line-text blit. I'll write a dump tool to decode the ending data. Checking the `nesrom.py` API first.
+  ▶ Grep "^def |^class " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/nesrom.py
+  ▶ Read nesrom.py
+  ▶ Write ending_dump.py
+  ▶ python3 tools/ending_dump.py
+The text decodes as ASCII (staff roll, story epilogue). The step-3 "crawl" is tile graphics, not text — switching that list to hex and printing all rectangle rows.
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit ending_dump.py
+  ▶ Edit ending_dump.py
+  ▶ python3 tools/ending_dump.py > /dev/null && sed -n '36,70p;110,128p' docs/ending.txt
+Updating REVERSE.md with the decoded data (step 3 is a tile-column scroll, not text).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding labels now.
+  ▶ grep -n "^17," labels.csv | head -40; grep -n "EndingPhaseTable\|A166\|A140" tools/disasm_all.py | head
+  ▶ Read disasm_all.py +50
+  ▶ Edit disasm_all.py
+Now updating the stale label comments and adding the new labels.
+  ▶ sed -i 's/^17,A166,EndingPhaseTable,s63: ptr16\[>=20\] on \$0600 (ending scene steps); A0EB = shared wait step$/17,A166,
+  ▶ Read labels.csv +984
+  ▶ Edit labels.csv
+Now the title idle path (`$06B4/$06B5` timeout → `8344`; that address is in the $8000 half, so bank 18).
+  ▶ python3 tools/dis.py 19 A749 0x60 2>&1 | head -50; python3 tools/xref.py 8344 2>&1 | head; python3 tools/xref.py 06B4 2>
+  ▶ python3 tools/dis.py 18 8344 0x30 --stop 2>&1; python3 tools/dis.py 19 A6C0 0x20 2>&1; python3 tools/dis.py 19 A796 0x9 
+Idle path resolved. Checking whether the web port's title menu already handles it.
+  ▶ Grep "06B4|06b4|A761|idle" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/title.js
+Already in the port. Recording the idle path in REVERSE.md.
+  ▶ Edit REVERSE.md
+Now an emulator check of the ending: poke `main_state`=4 and watch. Checking `poke_probe.py` options.
+  ▶ python3 -m tools.emu.poke_probe --help 2>&1 | head -40
+I'll write a small `ending_probe.py`. Reading `poke_probe.py` for the emulator API.
+  ▶ Read poke_probe.py
+  ▶ Grep "def (save_png|write_png|screenshot|dump_png|frame_png)|import.*png" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ Glob tools/emu/states/*
+  ▶ Grep "png" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/probe_screens.py
+  ▶ Read probe_screens.py
+  ▶ Write ending_probe.py
+  ▶ Edit ending_probe.py
+  ▶ time python3 -m tools.emu.ending_probe --frames 400 --out /tmp/ending_test 2>&1 | tail -40
+The ending runs in the emulator. Starting the full run (~6000 frames, a few minutes) in the background.
+  ▶ python3 -m tools.emu.ending_probe --frames 7500 > docs/ending_probe.txt 2>&1; tail -5 docs/ending_probe.txt
+  ▶ python3 -m tools.emu.ending_probe --frames 7500
+While it runs, a look at the test screenshots from the short run.
+  ▶ Read step_03.png
+  ▶ Read step_02.png
+  ▶ Glob /tmp/ending_test/*
+  ▶ Grep "def dump_screen" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+Step screenshots weren't written (my change test compared the wrong values). Fixing and restarting the run.
+  ▶ TaskStop task_id
+  ▶ Edit ending_probe.py
+  ▶ Edit ending_probe.py
+  ▶ Edit ending_probe.py
+  ▶ python3 -m tools.emu.ending_probe --frames 7500
+Meanwhile, testing the continue path (state 8): title SELECT then START.
+  ▶ python3 tools/emu/probe_screens.py --state tools/emu/states/title.state /tmp/cont 'cont=w:2;p:SELECT;w:4;p:START;w:30;w:
+  ▶ Read cont_0.png
+Continue (state 8) reaches gameplay in 30 frames, loading area 0 at level 1 even with no prior save. Checking the ending run's progress.
+  ▶ tail -5 /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/3d103bdd-27b8-4dcd-bbeb-90b310f68f74/tasks/bnr
+  ▶ Grep "LoadGameAndInit" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Continue is already documented (line 1767) and matches what I saw. Checking `docs/architecture_exe.md` for the ending entry while the run finishes.
+  ▶ Grep "[Ee]nding|17:A" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_exe.md
+  ▶ Read architecture_exe.md +90
+  ▶ Edit architecture_exe.md
+  ▶ Edit architecture_exe.md
+  ▶ ToolSearch max_results query
+  ▶ Monitor command description timeout_ms
+Waiting for the ending run to finish; I'll write the results once it's done.
+  ▶ Read bnr3d3q65.output
+The full ending run is still going in the emulator (about 7,500 frames). I'll write up the step timings and screenshots when it finishes.
+  ▶ Read bnr3d3q65.output
+The whole ending ran: step 29 reached at f8716, ~6,260 frames after the poke, with no `$40` write after `17:A050`. Checking a few screenshots.
+  ▶ Read step_04.png
+  ▶ Read step_09.png
+  ▶ Read step_21.png
+  ▶ Read final.png
+Everything matches the static trace: step 3 is a tower rising out of a saucer, and step 28 draws "THE END" over the final picture. Writing the emulator results and closing the task.
+  ▶ Edit REVERSE.md
+Now the Verification Log row, the task tick, and the web leftover.
+  ▶ sed -n '121,160p' REVERSE.md | cut -c1-160 | tail -8
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ sed -n '121,125p' REVERSE.md | cut -c1-200
+Header has 5 columns (Subsection | Claim | Check method | Result | Session); fixing my row to match.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Fixing the stale "≥ 20 entries" mentions elsewhere in REVERSE.md.
+  ▶ Grep "≥ 20|>= ?20|never ran in any emu" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ for l in 149 585 1879 1930 1941 1946; do sed -n "${l}p" REVERSE.md | grep -oE '.{0,120}(≥ 20|never ran in any emu).{0,12
+You've hit your 5-hour limit · resets 5:10pm (America/New_York)

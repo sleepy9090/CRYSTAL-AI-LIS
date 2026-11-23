@@ -1,0 +1,114 @@
+  ▶ Read dead_ends.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## |^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +433
+  ▶ wc -l re_loop_sessions/20261115_134839_session_01*.txt && tail -40 re_loop_sessions/20261115_134839_session_011.txt; hea
+Task: Ph3 text follow-ups. Let me read the Text section of REVERSE.md.
+  ▶ Grep "^### " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +326
+  ▶ python3 tools/xref.py 07DF; python3 tools/xref.py 07DE
+  ▶ python3 tools/dis.py 30 D090 0x180
+  ▶ python3 tools/dis.py 30 D020 0x70; echo ----; python3 tools/dis.py 30 D330 0xC0
+  ▶ python3 tools/dis.py 14 8000 0x60; python3 tools/xref.py 06C3; python3 tools/xref.py 06E3
+Working on the message-selection trace (task "text follow-ups"). Found two talk paths in bank 30; recording them now, then tracing the bank 14 NPC script.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 14 805F 0x130
+  ▶ python3 tools/dis.py 30 D085 3 && head -c 600 gfx/text.json; echo; grep -n "^def \|^import\|^from" tools/nesrom.py tools
+  ▶ Read text_dump.py +15
+  ▶ Write npc_script_dump.py
+  ▶ python3 tools/npc_script_dump.py 0 1 2 0x5E 0x80 0xFF; python3 tools/decode_tables.py 14:895D 8 w 2>&1 | head
+  ▶ Edit npc_script_dump.py
+  ▶ Edit npc_script_dump.py
+  ▶ Edit npc_script_dump.py
+  ▶ python3 tools/npc_script_dump.py 1 0x5E; python3 tools/npc_script_dump.py --json gfx/npc_scripts.json > gfx/npc_scripts.
+Wrote `tools/npc_script_dump.py` (decodes the NPC talk scripts); adding an `--out` option so it writes files itself instead of shell redirection.
+  ▶ Edit npc_script_dump.py
+  ▶ Edit npc_script_dump.py
+  ▶ python3 tools/npc_script_dump.py 1 0x5E && python3 tools/npc_script_dump.py --json gfx/npc_scripts.json --out gfx/npc_sc
+  ▶ python3 tools/npc_script_dump.py --out /dev/stdout | grep -c "^param.*script"; python3 tools/npc_script_dump.py --out /d
+  ▶ Grep "skipped" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/npc_scripts.txt
+  ▶ Grep "act +([1-9][0-9]?) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/npc_scripts.txt
+  ▶ Grep "act  0 " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/npc_scripts.txt
+  ▶ Read npc_scripts.txt +1150
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 20 8466 0x9A; python3 tools/dis.py 20 8500 0x3A
+  ▶ Grep "[0-9]+:8[4-5][0-9A-F]{2}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Read text.txt
+Now checking whether the stray text in bank 20 (`$8466-$84FF`) is reachable from any message pointer.
+  ▶ Grep "^\s*\d+\.\d+ .*(\$8|:8)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Grep "^\[|^==|^#" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Read text.txt +253
+  ▶ Grep "^-- \S+ \d+:[89]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Read text_dump.py +93
+  ▶ Edit text_dump.py
+  ▶ python3 tools/text_dump.py at 20:8466 8; python3 tools/text_dump.py at 20:8520 1; python3 tools/dis.py 20 8879 0x20
+  ▶ Grep "Now I can live safely|surprised me|Sometimes I help out|Get away!" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+Bank 20 `$8466-$8501` turns out to be a stale copy of bank 22 `$A466-$A501` (same offset) — dead filler. Now tracing the window-open routine `20:87B7`.
+  ▶ python3 tools/dis.py 20 87B7 0xC2
+  ▶ python3 tools/dis.py 20 8899 12 | cut -c1-30; python3 tools/dis.py 20 85B8 0x3A
+  ▶ Glob gfx/*
+  ▶ Glob tools/*.py
+  ▶ Grep "^def |^import|^from|PIL|png" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/meta_dump.py
+  ▶ Read meta_dump.py +100
+Writing a small font-render tool to verify that the text tiles are ASCII-coded in CHR banks `$3C-$3D` and `$38-$39`.
+  ▶ Write font_dump.py
+  ▶ grep -n "def load_rom" -A6 tools/nesrom.py | head; python3 tools/font_dump.py
+  ▶ Read font.png
+Font confirmed: tile id = ASCII, `$40` = ▼ prompt, `$18-$1F` = window frame, and R1 `$38` holds HUD tiles. Recording (b)+(c), then part (d).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/search_bytes.py "B9 00 BF" ; python3 tools/search_bytes.py "BD 00 BF"; python3 tools/search_bytes.py "BF 0
+  ▶ python3 tools/dis.py 16 9BD8 0x28; echo ---; python3 tools/dis.py 31 FDD8 0x40; python3 tools/xref.py FDF0; python3 tool
+  ▶ python3 tools/xref.py FDF6; python3 tools/dis.py 16 9BFF 0x80
+  ▶ python3 tools/search_bytes.py "BD 00 9F"; python3 tools/search_bytes.py "B9 00 9F"; python3 tools/search_bytes.py "?? 00
+  ▶ python3 tools/dis.py 23 BED6 0x10; python3 tools/decode_tables.py 21:BF00 256 u8 --per-line 32; python3 tools/decode_tab
+  ▶ Grep "^-- \S+ 21:B[EF]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+Part (d) resolved: bank 21 `$BF00` is real message text up to `$BF30`, followed by a stale copy of the bank 23 table. Bit 0 of `23:BF00` = "Save menu allowed". Writing it up.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/decode_tables.py 23:BDC0 62 u8 --per-line 31; python3 tools/decode_tables.py 31:FDC0 62 u8 --per-line 31
+  ▶ Edit REVERSE.md
+  ▶ tail -5 labels.csv && grep -c "" labels.csv && grep -nE "^(30,D354|30,D347|30,D3C2|14,8000|20,8500|20,8836|23,BF00|16,9B
+  ▶ Read labels.csv +250
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 30 D347 0x10 && python3 tools/dis.py 14 8000 4
+Labels load. Now marking the task done, adding follow-ups, and updating the output-files list.
+  ▶ Grep "text_dump|## Intermediate Output Files" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +440
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I finished the session 12 task, "Ph3: text follow-ups", and all four parts are answered. I added two tools (`npc_script_dump.py`, `font_dump.py`) and an `at` mode to `text_dump.py`, and ran all three; their output is in `gfx/`. Nothing went into `dead_ends.md` because nothing got stuck.
+
+**(a) How a message is chosen**
+- Every message in gameplay goes through `ShowMessage` at `30:D354`. While a message is open, Select replays it and A/B closes it.
+- There is a second entry point at `30:D347` that takes a single message number (group × 32 + message) and splits it into group and message.
+- Enemy and event code in banks 15, 19, 26 and 27 queues a message in `$06C3`/`$06E3`, and `30:D085` shows it.
+- **Talking to an NPC** runs a small script engine in bank 14 (`14:8000`):
+  - It works on 2048 story flags at `$6480` and a per-NPC conversation state at `$6580`; both are saved with the game.
+  - A script is a list of flag tests. The first test that passes picks the reply, may set or clear flags, and may move the NPC to its next conversation state.
+  - Each reply also carries an action number. Bank 30 runs it from a 32-entry table at `30:D123`, for example "teach magic".
+  - The decoded scripts for all 256 NPC ids, with message text, are in `gfx/npc_scripts.txt` and `.json`.
+- Session 11 listed 8 places that set the message number. There are actually 27; I traced the main ones and listed the rest as a follow-up.
+
+**(b) Bank 20 text and window**
+- The text at `20:8466-8527` is never read. It's a leftover byte-for-byte copy of bank 22 at the same offset, probably from an earlier build.
+- `20:8500` opens the text window: it draws a 10-row frame at the top of nametable 2 from 3-byte row templates. It sends the tiles to the screen through an 8-entry PPU upload queue at `$6200`.
+
+**(c) Characters on screen**
+- The text box loads CHR banks `$3C-$3D`, and each letter's tile number is simply its ASCII code, so there is no conversion table.
+- Tiles `$18-$1F` are the window frame, `$40` is the ▼ prompt and `$FE` is blank. The second half of that pattern table (`$38-$39`) holds the status-bar tiles.
+- I rendered and checked this in `gfx/font.png`.
+
+**(d) The per-area tables**
+- In `23:BF00`, bit 0 means "the Save command in the menu is allowed in this area" (`16:9BE1`). Bit 7 means the save code actually writes the record.
+- Bank 21 has no separate table. Its `$BF00` holds the end of the real text up to `$BF30`, then another leftover copy of the bank 23 table. `31:FDE0-FDFD` is a similar unused copy of save code.
+
+I added 25 labels and wrote everything up under "Who picks the message" and "Text window + font" in REVERSE.md. I also added two new tasks:
+- **Text follow-ups 2:** the 32 reply actions, the remaining message setters, the other bank 14 entry points, and story-flag names.
+- **Leftover-copy scan:** a `filler_scan.py` tool to find these leftover copies across all banks.
+
+SESSION_SUMMARY: Session 12 — the text follow-ups are done: the message flow (`ShowMessage` `30:D354`) and the NPC script engine in bank 14 (2048 story flags at `$6480`, per-NPC state at `$6580`) are decoded into `gfx/npc_scripts.*`; the text window and PPU upload queue are traced; the font is ASCII tile ids in CHR `$3C-$3D` (`gfx/font.png`); bit 0 of `23:BF00` = menu Save allowed; three leftover copies (unused data) found; 25 labels and two follow-up tasks added.

@@ -1,0 +1,123 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +2082
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '2224p' REVERSE.md | cut -c1-6000
+  ▶ wc -c re_loop_sessions/*_session_08*.txt re_loop_sessions/*_session_079.txt && tail -c 5000 re_loop_sessions/20261118_12
+Reviewed the notes from sessions 79–80. The top task is the enemy AI port (6/8 leftovers). Next I'm looking at the port's current object code and the REVERSE.md notes on the walker AIs.
+  ▶ ls web/src/game/obj/ && wc -l web/src/game/obj/*.js web/test/obj_check.mjs tools/emu/routine_capture.py && grep -n "AiWa
+  ▶ Read REVERSE.md +995
+  ▶ Read objects.js
+  ▶ Read ai_static.js
+  ▶ Read move.js
+  ▶ Read obj_check.mjs
+  ▶ grep -n "ROUTINES\|def _fix_case\|'ai_\|\"ai_\|fan\|turret\|0x27\|B595\|_fix" tools/emu/routine_capture.py | head -60; c
+  ▶ Read routine_capture.py +60
+Now disassembling the part (a) walker/chaser AIs (`27:A915`–`ACC0`).
+  ▶ python3 tools/dis.py 27 A915 0x1E0
+  ▶ python3 tools/dis.py 27 AAF4 0x1D0
+  ▶ python3 tools/dis.py 27 B339 0x70 && grep -n "^export function\|^export const" web/src/game/obj/util.js
+  ▶ Read util.js +1
+Part (a) is fully disassembled. Checking the `ObjAiTable` entries for the ids I'm about to port:
+  ▶ python3 tools/decode_tables.py 27:A354 24 ptr16 2>&1 | head -30; python3 tools/decode_tables.py 27:A396 2 ptr16 2>&1|hea
+Table matches. Writing `web/src/game/obj/ai_walk.js`:
+  ▶ Write ai_walk.js
+Checking that `m.wr` masks to a byte (the `dec` helper and `ANIM-2` rely on it):
+  ▶ Grep "^\s*wr\(|wr\s*=|  wr\(a, v\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/machine.js
+  ▶ Grep "wr\(a, v\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+`m.wr` masks, good. Wiring the new table into `objects.js`, then adding capture routines and RUN entries.
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Grep "RAND64_ZERO =|^POS_COLS|^def _poke_common" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+Now the port side (`objects.js` table + `obj_check.mjs` RUN map):
+  ▶ Edit objects.js
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+Capturing 100 emulator cases per walker AI, and regenerating the `ObjUpdateAll` cases now that more AIs are ported:
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 --routine AiWalkPaus
+All 1200 new cases match on the first run, and `ObjUpdateAll` gaps dropped from 26 to 11. Next, a mutation test to confirm the cases actually hit the detour path and catch the carry quirk:
+  ▶ F=web/src/game/obj/ai_walk.js && cp $F /tmp/aw.js && sed -i 's/(x + m.rd(0x08) + 1) \& 0xFF/(x + m.rd(0x08)) \& 0xFF/' $
+I'll do the mutations with Edit instead.
+  ▶ Edit ai_walk.js
+  ▶ Edit ai_walk.js
+  ▶ Edit ai_walk.js
+  ▶ node web/test/obj_check.mjs | grep -E "fuzz_walk|ObjUpdateAll|identical,"
+The shell and lunger mutations were caught, but the AiChase carry mutation wasn't, so the blocked path is under-sampled. Restoring the code, then measuring how often each path is hit:
+  ▶ Edit ai_walk.js
+  ▶ Edit ai_walk.js
+  ▶ Edit ai_walk.js
+  ▶ Write obj_case_stats.py
+  ▶ python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_walk.json --col 0620=60 --col 0640=1F --col 0600 --col 05A0=8 -
+`tools/dis.py` shadows the stdlib `dis` module when the script runs from `tools/`. I'll run it as a module instead:
+  ▶ python3 -m tools.obj_case_stats web/test/obj_frames/fuzz_walk.json --col 0620=60 --col 0640=1F --col 0600 --col 05A0=8 -
+The approval prompt was declined, so I'll drop `argparse` from the script (that import pulls in the stdlib `dis`) and keep the plain `python3 tools/...` form:
+  ▶ Edit obj_case_stats.py
+  ▶ Edit obj_case_stats.py
+  ▶ python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_walk.json --col 0620=60 --col 0640=1F --col 0600 --col 05A0=8 -
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 --routine AiWalkPaus
+Shot spawns went from ~1–4 to 21–49 per AI, and the chase-family blocked path is now around 30 cases. Re-running the AiChase carry mutation:
+  ▶ Edit ai_walk.js
+  ▶ node web/test/obj_check.mjs | grep -E "^FAIL fuzz|identical,"
+  ▶ Edit ai_walk.js
+  ▶ Edit ai_walk.js
+  ▶ node web/test/obj_check.mjs | grep -E "^FAIL fuzz|identical,"
+The double-blocked detour branch is caught (7 failures). Restoring and running every suite:
+  ▶ Edit ai_walk.js
+  ▶ for t in obj_check core_check world_check sprite_check serve_check ppu_check; do echo "$t: $(node web/test/$t.mjs 2>&1 |
+  ▶ node web/test/obj_check.mjs | tail -1; node web/test/core_check.mjs 2>&1 | tail -1; node web/test/world_check.mjs 2>&1 |
+Everything passes. Listing which unported AIs the 11 remaining `ObjUpdateAll` gap cases reach, for the task notes:
+  ▶ node web/test/obj_check.mjs --verbose | grep "^GAP" | sed 's/.*: //' | sort | uniq -c
+  ▶ sed -n '121,124p' REVERSE.md | cut -c1-300; grep -n "| 80 |$" REVERSE.md | cut -c1-200; grep -nE "^27,(AAFA|AB2D|AAAB|AA
+  ▶ Grep "\| 80 \|$" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^27,(AAFA|AB2D|AAAB|AAB0|ABAC|AC40|A9B4|B339)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read REVERSE.md +154
+  ▶ Edit REVERSE.md
+Now the AiChase section notes, with the new details found while porting:
+  ▶ Edit REVERSE.md
+  ▶ Read labels.csv +908
+  ▶ Edit labels.csv
+Now the task list. Reading the end of `### RE Investigation`:
+  ▶ Grep "^### (Web Port Fixes|RE Investigation)|^- \[ \] Ph7 web 6/8" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ awk 'NR>=2235 && NR<=2240 {print NR": "substr($0,1,400)}' REVERSE.md
+  ▶ Grep "^- \[.\] .{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^- \[ \] Ph3 \(low priority\) enemy/boss leftovers from session 78.*$" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2240
+  ▶ Edit REVERSE.md
+Wrapping up: updating the obj_frames README and `docs/architecture_web.md` for the new module.
+  ▶ Edit README.md
+  ▶ Edit README.md
+  ▶ Grep "ai_static|obj/move.js|objects.js" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Read architecture_web.md +62
+  ▶ Read architecture_web.md +195
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+I ported the first part of the top task: 12 walker/chaser enemy AIs. On the emulator test cases the port leaves exactly the same RAM and WRAM as the ROM in all 1200 cases. The other three parts of the task are still open, so I marked it done for part (a) only and moved the rest into one low-priority task at the end of RE Investigation, as the rules require. Nothing in the game calls this code yet, because gameplay isn't wired up in the port. Nothing was committed.
+
+**Results** (`node web/test/obj_check.mjs`):
+- **New AIs:** 1200/1200 cases identical (100 each for AIs `$20 $21 $22 $24 $25 $26 $27 $28 $29 $2A $2E $41`).
+- **Object loop (`ObjUpdateAll`):** 189/189 identical, plus 11 "gap" cases (down from 26 in session 80). The gaps now only reach AIs `$14 $16 $1B $1F $70 $76`, the objects created mid-frame when an enemy dies or a shot hits. They are listed in the leftover task.
+- **Other suites:** all other routine cases and the core, world, sprite, serve and ppu checks still pass.
+- **Negative tests:** deliberate errors in the shell, lunge and chase-detour code fail 7–13 cases each, so the checks do catch mistakes.
+
+**What changed:**
+- `web/src/game/obj/ai_walk.js` holds the 12 AIs and their helpers, ported instruction by instruction and added to the AI table in `obj/objects.js`.
+- `tools/emu/routine_capture.py` captures the new cases (`web/test/obj_frames/fuzz_walk.json`). The first capture rarely reached two paths: firing a shot (1–4 cases out of 100) and the chase enemy getting blocked by a wall (2 out of 100). I added steering so firing now shows up in 21–49 cases per shooter and the blocked path in about 30 chase cases.
+- `tools/obj_case_stats.py` is a new tool that counts how many cases take each path.
+
+**ROM details found while porting** (in REVERSE.md, under AiChase):
+- The chase AI computes its turn side with a leftover +1 carry. It has no effect, because the AI only acts on frames where that sum is even.
+- The shell enemy (`$41`) times its closed phase using the counter's value from before it was decremented.
+- When the burrower (`$29`) starts an attack, its "can't be touched while the player jumps" check still runs that frame.
+- None of these AIs ends the object loop early, unlike the fan turret.
+
+I also added 4 labels, a session 81 Verification Log row, and updated the `obj_frames` README and `docs/architecture_web.md`.
+
+SESSION_SUMMARY: Session 81 ported the walker/chaser enemy AIs $20-$2A, $2E and $41 to the web port (`obj/ai_walk.js`): 1200/1200 emulator fuzz cases identical, object-loop gap cases down from 26 to 11; task marked done for (a), with (b)-(d) moved to a new low-priority leftover task; not committed.

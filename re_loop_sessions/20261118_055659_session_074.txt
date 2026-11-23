@@ -1,0 +1,97 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md | 
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_07[1-4].txt && tail -c 5000 re_loop_sessions/20261118_015146_session_073.txt; echo ----; tail -
+  ▶ Grep "s73|session 73|fill_probe|sample_point_probe|hud_split_probe|ref_peek" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "s73|session 73|fill_probe|sample_point_probe|hud_split_probe|ref_peek" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1355
+I'm picking up the Ph6 reference-compare triage task. Session 73 finished items (a), (d), (e) and (g). I'm checking the fill-probe report it left behind.
+  ▶ ls -la docs/ref_fill_probe.txt && wc -l docs/ref_fill_probe.txt && head -c 6000 docs/ref_fill_probe.txt
+  ▶ Read ref_fill_probe.txt +75
+  ▶ cat tools/ref/ref_peek.py | head -30; python3 tools/ref/ref_peek.py 6410 32 ref/frame_1500.wram ref/frame_2250.wram ref/
+  ▶ ls tools/emu/ tools/ref/ && grep -n "watch" -il tools/emu/*.py | head
+  ▶ grep -n "watch" tools/emu/__main__.py tools/emu/memory.py tools/emu/nes.py | head -20; grep -n "def \|ram_fill\|keys" to
+  ▶ sed -n 1,80p tools/emu/__main__.py | grep -n "fill\|keys\|canon\|--" | head -40; grep -n "CANON\|canonical" tools/ref/co
+  ▶ time python3 -m tools.emu --frames 2463 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --wat
+  ▶ python3 -m tools.emu --frames 2463 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --watch 64
+Rerunning the emulator with write watches on `$6423` and `$0628-$062B` to find who writes them.
+  ▶ python3 -m tools.emu --frames 2463 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --watch 64
+  ▶ python3 -m tools.emu --frames 2463 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --watch 64
+  ▶ python3 -m tools.emu --frames 2463 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --watch 64
+  ▶ python3 -m tools.emu --frames 2463 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --watch 64
+`$6423` is a per-frame counter in name entry (`19:A3F9`), and `$0628-$062B` are countdown timers (`19:A1EF`). Checking the emulator's final values against FCEUX:
+  ▶ python3 tools/ref/ref_peek.py 6420 8 /tmp/emu2463.wram ref/frame_2250.wram ref/frame_2352.wram ref/frame_2460.wram; pyth
+  ▶ grep -in "frame_count\|frame_ctr\|framecount\|nmi_count" labels.csv | head; grep -n "^\*,00\(45\|46\|08\|4A\)," labels.c
+  ▶ sed -n 1,200p tools/ref/fill_probe.py | grep -n "import\|NES(\|def \|run_frame\|step_frame\|keys\|pads\|frame_no\|\.ram\
+  ▶ Read fill_probe.py +20
+  ▶ grep -n "241\|line\|def \|hook" tools/emu/sample_point_probe.py | head -30
+  ▶ Read sample_point_probe.py +36
+  ▶ Write drift_probe.py
+  ▶ python3 tools/ref/drift_probe.py 2>&1 | head -120
+  ▶ grep -n "frame_ready\|lag frame\|lag-frame" REVERSE.md | head -15; grep -n "MainLoop\|frame_ready" labels.csv | head
+The NMI bails out and sets `$07` whenever `$06` is non-zero (a long main-thread routine). So I'll log every `$06`/`$07` write in tools.emu to find its lag frames.
+  ▶ python3 -m tools.emu --frames 2463 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --watch 00
+  ▶ grep -n "poweron\|frameadvance\|framecount\|frame =\|frame=\|for \|reset\|joypad.set" tools/ref/fceux_capture.lua | head
+  ▶ grep -n "06F0" REVERSE.md | head -20
+  ▶ python3 tools/dis.py 19 A176 40; python3 tools/decode_tables.py 19:A193 7 word 2>&1 | head -12
+  ▶ python3 tools/dis.py 19 A1A1 12; python3 tools/dis.py 19 A26B 20; python3 tools/dis.py 19 A27C 40; python3 tools/dis.py 
+Steps 1 and 2 wait on `$0617`. Step 3 types text on every other frame, gated by `$06FF` bit 0. I'm logging `title_step` and `$0617` to see which step takes the extra frames.
+  ▶ python3 -m tools.emu --frames 2252 --keys 1250:START 1400:START 1600:START 1700:START --watch 06F1 --watch 0617 2>&1 | g
+  ▶ python3 -m tools.emu --frames 2252 --keys 1250:START 1400:START 1600:START 1700:START --watch 06F1 --watch 0617 2>&1 | g
+  ▶ python3 tools/dis.py 19 A212 40
+  ▶ python3 tools/dis.py 19 A23B 48
+  ▶ python3 tools/dis.py 19 A092 20; python3 tools/dis.py 19 A36E 50
+  ▶ Write lag_probe.py
+  ▶ sed -n 80,110p tools/emu/nes.py
+  ▶ sed -i 's/nes.watch_write(a.addr, w)/nes.on_write(a.addr, w)/' tools/emu/lag_probe.py && python3 -m tools.emu.lag_probe 
+  ▶ Edit lag_probe.py
+  ▶ python3 -m tools.emu.lag_probe --from 214 --to 2320
+  ▶ Read fceux_capture.lua +85
+  ▶ Edit fceux_capture.lua
+I'll give `lag_probe` a matching `--trace` output so both traces can be diffed line by line.
+  ▶ Edit lag_probe.py
+  ▶ Edit lag_probe.py
+  ▶ Edit lag_probe.py
+  ▶ python3 -m tools.emu.lag_probe --from 0 --to 260 --trace docs/emu_trace_title.txt && sed -n 1,4p docs/emu_trace_title.tx
+  ▶ grep -n "^19,A092\|^19,A212\|^19,A25C\|^19,A251\|^\*,6423\|^\*,0617\|^\*,0627\|^\*,0628\|^\*,06FF\|^\*,0006,\|^\*,0007,"
+  ▶ Read labels.csv +673
+  ▶ Read labels.csv +707
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ grep -c "" labels.csv && grep -n "^19,A3" labels.csv | head -3 && tail -3 labels.csv
+  ▶ Edit labels.csv
+  ▶ printf '%s\n' '19,A092,PpuQueueDrainWait,s74: spin until tmp_0A = tmp_0B (NMI drained the PPU queue) then reset both; at
+  ▶ Edit labels.csv
+Now writing the findings into REVERSE.md's triage section.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 -m tools.emu --frames 2321 --keys 1250:START 1400:START 1600:START 1700:START 2300:START --break 19:A1EC --break
+  ▶ grep -n "^- \[ \] Ph6 reference-compare triage\|^- \[ \] Ph3 (low priority) ending leftovers\|^### Web Port Fixes" REVER
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+A quick check that labels.csv still loads after the edits:
+  ▶ python3 tools/dis.py 19 A34E 6 && python3 tools/dis.py 19 A24C 8 && git status --short | head
+I finished the "Ph6 reference-compare triage" task (session 73 had done items a, d, e and g). Every remaining FCEUX-vs-tools.emu difference comes from frame timing or power-on RAM contents, not from the game taking a different code path. Exact placement of the lag frames needs one more FCEUX run, which needs your approval to launch, so it's queued as a follow-up.
+
+**(b) Uninitialised RAM.** FCEUX fills RAM with the `00×4 FF×4` pattern and WRAM with zeros. That matches 85-99% of the bytes tools.emu never writes. With that fill, only 5-41 RAM differences per reference frame remain, and they are all explained below or in session 73's notes.
+
+**(c) Frame offset.** It isn't a steady drift; there are three separate phases:
+- **Boot and title:** tools.emu runs 4 frames ahead at f120 and 3 ahead from f600 to f2250. A title counter, `$06FF` (`title_ctr`), pins this exactly: f120 and f1200 match with 0 differences.
+- **Status screen to name entry:** after the START at 1700, FCEUX reaches name entry about 6 frames sooner. The counter `$6423` ends at `$3A` in FCEUX and `$35` in tools.emu.
+- **Gameplay:** tools.emu is consistently 1 frame behind.
+
+Per-frame logging found 17 lag frames in tools.emu between f214 and f2320. Eight of them come from the status-screen text typer: at each line end, `19:A092` waits for the NMI to empty the PPU queue, which costs 2 frames. That wait depends on exactly when the CPU gets there relative to the NMI, which is the most likely place the two emulators split.
+
+**(f) WRAM differences.** `$6D23`/`$7D23` are save copies of `$6423`, and the save checksum `$70F4/$70F5` is off by exactly that difference of 5 (`7F` vs `7A`). The `$0628-$062B` "+1" difference is a set of name-entry timers. tools.emu decrements them once more at f2320, after the game has left the title state; which routine does that is still open.
+
+**Changes:**
+- **New tools:** `tools/ref/drift_probe.py` (writes `docs/ref_drift.txt`) and `tools/emu/lag_probe.py`. `lag_probe --trace FILE` writes the same per-frame columns as the FCEUX trace, so the two can be diffed line by line.
+- **`tools/ref/fceux_capture.lua`:** now also writes a per-frame `ref/trace.txt`. It hasn't been run yet.
+- **labels.csv:** 4 new labels (`PpuQueueDrainWait`, `StatusAnimTick`, `StatusTypeStep`, `name_entry_frames`) and 4 renamed (`title_ctr`, `status_anim_ctr`, `status_anim_frame`, `title_blink_timer`).
+- **REVERSE.md:** (b), (c) and (f) are written up in the triage section, the task is marked done, and the leftovers are one low-priority task at the end of RE Investigation. That covers the FCEUX rerun and trace diff, and old items (h) the blank FCEUX frame at f2409, (i) the menu/death capture steps and (j) the browser check of the catalog page.
+- **Stray file:** `docs/emu_trace_title.txt` is a short test output of the new trace option and can be deleted.
+
+Nothing is committed.
+
+SESSION_SUMMARY: Session 74 finished the Ph6 ref-compare triage. (b) FCEUX's power-on fill is confirmed (RAM `00×4 FF×4`, WRAM zero). (c) The frame offset has three phases: boot d=−4, title d=−3 (`title_ctr` `$06FF`, 0 diffs at f120/f1200), FCEUX reaching name entry ~6 frames sooner, and gameplay d=+1; 17 tools.emu lag frames, 8 of them from the `19:A092` PPU-queue wait. (f) `$6423`/`$6D23`/`$7D23`/`$70F4-5`/`$0628-B` trace to one timing cause. New tools `drift_probe.py` and `lag_probe.py`, a per-frame trace in `fceux_capture.lua`, 4 new and 4 renamed labels, and the leftovers (h)/(i)/(j) queued as one low-priority task.

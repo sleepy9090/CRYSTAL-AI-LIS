@@ -1,0 +1,107 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## Next Tasks|^- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +1500
+  ▶ Read dead_ends.md
+  ▶ wc -l re_loop_sessions/20261117_055613_session_04*.txt re_loop_sessions/20261116_193142_session_039.txt && tail -c 3000 
+  ▶ Grep "^#{2,4} " REVERSE.md
+  ▶ Grep "^\*\*[^*]+\*\*|^- \*\*" REVERSE.md
+Working on the session 41 task, Ph6 validate 2/4 (the findings sweep). Next I'm mapping the Key Findings subsections.
+  ▶ awk 'NR>=117 && NR<=940 && /^\*\*[^*]+\*\*/ {print NR": "substr($0,1,110)}' REVERSE.md | head -90
+  ▶ Read toolu_01WF6rjpp1bYc5hKxGrfgAhM.txt
+  ▶ Read REVERSE.md +955
+  ▶ wc -l tools/emu/*.py && ls tools/emu/states/
+Let me read verify.py to reuse its harness.
+  ▶ Read verify.py
+  ▶ Read nes.py
+  ▶ Read REVERSE.md +119
+  ▶ Read REVERSE.md +173
+  ▶ python3 tools/dis.py 30 C900 0x60 && echo ---- && python3 tools/dis.py 31 F3B6 0x9C && echo --- && python3 tools/dis.py 
+  ▶ python3 tools/dis.py 24 86AA 0x6A && python3 tools/dis.py 24 82E0 0x20 && grep -n "scanline\|self.line\|self.dot" tools/
+  ▶ Grep "CANON|canonical" tools
+  ▶ python3 tools/dis.py 28 80A5 0x40 --stop && python3 tools/xref.py 80A5 | head
+Writing `tools/emu/sweep.py`. It adds emulator checks for the boot, main loop, NMI, IRQ, vibrato, trampoline and OAM-hide findings that session 39's `verify.py` didn't cover.
+  ▶ Write sweep.py
+  ▶ time python3 tools/emu/sweep.py --out docs/emu_sweep.txt 2>&1 | tail -40
+  ▶ Grep "F488|F691|handler 6|handler 1\b|irq_mode" REVERSE.md
+  ▶ grep -n "190/192\|HUD split" REVERSE.md | cut -c1-400 | head; python3 tools/dis.py 31 F488 0x5D --stop; python3 tools/di
+  ▶ Grep "line 190|190/192|F455" REVERSE.md
+  ▶ sed -n '1404p' REVERSE.md | grep -o ".\{300\}190.\{400\}"
+  ▶ Grep ".{0,250}HUD.{0,350}" REVERSE.md
+  ▶ Edit sweep.py
+  ▶ Edit sweep.py
+  ▶ Edit sweep.py
+Now add the SoundUpdate call-site histogram and the last-write report for `$51`/`$0054`.
+  ▶ Edit sweep.py
+  ▶ Edit sweep.py
+  ▶ Edit sweep.py
+  ▶ python3 tools/emu/sweep.py --out docs/emu_sweep.txt 2>&1 | tail -32
+The loop variable `a` in my report code shadows `args`. Renaming it:
+  ▶ Edit sweep.py
+  ▶ python3 tools/emu/sweep.py --out docs/emu_sweep.txt 2>&1 | tail -34 | cut -c1-600
+All checks pass now. I'm compacting the long write lists in the report, then re-running so `docs/emu_sweep.txt` is clean.
+  ▶ Edit sweep.py
+  ▶ python3 tools/emu/sweep.py --out docs/emu_sweep.txt > /dev/null; echo exit $?; grep -n "writes to\|FAIL" docs/emu_sweep.
+  ▶ python3 tools/emu/sweep.py --out docs/emu_sweep.txt > /dev/null && echo PASS-ALL
+  ▶ Grep "writes to|FAIL" docs/emu_sweep.txt
+Every check passes (self-emu). Now writing the results into REVERSE.md: the Verification Log, heading marks, and three corrections (NMI, SoundUpdate callers, which IRQ handler draws the HUD split).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 24 8724 4 && git status --short | head
+The word at `$8724` is `00 00`, so the e=0 path writes the unmodified period, as documented. Now the NMI, IRQ, main loop, sprite pass and remaining headings:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now labels. Checking which of these addresses already have names:
+  ▶ Grep "^31,(F488|F6AD|F6C2|F6D6|F691|F40A|F3C6)" labels.csv
+  ▶ Read labels.csv +794
+  ▶ Edit labels.csv
+Now the Intermediate Output Files entry and the task status. Let me look at the end of the output-files table:
+  ▶ Grep "^\| `tools/emu/verify.py`|^\| `tools/ref/" REVERSE.md
+  ▶ sed -n '1427p' REVERSE.md | cut -c1-200; sed -n '1428,1430p' REVERSE.md | cut -c1-120
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding the unexercised paths to the queued validate 3/4 task, so they aren't left as a new follow-up chain:
+  ▶ Edit REVERSE.md
+Quick check that `labels.csv` still parses:
+  ▶ python3 tools/dis.py 31 F6AD 4 && python3 tools/dis.py 31 F488 3
+The comment was cut off at the first comma, so commas in `labels.csv` comments need CSV quoting. Checking how existing rows handle it:
+  ▶ Grep "^31,F4[0-9A-F]{2},.*"" labels.csv
+  ▶ Grep ","" labels.csv
+The file never quotes fields; it avoids commas instead. I'm rewriting my five rows with semicolons:
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 31 F488 3 | head -1
+  ▶ python3 tools/dis.py 31 F488 3
+I finished the session 41 task, **Ph6 validate 2/4 (findings sweep)**. Every check passes, but only against our own emulator ("self-emu"), because no reference emulator capture exists yet.
+
+**What I added**
+- **`tools/emu/sweep.py`** (output in `docs/emu_sweep.txt`): runs from power-on through the standard button script to frame 2460 and checks the parts of the code that session 39's `verify.py` didn't cover:
+  - startup (boot) and the main-loop dispatch
+  - the three NMI paths
+  - IRQ handler selection and every IRQ jump target
+  - the far-call helpers putting the previous banks back
+  - hiding unused sprites
+  - at most one sound command per frame
+  - an exact model of the vibrato routine, matched on all 2,463 calls.
+- **A "Verification Log" table** under Key Findings: one row per subsection with the claim, how it was checked, the result and the session. All 12 subsections now have an emulator check. Their headings are marked "(VERIFIED self-emu, sNN)", and the ones only partly covered say which parts.
+
+**Corrections the run showed**
+- **The gameplay HUD split is IRQ handler 1 (`31:F488`, line 190), not handler 0.** It switches to the HUD at the bottom of nametable 2, sets the HUD font graphics banks, and runs the sound update. Handler 0 was never used in the run. The title screen uses handler 6 (line 137).
+- **The NMI skips the sprite upload and the scroll copy when the main loop hasn't finished its frame.** That happened on 14 of 2,457 frames. In IRQ modes 7 and 9 it copies the position of object slot `$13` instead of the camera.
+- **The sound update call at `F4CF` is inside IRQ handler 1, not the NMI.** The NMI only runs sound through its per-mode routines: mode 0 runs it only while rendering is off, and the title mode 3 runs it every frame.
+- **Startup plays the bank-18 intro for about 212 frames before the main loop starts at frame 214.**
+
+I added 5 labels and updated a table comment. Comments in `labels.csv` must not contain commas, because the file isn't quoted and the disassembler cuts the comment off at the first comma.
+
+Several paths never ran, so they are still checked only by reading the code: area tables k3-k5, save slots and checksums, the full sound queue, sound-effect headers, IRQ handlers 0, 2-5 and 7, main states 4 and 5, IRQ modes 7 and 9, and vibrato depths other than 3. I added them to the queued validate 3/4 task. There are no new dead ends, and nothing is committed.
+
+SESSION_SUMMARY: Session 41 — Ph6 validate 2/4 done: new `tools/emu/sweep.py` (all checks pass, self-emu) and a Verification Log under Key Findings with all 12 subsections marked VERIFIED self-emu; corrections: gameplay HUD split = IRQ handler 1 `F488`, NMI skips the sprite upload when the main loop overruns (`$09`≠0) and copies slot `$13` in modes 7/9, sound update `F4CF` is in the IRQ not the NMI, boot runs the intro until f214; 5 labels.

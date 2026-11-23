@@ -1,0 +1,103 @@
+  ▶ ls re_loop_sessions | tail -4; wc -l dead_ends.md REVERSE.md; grep -n "## Next Tasks" REVERSE.md; grep -n -- "- \[ \]" R
+  ▶ cd re_loop_sessions; wc -c 20261122_104601_session_20[3456].txt; tail -c 2500 20261122_104601_session_205.txt; tail -c 1
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -c 4000 re_loop_sessions/20261122_104601_session_205.txt
+  ▶ Read event_check.mjs
+  ▶ Grep "^\| (11|12|13|19|20|8) \| `D" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +912
+Picking up leftovers item (i): run-level refs for event acts 11–13 (and 19/20 if the base state can be made to work). Exporting states now.
+  ▶ ls tools/emu/states/event_base.state && for a in 0B:D6D8:11 0C:D6DD:12 0D:D6E7:13; do IFS=: read nn pc dd <<< "$a"; pyth
+  ▶ for a in 0B,D6D8,11 0C,D6DD,12 0D,D6E7,13; do nn=${a%%,*}; r=${a#*,}; pc=${r%%,*}; dd=${r#*,}; python3 -m tools.emu.web_
+Running them one at a time.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --keys 2510:B:4 2530:B:4 --force 30:D552:0
+Now the entry points in play.js.
+  ▶ Grep "0xd7fd|0xd70d|0xd654" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/play.js
+  ▶ Grep "D7FD|D70D|D654" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/play.js
+  ▶ Edit play.js
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event11.state --web web/test/states/event11.json --frames 30
+  ▶ for n in 12 13; do python3 tools/web_state_compare.py --state tools/emu/states/event$n.state --web web/test/states/event
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event12.state --web web/test/states/event12.json --frames 30
+All three match on every frame. Writing the refs (same columns as s205) and checking oam_crc explicitly.
+  ▶ python3 tools/csv_trim.py /tmp/ev11/emu.csv web/test/event11_ref.csv --cols core,pal,obj,snd,oam_crc --frames 2541-2839 
+Now act 12's `NpcVanish` slot 14 — checking what the port does so the check can assert it.
+  ▶ Grep "^\s*(11|12|13):" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/giveitem.js
+  ▶ grep -n "export function npcVanish" -A10 web/src/game/states/*.js | head -14; python3 tools/csv_cols.py /tmp/ev12/emu.cs
+Slot 14's AI turns `$53` at f2629 in both runs. Adding the three acts to the check.
+  ▶ Edit event_check.mjs
+  ▶ Edit event_check.mjs
+  ▶ node web/test/event_check.mjs
+Acts 11–13 pass. The base state has slot 14 occupied (AI `$36`), so acts 19/20 may work here too; trying them.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --keys 2510:B:4 2530:B:4 --force 30:D552:0
+  ▶ grep -n "D718\|D71F\|evActClearSlot" web/src/game/states/giveitem.js | head; grep -n "^ *19:\|^ *20:" web/src/game/state
+  ▶ Edit play.js
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event19.state --web web/test/states/event19.json --frames 30
+Both match. Checking which branch ran (slot 13/14/15 AI over the run) and the return frames.
+  ▶ python3 tools/csv_cols.py /tmp/ev19/emu.csv /tmp/ev19/web.csv o0D_ai,o0E_ai,o0F_ai 2540-2839:30; python3 tools/csv_cols.
+  ▶ python3 tools/csv_cols.py /tmp/ev19/emu.csv /tmp/ev19/web.csv o0D_ai,o0E_ai,o0F_ai,o0F_x 2540-2546; python3 tools/csv_co
+  ▶ python3 tools/csv_cols.py /tmp/ev19/emu.csv /tmp/ev19/web.csv o0D_ai,o0E_ai,o0F_ai 2540-2546; python3 tools/csv_cols.py 
+Neither run takes the "both slots empty → spawn slot 15 type `$04CF`" branch (the other follower slot stays occupied). Checking whether `--force` can be repeated to empty slot 14 as well.
+  ▶ python3 -m tools.emu.web_state --help 2>&1 | grep -A4 -i force
+  ▶ Grep "force" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/web_state.py
+Repeatable. Making a variant of act 19 with slot 14 emptied too (`$04AE` = 0 at the dispatch), so the spawn branch runs.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --keys 2510:B:4 2530:B:4 --force 30:D552:0
+  ▶ python3 tools/csv_cols.py /tmp/ev19b/emu.csv /tmp/ev19b/web.csv o0D_ai,o0E_ai,o0F_ai 2593-2599; node web/test/pending_pr
+No slot-15 AI change; reading the handler to see what that branch actually spawns.
+  ▶ python3 tools/dis.py 30 D718 46
+  ▶ ls /tmp/ev19b; python3 tools/web_state_compare.py --help 2>&1 | grep -i -A2 "dump\|ram"
+  ▶ python3 tools/web_state_compare.py --help
+Running a RAM diff on a short window ending at the return frame (f2596) to confirm `$07D7` / the spawn in both emulators.
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event19b.state --web web/test/states/event19b.json --frames 
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event19b.state --web web/test/states/event19b.json --frames 
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event19b.state --web web/test/states/event19b.json --frames 
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event19b.state --web web/test/states/event19b.json --frames 
+The 8 differing bytes are scratch / frame-counter / pad bytes (the two dumps are taken at different points of the frame); `$07D7` and slot 15 agree. Reading their values:
+  ▶ Glob /tmp/ev19r/*
+  ▶ python3 tools/ram_byte.py /tmp/ev19r/web_ram.bin 07D7,04CF,04AF,04AD,04AE
+Branch confirmed in both: `$07D7` = `$7F`, `ObjInit` slot 15 with type `$04CF` = 0 in this base. Writing refs and checks for 19, 20 and 19b.
+  ▶ python3 tools/csv_trim.py /tmp/ev19/emu.csv web/test/event19_ref.csv --cols core,pal,obj,snd,oam_crc --frames 2541-2839 
+  ▶ Edit event_check.mjs
+  ▶ node web/test/event_check.mjs
+CSV values are decimal: slot 14 is `$24`, not `$36`. Fixing that and the `NaN` label for `19b`.
+  ▶ sed -i "s/want(m, 0x04AE, 0x36, 'event19 slot 14 kept')/want(m, 0x04AE, 0x24, 'event19 slot 14 kept')/; s/(13 = \$7F, 14
+Using the Edit tool instead.
+  ▶ Edit event_check.mjs
+  ▶ Edit event_check.mjs
+  ▶ Edit event_check.mjs
+  ▶ Edit event_check.mjs
+  ▶ Edit event_check.mjs
+  ▶ Edit event_check.mjs
+  ▶ node web/test/event_check.mjs | tail -5; python3 tools/run_checks.py 2>&1 | tail -4
+All 51 checks pass. Updating REVERSE.md (act table, leftovers task, Verification Log) and CLAUDE.md.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "s205.*event_check|event_check.*s205" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cut -c1-300 REVERSE.md | sed -n '175,182p'
+  ▶ Read REVERSE.md +179
+  ▶ Edit REVERSE.md
+  ▶ Grep "event_check.mjs" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CLAUDE.md
+  ▶ Edit CLAUDE.md
+I added full-run tests for event acts 11, 12, 13, 19 and 20, which finishes item (i) of the leftovers task. All five match tools.emu on every frame, including `oam_crc`, with no listed cells. `event_check.mjs` and all 51 checks pass. Nothing is committed.
+
+**Results** (same base state and recipe as s203–s205, act forced at `30:D552`, 299 frames each)
+
+| Act | What it does | Act returns |
+|---|---|---|
+| 11 (`D6D8`) | gives Barrier (`$46`) | f2629 |
+| 12 (`D6DD`) | gives Change (`$47`), then makes slot 14 vanish (slot 14 = `$53`) | f2629 |
+| 13 (`D6E7`) | gives Bow of Moon (`$3E`) | f2629 |
+| 19 (`D718`) | clears slot 13, plays SFX `$6B` and waits for it to end | f2596 |
+| 20 (`D71F`) | clears slot 14, same sound wait | f2596 |
+| 19b | act 19 with slot 14 also emptied | f2596 |
+
+In this base state, acts 19 and 20 leave the other follower slot occupied (13 = `$7F`, 14 = `$24`), so they skip the branch that runs when both slots are empty. The 19b variant adds a second `--force 30:D552:04AE=00` to cover that branch. It sets `$07D7` to `$7F` and initialises slot 15 with the type in `$04CF`, which is 0 in this state. A whole-RAM comparison at f2596 differs only in 8 scratch, pad and frame-counter bytes, because the two emulators dump RAM at different points in the frame.
+
+**Changes**
+- `web/src/game/states/play.js`: five new entry points, `30:D6D8`, `D6DD`, `D6E7`, `D718` and `D71F`.
+- `web/test/event_check.mjs`: covers the six runs, using new reference files `event11/12/13/19/19b/20_ref.csv` and states in `web/test/states/`. It also checks the return frame and, on that frame, the item given and the slot and `$07D7` values. The act-number label now prints "19b" correctly.
+- REVERSE.md: updated the event-table rows for acts 11–13 and 19/20, added a Verification Log row and marked item (i) done in the leftovers task.
+- CLAUDE.md: the `event_check.mjs` line lists the new acts and notes that `--force` can be repeated.
+
+The leftovers task stays unchecked, as the rules say for a low-priority task. Items (c), (e), (f) and (g) are still open. No new addresses were added to labels.csv.
+
+SESSION_SUMMARY: Session 206 added full-run tests for EventActionTable acts 11, 12, 13, 19 and 20 plus a 19b variant for the both-slots-empty branch (5 new entry points, 6 reference CSVs, every cell matches), which finishes leftovers item (i); all 51 checks pass.

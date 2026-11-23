@@ -1,0 +1,125 @@
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Read REVERSE.md +1715
+  ▶ Read REVERSE.md +1720
+  ▶ Read REVERSE.md +1845
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md; tail -c 3000 re_loop_sessions/20261117_205123_s
+  ▶ Read dead_ends.md
+  ▶ Grep "CADE|CB2E" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Picking task "decode `30:CADE`/`CB2E` substate tables" — checking how much is already documented.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 30:CADE 40 ptr16 2>&1 | head -50; py
+Table decoded: line 199 has the bank table wrong (24-27 and 30 also use n=9). Checking which handlers are already documented.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for a in CA2E 19:B900 B900 CBFC BC40 BDDB D8C7 BB39 BB9D BC04 BC6B 
+  ▶ Grep "(CA2E|B900|CBFC|BC40|BDDB|D8C7|BB39|BB9D|BC04|BC6B|CC17|BDF2|CC4D|D985|D98E|D997|D9AD|D9C1)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CAB6 0x34
+  ▶ Grep "[Ss]ubstate (table|list|\$?1[0-9]\b|2[0-9]\b|3[0-9]\b)|sub_state=|sub_state ?= ?\$?[0-9]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "ubstate" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_exe.md
+  ▶ Read architecture_exe.md +96
+The arch doc already has a partial table; 15 handlers still unnamed. Disassembling the bank-30 ones.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CA2E 0x31; echo; python3 tools/dis.py 30 CB
+  ▶ Grep "^(30,(C176|C89E|C676|C169)|31,(E3E9)|26,(98A8|9A30|8C0E)|14,800E|31,FF8C)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CC4D 0x60 --stop; echo; python3 tools/dis.p
+  ▶ Grep "16:8000|SelectedUseItem|30:DADA|30:DAFC|30:CC4D|30:C676|30:C831|19:BA65" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py --help 2>&1 | head -20
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "A9 ?? 85 41" --context 2; python3 to
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for p in "86 41" "84 41" "E6 41" "C6 41" "8D 41 00"; do echo "## $p
+Tracing who sets each unnamed substate (searching for non-immediate writes to `$41`).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "86 41" --context 4; python3 tools/se
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "85 41" --context 3 | grep -v "a9 .. 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 A5B0 0x20; python3 tools/dis.py 30 D500 0x5
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/xref.py 27:A5C5 2>&1 | head; python3 tools/xref.py 27
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 A540 0x40 ; grep -n "27,A3\|27,A5" labels.c
+  ▶ Grep "A5C5|AI `?\$0F|\$0F` *\|.*sub_state" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Found a new path: object AI `$0F` (`27:A5C5`) copies its `obj_timer2` into `sub_state`. Checking which object types use it.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls gfx/*.txt | head -40; python3 tools/objtype_dump.py --help 2>&1 
+  ▶ Grep "ai \$0F" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D985 0x53
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 DA0C 0x80 --stop; grep -n "^30,DA\|^30,D9" 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 16 9500 0x0C; python3 tools/dis.py 30 DA72 0x5
+  ▶ Grep "16:95|16:9[0-9A-F]{3}|\$40-\$48|types? `?\$4[0-8]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Substates 32-35 are a "walk into shop counter → bank-16 menu → walk out" family. Checking the four bank-16 menus.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 16 9558 0x22; echo; python3 tools/dis.py 16 95
+  ▶ Grep "^\s*(\$|id )?(18|19|1A|1B|1C|1D|23|24|27|28|29)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/menu_strings.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "C0 A5" --bank 27; python3 tools/dis.
+  ▶ Grep "^(32|\$?20)[.:]\$?11\b|32\.17" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Read text.txt +2422
+  ▶ Grep "ai \$0E" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+Substate 36 = empty-counter "Nobody's here." (type `$4E`, AI `$0E`). Now the remaining ones: 1, 4, 12/13, 24, 25, 27, 28, 30, 31.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^31,E3E9\|^30,D78\|^30,D7[0-9A-F]\|^30,D8[0-2]\|^26,9A[A-F
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 EFE8 0x1C; python3 tools/dis.py 19 BB39 0x6
+  ▶ Grep "magic 5|magic_sel.*5|Telepathy|magic \d+ *[=:]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +984
+Substate 24 = cure magic (magic 5), 28 = out-of-MP message. Checking 25, 27, 30, 31.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 BB9D 0x30; echo; python3 tools/dis.py 19 BC
+  ▶ Grep "EvActEnding|act 30|status b7|19:BC6B|19:BDF2|27:BD1F|27:BC04|\$1E` |\$1F` " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "| 30 | \`D827\`\|^| 30 |" REVERSE.md | cut -c1-400; grep -
+  ▶ Grep "^\| 30 \|" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 BBF0 0x18; python3 tools/dis.py 27 BD08 0x1
+  ▶ Grep "^27,B" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "->B[A-D][0-9A-F]{2}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 27:BA40 14 ptr16; python3 tools/dis.
+Substates 30/31 come from AI `$70`/`$F0` phase handlers (phase 2 → 31, phase 10 → 30). Identifying the object types.
+  ▶ Grep "\$A4`|\$B4`|\$B5`|\$F9`|type `?\$A4|C676|C482" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +840
+  ▶ Grep "^(30,(C482|C676|C831|C874|C008|C739|C89E|C176)|31,(FE00|FE17|E3E9))," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "30:C482|30:C676|30:C831|30:C874|30:C008|30:C739|30:C89E|30:C176|31:FE00|31:FE17|31:E3E9" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C482 0x20 --stop; echo; python3 tools/dis.p
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CCAD 0x40 --stop; echo; python3 tools/dis.p
+Substate 31 = rebuild screen/HUD after a cut-scene and return to play. Checking 12/13 (bank 15) and 4, 25, 27, 30 quickly.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 BC40 0x30; python3 tools/xref.py 15:BC40 | 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CB62 0x9A --stop
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CB84 0x78 --stop
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CB90 0x6C
+  ▶ Grep "AreaByIndexTable|\$4C\b.*(pad|controller 2)|pad ?2" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 BD60 0x30; python3 tools/dis.py 15 BDDB 0x2
+  ▶ Grep "15:BC40|[Pp]ause screen|START.*15:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Pause (START) = `15:BC40` called directly from play; substates 12/13 are vestigial entries for it. Now status b7 (substate 25) and substate 27/30.
+  ▶ Read REVERSE.md +1088
+  ▶ Grep "status (b7|\$80|byte|`\$0710`)|obj1_flash.*status|\$0710" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 BE24 0x50 --stop; echo; python3 tools/dis.p
+Enough to name every entry. Writing it up now.
+  ▶ Read REVERSE.md +196
+  ▶ Edit REVERSE.md
+Now labels.csv.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -3 labels.csv; grep -c "" labels.csv; grep -n "SubstateBankTab
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -i 's/^30,CB2E,SubstateBankTable,.*/30,CB2E,SubstateBankTable,u
+  ▶ Read labels.csv +30
+  ▶ Read labels.csv +890
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CAB6 0x28 | tail -4; python3 tools/decode_t
+Labels load. Updating `docs/architecture_exe.md`'s substate table.
+  ▶ Edit architecture_exe.md
+Now marking the task done in REVERSE.md.
+  ▶ Edit REVERSE.md
+One stale label comment to fix: `AreaByIndexTable` was described as "warp/continue", but it's the debug area cycler.
+  ▶ Grep "AreaByIndexTable" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+I finished the top open task: decoding the two state-1 substate tables (`30:CADE` handler pointers and `30:CB2E` bank numbers). Every handler now has a name. This is static analysis only; none of it has been checked in the emulator yet.
+
+**The tables**
+- Both have 40 entries. 10 handler slots are empty (2, 5, 9–11, 14, 15, 37–39).
+- The old note on the bank table was incomplete. Substates 24–27 and 30 also use banks 18/19, along with 3. Substates 12/13 use banks 14/15.
+
+**What the unnamed substates turned out to be**
+- **1 = `SubstAreaEnter`:** runs on every area change (exits, pit falls, warps).
+- **4 = leftover debug pause:** the game never sets substate 4. Holding B on controller 2 jumps straight into it and freezes play until B is pressed again. Next to it is a second debug feature: hold A+B on controller 1 and press A on controller 2 to cycle through the 16 areas in `AreaByIndexTable`.
+- **12/13 = pause screen (`15:BC40` / `15:BDDB`):** START calls this code directly, so these two table entries are never used. A side effect is that `$41` reads 9 (an empty slot) while the game is paused. That's harmless, because the pause loop never returns to the dispatcher.
+- **18 = equipment menu** (SELECT).
+- **24 = cure magic** (magic 5 / stone cure). **25 = change back from another form.**
+- **27 = Mesia reunion scene**, which ends by giving an item.
+- **28 = out of MP** (message plus error sound).
+- **30 / 31 = screen reset and screen rebuild**, triggered by the final-area object script (AI `$70`).
+- **32–35 = armor shop, tool shop, inn and pawn shop.** A shopkeeper object with AI `$0F` (`27:A5C5`) copies a value from its type data into `$41` to choose the shop. The player is walked in, the shop menu runs, and the player is walked back out through an exit.
+- **36 = empty shop counter** ("Nobody's here.").
+
+The names for 27, 30 and 31 come only from reading the code, not from playing those scenes.
+
+**Files changed**
+- **`REVERSE.md`:** new "State-1 substates (session 60)" table listing each handler, its bank, what sets it and what it does. I also fixed the bank-table note and marked the task done.
+- **`labels.csv`:** 25 new labels, and corrected comments on the two tables and `AreaByIndexTable`.
+- **`docs/architecture_exe.md`:** the substate table now has every entry named.
+
+No follow-up tasks were added.
+
+SESSION_SUMMARY: Session 60 — named all 40 state-1 substates (`30:CADE`/`CB2E`, 10 empty) with what sets each one, and fixed the bank-table note. START calls the pause screen directly (entries 12/13 unused), substate 4 is a leftover controller-2 debug pause next to a debug area cycler, and 32–36 are the shops and inn chosen by shopkeeper AI `$0F`. Static analysis only; REVERSE.md, labels.csv (25 labels) and architecture_exe.md updated.

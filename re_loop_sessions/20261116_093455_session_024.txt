@@ -1,0 +1,110 @@
+  ▶ Glob {dead_ends.md,REVERSE.md,re_loop_sessions/*}
+  ▶ Grep "^## Next Tasks" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +916
+  ▶ Read 20261116_093455_session_023.txt
+  ▶ Glob tools/*.py
+  ▶ Grep "MetatileAttr|BE00|EF36|metatile|Compression|\$67\b|k0 |k1 " REVERSE.md
+  ▶ Read REVERSE.md +320
+  ▶ python3 tools/dis.py 31 EDBA 0x90 && python3 tools/dis.py 31 EEEF 0x50
+Working on task Ph4 assets 2/5 (background rendering). I'm decoding the metatile attribute routine before writing the renderer.
+  ▶ python3 tools/dis.py 31 EE80 0x6F
+  ▶ Read palette_dump.py
+  ▶ Grep "^def |^[A-Z_]+ =" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/area_dump.py
+  ▶ Read area_dump.py +100
+  ▶ python3 tools/dis.py 31 EBC1 0xAB && python3 tools/dis.py 31 ED89 0x31 && python3 tools/dis.py 31 EF3E 0x10
+  ▶ python3 tools/xref.py 62FF && python3 tools/search_bytes.py "A9 0A 20 18 C4" --context 0 && python3 tools/xref.py EF36 &
+  ▶ python3 tools/dis.py 31 EB9C 0x25 && python3 tools/dis.py 31 EC6C 0xF8
+  ▶ Grep "^def |^ROOT|return" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/nesrom.py
+  ▶ Grep "^def (tile_pixels|write_png)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/meta_dump.py
+Writing `tools/render_screen.py` (shared library + CLI) now.
+  ▶ Write render_screen.py
+  ▶ python3 tools/render_screen.py --stats && python3 tools/render_screen.py --area 0 --all && python3 tools/area_dump.py su
+  ▶ python3 tools/render_screen.py 80 --area 4 && python3 tools/render_screen.py 63 --area 2 && python3 tools/decode_tables.
+  ▶ Read screen_099_a02.png
+  ▶ Read screen_128_a04.png
+Renderer output looks right (a village house screen). Screen `$80` is a real page: bank 4 page 0, filled with metatile `$80`, so it draws as a blank screen. I'm writing that to REVERSE.md now.
+  ▶ Edit REVERSE.md
+  ▶ grep -nE "^31,(EDE5|EEEF|EECC|EE31|EC88|EF17|EF07|EF1B)," labels.csv; tail -3 labels.csv
+  ▶ python3 tools/xref.py EC87; python3 tools/xref.py EB9C; python3 tools/xref.py EBC1
+  ▶ python3 tools/dis.py 31 EB88 0x14; python3 tools/xref.py EB88; python3 tools/xref.py EB8A
+  ▶ python3 tools/xref.py EB91; python3 tools/xref.py EECC; python3 tools/xref.py EE31
+Fixing the entry addresses in the notes and adding labels.
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read labels.csv +215
+  ▶ Edit labels.csv
+Now `tools/render_level.py` for whole areas, plus an `--every` mode in `render_screen.py` (each screen id rendered once, using the first area that places it).
+  ▶ Edit render_screen.py
+  ▶ Write render_level.py
+  ▶ time python3 tools/render_level.py 2 3C
+  ▶ Read area_002.png
+  ▶ Read area_060.png
+Both look correct, including area `$3C`, whose page comes from bank 10. Rendering all areas and every screen next.
+  ▶ time python3 tools/render_level.py --all && time python3 tools/render_screen.py --every && du -sh gfx/areas gfx/screens
+  ▶ Grep "  [5-8]x[4-9]|  [5-8]x1[0-2]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/areas/index.txt
+  ▶ python3 tools/render_level.py 3 --scale-down 3 && mv gfx/areas/area_003.png /tmp/area_003_small.png && python3 tools/ren
+  ▶ Read area_003.png
+  ▶ python3 tools/render_level.py 3 >/dev/null; python3 tools/dis.py 18 81F0 0x40 --stop; python3 tools/xref.py 81F0 | head 
+  ▶ python3 tools/search_bytes.py "85 8F A9 ?? 85 8C A9 ?? 85 8D 20 F0 81" --context 0 | tail -3; python3 tools/search_bytes
+  ▶ python3 tools/dis.py 19 A0B5 0x80 | grep -v "^$"
+  ▶ python3 tools/dis.py 19 A0B5 0x80
+  ▶ python3 tools/dis.py 18 82BE 0x40 --stop; python3 tools/dis.py 18 8174 0x30
+  ▶ Write render_rects.py
+  ▶ python3 tools/render_rects.py
+  ▶ Edit render_rects.py
+  ▶ Edit render_rects.py
+  ▶ Edit render_rects.py
+  ▶ Edit render_rects.py
+  ▶ Edit render_rects.py
+  ▶ python3 tools/render_rects.py | grep -v "^  " ; true
+  ▶ Read screen_19_A0C9.png
+  ▶ Read screen_19_A7FC.png
+  ▶ Read screen_18_802E.png
+  ▶ Edit render_rects.py
+  ▶ Edit render_rects.py
+  ▶ Edit render_rects.py
+  ▶ Edit render_rects.py
+  ▶ python3 tools/render_rects.py --list | head -1 && python3 tools/render_rects.py > /dev/null
+  ▶ Read screen_19_A7FC.png
+  ▶ Read screen_19_AC3F.png
+  ▶ Grep "gfx/palettes.png|Intermediate Output" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +900
+  ▶ Edit REVERSE.md
+Now the findings for the title/menu screens, next to the `NtRectBlit` notes:
+  ▶ Read REVERSE.md +419
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Grep "^18,(82BE|838B)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Labels are unique. Last step: marking the task done and queueing the one leftover at the end of RE Investigation.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Session 24 finished task **Ph4 assets 2/5 (backgrounds)**. All three new renderers ran without errors. I checked a sample of the output by eye: a village, a 5×7 overworld, a room whose page comes from bank 10, the name-entry screen and the intro. Each one looked correct.
+
+**Findings** (written to REVERSE.md)
+- **Attribute colours:** each metatile has one 2-bit background palette. The values are packed four per byte, starting at `9:B000` plus `$40` per tileset; `MetatileAttrPtrTable` `31:EEEF` points into that table. The helper `31:EECC` reads the value and merges it into the attribute buffer at `$6100`.
+- **`$62FF` bit 7 means "take screen pages from bank 10".** In 32 areas, the row renderer maps bank 10 in place of the normal page bank.
+  - The quirk: only the row path does this, and only for the first screen in a row. The column renderer `31:EC87` never checks the flag. This hasn't been confirmed in an emulator.
+- **Screen `$80` is a real page, not a special case.** Bank 4 page 0 is filled with metatile `$80` and draws as a black screen; the engine just reads it like any other screen. There are 660 such cells inside area maps.
+- **Screen ids and tilesets:** across 213 areas, about half the map cells (1431) use pages from bank 4. There are 253 distinct screen ids, and 12 tilesets (`$80`–`$AC`) are in use.
+- **Title/menu screens:**
+  - The data pointer for each picture is stored 2 bytes before the data.
+  - Menus load full 16-byte palette sets: `MenuPalLoad` `18:82BE` picks one of the 16 sets at `18:838B`.
+  - The same rectangle format is also used to write attribute rows.
+
+**New tools and outputs**
+- `tools/render_screen.py` renders single screens, plus a library the other tools reuse. Output: 256 PNGs in `gfx/screens/`.
+- `tools/render_level.py` stitches whole areas from their screen grids. Output: 213 maps in `gfx/areas/` plus an `index.txt`; the full run takes about 43 seconds.
+- `tools/render_rects.py` replays the bank 18/19 title and menu setup code. Output: 14 pages in `gfx/rects/` plus an index. Cut-scene colours are only approximate, because branches and palette fades aren't modelled.
+
+**Records updated:** REVERSE.md (the screen/metatile pipeline, the title/menu setup, the output-files table, and the task marked done) and labels.csv (10 new labels).
+
+**Still open:** these are queued as one low-priority task at the end of the RE Investigation list:
+- one of the 32 title-screen draw calls doesn't match the tool's pattern;
+- the exact cut-scene palettes;
+- an emulator check of the bank-10 quirk;
+- rendering the visited-screen variants per area.
+
+SESSION_SUMMARY: Session 24 — Ph4 assets 2/5 done: decoded per-metatile attributes (9:B000), the $62FF bank-10 page quirk (row path only) and the $80 blank page; new render_screen.py / render_level.py / render_rects.py → 256 screens, 213 area maps, 14 title/menu/cut-scene pages; MenuPalLoad 18:82BE + 16-byte palette sets; 10 labels.

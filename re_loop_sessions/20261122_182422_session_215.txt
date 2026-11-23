@@ -1,0 +1,211 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls re_loop_sessions | tail -4 && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md | 
+  ▶ Read REVERSE.md +2406
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_21[234].txt re_loop_sessions/*_215.txt
+  ▶ Read 20261122_104601_session_214.txt
+  ▶ Read 20261122_104601_session_213.txt
+  ▶ cat tools/passfit_runs.sh; wc -l web/test/pass_count.mjs tools/pass_fit.py tools/int_fit.py tools/lag_threshold.py; grep
+  ▶ cat web/test/pass_count.mjs tools/pass_fit.py tools/int_fit.py tools/lag_threshold.py; sed -n 40,80p web/src/game/mainlo
+Picking up (c2): putting the fitted cycle model into the port as a lag-frame estimate. Checking the existing coefficient files and the group81 check first.
+  ▶ ls -la /tmp/passfit /tmp/*.json /tmp/*.txt 2>&1 | head -30; cat web/test/group81_check.mjs | head -80
+  ▶ Glob /tmp/*.{json,txt}
+  ▶ Read group81_check.mjs
+  ▶ Read coef.json
+  ▶ Read icoef.json
+  ▶ Read mainloop.js
+  ▶ sed -n 40,75p web/src/game/states/play.js; sed -n 75,100p web/src/game/obj/objects.js; grep -n "^  rd(\|^  wr(\|^  rd (\
+  ▶ python3 tools/int_fit.py /tmp/c81.txt,/tmp/c59.txt /tmp/s81.txt,/tmp/s59.txt --coef /tmp/icoef.json --worst 0; python3 t
+Writing the port-side lag model now (per-stage counters in `Machine` + fitted coefficients → lag decision per pass).
+  ▶ sed -n 1,100p web/src/game/machine.js; grep -rn "soundUpdate" web/src/game --include=*.js | head; sed -n 80,100p web/src
+  ▶ grep -rn "soundUpdate\s*=\|passStage\|defineProperty" web/test/*.mjs web/src --include=*.mjs --include=*.js | grep -v "^
+  ▶ Write lagmodel.js
+Now wiring it into `Machine` (stage buckets + decision after render).
+  ▶ cat > /tmp/machine_patch.py <<'EOF'
+  ▶ Grep "loadState\(|this\.pending = null;|^  reset\(\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/machine.js
+Now the edits to machine.js:
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ python3 tools/edit_helper.py 2>/dev/null; grep -n "substPlayTail(m);   \|function\* substPlay(m) {\|  const y = readPads
+  ▶ Edit play.js
+  ▶ Edit play.js
+Now simplifying `pass_count.mjs` to read the Machine's buckets (plus `--no-lag`).
+  ▶ cp web/test/pass_count.mjs /tmp/pass_count_old.mjs && echo ok
+  ▶ Edit pass_count.mjs
+  ▶ Edit pass_count.mjs
+  ▶ Edit pass_count.mjs
+Verifying `--no-lag` reproduces the s214 counts exactly, then the model's lag frames on `$81`.
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages --no-lag --out /tmp/s81n.txt 2506:DOWN:2 2569:DO
+  ▶ node web/test/pass_count.mjs web/test/states/group59.json 2611 --stages --no-lag --out /tmp/s59n.txt 2510:UP:40 2550:B:4
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages --no-lag --out /tmp/s81n.txt 2506:DOWN:2 2569:DO
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages --no-lag --out /tmp/s81n.txt 2506:DOWN:2 2569:DO
+Counts are identical to s214 (rms 33 / 163 reproduced). Now the real test: group81 past its first lag frame.
+  ▶ Edit group81_check.mjs
+  ▶ node web/test/group81_check.mjs --last 2984 2>&1 | tail -32
+False lag right at the start. Writing a small probe tool to print each pass's estimate vs budget.
+  ▶ Write lag_probe.mjs
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2530 --all 2506:DOWN:2
+  ▶ Grep "^f25(0[5-9]|1[0-2]) " /tmp/c81.txt
+Estimate is ~6,400 cycles too high vs tools.emu's ~22,000. Adding a per-stage breakdown to find which term.
+  ▶ Edit lagmodel.js
+  ▶ Edit lag_probe.mjs
+  ▶ Edit lag_probe.mjs
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2508 2506:DOWN:2; grep -E "^250[678] " /tmp/s81n.txt
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2508 2506:DOWN:2
+  ▶ Grep "^250[678] " /tmp/s81n.txt
+Bug found: `spr`/`snd` keys start with `s` and were taken as AI dispatch buckets.
+  ▶ Edit lagmodel.js
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2512 2506:DOWN:2; node web/test/group81_check.mjs --last 2984 2
+Big step: the first divergence moved from f2605 to f2830, and the player HP steps now match the whole tools.emu run (`$AE … $42`). Checking where the first failure is.
+  ▶ node web/test/group81_check.mjs --last 2984 -v 2>&1 | grep -o "f2[0-9]*:" | uniq -c | head -8; node web/test/lag_probe.m
+Frames f2506-2829 now match at shift 0 (324 rows, was 99). Checking tools.emu's LAG passes to see which the model misses at f2830.
+  ▶ Grep "LAG" /tmp/L81.txt
+  ▶ Grep "^f28(2[4-9]) " /tmp/L81.txt
+  ▶ K="2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:DOWN:7 2592:B:4 2601:DOWN:6 2607:B:5 2618:DOWN:6 2624:B:4 2634:DOWN:5 2639:B:4 
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2829 --stages --out /tmp/s81f.txt 2506:DOWN:2 2569:DOWN:7 2576
+The 1993-cycle NMIs all carry 70 `cpuRd`s, which the 2-sample fit weighted at 0.37. Refitting `nmi`/`hud` on the 305 aligned frames.
+  ▶ python3 tools/int_fit.py /tmp/L81.txt /tmp/s81f.txt --save /tmp/icoef81.json --worst 6 && cat /tmp/icoef81.json 2>/dev/n
+  ▶ python3 tools/int_fit.py /tmp/L81.txt /tmp/s81f.txt --save /tmp/icoef81.json --worst 6
+  ▶ Read icoef81.json
+  ▶ Edit lagmodel.js
+  ▶ node web/test/group81_check.mjs --last 2984 -v 2>&1 | grep -o "f2[0-9]*:" | uniq -c | head -5; node web/test/group81_che
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2830 2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:DOWN:7 2592:B:4 2601
+  ▶ Grep "KEYS|LAST|parseKeys\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/group5c_check.mjs
+  ▶ Read group5c_check.mjs
+Let me give this check a `--last` option too and see how far `$59`/`$5A` go now.
+  ▶ sed -n 57,100p web/test/group5c_check.mjs
+  ▶ Edit group5c_check.mjs
+  ▶ sed -i 's|  if (php.join() !== run.php.join()) fail|  if (run.php \&\& php.join() !== run.php.join()) fail|; s|  if (att
+  ▶ Edit group5c_check.mjs
+  ▶ node web/test/group5c_check.mjs --last 2985 -v 2>&1 | grep -oE "^  FAIL 5[9a] f2[0-9]*:" | uniq -c | head -8; node web/t
+`$59` now matches to f2864 (was f2611). Checking `$5A`:
+  ▶ node web/test/group5c_check.mjs --last 2985 -v 2>&1 | grep -E "^  FAIL 5a" | head -5; node web/test/group5c_check.mjs --
+**`$5A` matches all 479 rows to f2995**, through all 6 of its tools.emu lag frames, and that area was never in any fit. Now looking at the `$59` miss at f2865:
+  ▶ node web/test/lag_probe.mjs web/test/states/group59.json 2866 2510:UP:40 2550:B:4 2566:B:4 2582:B:4 2598:B:5 2615:B:4 26
+  ▶ Grep "LAG|^f286[2-4] " /tmp/L59.txt
+  ▶ Write lag_model_check.py
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2984 2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:DOWN:7 2592:B:4 2601
+  ▶ grep -n "console.log(\`f\|^const ai = \|^}$" web/test/lag_probe.mjs
+  ▶ Edit lag_probe.mjs
+  ▶ Edit lag_probe.mjs
+  ▶ Edit lag_probe.mjs
+  ▶ Edit lag_probe.mjs
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2984 --out /tmp/p81.txt 2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:D
+  ▶ Read soundupdate.js
+  ▶ cat web/src/game/playsound.js | head -60
+  ▶ Edit lag_probe.mjs
+  ▶ SPLITS=1 node web/test/lag_probe.mjs web/test/states/group81.json 2508 | grep splits; SPLITS=1 node web/test/lag_probe.m
+  ▶ Edit lag_probe.mjs
+  ▶ Edit lag_probe.mjs
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2508 --splits; node web/test/lag_probe.mjs web/test/states/grou
+  ▶ Edit lagmodel.js
+  ▶ Edit playsound.js
+  ▶ Edit playsound.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+Refactoring so `lag_probe.mjs` prints exactly what the model decides on:
+  ▶ Edit lagmodel.js
+  ▶ Read lag_probe.mjs +24
+  ▶ Edit lag_probe.mjs
+  ▶ Edit lag_probe.mjs
+  ▶ node web/test/group81_check.mjs --last 2984 -v 2>&1 | grep -o "f2[0-9]*:" | uniq -c | head -3; node web/test/group5c_che
+`$59` now matches to f2944 (was f2864), `$5A` still all rows. Joining again to see both remaining misses:
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2984 --out /tmp/p81.txt 2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:D
+  ▶ Edit lagmodel.js
+  ▶ node web/test/group81_check.mjs --last 2984 -v 2>&1 | grep -o "f2[0-9]*:" | uniq -c | head -3; node web/test/group81_che
+**`$59` and `$5A` now pass over their whole 480-frame refs** (every cell at shift 0, snd included). `$81` matches to f2923; checking f2924:
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2984 --out /tmp/p81.txt 2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:D
+The f2923 miss is the kill frame of slot `$0E` (`EnemyKilled` in `ObjCollideAll`). The `colh` hit-handler coefficients came from only 3 passes (s213 caveat). Checking the stage split:
+  ▶ Grep "^f292[23] " /tmp/p81.txt
+Port col 2473 vs tools.emu 2999. Since the runs now stay aligned for ~400 frames each, I can refit every stage on far more hit frames (player 7 hits + kills) instead of the 3 that the s213 fit used.
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2922 --stages --out /tmp/s81f.txt 2506:DOWN:2 2569:DOWN:7 2576
+846 joined passes now (was 200): all-stage rms 49 / max 221, col rms 13. Loading the new coefficients:
+  ▶ Read coef215.json
+  ▶ python3 tools/int_fit.py /tmp/L81.txt,/tmp/L59.txt /tmp/s81f.txt,/tmp/s59f.txt --save /tmp/icoef215.json --worst 3
+Writing the refitted coefficients into `lagmodel.js`:
+  ▶ Read icoef215.json
+  ▶ Read lagmodel.js +1
+  ▶ Edit lagmodel.js
+  ▶ node web/test/group81_check.mjs --last 2984 -v 2>&1 | grep -o "f2[0-9]*:" | uniq -c | head -3; node web/test/group81_che
+Still the `$0E` kill pass. It is a LAG pass, so `--skip-lag` kept it out of the fit. Checking its new estimate:
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2923 --out /tmp/p81.txt 2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:D
+  ▶ Grep "^2923 " /tmp/s81k.txt
+  ▶ python3 tools/run_checks.py 2>&1 | tail -15
+  ▶ python3 tools/run_checks.py 2>&1 | grep -v "^0 " | head -30
+Two regressions, both look like false lags (port one frame behind). Probing `group18` first:
+  ▶ Grep "parseKeys|states/|LAST =" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/group18_check.mjs
+  ▶ node web/test/lag_probe.mjs web/test/states/group18.json 2560 2527:LEFT:47 | sort -t' ' -k9 -n | tail -4
+  ▶ node web/test/lag_probe.mjs web/test/states/group18.json 2545 2527:LEFT:47
+  ▶ Edit lagmodel.js
+  ▶ node web/test/group18_check.mjs | tail -1; node web/test/finalboss_check.mjs | tail -2
+  ▶ grep -n "parseKeys\|states/\|LAST" web/test/finalboss_check.mjs | head
+  ▶ node web/test/lag_probe.mjs web/test/states/finalboss.json 3147 --out /tmp/pfb.txt && python3 tools/grep_lines.py 2>/dev
+  ▶ Grep "LAG|margin -[0-9]{1,3} " /tmp/pfb.txt
+  ▶ grep -n "irq_mode" web/src/game/ram.js; node web/test/state_meta.mjs web/test/states/group81.json web/test/states/group5
+  ▶ Edit lag_probe.mjs
+  ▶ for s in group81 group59 group5a finalboss group18; do node web/test/lag_probe.mjs web/test/states/$s.json 2520 | tail -
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2508 && node web/test/lag_probe.mjs web/test/states/group59.jso
+`$81`/`$59` both run `irq_mode` 0. Restricting the model (and the late-sound deferral) to `irq_mode` 0:
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit lagmodel.js
+  ▶ Edit lagmodel.js
+  ▶ python3 tools/run_checks.py 2>&1 | grep -v "^0 " | head; node web/test/group81_check.mjs --last 2984 -v 2>&1 | grep -o "
+**52/52 checks pass**, plus `$59` / `$5A` over their full refs and `$81` to f2923. Making these the checks' defaults. First the `$81` values at f2923:
+  ▶ node web/test/group81_check.mjs --last 2923 | tail -3
+  ▶ Edit group81_check.mjs
+  ▶ Edit group81_check.mjs
+  ▶ Edit group81_check.mjs
+  ▶ Edit group81_check.mjs
+  ▶ Edit group5c_check.mjs
+  ▶ Edit group5c_check.mjs
+  ▶ Edit group5c_check.mjs
+  ▶ node web/test/group81_check.mjs; node web/test/group5c_check.mjs
+Both pass. Now the docs: REVERSE.md (task (c) text + Verification Log row) and CLAUDE.md.
+  ▶ grep -n "Main-loop pass cost" REVERSE.md | cut -c1-120
+  ▶ python3 tools/csv_cols.py 2>/dev/null | head -1; awk 'NR==184' REVERSE.md | tail -c 1500
+  ▶ Grep "\| Main-loop pass cost.{0,10}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+Now the task (c) text. Updating the (c2) part:
+  ▶ Edit REVERSE.md
+Now CLAUDE.md (check descriptions + new tools):
+  ▶ Edit CLAUDE.md
+I finished (c2), the step s214 left open: the port now predicts CPU-overrun (lag) frames from its own cycle estimate instead of only through the per-AI heuristics. All 52 web checks pass and the two lag test cases now run much further at shift 0. The leftovers task stays unchecked because (c3) and (c4) below remain. Nothing is committed.
+
+**Results**
+
+| Check | Before | Now |
+|---|---|---|
+| `group5c` area `$59` | f2507-2611 | whole ref f2507-2985, 11 lag frames |
+| `group5c` area `$5A` | f2517-2600 | whole ref f2517-2995, 6 lag frames |
+| `group81` area `$81` | f2506-2604 | f2506-2923 |
+
+Every cell matches at shift 0, sound included. `$5A` was in none of the fits, so it is the out-of-sample test. The predicted start line of each pass matched tools.emu on every compared pass.
+
+**How it works** (new `web/src/game/lagmodel.js`)
+- `Machine` counts RAM reads, writes and ROM reads per stage of each main-loop pass. A pass lags when its estimated cycles, plus the interrupts it runs into, go past the next NMI.
+- The start line of each pass comes from the length of the previous NMI.
+- Sounds queued late in a long pass now start one frame later, as in tools.emu. This fixed the false lag at `$59` f2864 and the sound swap s214 found at `$81` f2596/f2597.
+
+**Calibration fixes**
+- **Refit:** the s214 fits got the port lined up far enough to refit on the full runs: 846 passes, error 49 cycles rms (max 221).
+- **NMI fit:** the old fit was off for the long 1993-cycle NMIs, which gave a wrong start line at `$81` f2829.
+- **`top` fit:** it had folded its constant into the ROM-read term, which caused a false lag in the town area (`group18`).
+- **Threshold:** set at 130 cycles under the exact limit, the midpoint between the closest lag and non-lag passes.
+- **Final-boss area:** it uses a different NMI mode (`irq_mode` 7) and got false lags, so the model only runs in `irq_mode` 0, the mode it was fitted on.
+
+**Still open**, written into the task text:
+- **(c3):** `$81` still diverges at f2924. The pass where slot `$0E` dies (f2922) is estimated about 450 cycles low, because the collision hit-handler fit comes mostly from frames where the player is hit. The fix is exact cycle counts for the hit handlers, like the s213 collision count.
+- **(c4):** fit the other NMI modes, and cross-check in an area whose enemies have no fit of their own.
+
+**Files**
+- Port: new `lagmodel.js`; changes in `machine.js`, `states/play.js`, `playsound.js`.
+- Checks: `group81_check.mjs` and `group5c_check.mjs` now take `--last F`.
+- Tools: new `web/test/lag_probe.mjs` and `tools/lag_model_check.py`. `pass_count.mjs` now reads the Machine's counts, and `--no-lag` gives the old runs with identical counts.
+- Notes: REVERSE.md (the Verification Log row "Main-loop pass cost" and the task text) and CLAUDE.md.
+
+SESSION_SUMMARY: s215 did (c2): new `web/src/game/lagmodel.js` estimates each `irq_mode` 0 SubstPlay pass's cycles (stage, AI, H0, HUD and NMI fits refitted on 846 aligned passes) and makes it lag past (503 − S) × 341/3 − 130, plus late-queued sounds start a frame later as in tools.emu; `group5c` now passes the whole `$59` / `$5A` refs (`$5A` out of sample) and `group81` passes to f2923 (was f2604); 52/52 checks pass; (c3) kill-pass hit-handler cycles and (c4) other NMI modes remain.

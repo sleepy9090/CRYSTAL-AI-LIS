@@ -1,0 +1,133 @@
+  ▶ Skill skill
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks\|- \[ \]" REVERSE.md | head -20
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_20[6-9].txt && tail -c 3000 re_loop_sessions/20261122_104601_session_208.txt; tail -c 1500 re_l
+  ▶ Grep "row 23|rows 23|\(e5\)|load-state" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '2600,2615p' REVERSE.md | cut -c1-1500; grep -n "loadSplits" -r web/src | head; grep -n "killgold\|2525" REVERSE.
+Working on the gameplay-leftovers task (session 209). First I'm reproducing item (e): HUD rows 23-29 differ in load-state runs.
+  ▶ sed -n '30,80p' web/src/game/machine.js; ls web/test/states | head -50; grep -n "dump-screen\|png" web/test/kill_check.m
+  ▶ sed -n '1,60p' web/test/kill_check.mjs; ls web/test/states | grep -i kill; ls web/test/*.state 2>/dev/null | head; ls gf
+  ▶ ls gfx/compare/killgold_s176 | head -30; ls tools/emu/states | grep -i kill; sed -n '1,40p' tools/web_state_compare.py
+Rerun the screen compare for killgold now (post-s176/s208 fixes) to see whether (e) still reproduces.
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/killgold.state --web web/test/states/killgold.js
+  ▶ ls /tmp/kg209; ls tools | grep -i -E "png|diff|shot|pix" 
+  ▶ Glob tools/*{png,diff,shot,pix}*.py
+  ▶ Glob /tmp/kg209/*
+  ▶ sed -n '1,30p' tools/pixel_peek.py
+  ▶ Write png_diff_lines.py
+  ▶ python3 tools/png_diff_lines.py /tmp/kg209/emu_2525.png /tmp/kg209/web_2525.png; python3 tools/png_diff_lines.py /tmp/kg
+Line 191 is the only line that differs: tools.emu already shows the HUD content (x 8-95) there, while the port shows the flat backdrop colour. Next I'm checking where the HUD split starts in each.
+  ▶ for y in 189 190 191 192 193; do python3 tools/pixel_peek.py 10 $y /tmp/kg209/emu_2525.png /tmp/kg209/web_2525.png; done
+  ▶ python3 tools/pixel_peek.py 10 190 /tmp/kg209/emu_2525.png /tmp/kg209/web_2525.png && python3 tools/pixel_peek.py 10 191
+  ▶ python3 tools/dis.py 31 F488 80 && python3 tools/dis.py 31 F400 0x30 | head -5 && grep -n "IrqHandler1Hud\|irqHud" -r we
+  ▶ sed -n '255,330p' web/src/game/mainloop.js; grep -n "dot\|midLine\|splitX\|atX" web/src/ppu*.js web/src/*/ppu*.js 2>/dev
+  ▶ sed -n '1,40p' web/src/nes/ppu.js; grep -n "split\|renderLine\|irq" web/src/nes/ppu.js | head -40; grep -n "irqSplits\|r
+The port's PPU says "mid-scanline register changes: not modelled". Next I'm checking how tools.emu's PPU handles them, so the port can do the same.
+  ▶ grep -n "def \|dot\b\|cycle" tools/emu/ppu.py | head -80; wc -l tools/emu/ppu.py
+  ▶ Read ppu.py +10
+  ▶ Read ppu.py +171
+  ▶ Grep "split_log" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ sed -n '1,40p' tools/emu/shots.py
+I need the tools.emu write log for a run started from a saved state. `shots.py` only runs from power-on, so I'm writing a small tool that does it from a `.state`.
+  ▶ grep -n "state\.\|NES(\|run_frame\|def " tools/web_state_compare.py | head -30; grep -n "^def " tools/emu/state.py
+  ▶ Read web_state_compare.py +60
+  ▶ Write split_probe.py
+  ▶ timeout 300 python3 -m tools.emu.split_probe tools/emu/states/killgold.state 8
+  ▶ Read ppu.js +40
+  ▶ python3 tools/dis.py 31 F451 4 && python3 tools/dis.py 31 F4D8 40 | head -20; grep -n "irq_delay\|07FE" web/src/game/*.j
+  ▶ Grep "sync\(\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ sed -n '1,30p' tools/emu/hud_split_probe.py; grep -n "def write\|ppu" tools/emu/mapper*.py | head
+There's already a `hud_split_probe.py` from an earlier session (Ph6 triage (g)). I'm checking what REVERSE.md concluded from it.
+  ▶ grep -n "hud_split_probe\|triage (g)\|mid-line\|mid-scanline" REVERSE.md | cut -c1-900
+  ▶ Read machine.js +150
+  ▶ Edit split_probe.py
+  ▶ timeout 600 python3 -m tools.emu.split_probe tools/emu/states/killgold.state 300 --hist; ls tools/emu/states | head -40
+  ▶ grep -n "function chainSplit" -A12 web/src/game/mainloop.js; grep -rn "\.splits\b\|splits\.set\|renderLine\|renderFrame"
+Now the PPU change: a `timed(dot, fn)` queue and a dot-ordered render path for lines that have one.
+  ▶ Edit ppu.js
+  ▶ Edit ppu.js
+Now the flush guard on direct register access, so register state stays in program order:
+  ▶ grep -n "  setChrReg(r, val) {\|  readStatus() {\|  writeReg(r, val) {\|  oamDma(src, off = 0) {\|  vramWrite(a, val) {"
+  ▶ Edit ppu.js
+  ▶ Edit ppu.js
+  ▶ Edit ppu.js
+  ▶ Edit ppu.js
+  ▶ Edit ppu.js
+Now `irqHud` schedules its writes at the measured dots:
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/killgold.state --web web/test/states/killgold.js
+Line 191 drops from 73-75 px to 28 / 5 px. Next I'm checking which pixels remain.
+  ▶ python3 tools/png_diff_lines.py /tmp/kg209b/emu_2525.png /tmp/kg209b/web_2525.png; python3 tools/png_diff_lines.py /tmp/
+  ▶ Edit mainloop.js
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/killgold.state --web web/test/states/killgold.js
+Frames whose IRQ latency matches the chosen phase are now pixel-identical (0 px). The others keep a 1-23 px stripe from the 1-2 cycle latency difference. Running the full check suite next.
+  ▶ timeout 1800 python3 tools/run_checks.py 2>&1 | tail -30
+All 52 checks pass. Next I'm refreshing the canonical web-vs-emu screen comparison (§6 of COMPARISON.md had line-191 diffs at f2385/2392/2450).
+  ▶ git diff --stat COMPARISON.md gfx/compare/web.json 2>/dev/null | tail -2; timeout 1200 python3 tools/web_compare.py 2>&1
+  ▶ python3 tools/comparison.py report 2>&1 | tail -5; git diff -U0 COMPARISON.md | head -40
+  ▶ Grep "2385|line-191|row 23" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/COMPARISON.md
+  ▶ timeout 600 python3 -m tools.emu.split_probe tools/emu/states/group18.state 260 --hist --from 2575 --to 2750 && timeout 
+No message window in that run without its keys. I'm trying a state that opens one by itself.
+  ▶ Glob tools/emu/states/*{item,msg,talk,give,event_base,death}*
+  ▶ timeout 600 python3 -m tools.emu.split_probe tools/emu/states/talk16.state 200 --hist && timeout 300 python3 -m tools.em
+  ▶ Read hud_split_probe.py +30
+I'm adding a `--mapper` option to `split_probe`. It logs CHR register writes at the PPU's *unsynced* position, which is the dot they take effect in tools.emu:
+  ▶ Edit split_probe.py
+  ▶ Edit split_probe.py
+  ▶ Edit split_probe.py
+  ▶ timeout 300 python3 -m tools.emu.split_probe tools/emu/states/talk16.state 70 --mapper --from 2580 --to 2584
+  ▶ sed -n '216,256p' web/src/game/mainloop.js; grep -n "export function applyChrAlt\|function applyChrAlt" -A14 web/src/gam
+  ▶ grep -n "MSG_LATE =\|export function applyChrPlay" -A8 web/src/game/mainloop.js | head -30
+Adding a timed CHR helper and using it in H2/H3:
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+Testing on the talk16 state, whose window is open around f2580:
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/talk16.state --web web/test/states/talk16.json -
+Down to 0-23 px per frame, all on line-split rows. For a baseline, I'll run the same compare with my two edited files stashed.
+  ▶ git stash push -- web/src/nes/ppu.js web/src/game/mainloop.js && timeout 600 python3 tools/web_state_compare.py --state 
+I'll skip the stash baseline (it needs approval) and look at the remaining lines directly.
+  ▶ python3 tools/png_diff_lines.py /tmp/t16/emu_2578.png /tmp/t16/web_2578.png && python3 tools/png_diff_lines.py /tmp/t16/
+The rest is IRQ-latency jitter at fetch boundaries: 5-6 px on lines 15 / 90 / 191 when tools.emu's phase differs from the one I picked. Rerunning all checks:
+  ▶ timeout 1800 python3 tools/run_checks.py 2>&1 | grep -v "^0 " | tail -15
+All 52 pass. Now updating the PPU header comment:
+  ▶ Edit ppu.js
+Now REVERSE.md. First the triage (g) entry and the Verification Log table format:
+  ▶ sed -n '1784p' REVERSE.md | cut -c900-2500; grep -n "irq_mode\` 4 " REVERSE.md | head -3; sed -n '216p' REVERSE.md | cut
+  ▶ Grep "^\| `irq_mode` 4|^- \*\*\(g\) screen line 191" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1784
+  ▶ Grep "^\| .*irq_mode.* 4.*nmimode4" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +182
+  ▶ Edit REVERSE.md
+Now marking item (e) done in the leftovers task text:
+  ▶ Edit REVERSE.md
+  ▶ Grep "\(g\) \*\*\(e5\)\*\*" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Item (g) (state export + `run.mjs --load-state` scenarios) is already in use: I just ran it through `web_state_compare.py`, and dozens of checks load such states. Marking it done too:
+  ▶ Edit REVERSE.md
+  ▶ grep -n "ram_byte.py" CLAUDE.md
+  ▶ Edit CLAUDE.md
+  ▶ git status --short | head -20
+Session 209 closed two more items of the gameplay-leftovers task, (e) and (g). All 52 checks pass. Nothing is committed.
+
+**(e) HUD rows 23-29 differing after a state load: fixed, and not caused by state loads.**
+- **Cause:** all of it was one screen line, 191. The HUD's IRQ handler (`31:F488`) changes the screen address, scroll and graphics banks partway through that line. tools.emu draws the playfield there until about x=96 and then the HUD; the port made every change before the line started. REVERSE.md had already described this stripe as normal emulator behaviour (triage (g)); the port just didn't reproduce it.
+- **Port change:** an IRQ handler in the port can now schedule a PPU write at a given dot within the line (`ppu.timed` in `web/src/nes/ppu.js`). Lines with scheduled writes are drawn the way tools.emu draws them, tile fetch by tile fetch.
+- **Handlers using it:** the HUD handler, plus the two message-window handlers (`31:F4E5` / `31:F54B`), which switch graphics banks partway through the line below the window.
+- **Timing correction:** the graphics-bank switches take effect 9 dots earlier than REVERSE.md said. tools.emu applies them from the start of the store instruction, not the actual write.
+- **Results:**
+  - **Kill test state, line 191:** before, 73-75 px differed on every frame. Now 0 px on frames in the timing the port uses and 1-23 px on the others.
+  - **Talk test with the message window open:** 0-23 px per frame, only on lines 15, 90 and 191.
+  - **Canonical screen comparison:** 2 of 11 frames still differ (18 px and 5 px). Before, the line-191 stripe was 30-81 px. COMPARISON.md has been refreshed.
+- **Why some pixels remain:** when the IRQ starts depends on where the CPU is in a 6-cycle wait loop, so the timing shifts between 6 positions 3 dots apart. The port can't predict which without counting CPU cycles, so it always uses the middle one.
+
+**(g) state export and `--load-state` runs: already in place.** These tools exist and 40+ checks use them, so I only marked the item done.
+
+**New tools:**
+- `tools/emu/split_probe.py`: the dot of every PPU register and graphics-bank write per frame, starting from a saved state, optionally as a histogram.
+- `tools/png_diff_lines.py`: which pixel runs differ on each line between two screenshots.
+
+REVERSE.md has a new Verification Log row ("Mid-line IRQ writes"), the triage (g) correction and the task notes, and CLAUDE.md lists the new tools. No new ROM addresses, so labels.csv is unchanged. The task stays unchecked as the rules require for a low-priority task; only (c) is left: the CPU overruns the port doesn't model yet.
+
+SESSION_SUMMARY: Session 209 closed leftovers (e) and (g): the line-191 HUD stripe (not a load-state artifact) and the message-window graphics-bank switches now happen mid-line at their tools.emu dots, so the kill test's line 191 went from 73-75 px on every frame to 0 px on frames in the port's IRQ timing (1-23 px on the others); state export was already done; new `split_probe.py` and `png_diff_lines.py`; 52/52 checks pass; only (c) remains.

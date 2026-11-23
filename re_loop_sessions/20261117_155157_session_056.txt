@@ -1,0 +1,53 @@
+  ▶ wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; grep -n "^## \|^### " REVERSE.md | tail -30
+  ▶ Read dead_ends.md
+  ▶ grep -n "^- \[ \]" REVERSE.md | head -5; wc -c re_loop_sessions/*_05[345].txt
+  ▶ Read 20261117_155157_session_055.txt
+  ▶ tail -c 2500 re_loop_sessions/20261117_155157_session_054.txt; echo ----; tail -c 2500 re_loop_sessions/20261117_155157_
+Now the task context in REVERSE.md.
+  ▶ Read REVERSE.md +1826
+  ▶ grep -n -i "sound driver\|SoundUpdate\|24:8186\|vibrato\|Snd[A-Z]" REVERSE.md | head -50; ls web/src web/src/game web/sr
+  ▶ ls web web/data; head -40 web/test/apu_preview_check.mjs; grep -n -i "sound\|audio\|apu" docs/architecture_web.md | head
+  ▶ wc -l tools/emu/apu.py tools/emu/routine_capture.py web/test/obj_check.mjs web/src/game/prg.js web/src/game/playsound.js
+  ▶ Read routine_capture.py
+  ▶ Read apu.py
+  ▶ Read machine.js
+  ▶ Read prg.js
+  ▶ Read playsound.js
+  ▶ python3 tools/dis.py 31 F7FE 120 --stop; python3 tools/dis.py 24 8020 400 
+  ▶ python3 tools/dis.py 31 F843 80 --stop > /tmp/snd_dis.txt; python3 tools/dis.py 24 81AE 1528 >> /tmp/snd_dis.txt; wc -l 
+  ▶ python3 tools/dis.py 31 F843 80 --stop; python3 tools/dis.py 24 81AE 420
+  ▶ python3 tools/dis.py 24 8351 420
+  ▶ python3 tools/dis.py 24 84F4 440 | grep -v "^\s*$"
+  ▶ python3 tools/dis.py 24 84F4 440
+Still going: I've read most of the bank-24 sound driver (commands, tick, all the opcode handlers). Next is the vibrato routine and the opcode table, then I'll write the JS.
+  ▶ python3 tools/dis.py 24 86AA 106; python3 tools/decode_tables.py 24:8000 16 ptr16 2>&1 | head -20; python3 tools/dis.py 
+  ▶ grep -n "def call" -A30 tools/emu/nes.py; grep -n "class Interrupts" -A25 tools/emu/sprite_capture.py; ls tools/emu/stat
+  ▶ grep -n "nmi" tools/emu/ppu.py tools/emu/cpu.py tools/emu/nes.py | head -20; grep -n "irq" tools/emu/cpu.py | head
+Now writing the emulator capture tool for `SoundUpdate` call sequences (APU writes + RAM per call).
+  ▶ Write sound_capture.py
+Cleaning up a few leftover stubs in that file before running it.
+  ▶ Edit sound_capture.py
+  ▶ Edit sound_capture.py
+  ▶ time python3 -m tools.emu.sound_capture --load-state tools/emu/states/gameplay_first.state --out web/test/sound_frames/s
+The capture works: 130 scenarios, 35,940 driver calls, 215k APU writes. Now writing the JS driver port.
+  ▶ Write driver.js
+Fixing one detail: `$Bx` enters the sweep helper at `$83B6`, after the frame-end/dirty updates.
+  ▶ Edit driver.js
+  ▶ Write soundupdate.js
+Now the replay check. Looking at how `obj_check.mjs` builds its machine.
+  ▶ Read obj_check.mjs
+  ▶ Write sound_check.mjs
+  ▶ node web/test/sound_check.mjs 2>&1 | tail -12
+128/130 on the first run. The 2 failures come from random out-of-range SFX ids (`$78-$7F`) whose header pointer lands in the PPU register range. Checking what tools.emu returns there.
+  ▶ grep -n "def read" -A25 tools/emu/memory.py | head -50; grep -n "def read_reg" -A25 tools/emu/ppu.py | head -40
+  ▶ Edit sound_capture.py
+  ▶ python3 -m tools.emu.sound_capture --load-state tools/emu/states/gameplay_first.state --out web/test/sound_frames/seq.js
+All 130 scenarios match: 35,940 calls and 210,892 APU writes are identical. Next, a negative test: I'll remove the vibrato off-by-one quirk and confirm the check catches it.
+  ▶ Edit driver.js
+  ▶ node web/test/sound_check.mjs 2>&1 | tail -3
+  ▶ Edit driver.js
+  ▶ grep -n "dmc\|prg\|bin" web/src/data.js | head; grep -n "dmc" web/data/manifest.json tools/gen_web_data.py | head; grep 
+  ▶ python3 tools/dis.py 31 F751 50 --stop; python3 tools/dis.py 31 F771 20 --stop; sed -n 80,130p web/src/game/mainloop.js
+`NmiMode3` (`F771`, the title) is five lines ending in `JMP SoundUpdate`, so I'll port it as well. That lets `core_check` compare the 11 mode-3 NMIs in full.
+  ▶ grep -n "writeReg(1\|export function ppuScrollWrite\|^import" web/src/game/mainloop.js; grep -n "not ported\|mode 3\|mod
+You've hit your 5-hour limit · resets 8:50pm (America/New_York)

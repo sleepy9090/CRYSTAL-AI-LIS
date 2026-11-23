@@ -1,0 +1,95 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ grep -n "\- \[ \]" REVERSE.md | head -20; wc -c re_loop_sessions/*_20[456].txt re_loop_sessions/*207.txt
+  ▶ Read 20261122_104601_session_206.txt
+  ▶ Grep "TalkActionTable" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +874
+Picking leftovers item (a): run-level refs for talk acts 16/20/22/25/26, using the s203–s206 recipe (force the act at the dispatch, export state, compare). Looking at the talk dispatch first.
+  ▶ python3 tools/dis.py 30 D0C8 0x60 | head -50; python3 tools/dis.py 30 D552 0x12
+  ▶ grep -n "ENTRY_POINTS" -A3 web/src/game/states/play.js | head -40; grep -n "0xd6d8\|0xD6D8\|D6D8" -B2 -A8 web/src/game/s
+  ▶ Read play.js +255
+  ▶ sed -n 30,110p tools/emu/web_state.py; grep -n "TALK_ACTIONS\|export function\|^ *\(16\|20\|22\|25\|26\):" web/src/game/
+  ▶ sed -n 1,80p web/test/event_check.mjs; sed -n 440,470p web/src/game/states/talk.js; sed -n 296,330p web/src/game/states/
+Recipe: in `event_base.state`, redirect `EventActionDispatch`'s `JMP ($0010)` at `30:D560` into the talk handler (Y = act·2 there, same as the talk path's `TAY` at `D115`). Exporting act 16 first.
+  ▶ for a in 10:D1EB:EB:D1 14:D18E:8E:D1 16:D1CA:CA:D1 19:D2AE:AE:D2 1A:D336:36:D3; do IFS=: read nn pc lo hi <<< "$a"; dd=$
+  ▶ Write talk_states.sh
+  ▶ sh tools/emu/talk_states.sh
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --keys 2510:B:4 2530:B:4 --force 30:D552:0
+  ▶ E="python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --keys 2510:B:4 2530:B:4"; $E --force 3
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --keys 2510:B:4 2530:B:4 --force 30:D552:0
+  ▶ rm tools/emu/talk_states.sh && sed -n 540,570p web/src/game/states/talk.js && grep -n "0x16\]\|0x17\]\|0x16:\|0x17:" web
+All five talk-act states exported (f2540 L251). Now wiring port entry points.
+  ▶ sed -n 540,570p web/src/game/states/talk.js && grep -n "0x16\]\|0x17\]\|0x16:\|0x17:" web/src/game/states/talk.js && gre
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ python3 tools/web_state_compare.py --help | head -30; grep -n "web_state_compare" re_loop_sessions/20261122_104601_sessi
+  ▶ for n in 16 20 22 25 26; do echo "== $n"; python3 tools/web_state_compare.py --state tools/emu/states/talk$n.state --web
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/talk16.state --web web/test/states/talk16.json --frames 300 
+Act 16: every frame matches. Running 20, 22, 25, 26.
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/talk20.state --web web/test/states/talk20.json --frames 300 
+Four match fully; act 22 differs in `oam_crc` on 16 frames from f2630. Classifying those cells.
+  ▶ python3 tools/compare_frames.py /tmp/tk22/emu.csv /tmp/tk22/web.csv --cols core,pal,obj,snd,oam_crc 2>&1 | head -12; pyt
+  ▶ python3 tools/csv_cols.py /tmp/tk22/emu.csv /tmp/tk22/web.csv oam_crc,frame_ctr,sub 2627-2664 2>&1 | head -45
+  ▶ python3 -m tools.emu.pass_probe --help 2>&1 | head -20
+  ▶ python3 -m tools.emu.pass_probe tools/emu/states/talk22.state 130 --from 2626 --to 2666 --keys 2620:A 2660:A 2700:A 2740
+  ▶ python3 tools/compare_frames.py /tmp/tk22/emu.csv /tmp/tk22/web.csv --cols core,pal,obj,snd,oam_crc 2>&1 | tail -12; pyt
+  ▶ node web/test/pending_probe.mjs web/test/states/talk22.json 2700 2620:A 2660:A 2700:A 2>&1 | tail -5; sed -n 525,541p we
+  ▶ grep -rn "SPIN\b\|export const SPIN\|FSD_LAG" web/src --include=*.js | head -20
+  ▶ Read ai_boss.js +920
+  ▶ sed -n 40,60p web/src/game/mainloop.js
+  ▶ grep -n "export function\* waitFrame\b" -A8 web/src/game/states/death.js; grep -n "export const SPIN\|export const NO_NM
+  ▶ Edit talk.js
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/talk22.state --web web/test/states/talk22.json --frames 300 
+Act 22 now matches on all 299 frames. Act 19 (`D1B5`) also does two area loads, so I'll test it the same way.
+  ▶ Edit play.js
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --keys 2510:B:4 2530:B:4 --force 30:D552:0
+Act 19 matches with no change (it starts in vblank at L251, not after a message close, so its area loads fit in the frame). Now writing refs and adding the runs to `event_check.mjs`.
+  ▶ Read event_check.mjs +80
+  ▶ for n in 16 19 20 22 25 26; do python3 tools/csv_trim.py /tmp/tk$n/emu.csv web/test/talk${n}_ref.csv --cols core,pal,obj
+  ▶ python3 tools/csv_trim.py /tmp/tk16/emu.csv web/test/talk16_ref.csv --cols core,pal,obj,snd,oam_crc --frames 2541-2839 &
+  ▶ K="2621:A 2661:A 2701:A 2741:A"; node web/test/pending_probe.mjs web/test/states/talk16.json 2839 2621:A 2661:A 2701:A 2
+Return frames: 16 → f2709 (two messages), 19 → f2541, 20/25/26 → f2629, 22 → f2630 (= tools.emu's main-loop top). Adding the runs to `event_check.mjs`.
+  ▶ Edit event_check.mjs
+  ▶ Edit event_check.mjs
+  ▶ Edit event_check.mjs
+  ▶ Edit event_check.mjs
+  ▶ Edit event_check.mjs
+  ▶ node web/test/event_check.mjs
+All pass. Running the full check suite to make sure the `talk.js` change broke nothing else (other users of talk act 22).
+  ▶ python3 tools/run_checks.py 2>&1 | tail -6
+51/51 pass. Updating REVERSE.md (talk table, leftovers task, Verification Log) and CLAUDE.md.
+  ▶ grep -n "s206" REVERSE.md | cut -c1-200 | head; grep -o "16/22 show a message, no run-level ref yet" REVERSE.md; grep -o
+  ▶ Grep "^\| .*s206|event_check\.mjs. \(s206" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cut -c1-400 REVERSE.md | sed -n '178,182p'
+  ▶ Read REVERSE.md +180
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the leftovers task text (item (a)).
+  ▶ Edit REVERSE.md
+  ▶ Grep "event_check.mjs" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CLAUDE.md
+  ▶ Edit CLAUDE.md
+  ▶ Edit talk_states.sh
+I added full-run tests for six talk actions (16, 19, 20, 22, 25 and 26). All six now match tools.emu on every frame, including sprite memory and sound. Getting act 22 to match needed one port fix. `event_check.mjs` and all 51 checks pass. Nothing is committed.
+
+**How the tests reach the talk code.** I reused the event-act base state from s203–s206. A second `--force` overwrites the jump target in `EventActionDispatch` (`30:D560`), so the run lands in the talk handler instead of an event act. At that point the Y register holds the act number times two, the same value it has on the normal talk path. Each state stops at the handler's first instruction (f2540).
+
+| Act | What it does | Returns |
+|---|---|---|
+| 16 `D1EB` | "teach Recover" message, gives Recover, effect object in slot `$1E` | f2709 |
+| 19 `D1B5` | effect object, area load, makes the NPC beside the trigger vanish | f2541 |
+| 20 `D18E` | gives Flight, then full HP / MP restore | f2629 |
+| 22 `D1CA` | message 19.0, two area loads, effect object | f2630 |
+| 25 `D2AE` | gives Shield Ring, slot 14 becomes a follower | f2629 |
+| 26 `D336` | gives Ball of Water, `$060D` = 4 | f2629 |
+
+**Port fix (act 22).** From f2630 the port was one frame ahead of tools.emu on every column. The act runs two area loads in a row right after its message closes. In the ROM they take long enough that one screen refresh passes before the main loop restarts at f2630, which `pass_probe` confirms. The port did the loads instantly. One extra frame wait after the loads in `web/src/game/states/talk.js` fixes it. Act 19 does the same two loads but starts earlier in the frame, so it fits and needed no change.
+
+**Changes**
+- `web/src/game/states/play.js`: six new talk-act entry points.
+- `web/test/event_check.mjs`: the six talk runs, using new reference CSVs `web/test/talkDD_ref.csv` and states in `web/test/states/`. It also checks each act's return frame and its effects (item given, slot changes, HP / MP).
+- REVERSE.md: new Verification Log row, a note on talk act 22's table row, and an update to item (a) of the leftovers task. CLAUDE.md: the `event_check.mjs` line now covers the talk acts.
+- New `tools/emu/talk_states.sh` with the export commands. The shell sandbox wouldn't let me run it, so I ran the same commands one by one. It also breaks the project's "tools are `.py`" convention; it's only a record of the recipe, so delete it or turn it into a `.py` tool if you prefer.
+
+The leftovers task stays unchecked, as the rules say for a low-priority task. Still open: the pending-message path `30:D085` and the other `ShowMessage` callers in (a), plus items (c), (e), (f) and (g). No new addresses were needed in labels.csv.
+
+SESSION_SUMMARY: Session 207 added full-run tests for TalkActionTable acts 16/19/20/22/25/26 (entered by forcing the `30:D560` jump target in the event base state; every cell matches tools.emu) and fixed act 22 being one frame early, because its two area loads run past one frame in the ROM; all 51 checks pass.

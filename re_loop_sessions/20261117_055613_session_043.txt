@@ -1,0 +1,194 @@
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### \|- \[ \]" REVERSE.md | head -80
+  ▶ Read dead_ends.md
+  ▶ tail -c 2500 re_loop_sessions/20261117_055613_session_042.txt; echo ----; tail -c 1500 re_loop_sessions/20261117_055613_
+  ▶ sed -n 117,145p REVERSE.md; sed -n 1540,1556p REVERSE.md; ls ref gfx gfx/emu tools tools/emu web 2>&1 | head -120; ls CO
+  ▶ ls tools tools/emu web docs; ls gfx/emu/tour | head; ls gfx/emu/tour | wc -l; ls gfx/areas | head -3; ls gfx/areas | wc 
+  ▶ head -60 docs/emu_tour.txt; echo ...; grep -n "^#\|^==\|^--" docs/emu_tour.txt | head -30; echo; head -60 docs/ref_compa
+Picking up the top task (Ph6 validate 4/4 — build `COMPARISON.md`). Checking the existing ref-compare tooling first.
+  ▶ ls tools/ref; wc -l tools/ref/*.py tools/render_compare.py tools/emu/shots.py tools/emu/png.py; grep -n "def \|PIXELS\|a
+  ▶ Read compare_ref.py
+  ▶ cat ref/capture.txt | head -30; sed -n 1,60p tools/emu/__main__.py | grep -n "add_argument\|usage\|--" ; ls tools/emu/st
+  ▶ Grep "(?i)(pause|status screen|game over|start.*menu|select.*menu|menu.*(START|SELECT))" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "(?i)(Start\b|Select\b).{0,40}(opens|menu|substate|sub_state)|game ?over|player dies|death" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 1476,1500p REVERSE.md | cut -c1-900; grep -n "SubstPlay\|MenuOpen\|StatusMenu" labels.csv | head
+Writing a generator tool for `COMPARISON.md`. First I'm checking how to reach the menu, death, and save screens in the emulator.
+  ▶ grep -in "sub_state\|main_state\|^\*,41,\|^\*,40,\|hp_\|SubstateHandler\|MenuMain\|StatusMenu\|PlayerDeath\|GameOver" la
+  ▶ Read tour.py +1
+  ▶ grep -n "^def \|^    def " tools/emu/state.py tools/emu/nes.py tools/render_compare.py tools/emu/png.py; grep -n "load_s
+  ▶ Write probe_screens.py
+  ▶ timeout 600 python3 tools/emu/probe_screens.py /tmp/probe "start=w:10;p:START;w:40;shot;p:START;w:40;shot" "select=w:10;
+  ▶ Read start_0.png
+  ▶ Read select_0.png
+  ▶ Read hp0_1.png
+  ▶ Read hp0_2.png
+  ▶ grep -n "MenuSave\|16,9B\|16,9C\|16,9D" labels.csv | head; timeout 600 python3 tools/emu/probe_screens.py /tmp/probe "sa
+  ▶ python3 tools/xref.py 9BE1 2>&1 | head; grep -n "9BE1\|MenuSave" REVERSE.md | cut -c1-300 | head
+  ▶ python3 tools/dis.py 16 9B70 0x50 2>&1 | head -40
+  ▶ python3 tools/dis.py 16 9AF0 0x80 2>&1 | head -45; grep -n "^16," labels.csv | head -40
+  ▶ grep -n "^ *\(14\|15\|17\|36\|39\|0E\|0F\) " gfx/menu_strings.txt | head; timeout 600 python3 tools/emu/probe_screens.py
+  ▶ Read sd_0.png
+  ▶ sed -n 1,75p gfx/menu_strings.txt | cut -c1-80
+Still hunting the save page (it lives in the bank-16 SELECT menu). Checking the other menu pages.
+  ▶ Read sd_1.png
+  ▶ python3 tools/dis.py 16 9AD0 0x20 2>&1; python3 tools/search_bytes.py "EB 9A" 2>&1 | head; python3 tools/search_bytes.py
+  ▶ python3 tools/search_bytes.py "EE 9A" --context 6 2>&1 | head -30
+  ▶ python3 tools/dis.py 16 8130 0x40 2>&1
+In the SELECT menu, START opens the save/load page (`16:8149` → `16:9AEE`). Capturing it.
+  ▶ timeout 600 python3 tools/emu/probe_screens.py /tmp/probe "sv=w:10;p:SELECT;w:40;p:START;w:40;shot;p:RIGHT;w:20;shot;p:A
+  ▶ Read sv_0.png
+  ▶ Read sv_2.png
+Save page captured (also the LOAD prompt). Next I'm checking the static metasprite renderer so I can pair sprites for the Ph4 checkpoint.
+  ▶ sed -n 1,30p tools/meta_dump.py; grep -n "^def " tools/meta_dump.py tools/catalog_export.py tools/render_screen.py tools
+  ▶ Read meta_dump.py +37
+  ▶ grep -n "PALETTE\|NES_PAL\|def to_rgb\|self.fb\|def vram_read\|chr" tools/emu/ppu.py | head -20; grep -n "chr\|regs" too
+  ▶ grep -n "self.oam\b\|self.oam =\|def run_frame" -A0 tools/emu/ppu.py tools/emu/nes.py | head; sed -n 114,130p tools/emu/
+  ▶ Edit compare_ref.py
+  ▶ Edit compare_ref.py
+  ▶ sed -n 1,30p tools/emu/png.py; grep -n "NES_RGB" tools/palette_dump.py | head -2; grep -n "def parse_keys" -A12 tools/em
+  ▶ Write comparison.py
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit comparison.py
+  ▶ Edit comparison.py
+  ▶ time timeout 900 python3 tools/comparison.py screens sprites --out /tmp/cmp_test.md 2>&1 | tail -40
+Known `dis` shadowing issue — I'll import the stdlib modules first, before putting `tools/` on the path.
+  ▶ Edit comparison.py
+  ▶ time timeout 900 python3 tools/comparison.py screens sprites --out /tmp/cmp_test.md 2>&1 | tail -40
+The script's own directory is `tools/`, so it gets shadowed immediately. I'll strip it from `sys.path` before the stdlib imports.
+  ▶ Edit comparison.py
+  ▶ time timeout 900 python3 tools/comparison.py screens sprites --out /tmp/cmp_test.md 2>&1 | tail -40
+Sprites decoded by `meta_dump` match the framebuffer exactly for the player (`$02`), NPC `$39`, enemy `$98` and `$D3` (98 %). I'm checking why `$EB/$EC` (88 %) and slot 0 `$A7` are lower.
+  ▶ Read area01_s10_mEB.png
+  ▶ Read area01_s00_mA7.png
+  ▶ Grep "(?i)slot 0\b.{0,120}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "(?i)orbit ring.{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 1004p REVERSE.md | cut -c1-700; sed -n 286,292p REVERSE.md | cut -c1-400; sed -n 500,506p REVERSE.md | cut -c1-50
+  ▶ Edit comparison.py
+  ▶ Edit comparison.py
+  ▶ timeout 900 python3 tools/comparison.py sprites --out /tmp/cmp_test.md 2>&1 | grep -v "^screen" | tail -25
+  ▶ Edit comparison.py
+  ▶ Edit comparison.py
+  ▶ Edit comparison.py
+  ▶ timeout 3000 python3 tools/comparison.py ref areas > /tmp/cmp_run.log 2>&1; tail -5 /tmp/cmp_run.log
+  ▶ python3 tools/comparison.py ref areas > /tmp/cmp_run.log 2>&1
+  ▶ python3 tools/comparison.py ref areas > gfx/compare/run.log 2>&1
+  ▶ python3 tools/comparison.py ref areas
+While that runs, I'm checking the save prompt and game-over captures.
+  ▶ Read save_ask.png
+  ▶ Read death.png
+Area 1 shows "Cannot save!", which matches the documented `AreaSaveFlags` bit 0 rule. Preparing the REVERSE.md edits while the long run finishes.
+  ▶ sed -n 1436,1450p REVERSE.md | cut -c1-300; grep -n "emu_tour.txt\|ref_compare" REVERSE.md | cut -c1-200 | head
+  ▶ Read bl777idjp.output
+  ▶ ToolSearch max_results query
+  ▶ Monitor command description timeout_ms
+The `ref` and `areas` sections are still running in the background. I'll write up REVERSE.md once their numbers are in.
+Frame 120 is identical. The screen is nearly blank, so every offset ties, and the tool picked −3 because it takes the first tie. I'll note that in the report rather than rerun. Waiting for the remaining frames.
+Frame 600 is identical too (offset −1).
+Frame 1200 is identical as well.
+Frame 1450 (title screen, 12 colours) is identical.
+Frame 1500 is identical.
+Frame 2250 differs by 14 px (0.02 %), all in tile row 11. That's probably a cursor or blink-timing difference; I'll look at the pair once the run ends.
+Frame 2352 differs by 23 px, all in tile row 23. Waiting for the rest.
+Frame 2385 shows the same pattern: 26 px, all in tile row 23.
+Frame 2392: 20 px, again only tile row 23.
+Frame 2409 reports 0 px, but that result can't be trusted. The reference frame has only 1 colour while tools.emu has 4, and the palette-independent map folds all 4 onto that one colour, so it can't detect differences. I'll look at that pair directly.
+  ▶ Read ref_2409.png
+  ▶ Read ref_2385.png
+  ▶ grep -n "^== \|PAL \|NT  " docs/ref_compare.txt
+  ▶ timeout 900 python3 tools/emu/shots.py gfx/compare/probe 2378,2381,2384,2387,2390,2393 --press 1250:START --press 1400:S
+  ▶ Write pixel_peek.py
+  ▶ python3 tools/pixel_peek.py 100 170 ref/frame_2385.png ref/frame_2352.png ref/frame_2450.png gfx/compare/probe/*.png gfx
+  ▶ for p in "100 150" "140 160" "160 150" "120 140"; do python3 tools/pixel_peek.py $p ref/frame_2385.png gfx/compare/probe
+  ▶ python3 tools/pixel_peek.py 140 160 ref/frame_2385.png gfx/compare/probe/frame_2387.png gfx/compare/probe/frame_2378.png
+  ▶ python3 tools/pixel_peek.py 100 178 ref/frame_2385.png gfx/compare/probe/frame_2387.png && python3 tools/pixel_peek.py 2
+  ▶ Read ref_2460.png
+  ▶ Write mask_peek.py
+  ▶ python3 tools/mask_peek.py gfx/compare/ref_2460.png --top 8 && python3 tools/mask_peek.py gfx/compare/ref_2250.png --top
+  ▶ tail -3 /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/d8e44855-7a69-4c12-8420-7444bb132ae7/tasks/bl7
+About 33 of 204 areas are done. Meanwhile I'll make the ref severity explain these cases, and add a report-only mode so I don't need to rerun the emulator.
+  ▶ Edit comparison.py
+  ▶ Edit comparison.py
+  ▶ Edit comparison.py
+  ▶ Monitor command description timeout_ms
+Waiting for the areas section to finish. After that I'll rebuild the report from the caches and update REVERSE.md.
+The first monitor has expired; the second one is still watching for the run to finish.
+  ▶ grep -c "^area" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/d8e44855-7a69-4c12-8420-7444bb132ae7/t
+83 of 204 areas are done, at about 12 s each, so roughly 25 more minutes. Re-arming the watch.
+  ▶ Monitor command description timeout_ms
+Still waiting on the areas run.
+  ▶ Monitor command description timeout_ms
+I've re-armed the watch for the areas run.
+  ▶ grep -c "^area" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/d8e44855-7a69-4c12-8420-7444bb132ae7/t
+  ▶ Monitor command description timeout_ms
+165 of 204 areas are done, so it should finish in about 8 minutes.
+  ▶ grep -c "^area" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/d8e44855-7a69-4c12-8420-7444bb132ae7/t
+  ▶ Monitor command description timeout_ms
+About 10 areas are left.
+Done. Rebuilding the report with the updated severity rules (from cache only).
+  ▶ python3 tools/comparison.py report && grep -n "CRITICAL\|FIXED" COMPARISON.md | grep -v "^[0-9]*:Severity\|unpaired" | c
+Area `$01` is flagged at 3.1 %, just over the threshold. I'll check whether that's sprites only.
+  ▶ Read area_001.png
+Area `$01`'s 3.1 % is sprites only: the player with the orbit ring and an NPC. I'll classify it, then review all the MINOR rows.
+  ▶ Edit comparison.py
+  ▶ python3 tools/comparison.py report && grep "MINOR" COMPARISON.md | cut -c1-40,100-230 | sort -t'|' -k8 | uniq -c -f6 | h
+  ▶ python3 tools/comparison.py report; grep -c "NPC text window" COMPARISON.md; grep "animated\|MINOR (mostly\|cursor\|line
+I'm checking the `$60` pair to confirm the "animated tiles" explanation before keeping it as MINOR.
+  ▶ Read area_096.png
+  ▶ grep -n "sub_state 9\|sub_state \$12\|substate 9\|substate 18\|9AEE\|status screen" REVERSE.md labels.csv | cut -c1-200;
+  ▶ Grep "sub_state 9|sub_state .\$12|substate 9\b|substates? 18|9AEE|status screen|Reference cross-check" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Read REVERSE.md +1007
+  ▶ Read REVERSE.md +140
+Adding Verification Log rows after line 143.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Next, recording the menu entry paths I found under the Save / load module section.
+  ▶ Grep "^### Save / load module|^### Data Structures" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +962
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 16 9C7A 0x10 | head -8
+The exit path is confirmed (`9C7A` returns to the menu via `807E`/`807A`). Adding labels.
+  ▶ tail -3 labels.csv
+  ▶ Read labels.csv +805
+  ▶ Edit labels.csv
+Now the output-files table, the task list, and the checklist.
+  ▶ Grep "^\| `tools/emu/tour.py` → " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 1441p REVERSE.md | tail -c 200
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Marking the task done and filing the leftovers: the browser check and the reference captures for menus go to the triage task, together with the timing items.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Final check of the COMPARISON.md header, plus removing my scratch probe frames.
+  ▶ rm -r gfx/compare/probe && head -12 COMPARISON.md | cut -c1-250 && du -sh gfx/compare && git status --short | head
+  ▶ Read COMPARISON.md
+I've built `COMPARISON.md` for Ph6 validate 4/4. The first real comparison against the FCEUX captures shows our emulator matches it except for one scanline, and the Ph4 sprite checkpoint is now ticked. Two parts are still open: the web catalog wasn't opened in a real browser because this session has no browser, and the menu/death/save screens have no reference image to compare against.
+
+**What `COMPARISON.md` covers** (251 rows: 186 MATCH, 9 FIXED, 42 MINOR, 12 CRITICAL; image pairs in `gfx/compare/`). The new `tools/comparison.py` generates it.
+
+1. **FCEUX vs our emulator, 12 captured frames.** The pixel compare had never run because FCEUX saves 256×224 images, so I made `tools/ref/compare_ref.py` crop our frames to match.
+   - Boot, intro and title frames are identical. Frame 2250 differs by 14 px around the cursor.
+   - Every gameplay frame differs only on screen line 191, the line right after the HUD split at line 190. Our emulator's split timing is one scanline off from FCEUX.
+   - At frame 2409 the FCEUX image is blank while ours shows the faded room. The compare reports "0 px" there, but that's wrong: the colour mapping hides the difference. It's marked CRITICAL.
+   - The pairs look different in hue only because the two emulators use different RGB colour tables. The palette memory is identical in all 12 frames.
+2. **Static renderer pairs** from session 38 (title, name entry, areas 0 and 1): all exact.
+3. **203 toured areas vs the static maps**, recompared with camera X read as signed. Session 42's report read it unsigned, so four areas (`$14`, `$40`, `$41`, `$50`) were never compared; they all match now.
+   - MINOR: 32 rooms where an NPC text window is open on entry, the water animation in `$60/$64/$68` (I checked the pair), and area `$01` (3.1 %, sprites only).
+   - CRITICAL: `$15`, `$1A` and `$65` still ended in a different scene during the tour.
+4. **Menus, death and save**, captured from the area-1 save state:
+   - START opens the status screen; SELECT opens the equipment and item/magic grids.
+   - START inside the SELECT menu opens a save/load page (`SaveLoadPage` `16:9AEE`). Area 1 shows "Cannot save!", which matches the documented save-flag rule.
+   - Setting HP to 0 runs the death routine, then the game goes back to the intro. In this run there is no separate game-over screen.
+   - These 8 rows are CRITICAL only because no reference capture covers them yet.
+5. **Sprites:** 7 metasprite ids across 22 object slots in 5 areas, decoded by `meta_dump.py`, match our emulator's output 100 % on every visible pixel. To get there I had to skip pixels covered by higher-priority sprites, because slot 0 is drawn under the player and the orbit-ring pieces overlap.
+
+**Other changes**
+- REVERSE.md: three Verification Log rows (the FCEUX results count as properly verified, not self-emu), the menu entry paths, an update note on the old "reference not run" section, and the new tools in the output-files table.
+- `labels.csv`: 3 new labels (`SaveLoadPage`, `SaveLoadLoop`, `SaveLoadExit`).
+- Helper tools: `tools/emu/probe_screens.py`, `tools/pixel_peek.py`, `tools/mask_peek.py`.
+- The leftovers are added to the existing FCEUX triage task rather than a new one: the line-191 timing, the blank frame 2409, reference captures for the menu screens, and the browser check.
+
+`gfx/compare/probe/` (6 scratch frames) is still there because the delete was blocked by a permission prompt; it's safe to remove. Nothing is committed.
+
+SESSION_SUMMARY: Session 43 — Ph6 validate 4/4 done: new `tools/comparison.py` → `COMPARISON.md` (251 rows, MATCH 186 / FIXED 9 / MINOR 42 / CRITICAL 12, pairs in `gfx/compare/`); first FCEUX pixel cross-check (boot/title identical, gameplay differs only on line 191 after the HUD split, frame 2409 blank in FCEUX); 4 area compares fixed by signed camera X; menu/save/death screens captured (START→sub 9, SELECT→sub $12, SELECT+START→`SaveLoadPage` 16:9AEE); 7 metasprites 100 % → Ph4 ticked; browser check of web/catalog.html not done (no browser), moved to the triage task; 3 labels.
+That notice is only the progress watch expiring after the run had already finished, so nothing changed. Session 43 is complete as summarised above.
+
+SESSION_SUMMARY: Session 43 — Ph6 validate 4/4 done: new `tools/comparison.py` → `COMPARISON.md` (251 rows, pairs in `gfx/compare/`); FCEUX pixels match except line 191 (HUD split) and blank ref frame 2409; menu/save/death screens captured; 7 metasprites 100 % → Ph4 ticked; catalog.html browser check not done (no browser), moved to the triage task.

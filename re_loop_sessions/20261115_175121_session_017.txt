@@ -1,0 +1,139 @@
+  ▶ Glob {dead_ends.md,REVERSE.md,re_loop_sessions/*}
+  ▶ Read dead_ends.md
+  ▶ Read 20261115_175121_session_017.txt
+  ▶ Read 20261115_175121_session_016.txt
+  ▶ Grep "^## |^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +672
+  ▶ Grep "F05C|F066|F060|boss area|Boss" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Picking task "text follow-ups 6", starting with (a) the four unexplained boss-gate flags. Reading the relevant REVERSE.md notes first.
+  ▶ Read REVERSE.md +470
+  ▶ Grep "F05|F06" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/items.txt
+  ▶ Read items.txt
+  ▶ python3 tools/search_bytes.py "A9 64 85" --max 60; python3 tools/search_bytes.py "A9 65 85" --max 60; python3 tools/sear
+  ▶ python3 tools/dis.py 30 D190 0x40
+  ▶ python3 tools/area_dump.py 2>&1 | head -5; python3 tools/area_dump.py spawns 2>&1 | head -30
+Locating which areas hold the boss-intro triggers ($98, $9A-$A0) to find the boss object types.
+  ▶ python3 tools/area_dump.py spawns > /tmp/spawns.txt 2>&1; awk '/^ *[0-9]+ \$/{a=$0} /p=\$(98|9A|9B|9C|9D|9E|9F|A0|B1)/{p
+  ▶ python3 tools/area_dump.py spawns --out gfx/area_spawns.txt 2>&1 | tail -2; ls gfx | head -50
+  ▶ python3 tools/area_dump.py spawns > gfx/area_spawns.txt
+  ▶ Grep "sys.argv|def main|rest =|areas =" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/area_dump.py
+  ▶ Read area_dump.py +1
+I'll add an `--out` option and a `params` mode (param → areas index, serving sub-task (c)) to `area_dump.py`.
+  ▶ Read area_dump.py +170
+  ▶ Edit area_dump.py
+  ▶ Edit area_dump.py
+  ▶ python3 tools/area_dump.py params --out gfx/spawn_params.txt && python3 tools/area_dump.py spawns --out gfx/area_spawns.
+  ▶ Grep "^h2 p=\$(98|9[A-F]|A0|B1)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/spawn_params.txt
+  ▶ wc -l gfx/spawn_params.txt && grep -c . gfx/area_spawns.txt
+  ▶ Read spawn_params.txt
+  ▶ Grep "dispatch|ObjUpdate|ObjTypeTable|EntityHandler" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^(13|15|26|27|30|31)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read REVERSE.md +263
+  ▶ python3 tools/dis.py 30 CB90 0x40; python3 tools/xref.py 04A0 | head -40
+  ▶ python3 tools/dis.py 15 BC40 0x60
+  ▶ python3 tools/search_bytes.py "BD A0 04 0A" --disasm; python3 tools/search_bytes.py "B9 A0 04 0A" --disasm; python3 tool
+  ▶ Grep "object update|\$04A0|obj_active" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Still on boss gates: the object-update dispatcher isn't labelled yet, so I'm checking the kill paths in bank 26 (hit handlers) for a flag write.
+  ▶ python3 tools/dis.py 26 8FC4 0x84
+  ▶ python3 tools/search_bytes.py "BD A0 04 F0" --disasm; python3 tools/search_bytes.py "BD A0 04 D0" --disasm --max 20
+  ▶ python3 tools/xref.py 04A0 | tail -n +41
+  ▶ python3 tools/dis.py 30 CCC0 0x110
+  ▶ python3 tools/dis.py 30 C25D 0xA0 --stop
+  ▶ python3 tools/dis.py 30 C264 0xF0
+Writing `tools/objtype_dump.py` to decode `ObjTypeTable` records and map each type to its AI handler.
+  ▶ Write objtype_dump.py
+  ▶ python3 tools/objtype_dump.py --out gfx/objtypes.txt && python3 tools/objtype_dump.py --ai --out gfx/obj_ai.txt && pytho
+  ▶ python3 tools/search_bytes.py "20 ?? 90" --bank 15; python3 tools/search_bytes.py "20 ?? 8F" --bank 15; python3 tools/se
+  ▶ python3 tools/dis.py 15 A5E0 0x30; python3 tools/dis.py 15 A760 0x30
+  ▶ python3 tools/xref.py A76A --bank 15; python3 tools/xref.py A71E --bank 15; python3 tools/dis.py 15 A700 0x6A
+  ▶ python3 tools/dis.py 26 90AA 0xB0
+  ▶ python3 tools/dis.py 26 9152 0xD8
+Enemy death path found: when HP underflows, `26:9152` runs `ObjInit(slot, type=$04C0)`, so the dying object turns into its "death type". Bosses have `$04C0` = `$DC`/`$CF`/`$D4`. Dumping those types.
+  ▶ python3 tools/objtype_dump.py DC CF D4 C2; python3 tools/dis.py 26 924B 0x30
+  ▶ python3 tools/dis.py 27 B83B 0xA0
+  ▶ python3 tools/dis.py 26 98CD 0x10; python3 tools/objtype_dump.py DD; python3 tools/dis.py 15 B807 0x40
+Chain is boss → `$DC` → `$DD` (explosions, AI `$74`) → `$CF` (AI `$6F`, `15:B807`). `$CF` looks up the area in a table at `15:B95D` and runs a per-boss script. Reading on.
+  ▶ python3 tools/dis.py 15 B847 0x116
+  ▶ python3 tools/decode_tables.py 15:B95D 14 u8; python3 tools/decode_tables.py 15:B96B 14 ptr16
+  ▶ python3 tools/decode_tables.py 2>&1 | head -15
+  ▶ python3 tools/decode_tables.py 15:B987 13 hex21
+Decoded 13 records. Areas `28`, `6E` and `F2` share a code hook at `15:BA98`, so I'm checking it for the missing flag writes.
+  ▶ python3 tools/dis.py 15 BA98 0x50
+This hook reads the `15:BAFE` event records (sub-task (g)). Continuing.
+  ▶ python3 tools/dis.py 15 BAEA 0x30; python3 tools/decode_tables.py 15:BAFE 14 ptr16
+  ▶ python3 tools/decode_tables.py 15:BB1A 3 hex5; python3 tools/dis.py 15 BB29 0x60
+  ▶ Grep "^(6\.1|16\.19|25\.5)[ :]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Grep "^.{0,12}(06|6)[.:]0?1\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Grep "^-- (6\.1|16\.19|25\.5) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ for p in 98 9B 9C 9D 9E 9F A0; do python3 tools/search_bytes.py "A9 $p ?? 60 05"; done
+  ▶ python3 tools/search_bytes.py "A9 98 ?? 60 05"; python3 tools/search_bytes.py "A9 9B ?? 60 05"; python3 tools/search_byt
+  ▶ python3 tools/search_bytes.py "A9 98 85" --disasm; python3 tools/search_bytes.py "A9 9C 85" --disasm; python3 tools/sear
+No code or area spawns triggers `$98`/`$9B-$A0`. Checking what the two placed triggers (`$9A`, `$B1`) test, to see whether the missing gates matter at all.
+  ▶ python3 tools/flag_sites.py --hook2 | grep -E "item (98|99|9A|9B|9C|9D|9E|9F|A0|B1) "
+Triggers `$98`/`$9B-$A0` exist in the table but no area places them. Checking whether the boss AIs show these intros themselves through the pending-message slot (`$06C3`/`$06E3`).
+  ▶ python3 tools/xref.py 06E3 | grep -v "^--"; python3 tools/xref.py 06C3 | grep -v "^--"
+Boss AIs set pending messages themselves (`15:A9A1`, `ACED`, `AE2D`, `AF91`, `B0EC`, `B195`). Inspecting one to see whether it checks or writes a gate flag.
+  ▶ python3 tools/dis.py 15 A95D 0x60
+  ▶ python3 tools/dis.py 14 80A0 0x45
+  ▶ Grep "^def |85E0|86E0" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ Read npc_script_dump.py +25
+  ▶ python3 tools/dis.py 14 8135 0x14
+Writing `tools/presence_dump.py` to decode the `NpcHidden` presence lists (area + flag conditions) for every spawn param.
+  ▶ Write presence_dump.py
+  ▶ python3 tools/presence_dump.py C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC
+Output is garbage for `$C0+`, which suggests the direct-type spawn path skips `NpcHidden`. Verifying in the spawn handler.
+  ▶ python3 tools/dis.py 31 E2B5 0x40
+  ▶ python3 tools/dis.py 31 E363 0x14
+  ▶ python3 tools/dis.py 31 E340 0x23
+  ▶ python3 tools/decode_tables.py 14:86E0 0x50 ptr16 --per-line 8
+Bit 7 means "last condition" in this list format, not "more follow", so my loop was inverted. Fixing it.
+  ▶ Edit presence_dump.py
+  ▶ Edit presence_dump.py
+  ▶ python3 tools/presence_dump.py C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC
+  ▶ Grep "^  (2E|3D|61|38|07|08|0B|26|23|12|1C) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/items.txt
+  ▶ Grep "^(\*,(0704|0706|0102|07D5|07D6|07D7)|26,(8B7F|8B8F|8B9E|9152|924B|91FA|98CD)|30,CCCC|27,(A314|B83B)|15,(B807|B95D|B96B|BA98|BAFE|BB29)|14,(85E0|86E0))" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -4 labels.csv
+  ▶ Read labels.csv +365
+  ▶ Edit labels.csv
+Labels added. Generating the full presence dump for all params, then writing REVERSE.md.
+  ▶ python3 tools/presence_dump.py --out gfx/presence.txt && wc -l gfx/presence.txt && python3 tools/dis.py 15 B807 0x6 && p
+Now the REVERSE.md updates: a new "Boss defeat" section, the corrected boss-gate paragraph, the flag-table row, and the F100-F10C correction.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding the new output files to "Intermediate Output Files".
+  ▶ Grep "items\.txt|^## Intermediate" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +673
+  ▶ Edit REVERSE.md
+Updating the task list: marking follow-ups 6 done for (a), (g) and part of (c), and moving the leftovers to a new "text follow-ups 7".
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit dead_ends.md
+  ▶ Edit REVERSE.md
+  ▶ head -20 gfx/obj_ai.txt
+I finished part of task "text follow-ups 6" ((a), (g) and part of (c)) and marked it done. The rest is now a new "text follow-ups 7" task. Nothing is committed yet.
+
+**(a) Boss gates — resolved.** F05C, F05D, F05E, F060 and F066 are never set, and nothing breaks because of it. The only things that test them are the event triggers `$98` and `$9B-$A0`, and no area or code ever places those triggers. Each boss shows its own intro message from its AI code instead (e.g. `15:A99F`). The flags that actually stop a boss from coming back are **F100-F10C**:
+- Each boss spawn (params `$C0-$CC`) is suppressed by `NpcHidden` once its flag is set.
+- Picking up the boss's reward sets that flag. Every reward matched its boss, from Rabbit Boots → F100 to item `$61` → F10C.
+- This corrects session 16, which called F100-F10C "already collected" pickup flags.
+
+The `dead_ends.md` entry is marked resolved.
+
+**New code paths found along the way:**
+- **Object update loop** (`ObjUpdateAll` `30:CCCC`): it dispatches each slot through an AI table at `27:A314`, keyed by `obj_active & $7F`. AI ids `$60-$6F` (which covers all the boss AIs `$E0-$EB`) run in bank 15.
+- **Enemy death** (`EnemyKilled` `26:9152`): adds XP, turns the slot into its "death type", and handles level-up. XP is at `$0704`; the per-level HP, MP and XP tables are at `26:8B7F`, `8B8F` and `8B9E`.
+- **Boss defeat chain**: two explosion stages (types `$DC` → `$DD`), then `BossDefeated` `15:B807`. That routine turns the boss into the reward drop and loads a 21-byte record per area (`15:B987`): reward item, music, palettes, CHR banks and a code hook. REVERSE.md has the full boss table.
+- **(g) `15:BAFE`**: these are the "boss flees" speech records (messages 6.1, 16.19, 25.5), used by the hook at `15:BA98`.
+
+**Not traced yet:** the boss AI state machines themselves (belongs to task "gameplay 3/3"), and how the area `$43` boss gives its reward, since it has no defeat record.
+
+**Tools, all run:**
+- `area_dump.py` has a new `params` mode and `--out`; output is in `gfx/spawn_params.txt` and `gfx/area_spawns.txt`.
+- New `tools/objtype_dump.py` → `gfx/objtypes.txt`, `gfx/obj_ai.txt`.
+- New `tools/presence_dump.py` → `gfx/presence.txt`.
+
+**Docs:** 21 new labels in `labels.csv` (they show up in `dis.py`). REVERSE.md has a new section "Object update + boss defeat", plus a fixed flag table and an updated "Intermediate Output Files" list.
+
+SESSION_SUMMARY: Session 17 — text follow-ups 6 (a, g, part of c): found the object loop ObjUpdateAll 30:CCCC (AI table 27:A314), enemy death/XP/level-up 26:9152, and the boss-defeat chain ending in BossDefeated 15:B807 (per-area reward records 15:B987); the real boss gates are F100-F10C (NpcHidden presence, set by the reward pickup), F05C/F05D/F05E/F060/F066 are never set (their triggers are never placed); 15:BAFE = boss flee speeches; new objtype_dump.py, presence_dump.py, area_dump params; 21 labels; leftovers → "text follow-ups 7".

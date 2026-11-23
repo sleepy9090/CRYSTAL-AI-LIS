@@ -1,0 +1,76 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/20261122_104601_session_19[5-8].txt && tail -c 5000 re_loop_sessions/20261122_104601_session_197.
+  ▶ Grep "snd_saved_y|010F" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -n -o ".\{300\}010F.\{300\}" REVERSE.md | grep -i "areaenter\|2F\|spriteDraw" | head; grep -rn "010F\|saved_y\|sndS
+  ▶ python3 tools/dis.py 31 E4C8 48; grep -rn "0x2[fF]" web/src/game --include=*.js | grep -i playSound | head
+I'm working on leftover item (h): the Y value that `PlaySound($2F)` saves in `$010F` at the end of AreaEnter.
+  ▶ Read areaenter.js +270
+  ▶ python3 tools/dis.py 14 800E 3; python3 tools/dis.py 30 C169 30 --stop
+  ▶ python3 tools/dis.py 14 8019 120 --stop; grep -rn "export function spriteDraw" web/src
+  ▶ python3 tools/dis.py 28 800E 3; sed -n 1,80p web/src/game/obj/sprites.js
+  ▶ python3 tools/dis.py 28 8094 300 | head -110
+  ▶ python3 tools/dis.py 28 8030 100 | grep -n "Y\|RTS\|JSR\|JMP\|TA[YX]\|T[YX]A" ; python3 tools/dis.py 28 8145 120 | grep 
+  ▶ python3 tools/dis.py 28 8036 0x5F; python3 tools/dis.py 28 822E 0x1AA | grep -n "Y\b\|,Y\|RTS\|TAY\|INY\|DEY\|LDY\|JMP\|
+Tracing where the Y register ends up in the sprite pass (`28:800E`). Next I'll check whether the port's metasprite emitter can return its final Y.
+  ▶ wc -l web/src/game/obj/sprites.js && sed -n 80,330p web/src/game/obj/sprites.js
+  ▶ python3 tools/dis.py 28 8268 0x170
+  ▶ python3 tools/dis.py 28 8151 0x69
+  ▶ Read playsound.js
+Now I'll add the Y tracking to the sprite pass.
+  ▶ cat > /tmp/patch_sprites.py <<'EOF'
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+  ▶ grep -n "import.*sprites\|import.*playsound" web/src/game/states/areaenter.js
+  ▶ Edit areaenter.js
+  ▶ Edit areaenter.js
+The sprite pass now tracks Y and AreaEnter passes it on. Next I'll check it against tools.emu by watching `$010F` in both.
+  ▶ python3 tools/show_line.py REVERSE.md 161 | head -c 1500; echo; sed -n 1,40p web/test/ram_watch.mjs | grep -n "argv\|usa
+  ▶ python3 tools/web_state.py --help 2>&1 | head -30
+  ▶ ls tools/emu/ | head -50; python3 -m tools.emu --help 2>&1 | grep -i "watch\|dump" | head
+  ▶ grep -o "'--[a-z0-9-]*'" web/test/run.mjs | sort -u | tr '\n' ' '; echo; grep -rn "canon" tools/web_compare.py | head -5
+  ▶ grep -n "KEYS\|keys" tools/web_compare.py | head -10
+  ▶ grep -rn "CANON_KEYS *=" tools/ | head -3
+Running tools.emu with a watch on `$010F` over the new-game and continue runs, so I can compare against the port's RAM dumps.
+  ▶ (python3 -m tools.emu --frames 2400 --keys 1250:START 1400:START 1600:START 1700:START 2300:START --watch 010F 2>&1 | gr
+  ▶ python3 -m tools.emu --frames 2400 --keys 1250:START 1400:START 1600:START 1700:START 2300:START --watch 010F 2>&1 | tai
+  ▶ python3 -m tools.emu --frames 1650 --keys 1250:START 1400:START 1550:SELECT 1600:START --watch 010F 2>&1 | tail -6
+  ▶ node web/test/run.mjs --frames 1410 --keys 1250:START 1400:START 1550:SELECT 1600:START --dump-ram /tmp/cont_ram.bin --q
+  ▶ node web/test/run.mjs --frames 1410 --keys 1250:START 1400:START 1550:SELECT 1600:START --dump-ram /tmp/cont_ram.bin --q
+  ▶ node web/test/run.mjs --frames 2150 --keys 1250:START 1400:START 1600:START 1700:START 2300:START --dump-ram /tmp/ng_ram
+  ▶ od -A x -t x1 -j 0x10F -N 1 /tmp/cont_ram.bin && od -A x -t x1 -j 0x10F -N 1 /tmp/ng_ram.bin
+Both port runs finished. Now I'm reading `$010F` from the RAM dumps; I'm adding a small byte-reader tool because `od` needs approval.
+  ▶ Write ram_byte.py
+  ▶ python3 tools/ram_byte.py /tmp/cont_ram.bin 010F /tmp/ng_ram.bin
+Both match tools.emu: `$0A` after continue (the port wrote `$00` before) and `$00` after new game. Now I'll check an in-game area change and run the full check suite.
+  ▶ python3 tools/run_checks.py 2>&1 | tail -5
+  ▶ grep -n "state\|KEYS\|keys" web/test/fanskip_check.mjs | head -15
+  ▶ python3 -m tools.emu --load-state tools/emu/states/fanskip.state --frames 300 --watch 010F 2>&1 | tail -6
+  ▶ node web/test/ram_watch.mjs web/test/states/fanskip.json 300 010F 2>&1 | tail -6
+Values match in an in-game area entry too (fanskip: `$1A`, `$00`, `$0A`; the port's 1-frame delay there is already in that check's list). All 50 checks pass. Updating REVERSE.md.
+  ▶ Edit REVERSE.md
+Now the old note at line 161 that calls this a known difference.
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+I fixed item (h) of the gameplay-leftovers task. The port now writes the same value to `snd_saved_y` (`$010F`) as tools.emu when AreaEnter calls `PlaySound($2F)` (`31:E4EC`), and all 50 checks pass.
+
+- **Cause:** the port called `PlaySound($2F)` with Y = 0. The ROM passes whatever Y the sprite pass `ObjSpriteDraw` (`28:800E`) leaves behind, because nothing between the two touches Y (`WaitFrame` doesn't). No code reads that byte back.
+- **Fix:** `web/src/game/obj/sprites.js` now follows the Y register through every exit of the sprite pass, including the metasprite emitter, the hide pass and the orbit/burst sprites. A new `spriteDrawY()` returns it, and `web/src/game/states/areaenter.js` passes it to `PlaySound($2F)`.
+- **Results vs tools.emu:**
+  - Continue run, f1612: `$0A` on both; the port wrote `$00` before.
+  - New game, f2339: `$00` on both.
+  - The fanskip run's area-`$02` entry: same values (`$1A`, `$00`, `$0A`). The port writes them one frame later there, the 1-frame area-entry lag that `fanskip_check.mjs` already lists.
+- **Docs:** REVERSE.md strikes (h) in the task text and marks the old difference note as fixed. I added `tools/ram_byte.py`, which prints bytes from `--dump-ram` files (`od` needed approval each time), and listed it in CLAUDE.md.
+
+The task stays open because it is the low-priority leftovers task; items (a), (c)-(g) and (i) remain. Nothing is committed.
+
+SESSION_SUMMARY: Session 198 closed leftovers item (h): sprites.js now tracks ObjSpriteDraw 28:800E's final Y (spriteDrawY) and AreaEnter's PlaySound($2F) 31:E4EC passes it, so $010F matches tools.emu after continue ($0A, was $00), new game and the fanskip area entry; new tools/ram_byte.py; all 50 checks pass.

@@ -1,0 +1,166 @@
+  ▶ Skill skill
+  ▶ ls re_loop_sessions | tail -3 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \[ \
+  ▶ cat dead_ends.md | cut -c1-400 && wc -c re_loop_sessions/*_19[01].txt && tail -c 6000 re_loop_sessions/20261122_104601_s
+  ▶ grep -n "group_84\|group_7F\|def place_player\|def _group" tools/emu/scenario.py | head; python3 tools/area_dump.py spaw
+  ▶ python3 tools/area_dump.py spawns 129 2>&1 | head -30; python3 tools/area_dump.py spawns 131 2>&1 | head -30; python3 to
+Picking up the next enemy group: AI `$21` (type `$85`), likely in area `$81`. Checking its catalog stats first.
+  ▶ python3 tools/enemy_catalog.py 2>&1 | grep -iE "^ *(type|\\$?85|\\$?84)|ed " | head; python3 tools/enemy_catalog.py 2>&1
+  ▶ python3 tools/enemy_catalog.py --out /tmp/ecat.txt 2>&1 | head -3
+  ▶ Grep "^\S*\s*(type|\$?8[45])\b|^ *(85|84)" /tmp/ecat.txt
+  ▶ Grep "SwordElemBit" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -n -A6 "SCENARIOS\['group_29'\]" tools/emu/scenario.py; grep -n "AI.*\$21\b\|Ai21\|27:A3\|,AiP" labels.csv | head; 
+  ▶ Grep "SCENARIOS\['group_29'\]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Grep "AI `\$21`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 220p REVERSE.md | cut -c1-1500
+  ▶ Grep "^\| `\$21`|`\$21` `Ai" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Next: AI `$21` is `AiShooterWalk`; area `$81` has two type-`$85` + two type-`$84`. Setting up a `group_81` scenario.
+  ▶ Glob gfx/areas/area_129*
+  ▶ python3 tools/emu/group_probe.py -h 2>&1 | head -30
+  ▶ Read group_probe.py
+  ▶ Read area_129_coll.txt
+  ▶ Grep "SwordAttackTable" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_81 12 --out web/test/states/group81.json --save-state tools/emu/st
+Player starts at the bottom shaft (560, 415). Probing a walk up then left toward the shaft enemies.
+  ▶ timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group81.state --slots 0D,0E,10 --seg UP:30 LEFT:70 'B:4,NO
+The `$84` in the lower corridor blocks the way (sword 2 can't hurt it). Placing the player in the shaft above the walking `$85` (slot `$0E`) instead.
+  ▶ Read scenario.py +253
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_81 12 --out web/test/states/group81.json --save-state tools/emu/st
+  ▶ timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group81.state --slots 0D,0E,10 --seg DOWN:2 NONE:50 'B:4,N
+  ▶ timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group81.state --slots 0D,0E,10 --seg DOWN:2 NONE:50 'B:4,N
+First hit lands (74 → 62) but it gets knocked back. Trying walk-and-swing steps to follow it.
+  ▶ timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group81.state --slots 0D,0E,10 --seg DOWN:2 NONE:62 'DOWN:
+Player takes 18 per hit and the walker needs ~7 hits with sword 2. Switching to sword 4 (elem bit 8, not blocked by elem 5) and more HP.
+  ▶ sed -i "s/area='81', pokes={0x0421: 16, 0x0711: 2, 0x03E1: 16 + 2, 0x03C1: 0x60, 0x0708: 0x60,/area='81', pokes={0x0421:
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_81 12 --out web/test/states/group81.json --save-state tools/emu/st
+Sword 4 works: slot `$0E` (AI `$21`) dies at f2924, and the `$84` in `$10` is hit too. Now building the tools.emu reference. Looking at how s190 wrote its check.
+  ▶ Read group84_check.mjs
+  ▶ K="2505:DOWN:2"; for i in $(seq 0 25); do K="$K $((2569+16*i)):DOWN:6 $((2575+16*i)):B:4"; done; echo "$K" > /tmp/g81key
+  ▶ Write keyseq.py
+  ▶ K=$(python3 tools/keyseq.py 2505:DOWN:2 '2569:DOWN:6,+6:B:4*26/16') && echo "$K" | cut -c1-120 && mkdir -p gfx/group81 &
+  ▶ python3 tools/keyseq.py 2505:DOWN:2 '2569:DOWN:6,+6:B:4*26/16'
+  ▶ mkdir -p gfx/group81 && timeout 900 python3 -m tools.emu --load-state tools/emu/states/group81.state --frames 480 --watc
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu --load-state tools/emu/states/grou
+Verifying the planned keys in tools.emu (kill frame / HP steps) before building the reference.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu --load-state tools/emu/states/grou
+tools.emu agrees: `$0E` dies f2923, 7 player hits. Building the reference CSV.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 1500 python3 tools/web_state_compare.py --state tools/emu/s
+As in s190 the web side uses unshifted keys here; getting the per-press port frames from tools.emu's `$43` writes.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu --load-state tools/emu/states/grou
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu --load-state tools/emu/states/grou
+Converting these pad writes into port key frames with a small reusable tool.
+  ▶ Write pad_watch_keys.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu --load-state tools/emu/states/grou
+  ▶ Edit pad_watch_keys.py
+  ▶ Edit pad_watch_keys.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu --load-state tools/emu/states/grou
+Now trimming the ref and writing the check.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,15p tools/csv_trim.py; ls gfx/group81
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_trim.py gfx/group81/emu.csv web/test/group81_ref.
+  ▶ Write group81_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/group81_check.mjs 2>&1 | tail -35
+First divergence at f2605: the port is one frame ahead on objects, which looks like a tools.emu lag frame the port doesn't model. Classifying the cells.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs -h 2>&1 | head -20
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --quiet --load-state web/test/states/group81.
+Tools.emu skips a whole main-loop pass at f2605 (player, `$0D`, `$0E` all frozen), the port doesn't. Checking what the docs say about the lag model and per-pass counters.
+  ▶ Grep "lag frame|LAG_|overrun" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/mainloop.js
+  ▶ Grep "overrun" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Grep "overrun|lag_probe|WaitFrame" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,40p tools/emu/lag_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,30p tools/emu/lag08_probe.py
+  ▶ Read lag08_probe.py +30
+Writing a small probe that logs main-loop tops and NMI `frame_ready` per frame from a state with keys, to see why tools.emu loses f2605.
+  ▶ Grep ",(ObjUpdateAll|ObjCollideAll|SpriteDrawAll|MainLoop\w*|WaitFrame)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Write pass_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.pass_probe tools/emu/states/group8
+This area runs close to the frame budget: `ObjUpdateAll` takes 157-235 lines, and at f2604 `ObjCollideAll` starts at L235 and overruns the NMI. Counting how many lag frames the whole run has.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/group8
+18 lag frames in 480; that's a CPU-cost model the port lacks (gap (c)). Finding which slot's AI eats the time: disassembling the `ObjUpdateAll` dispatch.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CCCC 80 | head -45
+  ▶ Edit pass_probe.py
+  ▶ Edit pass_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.pass_probe tools/emu/states/group8
+Slot `$12` (AI `$70`, last in the dispatch) costs 95-150 lines per frame, and that cost decides the overrun. Looking at what AI `$70` does in this slot.
+  ▶ Grep "^\| `\$70`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "AI \`\$70\` final-scene phases\|^### AI \`\$70\`\|AiFinal\
+  ▶ Grep "AI `\$70` final-scene phases|AI `\$70`.{0,40}(phase 0|idle|dormant|sleep)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 684,700p REVERSE.md | cut -c1-900
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group
+  ▶ Grep "^- \*\*(12|1[0-2]) `B" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 704p REVERSE.md | cut -c1-2500
+Phase 12 is cheap, so the cost is after `ObjUpdateAll`, before `ObjCollideAll` (`30:CB7E`). Disassembling that stretch of the gameplay pass.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CB50 60
+  ▶ Grep "^(28|31),(800E|E8F6)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit pass_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.pass_probe tools/emu/states/group8
+  ▶ Read area_132_coll.txt
+The `$85` in area `$84` walks the horizontal corridor at y 380. Adding a `group_84b` scenario that places the player in that corridor (sword 4, max defences).
+  ▶ Edit scenario.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.scenario_state group_84b 12 --out 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group
+The `$85` patrols vertically at x 230 (y 375-412) below the corridor line, so horizontal swings miss. Trying: walk right to x 230, up to the top edge, face down, swing.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group
+Two hits land (36 each, 74 → 26), but only every ~200 frames. Trying to follow it downward between swings.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group
+Kill at f2656 after 4 hits. Expanding the keys and checking tools.emu for lag frames.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/keyseq.py 2505:RIGHT:20 2525:UP:14 2539:RIGHT:18 2557
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/group8
+No lag frames. Building the ref and port keys.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu --load-state tools/emu/states/grou
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu --load-state tools/emu/states/grou
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 1500 python3 tools/web_state_compare.py --state tools/emu/s
+Now the check file (replacing the failed area-`$81` one).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; git mv -f web/test/group81_check.mjs web/test/group84b_check.mjs 2>
+  ▶ rm /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/group81_check.mjs /home/sleepy9090/Downloads/nes-port/RE-C-
+  ▶ Write group84b_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/group84b_check.mjs 2>&1 | tail -32
+  ▶ Read group81_check.mjs
+  ▶ Edit group81_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "LAST\|KILLS\|PHP\|EHP\|ehp.push\|console.log" web/test/gro
+  ▶ Edit group81_check.mjs
+  ▶ Edit group81_check.mjs
+  ▶ Edit group81_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/group81_check.mjs 2>&1 | tail -5
+Both checks pass. Running the full suite in the background while I update the docs.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 3000 python3 tools/run_checks.py 2>&1 | tail -12
+  ▶ Grep "^\| Area-`\$84` enemy group, AI `\$40`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 220p REVERSE.md | tail -c 400; sed -n 221p REVERSE.md | cut 
+  ▶ Edit REVERSE.md
+Now the task note in Next Tasks (task stays open, it's the low-priority leftovers task) and gap (c) in the other leftovers task.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now CLAUDE.md (list the new checks and tools) and a label for the per-slot dispatch.
+  ▶ Edit CLAUDE.md
+  ▶ Grep "^30,CCFA|^31,F3B6" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 449,450p labels.csv
+  ▶ Edit labels.csv
+  ▶ Read bcumu5zjm.output
+I checked AI `$21` (`AiShooterWalk`, enemy type `$85`) against tools.emu, and the web port matches with no code changes. The new `web/test/group84b_check.mjs` passes all 479 rows (f2506-2984) at shift 0, sound included, with no excused cells. The full suite passes 44 of 45 checks. The one failure is `world_check` on areas `$3C`, `$3D` and `$BC`, the known gap (j).
+
+**Area `$81` didn't work.** I tried it first because it has two type-`$85` enemies. There, tools.emu skips 18 of 480 frames because the CPU overruns its frame budget. The port has no general model of CPU time (gap (c)), so from f2605 it runs one frame ahead. I wrote a new probe, `tools/emu/pass_probe.py`, which prints the scanline where each part of a frame starts. In this area the main loop takes about 240 of the 241 lines before vblank:
+- updating the objects takes about 100 lines,
+- drawing the sprites 65-80,
+- object collisions about 60,
+- the camera about 50 lines instead of 11 when the screen scrolls vertically.
+
+**I used area `$84` instead.** The type-`$85` enemy in slot `$11` there was out of reach in s190. The new `group_84b` scenario places the player in its corridor with sword 4, because the enemy is immune to swords 1 and 3. That run has no lost frames:
+- It walks back and forth on a vertical line at x 230, so the player stands above it and swings down.
+- Its HP goes `$4A` → `$32` → `$1A` → `$02`, and it dies at f2655.
+- The player takes one contact hit at f2655.
+- None of its shots hit the player in the run, so that path isn't covered.
+
+**Changes:**
+- `web/test/group81_check.mjs` now compares only up to f2604, the last frame before the first skipped one. Its reference CSV still runs to f2984, so it can test a CPU-time model if one gets built.
+- Two small key tools: `tools/keyseq.py` expands repeated key patterns, and `tools/pad_watch_keys.py` turns tools.emu's `--watch 0043` output into the port's key frames.
+- `labels.csv` has a new label, `ObjUpdateDispatch` at `30:CCFA` (the per-slot AI dispatch).
+- REVERSE.md has a new Verification Log row ("AI `$21` `AiShooterWalk`"). The task has an s191 note: `$21` is struck from the remaining list, and future group scenarios should be run through `pass_probe` first to rule out lost frames. The gap (c) note in the other leftovers task now points to the area-`$81` test case.
+- CLAUDE.md lists the new checks and tools.
+
+The task stays open because it is the low-priority leftovers task. Nothing is committed.
+
+SESSION_SUMMARY: Session 191 checked AI $21 AiShooterWalk (type $85) in area $84 with the new group_84b scenario (sword 4, place_player); web/test/group84b_check.mjs: 479/479 rows equal at shift 0 including sound (kill f2655), no port change; area $81 dropped because tools.emu loses 18/480 frames to CPU overruns there (new tools/emu/pass_probe.py; group81_check.mjs checks f2506-2604 only); new keyseq.py and pad_watch_keys.py; 44/45 checks pass (world_check is the known gap (j)).

@@ -1,0 +1,86 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -3 && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ sed -n 2352,2366p REVERSE.md && tail -c 3500 re_loop_sessions/20261122_104601_session_167.txt; tail -c 2500 re_loop_sess
+  ▶ tail -c 4000 re_loop_sessions/20261122_104601_session_167.txt; echo ----; tail -c 1500 re_loop_sessions/20261122_104601_
+  ▶ python3 tools/ai_missing.py; wc -l web/src/game/obj/ai_shot.js; grep -n "Session 167\|s167:" REVERSE.md | cut -c1-150
+  ▶ Read ai_shot.js
+  ▶ python3 tools/dis.py 26 A4C6 0x80 && python3 tools/dis.py 26 A519 0x40 --stop
+Wrong bank (26 instead of 27). Now porting the next batch of missing enemy AIs, starting with the short ones in bank 27.
+  ▶ python3 tools/dis.py 27 A4C6 0x60 && echo ---- && python3 tools/dis.py 27 A616 0xB0
+  ▶ Grep "aiMpDrain|AiMpDrain|0x76:" web/src/game
+  ▶ Read ai_effect.js +30
+  ▶ sed -n 200,215p web/src/game/obj/ai_effect.js; python3 tools/dis.py 27 A6C5 0x110
+  ▶ grep -n "^export" web/src/game/obj/util.js | cut -c1-150; grep -n "0x50\b\|C25D\|objInit\|97D7" web/src/game/obj/ai_stat
+  ▶ Read ai_static.js +1
+  ▶ grep -rn "export function\*\? *playSound\|export function farObjInit" -A12 web/src/game | head -40; grep -n "0x0B\|0x0A\
+Reading the s167 capture setup in `routine_capture.py` so I can add the new AIs the same way.
+  ▶ grep -n "AiShopEmpty\|AiFallingObj\|AiDropSpawner\|fuzz_misc\|MISC_AIS\|def _fix_misc\|AiS0DTransform" tools/emu/routine
+  ▶ sed -n 210,240p tools/emu/routine_capture.py; sed -n 470,530p tools/emu/routine_capture.py; sed -n 85,110p web/test/obj_
+  ▶ Read util.js +1
+  ▶ grep -rn "AI_SHOT\b" web/src | grep -v "^web/src/game/obj/ai_shot.js" ; grep -n "AI_\|import\|glob\|re\.\(find\|compile\
+  ▶ Grep "^27,(A4C6|A616|A6C5|A6FB|A7CD|A802|A70E|A753|A4E0)," labels.csv
+  ▶ Grep "AI \$(33|55|51|53|54)\b|types? \$(31|3A|2B|B0)\b" REVERSE.md
+  ▶ python3 tools/dis.py 31 FF80 0x30; sed -n 1,60p web/src/game/obj/objinit.js | grep -n "farRestore\|function\|Y\b" 
+Checking what Y holds after ObjInit returns (it feeds PlaySound's saved Y in AI $51).
+  ▶ python3 tools/dis.py 31 FFDB 0x18 --stop; sed -n 13,46p web/src/game/obj/objinit.js; python3 tools/dis.py 30 C25D 0x70 |
+  ▶ Edit ai_shot.js
+  ▶ Edit ai_shot.js
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+Now the capture entries and fuzz steering.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ awk 'NR>=380 && NR<=520 && /^def /{print NR": "$0}' tools/emu/routine_capture.py; grep -n "story_flags\|0x6480\|wram\[0x
+  ▶ Grep "^def _fix_field|^def |story_flags|wram\[0x48" tools/emu/routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ sed -n 574,592p tools/emu/routine_capture.py; grep -rn "fuzz_misc" --include=*.md . | head -3
+  ▶ sed -n 40,50p web/test/obj_frames/README.md; sed -i "s/    if name == 'AiMpDrain':$/    if name in ('AiMpDrain', 'AiMpDr
+Wiring the new AIs into the fuzz capture; next I run the emulator capture and compare.
+  ▶ Edit routine_capture.py
+  ▶ Read README.md +38
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine AiDuelStar
+  ▶ node web/test/obj_check.mjs 2>&1 | grep fuzz_duel; python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_duel.json --
+All 2,400 match. AI $52's shot path (timer2 = $0E) wasn't hit; adding that edge and recapturing.
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine AiDuelStar
+Coverage is good: shots, sounds, the swing start, and each AI's end state all appear. Running the regression checks.
+  ▶ python3 tools/ai_missing.py | tail -1; for t in core_check finalboss_check bosse2_check; do echo "== $t"; node web/test/
+  ▶ python3 tools/ai_missing.py | tail -1; node web/test/core_check.mjs 2>&1 | tail -1; node web/test/finalboss_check.mjs 2>
+Now the docs: README, labels, REVERSE.md findings + task text.
+  ▶ Edit README.md
+  ▶ grep -n "^27,A5C5\|^27,A5CB\|^27,A4DC" labels.csv
+  ▶ Read labels.csv +1509
+  ▶ Edit labels.csv
+  ▶ Read REVERSE.md +1359
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit ai_shot.js
+I ported 8 more of the enemy AIs the web port was missing. All 2,400 new test cases match the emulator, and the existing checks still pass. The low-priority boss-AI task stays open as the rules require, with 11 ids left: `$06 $07 $0B $12 $13 $32 $34 $39 $40 $79 $7D`.
+
+**What the new AIs do**
+- **`$33`** (type `$31`) counts up, and at `$40` it un-hides itself.
+- **`$55`** (type `$3A`) only runs in area `$51`, or area `$60` at entry 0. It moves left 1 px per frame and carries the player (slots 0 and 1) with it. At x = `$0680` it drops the player at y `$88` and stops.
+- **`$51`** (types `$B0 $B1 $D8 $D9`) runs only if a story flag is set; the gate check is at `27:A6FB`. On screen in area 3 it turns slot `$0D` into a new object, and it plays sound `$37` every 32 steps.
+- **`$0A` / `$52`** are the duel opening and the sparring opponent:
+  - The opponent follows the player's x and stays inside `$28-$97`.
+  - It starts a swing on a random roll when the player is within 8 px. The roll threshold shifts after each duel win.
+  - Its swing fires shot `$5B`.
+- **`$53`** (type `$2B`) waits for sub_state 8, then sets sub_state 7 and some event values, hides itself and disappears after 64 frames.
+- **`$54`** (no object type) aims at the player every 4th frame and steps toward them.
+- **`$77`** is `AiMpDrain` with overlay `$99` instead of `$A3`. `aiMpDrain` now takes the AI id, so the sound call gets the right Y value.
+
+**Code changes**
+- `web/src/game/obj/ai_shot.js`: the seven AIs other than `$77`.
+- `web/src/game/obj/ai_effect.js`: `$77`.
+
+**Checks**
+- New test file `web/test/obj_frames/fuzz_duel.json`: 300 random emulator cases per AI. `obj_check.mjs` passes 23,800/23,800 overall.
+- Most branches got real coverage, including the shots, the `$37` and MP sounds, and each AI's end state. The opponent's swing start was hit only once in 300 cases.
+- `core_check`, `finalboss_check` and `bosse2_check` still pass. `ai_missing.py` now reports 90/101 ported.
+
+**Docs:** I added a findings paragraph under "Boss shot / part AIs" in REVERSE.md and updated the task's remaining-id list. I also added 6 labels to `labels.csv`, the new test cases to `routine_capture.py` with input steering, and the regenerate command to `web/test/obj_frames/README.md`. Nothing is committed.
+
+SESSION_SUMMARY: Session 168 ported AI $0A $33 $51-$55 $77 (27:A4C6-A85E) into obj/ai_shot.js / ai_effect.js; fuzz_duel.json 2400/2400 match the emulator, 11 ObjAiTable ids remain, and the low-priority boss-AI task stays open with that list.

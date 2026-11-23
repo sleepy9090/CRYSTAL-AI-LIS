@@ -1,0 +1,121 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -3; gr
+  ▶ Read REVERSE.md +2353
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 5000 re_loop_sessions/20261122_104601_session_168.txt; echo
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/ai_missing.py; wc -l re_loop_sessions/20261122_104601
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 A90C 0x10; echo; python3 tools/dis.py 27 B9
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls web/src/game/obj/; grep -n "B728\|B805\|B807\|aiReward6C\|bossDe
+Porting the remaining AIs; starting with the short ones (`$79`, `$7D`, `$06`).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 B7F6 0x40; python3 tools/dis.py 27 B728 0x4
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C427 0x20 --stop; python3 tools/dis.py 27 B
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 790,830p web/src/game/obj/ai_boss.js; sed -n 85,115p web/src
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 B728 0x10; grep -n "'\$79'\|\$79\b" REVERSE
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 B728 0x10
+  ▶ Grep "AI \$79|AI \$7D|AI \$06\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CCE0 0x60
+Status: `$79` is just `SetR7($0F)` + the already-ported `AiReward6C` (15:B728). Now writing `$06`/`$7D` next to the existing `explodeStep` in `ai_effect.js`.
+  ▶ Read ai_effect.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 B9E8 0x44; python3 tools/dis.py 27 B836 6; 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^export" web/src/game/obj/util.js; grep -n "^export const 
+Now writing the ports.
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+Fixing two things: `B955` is a `JSR`, so both of its paths go back to the act_timer step. And `$79` belongs in `ai_boss.js` next to `aiReward6C`.
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_boss.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -i '20s/import { cpuRd, indY, setR6, switchBank16, farRestore }
+  ▶ Edit ai_boss.js
+  ▶ Grep "AiMpDrain99|'AiDuel|fuzz_duel|AiScreenRedraw08|AiExplode|DeathPuff|AiReward6C" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/routine_capture.py
+  ▶ Read routine_capture.py +200
+  ▶ Read routine_capture.py +500
+  ▶ Grep "B7F6|B83B|PPU_ROUTINES|_fix_effect\(|def _slot" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/routine_capture.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C676 0x10 --stop; sed -n 352,362p tools/emu
+Steering the new AIs into the fuzz capture next.
+  ▶ Grep "AiMpDrain99|fuzz_duel|AiReward6C" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test
+Now the edits to the capture and check scripts.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "BossDefeated\|BgRowRender\|ciram\|fuzz_duel\|FILES\|\.json
+Good, all JSON files are picked up automatically. Running the capture.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.routine_capture --load-state tools
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 27:B8E6 16 u8x4 2>&1 | head -20; pyt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 B8E6 0x40 | awk '{print $1, $3}' | tr '\n' 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 27:B8E6 64 u8 2>&1 | head -20
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "export function setR7\|export function cpuRd\|export funct
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/case_bytes.py 2>&1 | head -5; node web/test/obj_check
+Still debugging `$79`: every case fails. Checking the full byte diff of one case.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/obj_check.mjs --help 2>&1 | head -5; grep -n "process
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; mkdir -p /tmp/s169 && cp web/test/obj_frames/fuzz_effect2.json /tmp
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/obj_check.mjs --verbose 2>&1 | grep "AiReward79#" | h
+  ▶ Read ai_boss.js +830
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/case_bytes.py web/test/obj_frames/fuzz_effect2.json '
+  ▶ Grep "def call|bank_override|force|pin" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ Read routine_capture.py +936
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 B736 0x14; python3 tools/dis.py 15 B7B8 0x8
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls tools/emu/ | head -50; python3 tools/case_paths.py 2>&1 | head -
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,25p tools/emu/case_trace.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.case_trace --load-state tools/emu/states/gamep
+The `$79` stub swaps its own `$A000` window: once `SetR7($0F)` returns, the CPU fetches 15:A911, not the `JMP`. Disassembling there.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 15 A8F0 0x50; python3 -m tools.emu.case_trace 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "function bossEBMove" -A30 web/src/game/obj/ai_boss.js; pyt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "function stepSlot\|const stepSlot" -A6 web/src/game/obj/ai
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_effect.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -i "s/'AiReward79': (0x79, 0xA90C)/'AiBank15Fall79': (0x79, 0xA
+  ▶ Edit obj_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -i "s/  AiReward79: (m, r) => { B.AI_BOSS\[0x79\](m, r.x); },/ 
+Switching to the Edit tool for the renames.
+  ▶ Edit obj_check.mjs
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.routine_capture --load-state tools
+All 900 cases match. Checking which branches the cases actually covered.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/case_paths.py web/test/obj_frames/fuzz_effect2.json A
+Coverage is good: the row redraw ran in 101 cases and the DeathPuff spawn in 26. Now the docs.
+  ▶ Grep "s168.*\$0A|Session 168|\*\*s168" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1360p REVERSE.md | cut -c1-400; sed -n 1361,1362p REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^27,B8[0-9A-F][0-9A-F]\|^27,B9\|^27,A9[01]" labels.csv
+  ▶ Read labels.csv +1184
+  ▶ Edit labels.csv
+  ▶ Read REVERSE.md +1360
+  ▶ Edit REVERSE.md
+Updating the task text and the test README, then running the regression checks.
+  ▶ Edit REVERSE.md
+  ▶ Read README.md +49
+  ▶ Edit README.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for t in core_check finalboss_check bosse2_check bossa6_check; do e
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/core_check.mjs 2>&1 | tail -1; node web/test/finalbos
+I ported 3 more of the enemy AIs the web port was missing: `$06`, `$79` and `$7D`. All 900 new test cases match the emulator and the existing checks still pass. The low-priority boss-AI task stays open as the rules require, with 8 ids left: `$07 $0B $12 $13 $32 $34 $39 $40`.
+
+**What the new AIs do**
+- **`$06`** (type `$D6`, `27:B93E`) breaks apart in steps:
+  - Each step it fires a piece (shot `$3D`) and places it using the same offset table as the boss explosion.
+  - It counts `obj_anim` up to `$17`, then back down, and turns itself off at 0.
+  - In its last 4 frames it redraws one background row, using the same routine as AI `$08` (`27:B805`). The port now has one shared `redrawRowTail` for both.
+- **`$7D`** (`DeathPuff`, `27:B9AA`) shakes for 16 frames, then turns into a puff and fades. If the object has a drop class, it spawns the drop. When no slot is free it frees its own slot and tries again.
+- **`$79`** (`27:A90C`) is a broken entry in the ROM:
+  - It switches the `$A000` memory bank while its own code is running from that bank.
+  - Its `JMP` to the boss-reward code (`15:B728`) therefore never runs. The CPU continues inside the boss movement code at `15:A911` instead.
+  - From there it rewrites the screen-mirroring register (the PPU ends up in vertical mirroring), moves a run of object slots, and returns with a leftover value in X.
+  - My first port followed the `JMP` and failed all 300 cases. An emulator trace (`tools.emu.case_trace`) showed the real path, and the port now copies it. No object type uses this id, so it should never run in normal play.
+
+**Code changes**
+- `web/src/game/obj/ai_effect.js`: `$06` and `$7D`, plus the shared row-redraw routine.
+- `web/src/game/obj/ai_boss.js`: `$79`.
+
+**Checks**
+- New test file `web/test/obj_frames/fuzz_effect2.json`: 300 cases per AI, all identical. `obj_check.mjs` passes 24,700/24,700 overall.
+- The important branches were covered: the row redraw ran in 101 `$06` cases (nametable memory compared too), and the `$7D` drop spawned in 26 cases.
+- `core_check`, `finalboss_check`, `bosse2_check` and `bossa6_check` still pass. `ai_missing.py` now reports 93/101 ported.
+
+**Docs:** I added a findings paragraph under "Boss shot / part AIs" in REVERSE.md and updated the task's remaining-id list. I also added 4 labels to `labels.csv` and updated the `DeathPuff` one. The new test cases went into `routine_capture.py` with input steering, and the regenerate command into `web/test/obj_frames/README.md`. Nothing is committed.
+
+SESSION_SUMMARY: Session 169 ported AI $06 (27:B93E, shared row redraw 27:B805), $7D DeathPuff and the broken $79 (its SetR7($0F) swaps its own bank and falls into 15:A911) into obj/ai_effect.js / ai_boss.js; fuzz_effect2.json 900/900 match the emulator, 8 ObjAiTable ids remain, and the low-priority boss-AI task stays open with that list.

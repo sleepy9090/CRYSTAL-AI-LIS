@@ -1,0 +1,109 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md | 
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_18[0-3].txt && tail -c 5000 re_loop_sessions/20261122_104601_session_182.txt
+  ▶ grep -n "group_" tools/emu/scenario.py | head -30 && python3 tools/area_dump.py spawns 18 2>&1 | head -40
+  ▶ sed -n 600,670p tools/emu/scenario.py && python3 tools/area_dump.py --help 2>&1 | head -20; python3 tools/area_dump.py s
+  ▶ grep -n "h1 rec\|h1 record\|handler h1\|\bh1\b" REVERSE.md | cut -c1-400 | head -20; grep -n "h1\|80F0" tools/area_dump.
+Picked the top open task (Ph7 leftovers): the next enemy group is area `$18`. Checking what its h1 spawns are.
+  ▶ grep -n "area \$18\|area 18\| 18 " gfx/param_report.txt | head -20; ls tools/enemy_catalog.py && python3 tools/enemy_cat
+  ▶ Grep "\$18\b|area 18" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/param_report.txt
+  ▶ python3 tools/enemy_catalog.py 2>&1 | head -60
+  ▶ Grep "^p=\$(16|17|18|19|1A|08) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/param_report.txt
+Area `$18` is a town: its 6 h1 records are type `$30` NPCs (talkers), not enemies. I'll do the same frame check with an NPC talk in it. Recalling the s182 command sequence.
+  ▶ grep -n "▶" re_loop_sessions/20261122_104601_session_182.txt | head -60 | cut -c1-260
+Adding a `group_18` scenario (no keys yet) to get a state and probe NPC positions.
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_18 12 --out web/test/states/group18.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group18.state --slots 0D,0E,0F,10,11,12 --every 30 --seg N
+  ▶ Grep "talk.{0,40}(press|button)|(press|button).{0,30}talk" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -n -i "NpcTalk\|TalkStart\|talk_" labels.csv | head -15
+  ▶ sed -n 23,24p re_loop_sessions/20261122_104601_session_182.txt | cut -c1-400
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group18.state --frames 300 --keys 2526:LEFT:100 --watch 0
+Walking the player into the nearest NPC in tools.emu to find when the talk starts.
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group18.state --frames 300 --keys 2526:LEFT:100 --watch 0
+  ▶ Grep "^\*,[0-9A-F]+,(sub_state|main_state|talk_npc|pending_msg)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group18.state --frames 300 --keys 2526:LEFT:100 --watch 0
+  ▶ python3 tools/xref.py 9508 2>&1 | head; python3 tools/dis.py 26 94E0 48 2>&1 | head -30
+  ▶ python3 tools/dis.py 26 94B0 48 2>&1 | head -24
+Talk = the B-swing probe (slot 3) hitting an AI `$30` NPC. Trying LEFT then B.
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group18.state --frames 400 --keys 2526:LEFT:45 2580:B:4 -
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group18.state --frames 400 --keys 2526:LEFT:45 2580:B:4 -
+The talk starts at f2562 from walking into the NPC. Now finding the presses that close the message.
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group18.state --frames 600 --keys 2526:LEFT:36 2700:A:4 2
+  ▶ Read g18.png
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group18.state --frames 200 --keys 2526:LEFT:36 --watch 00
+  ▶ Read g18b.png
+Message shows (NPC p=`$16`). Finding when the A presses close it.
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group18.state --frames 600 --keys 2526:LEFT:36 2700:A:4 2
+Talk closes at f2769 (sub_state → 8) after A at 2700 and 2760. Now the s182 compare command.
+  ▶ sed -n '/web_state_compare.py --state tools\/emu\/states\/group11/{p;n;p;n;p;n;p;n;p;n;p}' re_loop_sessions/20261122_104
+  ▶ Grep "web_state_compare.py --state" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions/20261122_104601_session_182.txt
+Writing the scenario keys, then reading group11_check.mjs as the template.
+  ▶ Edit scenario.py
+  ▶ Read group11_check.mjs
+Rebuilding the state, then producing the ref CSV with the compare tool.
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_18 12 --out web/test/states/group18.json --save-state tools/emu/st
+Expected pad offset; getting the per-press port key frames from `--watch 0043`.
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group18.state --frames 480 --keys 2526:LEFT:36 2700:A:4 2
+  ▶ ls gfx/group18 gfx/group11 && sed -n 1,15p tools/csv_trim.py
+  ▶ python3 tools/csv_trim.py gfx/group18/emu.csv web/test/group18_ref.csv --cols core,snd,pal,obj,oam_crc --frames 2507-298
+Only `sub` differs: 22 frames from f2535 (tools.emu 8, port 7) while the player pushes against the NPC. Looking at the code that writes 7.
+  ▶ python3 tools/dis.py 26 9490 32 2>&1; timeout 600 python3 -m tools.emu --load-state tools/emu/states/group18.state --fra
+The 7 is written by `TalkProbeItemUse` mid-pass; tools.emu's L261 row sample already includes the next pass's sub_state 7→8 handler writes at L254-258. Classifying the cells.
+  ▶ python3 tools/cell_class.py web/test/group18_ref.csv gfx/group18/webk.csv sub 2507-2984 2>&1 | tail -30
+  ▶ python3 tools/dis.py 30 D52C 18 2>&1; python3 tools/dis.py 30 D878 14 2>&1
+The flicker is `GiveTrigger` `30:D539` each frame: the probe hits slot `$13` (h2 p=`$A6` event trigger) while the player walks past. Checking what p=`$A6` is.
+  ▶ Grep "^p=\$A6 " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/param_report.txt
+p=`$A6` is an act-0 event trigger with an empty message, so it does nothing visible but runs `GiveTrigger` every frame you're on it. Writing `group18_check.mjs`.
+  ▶ Write group18_check.mjs
+  ▶ node web/test/group18_check.mjs
+The state's own frame f2507 has no port row; trimming the ref to start at f2508.
+  ▶ python3 tools/csv_trim.py gfx/group18/emu.csv web/test/group18_ref.csv --cols core,snd,pal,obj,oam_crc --frames 2508-298
+  ▶ Edit group18_check.mjs
+  ▶ python3 tools/csv_trim.py gfx/group18/emu.csv web/test/group18_ref.csv --cols core,snd,pal,obj,oam_crc --frames 2508-298
+Passes. Running the full suite in the background while I update the docs.
+  ▶ timeout 1800 python3 tools/run_checks.py > /tmp/checks183.txt 2>&1; tail -8 /tmp/checks183.txt
+  ▶ Grep "^\| Area-`\$11` enemy group" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ timeout 1800 python3 tools/run_checks.py 2>&1 | tail -8
+  ▶ Read REVERSE.md +212
+  ▶ Edit REVERSE.md
+  ▶ Grep "Left: area `\$18` \(h1 records\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+Docs updated. Waiting for the full check run.
+  ▶ Monitor command description
+  ▶ Read b76bepe7z.output
+Still running; I'll wait for the completion notice.
+  ▶ Monitor command description
+  ▶ Monitor command description
+The full suite is still running; the background task notifies me when it finishes.
+  ▶ Read b76bepe7z.output
+I checked area `$18` against tools.emu, and the port matches with no code changes. It turned out to be a town, not an enemy group, so the check covers its NPCs and a conversation instead.
+
+**What's in the area:** six type-`$30` NPCs (AI `$30`) in slots `$0D-$12`, five of them walking. Slot `$13` holds an event trigger (p=`$A6`) that does nothing visible: action 0, empty message.
+
+**The run** (new scenario `group_18`, state taken 12 frames in):
+- The player walks left over the trigger and into NPC p=`$16`. Walking into an NPC starts the conversation by itself, no button needed (`TalkProbeHit` `26:94B0` → `TalkStart` `26:9508`, at f2562).
+- Two A presses page through the message ("I'm Akahana. …") and close it at f2769.
+- The player then walks up and left around town.
+
+**Result:** the new `web/test/group18_check.mjs` passes all 477 rows (f2508-2984) at shift 0, sound included. It also checks the talk start and end frames and which NPC was talked to.
+
+**22 listed `sub` cells** (f2535-2556, tools.emu 8, port 7) are sampling timing, not a port bug:
+- While the player overlaps the trigger, `TalkProbeItemUse` `26:94A2` sets sub_state 7 every frame.
+- The next pass starts during vblank, and `GiveTrigger` `30:D539` / `30:D880` set it back to 8 before tools.emu samples its row at line 261.
+- The port records its row at the end of the pass, when the value is still 7.
+
+**Full suite:** 35 of 36 checks pass. `world_check` still fails on areas `$3C`, `$3D` and `$BC`, the known gap (j).
+
+**Docs:** REVERSE.md has a new Verification Log row ("Area-`$18` town NPCs + talk") and an s183 note in the task. The task stays open because it's a low-priority leftovers task. What's left is the other enemy AIs that areas place (`$25 $26 $40 $44 $45` …). CLAUDE.md lists the new check.
+
+New files are `web/test/group18_check.mjs`, `web/test/group18_ref.csv`, `web/test/states/group18.json` and `tools/emu/states/group18.state`, and `tools/emu/scenario.py` has the new scenario. Nothing is committed.
+
+SESSION_SUMMARY: Session 183 checked area $18 (a town: 6 h1 type-$30 NPCs + event trigger p=$A6) against tools.emu with the new group_18 scenario and web/test/group18_check.mjs: 477/477 rows equal at shift 0 including sound, a walk-in talk with NPC p=$16 (f2562-2769, closed by 2 A presses), 22 listed sub cells from row-sampling timing on the trigger, no port change; 35/36 checks pass (world_check is the known gap (j)).
+That notice is from a leftover watcher on the check run, which had already finished. Session 183 is complete and the results above stand: 35 of 36 checks pass, and the only failure is `world_check` (the known gap (j)).
+
+SESSION_SUMMARY: Session 183 checked area $18 (a town: 6 h1 type-$30 NPCs + event trigger p=$A6) against tools.emu with the new group_18 scenario and web/test/group18_check.mjs: 477/477 rows equal at shift 0 including sound, a walk-in talk with NPC p=$16 (f2562-2769), 22 listed sub cells from row-sampling timing, no port change; 35/36 checks pass (world_check is the known gap (j)).
+That was the last leftover watcher closing, and nothing is still running. Session 183 is done: the area-`$18` check passes, and the full suite is at 35 of 36, with `world_check` failing on the known gap (j).
+
+SESSION_SUMMARY: Session 183 checked area $18 (a town: 6 h1 type-$30 NPCs + event trigger p=$A6) against tools.emu with the new group_18 scenario and web/test/group18_check.mjs: 477/477 rows equal at shift 0 including sound, a walk-in talk with NPC p=$16 (f2562-2769), 22 listed sub cells from row-sampling timing, no port change; 35/36 checks pass (world_check is the known gap (j)).

@@ -1,0 +1,94 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \[ \
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +1852
+  ▶ Grep "^- \[ \]|^###|^## " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1970
+  ▶ wc -c re_loop_sessions/*_session_06[6-9].txt && tail -c 3000 re_loop_sessions/20261117_205123_session_068.txt; echo ----
+  ▶ Read 20261117_205123_session_068.txt
+  ▶ git show --stat HEAD | head -30 && tail -5 labels.csv && ls tools/visited_scan.py tools/bank10_scan.py gfx/visited_scan.
+  ▶ git show HEAD -- tools/render_rects.py | head -80; python3 tools/render_rects.py | grep "^screen\|^[0-9]\|match" | head 
+  ▶ time python3 -m tools.emu --frames 2600 --watch 06F1 > /tmp/claude_s69_watch.txt 2>&1; grep -v "^\s*$" /tmp/claude_s69_w
+  ▶ python3 -m tools.emu --frames 2600 --watch 06F1
+  ▶ python3 tools/compare_frames.py --help 2>&1 | head -30; python3 -m tools.emu --help 2>&1 | grep -i "dump\|bg\|sprite\|la
+  ▶ for f in 600 1300 1900; do python3 -m tools.emu --frames $f --dump-screen /tmp/claude_s69_f$f.png >/dev/null 2>&1; done;
+  ▶ python3 -m tools.emu --frames 600 --dump-screen /tmp/claude_s69_f600.png && python3 -m tools.emu --frames 1300 --dump-sc
+Emulator screens are dumped. Next I'm diffing them against the offline rect renders to see whether the leftover differences are sprites or palette.
+  ▶ python3 tools/compare_frames.py /tmp/claude_s69_f600.png gfx/rects/screen_19_A859.png --diff /tmp/claude_s69_d600.png; p
+  ▶ Read claude_s69_f1300.png
+  ▶ Read screen_19_AA51.png
+  ▶ Read claude_s69_f1900.png
+Both remaining differences are just the tower metasprite. The background and palettes match the emulator exactly. Now checking which opening-step labels already exist.
+  ▶ Grep "^(18,(82B3|82F1|82FD|81D8|8198|80E7|81F0|82BE|81A1)|19,(A7F6|A843|A8D2|A92D|A953|AA05|AA16|AA30|AAC2|AAF1|AB81|B162|B164|A8C8|A8CD|A7FC|A859|A95E|A9B3|AA51|AB1E))," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 19 A7F6 0x60 --stop; python3 tools/dis.py 18 82B3 0x0B; python3 tools/dis.py 18 82F1 0x0C; python3 
+  ▶ Grep "A7F6|A92D|AA16|opening|intro story|81D8|80E7" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1805
+  ▶ grep -n "render_rects\|NtRectBlit\|62FF\|--visited\|visited_scan\|k4" REVERSE.md | cut -c1-260
+  ▶ Read REVERSE.md +505
+  ▶ Read REVERSE.md +600
+Session 68 left no notes, so I'm re-running its two scans to recover their results.
+  ▶ python3 tools/visited_scan.py && head -30 gfx/visited_scan.txt && python3 tools/bank10_scan.py
+All 32 bank-10 areas are single 1×1 rooms. Next I'm checking the 38.6% background diff that the emulator tour shows for those rooms.
+  ▶ head -30 docs/emu_tour.txt; grep -nE "^\s*(area )?\\\$?(3C|C2|D0|F9)\b" docs/emu_tour.txt | head
+  ▶ Read emu_tour.txt
+  ▶ Grep "^\s*\$?(3C|C2|D0|F9|BC)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_tour.txt
+Every bank-10 room shows the same ~38.6% background diff, so this is systematic, not noise. Checking whether the tour tool kept the frames.
+  ▶ ls tools/emu/ | tr '\n' ' '; ls gfx/emu | head -30; ls gfx/emu | wc -l
+  ▶ Glob gfx/emu/tour/*C2*
+  ▶ Grep "def |argparse|add_argument|poke|png" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/tour.py
+  ▶ Read tour.py +150
+  ▶ Read tour.py +410
+No saved frames for these rooms. I'll check whether `tour.py run --only` can re-run just a few areas with screenshots.
+  ▶ Read tour.py +264
+  ▶ timeout 900 python3 -m tools.emu.tour run --only C2,D0 --shots /tmp/claude_s69_tour --out /tmp/claude_s69_tour.txt 2>&1 
+  ▶ grep -E "^  (C2|D0)" /tmp/claude_s69_tour.txt; ls /tmp/claude_s69_tour
+  ▶ Grep "^  (C2|D0)" /tmp/claude_s69_tour.txt
+  ▶ Read area_194.png
+  ▶ Read area_194.png
+The emulator draws the bank-10 room correctly. The 38.6% diff is the "INN" shop-name window over the top of the playfield, not a wrong page. I'll confirm by comparing only the area below the window.
+  ▶ python3 tools/render_compare.py /tmp/claude_s69_tour/area_194.png gfx/areas/area_194.png --crop 8,88,248,100 --search 8 
+  ▶ python3 tools/render_compare.py /tmp/claude_s69_tour/area_208.png gfx/areas/area_208.png --crop 8,88,248,100 --search 8
+Both rooms match apart from sprite boxes, so the bank-10 quirk is never exposed. Now decoding the opening step table so I can label the steps.
+  ▶ python3 tools/decode_tables.py 19:A7BC 25 ptr16
+  ▶ python3 tools/dis.py 19 A8D2 0x84 --stop; python3 tools/dis.py 19 AA05 0x2C; python3 tools/dis.py 19 AAC2 0x30 --stop
+  ▶ python3 tools/dis.py 19 A92D 0x26 --stop; python3 tools/dis.py 18 81D8 0x18 --stop; python3 tools/dis.py 18 8198 0x9 --s
+I have enough to label the steps. Checking for existing "Opening" labels to avoid name clashes.
+  ▶ Grep "Opening|^19,(9FC2|A064|A070|ABAB)|^18,(838B|9FCC)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 19 A843 0x16 --stop; python3 tools/dis.py 19 AB81 0x2A --stop
+Now writing the labels.
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ wc -l labels.csv
+  ▶ Read labels.csv +975
+  ▶ Edit labels.csv
+Labels are in. Now updating the REVERSE.md sections: the blit-caller note, the palette model, the bank-10 quirk, and the visited scan.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Checking the D0 frame before claiming every bank-10 room is a shop.
+  ▶ Read area_208.png
+  ▶ Edit REVERSE.md
+  ▶ Grep "render|argv|out|gfx/" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/visited_scan.py
+  ▶ python3 tools/visited_scan.py --render | tail -1 && node web/test/world_check.mjs --visited 2>&1 | tail -6
+Web `world_check --visited`: 83 areas identical, 0 differ. Reading the scan tool's docstring so the visited write-up is accurate.
+  ▶ Read visited_scan.py
+  ▶ grep -n "ED99\|ScreenTileSubst\|62F0" REVERSE.md | cut -c1-200
+  ▶ Read REVERSE.md +501
+  ▶ Edit REVERSE.md
+Adding the two new tools to the Intermediate Output Files table and marking the task done.
+  ▶ Grep "^\| `tools/render_rects.py`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Quick check that the disassembler still loads labels.csv with the new entries.
+  ▶ python3 tools/dis.py 19 A7F6 6 && git status --short
+I finished the Ph4 background leftovers task, the top unchecked item. Session 68 had done most of the work but was cut off before writing anything down, so I re-ran its scans, checked the open points in the emulator and recorded the results. All four sub-items are now marked done in REVERSE.md.
+
+1. **The unmatched `NtRectBlit` caller** is `19:A80F`, inside the opening's date-card step (`19:A7F6`). It does a few extra stores before the JSR (tile bias 0, `cam_y` 0), which broke the matching pattern. Its data at `19:B164` is a 30×3 text block reading "1997, October 1," / "The END DAY". `render_rects.py` now matches all 32 blit sites and produces 15 screens.
+2. **Cut-scene palettes:** each opening page uses exactly one background palette set: the palette goes black, one set is loaded, then it fades in. Against the emulator:
+   - At f400, f900 and f916 the rendered pages match with 0 pixel differences.
+   - At f600, f1300 and f1900 the only differences are inside the tower sprite, so the backgrounds and colours are exact.
+   - One page (`19:A95E`) loads no palette of its own because the next page loads it in the same step; the renderer now handles that.
+3. **Bank-10 row/column quirk:** it never shows. All 32 affected areas are single-screen rooms with the camera fixed at x=0, so the faulty code paths never run. In the emulator, rooms `$C2` and `$D0` match the static render except for sprites. The steady 38.6% background difference in `docs/emu_tour.txt` comes from the "INN" name window covering the top of the screen, not a wrong page.
+4. **Visited-screen substitution:** 79 of 213 areas show a visible change. In 102 of the changed spots the change is kept between area loads; the other 47 revert on the next load. All 79 variants are rendered, and the web port's world check gives 83 areas identical, 0 different. This one is a static check only; I didn't confirm it per area in the emulator.
+
+I added 17 labels to `labels.csv` (the opening steps, the bank 18 palette/sprite helpers and the date-card pointer) and listed `visited_scan.py` and `bank10_scan.py` in the tools table. Nothing is committed yet; the changes are in `REVERSE.md` and `labels.csv`.
+
+SESSION_SUMMARY: Session 69 finished the Ph4 background leftovers: 32/32 blit sites matched, opening palettes per page confirmed exact in the emulator, the bank-10 quirk shown never to appear (the tour's 38.6% diff is the shop window), 79 areas with visited substitution rendered and 83/83 identical in the web check, and 17 labels added.

@@ -1,0 +1,180 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*session_21[5678].txt && tail -c 3500 re_loop_sessions/20261122_182422_session_217.txt; echo ----
+  ▶ wc -l web/src/game/lagmodel.js && grep -n "lagDomain\|irq_mode\|irqMode\|nmi" web/src/game/lagmodel.js | head -40; grep 
+  ▶ Read lagmodel.js
+  ▶ grep -n "irq_mode" REVERSE.md | cut -c1-260 | head -40
+  ▶ Read REVERSE.md +450
+Reading the lag model and the NMI-mode docs; the task is (c4): extend the port's lag model beyond `irq_mode` 0 (boss mode 7). Next I'll measure a mode-7 run.
+  ▶ cat tools/passfit_runs.sh; ls web/test/states/ | grep -i "final\|boss\|e2\|a6\|ai70\|restore"; sed -n 1,60p web/test/fin
+  ▶ ls tools/emu/states/ | grep -i "final\|boss"; sed -n 1,50p tools/emu/pass_cost.py | grep -v "^import\|^from"; sed -n 1,3
+  ▶ grep -n "keys\|KEYS\|runFrame(" web/test/bosse2_check.mjs | head; node web/test/state_meta.mjs web/test/states/finalboss
+  ▶ mkdir -p gfx/mode7 && (python3 -m tools.emu.pass_cost tools/emu/states/finalboss.state 900 --split-int --slots --out gfx
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/finalboss.state 900 --split-int --slots --out gfx/mode7/cfb.txt > gfx/mo
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/bosse2.state 480 --split-int --slots --out gfx/mode7/ce2.txt > gfx/mode7
+  ▶ node web/test/pass_count.mjs web/test/states/finalboss.json 3404 --stages --out gfx/mode7/sfb.txt > /dev/null; node web/
+  ▶ mkdir -p gfx/mode7 && node web/test/pass_count.mjs web/test/states/finalboss.json 3404 --stages --out gfx/mode7/sfb.txt 
+Setting up output files for the boss-mode cost runs (hit a permission prompt on mkdir; retrying simply).
+  ▶ mkdir -p /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/mode7
+  ▶ mkdir -p /tmp/mode7 && cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM && node web/test/pass_count.mjs web/test/stat
+  ▶ mkdir -p /tmp/mode7
+  ▶ node web/test/pass_count.mjs web/test/states/finalboss.json 3404 --stages --out /tmp/m7_sfb.txt | tail -2
+  ▶ node web/test/pass_count.mjs web/test/states/bosse2.json 3003 --stages --out /tmp/m7_se2.txt
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/finalboss.state 900 --split-int --slots --out /tmp/m7_cfb.txt
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/bosse2.state 480 --split-int --slots --out /tmp/m7_ce2.txt
+Meanwhile, look at the port counts and how the irq_mode varies in these runs.
+  ▶ wc -l /tmp/m7_sfb.txt /tmp/m7_se2.txt; sed -n '1,3p;400,402p' /tmp/m7_sfb.txt | cut -c1-300; sed -n 30,110p web/test/pas
+  ▶ Read m7_sfb.txt
+  ▶ Read pass_count.mjs +11
+  ▶ Read int_fit.py
+  ▶ Edit pass_count.mjs
+  ▶ grep -n "colc=\|split()\|'='" tools/pass_fit.py tools/lag_model_check.py tools/lag_stage_diff.py | head -20
+  ▶ Read pass_fit.py +128
+  ▶ Edit int_fit.py
+  ▶ Edit int_fit.py
+  ▶ Edit int_fit.py
+  ▶ Edit int_fit.py
+The E2 boss cost table is done; rerunning the port counts with the new `im=` column and fitting the NMI cost per irq_mode.
+  ▶ node web/test/pass_count.mjs web/test/states/bosse2.json 3003 --stages --out /tmp/m7_se2.txt && python3 tools/int_fit.py
+  ▶ Write m7_icoef.json
+  ▶ python3 tools/int_fit.py /tmp/m7_ce2.txt /tmp/m7_se2.txt --coef /tmp/m7_icoef.json --im 7 --worst 8; echo ---; python3 t
+  ▶ Grep "^f29(2[3-9]|3[0-9]) " /tmp/m7_ce2.txt
+  ▶ Grep "^29(2[4-9]|3[0-9]) " /tmp/m7_se2.txt
+  ▶ python3 tools/dis.py 31 F3B6 0x60
+  ▶ grep -n "startLine\|lagLine\|lagDomain\|lagPass =\|lagStart =" web/src/game/*.js web/src/game/*/*.js | head -20
+  ▶ Read machine.js +195
+  ▶ Edit lagmodel.js
+  ▶ Edit lagmodel.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ node web/test/lag_probe.mjs web/test/states/bosse2.json 3003 --all --out /tmp/m7_pe2.txt && python3 tools/lag_model_chec
+  ▶ Grep "^f29(0[4-9]|1[0-9]|2[0-2]) " /tmp/m7_ce2.txt
+  ▶ Grep "^f?29(0[4-9]|1[0-9]|2[0-2])\b" /tmp/m7_pe2.txt
+  ▶ node web/test/lag_probe.mjs web/test/states/bosse2.json 3003 --all --splits --out /tmp/m7_pe2s.txt >/dev/null; python3 t
+  ▶ sed -n 1,40p tools/pass_fit.py; grep -n "'--ai'\|--coef\|def " tools/pass_fit.py
+  ▶ Read pass_fit.py +62
+  ▶ Read pass_fit.py +127
+Adding `--fit-new` (fit AI ids missing from `--coef`) and `--from/--to` frame limits to `pass_fit.py`.
+  ▶ Edit pass_fit.py
+  ▶ Edit pass_fit.py
+  ▶ Edit pass_fit.py
+  ▶ Edit pass_fit.py
+Now the coefficients file from `LAG_COEF` (pass_fit keys: `ai*`, `aiXX`, stages; col 5 terms).
+  ▶ Write m7_coef.json
+  ▶ node web/test/pass_count.mjs web/test/states/bosse2.json 3003 --stages --out /tmp/m7_se2.txt && python3 tools/pass_fit.p
+The AI `$62` fit is exact on the aligned passes (rms 1). Next, the final-boss run's lag frames.
+  ▶ Grep "LAG" /tmp/m7_cfb.txt
+  ▶ python3 tools/run_checks.py boss final ai70 2>&1 | tail -15
+  ▶ node web/test/lag_probe.mjs web/test/states/finalboss.json 3404 --all --out /tmp/m7_pfb.txt > /dev/null; python3 tools/l
+  ▶ Grep "^f?29(4[8-9]|5[0-9]|6[0-2])\b|LAG" /tmp/m7_pfb.txt
+  ▶ Grep "^f29(4[8-9]|5[0-9]|6[0-7]) " /tmp/m7_cfb.txt
+  ▶ node web/test/pass_count.mjs web/test/states/finalboss.json 3404 --stages --no-lag --out /tmp/m7_sfb.txt && node web/tes
+E2 is misaligned after f2914, so I'm fitting each run on its own aligned range.
+  ▶ python3 tools/pass_fit.py /tmp/m7_cfb.txt /tmp/m7_sfb.txt --stages --ai --skip-lag --coef /tmp/m7_coef.json --fit-new --
+  ▶ python3 tools/pass_fit.py /tmp/m7_cfb.txt /tmp/m7_sfb.txt --stages --ai --skip-lag --coef /tmp/m7_coef.json --fit-new --
+  ▶ Read m7_coef_fb.json
+  ▶ Read m7_coef_e2.json
+  ▶ Edit lagmodel.js
+  ▶ node web/test/lag_probe.mjs web/test/states/finalboss.json 3404 --all --out /tmp/m7_pfb.txt > /dev/null; python3 tools/l
+Final boss estimates are now within ~100 cycles near the boundary, with no false lags. Running the boss checks again, then looking at the dive (f3146+).
+  ▶ python3 tools/run_checks.py boss final ai70 2>&1 | tail -9
+All 7 pass. Now trying to extend `finalboss_check` into the dive, where every tools.emu pass lags. Generating a longer reference.
+  ▶ sed -n 1,30p tools/web_state_compare.py | grep -v "^import\|^from"; sed -n 1,15p tools/csv_trim.py
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/finalboss.state --web web/test/states/finalboss.json --frame
+While that runs, rechecking the E2 boss run with the new `$62` fit.
+  ▶ node web/test/lag_probe.mjs web/test/states/bosse2.json 3003 --all --out /tmp/m7_pe2.txt >/dev/null && python3 tools/lag
+E2 boss: 7/7 lag frames, 0 disagreements, 0 start-line misses. Generating a full-length E2 compare too, to extend `bosse2_check.mjs`.
+  ▶ sed -n 1,40p web/test/bosse2_check.mjs
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/bosse2.state --web web/test/states/bosse2.json --frames 480 
+Running the full check suite in the meantime (the new AI fits could touch mode-0 areas that use `$1B` / `$3F` / `$7F`).
+  ▶ python3 tools/run_checks.py 2>&1 | grep -v "^0 " | tail -20
+  ▶ Read bn31jdanx.output
+  ▶ Read bxvq29kju.output
+E2 now matches over the whole 480 frames, apart from the PARTIAL cells already listed and one new pair (`pos_x`/`pos_y`, every 11 frames from f2910). Checking what those columns are.
+  ▶ grep -n "pos_x\|pos_y" tools/emu/compare.py web/test/harness.mjs | head; python3 tools/csv_cols.py /tmp/m7_wse2/emu.csv 
+  ▶ python3 tools/compare_frames.py /tmp/m7_wsc/emu.csv /tmp/m7_wsc/web.csv --frames 3100-3403 | grep -v "^  o1\|^  o0" | he
+The dive f3146-3216 now matches tools.emu at shift 0 (lag pattern included), apart from one `oam_crc` at f3167. Checking f3167, f3217 and the earlier range.
+  ▶ python3 tools/compare_frames.py /tmp/m7_wsc/emu.csv /tmp/m7_wsc/web.csv --frames 2505-3099 | tail -8; python3 tools/cell
+Before f3100 only the already-listed cells differ. The first new problems are at f3217 (slot `$1B` cleared one frame EARLY) and f3221 (music LATE). Looking at the passes around them.
+  ▶ Grep "^f32(1[2-9]|2[0-4]) " /tmp/m7_cfb.txt
+  ▶ Grep "^f32(1[2-9]|2[0-4])\b" /tmp/m7_pfb.txt
+  ▶ python3 tools/cell_class.py /tmp/m7_wsc/emu.csv /tmp/m7_wsc/web.csv oam_crc,pal_crc,o03_ai,o0D_ai,o14_ai,sub,state,music
+  ▶ Read finalboss_check.mjs +56
+  ▶ python3 tools/csv_trim.py /tmp/m7_wsc/emu.csv web/test/finalboss_ref.csv --cols core,pal,obj,oam_crc --frames 2505-3220 
+Only rows were added; the existing rows are unchanged. Updating the two checks.
+  ▶ Edit finalboss_check.mjs
+  ▶ Edit finalboss_check.mjs
+  ▶ Edit finalboss_check.mjs
+  ▶ Edit finalboss_check.mjs
+  ▶ node web/test/finalboss_check.mjs
+  ▶ python3 tools/csv_cols.py /tmp/m7_wsc/emu.csv /tmp/m7_wsc/web.csv oam_crc,o0D_y,o00_y 3164-3170
+Port = the ref's next frame here too: the f3166 pass lags, and tools.emu's row 3167 holds a half-written OAM. Moving it to EARLY.
+  ▶ Edit finalboss_check.mjs
+  ▶ node web/test/finalboss_check.mjs
+27 model overruns + 9 two-frame wait passes already ported as heuristics = tools.emu's 36 dive lag frames. Now `bosse2_check`.
+  ▶ Edit bosse2_check.mjs
+  ▶ Edit bosse2_check.mjs
+  ▶ node web/test/bosse2_check.mjs; grep -n "^console.log\|lagFrames" web/test/bosse2_check.mjs | head
+Both checks pass. Adding an assert on the overrun counts so that losing mode 7 fails loudly.
+  ▶ Read bosse2_check.mjs +69
+  ▶ Edit bosse2_check.mjs
+  ▶ Edit finalboss_check.mjs
+  ▶ python3 tools/run_checks.py 2>&1 | tail -3
+52/52 pass. Updating the stale `lagDomain` comment, then REVERSE.md / CLAUDE.md.
+  ▶ Edit lagmodel.js
+  ▶ grep -n "^| Main-loop pass cost" REVERSE.md | cut -c1-60; grep -n "(c4) other NMI modes" REVERSE.md | cut -c1-40
+Correction to my comment: AI `$70` (`27:BCE8`) sets `irq_mode` 2 during play passes, so mode 2 isn't SubstPlay-free. Fixing the comment.
+  ▶ Edit lagmodel.js
+  ▶ Read REVERSE.md +184
+I'll add a separate s218 row after this one instead of growing it further.
+  ▶ Edit REVERSE.md
+Now the task text (c4) in the leftovers item.
+  ▶ Edit REVERSE.md
+  ▶ grep -n "finalboss_check.mjs\|bosse2_check.mjs\|pass_fit.py C1,C2\|int_fit.py COST" CLAUDE.md | cut -c1-220
+  ▶ sed -n '47p;103p' CLAUDE.md
+  ▶ Edit CLAUDE.md
+  ▶ Edit CLAUDE.md
+  ▶ Edit CLAUDE.md
+Adding a label for the NMI's slot-`$13` copy if one isn't there already.
+  ▶ Grep "^31,F3(F6|EC)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -c 200 labels.csv | od -c | tail -3
+  ▶ printf '%s\n' '31,F3F6,NmiScrollFromSlot13,"irq_mode 7/9: $07D8-$07DB = slot $13 x/y (+27 cycles in mode 7, +24 in 9, s2
+  ▶ Read labels.csv +1
+  ▶ Grep "^31,F3B6," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 31 F3F0 8 && git status --short | head -20
+The lag model now covers `irq_mode` 7, the mode the bosses run in. Both boss checks compare much longer stretches against tools.emu, and all 52 checks pass. This was the open (c4) part of the low-priority Ph7 leftovers task. That task stays unchecked: the optional remaining parts are written into its text.
+
+**What was wrong**
+- **The NMI cost.** In modes 7 and 9 the NMI copies its scroll values from object slot `$13` instead of the usual place (`31:F3F6`). That costs 27 extra cycles in mode 7 and 24 in mode 9, and the port wasn't counting it. tools.emu confirms it: the E2 boss's NMIs take 1340 / 1643 cycles where mode 0's take 1315 / 1618.
+- **The two boss AIs.** Neither had its own cycle fit, so both used the shared fallback. That put `$62` (E2 boss) about 1750 cycles too low and `$6B` (final boss) about 870 too high. The `$6B` error caused a false lag at f2956.
+- **The late start lines in the final boss fight.** An earlier note blamed these on the fit, but they are real: the rain phase has 2198-cycle NMIs, so its passes start at line 260.
+
+**Changes in the port**
+- `lagmodel.js`: the NMI extra is added when working out the next pass's start line. Mode 7 is now judged as well as mode 0 (`m.lagMode7 = false` turns it back off). There are new per-AI fits for `$62` and `$6B` (rms 1 and 11 cycles), plus `$3F`, `$7F` and `$1B`.
+- `machine.js`: applies the NMI extra only when the NMI actually ran its normal (non-lag) branch.
+
+**Results**
+- **E2 boss:** all 7 lag frames tools.emu has are reproduced, with no disagreements and no wrong start lines. `bosse2_check.mjs` now compares the whole 480-frame reference (to f3002, was f2907). It also asserts the 7 overruns.
+- **Final boss:** no false lags before the dive. During the dive (f3146-3218) every tools.emu pass lags. The port gets all 36 lag frames: 27 come from the model, and 9 come from the slow two-frame passes the port already handles as waits.
+  - `finalboss_check.mjs` now runs to f3220 (was f3147) and asserts the 27 overruns.
+  - The player dies at f3218. The death sequence after that is not covered.
+- **New listed cells:**
+  - E2: 9 PARTIAL `pos_x/y` cells, scratch values caught mid-update in the player's three-frame wait passes.
+  - Final boss: 2 EARLY cells (f3167, f3217). There the lagging pass is still running when tools.emu records the frame, while the port finishes the whole pass inside that frame.
+
+**Tool changes**
+- `pass_fit.py --fit-new --from/--to`: fits only the AI ids the saved coefficients lack, limited to the frames where port and tools.emu are still in step.
+- `pass_count.mjs` rows now end in `im=` (the `irq_mode`).
+- `int_fit.py --im` picks frames by that mode.
+- New label `31:F3F6` `NmiScrollFromSlot13`.
+
+**Still open (optional, in the task text):**
+- Mode 2 passes, which AI `$70` switches on during play (its known lags are already handled by heuristics).
+- Own fits for AIs `$34`, `$4E` and `$40`.
+
+REVERSE.md has a new Verification Log row ("Lag model in `irq_mode` 7") and updated task text; CLAUDE.md is updated too. Nothing is committed.
+
+SESSION_SUMMARY: s218 did (c4) for `irq_mode` 7: NMI +27 cycles for the slot-`$13` scroll copy (`31:F3F6`), the lag model now judges mode 7 with its own fits for AIs `$62` / `$6B` / `$3F` / `$7F` / `$1B`; `bosse2_check.mjs` passes its whole 480-frame ref (7/7 lag frames) and `finalboss_check.mjs` runs to f3220 through the dive (27 model overruns + 9 ported waits = tools.emu's 36); 52/52 checks pass; mode 2 and fits for AIs `$34` / `$4E` / `$40` remain optional.

@@ -1,0 +1,114 @@
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks\|^### \|- \[ \]" REVERSE.md | h
+  ▶ Read dead_ends.md
+  ▶ tail -c 3000 re_loop_sessions/20261116_193142_session_035.txt; echo ----; tail -c 2500 re_loop_sessions/20261116_193142_
+  ▶ cat tools/emu/memory.py tools/emu/__init__.py tools/emu/loader.py && sed -n 1,80p tools/emu/mapper.py && grep -n "def \|
+  ▶ sed -n 80,214p tools/emu/mapper.py && sed -n 55,210p tools/emu/cpu.py && grep -n "master\|PALETTE\|def " tools/palette_d
+  ▶ sed -n 1,40p tools/emu/test_mapper.py && sed -n 1,35p tools/palette_dump.py && ls tools/__init__.py; grep -n "tools/emu"
+  ▶ grep -n "_StubPpu" -A12 tools/emu/test_cpu.py | head -20; grep -n "IrqHandlerTable\|PPUCTRL\|ppu_ctrl" REVERSE.md | head
+First, a small change to the CPU so register accesses can line the PPU up to within the instruction:
+  ▶ Edit cpu.py
+  ▶ grep -n "self.stall = 0$\|self.irq_flags = 0$" tools/emu/cpu.py
+  ▶ Edit cpu.py
+Now the PPU itself:
+  ▶ Write ppu.py
+Now the APU stub, controllers, PNG writer, and the system/frame loop:
+  ▶ Write apu.py
+  ▶ Write pads.py
+  ▶ Write png.py
+  ▶ Write nes.py
+Now a minimal CLI (emu 4/6 will extend it):
+  ▶ Write __main__.py
+  ▶ mkdir -p gfx/emu && python3 -m tools.emu --frames 120 --dump-screen gfx/emu/boot_f120.png --scale 2 && python3 tools/emu
+  ▶ mkdir -p gfx/emu
+  ▶ python3 -m tools.emu --frames 120 --dump-screen gfx/emu/boot_f120.png --scale 2
+`tools/dis.py` shadows the standard-library `dis` module because `emu/__init__` puts `tools/` first on `sys.path`. I'll append it instead:
+  ▶ Edit __init__.py
+  ▶ python3 -m tools.emu --frames 120 --dump-screen /tmp/boot_f120.png --scale 2
+It runs at 25.5 fps, with 29,780 CPU cycles per frame (correct for NTSC) and NMIs firing. Let me look at the picture:
+  ▶ Read boot_f120.png
+The logo screen renders correctly. Next, a small tool to dump screens at chosen frames, logging MMC3 IRQ split writes, so I can check later screens:
+  ▶ Write shots.py
+  ▶ python3 tools/emu/shots.py /tmp/emu 300,600,900,1200 --splits
+  ▶ Read frame_0600.png
+  ▶ Read frame_1200.png
+The intro screens render correctly. None of them use a mid-frame split, so I'll press START to reach the title/menu screens and see whether any do:
+  ▶ python3 tools/emu/shots.py /tmp/emu2 1300,1450,1600,1800 --press 1250:START --press 1400:START --press 1550:START --pres
+  ▶ Read frame_1450.png
+  ▶ Read frame_1800.png
+The title screen renders correctly. Frame 1800 is the start of the new-game sequence. Let me run further to reach gameplay, where the HUD split should appear:
+  ▶ python3 tools/emu/shots.py /tmp/emu3 2200,2600,3000,3400 --press 1250:START --press 1400:START --press 1550:START --pres
+  ▶ Read frame_3400.png
+This is the name-entry screen. I'll try confirming with START, then DOWN×3 plus A as a fallback, and add the PC to the output for diagnosis:
+  ▶ Edit shots.py
+  ▶ python3 tools/emu/shots.py /tmp/emu4 2100,2300,2600,3000,3400 --press 1250:START --press 1400:START --press 1550:START -
+  ▶ Read frame_3400.png
+Input is getting through (the name changed from `AAAA` to `AAA`), but DOWN didn't move the cursor. Let me check how the game reads the pad:
+  ▶ Grep "(?i)controller read|ReadPad|joy_|pad_new|\$4016" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+The DOWN presses came before the name-entry screen opened (it starts around frame 2250). One more run with the presses after that:
+  ▶ python3 tools/emu/shots.py /tmp/emu5 2460,2700,3000,3400,3800,4200 --press 1250:START --press 1400:START --press 1550:ST
+  ▶ Read frame_2700.png
+DOWN still doesn't move the cursor, while A works. Let me read `ReadPadsMenu` to see whether the emulator or my input script is at fault:
+  ▶ python3 tools/dis.py 31 FE80 0xC4
+The pad logic matches the hardware. To find out where DOWN gets lost, I'll watch what the game writes to `pad_new` (`$4B`) and `pad_raw` (`$4F`) around the DOWN press:
+  ▶ Write padprobe.py
+  ▶ python3 tools/emu/padprobe.py 2398 2406 --press 1250:START --press 1400:START --press 1550:START --press 1700:START --pr
+  ▶ Write test_ppu.py
+  ▶ python3 tools/emu/test_ppu.py --rom 2>&1 | tail -30
+One failure, and it's a bug in the test: sprite palette 1 lives at `$3F14-$3F17`, which the test never set (it expected the BG palette 1 value). Fixing the test:
+  ▶ Edit test_ppu.py
+  ▶ Edit test_ppu.py
+  ▶ python3 tools/emu/test_ppu.py --rom 2>&1 | tail -3; python3 tools/emu/test_cpu.py --rom | tail -1; python3 tools/emu/tes
+  ▶ python3 tools/emu/test_ppu.py 2>&1 | grep FAIL
+The failure is in the test again: it read the overflow flag after the pre-render line had already cleared it. I'll check the flag mid-frame instead:
+  ▶ Edit test_ppu.py
+  ▶ python3 tools/emu/test_ppu.py --rom 2>&1 | tail -2
+All 18 pass. Tidying one awkward assertion in the scroll test (the expected value is `$616F`, the NESdev worked-example value):
+  ▶ Edit test_ppu.py
+  ▶ python3 tools/emu/test_ppu.py 2>&1 | tail -1 && python3 tools/emu/shots.py gfx/emu 120,600,1200,1450,2460 --press 1250:S
+Reference screens are saved to `gfx/emu/`. A quick check of `--log-apu`:
+  ▶ python3 -m tools.emu --frames 30 --log-apu /tmp/apu.log && wc -l /tmp/apu.log && awk '{print $3}' /tmp/apu.log | sort | 
+  ▶ python3 -m tools.emu --frames 30 --log-apu /tmp/apu.log
+  ▶ Grep "40(15|17|00) " /tmp/apu.log
+  ▶ Read apu.log
+Logging works (only the init writes `$4010/$4017/$4015` occur in the first 30 frames). Now the docs: package docstring, then REVERSE.md.
+  ▶ Edit __init__.py
+  ▶ Read REVERSE.md +1366
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I finished task **Ph5.5 emu 3/6**: the emulator now has the graphics chip (PPU) and a frame loop. It boots the ROM through the logo, the intro story screens and the title screen to the name-entry screen, all drawn correctly, at about 26 frames per second in pure Python.
+
+**Tests:** all three suites pass.
+- The new `python3 tools/emu/test_ppu.py --rom` passes 18/18.
+- The CPU tests (24/24) and mapper tests (9/9) from sessions 34 and 35 still pass.
+
+**New files in `tools/emu/`:**
+- **`ppu.py`:** the graphics chip.
+  - All eight registers, with exact scroll and address behaviour, the delayed read from `$2007`, and palette and nametable mirroring.
+  - Vblank NMI at line 241, the odd-frame shortened line, sprite-0 hit and the 8-sprites-per-line limit.
+  - Both sprite sizes, flips and priority, and hiding of the left 8 pixels.
+  - **Timing:** before every register access, the picture is drawn up to the exact moment of that access. This keeps mid-line scroll and graphics-bank changes on the right pixel, so split screens come out correctly.
+  - **Scanline counter:** it ticks the MMC3 counter once per line, 241 times per frame with this game's settings.
+- **`apu.py`:** a stand-in for the sound chip. It records register writes and never raises an interrupt.
+- **`pads.py`:** controllers, including button parsing like `A+RIGHT`.
+- **`png.py`:** a small PNG writer using only the standard library.
+- **`nes.py`:** wires the parts together and runs whole frames.
+- **`__main__.py`:** `python3 -m tools.emu --frames N --dump-screen F.png [--log-apu]`.
+- **Two debugging helpers:** `shots.py` (screens at chosen frames with scripted button presses, plus a list of mid-frame scroll writes) and `padprobe.py` (shows what the game stores when a button is pressed).
+
+**Changes to existing files:**
+- `cpu.py` now records each instruction's cycle count before running it, which the per-access timing needs.
+- `emu/__init__.py` now adds `tools/` to the end of the module search path instead of the front. Otherwise `tools/dis.py` hides Python's built-in `dis` module, and `argparse` crashes.
+
+**Two things left for emu 5/6** (noted in that task):
+- **In-game split screen:** none of the screens reached so far change the scroll partway down. Split screens are only checked with synthetic tests, not yet the in-game one (IRQ handler 0 at `31:F455`).
+- **Name-entry cursor:** DOWN reaches the game (the game records the press), but the cursor doesn't move. That is down to how the name-entry screen reads input, not an emulator bug, so its handler needs reading before the start of a game can be scripted.
+
+**Records:**
+- Five reference screens saved to `gfx/emu/frame_{0120,0600,1200,1450,2460}.png`.
+- REVERSE.md has the task marked done and a full entry under Intermediate Output Files.
+- No new ROM addresses, so `labels.csv` is unchanged.
+- No new dead ends.
+- Nothing committed.
+
+SESSION_SUMMARY: Session 36 — Ph5.5 emu 3/6 done: new `tools/emu/{ppu,apu,pads,png,nes,__main__,shots,padprobe}.py`; PPU draws up to each register access (exact scroll latches, sprites, sprite-0, NMI, MMC3 line counter); `test_ppu.py --rom` 18/18 (CPU 24/24, mapper 9/9 still pass); ROM boots to title and name entry at ~26 fps, screens in `gfx/emu/`; in-game split check and name-entry input moved to emu 5/6.

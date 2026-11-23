@@ -1,0 +1,92 @@
+  ▶ Read dead_ends.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## Next Tasks" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +601
+  ▶ Read 20261115_134839_session_014.txt
+  ▶ Grep "SESSION_SUMMARY" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions
+  ▶ Grep "EventActionTable|D563|^#+ " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +422
+Picking up session 15 on "text follow-ups 4": starting with part (a), naming the 32 `EventActionTable` `30:D563` handlers.
+  ▶ python3 tools/decode_tables.py 30:D563 32 ptr16 --per-line 8 && python3 tools/dis.py 30 D5A3 0xB0
+  ▶ python3 tools/dis.py 30 D653 0x1E0
+  ▶ python3 tools/dis.py 30 D82E 0x20 --stop; python3 tools/dis.py 30 D88B 0x40 --stop; grep -nE "^(30|31),(E148|E144|C169|D
+  ▶ grep -nE "^\s*(28\.17|14\.5|22\.[0-7])\b" gfx/text.txt | cut -c1-200; head -5 gfx/text.txt; python3 tools/dis.py 30 C169
+  ▶ Grep "^(== group (14|22|28)\b|\s*(14\.05|22\.0[0-7]|28\.17)\b)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ sed -n '1026,1030p;1572,1600p' gfx/text.txt | cut -c1-300; awk 'NR>2014 && /^  *(\[)?17/ {print; exit}' gfx/text.txt; gr
+Reading the dialogue text the event handlers show (groups 14, 22, 28) so I can name them.
+  ▶ Read text.txt +1026
+  ▶ Read text.txt +1572
+  ▶ Grep "^-- 28\.17 " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Grep "act \d+" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/flag_sites.txt
+  ▶ Grep "-> act [1-9]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/flag_sites.txt
+  ▶ Grep "^\s*(29|3E|41|42|46|47|38|88|9E|DE|55):" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Part (a) is written up. Now I'm adding labels, then part (b): code that sets story flags directly.
+  ▶ wc -l labels.csv && grep -nE "^30,(D5A4|D5E6|D659|D6A8|D7B7|D791|D805|D827|D88B|D23F|D7CE|D75E)," labels.csv
+  ▶ Read labels.csv +328
+  ▶ Edit labels.csv
+  ▶ for a in 6480 6481 6482 6483 6484 6485 6486 6487 6488 6489 648A 648B 648C 648D 648E 648F 6490 6491 649D 64DE 64DF; do ec
+  ▶ python3 tools/xref.py --help 2>&1 | head -20
+  ▶ Grep "^def |^import|^from" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/xref.py
+  ▶ Read xref.py +20
+  ▶ grep -n "^def decode" -A12 tools/instruction_set.py | head -30
+  ▶ Write flag_code_sites.py
+  ▶ Edit flag_code_sites.py
+  ▶ python3 tools/flag_code_sites.py --out gfx/flag_code_sites.txt
+  ▶ Grep "load_rom\(|load_labels\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/xref.py
+Fixing a small bug in the new flag-site scanner, then running it.
+  ▶ Edit flag_code_sites.py
+  ▶ python3 tools/flag_code_sites.py --out gfx/flag_code_sites.txt
+Most of the 217 hits are dialogue text decoded as code. I'll add a filter, then trace the real sites (`26:903A`, `27:A6FE`, `30:DD64`, `31:E7CE`).
+  ▶ Edit flag_code_sites.py
+  ▶ Edit flag_code_sites.py
+  ▶ Edit flag_code_sites.py
+  ▶ python3 tools/flag_code_sites.py --out gfx/flag_code_sites.txt | grep -vE "^(0[0-9]|1[0-3]|19|2[0-3]):" ; python3 tools/
+  ▶ python3 tools/dis.py 26 9008 0x18; python3 tools/xref.py 26:9010 ; python3 tools/xref.py 26:9014; python3 tools/xref.py 
+  ▶ python3 tools/dis.py 26 8FD0 0x41; python3 tools/decode_tables.py 26:9045 10 u8; python3 tools/decode_tables.py 26:904F 
+  ▶ python3 tools/dis.py 26 8F90 0x44; python3 tools/decode_tables.py 26:9058 20 u8; grep -nE "^26,8F|^26,90" labels.csv
+Found a code path that sets story flags when an object is hit (`26:9011`, ids from tables `26:9045`/`904F`). Checking the other direct sites now.
+  ▶ python3 tools/dis.py 27 A6EC 0x24 --stop; python3 tools/dis.py 30 DD58 0x10 --stop; python3 tools/xref.py DD58; python3 
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 26 8FC4 4 && python3 tools/dis.py 30 D7B7 2 && python3 tools/flag_code_sites.py > /dev/null && echo
+Labels load and the tool works. Now closing the task in REVERSE.md and moving parts (c)–(h) into a new follow-up task.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "flag_sites" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Session 15 finished parts (a) and (b) of "Ph3: text follow-ups 4". I marked the task done and moved the remaining parts into a new task, "text follow-ups 5". Everything here comes from reading the ROM; nothing was run in an emulator. Nothing was added to `dead_ends.md`.
+
+**(a) Event-trigger actions:** all 32 entries of the action table at `30:D563` are now named, in a table under "Event triggers" in REVERSE.md.
+- **Act 29 does not start a boss fight.** It only removes the trigger object, so the boss must already be placed by the area itself. The one exception is area `$F2`, where it also spawns object type `$88`. Session 14 had guessed "boss start".
+- **Act 1** shows message 28.17 ("You've finally found the Sword of Thunder… Azteca awaits you") and then warps the player to area `$F2`.
+- **Act 7** shows Mesia's message (14.5) with an effect object.
+- **Act 23** shows the four backstory speeches 22.0, 22.2, 22.4 and 22.6 in a row.
+- **Acts 24 and 27** turn objects into followers.
+- **Act 25** pushes the player back 8 pixels ("you cannot climb this yet"). It has a bug: when the addition carries, it increments the low byte again instead of the high byte.
+- **Act 30** switches to game sub-state `$1B` and skips the normal return. It is used by the Mesia reunion, so it is probably the ending.
+- The other acts give items (Paralysis, Barrier, Change, Bow of Moon, Gas Mask, Refresh), stop the music, or spawn objects.
+- 11 of the 32 acts (2, 12-14, 16, 19-22, 28, 31) are not used by any event trigger.
+
+**(b) Code that sets story flags directly:**
+- New tool `tools/flag_code_sites.py` lists every instruction that reads or writes the story-flag area. It ran and wrote `gfx/flag_code_sites.txt` (69 sites). The entries in the text banks are still dialogue mis-read as code, so only about 20 are real.
+- **When certain objects are hit, a flag is set** (`HitSetFlag` at `26:9011`). Objects with 9 particular spawn ids set flags F058, F059, F06D-F071, F099 and F0A1. A separate list of 20 ids makes some objects immune.
+- **A code hook adds a follower in area `$1C`** (`31:E7C4`). If flag F053 is set and F045 is not, it sets F045 and adds follower `$0C`; otherwise it clears F053. This matches event trigger `$8F`, so F053 means "follower waiting" and F045 means "follower has joined".
+- **Still unknown:** what sets the boss-gate flags F05C-F06C. No direct code write was found and the hit routine doesn't cover them. This is the first item of the new task.
+
+24 labels were added and they load in `dis.py`.
+
+**Moved to "text follow-ups 5":**
+- Find what sets the boss-gate flags.
+- Merge the new code-site list into `flag_sites.py` and drop flags that come from invalid NPC scripts.
+- Map NPCs, triggers and flagged objects to their areas.
+- Trace item hooks 0 and 1 and the `$70` item path.
+- Trace the remaining object types and hit handlers.
+- Decode the `15:BAFE` event records.
+- Render the menu font tiles to confirm the word tiles.
+- Trace `18:BC04`, which act 1 calls before the warp.
+
+SESSION_SUMMARY: Session 15 — text follow-ups 4 (a)+(b): named all 32 EventActionTable 30:D563 handlers (act 29 = consume trigger, not boss start; act 1 Sword of Thunder warp; act 25 push-back carry bug; act 30 ending sub-state $1B); new flag_code_sites.py finds the direct flag code: object-hit flag setter HitSetFlag 26:9011 and the area-$1C follower hook 31:E7C4 (F053/F045); boss-gate setters still unknown; 24 labels; leftovers → "text follow-ups 5".

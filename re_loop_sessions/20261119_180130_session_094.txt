@@ -1,0 +1,111 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | tail -30
+  ▶ Read dead_ends.md
+  ▶ grep -n "^- \[ \]" REVERSE.md | head; wc -c re_loop_sessions/*_09[123].txt
+  ▶ tail -c 2500 re_loop_sessions/20261119_130155_session_091.txt; echo ======; tail -c 2500 re_loop_sessions/20261119_13015
+  ▶ grep -n "s93\|session 93" REVERSE.md | cut -c1-200 | head -20; git status --short | head; git log --stat -1 | tail -15
+  ▶ ls web/src/game web/src/game/states && wc -l web/src/game/states/*.js web/src/game/*.js && grep -n "sub_state\|SubstMenu
+Picking the top open task (menu screens port: pause/status, equip menu, save/load page). Reading the existing port structure first.
+  ▶ Read play.js
+  ▶ Read death.js
+  ▶ Read REVERSE.md +160
+  ▶ Read REVERSE.md +235
+  ▶ sed -n '159p' REVERSE.md; ls web/test/states/ tools/emu/states/; grep -n "argparse\|add_argument" tools/emu/web_state.py
+  ▶ Read web_state.py
+  ▶ grep -n "load-state\|loadState\|resume\|entry\|pc\b" web/test/run.mjs | head -30; grep -n "pc\|until" web/src/game/machi
+  ▶ Read mainloop.js
+  ▶ Read machine.js
+  ▶ python3 tools/dis.py 30 CB62 0x9A --stop; python3 tools/dis.py 15 BC40 0x320
+Scoping to the pause/status screen (PauseScreen `15:BC40` + PauseWait + NmiMode2) for this session. Checking which helpers the port already has.
+  ▶ grep -n "^export" web/src/game/world/*.js web/src/game/pads.js web/src/game/obj/sprites.js web/src/game/states/title.js 
+  ▶ grep -rn "C482\|F64F\|ApplyChrAlt\|C1AE\|queueBlock\|FEE0" web/src --include=*.js | cut -c1-180; python3 tools/dis.py 30
+  ▶ sed -n '1,41p' web/src/game/obj/sprites.js; python3 tools/dis.py 30 C482 0x40 --stop; python3 tools/dis.py 14 8000 0x10;
+  ▶ grep -rn "0xC518\|C518\|28:8000\|80A5\|hideUnused\|function " web/src/game/obj/sprites.js web/src/game/world/ppuqueue.js
+  ▶ python3 tools/dis.py 30 C501 0x30 --stop; sed -n '42,110p;170,186p' web/src/game/obj/sprites.js; sed -n '1,80p' web/src/
+  ▶ Read web_state_compare.py
+  ▶ cat web/src/game/prg.js web/src/game/pads.js | head -120; sed -n 30,75p web/test/run.mjs
+  ▶ Grep "def parse_keys|nes.keys =|parse_keys\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ python3 tools/dis.py 31 F705 0x2C --stop; python3 tools/dis.py 31 F6AD 0x15 --stop; python3 tools/dis.py 31 F3E4 0x12; p
+  ▶ grep -n "irq_mode\|export function paletteUpload" -A3 web/src/game/palette.js | head -20; python3 tools/decode_tables.py
+Writing the port now: `states/pause.js` plus small exports in `death.js`/`sprites.js` and NmiMode2 in `mainloop.js`.
+  ▶ python3 - <<'EOF' 2>/dev/null; true
+  ▶ python3 tools/dis.py 28 822E 4 --stop; python3 tools/dis.py 26 8E46 6 --stop
+Now the edits:
+  ▶ sed -i 's|^function queueFlushNow(m) {|export function queueFlushNow(m) {|' web/src/game/states/death.js && sed -i 's|^f
+  ▶ Edit death.js
+  ▶ Edit sprites.js
+  ▶ Edit sprites.js
+  ▶ Write pause.js
+  ▶ Read ram.js
+  ▶ Edit ram.js
+  ▶ Edit pause.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit play.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+Port code written; now adding `--keys` to the two state tools so START can open and close the pause in both emulator and port.
+  ▶ Read debug.py +165
+  ▶ python3 - tools/emu/web_state.py tools/web_state_compare.py <<'EOF'
+Using Edit instead.
+  ▶ Edit web_state.py
+  ▶ Edit web_state.py
+  ▶ Edit web_state.py
+  ▶ Edit web_state_compare.py
+  ▶ Edit web_state_compare.py
+  ▶ Edit web_state_compare.py
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --keys 2470:START -
+  ▶ python3 tools/web_state_compare.py --state /tmp/pause.state --web web/test/states/pause.json --frames 100 --keys 2540:ST
+Paused frames look identical apart from the HUD rows (unported IRQ split); post-unpause gameplay diverges as expected. Checking the early frames and CSV columns:
+  ▶ python3 tools/web_state_compare.py --state /tmp/pause.state --web web/test/states/pause.json --frames 76 --keys 2540:STA
+  ▶ python3 tools/compare_frames.py /tmp/web_state_compare/emu.csv /tmp/web_state_compare/web.csv --cols core,pal,obj,oam_cr
+Two real CSV differences to chase: `sub` hits 9 one frame later in the port, and slot `$1F` (`$04BF`/x) stays set in tools.emu during the pause. Watching those writes in tools.emu:
+  ▶ python3 -m tools.emu --help 2>&1 | grep -i -A1 "watch\|trace" | head -20
+  ▶ python3 -m tools.emu --load-state /tmp/pause.state --frames 32 --watch 04BF --watch 008F --watch 0041 2>&1 | head -40
+  ▶ Read web_2520.png
+The port renders the real status screen. Running the regression checks:
+  ▶ for t in core_check ppu_check sprite_check obj_check serve_check; do echo "== $t"; node web/test/$t.mjs 2>&1 | tail -2; 
+  ▶ node web/test/core_check.mjs 2>&1 | tail -2; node web/test/ppu_check.mjs 2>&1 | tail -2; node web/test/sprite_check.mjs 
+All pass. Re-checking the death comparison (shares `death.js`/`machine.js` changes):
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --poke 03C1=00 --un
+Death still 0/557. Now the write-up — checking which labels already exist:
+  ▶ Grep "^(15,(BE11|BEBF|BE2A|BD84|BDCB|BF1E)|30,(C1AE|C518)|28,8000)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv
+  ▶ Read labels.csv +1168
+  ▶ Edit labels.csv
+Now REVERSE.md: Verification Log row, substate table notes, and the task.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2346
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2354
+  ▶ Edit REVERSE.md
+Updating `docs/architecture_web.md` to list the new module:
+  ▶ Grep "death\.js|F751|nmiMode2" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Read architecture_web.md +150
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+I ported the pause/status screen to the web version, and while paused it matches tools.emu on all 74 frames outside the HUD rows. The equipment menu and save/load page from the same task are not ported yet; they're filed as a new task.
+
+**What's new in the port**
+- **`web/src/game/states/pause.js`** (new): the pause screen build, the wait-for-START loop, and the helpers it needs (the block-copy routine at `30:C482`, the condition text, the equipment name rows, and the small player figure drawn through object slot `$1F`).
+- **`mainloop.js`**: added NMI mode 2 and the alternate CHR bank switch it uses. The mode lookup now ignores bit 7 of `irq_mode`, as the ROM does. Before, the `$82` value the pause screen sets would have crashed the port.
+- **Starting from a saved state**: during play the game calls the pause screen directly, not through the substate table, so a saved state stopped there can't be resumed the usual way. I added an `ENTRY_POINTS` map in `play.js` that `Machine.loadState` uses to start that routine. I also added substate 12 to the table (an entry the game never uses).
+- **Small supporting changes**: three existing helpers are now exported, and `ram.js` gained names for `$58` and `$6C`.
+- **Tools**: `tools/emu/web_state.py` and `tools/web_state_compare.py` now take `--keys`, so a test can press START to open the pause screen and again to close it. The test state is `web/test/states/pause.json`.
+
+**Test results**
+- **Pause screen vs tools.emu**: 0 of 74 frames (f2470 to f2543, from opening the screen to pressing START) differ outside tile rows 23-29. Those rows are the HUD, drawn by a mid-screen IRQ switch that isn't ported yet.
+- **After unpausing**: from f2544 on the frames differ, because the game goes back to the normal gameplay frame, which the port doesn't have yet.
+- **Leftover CSV differences**: a few rows differ, but all come from when tools.emu samples its row (line 0 of the next frame, when part of the next frame's work has already run). This is the same effect noted in session 89; I confirmed it with a write watch.
+- **Regression checks**: the death-screen comparison is still 0 of 557 frames different. `core_check`, `ppu_check`, `sprite_check` (552/552), `obj_check` (4799/4800, unchanged) and `serve_check` all pass.
+
+**Docs**
+- `REVERSE.md` has a new Verification Log row "Pause / status screen (web port)", a note on the pause row of the substate table, and the task marked done.
+- `labels.csv` has 7 new labels and `docs/architecture_web.md` lists the new module.
+- One new low-priority task at the end of RE Investigation covers the rest: the equipment/item menu (`30:D8C7`), the save/load page (`16:9AEE`) and the area-`$5F` screen restore (`30:CC4D`).
+
+I haven't committed anything.
+
+SESSION_SUMMARY: Session 94 — pause/status screen ported (`states/pause.js` + NMI mode 2 + `ENTRY_POINTS` state entry + `--keys` in the state tools); 0/74 paused frames differ from tools.emu outside the HUD rows, death still 0/557, all web checks pass; equipment menu and save/load page filed as one new low-priority task.

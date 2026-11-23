@@ -1,0 +1,169 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -4 && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +2267
+  ▶ grep -n "^- \[ \]" REVERSE.md; tail -c 3000 re_loop_sessions/20261120_190200_session_119.txt; echo ----; tail -c 1500 re
+  ▶ ls web/src/game web/src/game/states && wc -l web/src/game/states/equip.js web/src/game/states/pause.js && grep -n "not p
+  ▶ grep -n "SubstRestoreScreen\|CC4D" REVERSE.md | cut -c1-400; grep -n "CC4D\|RestoreScreen" labels.csv
+Picked the top unchecked task (Ph7 SELECT-menu leftovers); porting `SubstRestoreScreen` `30:CC4D` first, since it's self-contained.
+  ▶ sed -n 292p REVERSE.md && python3 tools/dis.py 30 CC4D 120 --stop
+  ▶ python3 tools/dis.py 30 CCC7 16 --stop; python3 tools/xref.py CC4D
+  ▶ sed -n 1,40p web/src/game/states/play.js; sed -n 45,70p web/src/game/states/play.js; sed -n 195,260p web/src/game/states
+  ▶ python3 tools/dis.py 30 C89C 20; python3 tools/dis.py 30 D90A 12; grep -n "waitPpuQueue\|export function\* fullScreenDra
+  ▶ python3 tools/xref.py C8A9; sed -n 230,275p web/src/game/world/bgstream.js; grep -n "fullScreenDraw(" -r web/src/game; g
+  ▶ sed -n 1,40p web/src/game/states/pause.js; sed -n 25,45p web/src/game/states/death.js; sed -n 290,300p web/src/game/stat
+Writing the `SubstRestoreScreen` port now (in `saveload.js`, next to `hudWindowSetup`), then wiring its 4 callers.
+  ▶ sed -n 1,40p web/src/game/states/saveload.js; grep -n "^import\|saveload" web/src/game/states/equip.js web/src/game/obj/
+  ▶ grep -n "5F\|C8A9\|C89E\|D0C5" web/src/game/states/talk.js | head; python3 tools/dis.py 30 D0B8 16; python3 tools/dis.py
+  ▶ grep -n "sub_state, 8\|0x41, 8\|C89\|irq_mode" web/src/game/states/talk.js | head; python3 tools/dis.py 30 C890 14
+  ▶ grep -n "export function cpuRd" -A8 web/src/game/prg.js; grep -n "^import" web/src/game/world/bgstream.js
+Now adding the routine.
+  ▶ grep -n "^export function\* hudWindowSetup" -B2 web/src/game/states/saveload.js && grep -n "^}" web/src/game/states/save
+  ▶ Read saveload.js +296
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+  ▶ python3 tools/dis.py 30 CB62 0x52 --stop
+  ▶ python3 tools/dis.py 30 CB84 0x34
+  ▶ python3 tools/dis.py 30 C169 13 --stop; python3 tools/dis.py 30 C4BE 0x5A --stop; sed -n 40,75p web/src/game/states/paus
+Wiring the callers; checking which Y register `SubstPlay` continues with after the restore.
+  ▶ python3 tools/dis.py 30 C482 0x3C --stop; python3 tools/dis.py 30 C8B2 0x20 --stop | grep -i "y\b\|,Y\|LDY\|INY\|DEY\|TA
+  ▶ python3 tools/dis.py 30 C8B2 0x0E --stop; grep -n "export function queueFlushNow" -A6 web/src/game/states/death.js
+  ▶ Read pause.js +21
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ python3 tools/dis.py 30 C436 0x12 --stop
+  ▶ python3 tools/dis.py 30 C676 0x7 --stop
+Making `ppuQueueBlock` return its final Y so the area-`$5F` pause path can resume `SubstPlay` with the right register.
+  ▶ Edit pause.js
+  ▶ Edit pause.js
+Now return Y from `substRestoreScreen` and wire it in play.js / equip.js.
+  ▶ python3 tools/sedit.py 2>/dev/null; grep -n "m.wr(0x2F, 0x3E);" -A8 web/src/game/states/saveload.js
+  ▶ Edit saveload.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+Now testing. Checking `web_state.py` options to reach area `$5F` in both tools.emu and the port.
+  ▶ python3 tools/web_state.py --help 2>&1 | head -50; grep -n "web_state.py" REVERSE.md | grep -i "5F\|poke 006C" | cut -c1
+  ▶ Glob **/web_state*
+  ▶ grep -n "Save / load page\|s102 row\|web_state" REVERSE.md | grep -i "pause\|s94\|--until" | head -4 | cut -c1-900
+  ▶ ls tools/emu/states/ web/test/states/; python3 -m tools.emu.web_state --help 2>&1 | head -40
+Trying a scenario: force an area load into `$5F`, pause, unpause.
+  ▶ mkdir -p /tmp/s120 && timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-pl
+  ▶ timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --poke 
+  ▶ timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --poke 
+  ▶ wc -l tools/emu/web_state.py && grep -n "frame\|keys\|print" tools/emu/web_state.py | head -50
+  ▶ python3 -m tools.emu --help 2>&1 | grep -A1 -i "poke\|load-state\|compare\|keys" | head -30
+  ▶ timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --poke 
+Saved a state at the first `SubstPlay` in area `$5F` (f2502). Now pausing from there.
+  ▶ timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/area5f_s120.state --keys 2505:START --until 15:
+  ▶ timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/area5f_s120.state --keys 2510:START:6 --until 1
+  ▶ python3 tools/xref.py 004D --data 2>&1 | head; grep -n "\`pad_act\`\|pad_act.*START\|\$4D.*b4" REVERSE.md | head -5 | cu
+  ▶ Grep "pad_act" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/pads.js
+START doesn't register there; but AI `$70` (in area `$5F`) itself sets `sub_state $1F`. Checking whether `SubstRestoreScreen` runs naturally.
+  ▶ timeout 900 python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --poke 
+Reached `30:CC4D` at f2506 (via AI `$70` phase 2 → `sub_state $1F`). Comparing the port against tools.emu from there.
+  ▶ python3 tools/web_state_compare.py --help 2>&1 | head -40
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/restore5f_s120.state --web web/test/states/resto
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/restore5f_s120.state --web web/test/states/resto
+Sub-state timing now matches. Left: f2515 screen and the f2516 `pos` row. Looking at the f2515 images.
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/restore5f_s120.state --web web/test/states/resto
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/restore5f_s120.state --web web/test/states/resto
+  ▶ Glob gfx/compare/s120/*2515*
+  ▶ Read pair_2515.png
+Emu still shows a blank screen at f2515 while the port already has rendering on. Tracing the emu's NMI timing through the routine.
+  ▶ python3 tools/trace_summary.py --help 2>&1 | head -20; python3 -m tools.emu --help 2>&1 | grep -A2 "trace"
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/restore5f_s120.state --frames 12 --trace gfx/compare/s120
+Emu timeline: mask on at f2515 L142, sub 8 at f2515 L252, so rendering shows from f2516. Getting the port's timeline to compare.
+  ▶ grep -n "'--[a-z-]*'" web/test/run.mjs | head -30
+  ▶ Grep "frameNo|this\.frame\b|frame0" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/machine.js
+  ▶ Read machine.js +120
+  ▶ Edit play.js
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/restore5f_s120.state --web web/test/states/resto
+`$08` now matches. Remaining f2515 diff: instrumenting the port briefly to get its frame timeline.
+  ▶ grep -n "frame0\|load-state\|m.log\|log(" web/test/run.mjs | head -20
+  ▶ cp web/src/game/states/saveload.js /tmp/saveload.bak.js 2>/dev/null; grep -n "yield\* hudWindowSetup(m);                
+Adding temporary log lines (will remove after).
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+  ▶ node web/test/run.mjs --load-state web/test/states/restore5f.json --frames 12 2>&1 | grep -v "^frames="
+Port runs the post-draw part one frame early compared with emu (CC7D f2512 vs emu f2513). So the NMI after row 30 does fall inside the draw: lag rows are 6/12/18/24/30. Testing.
+  ▶ sed -i 's/^const RESTORE_LAG = (n) => n < 30 \&\& n % 6 === 0;/const RESTORE_LAG = (n) => n % 6 === 0;/' web/src/game/st
+  ▶ Edit saveload.js
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/restore5f_s120.state --web web/test/states/resto
+  ▶ Grep "^\*,00(09|F[0-9A-F])," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+The 9 bytes are sound-driver scratch + `frame_ready`, the known end-of-run sampling artifacts. Now testing the pause path (`30:CBB1`) after the restore.
+  ▶ timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/restore5f_s120.state --keys 2540:START --until 
+  ▶ Grep "wr\(R\.pad_(act|new)|wr\(0x4[BD]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/states/restore5f_s120.state --keys 2540:START:40 --unt
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/restore5f_s120.state --frames 40 --keys 2540:START:20 --t
+  ▶ python3 tools/trace_summary.py gfx/compare/s120/t2.txt
+SubstPlay stops after f2517: AI `$70`'s phases run multi-frame waits inside `ObjUpdateAll`. Checking when play resumes.
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/restore5f_s120.state --frames 600 --trace gfx/compare/s12
+  ▶ wc -l gfx/compare/s120/t3.txt
+  ▶ Read t3.txt +1
+  ▶ Read t3.txt +80
+Play resumes at f2671. Pausing there.
+  ▶ timeout 900 python3 -m tools.emu.web_state --load-state tools/emu/states/restore5f_s120.state --keys 2680:START:3 --unti
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/pause5f_s120.state --web web/test/states/pause5f
+The pause path shows more differences, starting while the pause screen is up (f2692, `sub 9` at f2708), before the restore runs. Looking at those frames.
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/pause5f_s120.state --web web/test/states/pause5f
+  ▶ Read pair_2692.png
+  ▶ Read pair_2733.png
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/pause5f_s120.state --frames 60 --keys 2720:START --trace 
+  ▶ grep -n "TMP" web/src/game/states/saveload.js
+  ▶ Read saveload.js +319
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+  ▶ rm tools/emu/states/area5f_s120.state; for t in core_check ppu_check serve_check world_check sprite_check obj_check soun
+  ▶ rm tools/emu/states/area5f_s120.state
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/serve_check.mjs 2
+  ▶ node web/test/sprite_check.mjs 2>&1 | tail -1; node web/test/obj_check.mjs 2>&1 | tail -1; node web/test/sound_check.mjs
+  ▶ grep -n "^30,C8A\|^30,C89" labels.csv; grep -n "^| Pause / status screen (web port)" REVERSE.md | cut -c1-20; grep -n "^
+  ▶ Grep "^30,C8[89A]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ printf '30,C89E,Area5FIrqOff,s120: area $5F -> irq_mode 0 (RTS shared with C8A9)\n30,C8A9,RestoreIfArea5F,s120: area $5F
+  ▶ wc -l labels.csv
+  ▶ Read labels.csv +1357
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 30 C89E 12
+Labels in. Now writing the REVERSE.md updates (substate row, Verification Log row, task text).
+  ▶ Grep "^\| (31 \| `30:CC4D`|Pause / status screen \(web port\))" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +171
+  ▶ Edit REVERSE.md
+Now the task text (low-priority leftovers: stays unchecked, note what's done).
+  ▶ Edit REVERSE.md
+I ported `SubstRestoreScreen` (`30:CC4D`) to the web port and it matches tools.emu. The task (Ph7 SELECT-menu leftovers) stays unchecked because the shop/pawn menu variants are still open. All web checks pass.
+
+**What changed**
+- **`states/saveload.js`**: new `substRestoreScreen`, which redraws the area-`$5F` screen after a window has covered it. Also a small `restoreIfArea5F` for `30:C8A9`, which runs the restore only in area `$5F`; nothing calls it yet because its two callers aren't ported.
+- **Wiring**: it now runs from all three places the game uses it:
+  - as sub-state 31, which the final AI (AI `$70`) switches to;
+  - after the pause screen (`play.js`);
+  - after the equipment menu (`equip.js`).
+
+  These replace the old "not ported" log lines. I also added an entry point for `30:CC4D` so saved emulator states that stop there start correctly; without it, the port's per-frame counter at `$08` came out one off.
+- **`pause.js`**: `ppuQueueBlock` now returns the Y register value it leaves. After the pause path the game continues normal play with that Y.
+- **Frame timing**: the full-screen redraw takes 5 frames in the emulator. I set where those frame breaks fall from emulator traces.
+
+**Results against tools.emu**
+- **Final-boss path** (`web/test/states/restore5f.json`): frames f2508–2535 are pixel-identical apart from the known scanline-191 split. One per-frame data row differs, which is the usual mismatch for a value the game writes during vblank. The end-of-run memory differs only in `frame_ready` and sound-driver scratch bytes.
+- **Pause path** (`web/test/states/pause5f.json`): the restore itself lines up frame for frame. The one exception is a single mid-redraw frame where the player Y differs by 8 px. The redraw's speed depends on which tiles are being drawn, so a fixed timing model can't match every case.
+- **Differences outside the restore**:
+  - In area `$5F` the pause window appears one frame early (f2692). I didn't investigate this; it's in the pause code, not the restore.
+  - From f2733 on, boss palette flashes and object positions differ. That comes from the final boss AI, which isn't ported yet.
+- **Checks**: core, ppu, serve, world, sprite 552/552, routines 14900/14900, sound 130/130 and apu all pass.
+
+**Records**
+- **REVERSE.md**: updated the sub-state 31 row, added a Verification Log row with the exact commands, and noted what's done and what's left in the task.
+- **labels.csv**: added `Area5FIrqOff` (`30:C89E`) and `RestoreIfArea5F` (`30:C8A9`).
+
+Your permission settings blocked removing one unused intermediate save state, `tools/emu/states/area5f_s120.state`, so it's still there and safe to delete. Nothing is committed.
+
+SESSION_SUMMARY: Session 120: ported SubstRestoreScreen 30:CC4D (saveload.js; sub_state 31, pause and equip-menu exits, entry point) with measured frame timing; area-$5F scenarios restore5f/pause5f match tools.emu apart from row-timing rows, one mid-redraw row and the unported final-boss AI; all web checks pass; shop/pawn menu variants left in the task.

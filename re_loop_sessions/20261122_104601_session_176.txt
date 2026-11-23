@@ -1,0 +1,93 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls re_loop_sessions | tail -4 && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \[ \
+  ▶ Read dead_ends.md
+  ▶ wc -l re_loop_sessions/*_17[3456].txt && tail -c 2500 re_loop_sessions/20261122_104601_session_175.txt; tail -c 1500 re_
+  ▶ Grep "snd\*?_period|period offset" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ for n in 158 164 173 176 194 680; do sed -n "${n}p" REVERSE.md | grep -o ".\{300\}snd[^ ]*_period.\{400\}" ; echo ---; d
+  ▶ Grep ".{0,300}snd\*?_period.{0,500}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Picked the top task's open item: the 1-frame `snd*_period` offset. Gathering prior notes now.
+  ▶ Grep ".{0,200}(snd\*?_period|music-tick phase|sound phase).{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 1,80p web/test/ai70msg_check.mjs; ls web/test/states/ | head -50; head -2 web/test/ai70msg_ref.csv
+  ▶ ls gfx/compare/ai70msg/ | head; ls gfx/compare/ | head -60
+  ▶ head -1 gfx/compare/ai70msg/emu.csv | tr , '\n' | grep -n snd; python3 tools/compare_frames.py gfx/compare/ai70msg/emu.c
+  ▶ wc -l tools/emu/scenario_state.py web/src/game/mainloop.js web/src/game/machine.js && grep -n "irqHud\|soundUpdate\|Soun
+  ▶ Read machine.js +100
+  ▶ Read scenario_state.py
+Investigating where the sound tick falls relative to the state export point (port runs mainStep → render w/ HUD IRQ sound tick → NMI).
+  ▶ sed -n 1,40p tools/web_state_compare.py; grep -n "add_argument" tools/web_state_compare.py
+  ▶ for f in ai70msg killgold restore5f bossa6 finalboss; do test -f web/test/states/$f.json && node -e 'const s=require(pro
+  ▶ Write state_meta.mjs
+  ▶ node web/test/state_meta.mjs web/test/states/ai70msg.json web/test/states/killgold.json web/test/states/restore5f.json w
+  ▶ sed -n 40,200p tools/web_state_compare.py
+  ▶ python3 tools/csv_cols.py gfx/compare/ai70msg/emu.csv gfx/compare/ai70msg/web.csv snd0_period,snd1_period,music 2870-287
+Port's sound tick is 1 frame late vs tools.emu after state loads. Checking whether a continuous boot-to-gameplay run shows the same.
+  ▶ grep -n "KEYS\|keys" tools/web_compare.py | head; grep -n "snd" COMPARISON.md | head
+  ▶ grep -n "CANON_KEYS =" -A3 tools/compare_ref.py; sed -n 340,360p COMPARISON.md
+  ▶ ls -la gfx/compare/web_emu.csv gfx/compare/web_web.csv && python3 tools/compare_frames.py gfx/compare/web_emu.csv gfx/co
+Likely cause found: `loadState` clears `irqSplits`, so the first frame after a load has no HUD IRQ → its `SoundUpdate` tick is lost. Checking how splits are built.
+  ▶ grep -n "irqSplits" -r web/src | head -30
+  ▶ Read mainloop.js +40
+  ▶ sed -n 300,350p web/src/game/mainloop.js; grep -n "mapper" tools/emu/web_state.py | head
+  ▶ grep -n "irq" tools/emu/mapper*.py tools/emu/*.py | grep -i "self\.\(irq\|latch\)" | head -20; sed -n 75,95p tools/emu/w
+  ▶ sed -n 160,256p web/src/game/mainloop.js
+Every NMI mode leaves its split in `$56` (handler) / `$57` (latch), so `loadState` can rebuild the split for the first frame from RAM. Implementing.
+  ▶ Read machine.js
+Now the edit:
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/ai70msg.state --web web/test/states/ai70msg.json --frames 32
+All 319 rows equal including `snd`. Now running every check for regressions.
+  ▶ for f in web/test/*_check.mjs; do out=$(timeout 600 node "$f" 2>&1); rc=$?; echo "$rc $(basename "$f") | $(echo "$out" |
+  ▶ Glob {web/test/*all*,tools/*check*.py,tools/run_*.py}
+  ▶ Write run_checks.py
+  ▶ python3 tools/run_checks.py
+world_check fails; checking whether that predates my change.
+  ▶ grep -n "loadState\|runFrame" web/test/world_check.mjs | head; git stash push web/src/game/machine.js -q && node web/tes
+  ▶ Grep "loadState|runFrame|7e6|07E6" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/world_check.mjs
+  ▶ Read world_check.mjs +55
+  ▶ git status --short | head -20
+  ▶ git stash push -q web/src/game/machine.js && python3 tools/run_checks.py world; git stash pop -q; git status --short web
+  ▶ node web/test/world_check.mjs 2>&1 | grep -c FAIL; ls -la --time-style=full-iso web/data/areas.json web/src/game/world/*
+  ▶ node web/test/world_check.mjs > gfx/world_check_s176.txt 2>&1; grep -c FAIL gfx/world_check_s176.txt; git log -1 --forma
+  ▶ git log -3 --format='%h %ci %s' -- web/data/areas.json web/src/game/world/ web/test/world_check.mjs
+  ▶ git show --stat 53a99f2 -- web/ | tail -8; grep -rn "world_check\|world " re_loop_sessions/20261122_104601_session_17[34
+  ▶ Read 20261122_104601_session_174.txt +156
+  ▶ Grep "world_check.{0,200}(\$3C|\$BC|07E6|fail)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/killgold.state --web web/test/states/killgold.json --frames 
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/restore5f.state --web web/test/states/restore5f.json --frame
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/restore5f_s120.state --web web/test/states/restore5f.json --
+All three load runs (ai70msg, restore5f, killgold) now match tools.emu in every `snd*_period` cell. Updating docs.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^## Verification Log|^\| s17[45]|kill_check.mjs.*\| \d+ \|$" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +205
+  ▶ Edit REVERSE.md
+  ▶ Read CLAUDE.md +50
+  ▶ Edit CLAUDE.md
+I fixed the 1-frame sound offset that showed up whenever the port started from a saved state. The low-priority boss-AI task stays open with that item crossed off.
+
+**Cause.** `Machine.loadState` threw away the IRQ split that the previous NMI had scheduled. So the first frame after a load ran no IRQ handler. In gameplay, the HUD IRQ handler `IrqHandler1Hud` is where the sound driver ticks (`SoundUpdate` `31:F4CF`). Every loaded run therefore lost one tick for good, and every note change landed one frame after tools.emu. Runs from power-on never load a state, which is why they matched.
+
+**Fix.** A new `loadSplits` in `web/src/game/machine.js` rebuilds that split from RAM for states taken during vblank (line > 240). Every NMI mode leaves the handler number in `$56` and the latch in `$57`. Mode 5 is the exception (handler 6, latch from `$58`). Mode 3, and modes 0/2/7 with rendering off, schedule no split.
+
+**Results.** Comparing `snd*_period` against tools.emu at shift 0 after a load:
+
+| Run | Rows equal now | Before |
+|---|---|---|
+| ai70msg | 319/319 | 24 frames late |
+| restore5f | 249/249 | also late (seen in s174) |
+| killgold | 299/299 | also late (seen in s175) |
+
+**Checks.** 29 of 30 pass with the fix, including `obj_check` 27100/27100 and sound 130/130. `world_check` fails for areas `$3C`, `$3D` and `$BC`: `$07E6/$07E7` hold 13/14 instead of 11 after `loadAreaMap`. That check never calls `loadState`, so this change can't cause it. It probably failed before too: s174 piped its output through `tail -2`, which hid the exit code. I couldn't prove that by rerunning it without my change, because the `git stash` needed for that wasn't approved. I logged it as item (j) in the gameplay-leftovers task and didn't investigate further.
+
+The first frame after a load now renders the HUD split too. In killgold the only pixel difference left is about 75 px in tile row 23, the same on every frame, which I noted under gap (e).
+
+**Files**
+- Edited: `web/src/game/machine.js`.
+- New: `tools/run_checks.py` runs every check and prints one line each, with real exit codes and any FAIL lines. `web/test/state_meta.mjs` prints a state's frame and line info plus its sound RAM.
+- Docs: REVERSE.md has the updated task text, gaps (e) and (j), and a Verification Log row. CLAUDE.md lists the two new tools.
+- No ROM addresses were investigated, so `labels.csv` is unchanged.
+
+Still open in this task: per-enemy-group save-state scenarios and the fan-turret frame. The existing reference CSVs still leave sound columns out; they can now include them. Nothing is committed.
+
+SESSION_SUMMARY: Session 176 fixed the 1-frame snd*_period offset after state loads: loadState now rebuilds the previous NMI's IRQ split from $56/$57, so the gameplay sound tick in the HUD IRQ runs on the first frame, and the ai70msg, restore5f and killgold runs match tools.emu in every snd cell; 29/30 checks pass, and world_check's 3-area $07E6/7 failure, apparently older and not loadState-related, is logged as gameplay-leftovers gap (j).

@@ -1,0 +1,112 @@
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +2171
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '2300,2335p' REVERSE.md | cut -c1-3000
+  ▶ grep -n "^- \[ \]" REVERSE.md | cut -c1-2500
+Reading recent session logs to choose the task (top unchecked one is the Ph7 menu/death screens).
+  ▶ wc -c re_loop_sessions/*_08[678].txt re_loop_sessions/*_089.txt && tail -c 5000 re_loop_sessions/20261119_080140_session
+Session 88 was mid-way through task 2320 part (d) (death screen) and was cut off before documenting. I'll pick that up: fix the 1-in-8-frame OAM mismatch, then document.
+  ▶ head -c 3600 re_loop_sessions/20261119_080140_session_088.txt; cat re_loop_sessions/20261119_130155_session_089.txt; git
+  ▶ ls -la /tmp/death.state /tmp/emu_death.csv 2>&1; cat tools/web_state_compare.py; sed -n 1,90p tools/emu/web_state.py
+  ▶ Read web_state_compare.py
+  ▶ Read web_state.py
+  ▶ mkdir -p .wsc && python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --
+  ▶ mkdir -p .wsc && python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --poke 03C1=00 --un
+Death state regenerated (identical to session 88's). Now running the emu-vs-port comparison to see the remaining diffs.
+  ▶ python3 tools/web_state_compare.py --state gfx/wsc/death.state --web web/test/states/death.json --frames 560 --out-dir g
+  ▶ Glob tools/*{csv,col,show}*.py
+  ▶ head -20 tools/csv_rows.py
+  ▶ python3 tools/csv_rows.py gfx/wsc/emu.csv gfx/wsc/web.csv --cols pal_crc,oam_crc,frame_ctr --frames 2470-2530
+  ▶ head -1 gfx/wsc/emu.csv | tr , ' '; echo; python3 tools/csv_rows.py gfx/wsc/emu.csv gfx/wsc/web.csv --cols pal_crc,oam_c
+The CSV diffs look like the emu row being sampled mid-write (intermediate CRCs that are neither old nor new value). Checking whether the pixels differ too at those frames.
+  ▶ python3 tools/web_state_compare.py --state gfx/wsc/death.state --web web/test/states/death.json --frames 140 --out-dir g
+  ▶ Read pair_2485.png
+  ▶ Read pair_2520.png
+  ▶ Read death.js
+The emu's `pal_buf` is mid-write a full frame after the fade step starts, so `PaletteBuild` seems to take more than one frame of CPU time. Measuring it.
+  ▶ python3 -m tools.emu --help 2>&1 | head -50
+  ▶ python3 -m tools.emu --load-state gfx/wsc/death.state --frames 27 --watch 6140 --watch 615F --watch 0011 2>&1 | head -30
+  ▶ Grep "frame_no|_frame_cb|on_frame|line == 24" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ sed -n 130,160p tools/emu/nes.py
+  ▶ grep -n "frame_ready\|queue" web/src/game/ram.js | head; python3 -m tools.emu --load-state gfx/wsc/death.state --frames 
+The NMI drains only one queue record per frame: the MP-digit record goes at NMI 2461, the HP bar at NMI 2462, and the fade starts after that. Checking how the port's NMI drains the queue.
+  ▶ grep -n "ppuQueueFlush\|export function\|SPIN\|frame_ready" web/src/game/world/ppuqueue.js web/src/game/mainloop.js web/
+  ▶ Read ppuqueue.js
+  ▶ python3 tools/dis.py 30 C67D 0x70 --stop
+The port's queue flush matches the ROM. Checking which frame the port starts the fade on.
+  ▶ grep -n "'--[a-z-]*'" web/test/run.mjs | head -30; sed -n 25,70p web/src/game/mainloop.js
+  ▶ grep -n "frame0\|state.frame\|st.frame" web/test/run.mjs | head
+  ▶ node web/test/run.mjs --load-state web/test/states/death.json --frame0 2461 --frames 559 --quiet --compare gfx/wsc/web61
+  ▶ python3 - <<'EOF' 2>/dev/null || echo "use Edit"
+  ▶ Edit web_state_compare.py
+  ▶ Edit web_state_compare.py
+  ▶ S=$(seq -s, 2462 1 3018); python3 tools/web_state_compare.py --state gfx/wsc/death.state --web web/test/states/death.jso
+  ▶ Edit web_state_compare.py
+  ▶ Edit web_state_compare.py
+  ▶ python3 tools/web_state_compare.py --state gfx/wsc/death.state --web web/test/states/death.json --frames 560 --frame0 24
+With `--frame0 2461` the playfield matches: the remaining diffs are the HUD rows 23-29 (the unported IRQ split) and 1-7 px in tile row 0 on fade frames. Filtering those out to find anything else.
+  ▶ Write shot_filter.py
+  ▶ python3 tools/web_state_compare.py --state gfx/wsc/death.state --web web/test/states/death.json --frames 560 --frame0 24
+All 557 frames from 2462 to 3018 are pixel-identical outside the HUD, including the 1-in-8 animation frames that session 88 flagged. Checking the CSV columns over the whole run.
+  ▶ python3 tools/compare_frames.py gfx/wsc/all/emu.csv gfx/wsc/all/web.csv --cols core,pal,obj,oam_crc,ttl_ 2>&1 | grep -v 
+  ▶ Edit web_state.py
+  ▶ Read run.mjs +1
+  ▶ Read run.mjs +55
+  ▶ Edit run.mjs
+  ▶ Edit run.mjs
+  ▶ Edit web_state_compare.py
+  ▶ Edit web_state_compare.py
+Regenerating `death.json` with the new field and rerunning the full check with no manual `--frame0`.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --poke 03C1=00 --un
+Verified. Running the standard web checks to make sure nothing else broke.
+  ▶ for t in core_check ppu_check obj_check sprite_check; do node web/test/$t.mjs >/dev/null 2>&1; echo "$t exit $?"; done
+  ▶ node web/test/core_check.mjs 2>&1 | tail -2; node web/test/ppu_check.mjs 2>&1 | tail -2; node web/test/obj_check.mjs 2>&
+All checks pass. Now documenting: checking whether REVERSE.md already has the "Death / game over" section that `death.js` refers to.
+  ▶ grep -n "Death / game over\|PlayerDeath\|web_state" REVERSE.md | cut -c1-200 | head -20; grep -n "Title side" REVERSE.md
+No "Death / game over" section exists yet; session 88 didn't get that far. Checking which helper labels exist before adding new ones.
+  ▶ grep -in "^19,B9FB\|^19,BA0\|^19,BA45\|^30,C008\|^30,C188\|^30,C169\|^30,C176\|^26,8F2B\|^26,8EC5\|^26,8F64\|^26,8D49\|^
+Adding the labels for the routines session 88 ported.
+  ▶ tail -3 labels.csv
+  ▶ printf '%s\n' \
+I'll use the Edit tool for `labels.csv` instead of shell writes.
+  ▶ Read labels.csv +137
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Grep "Bank26_Fade" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+Labels done (no code depends on the old fade names). Now the REVERSE.md Verification Log row and a section for the death / game-over port.
+  ▶ sed -n 155,160p REVERSE.md | cut -c1-250; sed -n 870,880p REVERSE.md | cut -c1-300; sed -n 2324,2328p REVERSE.md | cut -
+  ▶ Read REVERSE.md +874
+Now inserting the Verification Log row and a short section after the Opel Statue paragraph.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I wrote "GAME OVER from about f2780" without checking it, so I'll confirm it before keeping it.
+  ▶ python3 -m tools.emu --load-state gfx/wsc/death.state --frames 400 --watch 07F3 --watch 0040 2>&1 | grep -v "^frames" | 
+  ▶ Edit REVERSE.md
+Now marking the task done and filing part (c) as a single leftover at the end of RE Investigation.
+  ▶ grep -n "^- \[ \] Ph7 (low priority) menu / death screens\|^- \[ \] Ph7 (low priority) boss / effect AI port" REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2327
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Fixing the section reference in the `death.js` header to match the actual REVERSE.md heading.
+  ▶ Edit death.js
+  ▶ node web/test/run.mjs --load-state web/test/states/death.json --frames 10 --quiet | tail -1 && git status --short | grep
+I finished part (d) of the top task, the death / game-over screen. The port now matches the emulator: frames 2462–3018, from death through GAME OVER to the title, have 0 differing pixels outside the bottom status-bar rows 23–29. The status bar can't match yet because the mid-screen split that draws it isn't ported; that's part of the gameplay task. The core, ppu, obj and sprite checks still pass.
+
+- **What was wrong:** the 1-in-8-frame pose mismatch session 88 got stuck on was not a port bug. The saved death state is taken just after a vblank interrupt (frame 2460, line 254), so the port's first frame is really 2461, not 2460. With that one-frame shift, every frame matches.
+- **Fix:** `tools/emu/web_state.py` now writes a `frame0` field into the state file, and `web/test/run.mjs` and `tools/web_state_compare.py` use it, so you don't need to add the +1 by hand. I regenerated `web/test/states/death.json` with it.
+- **Tool changes:** `web_state_compare.py` accepts `--frame0` and frame ranges in `--shots` (e.g. `2462-3018`). The new `tools/shot_filter.py` hides the known status-bar rows so only real differences show.
+- **Remaining differences, both harmless:** 20 single frames in the per-frame CSV differ because the emulator records its row just after the next frame's work has started (e.g. it catches the palette half-rebuilt). On three fade frames, 1–7 pixels in the top tile row differ because the emulator's palette upload runs slightly past the end of vblank.
+- **Not tested:** the Opel Statue revive path is ported but was not compared against the emulator.
+
+**Documentation:**
+- REVERSE.md has a new "Death / game over sequence" section with the timing: GAME OVER sprites at f2760, title at f2856.
+- It also has a Verification Log row with the exact commands.
+- `labels.csv` has 9 new labels, and the two "tentative" fade routines are renamed `FadeOut`/`FadeIn`.
+- The task is marked done. Part (c), the pause/status, equipment and save/load menus, is filed as one new low-priority task at the end of RE Investigation.
+
+`gfx/wsc/` holds about 1,100 scratch comparison PNGs. Deleting needed approval, so I left them; you can remove that folder. Nothing is committed.
+
+SESSION_SUMMARY: Session 89 — death/game-over port verified (0/557 frames differ outside the status bar); session 88's 1-in-8-frame pose mismatch was a one-frame labelling offset, now fixed via a `frame0` field in exported states; added `shot_filter.py` and range shots, 9 labels, docs; menu screens (c) filed as a new task.

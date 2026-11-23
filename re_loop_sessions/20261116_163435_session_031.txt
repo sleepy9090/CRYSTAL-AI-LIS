@@ -1,0 +1,92 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls; ls re_loop_sessions | tail -5; wc -l dead_ends.md REVERSE.md; g
+  ▶ Read REVERSE.md +1143
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions; wc -c *028* *029* *030*; tail -c 1500 20261116_163
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "F1CD\|F0A4\|7D00\|\$6140\|\$6200\|62F0\|64C0\|\$6300\|Save
+  ▶ Grep "F1CD|F0A4|7D00|\$6140|\$6200|62F0|64C0|\$6300|SaveGame|LoadGame|\$7100|70F0|646B" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Working on session 31's task: Ph5 structs 3/5 (save data / WRAM field table). Reading the existing save module notes now.
+  ▶ Read REVERSE.md +118
+  ▶ Read REVERSE.md +912
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 F0A4 300 --stop
+  ▶ python3 tools/dis.py 31 F103 0x1A1
+  ▶ python3 tools/dis.py 23 BD92 0x64; python3 tools/dis.py 31 F370 0x50
+  ▶ python3 tools/decode_tables.py 2>&1 | head -20; grep -c "" disasm/bank_23.asm; grep -n "BE00\|^BE\|23:BE" disasm/bank_23
+  ▶ Read bank_23.asm +705
+Tracing the boot save-verification code (`31:F0A4`–`F2A3`) and the bank 23 new-game template; next I'll check who reads `$7001`/`$700E`/`$0F`.
+  ▶ Grep "^\$?(7[0-9A-F]{3}|6[0-9A-F]{3})\b|^ *\$(6|7)[0-9A-F]{3}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/ram_map.txt
+  ▶ Read ram_map.txt +405
+  ▶ Grep "^SaveGame:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm/bank_23.asm
+  ▶ Read bank_23.asm +466
+  ▶ Grep "wram_7001|\$700E|\$700F|wram_7005|menu_save_state|\$BE00" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm
+  ▶ Grep "\$700[0-9A-F]\b|\$70F[0-5]\b|save_csum|7001|7005" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm
+Still on the save-data task: confirmed the boot slot check/repair logic and found the save copy drops most of `npc_state`. Checking the checksum seed (`$16`) at boot, then writing up.
+  ▶ python3 tools/dis.py 31 F2A4 0xCC | grep -v "^$"
+  ▶ python3 tools/dis.py 31 F2A4 0xCC
+  ▶ Grep "(LDA|LDX|LDY|STA|BIT|CMP|INC|DEC|ORA|AND) \$0F\b|tmp_0F" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm
+  ▶ Grep "C9DA|state-5|state 5" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/dis.py 30 C9C8 0x30; python3 tools/xref.py C9DA
+  ▶ Grep "^def |^class " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/nesrom.py
+  ▶ Read nesrom.py
+Writing `tools/save_dump.py` to decode the save image layout, copy descriptors (with the length quirk) and the new-game template from the ROM.
+  ▶ Write save_dump.py
+  ▶ Read nesrom.py +61
+Good, format matches. Running it.
+  ▶ python3 tools/save_dump.py --out docs/save_layout.txt && python3 tools/save_dump.py
+Output looks right. Fixing two inaccurate notes in the tool (the `$6407-$6417` "no refs" claim — `$6410` is read in bank 15 — and the `+1E` template text), then re-running.
+  ▶ Edit save_dump.py
+  ▶ Edit save_dump.py
+  ▶ python3 tools/save_dump.py --out docs/save_layout.txt
+Now labels. Checking which of these addresses already have labels.
+  ▶ Grep "^31,(F0A4|F1CD|F23D|F26D|F273|F298|F1E2|F219|F1C7|F11F|F1A3|F140)|^23,BE00|^\*,(7001|7005|700E|700F|F|0F|0016|16|70F4|6407|6478|64C0|62F0)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "BootSub|ColdInitSub|wram_7001|wram_7005" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Read labels.csv +14
+  ▶ Read labels.csv +743
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Grep "^\*,(000F|0F|70F4|700E|700F)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "\(\$0E\)|\(tmp_0E\)|\$0E,X|\$0E,Y" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm
+Labels done. Now writing the save-data section into REVERSE.md.
+  ▶ Grep "^#### |^### State Machine" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1036
+  ▶ Edit REVERSE.md
+Section written. Updating the boot notes, cross-references, output-files table and the task checkbox.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "obj_struct\.txt" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "struct_dump|ram_map\.py" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1185
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Finishing up: a quick check that the disassembler picks up the new labels.
+  ▶ python3 tools/dis.py 31 F39F 6; python3 tools/dis.py 31 F0E7 5
+I finished Ph5 structs 3/5 (save data) for session 31. Everything comes from reading the code, not from running it; the emulator checks are still queued.
+
+**What the boot code does**
+- **`BootSaveCheck` `31:F0A4`** (was `BootSub`) runs on every boot and checks three save images:
+  - **Slots 0 and 1:** each slot has a primary and a backup copy. If the two copies match, only the "AMI" tag is checked. If they differ, each copy's checksum is compared with the stored one (`$70F0-$70F3`), and a good copy overwrites the bad one. If neither passes, the slot is reset from a built-in default page at `23:BE00` (the new-game starting values).
+  - **Current image `$7D00`:** it must equal its mirror at `$6D00` and carry the AMI tag. There is no checksum.
+- **`ColdSaveInit` `31:F1CD`** (was `ColdInitSub`) always resets the current image on power-on. The two save slots survive.
+
+**Bugs in the original code that the web port has to reproduce or knowingly change**
+1. **NPC state is not saved.** The save copy was meant to cover 512 bytes (story flags plus NPC state). The copy routine's length bug cuts it to 257, so only `npc_state[0]` is kept, and every other NPC's state comes back as 0 after loading.
+2. **Checksum seed.** The boot checksum routine `31:F23D` adds onto whatever `$16` already holds instead of starting from 0. So the repair path only works by luck. It only runs when a save was interrupted between writing the primary and the backup.
+3. **Slot 1 asymmetry.** When slot 1's primary passes, the code still falls into the backup check. If that fails, slot 1 is wiped. Slot 0 skips that check.
+4. **Boot copy is one page off.** `31:F3A2` copies the save image into the flag and NPC-state areas one page too early. Loading the game (`LoadGameAndInit`) overwrites both pages, so it looks harmless. I haven't proven that loading is the only way into gameplay, so that is queued.
+
+**Written up in REVERSE.md**
+- A new "Save data + WRAM layout" section with two field tables:
+  - the 768-byte save image, with the new-game default for each field (HP 48/48, MP 34/34, level 1, area 0, empty inventory);
+  - every region of `$6000-$7FFF`, with how long it lives and what writes it.
+- `$0F`, `$700E`/`$700F` and `$7001` are written but never read.
+
+**Also changed**
+- **New tool:** `tools/save_dump.py` → `docs/save_layout.txt`. It reads the ROM directly and prints the copy lengths with and without the length bug, plus which source fills each byte of the save image.
+- **Labels:** 15 new and 4 renamed, all with comments.
+- **New task:** a single low-priority save-leftovers task at the end of the list (the new-game path, two unknown fields at `$6410` and `$6478`, and an emulator check of the NPC-state loss).
+
+SESSION_SUMMARY: Session 31 — Ph5 structs 3/5 done: `tools/save_dump.py` → `docs/save_layout.txt`; decoded the boot save check `BootSaveCheck 31:F0A4` and cold reset `ColdSaveInit 31:F1CD`; documented the save image and WRAM `$6000-$7FFF` field tables plus 4 quirks (only `npc_state[0]` saved, uncleared `$16` checksum seed, slot-1 check asymmetry, off-by-one-page boot copy); 15 new and 4 renamed labels.

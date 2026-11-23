@@ -1,0 +1,99 @@
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Read dead_ends.md
+  ▶ Grep "^#+ |^- \[" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1071
+  ▶ Read 20261116_163435_session_028.txt
+  ▶ wc -l re_loop_sessions/20261116_143140_session_02*.txt re_loop_sessions/20261116_093455_session_025.txt && tail -n 15 re
+  ▶ Read REVERSE.md +728
+Working on the top queued task (session 11-20 text/gameplay leftovers). Starting with `BossPhaseTable` `15:A413` and `$07D7`.
+  ▶ python3 tools/dis.py 15 A400 19 && python3 tools/decode_tables.py 15:A413 50 ptr16 2>&1 | head -60
+  ▶ python3 tools/xref.py A400 --bank 15 2>&1 | head -30; python3 tools/search_bytes.py "A9 ?? 4C 00 A4" 2>&1 | head; python
+  ▶ for a in A486 A67F A96C ABDF AC8A ADE3 AF57 B0C0 B14A B2F3; do python3 tools/dis.py 15 $a 2 | tail -1; done; grep -n "^2
+  ▶ Write boss_phase_dump.py
+  ▶ Grep "^def " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/nesrom.py
+  ▶ Read nesrom.py +15
+  ▶ sed -i 's/^from nesrom import load_rom, prg_read  # noqa$/from nesrom import load_rom/; s/^    rom = load_rom()$/    rom
+  ▶ Edit boss_phase_dump.py
+  ▶ Edit boss_phase_dump.py
+  ▶ python3 tools/boss_phase_dump.py --out gfx/boss_phases.txt
+  ▶ python3 tools/xref.py 07D7 2>&1 | head -40; grep -n "AI \$E2\|ai=\$E2\| E2 " gfx/obj_ai.txt | head
+  ▶ python3 tools/xref.py 07D7
+  ▶ Grep "E2|^AI|^ai" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ python3 tools/dis.py 31 E8F0 0x20 && python3 tools/dis.py 31 E9AC 0x18 && python3 tools/dis.py 26 93B0 0x16 && python3 t
+Decoded the boss phase table (10 bosses, 50 phase slots). Now tracing what `$07D7` gates.
+  ▶ python3 tools/xref.py E8F6 && python3 tools/dis.py 31 EA41 0x14 && python3 tools/dis.py 31 EADF 0x10 && python3 tools/di
+  ▶ Glob tools/*.py
+  ▶ Grep "(sta|STA) \$07D7" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm
+  ▶ python3 tools/dis.py 31 EA53 0x40
+Writing these findings now.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 14 8430 0x24 && grep -n ",8451,\|,8469,\|,E8F6,\|,07D7,\|,A413,\|,07D5,\|,ABDA,\|,844" labels.csv
+  ▶ Grep "8442|8451|843D|UseFail" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/search_bytes.py "51 84"; python3 tools/search_bytes.py "42 84"
+  ▶ python3 tools/dis.py 14 83F0 0x2A
+  ▶ Grep "^14,8[34]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "^\s*\$?(3E|3F|40)\b|item 3E|item 3F|item 40" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/items.txt
+Item gate identified (the three Bows). Updating notes, then tracing the area `$43` boss reward path.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 15 ABDA 0xA1
+  ▶ Grep "\$11\b.*(substate|sub_state)|(substate|sub_state)[^|]*\$11\b|0623" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/decode_tables.py 30:CADE 24 ptr16
+  ▶ Grep "param \$?C3|^C3|p=C3|\bC3:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx
+  ▶ Read npc_scripts.txt +1041
+  ▶ Grep "^\| 2[67] \|" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+The area `$43` "boss" turns out to be a talk event, not a fight. Recording it.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the generic AI `$10` (`27:B0B5`, 28 types).
+  ▶ python3 tools/dis.py 27 B0B5 0x60 && python3 tools/dis.py 27 9897 0x40
+  ▶ python3 tools/dis.py 26 9861 0x80 && python3 tools/dis.py 26 8480 0x30
+  ▶ python3 tools/dis.py 26 84AE 0x10 && python3 tools/dis.py 26 9A30 0x30
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 27 ACD9 0x88 --stop
+  ▶ python3 tools/dis.py 27 ACE2 0x58
+  ▶ python3 tools/dis.py 27 AD3C 0x60 && python3 tools/decode_tables.py 27:AD9C 8 u8 && python3 tools/dis.py 26 97D7 0x20
+Writing AI `$30` (talkable wanderer NPC) findings.
+  ▶ Edit REVERSE.md
+  ▶ tail -n 5 labels.csv && python3 tools/dis.py 27 A915 0x40
+  ▶ python3 tools/dis.py 27 A955 0x14 && python3 tools/dis.py 26 98D7 0x30
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^2[67],\(B0B5\|ACD9\|A915\|A94A\|8480\|9861\|97D7\|98D7\|98C7\|9A30\|AD9C\|97E4\)," labels.csv; grep -n "^\*,\(
+  ▶ Edit labels.csv
+  ▶ Grep "^\*,0(710|6E0|5A0|7D5)|^\*,7(10)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 31 E8F6 3 && python3 tools/dis.py 27 B0D4 3
+Labels load fine. Now closing out the task and re-homing the leftover parts.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now appending the (c)+(h) leftover at the end of `### RE Investigation`.
+  ▶ Read REVERSE.md +1158
+  ▶ Edit REVERSE.md
+  ▶ Grep "gfx/catalog|^\| `web/catalog" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+I finished the session's task (the leftover text/gameplay items from sessions 11–20). I did part (f) and moved the other parts to existing or new tasks. Everything comes from reading the code, not from running it, since there's no emulator yet. Nothing is committed.
+
+**What I found**
+
+- **Boss phase table (`15:A413`)**: it has 50 entries shared by 10 boss AIs. Each boss starts at its own base index and steps through its own phases. A new tool, `tools/boss_phase_dump.py`, lists each boss's handler, base and phase addresses in `gfx/boss_phases.txt`. Two entries (25 and 26) are empty and never used.
+- **`$07D7` is a boss-fight camera lock** (now labelled `boss_cam_lock`):
+  - **1–$7F:** the camera freezes for that many frames. Bosses keep refreshing it during a fight, so you can't leave the screen or teleport.
+  - **The three Bows:** they only work while this lock is set (1–$7F). That's why they can only be used once a boss or statue fight has started.
+  - **$80 and up:** during a boss intro, the camera slides into line with the screen grid.
+- **The area `$43` "boss" is a conversation, not a fight.** That's why it has no reward record. If you have the Sword of Water, it gives you the Ball of Water and leaves. If you haven't visited the elder yet, it throws you off the bottom of the screen and leaves.
+- **Three common movement behaviours, each documented step by step:**
+  - `$10`, used by 28 object types: projectiles and effects that move in a straight line until a timer runs out. Some of them stop at walls.
+  - `$20`: enemies that walk in a random direction for a while, then pause.
+  - `$30`: town NPCs that wander randomly in 4 directions and turn when blocked.
+  - Along the way I named the helpers they share: the speed tables, the random-number table and the wall check.
+
+I added 23 labels to `labels.csv`. I checked that the disassembler picks them up, with one catch: a call from bank 27 into bank 26 still shows the bare address (`JSR $8480`) instead of the label name.
+
+**Where the rest of the task went**
+- The other enemy AI, the hit handlers, the NPC's second movement mode and the inner movement step moved into the "gameplay 3/3" enemies task. The step-by-step logic of each boss phase is also queued there.
+- The Crystalis charge check and the player-update calls moved into "gameplay 1/3".
+- The NPC/trigger report and the menu glyph dump became one new low-priority task at the end of the list. The NPC script dump shows no areas for the area `$43` NPC, even though it is placed there; I noted that in the task.
+
+SESSION_SUMMARY: Session 28 — partly done (f) of the old text/gameplay leftovers task: boss phase table decoded (10 boss AIs, `tools/boss_phase_dump.py` → `gfx/boss_phases.txt`); `$07D7` = boss-fight camera lock (blocks exits and teleport; Bows only work while it's set); area `$43` "boss" = conversation that gives the Ball of Water; movement AIs `$10`/`$20`/`$30` and their helpers documented; 23 labels; other parts moved to gameplay 1/3, gameplay 3/3 and one new low-priority task; task marked done.

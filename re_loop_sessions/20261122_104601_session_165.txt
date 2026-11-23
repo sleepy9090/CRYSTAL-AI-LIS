@@ -1,0 +1,149 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -4; wc -l dead_ends.md REVERSE.md; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for f in re_loop_sessions/*_16[234].txt; do echo "=== $f"; wc -c $f
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 4000 re_loop_sessions/20261122_081059_session_164.txt; echo
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; git show --stat HEAD | head -30; git status --short | head; grep -n
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; git show HEAD -- tools/emu/routine_capture.py web/test/obj_check.mj
+Picking up session 164's unfinished `$6B` final-boss port: checking the harness wiring, then running the fuzz capture.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "aiBowOfTruth9E\|bossAiEB\|0x6B\|0xB2DA" web/src/game/obj/a
+  ▶ Read ai_boss.js +1140
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; mkdir -p /tmp/eb; time python3 -m tools.emu.routine_capture --load-
+  ▶ mkdir -p /tmp/eb
+  ▶ python3 -m tools.emu.routine_capture --help 2>&1 | head -30
+Using a scratch file inside the project instead of /tmp.
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine BossAiEB -
+  ▶ sed -n 1,40p web/test/obj_check.mjs | grep -n "argv\|json\|usage" ; grep -n "process.argv" web/test/obj_check.mjs
+  ▶ mkdir -p web/test/eb_scratch && mv web/test/eb_scratch.json web/test/eb_scratch/ && node web/test/obj_check.mjs --dir we
+  ▶ mkdir -p web/test/eb_scratch
+  ▶ mv web/test/eb_scratch.json web/test/eb_scratch/
+  ▶ node web/test/obj_check.mjs --dir web/test/eb_scratch 2>&1 | tail -30
+  ▶ Read obj_check.mjs +128
+  ▶ Write README.txt
+Fuzz capture worked (300 cases); now replaying them through the port.
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine BossAiEB -
+300/300 match on the first run. Checking which code paths the cases actually reach.
+  ▶ python3 tools/case_paths.py --help 2>&1 | head -20
+  ▶ python3 tools/case_paths.py web/test/eb_scratch/eb.json BossAiEB 000B 6000 030F 04EE 04EF 04F2 0051 0010 col:0360 col:06
+Coverage looks good across all phases 1-6. Next: phase 0 (setup with fades) isn't fuzzed, so I'm looking for a real-fight scenario to frame-check it.
+  ▶ grep -n "final_locked\|boss_e2\|def scen_\|SCENARIOS\[" tools/emu/scenario.py | head -40; grep -n "final_locked\|frame0\
+  ▶ Read scenario.py +210
+  ▶ Read scenario.py +585
+  ▶ Read bosse2_check.mjs
+Fuzz is solid. Building a real-fight frame check for the final boss, same workflow as `bosse2_check`: export a state from scenario `final_boss` just after the spawn.
+  ▶ python3 tools/web_state_compare.py --help 2>&1 | head -30; python3 -m tools.emu.scenario_state --help 2>&1 | head -20; p
+I'll add a no-input scenario `final_boss_idle` (the existing ones poke RAM every frame, which the port can't replay).
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario final_boss_idle 2>&1 | tail -40
+Player dies at +724 with no input, so the usable window is f2505 to about f3215 (setup, sway, rain, mouth, dive). Exporting the state at +10.
+  ▶ python3 -m tools.emu.scenario_state final_boss_idle 10 --out web/test/states/finalboss.json --save-state tools/emu/state
+  ▶ sed -n 1,80p tools/emu/scenario_state.py
+Off-by-one: the spawn has to be applied at the export itself, so OFF must be 9 (as `bossa6_check` does).
+  ▶ python3 -m tools.emu.scenario_state final_boss_idle 9 --out web/test/states/finalboss.json --save-state tools/emu/states
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/finalboss.state --web web/test/states/finalboss.json --frame
+Matches through the setup apart from a few cells; first real split is at f2697. Looking at the early ones.
+  ▶ python3 tools/compare_frames.py web/test/eb_scratch/emu.csv web/test/eb_scratch/web.csv --frames 2504-2700 2>&1 | head -
+  ▶ python3 tools/csv_cols.py 2>&1 | head -5; python3 tools/csv_cols.py web/test/eb_scratch/emu.csv web/test/eb_scratch/web.
+  ▶ E=web/test/eb_scratch/emu.csv; W=web/test/eb_scratch/web.csv; python3 tools/csv_cols.py $E $W pal_crc,music 2536-2540; p
+  ▶ python3 tools/csv_cols.py web/test/eb_scratch/emu.csv web/test/eb_scratch/web.csv pal_crc,music 2536-2540; python3 tools
+pal_crc cells are the usual mid-PaletteBuild PARTIAL cells (port = previous frame). Music at f2590 and the f2697-2699 x shift are timing splits; reading `ebSetup` to place them.
+  ▶ grep -n "function\* ebSetup\|function\* bossBgCycle\|function\* bossBgStrip\|function ebMouthStart" web/src/game/obj/ai_
+  ▶ Read ai_boss.js +960
+  ▶ grep -n "export function\* fadeOut" -A 25 web/src/game/states/death.js
+  ▶ Grep "function\* fadeOut" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Grep "fadeOut\b.*[=(]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ python3 tools/compare_frames.py web/test/eb_scratch/emu.csv web/test/eb_scratch/web.csv --frames 2700-2830 2>&1 | head -
+Emu stays one frame ahead from f2697 on, so the straddled last fade-in step must be modelled. Checking `fade()` for an existing hook.
+  ▶ Read death.js +1
+  ▶ python3 tools/dis.py 30 C169 0x18; python3 tools/dis.py 26 8C3D 0x34
+  ▶ Grep "pos_x|pos_y" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/harness.mjs
+  ▶ Read harness.mjs +50
+  ▶ python3 tools/csv_cols.py web/test/eb_scratch/emu.csv web/test/eb_scratch/web.csv o0D_x,pos_y,o0D_ai,oam_crc 2694-2716
+Both runs stall every 4th frame (PPU queue drain) but the port's cycle starts one frame late at the sway's first frame. Tracing per-frame state on both sides.
+  ▶ grep -n "peek" tools/emu/scenario.py | head; grep -n "'--" tools/emu/scenario.py | head -20
+  ▶ Read e2_intro_probe.py
+  ▶ python3 tools/dis.py 15 B380 0x3C
+  ▶ Write eb_setup_probe.py
+  ▶ python3 -m tools.emu.eb_setup_probe tools/emu/states/finalboss.state 200 2693 2>&1 | grep -v "WaitFrame" | head -70
+  ▶ python3 -m tools.emu.eb_setup_probe tools/emu/states/finalboss.state 196 2695 2>&1 | sed -n 1,30p
+The probe shows the ROM runs the first sway pass in the very next frame after setup returns; the port waits one extra frame. Reading the main loop to see why.
+  ▶ python3 tools/dis.py 30 C8A0 0x6A
+The ROM's main loop doesn't pass `top` between setup and the first sway, so the boss runs twice in one object pass. I suspect X gets clobbered by PaletteBuild in the fade. Checking ObjUpdateAll.
+  ▶ grep -in "ObjUpdateAll" labels.csv | head -3; grep -n "8C12\|PaletteBuild" labels.csv | head -5
+  ▶ python3 tools/dis.py 30 CCCC 0x50 --stop
+  ▶ python3 tools/dis.py 30 CD06 0x30
+  ▶ Grep "0xCD2B|ObjUpdateAll|objUpdateAll" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj
+  ▶ Read objects.js +60
+The port's loop already accepts a returned X, but treats X < slot as an endless loop. Checking what X PaletteBuild leaves.
+  ▶ python3 tools/dis.py 26 8C0E 0x30; python3 tools/dis.py 26 8C6E 0x45 --stop
+  ▶ python3 tools/dis.py 31 FF8C 0x20 --stop; grep -n "B14_800E\|SpriteDraw\b" labels.csv | head
+  ▶ Grep "\.cpu\.(x|X)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ Edit eb_setup_probe.py
+  ▶ Edit eb_setup_probe.py
+  ▶ python3 -m tools.emu.eb_setup_probe tools/emu/states/finalboss.state 196 2696 2>&1 | grep -v "WaitFrame" | sed -n 1,45p
+  ▶ Edit ai_boss.js
+  ▶ Edit objects.js
+  ▶ Edit objects.js
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/finalboss.state --web web/test/states/finalboss.json --frame
+Big improvement: f2697-3147 now match (sway, rain, mouth). Next split is at f3148, the dive (phase 2) start.
+  ▶ python3 tools/compare_frames.py web/test/eb_scratch/emu.csv web/test/eb_scratch/web.csv --frames 2585-3152 2>&1 | head -
+  ▶ python3 tools/csv_trim.py web/test/eb_scratch/emu.csv web/test/finalboss_ref.csv --cols core,pal,obj,oam_crc --frames 25
+  ▶ Write finalboss_check.mjs
+  ▶ Edit finalboss_check.mjs
+  ▶ node web/test/finalboss_check.mjs
+  ▶ Grep "const CAM_LOCK" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj
+The cam lock is written $10 each frame then counted down once, so $0F is right. Fixing the assertion.
+  ▶ sed -i "s/want('cam lock \$07D7', m.rd(0x07D7), 0x10);/want('cam lock \$07D7 (\$10, one countdown step)', m.rd(0x07D7), 
+  ▶ Edit finalboss_check.mjs
+  ▶ Edit finalboss_check.mjs
+  ▶ node web/test/finalboss_check.mjs; for t in bosse2 bossa6 bossflee core finalscene mesia; do node web/test/${t}_check.mj
+  ▶ node web/test/finalboss_check.mjs; node web/test/bosse2_check.mjs | tail -2; node web/test/bossa6_check.mjs | tail -2; n
+All pass. Now folding the `BossAiEB` cases into the committed fuzz set (`fuzz_boss.json`) as the workflow says.
+  ▶ Grep "fuzz_boss|fuzz_update" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/obj_frames/README.md
+  ▶ Read README.md +66
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine BossAiE0,B
+18100/18100 routine cases identical. Now the docs: REVERSE.md, labels, CLAUDE.md, README. First removing the scratch directory.
+  ▶ rm -r web/test/eb_scratch
+I'll leave the scratch dir and mention it. Finding the REVERSE.md spots to update.
+  ▶ grep -n "Session 163\|^## Verification Log\|bosse2_check" REVERSE.md | head; grep -n "B2DA\|B6C1\|B301" labels.csv
+  ▶ Read REVERSE.md +1338
+Adding the session-165 note after the s163 block.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Updating the task text (it's a low-priority leftovers task, so it stays unchecked with `$6B` struck off).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now labels, CLAUDE.md, the fuzz README and architecture_web.md.
+  ▶ grep -n "^15,B\(3BC\|425\|493\|4C8\|4DD\|524\|541\|552\|587\|599\|5F9\|60C\|618\|623\|642\|67A\|6A3\|71D\|301\)," labels
+  ▶ grep -n "^15,B[0-9A-F]*," labels.csv | sed -n '/B2DA\|B6C1/p;/^.*15,B3/p;/^.*15,B5/p'
+  ▶ Grep "^15,B[2-7][0-9A-F]{2}," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv
+  ▶ Read labels.csv +518
+  ▶ Edit labels.csv
+Labels done; updating CLAUDE.md, architecture_web.md and the fuzz README, then committing.
+  ▶ Edit CLAUDE.md
+  ▶ Edit architecture_web.md
+  ▶ Edit README.md
+  ▶ Edit README.md
+I ported and checked the final boss (AI `$6B`, `AiBowOfTruth9E` `15:B2DA`). Session 164 had written the port but was cut off before testing it; this session tested it and fixed the one timing difference the frame check turned up.
+
+**Fuzz cases:** 300 random cases of the final-boss routine came out identical on the first run, covering phases 1-6. I added them to `fuzz_boss.json` and regenerated `fuzz_update.json`; all 18100/18100 routine cases match.
+
+**Bug found and fixed:** when the boss's setup phase finishes, the ROM leaves the CPU's slot index at 0 instead of the boss's slot. The object loop then runs slots 1-$1E a second time in the same frame, so the player and the boss update twice. The port wasn't doing this and ran one frame behind tools.emu from f2697. The setup now hands back slot 0, and the object loop in `obj/objects.js` continues from there. Before, it logged that case as an endless loop; it still does if an object keeps doing it, and stops after 64 repeats. I confirmed what the ROM does with a new probe, `tools/emu/eb_setup_probe.py`.
+
+**Frame check:** new test `web/test/finalboss_check.mjs` with `finalboss_ref.csv`, from a new no-input scenario `final_boss_idle`. Frames f2505-3147 match tools.emu exactly at shift 0. That covers the setup, swaying with hand attacks, the rain attack, and the start of the dive. Nine cells differ in an expected way and the test checks them as "port shows the previous frame":
+- 8 palette cells where tools.emu's frame ends partway through a fade step;
+- 1 music cell at f2590, where a sound effect shows up one frame later in the port.
+
+The bosse2, bossa6, bossflee, core, finalscene and mesia checks still pass.
+
+**Not covered:**
+- From f3148 the dive causes a lag frame in tools.emu that the port doesn't model. That's the existing CPU-overrun gap (c).
+- With no input the player dies at f3219, so the frame check stops before then.
+- The rise, hold and mouth phases are only tested by the fuzz cases.
+
+**Docs:** I updated REVERSE.md (a Sessions 164-165 note and a Verification Log row), added 12 labels, and added the new check to CLAUDE.md, `docs/architecture_web.md` and the fuzz README. The task line is low priority, so it stays unchecked with `$6B` struck off. Still open there: death chains, drops, missing AI ids, per-enemy scenarios, and `ShowMessage`.
+
+**Cleanup for you:** please delete `web/test/eb_scratch/`, a scratch folder I couldn't remove without your approval. Separately, an older label comment at `15:B618` mentions what looks like a game title, which the project rules forbid; you may want to reword it. I haven't committed anything.
+
+SESSION_SUMMARY: Session 165 checked and finished the AI $6B final boss port (15:B2DA): fuzz 300/300 (all routine cases 18100/18100), and the new finalboss_check.mjs matches tools.emu at shift 0 over f2505-3147 after porting the setup's return with X = 0, which makes ObjUpdateAll re-run slots 1-$1E; lag frames from f3148 stay under gap (c).

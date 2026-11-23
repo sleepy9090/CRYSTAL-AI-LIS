@@ -1,0 +1,61 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls re_loop_sessions | tail -4 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.md |
+  ▶ sed -n 2272,2290p REVERSE.md | cut -c1-400; grep -n "^- \[ \]" REVERSE.md | cut -c1-200; cat dead_ends.md | cut -c1-300
+  ▶ for f in re_loop_sessions/*_12[345].txt; do echo "== $f"; wc -c $f; tail -c 2500 $f; done
+  ▶ tail -c 2000 re_loop_sessions/20261120_190200_session_123.txt; echo ====; tail -c 2000 re_loop_sessions/20261120_190200_
+  ▶ grep -n -i "never run\|never-run\|not run" docs/emu_scenarios.txt | head; grep -n "PaletteBlackFill\|ScreenPageAtCamera\
+I'm on the top unchecked task: the Ph6 scenario leftovers. The plan is to work out which of the routines it lists that never run are actually reachable or dead, starting with their callers.
+  ▶ sed -n 979,1000p docs/emu_scenarios.txt
+  ▶ for a in 8C32 824B FFBE A1BB A211 AD9C 8232 EF33 A092 FE01 FE18; do echo "== $a"; python3 tools/xref.py $a 2>&1 | head -
+  ▶ python3 tools/xref.py 8C32; python3 tools/xref.py 824B; python3 tools/xref.py FFBE; python3 tools/xref.py A1BB; python3 
+  ▶ python3 tools/xref.py 8C32 --data; python3 tools/xref.py 824B --data; python3 tools/xref.py FFBE --data; python3 tools/x
+  ▶ python3 tools/dis.py 31 FD10 24; echo; python3 tools/dis.py 31 FDF0 60; echo; python3 tools/dis.py 31 EF2A 30
+  ▶ python3 tools/xref.py 8CC0; python3 tools/xref.py 8232; python3 tools/xref.py 8C3D; python3 tools/dis.py 26 8C28 30; pyt
+  ▶ python3 tools/search_bytes.py "4B 82"; python3 tools/search_bytes.py "32 8C"; python3 tools/search_bytes.py "33 EF"; pyt
+  ▶ python3 tools/dis.py 27 A01C 30; python3 tools/dis.py 27 A1E8 14; python3 tools/dis.py 27 AD18 16; grep -n "MagicButtonS
+The PC-based "never run" list mixes code with data tables. Ten of the labels are tables that executing code reads. Let me check how scenario.py counts coverage.
+  ▶ Grep "never run|newly run|def .*cover" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ python3 tools/dis.py 27 A0F0 12; python3 tools/dis.py 27 A155 70
+  ▶ Grep "magic|'name'|^    \w+=dict|^    '\w+': dict|^SCENARIOS" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Read scenario.py +28
+  ▶ Grep "^SCENARIOS\[|^def main|argv|a\.names|add_argument" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Read scenario.py +206
+  ▶ python3 tools/dis.py 27 A1B0 14
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario mp_fail_area mp_fail_status 2>&1 | tail -30
+Both scenarios ran `MagicFailSound`. Now I'll check whether the port has it.
+  ▶ Grep "MagicFailSound|magicFail|A1BB" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Grep "0x58|0x4E" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj/player.js
+The port already handles both fail paths (`player.js:85/106/127`). Next I'll record the findings in labels.csv and REVERSE.md.
+  ▶ Read labels.csv +49
+  ▶ Read labels.csv +214
+  ▶ Read labels.csv +268
+  ▶ Read labels.csv +892
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Now the task text in REVERSE.md (the item stays unchecked, as the leftovers rule requires).
+  ▶ Edit REVERSE.md
+I finished one part of the top open task, the Ph6 scenario leftovers. The rest of that task is still open, so it stays unchecked, as the rule for low-priority leftovers tasks says. Nothing is committed.
+
+**Which of the 42 "never run" labels can actually run**
+
+I checked who calls each one:
+- **Dead code (6), never called:**
+  - `PaletteBlackFill` `26:8C32`: no code calls it. The only matching byte pair is data at `20:898E`.
+  - `NtRectBlitQueued` `18:824B`: no JSR or JMP to it, and no pointer to it anywhere in the ROM.
+  - `FarCall_B26_8CC0` `31:FFBE`: nothing jumps to it. The four places that contain its address are data, and all 13 callers of `HudHpBar` call `26:8CC0` directly.
+  - `ScreenPageAtCamera` (found in session 61), and `ShopDoorOpen` / `ShopDoorClose` (session 64).
+- **Data tables (10):** `ScreenBlank80`, `MenuChrR1`, `IntroRectPtr`, `IntroRect`, `MenuPalSets`, `DateCardRectPtr`, `NewSaveTemplate`, `MagicButtonSel`, `FacingKeep`, `NpcLookAhead`. Code that does run reads them (for example `MenuChrR1` at `16:820C`). The coverage list only counts executed instructions, so these labels will never come off it.
+- **Run by other checks since session 103 (2):** `SubstRestoreScreen` (the area-`$5F` pause runs in sessions 120 and 125) and `FadeSaveZpToWram` (the inn, session 123).
+- **Newly run (1):** `MagicFailSound` `27:A1BB`. It plays when magic 3 or magic 7 is cast in areas `$58-$5F`, or when the player has status 4. I added two scenarios to `tools/emu/scenario.py`:
+  - `mp_fail_area`: magic 3 in area `$58`;
+  - `mp_fail_status`: magic 7 with `$0710` = 4.
+
+  Both ran it. The web port already has these paths (`web/src/game/obj/player.js:85`, `:106`, `:127`).
+
+**Not done:** I did not regenerate `docs/emu_scenarios.txt`, because the full scenario run takes about 55 minutes. The task text says to do that with the next batch of scenarios. The other open items stay listed in the task: pits, conveyor, IRQ handlers, sound sweep/fade, the warp pick, the burst, hit rules, the final boss, reveals, the transform, the shot eater, type `$64`, and the ending labels.
+
+**Records:** REVERSE.md's task text now has the full breakdown, and four rows in labels.csv have updated comments. There are no new addresses.
+
+SESSION_SUMMARY: Session 126: sorted the 42 never-run labels in the Ph6 scenario-leftovers task into 6 dead routines (PaletteBlackFill, NtRectBlitQueued and FarCall_B26_8CC0 newly confirmed dead), 10 data tables and 2 already covered elsewhere; new scenarios mp_fail_area and mp_fail_status run MagicFailSound 27:A1BB (the port already has it); emu_scenarios.txt not regenerated; the task stays open with the remaining items.

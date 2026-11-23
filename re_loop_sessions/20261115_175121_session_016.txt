@@ -1,0 +1,91 @@
+  ▶ Read dead_ends.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## Next Tasks" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +651
+  ▶ wc -c re_loop_sessions/*_session_01[3-6].txt && tail -c 2500 re_loop_sessions/20261115_134839_session_015.txt; echo ----
+  ▶ git status --short | head; git diff --stat
+  ▶ Grep "F05C|F06C|NpcFlagApply|826F|831E|boss.gate" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +405
+Resuming task "text follow-ups 5" (a): tracing item hooks 0/1 (`14:826F`/`14:831E`), which the cut-off run found call `NpcFlagApply`.
+  ▶ python3 tools/dis.py 14 826F 0x130
+  ▶ python3 tools/dis.py 14 8078 0x28 && python3 tools/dis.py 14 8112 0x56 && python3 tools/dis.py 14 9B00 0x10
+  ▶ Grep "^(def |import |from )" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/flag_sites.py
+  ▶ Read flag_sites.py
+  ▶ Grep "^def |^[A-Z_]+ =|item" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/npc_script_dump.py
+  ▶ Grep "^def |8A5C|ITEM" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/text_dump.py
+  ▶ Read npc_script_dump.py +27
+Writing `tools/item_dump.py` to decode the hook-0 records. First I'll check the hook-1 handler table `14:8399` so the tool covers both.
+  ▶ python3 tools/decode_tables.py --help 2>&1 | head -5; python3 tools/dis.py 14 84DB 0x30
+  ▶ Write item_dump.py
+  ▶ python3 tools/item_dump.py --out gfx/items.txt
+  ▶ Grep "^F0(5C|5D|5E|60|66) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/flag_sites.txt
+Hook 1 (item use) records also carry set-lists. Disassembling its handlers `14:8439-85C8` to learn the record format.
+  ▶ python3 tools/dis.py 14 8439 0xA7 && python3 tools/dis.py 14 8564 0x64
+  ▶ python3 tools/dis.py 14 8507 0x5D
+  ▶ Edit item_dump.py
+  ▶ Edit item_dump.py
+  ▶ sed -i "s/('as 8451 and (\$060D=0 or area<>\$A6) -> fail'/('as 8451, plus \$060D<>0 and area \$A6'/" tools/item_dump.py 
+  ▶ Edit item_dump.py
+  ▶ python3 tools/item_dump.py --out gfx/items.txt > /dev/null; python3 tools/search_bytes.py 2>&1 | head -3
+  ▶ Grep "ItemUseHook" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/items.txt
+  ▶ for a in 8112 8135 8148 8078; do echo "== $a"; python3 tools/xref.py $a 2>&1 | grep -v "^ *[0-9]*:.*\.db" | head -20; do
+  ▶ python3 tools/xref.py 8112; python3 tools/xref.py 8148; python3 tools/xref.py 8135
+  ▶ python3 tools/search_bytes.py "9D ?? 64" --max 80 | grep -E "^ *(1[45]|2[4-9]|3[01]):" ; python3 tools/search_bytes.py "
+  ▶ python3 tools/dis.py 15 BF40 0x30; python3 tools/dis.py 26 9025 0x22; python3 tools/xref.py BF4A --bank 15; python3 tool
+`26:9026-9044` is a general flag write: flag in A, bit value in `$12` (it can set or clear). I'll find where it starts and whether anything outside `HitSetFlag` calls it.
+  ▶ python3 tools/dis.py 26 9000 0x26
+  ▶ python3 tools/xref.py 9023; python3 tools/xref.py 9024; python3 tools/xref.py 9011; python3 tools/xref.py 9020
+`HitSetFlag` has two more entry points: `26:8E05`/`8E20` call `26:9020` with Y preset, and `30:CCF7` calls `HitSetFlag`. Inspecting both.
+  ▶ python3 tools/dis.py 26 8DE0 0x48; python3 tools/decode_tables.py 26:904F 16 u8; python3 tools/dis.py 30 CCE0 0x20
+  ▶ python3 tools/flag_sites.py --hook2 | grep -E "item (98|9A|9B|9C|9D|9E|9F|A0) "
+  ▶ python3 tools/search_bytes.py "40 66" --bank 14 ; python3 tools/search_bytes.py "40 66" --bank 15; python3 tools/search_
+  ▶ python3 tools/search_bytes.py "00 66" --bank 14 --context 4; python3 tools/search_bytes.py "00 5C" --bank 14 --context 4
+  ▶ python3 tools/dis.py 30 C950 0x18; python3 tools/dis.py 15 A3A0 0x16; python3 tools/dis.py 15 A785 0x3A
+Findings so far: hooks 0/1 are fully decoded, four boss gates come from reward items, and the other five have no set site in any path the tools cover. Writing this to REVERSE.md and labels.csv now.
+  ▶ Grep "^14,(8112|826F|831E|80E3)|^\*,(6430|6428|0718|0711)|^26,(9011|904F)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv && cat >> labels.csv <<'EOF'
+  ▶ wc -l labels.csv
+  ▶ Read labels.csv +355
+  ▶ Edit labels.csv
+Now the REVERSE.md section (inserted before "Story flags"), the boss-gate row, and the open-question paragraph.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Next I'll update the task list: (a) is partly done and (d) is done; the rest moves to a new "text follow-ups 6".
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit dead_ends.md
+Quick check that the new labels load in `dis.py`:
+  ▶ python3 tools/dis.py 14 826F 0x8 && python3 tools/dis.py 14 8491 0x6
+Session 16 is done. I worked on "text follow-ups 5": I solved part (d) and part of (a), and only 4 of the 9 boss-gate flags now have a known setter.
+
+**Item hooks 0/1 are the inventory routines.** Both apply story-flag set-lists, so picking up or using an item can set flags.
+- **Pick-up (`ItemGetHook` `14:826F`, table `14:9B00`, 113 items):**
+  - Each item has a record: inventory range or fixed equip slot, a result, a set-list, and an optional next item to give.
+  - Getting Crystalis removes the other swords and all balls/bracelets. Getting a bracelet unequips its ball.
+  - The inventory is at `$6430-$645F`, in 8 categories (swords, armor, shields, balls/bracelets, consumables, rings, key items, magic).
+  - Ids `$50-$70` are variants of existing items. Each sets its own flag, which looks like a "this pickup was already collected" flag (F0AA-F0E7, F100-F10C).
+- **Use (`ItemUseHook` `14:831E`):**
+  - Usable items 00-4F each have a handler and a record (`14:8399`/`14:9BE2`); any other item fails with "cannot use".
+  - The handler types:
+    - Touch-match: the item must be used on a specific spawn.
+    - Area check: the item only works in certain areas.
+    - Consumables: Medical Herb HP+32, Fruit of Power MP+32, Magic Ring MP full, four status cures.
+    - Broken Statue → Statue of Gold.
+  - Used items are removed from the inventory, except the Shell Flute.
+  - Examples of flags set by use: Windmill Key → F00A, the four stone people → F069/F06A/F06B/F035, Key to Prison → F00D.
+
+**Boss gates:**
+- **Found:** four gates are set by picking up the boss's reward item: F067 (Mado 1, Ball of Thunder), F062 (Mado 2, a Sacred Shield variant), F06C (Emperor, Psycho Armor) and F05F (Sword of Thunder).
+- **Still unknown:** nothing found sets F05C (Karmine), F05D (Kelbesque 2), F05E (Draygon) or F066 (Kelbesque 1). F060 (Sabera 2) is set only by NPC scripts that look invalid.
+- **Searched:** every caller of the flag-apply routine, raw flag bytes in banks 14/15, indexed writes into `$64xx`, and the callers of `HitSetFlag`. One small find: `30:CCF7` calls it to clear a hit flag when a timer runs out. This is logged in `dead_ends.md` with next steps; the simplest is a write watch on `$648B/$648C` once the emulator exists.
+
+**Files:**
+- New tool `tools/item_dump.py` (ran it) → `gfx/items.txt`.
+- REVERSE.md: new section "Item hooks 0/1", updated boss-gate row in the flag table.
+- 13 new labels in `labels.csv`; they show up in `dis.py`.
+- The task is marked done. The leftovers, including the 4 unexplained gates, are in a new "text follow-ups 6" task.
+
+Nothing has been committed.
+
+SESSION_SUMMARY: Session 16 — text follow-ups 5 (a part, d): hooks 0/1 are the inventory routines (ItemGetHook 14:826F / ItemUseHook 14:831E, inventory $6430-$645F); boss gates F05F/F062/F067/F06C are set by picking up the boss reward; F05C/F05D/F05E/F066 setters still unknown (dead_ends.md); new item_dump.py → gfx/items.txt; 13 labels; leftovers → "text follow-ups 6".

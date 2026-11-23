@@ -1,0 +1,42 @@
+  ▶ Read dead_ends.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## |^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read 20261115_112251_session_001.txt
+  ▶ Glob tools/*
+  ▶ Read REVERSE.md
+  ▶ Read nesrom.py
+  ▶ Read dis.py
+  ▶ Read instruction_set.py
+  ▶ Edit nesrom.py
+Building `search_bytes.py` and `xref.py` now (task 1 in Next Tasks); I just added shared bank-window helpers to `nesrom.py`.
+  ▶ Write search_bytes.py
+  ▶ Write xref.py
+Now testing both against known addresses (SwitchBank16 `C40E`, state var `$40`, and the `LDA #n / JSR C40E` pattern).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools && python3 xref.py C40E | tail -8 && python3 xref.py C40E | gr
+  ▶ python3 tools/xref.py C40E
+Works — includes the known reset call sites (`F322`, `F399`) and state handlers (`C933`…). Testing the other modes:
+  ▶ python3 tools/xref.py F421 --data --imm --loose
+  ▶ python3 tools/search_bytes.py "A9 ?? 20 0E C4" --max 4 --disasm --context 2
+  ▶ python3 tools/xref.py 40 --bank 30
+Zero-page and pattern modes work. The `F421 --imm` check found nothing, but Reset is documented as storing `$F421` → `$0054`. Checking how Reset does that:
+  ▶ python3 tools/dis.py 31 F2D0 0x30; python3 tools/dis.py 31 F41E 0x20
+  ▶ Grep "F42|^bank" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I built the two search tools from the top Next Tasks item, `tools/search_bytes.py` and `tools/xref.py`, and tested them against addresses we already know. That task is marked done.
+
+- **`search_bytes.py`** searches PRG (or CHR with `--chr`) for a hex pattern, where `??` matches any byte. It reports hits as `BB:AAAA` plus the file offset, and can show surrounding bytes (`--context`), disassemble each hit (`--disasm`) or limit to one bank (`--bank`).
+- **`xref.py`** finds every instruction that references an address, including zero-page addresses and branches within the same bank. It drops matches that look like data rather than real instructions (`--loose` shows them anyway). It can also find raw 16-bit pointers (`--data`) and an address loaded as separate low/high byte values (`--imm`).
+- **Shared helpers** added to `nesrom.py`: `bank_window`, `bank_cpu_addr` and `parse_bank_addr`.
+
+**Test results:**
+- `xref.py C40E` found 48 calls to `SwitchBank16`, all in the fixed banks 30 and 31. The swappable banks never call it themselves, so bank switching is always driven from fixed code.
+- `xref.py 40 --bank 30` found the 3 places that read or write the main state variable `$40`: `C904`, `C977` and `C9F5`.
+- `--data` found a real pointer at `31:F422` (`.dw $F421`). Reset reads it to set the initial IRQ vector at `$0054`. I added it to `labels.csv` as `IrqDefaultPtr`.
+- `--imm` found nothing for `F421`. That's correct: Reset loads the vector from that pointer word, not as two immediate values.
+- The pattern `A9 ?? 20 0E C4` finds the `LDA #n / JSR C40E` call sites, which the next task (mapping which 16KB bank holds which subsystem) needs.
+
+REVERSE.md is updated with the tool descriptions and these findings. I didn't run `--chr` mode; the rest was tested on the cases above.
+
+SESSION_SUMMARY: Built and verified tools/search_bytes.py and tools/xref.py (plus bank helpers in nesrom.py); all 48 SwitchBank16 calls are in fixed banks; labelled 31:F422 IrqDefaultPtr.

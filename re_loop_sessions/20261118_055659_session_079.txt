@@ -1,0 +1,110 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -4; wc -l dead_ends.md REVERSE.md; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^- \[ \]" REVERSE.md | head; sed -n 2200,2225p REVERSE.md;
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read 20261118_055659_session_078.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 2205,2225p REVERSE.md | cut -c1-1500
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 2207p REVERSE.md | cut -c1500-; ls web/src web/src/* web/tes
+Top task is "Ph7 web 4/8 leftovers" (world runtime port). Reading the existing web world code first.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls web/src/game/world web/src/game/obj web/test/world_frames; wc -l
+  ▶ Read bg.js
+  ▶ Read area.js
+  ▶ Read machine.js
+  ▶ Read mainloop.js
+  ▶ Grep "PpuQueueFlush|BgRowRender|BgColRender|ScreenRowRender|C831|MetatileAttr\b|EDE5|EE31|ED64" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +490
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 337p REVERSE.md | cut -c1-3000
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C676 0x1C0
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C831 0x60 --stop; python3 tools/dis.py 31 E
+Disassembling the rest of the column render and the attr/NT-address helpers.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 ECE1 0x260; python3 tools/dis.py 30 C436 0x
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 EF40 0x20 --stop; python3 tools/dis.py 30 C
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C864 0x50; grep -n "export" web/src/game/ob
+  ▶ Read prg.js
+  ▶ Read util.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "writeReg\|case \|ciram\|inc32\|wr(a, v)\|& 0xFF" web/src/n
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l tools/emu/routine_capture.py web/test/obj_check.mjs; sed -n 1
+  ▶ Read routine_capture.py +80
+  ▶ Read obj_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls tools/emu; grep -n "self\.\(ciram\|vram\|nt\|v\|t\|ctrl\|mask\|w
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 70,95p web/src/nes/ppu.js; grep -n "mirror" tools/emu/mapper
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -rn "switchBank16\|function setR" web/src | head; python3 tool
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "nmi\|irq" tools/emu/nes.py | head -30; grep -n "nmi" tools
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 170,190p tools/emu/nes.py; sed -n 295,312p tools/emu/nes.py
+  ▶ Grep "\.nmi\(\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "irq" tools/emu/mapper.py | head
+Writing the port: `world/ppuqueue.js` (queue ring + flush) and `world/bgstream.js` (row/column render, full-screen draw).
+  ▶ Write ppuqueue.js
+  ▶ Edit prg.js
+  ▶ Write bgstream.js
+Now extending `routine_capture.py` with the queue/BG routines (NMI/IRQ suppressed, CIRAM recorded).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 - <<'EOF' 2>&1 | head -0
+  ▶ Grep "ciram" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat > /tmp/rc_patch.py <<'EOF'
+Not needed; editing the capture tool directly.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+Now the run loop: CIRAM base/diff, quiet mode, mapper banks from the shadows.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ time python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine PpuQueueFlush,BgR
+While that runs, wiring the check and the Machine hook.
+  ▶ python3 - <<'EOF'
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ for t in core_check obj_check world_check sprite_check; do node web/test/$t.mjs 2>&1 | tail -4; done
+  ▶ node web/test/core_check.mjs 2>&1 | tail -5 && node web/test/obj_check.mjs 2>&1 | tail -4 && node web/test/world_check.m
+  ▶ Read bx2y1e92u.output
+  ▶ Read REVERSE.md +121
+  ▶ Read bx2y1e92u.output
+  ▶ Grep "^(30,(C72B|C739|C436|C43E|C831|C864)|31,(EB9C|EC87|EE80|EEA4|EC7F|EF07|EF1B))," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv && wc -l labels.csv
+  ▶ Read labels.csv +1066
+  ▶ Edit labels.csv
+Now the REVERSE.md write-up (pending the capture result).
+  ▶ Edit REVERSE.md
+  ▶ Read bx2y1e92u.output
+  ▶ ToolSearch max_results query
+  ▶ TaskStop task_id
+  ▶ time python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine PpuQueueFlush,BgR
+  ▶ cp /tmp/fuzz_bg_try.json web/test/obj_frames/fuzz_bg.json && node web/test/obj_check.mjs 2>&1 | grep -v "^ok"
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine PpuQueueFlush,BgRowRen
+RAM matches everywhere; only nametable bytes differ. Checking mirroring formulas.
+  ▶ sed -n 172,185p tools/emu/mapper.py && sed -n 120,140p tools/emu/ppu.py && sed -n 205,232p tools/emu/ppu.py
+The emulator applies the "$2007 write during rendering" glitch because the fuzz call runs mid-frame; real flushes happen in vblank or with rendering off. Forcing the PPU's mask off for these cases.
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine PpuQueueFlush,BgRowRen
+Row/column/flush: 300/300 identical. FullScreenDraw stalled because `30:C72B` scans all 8 ring slots (also stale ones), so random src=0 bytes make it spin forever; fixing the case setup.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ time python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine FullScreenDraw --
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine PpuQueueFlush,BgRowRen
+1400/1400 identical. One negative test to make sure the cases reach the bank-10 quirk:
+  ▶ Edit bgstream.js
+  ▶ node web/test/obj_check.mjs 2>&1 | grep "fuzz_bg"
+  ▶ Edit bgstream.js
+Negative test fails as expected; reverted. Running the full check suite.
+  ▶ node web/test/obj_check.mjs | tail -1 && node web/test/core_check.mjs | tail -1 && node web/test/world_check.mjs | tail 
+All pass. Now docs/bookkeeping: README, Verification Log, task list.
+  ▶ Edit README.md
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^- \[ \] Ph7 web 4/8 leftovers\|^- \[ \] Web fix: gameplay frames" REVERSE.md | cut -c1-80
+  ▶ Read REVERSE.md +2216
+  ▶ sed -n 2230p REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "ppuqueue|ppuQueueFlush" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Read architecture_web.md +50
+  ▶ Read architecture_web.md +132
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+You've hit your 5-hour limit · resets 12:10pm (America/New_York)

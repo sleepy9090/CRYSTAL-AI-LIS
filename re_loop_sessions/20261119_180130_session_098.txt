@@ -1,0 +1,170 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; gr
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/*_09[4-8].txt; tail -c 5000 re_loop_sessions
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 3500 re_loop_sessions/20261119_180130_session_094.txt; echo
+  ▶ Grep "SubstEquipMenu|16:8000|EquipMenu|IrqMenuChrSplit" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 172p REVERSE.md | cut -c1-3000; grep -n "bank 16\|Bank 16\|^
+Session 98 task: port the equipment/item menu (`SubstEquipMenu`, bank 16) to the web port. Reading the ROM routine and the pause port now.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D8C7 300 --stop | head -150
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D930 200 --stop; python3 tools/dis.py 30 D8
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls tools/ | tr '\n' ' '; echo; grep -n "^16," labels.csv | wc -l; l
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -30 tools/bank_calls.py; ls disasm/ | head
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^def \|^[A-Z_]* = " tools/nesrom.py tools/instruction_set.
+  ▶ Read instruction_set.py +60
+Writing a small call-tree tool to size the bank-16 equipment-menu code before porting it.
+  ▶ Write call_tree.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 80,95p tools/nesrom.py; python3 tools/call_tree.py 16 8000 -
+  ▶ Read pause.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; mkdir -p /tmp/s98; python3 tools/dis.py 16 8000 0xAED > /tmp/s98/me
+  ▶ Grep "^\s*(16:)?80D1|8B1F|^\s*(16:)?9A62" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm/bank_16.asm
+  ▶ Read bank_16.asm
+  ▶ Read bank_16.asm +420
+Still reading the bank-16 menu code (about 2.4 KB to port); next I'll write `states/equip.js`.
+  ▶ Read bank_16.asm +980
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -rn "8933\|MenuPrint\|8AB0\|C80C\|F7DB\|nmiMode6\|F61A\|IrqMen
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l web/src/game/mainloop.js web/src/game/machine.js web/src/game
+  ▶ Read mainloop.js +50
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 F7DB 0x30 --stop; python3 tools/dis.py 31 F
+  ▶ Read machine.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "splits\|setChrReg" web/src/nes/ppu.js | head; cat web/src/
+Next: the exit path after the menu closes (`SelectedUseItem`, `SwordPowerLevel`, `30:DAFC/DADA`, the bank-14 and bank-26 calls). Checking which are already in the port.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D9D8 0x30 --stop; python3 tools/dis.py 30 D
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D9FC 0x20 --stop; python3 tools/dis.py 30 D
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 DB0E 0x80 --stop; python3 tools/dis.py 30 D
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 DB0E 0x2C; python3 tools/dis.py 30 DA06 0x1
+  ▶ Read death.js +40
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "Pause / status screen (web port)" REVERSE.md | head -2; gr
+Checking how the session-94 pause screen was verified, so I can reuse that workflow for the menu.
+  ▶ Grep "^\| Pause / status screen \(web port\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob web/test/states/*
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 167p REVERSE.md | cut -c1-3000
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/json_peek.py web/test/states/death.json 2>&1 | head -
+  ▶ Read mainloop.js
+Now I have the full menu flow (main loop, grid build, sort, equip/unequip, drop with the YES/NO confirm). Checking two fixed-bank helpers before writing the port.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C169 0x20 --stop; sed -n 1,61p web/src/game
+  ▶ Read ppu.js +215
+I have the whole flow mapped. Checking how `web_state.py` sets `frame0` for a state stopped inside the substate dispatch, then writing `states/equip.js`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "frame0" tools/emu/web_state.py | head; grep -n "export fun
+  ▶ Read prg.js
+Writing `web/src/game/states/equip.js`.
+  ▶ Write equip.js
+Now wiring it in: substate 18 + entry point in `play.js`, NMI mode 6 and IRQ handler 7 in `mainloop.js`/`machine.js`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 - <<'EOF' 2>&1 || true
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+Wiring done. Generating the tools.emu reference state at `30:D8C7` (SELECT pressed in area 1).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; time python3 -m tools.emu.web_state --load-state tools/emu/states/a
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,40p tools/web_state_compare.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; time python3 tools/web_state_compare.py --state tools/emu/states/eq
+The menu opening matches on all 119 frames (outside the HUD rows). Checking the CSV diff and port log too.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/equip_s
+Only 3 single-frame CSV blips (the known line-0 sampling phase from s89/s94). Now a keyed run: move, equip/unequip, switch grids, drop with confirm, then SELECT to close.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/equip_s
+Diffs are single-frame and transient (each settles the next frame), which looks like a one-frame phase offset. Checking the CSV columns to see which side is early.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py /tmp/wsc_equip2/emu.csv /tmp/wsc_eq
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py /tmp/wsc_equip2/emu.csv /tmp/wsc_eq
+The web side is one frame ahead exactly at key presses. Checking how `web_state_compare.py` applies `--keys` to each side.
+  ▶ Grep "keys|shift" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/web_state_compare.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "keys" tools/emu/nes.py | head; grep -n "def parse_keys" -A
+  ▶ Read nes.py +130
+  ▶ Read web_state_compare.py +38
+  ▶ Edit web_state_compare.py
+  ▶ Edit web_state_compare.py
+  ▶ Edit web_state_compare.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; K="2600:RIGHT 2610:A 2625:DOWN 2635:A 2650:A 2665:LEFT 2675:A 2690:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/equip_s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py /tmp/wsc_equip3/emu.csv /tmp/wsc_eq
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -1 /tmp/wsc_equip3/emu.csv | tr ',' '\n' | grep -n -i "inv\|eq
+  ▶ Grep "def columns|crc|0x64|0x0711" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/compare.py
+The CSV doesn't cover `$6428-$645F` or `$0711-$0718`. Checking whether `run.mjs` can dump RAM so I can diff the full RAM + WRAM at the end of the run.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,30p web/test/run.mjs; grep -n "dump" tools/web_state_compa
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "self.ram\b\|self.ram =\|wram =\|self.wram\|prg_ram" tools/
+  ▶ Grep "self\.ram\s*=|wram\s*=|dumpRam|dump-ram|dump-wram" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Grep "dump_ram|dump_wram" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/__main__.py
+Adding a `--ram-diff` option to `web_state_compare.py` (end-of-run RAM + WRAM diff).
+  ▶ Read web_state_compare.py +86
+  ▶ Edit web_state_compare.py
+  ▶ Edit web_state_compare.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/equip_s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/equip_s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/equip_s
+  ▶ Write mem_diff.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/mem_diff.py web/test/states/equip.json /tmp/wsc_equip
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,40p tools/emu/web_state.py | grep -n "poke\|--" ; python3 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/mem_diff.py web/test/states/equip.json /dev/null 6428
+  ▶ Edit mem_diff.py
+  ▶ Edit mem_diff.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/mem_diff.py zero web/test/states/equip.json 6428-645F
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.web_state --load-state tools/emu/states/area1_
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/equip_s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/equip_s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for n in 477 478 479 480 482; do echo "== frames $n"; python3 tools
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/equip_s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py /tmp/wsc_equip6/emu.csv /tmp/wsc_eq
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_rows.py /tmp/wsc_equip6/emu.csv /tmp/wsc_equip6/w
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_rows.py /tmp/wsc_equip6/emu.csv /tmp/wsc_equip6/w
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/equip_s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for t in core_check ppu_check serve_check sprite_check obj_check; d
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_chec
+All five checks pass. Rerunning the s94 pause and s89 death comparisons as regressions.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.web_state --load-state tools/emu/states/area1_
+Both regressions still pass (pause 0/74, death 0/557). Now the documentation: labels, the REVERSE.md log row and task status, and architecture_web.md.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^16,\|^30,D8C7\|^30,DADA\|^30,DAFC\|^31,F7DB\|^31,F61A" la
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 200 labels.csv | od -c | tail -3
+  ▶ Read labels.csv +1
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 16 8000 3; python3 tools/dis.py 30 D909 6; pyt
+Labels load. Now REVERSE.md: the Verification Log row goes after the pause row (line 167).
+  ▶ Read REVERSE.md +168
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2378
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding a web-port note to the substate table row and the IRQ-handler row.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "pause\.js" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+I ported the SELECT equipment/item menu to the web version. It matches tools.emu on every frame I tested outside the HUD rows, and all the other web checks still pass. The save/load page it opens with START is not ported yet and is filed as a new task. Nothing is committed.
+
+**What's new in the port**
+- **`web/src/game/states/equip.js`** (new): the menu wrapper at `30:D8C7` plus the bank-16 menu at `16:8000`. That covers:
+  - the window and both grids, switched by wrapping UP/DOWN;
+  - the cursor and item icons, and the menu text printer;
+  - A to equip or unequip;
+  - B to drop, with the YES/NO prompt;
+  - the inventory sort and the re-selection after a drop;
+  - the exit path back to normal play.
+- **`mainloop.js` / `machine.js`**: NMI mode 6, and IRQ handler 7, which switches the CHR banks partway down the screen.
+- **`play.js`**: substate 18 now runs the menu, and an entry point lets a saved state stopped at `30:D8C7` start there.
+
+**Tools**
+- **`tools/web_state_compare.py --web-key-shift N`**: the menu reads the pad during vblank, which tools.emu counts as the previous frame. Without a shift of 1, the port reacted one frame early and 29 frames differed by a cursor sprite.
+- **`--ram-diff` / `--ram-ignore`**: also compares all of RAM and WRAM after the last frame.
+- **`tools/call_tree.py`**: lists the code reachable from an entry point; I used it to size the 3.9 KB menu.
+- **`tools/mem_diff.py`**: compares two memory dumps over an address range.
+- **Test state**: `web/test/states/equip.json`, with items poked in.
+
+**Test results**
+- **Pixels:** 0 of 469 frames differ outside tile rows 23-29 (f2471-2939). The run covered the build, both grids, equip, unequip, a drop cancelled with NO and one confirmed with YES (with re-sort and redraw), an undroppable key item, and equipping an item.
+- **Memory at the end, still inside the menu:** all of WRAM matches. Only 5 RAM bytes differ: three are the one-frame offset of the end snapshot, and two are a sound queue the port never empties. In this mode the sound tick runs inside IRQ handler 1 (the HUD split), which isn't ported, so the sound columns differ for the whole run.
+- **Closing the menu:** both sides return to the normal play state (`sub_state` 8) at f2944, with equal core values and sprites. From f2945 on the game runs normal gameplay, which isn't ported.
+- **Regression checks:** `core_check`, `ppu_check`, `serve_check`, `sprite_check` (552/552) and `obj_check` (5000/5000) pass. The pause screen (0/74) and death sequence (0/557) comparisons are unchanged.
+
+**Not ported (the port logs these and stops):**
+- START, which opens the save/load page (`16:9AEE`);
+- the exits taken after saving (`30:C80C`) and after loading (`30:D930`);
+- the shop/pawn versions of the menu;
+- the screen restore in area `$5F`.
+
+These are one new low-priority task at the end of RE Investigation.
+
+**Docs:** `REVERSE.md` has a new Verification Log row "Equipment / item menu (web port)", notes on the substate and IRQ tables, and the task marked done. `labels.csv` has 33 new labels, and `docs/architecture_web.md` lists the new module.
+
+SESSION_SUMMARY: Session 98 — SELECT equipment/item menu ported (`states/equip.js` = SubstEquipMenu 30:D8C7 + bank 16 menu, NMI mode 6 + IRQ handler 7): 0/469 frames differ outside the HUD rows, WRAM equal and only 5 phase/sound-queue RAM bytes differ, exit to sub_state 8 matches; new `--web-key-shift`/`--ram-diff` in web_state_compare.py, `tools/call_tree.py`, `tools/mem_diff.py`; save/load page and other menu exits filed as one low-priority task.

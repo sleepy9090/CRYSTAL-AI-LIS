@@ -1,0 +1,121 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls re_loop_sessions | tail -4 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.md |
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*18[2-5]* && tail -c 3000 re_loop_sessions/20261122_104601_session_184.txt
+  ▶ head -c 7000 re_loop_sessions/20261122_104601_session_184.txt; grep -n "group_29\|group_05" tools/emu/scenario.py | head
+  ▶ sed -n 600,700p tools/emu/scenario.py; grep -n "^; AI \$26\|^; AI \$27\|^; AI \$29\|^; AI \$2A" -A12 gfx/enemy_catalog.t
+  ▶ Read scenario.py +600
+  ▶ Grep "^; AI \$(26|27|29|2A)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/enemy_catalog.txt
+Picking area `$6A` (AI `$26`, type `$78`) as the next enemy group; dumping its spawns.
+  ▶ python3 tools/area_dump.py spawns '$6A' 2>&1 | head -40
+  ▶ python3 tools/area_dump.py spawns 0x6A 2>&1 | head -40; python3 tools/area_dump.py spawns 0x6B 2>&1 | head -30
+Area `$6B` is small (one type-`$78` in slot `$0D`). Checking what REVERSE.md says about AI `$26`.
+  ▶ Grep "A9E4|AI `\$26`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read enemy_catalog.txt
+Type `$78`: hp `$2D`, atk `$34`, def 8, ed `$72` (elem nibble 2). Checking `SwordElemBit` to choose a sword that hurts it.
+  ▶ Grep "SwordElemBit" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Sword 1 (elem bit 1) is not blocked by nibble 2. Adding a keyless `group_6B` scenario to probe the slots.
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_6B 12 --out web/test/states/group6b.json --save-state tools/emu/st
+Chaser creeps up slowly from (168,426); player at (304,304). Walking toward it.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group6b.state --slots 0D --every 8 --seg NONE:20 LEFT:130 
+Walls block at x=292 and y=396. Looking at the area render to find a path.
+  ▶ Glob gfx/areas/*6[bB]*
+  ▶ python3 tools/render_level.py --help 2>&1 | head -15
+  ▶ Grep "argv|add_argument|def main" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/render_level.py
+  ▶ python3 tools/render_level.py 6B --coll 2>&1 | tail -5; ls -t gfx/areas | head -3
+  ▶ Read area_107_coll.png
+Map shows a corridor from the stairs going left then down along the column. Trying DOWN first, then LEFT.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group6b.state --slots 0D --every 6 --seg NONE:20 DOWN:24 L
+The chaser lines up at x=148 below the player, then backs away. Facing down and swinging.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group6b.state --slots 0D,11,12 --every 4 --seg NONE:20 DOW
+Two hits landed (enemy HP 45→35→25); the player took one contact hit ($60→$2D). Extending the swings to finish it.
+  ▶ S=$(for i in $(seq 1 20); do printf "B:4 NONE:8 "; done); timeout 300 python3 tools/emu/group_probe.py tools/emu/states/
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group6b.state --slots 0D,0E,0F,10 --every 4 --seg NONE:20 
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group6b.state --slots 0D,0E,0F,10 --every 6 --seg NONE:20 
+Hits at f2660(contact), 2702, 2784, 2858; enemy HP 5 left and it parks at y=425. Stepping down for the final swing.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group6b.state --slots 0D,0E --every 3 --seg NONE:20 DOWN:2
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group6b.state --slots 0D,0E --every 3 --seg NONE:20 DOWN:2
+Kill at f2898 (puff AI `$7D`, slot cleared f2946). Writing the keys into the scenario (offset = probe frame − 2495).
+  ▶ Edit scenario.py
+  ▶ Read group29_check.mjs
+Now the emu key frames: re-exporting the state and getting `$43` write frames via `--watch`.
+  ▶ Grep "watch 0043|web_state_compare.py --state|csv_trim" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions/20261122_104601_session_184.txt
+  ▶ Read group08_check.mjs
+  ▶ Grep "add_argument" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/web_state_compare.py
+  ▶ python3 -m tools.emu --help 2>&1 | grep -E "load|watch|keys|frames" 
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group6b.state --frames 480 --watch 0043 --keys 2526:DOWN:
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group6b.state --frames 480 --watch 0043 --keys 2526:DOWN:
+Port key frames derived from the `$43` writes. Generating the ref with `web_state_compare`.
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/group6b.state --web web/test/states/group6b.json
+Those diffs are from feeding the emu frames to the port; the check uses the derived port frames. Writing the check script.
+  ▶ cat tools/csv_trim.py | head -20
+  ▶ python3 tools/csv_trim.py gfx/group6b/emu.csv web/test/group6b_ref.csv --frames 2508-2984 && wc -l web/test/group6b_ref.
+  ▶ Write group6b_check.mjs
+  ▶ node web/test/group6b_check.mjs 2>&1 | tail -35
+All 477 rows equal; only my kill detector missed. Checking `o0D_ai` in the ref around the kill.
+  ▶ python3 tools/csv_cols.py web/test/group6b_ref.csv gfx/group6b/emu.csv o0D_ai,o0D_y 2894-2900 2>&1 | head -12
+The ref run doesn't show the kill at f2898. Checking `o0D` columns over the run.
+  ▶ head -1 web/test/group6b_ref.csv | tr ',' '\n' | grep -n "0D\|hp\|p_" | head; python3 tools/csv_cols.py web/test/group6b
+The ref's emu run diverges from the probe (chaser keeps sliding down). Checking whether the plain tools.emu run with these keys kills it.
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group6b.state --frames 480 --watch 03CD --keys 2526:DOWN:
+Only one hit in the plain tools.emu run, so the probe's key timing differs from `--keys`. Checking how group_probe applies keys.
+  ▶ Grep "pad|key|frame_no|def " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/group_probe.py
+  ▶ Read group_probe.py +27
+  ▶ Grep "def keys_fn|def parse_keys|frame_no" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/pads.py
+The probe holds keys from L252 of the previous frame, so reads at L261 of F−1 see them one frame earlier than `--keys F`. Retrying the emu keys shifted by −1.
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group6b.state --frames 480 --watch 03CD --keys 2525:DOWN:
+Now it matches the probe (kill write f2897). Updating the scenario keys (−1) and re-deriving the port frames.
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group6b.state --frames 480 --watch 0043 --keys 2525:DOWN:
+Port frames: mostly line 5 now. Regenerating the ref with the corrected emu keys and updating the check's keys.
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/group6b.state --web web/test/states/group6b.json
+  ▶ Edit group6b_check.mjs
+  ▶ node web/test/group6b_check.mjs 2>&1 | tail -35
+All 477 rows equal; the port's kill lands at f2897. Confirming against the ref's `o0D_ai`.
+  ▶ python3 tools/csv_cols.py web/test/group6b_ref.csv web/test/group6b_ref.csv o0D_ai,o0D_y 2895-2899 2>&1; python3 tools/c
+Ref kill frame is f2897 (probe label was one frame late, as in s184). Fixing the constant and comments.
+  ▶ sed -i 's/^const KILL = 2898; /const KILL = 2897; /; s/then DOWN + B and the kill at f2898/then DOWN + B and the kill at
+  ▶ Edit group6b_check.mjs
+  ▶ Edit group6b_check.mjs
+  ▶ node web/test/group6b_check.mjs
+Check passes. Starting the full suite in the background while I update the docs.
+  ▶ timeout 3000 python3 tools/run_checks.py 2>&1 | tail -45
+  ▶ Grep "^\| Area-`\$29` enemy group" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +214
+  ▶ Edit REVERSE.md
+Now the s185 note in the task text.
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+The docs are updated. Now I'm waiting for the full check suite to finish.
+  ▶ ToolSearch max_results query
+The background check suite will notify me when it finishes; I'm waiting for that before the summary.
+  ▶ Read bmf31an6v.output
+The web port matches tools.emu on area `$6B`'s enemy group (AI `$26`) with no code changes. The new `web/test/group6b_check.mjs` passes all 477 rows (f2508-2984) at shift 0, sound included, with no cells to excuse.
+
+**What's in the area:** one type-`$78` enemy in slot `$0D`, run by AI `$26` (`AiShooterChase`, `27:A9E4`). Its element nibble is 2, which makes it immune to sword 2, so the new `group_6B` scenario uses sword 1 (level 16, attack `$03E1` = 17). The other spawns are two h2 records and one h3 record.
+
+**The run:** the player goes down and left along the corridor to x=148, faces down and swings while the chaser walks up the column.
+- One contact hit takes the player from HP `$60` to `$2D`.
+- Four sword hits (f2661, f2701, f2783, f2857) take it from 45 to 5, 10 per hit.
+- The kill comes at f2897: it turns into a death puff and drops nothing.
+
+**Not covered:** the chaser never fired, so AI `$26`'s shot branch is still unchecked. Area `$6A`, which has two of these enemies, wasn't run.
+
+**Key-timing pitfall:** at first the tools.emu run landed only 1 hit instead of 5. `group_probe.py` presses keys one frame earlier than tools.emu's `--keys` when the game reads the pad at line 261. So a frame planned with the probe has to go to `--keys` one frame earlier. I checked the planned keys with `tools.emu --watch 03CD` (the enemy's HP) before making the ref. This is now written down in the check header, REVERSE.md and CLAUDE.md.
+
+**Full suite:** 37 of 38 checks pass. The one failure is `world_check` on areas `$3C`, `$3D` and `$BC`, the known gap (j).
+
+**Docs:**
+- REVERSE.md has a new Verification Log row ("Area-`$6B` enemy group, AI `$26`").
+- The task has an s185 note and stays open as the low-priority leftovers task. AI `$26` is struck from its list of remaining AIs.
+- CLAUDE.md lists the new check.
+
+New files:
+- `web/test/group6b_check.mjs`
+- `web/test/group6b_ref.csv`
+- `web/test/states/group6b.json`
+- `tools/emu/states/group6b.state`
+
+`tools/emu/scenario.py` has the `group_6B` scenario. Nothing is committed.
+
+SESSION_SUMMARY: Session 185 checked area $6B's enemy group (AI $26, type $78; sword 1 because elem 2 blocks sword 2) with the new group_6B scenario and web/test/group6b_check.mjs: 477/477 rows equal at shift 0 including sound, 4 hits plus the kill at f2897, no port change; group_probe's keys land one frame earlier than tools.emu --keys at line-261 pad reads, now documented; 37/38 checks pass (world_check is the known gap (j)).

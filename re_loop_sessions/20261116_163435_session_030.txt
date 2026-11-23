@@ -1,0 +1,135 @@
+  ▶ Read dead_ends.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## Next Tasks" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ wc -l re_loop_sessions/20261116_143140_session_027.txt re_loop_sessions/20261116_163435_session_02*.txt re_loop_sessions
+  ▶ Read 20261116_163435_session_029.txt +50
+  ▶ Read 20261116_163435_session_028.txt +60
+  ▶ Read REVERSE.md +1079
+  ▶ Grep "^#|ObjTypeTable|objtype_dump" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +340
+  ▶ Read REVERSE.md +728
+  ▶ Read REVERSE.md +936
+Starting session 30 on the top open task: **Ph5 structs 2/5, the object slot struct**. Next I'm checking the existing tools so I can build `struct_dump.py`.
+  ▶ Read objtype_dump.py
+  ▶ Grep "^def |^class |^[A-Z_]+ =" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/ram_map.py
+  ▶ Grep "^def |^class " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/nesrom.py
+  ▶ Read ram_map.py +20
+  ▶ Read nesrom.py +1
+  ▶ Grep "obj_u05A0" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm/bank_30.asm
+  ▶ Grep "\$05A[0-9A-F]|\$066[0-9A-F]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm/bank_30.asm
+  ▶ Grep "(Music header|music headers|header =|Metasprite record|metasprite record|palette record|Palette record|4 quadrant|MetatileAttr)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Writing `tools/struct_dump.py`. It cross-references the disassembly's read/write sites for each object column with the `ObjTypeTable` initial values.
+  ▶ Write struct_dump.py
+  ▶ python3 tools/struct_dump.py obj --out docs/obj_struct.txt && python3 tools/struct_dump.py objtype > /tmp/objtype_hist.t
+  ▶ python3 tools/struct_dump.py obj --out docs/obj_struct.txt && python3 tools/struct_dump.py objtype --out docs/obj_struct
+  ▶ Read obj_struct.txt
+Data is in. Now I'll check the four unknown columns (`$03A0`, `$05A0`, `$0640`, `$0660`) at their main sites, starting with `26:95F8`, which reads `$03A0`, `$05C0` and `$0340`.
+  ▶ python3 tools/dis.py 26 95C0 0xC0
+  ▶ python3 tools/dis.py 26 9682 0x12 && python3 tools/decode_tables.py 26:9691 32 b4 && python3 tools/xref.py 95F8
+  ▶ python3 tools/decode_tables.py 2>&1 | head -20; python3 tools/xref.py 95F8
+  ▶ python3 tools/decode_tables.py 26:9691 32 s8 --per-line 4 && python3 tools/dis.py 26 8F90 0x2B
+Hitbox record = `{dx, w, dy, h}` (signed, relative to `$05C0/$05E0` screen pos). The overlap routine `26:95F8` is driven by a pair list at `26:96F2`. Let me see the loop head.
+  ▶ python3 tools/dis.py 26 8F6E 0x22 && python3 tools/decode_tables.py 26:96F2 12 hex3 --per-line 4 && python3 tools/xref.p
+Records are 4 bytes at `26:96F1` (`slot, first, last, handler`), and the hitbox table is 24 entries (`9691-96F0`). Re-decoding both:
+  ▶ python3 tools/decode_tables.py 26:96F1 15 hex4 --per-line 1 && python3 tools/decode_tables.py 26:96A9 18 s8 --per-line 4
+  ▶ Grep "^26,(8F6E|8FBB|9026|90AA|9357|94B0|95F8|9691|96F1|95C0|98D7)|^\*,(3A0|5A0|640|660|340|380)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/decode_tables.py 26:8FBB 4 ptr16
+Writing collision findings to REVERSE.md before going on.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 30 CCCC 0x70
+`$05A0` is an **AI-freeze timer**: while it's non-zero the AI is skipped. On the frame it hits 0, a `b2`=1 object clears its hit flag. Next, the `$0340` knockback path and `$0640`/`$0660`.
+  ▶ python3 tools/dis.py 30 CD3A 0x45 && python3 tools/struct_dump.py obj --sites | grep -A50 '^\$0640' | grep -B0 -E '^\s+[
+  ▶ python3 tools/dis.py 30 CD3A 0x45 && python3 tools/struct_dump.py obj --sites --out /tmp/obj_sites.txt
+  ▶ Grep "^\$(0340|0640|0660)|^\s+\d\d:[0-9A-F]{4}" /tmp/obj_sites.txt
+Too noisy as a flat list. I'll go straight to the main `$0640` reader, `27:A969`.
+  ▶ python3 tools/dis.py 27 A969 0x7C
+  ▶ python3 tools/dis.py 26 972D 0x50 && python3 tools/dis.py 27 A9E4 0x40
+`26:972D` = **spawn projectile**: A = shot id → 4-byte record at `20:BC00`/`BD00` (ids ≥`$40`), Y = direction. Let me see what the "pause timer" name for `$0440` was based on.
+  ▶ Grep "\$0440|972D|\$0640|\$0660" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+The "pause timer" name came from AI `$30` NPCs, so the column is per-AI. For shooter AIs, `$0440` is the shot id. Now `$0660`'s other main user, `27:A7CD`:
+  ▶ python3 tools/dis.py 27 A7CD 0x38 && python3 tools/dis.py 27 A70E 0x30
+  ▶ Grep "obj_flags,|obj_flags2,|obj_tile_ofs,|obj_overlay_id," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm/bank_28.asm
+  ▶ Grep "\$0380" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Flag bits are already documented (session 5), so I won't repeat them. Now the labels: I'll find the current entries for the columns being renamed.
+  ▶ Grep "obj_u03A0|obj_u05A0|obj_u0640|obj_u0660|obj_pause_timer|^26,(8F6E|95C0|95F8|9691|96F1|972D),|^20,BC00" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Now the new code labels. I'll append them at the end of labels.csv.
+  ▶ tail -c 200 labels.csv | od -c | tail -3 && cat >> labels.csv <<'EOF'
+  ▶ wc -l labels.csv
+  ▶ Read labels.csv +750
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 26 8FA2 0x12 && python3 tools/dis.py 30 CCDD 6
+Labels resolve. Re-running the dump so it uses the new names, then writing the field table.
+  ▶ python3 tools/struct_dump.py obj --out docs/obj_struct.txt && python3 tools/struct_dump.py objtype --out docs/obj_struct
+`rec` works mechanically (that address was header pointers, not k3 data). I'll add `hitbox` and `collpair` layouts with signed-byte support, since those are the new structs.
+  ▶ Edit struct_dump.py
+  ▶ Edit struct_dump.py
+  ▶ python3 tools/struct_dump.py rec hitbox 26:9691 24 && python3 tools/struct_dump.py rec collpair 26:96F1 3
+Fixing the hitbox examples in my earlier note, then adding the full field table.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Two claims in that table go beyond what I checked: the slot 0 role and "one frame late". I'll tone those down and mark the speed nibble as inferred.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now updating the RAM Map row, the Data Structures header, the outputs table and the task list.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^\| `tools/ram_map.py`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "ram_map" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1114
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Last check: anything else still using the old label names?
+  ▶ Grep "obj_pause_timer|obj_u03A0|obj_u05A0|obj_u0640|obj_u0660" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Grep "obj_pause_timer|obj_u03A0|obj_u05A0|obj_u0640|obj_u0660" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+`ram_map.py` has a curated name table that would bring back the old names. Updating it:
+  ▶ Read ram_map.py +128
+  ▶ Edit ram_map.py
+  ▶ Edit ram_map.py
+  ▶ Edit ram_map.py
+  ▶ Edit ram_map.py
+  ▶ python3 tools/ram_map.py --emit-labels 3 && python3 tools/ram_map.py && python3 tools/struct_dump.py obj --out docs/obj_
+I finished the session's task, **Ph5 structs 2/5 (object slot struct)**, and marked it done in REVERSE.md. Everything comes from reading the code; there's no emulator yet. Nothing is committed.
+
+**New tool: `tools/struct_dump.py`**
+- `obj` → `docs/obj_struct.txt`: one row per object column (4 zero-page + 32 at `$0300-$06E0`). Each row has the name, read/write counts, fixed-slot refs, banks, which routines write and read it, and how many object type records set it.
+- `objtype` → `docs/obj_struct_inits.txt`: the starting values each column gets across all type records.
+- `rec <layout> BB:AAAA [n]`: decodes fixed-size records (`area_hdr`, `spawn`, `k1`-`k5`, and the new `hitbox`/`collpair`). Formats with variable length stay in their existing tools. I only spot-checked `k3` on header pointers rather than real exit data, so its output there was meaningless; the `hitbox` and `collpair` dumps match the hand decode.
+
+**What I found**
+- **The four unknown columns are resolved:**
+  - `$03A0` = `obj_coll`: the high nibble is a collision-group mask, the low nibble picks a hitbox.
+  - `$05A0` = `obj_freeze`: while it's non-zero, the object's AI doesn't run that frame.
+  - `$0640` = `obj_act_timer`: an attack countdown; at `$0F` the object fires a projectile.
+  - `$0660` = `obj_aux`: a per-AI step counter (for example the vanish fade-out).
+- **`$0440` renamed `obj_shot_id`** (was `obj_pause_timer`). For shooting enemies it's the projectile id. Wandering NPCs and the walk-and-pause AI reuse it as a pause timer.
+- **Object-vs-object collision:**
+  - `ObjCollideAll` `26:8F6E` runs once per frame.
+  - A 15-record pair table at `26:96F1` checks fixed attacker slots against target slots `$0D-$1E`. Attackers are the player (slot 1), slot 3, slot `$0C`, and the player's shots/sword (slots 2 and 4-11).
+  - The overlap test (`26:95F8`) is a plain box check using a 24-entry hitbox table at `26:9691`.
+- **Knockback:** the high nibble of `$0340` counts 8 frames. During that time the object is pushed at speed 8 and its AI doesn't run. The player handles its own knockback instead.
+- **Projectiles:** `SpawnShot` `26:972D` uses a table at `20:BC00`. Decoding its fields is queued in "gameplay 3/3".
+
+**REVERSE.md:** new "Object slot struct" section under Data Structures with a field table for all 36 columns, the per-frame skip order and the fixed slot roles. I also updated the RAM Map row, the output-files table, and notes on "gameplay 3/3" and "area follow-ups 3".
+
+**Labels:** 7 new code labels and 7 renamed RAM labels, also updated in `ram_map.py`'s curated names so a re-run won't bring back the old ones. The disassembler shows the new names (e.g. `JSR ObjOverlapScan`, `DEC obj_freeze,X`).
+
+**Caveats:**
+- Two points are inferred, not proven: that the low nibble of `$0340` is general move speed, and what slot 0 is for.
+- The `disasm/*.asm` files still show the old names until `disasm_all.py` is re-run.
+
+SESSION_SUMMARY: Session 30 — Ph5 structs 2/5 done: `tools/struct_dump.py` (obj/objtype/rec) → `docs/obj_struct.txt` + `docs/obj_struct_inits.txt`; object slot field table in REVERSE.md; resolved `$03A0` obj_coll, `$05A0` obj_freeze, `$0640` obj_act_timer, `$0660` obj_aux, `$0440` → obj_shot_id; found object collision (`ObjCollideAll 26:8F6E`, `CollPairTable 26:96F1`, `ObjOverlapScan 26:95F8`, `HitboxTable 26:9691`), knockback and `SpawnShot 26:972D`; 14 labels.

@@ -1,0 +1,111 @@
+  ▶ ls re_loop_sessions | tail -5; wc -l dead_ends.md REVERSE.md; grep -n "## Next Tasks" REVERSE.md; grep -n "^- \[ \]" REV
+  ▶ grep -n "^- \[ \]\|^###" REVERSE.md | awk -F: '$1>2186'
+  ▶ Grep "^- \[ \]|^###" REVERSE.md
+  ▶ Read REVERSE.md +2330
+  ▶ Read dead_ends.md
+  ▶ sed -n '2336,2353p' REVERSE.md | cut -c1-3000; for f in re_loop_sessions/*_session_08[9]*.txt re_loop_sessions/*_session
+Reading the task list and recent session logs before I pick the task.
+  ▶ sed -n '2336,2353p' REVERSE.md
+  ▶ tail -c 3000 re_loop_sessions/20261119_130155_session_091.txt; echo; ls -la re_loop_sessions/20261119_130155_session_092
+  ▶ Read scenario.py
+  ▶ Read emu_scenarios.txt
+Picking the top task: Ph6 scenario leftovers. I'll start with the talk-action / event-act batch (pokes on the area-$01 NPC), then bosses/shops if time allows.
+  ▶ Read REVERSE.md +707
+  ▶ python3 tools/dis.py 30 D0C8 100; python3 tools/dis.py 30 D539 40
+  ▶ python3 tools/dis.py 30 D50E 44; grep -n "def set_tracer\|def on_write\|def on_exec\|def call\b\|def call(" tools/emu/ne
+  ▶ Read nes.py +70
+  ▶ grep -n "exec_hooks" -A12 tools/emu/nes.py | sed -n '1,60p' | grep -n "fn(" 
+Adding an exec-hook "force" mechanism to scenario.py so a scenario can override the action byte `$22` right before the talk / event dispatch.
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ Read nes.py +112
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ time python3 -m tools.emu.scenario talk_23 event_25 2>&1 | head -40
+Both hooks work (act 23 = full restore + vanish; event act 25 = push-back). Running the full scenario set (old + 43 new) in the background to regenerate `docs/emu_scenarios.txt`.
+  ▶ python3 -m tools.emu.scenario --out docs/emu_scenarios.txt > /tmp/scen_all.log 2>&1
+  ▶ python3 -m tools.emu.scenario --out docs/emu_scenarios.txt > /dev/null 2>gfx/scen_err.log
+  ▶ python3 -m tools.emu.scenario --out docs/emu_scenarios.txt
+While that runs (~25 min), a static check from the same task: does anything set `area_id` to `$16` or `$6F`?
+  ▶ for p in "a9 16 85 6c" "a9 6f 85 6c" "a9 16 8d 6c 00" "a9 6f 8d 6c 00"; do echo "== $p"; python3 tools/search_bytes.py "
+  ▶ python3 tools/search_bytes.py "a9 16 85 6c" --context 0; python3 tools/search_bytes.py "a9 6f 85 6c" --context 0; python
+  ▶ Grep "area_graph|no inbound" REVERSE.md
+  ▶ grep -o ".\{0,400\}no inbound.\{0,600\}" REVERSE.md | head -3; python3 tools/area_graph.py 16 6F
+  ▶ python3 tools/area_graph.py 16 6F
+  ▶ Grep "\$16`?/`?\$6F|`\$6F`.{0,80}inbound|areas? `\$16`" REVERSE.md
+  ▶ python3 tools/search_bytes.py "6c" --context 0 2>/dev/null | head -0; python3 tools/xref.py 006C | head -60
+  ▶ python3 tools/xref.py 006C | grep -E "  (STA|STX|STY|INC|DEC)|85 6c|86 6c|84 6c|e6 6c|c6 6c|8d 6c" | grep -vE "^  (0[0-9
+Checking the two `area_id` writers that `area_graph.py` doesn't model (`30:DAAD`, `28:84EB`).
+  ▶ python3 tools/dis.py 30 DA90 40; python3 tools/dis.py 28 84E0 16
+  ▶ wc -c /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/4a2590ba-dc83-4c06-8089-f444056ef50c/tasks/b0t3g
+  ▶ Grep "emu_scenarios" REVERSE.md
+  ▶ sed -n '165p;177p;2145p' REVERSE.md
+  ▶ Read REVERSE.md +166
+The run prints only when it finishes, so I'll wait on it with Monitor.
+  ▶ ToolSearch max_results query
+  ▶ Monitor command description timeout_ms
+The scenario run is still going; I'll pick it up when the notification arrives.
+  ▶ Monitor command description timeout_ms
+Still waiting on the scenario run.
+  ▶ Monitor command description timeout_ms
+Still running (about 20 of the expected ~25 minutes so far).
+  ▶ tail -30 /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/4a2590ba-dc83-4c06-8089-f444056ef50c/tasks/b0
+A forced action crashed the CPU (jump into RAM at `$000C`). I'll make `run()` record a crash as that scenario's result instead of aborting the whole report, then rerun.
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario --out docs/emu_scenarios.txt > /dev/null
+While it reruns, recording the `$16`/`$6F` finding in REVERSE.md.
+  ▶ Edit REVERSE.md
+  ▶ Monitor command description timeout_ms
+The `$16`/`$6F` finding is in REVERSE.md. The rerun of the scenarios is in progress.
+  ▶ Monitor command description timeout_ms
+Still running.
+  ▶ Monitor command description timeout_ms
+Still waiting on the rerun.
+  ▶ Grep "^\[(talk|event)_|^  end:|newly run|CRASH|^union|^  bank" docs/emu_scenarios.txt
+Union went from 93 to 114 of 178. Two results need a closer look: `event_30` crashes, and `event_01` (the Thunder warp) ends in area `$03`.
+  ▶ grep -n -A14 "^\[event_01\]\|^\[event_30\]" docs/emu_scenarios.txt
+  ▶ Edit scenario.py
+  ▶ python3 tools/dis.py 30 D827 8; python3 tools/xref.py D497
+  ▶ python3 -m tools.emu.scenario event_01 | head -20
+  ▶ Edit emu_scenarios.txt
+Now the talk-act results I haven't seen yet (`talk_01`–`talk_16`), plus the watched values:
+  ▶ grep -n -A12 "^\[talk_" docs/emu_scenarios.txt | grep -E "^\S*\[talk|end:|0702|03C1|0708|6C <-|newly" | head -80
+`talk_01` stands out: it ends in area `$00` with HP 1. Full log:
+  ▶ Read emu_scenarios.txt +298
+  ▶ python3 tools/dis.py 26 93F0 40; python3 tools/dis.py 30 D19C 25
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the tool-table row, then the task bookkeeping: mark the task done and add one leftover task at the end of RE Investigation.
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^- \[ \] Ph6 (low priority) scenario leftovers (from s85" REVERSE.md | cut -c1-80
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Last check: `--list` still works after the edits.
+  ▶ python3 -m tools.emu.scenario --list | tail -3
+Session 92 covered two parts of the top task (Ph6 scenario leftovers): the talk/event actions and the question about areas `$16`/`$6F`. The rest of that task is now one new low-priority task at the end of RE Investigation.
+
+**Talk and event actions.** Scenarios can now override a byte when a given instruction runs (a new `force()` helper in `tools/emu/scenario.py`). I used it to set the action byte `$22` just before the two action tables jump: `30:D10D` for talk, `30:D552` for events. That gave 20 `talk_NN` and 23 `event_NN` scenarios, one per distinct handler. The scenarios now run **114 of the 178** labels the tour never reached (was 93).
+
+Every handler did what REVERSE.md says. A few results stood out:
+- **Talk act 1** spawns two type-`$64` objects that hit the player for 47 at once (HP 48→1). They are hostile.
+- **Event act 1** works end to end: the sword pose, message 28.17, then `area_id`=`$F2`. Area `$F2` finishes loading 74 frames later and one of its triggers fires straight away.
+- **Event act 21** spawns type `$9E`, which runs `AiBowOfTruth9E` and `BossBgStrip`.
+- **Event act 25** pushes the player 8 px, which here was enough to cross area `$03`'s exit into area `$02`.
+- **Event act 30** crashes the CPU, but only because I forced it onto the item-use path. It expects to be reached through `JSR` from `30:D548`. The item-use path reaches it through `JMP` instead, so its two `PLA`s remove the wrong return address and the `RTS` lands in RAM. In the game only trigger `$A4` uses act 30, through the `JSR` path, so this isn't a game bug.
+- A crash now shows as `CRASH fN: …` on that scenario's result line instead of stopping the whole report. The first full run died on that act 30 crash, so I added this and reran.
+
+**Areas `$16`/`$6F` can't be reached.** I checked every place that writes `area_id` (`$6C`). The only one `tools/area_graph.py` didn't already model is the shop walk-out at `30:DAAD`, which reads the same exit records. `28:84EB` looks like a write but is data. No code puts `$16` or `$6F` there, and loading a save only returns you to an area you saved in.
+
+**Files:**
+- `tools/emu/scenario.py`: the new helper, the 43 scenarios and the crash handling.
+- `docs/emu_scenarios.txt`: regenerated from a full run. One block, `event_01`, was edited in by hand from a single rerun with a longer key script (the full run had stopped pressing buttons while message 28.17 was still waiting). The coverage total isn't affected.
+- `REVERSE.md`: the findings under "Scripted scenarios", the task ticked, and the leftover task added.
+- `labels.csv`: unchanged; no new addresses came up.
+
+SESSION_SUMMARY: Session 92 — scenario leftovers: new `force()`/`exec` hooks in `scenario.py` and 43 forced talk/event-action scenarios; every handler matched its doc and the never-run coverage rose 93→114/178 (talk act 1 = hostile type `$64` pair, event act 1 warps to `$F2`, act 30 only crashes when forced through the item-use `JMP` path); areas `$16`/`$6F` have no `area_id` writer, so they are unreachable; the rest went into one new low-priority task.

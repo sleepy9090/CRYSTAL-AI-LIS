@@ -1,0 +1,169 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ grep -n "^- \[ \]" REVERSE.md | head -10; wc -c re_loop_sessions/20261119_230117_session_10*.txt re_loop_sessions/202611
+  ▶ Read 20261119_230117_session_101.txt
+  ▶ Read 20261119_230117_session_099.txt
+  ▶ Read 20261119_230117_session_100.txt
+  ▶ Read REVERSE.md +1554
+  ▶ ls web/src/game web/src/game/states web/test && wc -l web/src/game/states/*.js web/src/game/save.js && grep -n "SaveLoad
+Picking up the top open task, porting the save/load page (`SaveLoadPage` `16:9AEE`). Next I'll read the menu port and the save code.
+  ▶ grep -rln "save" web/src | head; grep -n "Equipment / item menu (web port\|equip.js" REVERSE.md | cut -c1-200 | head
+  ▶ Read equip.js
+  ▶ Read save.js
+  ▶ Read REVERSE.md +171
+Next I'll disassemble the save/load page code in bank 16.
+  ▶ python3 tools/dis.py 16 9AEE 0x260 2>&1 | cut -c1-90
+  ▶ python3 tools/dis.py 16 9D4E 0x60 2>&1 | cut -c1-90; python3 tools/dis.py 16 88A8 0x80 2>&1 | cut -c1-90
+  ▶ python3 tools/dis.py 30 C80C 0x30 --stop 2>&1 | cut -c1-90; python3 tools/dis.py 30 D8C7 0x80 2>&1 | cut -c1-90 | sed -n
+  ▶ python3 tools/dis.py 16 807A 0x30 2>&1 | cut -c1-90; python3 tools/dis.py 30 D930 0x90 2>&1 | cut -c1-90
+  ▶ grep -rn "8C3D\|8C49\|8c3d\|8c49\|BA65\|ObjInit\|objInit\|export function\* waitFrame\|export function waitFrame" web/sr
+  ▶ Read death.js
+I have the save/load page disassembled. Now I'm checking the existing helpers (the frame-ready wait and ObjInit) before writing the port.
+  ▶ sed -n 35,55p web/src/game/states/title.js; grep -rn "BA65\|19:BA65\|commonSetup\|titleCommon" web/src | head; python3 t
+  ▶ python3 tools/dis.py 23 BD09 0xF7 2>&1 | cut -c1-80
+  ▶ grep -n "767\|\$2FF\|X = \$20\|X=\$20\|BA65" REVERSE.md | cut -c1-260 | head; python3 tools/dis.py 19 BA65 0x60 --stop 2
+  ▶ Grep "767|\$2FF|X ?= ?\$20|BA65" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/dis.py 19 BA65 0x60 --stop 2>&1 | cut -c1-80
+  ▶ python3 tools/dis.py 19 BAC7 0x14 2>&1 | cut -c1-80; sed -n 20,40p web/src/game/states/pause.js; sed -n 100,140p web/src
+  ▶ grep -rn "8D59\|8d59" web/src | head -3; cat web/src/game/states/play.js | head -49; grep -n "equip\|sub_state\|substEqu
+I'm checking the size of `26:8D59` to decide whether the HUD rebuild after a load fits into this session.
+  ▶ python3 tools/dis.py 26 8D59 0x70 --stop 2>&1 | cut -c1-80
+  ▶ python3 tools/dis.py 26 8DC8 0x18 --stop 2>&1 | cut -c1-80; sed -n 72,100p web/src/game/states/death.js
+  ▶ python3 tools/dis.py 26 8E46 8 2>&1 | cut -c1-80; grep -n "hudRedraw(" web/src -r | head; grep -n "export function queue
+Writing the port now. First I'm checking the test scenarios that exist for save/load (s85).
+  ▶ Grep "save_ok|load_ok" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ python3 tools/web_state_compare.py --help 2>&1 | head -50; python3 -m tools.emu.web_state --help 2>&1 | head -40
+  ▶ sed -n 1,60p web/src/game/obj/objinit.js; sed -n 138,180p web/src/game/states/death.js; grep -n "yield SPIN\|=== SPIN\|S
+I have what I need. Writing `states/saveload.js` now.
+  ▶ Write saveload.js
+I left a messy helper in there. Cleaning up `waitSrc60` and the imports.
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+Now wiring it into `equip.js`: exporting the helpers it shares and replacing the three "not ported" stops.
+  ▶ sed -i -e 's/^function menuSnd(m, a) {/export function menuSnd(m, a) {/' -e 's/^function menuFlush(m) {/export function 
+Using Edit instead.
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit death.js
+Now the three call sites in `equip.js` (START → page, `$FB`/`$AB` exit, load tail).
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+  ▶ Edit equip.js
+Wired in. Running the s98 regression compare first (it must stay at 0 differing frames).
+  ▶ node -e "import('./web/src/game/states/equip.js').then(()=>console.log('ok'))" && time python3 tools/web_state_compare.p
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/equip_s98.state --web web/test/states/equip.json --frames 47
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/equip_s98.state --web web/test/states/equip.json --frames 62
+There are differences. Looking at where they start:
+  ▶ python3 tools/compare_frames.py gfx/compare/s102b/emu.csv gfx/compare/s102b/web.csv --cols core 2>&1 | head -30; python3
+  ▶ head -1 gfx/compare/s102b/emu.csv | tr ',' '\n' | head -12 | tr '\n' ' '; echo; awk -F, 'NR==1{for(i=1;i<=NF;i++)h[$i]=i
+  ▶ python3 tools/compare_frames.py gfx/compare/s102b/emu.csv gfx/compare/s102b/web.csv --cols sub,state,irq --frames 2860-3
+  ▶ python3 tools/compare_frames.py gfx/compare/s102b/emu.csv gfx/compare/s102b/web.csv --cols sub,state,pal --frames 2860-3
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/equip_s98.state --web web/test/states/equip.json --frames 51
+0/516 frames differ outside the HUD rows. Now the end-of-run RAM diff:
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/equip_s98.state --web web/test/states/equip.json --frames 51
+  ▶ Glob tools/emu/states/*
+  ▶ Grep "area=|def .*area|'area'" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Grep "\['area'\]|area_state|def load_area|\.state'" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+The scenario tool changes area by poking `$6C`/`$6D` and `$41`=1. I'll do the same with `web_state.py` to export an area-02 menu state (`AreaSaveFlags` `$81`), with the s98 inventory pokes.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --poke 006C=02 --po
+Exported, stopped at f2600. Save-OK run: START, DOWN (slot 2), A, LEFT (YES), A → `SaveGame` + `SaveSlotCopy` 6/7 → `$FB` fade exit.
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/saveload_s102.state --web web/test/states/saveload.json --fr
+The port leaves the menu 4 frames early (`sub`=8 at f2959, emulator f2963). Looking at which frames differ before that:
+  ▶ python3 tools/compare_frames.py gfx/compare/s102c/emu.csv gfx/compare/s102c/web.csv --cols core,pal,snd --frames 2601-29
+  ▶ python3 tools/compare_frames.py gfx/compare/s102c/emu.csv gfx/compare/s102c/web.csv --cols pal,oam_crc --frames 2601-296
+  ▶ Read mainloop.js +25
+  ▶ for pc in 16:9C64 16:9C7A 16:8098; do python3 -m tools.emu.web_state --load-state tools/emu/states/saveload_s102.state -
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/saveload_s102.state --keys 2730:START 2800:DOWN 2830:A 2860
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/saveload_s102.state --keys 2730:START 2760:RIGHT 2790:A 282
+Load: f2841 L251 → f2843 L175, so 2 NMIs (k = 2). Adding both lag counts:
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+Rerunning the save-OK compare up to the exit:
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/saveload_s102.state --web web/test/states/saveload.json --fr
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/saveload_s102.state --web web/test/states/saveload.json --fr
+  ▶ Glob gfx/compare/s102c/*2960*
+  ▶ Read pair_2960.png
+At f2960 (after the exit) the port still shows the `$2800` menu window under the game CHR, while the emulator shows the playfield. Checking f2605:
+  ▶ Read pair_2605.png
+  ▶ node web/test/run.mjs --load-state web/test/states/saveload.json --frames 364 --keys 2731:START 2801:DOWN 2831:A 2861:LE
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/saveload_s102.state --web web/test/states/saveload.json --fr
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/saveload_s102.state --web web/test/states/saveload.json --fr
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/saveload_s102.state --keys 2730:START 2760:RIGHT 2790:A 282
+ROM timing for the load: `SaveSlotCopy` runs f2841 L251 → f2842 L253 (1 NMI), then `LoadGame` runs to f2843 L175 (1 NMI). Splitting the lag 1 + 1 to match:
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/saveload_s102.state --web web/test/states/saveload.json --fr
+  ▶ cp web/src/game/states/saveload.js /tmp/saveload.bak.js && python3 - <<'EOF' 2>/dev/null; echo "(inline python blocked b
+  ▶ Edit saveload.js
+  ▶ node web/test/run.mjs --load-state web/test/states/saveload.json --frames 250 --keys 2731:START 2761:RIGHT 2791:A 2821:L
+  ▶ node web/test/run.mjs --load-state web/test/states/saveload.json --frames 250 --keys 2731:START 2761:RIGHT 2791:A 2821:L
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/saveload_s102.state --web web/test/states/saveload.json --fr
+17 differing shots, which are the f2601-2617 window-build frames (the known IRQ split). CSV and RAM:
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/saveload_s102.state --web web/test/states/saveload.json --fr
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/saveload_s102.state --web web/test/states/saveload.json --fr
+Page → grid → close: no core diffs, and the only shot diffs are the 2 frames after the menu closes (the same play-screen IRQ split). Running the regression checks:
+  ▶ for t in core_check ppu_check sprite_check serve_check world_check obj_check sound_check; do printf "%s: " $t; node web/
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/sprite_check.mjs 
+All checks pass. Now docs. Checking which of the touched addresses already have labels:
+  ▶ Grep "^(16,(88A8|892A|9C85|9CAE|9CDE|9D52|9D8D|9D9C)|26,8D59|19,BA65|19,BAD9|30,C80C|30,D930)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv
+  ▶ cat >> labels.csv <<'EOF'
+Using Edit for that instead.
+  ▶ Edit labels.csv
+Now REVERSE.md. First the save module section (new quirks plus a web-port note):
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now marking the task done and filing the leftovers as one low-priority task at the end of RE Investigation:
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2412
+  ▶ Edit REVERSE.md
+  ▶ Grep "equip\.js|states/equip" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ sed -n 164p docs/architecture_web.md | cut -c1-400
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+I ported the save/load page to the web port, and it matches the emulator (tools.emu) in all four test runs. Nothing is committed.
+
+**Code**
+- **New `web/src/game/states/saveload.js`** (exact ROM behaviour) covers:
+  - the page itself (`16:9AEE`) and its input loop: SAVE/LOAD toggle, slot choice, B, SELECT/START;
+  - `MenuSave`: "Cannot save!", the player-status refusal and the YES/NO confirm;
+  - the slot copy routine (`16:9CE0`) and the bank-23 save and load routines (`SaveGame`, `LoadGame`, `LoadGameAndInit`);
+  - the menu-exit fade (`30:C80C`);
+  - the after-load tail (`30:D930`), which includes the HUD rebuild (`19:BA65`) and the charge-meter draw (`26:8D59`).
+- **`states/equip.js`** now runs these instead of stopping. I also made a few existing helpers in `equip.js` and `death.js` public so the new file can reuse them.
+
+**Findings** (written to REVERSE.md)
+- **Slot copy is one byte short:** it copies `$2FF` bytes, not `$300`, so the last byte of each save slot is never copied.
+- **Refused autosaves are only partly mirrored:** when saving isn't allowed, `SaveGame` copies the backup mirror only from offset = area id onwards. The cause is that `SaveAllowed` leaves the area id in X.
+- **Each slot is written twice, but only the first copy is ever loaded.**
+- **Saving and loading take real time on the NES.** A save spans 4 frames and a load spans 1 frame. The first fix (instant copies) left the port 4 frames ahead after a save. I measured the exact frame and scanline in the emulator and the port now waits the same number of frames.
+
+**Tests** (all compared against the emulator)
+
+| Run | Result |
+|---|---|
+| Area 1: toggles, LOAD then NO, "Cannot save!", fade exit | 0 of 516 frames differ outside the HUD rows |
+| Area 02: save to slot 2, then fade exit | Exit frame matches; all save data and checksums are byte-identical |
+| Area 02: load slot 1, then the after-load tail | Whole RAM + WRAM equal except the frame-ready flag (`$09`) |
+| Area 02: back to the item grid, then close the menu | No differences in the core columns |
+
+The area-02 runs needed a new saved state (`web/test/states/saveload.json`, `tools/emu/states/saveload_s102.state`).
+
+- **Remaining differences:** in area 02, the frames while the menu window is being drawn and those right after the menu closes show differences in the playfield rows. The camera there reaches into the second screen, and the gameplay HUD-split IRQ handlers aren't ported yet. That work is already queued under "Web fix: gameplay frames" (d), so this isn't menu code.
+- **Regression checks:** the session-98 menu test is unchanged, and all the `web/test` checks still pass (core, ppu, sprite, serve, world, obj, sound).
+
+**Docs:** REVERSE.md has a new section in the save/load module, a Verification Log row, and the task marked done. `labels.csv` has 12 new labels and `docs/architecture_web.md` is updated. What's left of the menu work is one new low-priority task at the end of RE Investigation: the shop/pawn variants of the SELECT menu and `SubstRestoreScreen`.
+
+SESSION_SUMMARY: Session 102: ported the SELECT-menu save/load page and save module to the web port (new `states/saveload.js`, wired into `equip.js`); four emulator comparisons pass (save data byte-identical, whole RAM equal after a load); found the slot copy is one byte short, the refused-save mirror starts at the area id, and saves/loads take 4/1 frames; shop/pawn variants and `SubstRestoreScreen` filed as one new last task.

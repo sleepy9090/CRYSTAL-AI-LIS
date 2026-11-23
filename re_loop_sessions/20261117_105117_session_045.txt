@@ -1,0 +1,59 @@
+  ▶ Glob {dead_ends.md,REVERSE.md,re_loop_sessions/*}
+  ▶ Read dead_ends.md
+  ▶ Read 20261117_055613_session_044.txt
+  ▶ Read 20261117_055613_session_043.txt
+  ▶ Read 20261117_105117_session_045.txt
+  ▶ Grep "^## Next Tasks|^- \[ \]|^###" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1600
+  ▶ Read REVERSE.md +878
+Session 44 finished the static write-up for the top task (Ph3 gameplay 1/3, player) but was cut off during the emulator check. Next I'm running that player probe to finish it.
+  ▶ Read player_probe.py
+  ▶ timeout 300 python3 tools/emu/player_probe.py --seg NONE:4 RIGHT:32 LEFT:16 DOWN:16 B:100 NONE:24 --every 4 2>&1 | tail 
+  ▶ Grep "equip_sword|sword_power|player_mp|orbit_burst|,0712,|,0716,|^\*,0711," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Glob tools/emu/states/*
+I'll add a `--poke ADDR=VAL` option so the probe can equip a sword and select the jump magic.
+  ▶ Edit player_probe.py
+  ▶ Edit player_probe.py
+  ▶ Edit player_probe.py
+  ▶ timeout 300 python3 tools/emu/player_probe.py --poke 0711=01 --poke 0719=00 --seg NONE:2 B:40 NONE:22 --every 2 2>&1 | c
+  ▶ timeout 300 python3 tools/emu/player_probe.py --poke 0712=09 --seg NONE:8 A:3 NONE:36 2>&1 | cut -c1-60 | awk 'NR>9'; py
+  ▶ timeout 300 python3 tools/emu/player_probe.py --poke 0712=09 --seg NONE:8 A:3 NONE:36 2>&1 | cut -c1-60
+  ▶ python3 tools/dis.py 26 9E08 0x60
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Next: the heading, a Verification Log row, and the task status.
+  ▶ Read REVERSE.md +119
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now checking that session 44's routine names made it into labels.csv:
+  ▶ Grep "PlayerMove|PlayerUpdate|PlayerSetSpeed|PlayerPlaceBody|PlayerFacing|PlayerMagic|PlayerConveyor|JumpHeightTable|SwordChargeCap|SpendMp|DiagToCardinal|FacingKeep|SwordElemBit|SwordMpCost|JmpTable27_A072" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "^\*,(0712|0716|0620|0640|0641)|^2[67]," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Session 44 never added its labels. Checking which of those addresses already have one:
+  ▶ Grep "^2[67],(9D9A|9D81|9BF6|9CEF|A1C9|A022|9FD2|9D4D|9AE8|A017|A211|9C66|8BD8|8BD2|A092|A1BB|9B41|8D59|A112|A143|A0A3|A0D7|A0F4|A161|A17D|A18E|A1A1),|^\*,(0712|0716|0620|0640|0641|0714|0710)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +805
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Grep "ram_0712" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ python3 tools/dis.py 27 A022 0x10
+Labels load correctly. Last step: mark the task done and file the unverified parts once, at the end of RE Investigation.
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +1664
+  ▶ Edit REVERSE.md
+I finished the top task, Ph3 gameplay 1/3 (player). Session 44 had written up the player code but was cut off before checking it in the emulator; this session ran that check and closed the task.
+
+**Emulator check** (`tools/emu/player_probe.py`, from `gameplay_first.state`, our emulator only, no FCEUX reference):
+- **Walking:** speed 6 moves 2 px per frame, which matches the step table. Left and right ran into walls in that room, so only the downward walk measures it.
+- **Slot order:** slot 0 (ground body) runs before slot 1 (drawn body) every frame. For about the first 5 frames after loading the state, slot 0's movement routine isn't reached, so input is ignored then.
+- **Sword charge:** with no sword equipped, B does nothing. With sword 1 set by a RAM poke, the charge goes up by 1 every 4 frames and stops at 8 after 32 frames. On release the swing counts down from `$11` to 0, one per frame, and the charge resets to 0.
+- **Jump:** it lasts 32 frames and the drawn body's height matches `JumpHeightTable` exactly on every frame. The ground body's y never changes.
+- **Correction:** session 44 said that while B is held the drawn body shows the standing pose. Standing still on the ground, it actually shows the swing pose (meta 4 plus facing). The disassembly at `26:9E39` explains it: with a direction held the pose doesn't change, and in the air it is meta 0. REVERSE.md now says this.
+
+**Other changes**
+- `player_probe.py` has a new `--poke ADDR=VAL` option, so the probe can equip a sword or select a magic.
+- REVERSE.md: the Player section heading is marked verified (our emulator only) and has a new emulator-check paragraph. There is a new row in the Verification Log.
+- `labels.csv`: session 44 had added none of its routine names, so I added 18 (`PlayerMove`, `PlayerSetSpeed`, `PlayerPlaceBody`, `JumpHeightTable`, `SpendMp`, `PlayerMagic`, `PlayerFacing`, and others). `$0712` is renamed to `magic_sel`. `dis.py` picks up the new labels.
+- **Still unchecked:** magic 1–8, the charged sword shot, conveyor and sinking, the speed 4/9 diagonal quirk, and what the player status bits mean. I added them as one low-priority task at the end of the RE Investigation list.
+
+Nothing is committed.
+
+SESSION_SUMMARY: Session 45 — Ph3 gameplay 1/3 done: player_probe.py (+`--poke`) confirmed walk speed 2 px/frame, charge +1/4 frames capped at 8, swing countdown and the 32-frame jump matching `JumpHeightTable`; corrected the held-B swing pose (meta 4, not 0); Verification Log row; 18 player labels + `magic_sel`; remaining checks (magic, charged shot, conveyor, status bits) filed as one low-priority task.

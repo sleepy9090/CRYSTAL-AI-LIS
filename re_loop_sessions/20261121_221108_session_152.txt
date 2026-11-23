@@ -1,0 +1,39 @@
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^##+ " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob re_loop_sessions/*session_1[45]*
+  ▶ sed -n '2299,2312p' REVERSE.md | cut -c1-600; grep -n '^- \[ \]' REVERSE.md | cut -c1-300 | head -8; wc -c re_loop_sessi
+  ▶ sed -n '2310p' REVERSE.md; echo; tail -c 2500 re_loop_sessions/20261121_221108_session_151.txt; echo; tail -c 2000 re_lo
+  ▶ wc -l dead_ends.md; grep -n -i 'final\|BDF2\|substate\|ENTRY_POINTS' dead_ends.md | cut -c1-300; grep -n 'BDF2\|FinalSce
+Picking task: port sub_state 30 `SubstFinalSceneReset` (19:BDF2). Reading the docs row and disassembly now.
+  ▶ sed -n '309p' REVERSE.md; python3 tools/dis.py 18 BDF2 0x1F0
+  ▶ python3 tools/dis.py 19 BDF2 0x1E0
+  ▶ python3 tools/dis.py 19 BFC9 0x37; ls web/src/game/states/; wc -l web/src/game/states/mesia.js web/src/game/states/play.
+  ▶ Read mesia.js
+  ▶ Read play.js
+  ▶ grep -n -i '^26,98A8\|^26,9897\|^26,8C3D\|^26,8C0E\|D354\|^30,C482\|^30,C739\|^30,C676\|^31,FFCF\|^31,FF80\|^31,FF8C' la
+  ▶ grep -rn 'C739\|export function\*\? *fadeOut\|export function\*\? *waitFrames\|function\* *showMessage\b' web/src | cut 
+Gathering the helper ports (sprite pass, fade, PPU queue) to reuse in the new handler.
+  ▶ sed -n 1,40p web/src/game/states/formrevert.js; sed -n 15,45p web/src/game/states/pause.js; grep -n 'fadeOut\|^export' w
+  ▶ sed -n 28,52p web/src/game/prg.js; grep -rn 'FarCall_D354\|D354' web/src/game | cut -c1-200; sed -n 140,190p web/src/gam
+  ▶ python3 tools/dis.py 31 FF8C 0x14; grep -n -i 'RestoreBanks' labels.csv | head -3; python3 tools/dis.py 30 C40E 0x20
+Now checking how session 150 built its test state and reference CSV so I can reuse the workflow.
+  ▶ grep -n 'web_state\|tools.emu\|csv_trim\|phase_compare\|node web' re_loop_sessions/20261121_221108_session_150.txt | cut
+  ▶ sed -n 20,40p re_loop_sessions/20261121_221108_session_150.txt | cut -c1-700; python3 tools/web_state_compare.py --help 
+Exporting a test state at `19:BDF2` from town $02 with `sub_state` poked to `$1E`, same as sessions 149-150.
+  ▶ sed -n 24p re_loop_sessions/20261121_221108_session_150.txt; python3 -m tools.emu.web_state --help 2>&1 | head -30
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/town02_enter.state --frames 100 --poke 0041=1E --until 19:B
+  ▶ python3 tools/dis.py 26 8C0E 0x30 --stop; grep -n 'xReg' web/src/game/states/death.js | head
+Writing the port in a new `states/finalscene.js`, reusing the Mesia palette flash (exporting it from `mesia.js`).
+  ▶ Edit mesia.js
+  ▶ grep -n 'export function\*\? *farObjInit' -A12 web/src/game/obj/objinit.js; grep -n 'const fade\|function\* fade' -A3 we
+  ▶ Write finalscene.js
+  ▶ grep -n 'main_state' web/src/game/ram.js | head -3 && python3 - <<'EOF' 2>/dev/null || true
+I'll use Edit instead.
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Grep "main_state" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/ram.js
+Port wired in. Running tools.emu and the port side by side from the exported state, tapping A periodically to close the 5 messages.
+  ▶ KEYS=$(for f in $(seq 2600 40 3400); do printf "%d:A:2 " $f; done) && echo $KEYS > /tmp/fs_keys.txt && timeout 1200 pyth
+You've hit your 5-hour limit · resets 3:10am (America/New_York)

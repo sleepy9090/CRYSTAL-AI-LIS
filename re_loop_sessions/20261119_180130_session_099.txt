@@ -1,0 +1,22 @@
+  ▶ Grep "^## |^### |^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Read REVERSE.md +2370
+  ▶ Glob re_loop_sessions/*session_09[6-9]*
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md re_loop_sessions/20261119_180130_session_09*.txt
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l tools/emu/scenario.py docs/emu_scenarios.txt; grep -n "argpar
+Reading the scenario tool to pick which leftovers (bosses, chaser/shooter, platforms…) to tackle this session.
+  ▶ Read scenario.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "still never run" -A 70 docs/emu_scenarios.txt | tail -70
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "AiDasher\|AiFanTurret\b\|AiOrbiter\|AiBurst\|ObjAiExplode\
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -30 gfx/obj_ai.txt; grep -n " 2C\b\| 44\b\| 4C\b\| 4D\b\| 58\b
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -E "ai \\\$(44|4C|4D|58|74|2C)" gfx/obj_ai.txt
+  ▶ Grep "ai \$(44|4C|4D|58|74|2C) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; awk '/^ *[0-9]+ \$/{a=$2} /h0 p=\$(0B|0D|27) /{print a, $0}' gfx/ar
+Finding which areas spawn the dasher / fan-turret / burst enemies so I can build scenarios for them.
+  ▶ Grep "^ +\d+ \$|h0 p=\$(0B|0D|27) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/area_spawns.txt
+  ▶ Grep "AiDasher|AiFanTurret|AiOrbiter|AiBurst" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "def call\|def on_exec\|def run_frame" -A12 tools/emu/nes.p
+  ▶ Read nes.py +156
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C25D 80
+You've hit your 5-hour limit · resets 11pm (America/New_York)

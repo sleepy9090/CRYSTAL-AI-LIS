@@ -1,0 +1,112 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/20261122_182422_session_215.txt re_loop_sessions/20261122_182422_session_216.txt && tail -c 4000 
+  ▶ wc -l web/src/game/lagmodel.js web/src/game/obj/collide.js && grep -n "cyc\|colh\|passStage" web/src/game/obj/collide.js
+  ▶ Read lagmodel.js
+  ▶ Read collide.js +440
+  ▶ sed -n 1,80p web/test/group81_check.mjs && ls tools/passfit_runs.sh && cat tools/passfit_runs.sh
+Working on task (c3): measuring the `$81` f2922 kill pass in tools.emu vs. the port's estimate.
+  ▶ ls -la /tmp/passfit /tmp/lag* 2>&1 | head -30; grep -n "f2922\|L81\|full" /home/sleepy9090/Downloads/nes-port/RE-C-NES-R
+  ▶ Grep "f2922|pass_cost .*group81|lag_probe" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions/20261122_182422_session_215.txt
+  ▶ Glob /tmp/**/c81*.txt
+  ▶ wc -l /tmp/c81.txt; python3 tools/grep_lines.py 2>&1 | head -3
+  ▶ Grep "^(2920|2921|2922|2923|2924) |^#|^frame" /tmp/c81.txt
+  ▶ Read c81.txt
+  ▶ Grep "^f29(1[89]|2[0-4]) " /tmp/c81.txt
+The saved table stops early, so I'm regenerating the tools.emu pass-cost table for `$81` out to f2930.
+  ▶ python3 tools/keyseq.py 2505:DOWN:2 '2569:DOWN:6,+6:B:4*26/16'
+  ▶ time python3 -m tools.emu.pass_cost tools/emu/states/group81.state 425 --split-int --slots --out /tmp/c81full.txt --keys
+  ▶ Grep "^f(289[0-2]|29(1[89]|2[0-4])) " /tmp/c81full.txt
+Now the port's estimate for the same passes.
+  ▶ sed -n 1,30p web/test/lag_probe.mjs | grep "^//"
+  ▶ K=$(grep -o "parseKeys(('.*" web/test/group81_check.mjs | head -1); node web/test/lag_probe.mjs web/test/states/group81.
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2924 --splits --out /tmp/p81.txt 2506:DOWN:2 2569:DOWN:7 2576:B
+  ▶ Grep "^f?(289[1-3]|292[0-4])" /tmp/p81.txt
+Port row f2923 (= emu pass f2922): col 2546 vs tools.emu 2999, a 453-cycle gap in the hit-handler part. Looking at the kill handler path.
+  ▶ Grep "^(export )?(function\*?|const) |cyc|passStage" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj/collide.js
+  ▶ Read collide.js +76
+The kill path adds `HudRedraw(2)` (XP digits) + `AddXp` + `EnemyDeathFx`, which the player-hit-dominated fit doesn't see. Checking `hudRedraw`.
+  ▶ Grep "export function\*? ?(hudRedraw|hudHpBar)|HudRedraw [0-9]+:|HudHpBar [0-9]+:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Read death.js +60
+  ▶ python3 tools/dis.py 26 9152 0x130 && python3 tools/dis.py 26 913B 0x17
+Counting cycles by hand from the disassembly. Next: HudRedraw, ToDecimal, the queue helpers and PlaySound.
+  ▶ python3 tools/dis.py 26 8E46 0x7F && python3 tools/dis.py 26 8F2B 0x39
+ToDecimal = 212 + 52 × (digit sum) cycles (plus the JSR). Now the 30-bank helpers.
+  ▶ python3 tools/dis.py 30 C72B 0x20 && python3 tools/dis.py 30 C436 0x14 && python3 tools/dis.py 30 C125 0x40
+  ▶ python3 tools/dis.py 30 C162 0x10 && grep -n "cyc\|export function" web/src/game/playsound.js | head
+  ▶ Read playsound.js
+PlaySound(SFX) = 62 cycles (72 with a full queue); HudRedraw (no wait, rendering on) = 636 + 52 × digit sum (+4 for 8-bit values). Checking how `m.passStage` books counts before wiring it in.
+  ▶ Grep "passStage|lagCyc|cyc\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/machine.js
+Booking works per stage, so I'll run `EnemyKilled` under `col` with exact `m.cyc`, and keep the `ObjInit` / level-up calls in `colh` (fit). Writing the helpers.
+  ▶ Edit death.js
+  ▶ Grep "^import" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj/collide.js
+  ▶ Edit collide.js
+  ▶ Edit collide.js
+  ▶ Edit collide.js
+  ▶ Grep "enemyKilled" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+Restoring the caller's stage instead of hardcoding `colh` (obj_check calls the handlers directly):
+  ▶ python3 - <<'EOF' 2>/dev/null || echo use-edit
+  ▶ Edit collide.js
+  ▶ Edit collide.js
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2926 --out /tmp/p81b.txt 2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:
+  ▶ Grep "^f292[2-6] L" /tmp/p81b.txt
+Col is now 3103 vs tools.emu 2999 (+104; was −453). Narrowing the remaining gap: I'll measure the ROM's EnemyKilled subroutine cycles directly in tools.emu.
+  ▶ Glob tools/emu/*.py
+  ▶ Read sound_cost_probe.py
+I'll write a small generic tool `tools/emu/span_cost.py`: cycles between an entry PC and an exit PC per occurrence (with key input), to measure EnemyKilled and its pieces.
+  ▶ Grep "keys|^def |^from|^import|on_exec\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/pass_cost.py
+  ▶ Write span_cost.py
+Simplifying: drop the guessed interrupt hooks and print entry/exit lines instead, so I can spot a span an IRQ landed in.
+  ▶ Write span_cost.py
+  ▶ python3 -m tools.emu.span_cost tools/emu/states/group81.state 420 26:9152 26:9155 26:9155 26:916A 26:916A 26:91EF 26:91E
+Every piece matches my count exactly except PlaySound: measured 68 vs my 70 for `LDA/JSR + PlaySound`. Measuring PlaySound alone to find the 2 cycles.
+  ▶ python3 -m tools.emu.span_cost tools/emu/states/group81.state 420 30:C125 30:C13F 30:C13F 30:C160 30:C160 30:C168 --from
+Found it: `CMP #$A0` sets N for every id $20-$9F, so `BMI` is taken (13 cycles, not 15). Fixing the constant to 60 / 70.
+  ▶ Edit collide.js
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2984 --out /tmp/p81c.txt 2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:
+  ▶ node web/test/group81_check.mjs --last 2984 -v | grep -o "f2[0-9]*:" | uniq -c | head -5
+Matches now run to f2942 (was f2923). Extending the tools.emu cost table to f2984 to see the next miss.
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group81.state 480 --split-int --slots --out /tmp/c81full.txt --keys 2505
+Next miss: f2942, port 858 cycles low, nearly all in the HUD IRQ (port 2195 vs tools.emu 3335). Looking at that pass.
+  ▶ Grep "^f294[0-3] " /tmp/c81full.txt
+  ▶ Grep "^f294[1-4] L" /tmp/p81c.txt
+Port row f2942 = emu pass f2941: HUD matches (2195 vs 2251); the gap is col (port 2328 vs 3140). A coin (AI `$7B`) appears that pass; checking which handler ran.
+  ▶ Read collide.js +330
+  ▶ sed -n 399,410p web/src/game/obj/collide.js && python3 tools/dis.py 26 9357 0x14 && python3 tools/dis.py 26 946D 0x40
+I'll give `PickupGold` (and HitPlayer's path to it) exact cycles too. Measuring both pieces:
+  ▶ python3 -m tools.emu.span_cost tools/emu/states/group81.state 440 26:9357 26:946D 26:946D 26:949D 26:9361 26:9364 --from
+PickupGold body measures 120 = my count (45 + 15 + PlaySound 60). Making `pickupGold` exact the same way (from HitPlayer's `JMP PickupGold`; the HitPlayer prefix stays fitted).
+  ▶ Edit collide.js
+  ▶ node web/test/lag_probe.mjs web/test/states/group81.json 2984 --out /tmp/p81c.txt 2506:DOWN:2 2569:DOWN:7 2576:B:4 2585:
+The whole `$81` ref (f2506-2984, 479 rows) now passes at shift 0, with no LAG disagreements against tools.emu. Making that the check's default and running every check.
+  ▶ Edit group81_check.mjs
+  ▶ node web/test/group81_check.mjs | tail -3; python3 tools/run_checks.py 2>&1 | tail -15
+All 52 checks pass, and `group81` now checks the full run including its kill / HP-step lists. Updating REVERSE.md (task text + Verification Log) and CLAUDE.md.
+  ▶ Edit REVERSE.md
+  ▶ Grep "^\| Main-loop pass cost" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ awk 'NR==184' REVERSE.md | tail -c 600
+  ▶ Grep ".{300}$" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +185
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+  ▶ Edit group81_check.mjs
+I fixed (c3): the `$81` run that used to stop matching at f2924 now matches tools.emu over its whole length. Two hit handlers now count their exact ROM cycles: `EnemyKilled` (when an enemy dies) and `PickupGold` (when the player grabs a coin). All 52 web checks pass. Nothing is committed.
+
+**Results**
+- **f2922 kill pass:** the port's estimate for the collision stage was 453 cycles low; it now equals tools.emu (2999).
+- **f2941 coin pickup:** this pass was the next one off, 812 cycles low; it now matches too.
+- **Lag frames:** over the full 480-frame `$81` run, the port and tools.emu both have 15 lag frames, with no disagreements.
+- **`group81_check.mjs`:** now compares the whole ref, f2506-2984 (479 rows, all at shift 0, sound included). The kill frame and player HP-step checks are back on.
+
+**How it works**
+- Both handlers now book their exact ROM cycles into the cycle count the lag model uses for the collision stage, so no refit was needed.
+- Two cases still use the old fitted estimate: an enemy that turns into another object when it dies, and the level-up branch.
+- A new helper, `hudRedrawCycles` in `states/death.js`, gives the cost of redrawing a HUD number. It grows with the number's decimal digit sum: 636 + 52 per unit (e.g. 1,156 cycles at digit sum 10).
+
+**Measuring:** to check every count I wrote a new tool, `tools/emu/span_cost.py`. It prints the CPU cycles tools.emu spends between two ROM addresses. Each piece matched except one: `PlaySound` costs 2 cycles less than I first counted, because a branch I expected to fall through is always taken for sound-effect ids.
+
+**Still open:** (c4) — fitting the other NMI modes, and a cross-check in an area whose enemies have no fit of their own. The leftovers task stays unchecked for it.
+
+Files changed: `obj/collide.js`, `states/death.js` and `group81_check.mjs`, plus the new `span_cost.py`. REVERSE.md has the updated task text and a new Verification Log row, and CLAUDE.md lists the new tool.
+
+SESSION_SUMMARY: s216 did (c3): `EnemyKilled` 26:9152 and `PickupGold` 26:946D now count exact ROM cycles in the lag model (new `hudRedrawCycles`, PlaySound SFX 60/70, every piece checked with new `tools/emu/span_cost.py`); `group81_check.mjs` now passes the whole `$81` ref f2506-2984 (15/15 lag frames, 0 disagreements); 52/52 checks pass; (c4) remains.

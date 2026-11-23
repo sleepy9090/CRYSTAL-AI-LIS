@@ -1,0 +1,69 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*,REVERSE.md}
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md
+  ▶ Read 20261115_112834_session_003.txt
+  ▶ Read 20261115_112834_session_002.txt
+Top task: decode sound data formats. Let me start with the stream init and tick.
+  ▶ python3 tools/dis.py 24 80E4 200
+  ▶ python3 tools/dis.py 24 81AE 260
+  ▶ python3 tools/dis.py 24 82B3 150; echo ----; python3 tools/dis.py 24 8347 70
+Major correction: `24:$8000` is the stream **opcode** jump table (high nibble of each byte), not a track pointer table. Let me record that now, then look at the handlers.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 24 8388 250
+  ▶ python3 tools/dis.py 24 847D 230
+  ▶ python3 tools/dis.py 24 8561 220
+  ▶ python3 tools/decode_tables.py 24:8000 16 ptr16 2>&1 | head -30; python3 tools/decode_tables.py 2>&1 | head -15
+`decode_tables.py` doesn't exist yet — I'll write it. Checking `nesrom.py` API first.
+  ▶ Grep "^def |^class " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/nesrom.py
+  ▶ Write decode_tables.py
+  ▶ python3 tools/decode_tables.py 24:8000 16 ptr16; echo ---; python3 tools/decode_tables.py 24:87A6 18 u8 --per-line 6; ec
+  ▶ python3 tools/dis.py 24 863B 120; echo ----; python3 tools/dis.py 24 8094 80
+  ▶ python3 tools/decode_tables.py 24:8AB8 32 u8 --per-line 16; python3 tools/decode_tables.py 24:87B8 13 split:8838; python
+  ▶ python3 tools/decode_tables.py 24:8AB8 32 u8 --per-line 16; python3 tools/decode_tables.py 24:87B8 13 split:8838; python
+  ▶ python3 tools/dis.py 24 8048 76; python3 tools/decode_tables.py 24:9FC0 32 ptr16
+Decoding the sound engine's stream opcodes and tables (writing them up next). Fixing a read: bank 12 sits at `$A000` through R7, so its table is at file-bank 12 offset 0.
+  ▶ python3 tools/decode_tables.py 12:8000 48 ptr16; python3 tools/decode_tables.py 24:87B8 32 split:8838
+Note encoding is cute: the low nibble is the hex letter of the note (C/D/E/F/A/B literal; 0=G, 1=C#, 2=D#, 4=F#, 5=G#, 6=A#). Now the PlaySound id list.
+  ▶ python3 tools/search_bytes.py "A9 ?? 20 25 C1" --max 200
+I need the immediates grouped by id. Writing a small tool for that.
+  ▶ Write sound_ids.py
+  ▶ python3 tools/sound_ids.py
+Running the new script needs approval, so I'll get the immediates from `search_bytes --disasm` instead.
+  ▶ python3 tools/search_bytes.py "A9 ?? 20 25 C1" --max 200 --disasm --context 1 | grep -E "LDA #"
+Got the ids. Writing up REVERSE.md and labels now.
+  ▶ Grep "^24,|^12,|SndTrackPtr" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +33
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Quick check that the new labels load and show up in the disassembly:
+  ▶ python3 tools/dis.py 24 8347 28; python3 tools/decode_tables.py 24:8000 3 ptr16
+I've decoded the sound data formats. All findings are in REVERSE.md under "Sound data format", the task is ticked, and the new labels load and show correctly in the disassembler.
+
+**Correction to an earlier session:** `24:$8000` is not a table of pointers to sound data, as session 6 recorded. It is the jump table for the sound stream's commands. Each stream byte's high nibble picks one of 16 handlers, through `24:8347` (now labelled `SndReadOp`).
+
+**What's decoded:**
+- **Music:** the header table is at `24:8C0C` and covers ids `$00-$1F`; ids `$02`, `$05` and `$10` are empty. Each header is one byte the code never reads, then pointers to 4 channel streams (two square, triangle, noise). Id `$00` is a silence track.
+- **Sound effects:** the header table is at the very start of bank 12, which the driver maps in at `$A000`. It covers ids `$20-$77`. Each header is a priority byte (lower wins) followed by two stream pointers, one played on the second square channel and one on noise. While an effect plays, the matching music channels are muted but keep running.
+- **Commands:** I worked out all 16: note, octave, rest, note length (32-entry table of frame counts), legato, volume, duty, jump/loops, sweep, detuned note (on the noise channel this triggers a sample drum), envelope, vibrato, and end. "End" sets the next music id, which is how tracks loop or chain.
+- **Notes:** the low nibble of a note byte is the note's hex letter: C, D, E, F, A, B are literal, `0`=G, `1`=C♯, `2`=D♯, `4`=F♯, `5`=G♯, `6`=A♯. I checked this against the period table (C = `$6AC` ≈ 65.4 Hz, which is C2).
+- **Ids the game uses**, from the 67 places that load a fixed id before calling `PlaySound`:
+  - Music: `$00`, `$0C` and `$12` (8 sites), plus `$80` and `$93`, which force-restart `$00` (stop) and `$13`.
+  - About 40 distinct sound-effect ids; `$29` is the most common.
+  - One call site (`26:92D6`) asks for `$44`, which is an empty slot, so it plays nothing.
+  - The other ~18 callers load the id from RAM or a table, and I didn't list those.
+
+**Tools:**
+- `tools/decode_tables.py`: it was listed as available but didn't exist, so I wrote it.
+- `tools/sound_ids.py`: groups the call sites by id. It's written but hasn't run, because running it needed approval; I got the ids from `search_bytes.py --disasm` instead.
+
+**Gaps:**
+- I only checked the first 48 of 88 sound-effect entries for empty slots.
+- The triangle branch of the duty command (`24:854D`) and the vibrato routine (`24:86AA`) aren't traced in detail.
+
+These are now a follow-up task, along with naming the music tracks by the game states that play them and a tool to print a stream as readable commands.
+
+SESSION_SUMMARY: Decoded the bank 24 sound engine's data formats (the 16 stream commands, music/effect header tables, hex-letter notes, note lengths, envelopes, sample drums) and listed the sound ids the game uses; corrected `24:$8000` to the command jump table; added `decode_tables.py` and an unrun `sound_ids.py`.

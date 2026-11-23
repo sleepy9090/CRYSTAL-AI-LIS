@@ -1,0 +1,130 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +1728
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 1828,1838p REVERSE.md | cut -c1-3000; ls -la re_loop_sessions | tail -4; tail -c 6000 re_loop_sessions/20261117_1
+  ▶ git show --stat HEAD | head -30; git status --short | head; ls web/src/game web/src/game/* -d; ls web/src/game/sound 2>/
+Session 56 left the sound driver port committed but undocumented. I'm checking it still passes, then I'll continue task 7/8: the WebAudio APU, the mode-3 NMI and save data.
+  ▶ for t in sound core ppu serve world sprite obj; do echo "== $t"; node web/test/${t}_check.mjs 2>&1 | tail -3; done
+  ▶ node web/test/sound_check.mjs 2>&1 | tail -3; node web/test/core_check.mjs 2>&1 | tail -3; node web/test/serve_check.mjs
+Good, all pass. Now the mode-3 NMI and how SoundUpdate is hooked in mainloop.
+  ▶ python3 tools/dis.py 31 F771 20 --stop; python3 tools/dis.py 31 F6D6 70 --stop; cat web/src/game/sound/soundupdate.js; g
+  ▶ Read mainloop.js +60
+  ▶ Read machine.js
+  ▶ head -40 web/src/game/sound/driver.js; grep -n "apu\|m\.\w*(" web/src/game/sound/driver.js | grep -v "m.rd\|m.wr" | head
+  ▶ ls web web/src web/src/nes web/test web/data; head -30 web/test/apu_preview_check.mjs 2>/dev/null; head -30 tools/emu/ap
+  ▶ wc -l web/apu_preview.js web/src/main.js web/src/data.js; grep -n "function\|class\|dmc" web/apu_preview.js | head -40; 
+  ▶ python3 tools/xref.py 8020 2>&1 | head; python3 tools/xref.py 8048 2>&1 | head; grep -n "SndInit\|4017" REVERSE.md | cut
+Writing the register-level APU (`web/src/nes/apu.js`) now. After that I'll connect it to Machine and the browser's WebAudio output.
+  ▶ Write apu.js
+  ▶ Edit apu.js
+  ▶ Edit apu.js
+Now wiring it into Machine (APU, `SndInit` at reset, `$4017=$40`, the real `soundUpdate`) and porting NMI mode 3.
+  ▶ python3 tools/dis.py 31 F2A4 160 --stop | grep -n "4017\|8020\|SetR\|C40E\|4015" ; python3 tools/dis.py 31 F318 24
+Now edit machine.js.
+  ▶ python3 - <<'EOF' 2>/dev/null || echo "use edit tool"
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ python3 tools/dis.py 31 F2A4 40 | grep -i "40\b\|APU\|4010\|4017\|FRAME\|DMC"
+  ▶ python3 tools/dis.py 31 F2C0 24
+  ▶ Edit machine.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ node web/test/sound_check.mjs 2>&1 | tail -2; node web/test/core_check.mjs 2>&1 | tail -4; node web/test/serve_check.mjs
+All checks pass, and `core_check` now compares all 23 traced NMIs in full (mode 3 included). Next I'm comparing the sound columns against tools.emu over the title frames.
+  ▶ mkdir -p /tmp/s57 && node web/test/run.mjs --frames 300 --compare /tmp/s57/web.csv 2>&1 | tail -2 && python3 -m tools.em
+  ▶ mkdir -p /tmp/s57 && node web/test/run.mjs --frames 300 --compare /tmp/s57/web.csv
+  ▶ mkdir -p out/s57 && node web/test/run.mjs --frames 300 --compare out/s57/web.csv
+  ▶ node web/test/run.mjs --frames 300 --compare gfx/s57_web.csv
+  ▶ python3 -m tools.emu --frames 514 --compare gfx/s57_emu.csv 2>&1 | tail -2
+  ▶ python3 tools/compare_frames.py gfx/s57_emu.csv gfx/s57_web.csv --cols snd,core 2>&1 | tail -12; head -1 gfx/s57_web.csv
+  ▶ sed -n 1,30p web/src/game/mainloop.js; grep -n "Title\b\|title state\|MainState3\|state 3" REVERSE.md | cut -c1-260 | he
+  ▶ grep -n "export" web/src/game/playsound.js; node -e "const s=require('./web/data/sound.json');console.log(Object.keys(s)
+  ▶ grep -n "export\|^//" web/src/game/playsound.js | head; grep -o '"id": *[0-9]*' web/data/sound.json | head -50 | tr '\n'
+  ▶ Read sound_capture.py +28
+Now the check script.
+  ▶ Write apu_check.mjs
+  ▶ node web/test/apu_check.mjs
+Two failures: my length test set the halt bit ($30), which is a test bug. For music $00 I'm checking what that track is.
+  ▶ Edit apu_check.mjs
+  ▶ Grep "music \$00|Music \$00|id \$00|`\$00` .*(silen|stop|music)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Music `$00` is documented as silence, so the test should expect it to be quiet.
+  ▶ Edit apu_check.mjs
+  ▶ Edit apu_check.mjs
+  ▶ node web/test/apu_check.mjs 2>&1 | grep -v "^ok"
+All pass, rendering at about 19× realtime. Quick negative test: clocking the pulse timers every CPU cycle should fail the pitch check.
+  ▶ Edit apu.js
+  ▶ node web/test/apu_check.mjs 2>&1 | grep -i "fail" | head
+  ▶ Edit apu.js
+Caught as expected; reverted. Now the WebAudio output and the save data. Reading main.js.
+  ▶ Read main.js
+  ▶ Grep "^### Save / load module|SaveGame|slot.*\$6[0-9A-F]{3}|checksum" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1201
+Now the browser side: `web/src/audio.js` (WebAudio output) and `web/src/save.js` (battery WRAM in `localStorage`).
+  ▶ Write audio.js
+  ▶ Write save.js
+  ▶ grep -n "wram" web/src/game/ram.js | head -5; grep -n "status\|<p\|<div\|keys" web/index.html | head
+  ▶ Edit audio.js
+Now main.js and the help line.
+  ▶ Edit main.js
+  ▶ Edit main.js
+  ▶ Edit main.js
+  ▶ Edit index.html
+  ▶ node --version; node web/test/serve_check.mjs 2>&1 | tail -4; grep -n "addEventListener\|globalThis\.\w* =" web/test/ser
+I'll extend serve_check's DOM stubs with a fake `localStorage` and `AudioContext` so main.js's sound and save paths are exercised end to end.
+  ▶ Read serve_check.mjs +40
+  ▶ Edit serve_check.mjs
+  ▶ Edit serve_check.mjs
+  ▶ node web/test/serve_check.mjs 2>&1 | tail -5
+  ▶ node web/test/serve_check.mjs 2>&1 | grep -m3 -i "error\|at "
+  ▶ Edit serve_check.mjs
+  ▶ node web/test/serve_check.mjs 2>&1 | tail -5
+Nothing in WRAM changed during the 60 stub frames, so `poll()` correctly skipped the save. `pagehide` should save unconditionally instead.
+  ▶ Edit main.js
+  ▶ Edit main.js
+  ▶ node web/test/serve_check.mjs 2>&1 | tail -4; node web/test/core_check.mjs | tail -1; node web/test/sound_check.mjs | ta
+All checks pass. Checking headless run.mjs speed with the APU attached:
+  ▶ node web/test/run.mjs --frames 3000 2>&1 | tail -1; rm -f gfx/s57_web.csv gfx/s57_emu.csv
+  ▶ node web/test/run.mjs --frames 3000
+Now updating REVERSE.md. First, the existing leftover tasks at the end of RE Investigation:
+  ▶ sed -n 1860,1876p REVERSE.md | cut -c1-400
+  ▶ grep -n "^- \[ \] Ph7 web 4/8 leftovers" REVERSE.md | cut -d: -f1; grep "^- \[ \] Ph7 web 4/8 leftovers" REVERSE.md | gr
+  ▶ Read REVERSE.md +142
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now marking task 7/8 done and adding the single leftover task at the end of RE Investigation.
+  ▶ Edit REVERSE.md
+  ▶ sed -n 455,465p web/src/game/sound/driver.js; python3 tools/search_bytes.py "AD 15 40" 2>&1 | head -5
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding the new checks to the CLAUDE.md list, and checking labels for the routines touched:
+  ▶ grep -n "^24,81F3\|^31,F771\|^31,F7FE\|^24,8020" labels.csv
+  ▶ Edit CLAUDE.md
+  ▶ grep -n "^31,F7[0-9A-F][0-9A-F],\|^24,81F3\|^24,81" labels.csv | head
+  ▶ wc -l labels.csv && grep -n "NmiMode3\|SndMusicTick" labels.csv
+  ▶ Read labels.csv +886
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 31 F76E 8 && python3 tools/dis.py 24 81F0 6
+Labels resolve. Checking whether the loop script makes the commit:
+  ▶ Grep "git (commit|add)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop.sh
+Task **Ph7 web 7/8** (audio + screens) is marked done in REVERSE.md, but only the sound and save-data half was built. The title/menu screens, the HUD and the pause screens are not ported; they're now one leftover task at the end of RE Investigation. All web checks pass, but I haven't heard the audio in a real browser (none available here).
+
+**Session 56's work, now documented:** that session ported the sound driver, then hit the usage limit before writing anything to REVERSE.md. I re-ran its check (still 130/130, every APU write and driver RAM byte identical to tools.emu) and recorded it in the task notes and the Verification Log.
+
+**New this session:**
+- **`web/src/nes/apu.js`**: a model of the console's sound chip (two square-wave channels, triangle, noise, sampled-audio DMC channel), driven by the ported driver's register writes. Without audio output (headless runs) it only advances what the game can read back, so `run.mjs` still runs at about 62,000 fps.
+- **Machine:** it now owns the APU. Reset sets the sound chip up and initialises the driver, as the ROM's Reset does. Each frame advances the APU by one frame of CPU time. One difference from hardware: writes take effect at once rather than at their exact scanline, so only their timing inside the frame differs.
+- **NMI mode 3 (`31:F771`, the title's per-frame routine)** is ported, so `core_check.mjs` now compares all 23 traced NMIs in full (it was 12).
+- **`web/src/audio.js`**: browser audio output. Sound starts on the first key or click (browsers block autoplay) and M mutes.
+- **`web/src/save.js`**: all 8 KB of battery save RAM ($6000-$7FFF) kept byte for byte in `localStorage`. It is restored before Reset, as on a real power-on, so the game's own save check sees the layout it expects. It saves every ~5 s if anything changed, and always when the page is closed.
+- **Checks:** new `web/test/apu_check.mjs`, which tests pitch, length counters, DMC and sweep against the chip's formulas because tools.emu has no audio to compare with. It also renders all 32 music tracks through the driver, and `--wav ID OUT.wav` writes one out. A deliberately broken pulse timer made it fail as it should. `serve_check.mjs` now also covers audio output and save restore/write-back, using a fake audio context and storage.
+
+**Two things that will show up when comparing against tools.emu:**
+- **No sound on the title or in gameplay yet.** The title music starts from main state 3, which is still a stub, and gameplay sound runs from the HUD interrupt handler, which isn't ported. Both are in the leftover task.
+- **One extra register write is possible.** The driver checks whether the DMC channel is busy (`24:81F3`). The port now answers with a real value, while tools.emu always answers 0, so the port can emit one extra `$4013` write that tools.emu doesn't. RAM is unaffected.
+
+I also added labels `NmiMode3` and `SndMusicTick` and listed the two sound checks in CLAUDE.md. Two scratch comparison files, `gfx/s57_emu.csv` and `gfx/s57_web.csv`, are still there because deleting them needed approval. They're safe to remove.
+
+SESSION_SUMMARY: Ph7 web 7/8 done (sound + save): added the APU model with WebAudio output, `localStorage` save RAM and the title's NMI mode 3, recorded session 56's driver port (130/130), added apu_check and extended serve_check; screens and HUD moved to a leftover task.

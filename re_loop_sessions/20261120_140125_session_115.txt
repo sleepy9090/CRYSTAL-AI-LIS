@@ -1,0 +1,188 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \
+  ▶ Read REVERSE.md +2267
+  ▶ Read dead_ends.md
+  ▶ tail -c 3500 re_loop_sessions/20261120_140125_session_114.txt; echo ----; tail -c 2500 re_loop_sessions/20261120_140125_
+  ▶ Grep "CAB6|CD8A" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ grep -n "^| \$\?11 \|^| 17 \|0x11\|\$11 \|AiS0DTransform" REVERSE.md | cut -c1-600 | head -30
+  ▶ Grep "^\| (17|\$11) |AiS0DTransform" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Picked the top task (gameplay leftovers); now reading the docs for `sub_state` `$11` = `NpcTalk` `30:D0C8`, which the canonical run reaches.
+  ▶ python3 tools/show_line.py REVERSE.md 2454 | head -60; grep -n "NpcTalk\|D0C8" REVERSE.md | cut -c1-200 | head -40
+  ▶ Read REVERSE.md +795
+  ▶ Grep "showMessage|ShowMessage|D354|D347|talkAction|NpcScript|npcScript" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Grep "ShowMessage`? `?30:D354|D354|TextWindow|MsgWindow" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +740
+  ▶ grep -n "KEYS\|keys" tools/web_compare.py | head; ls web/src/game web/src/game/*/ ; grep -n "irqHandlers\|IrqMsg\|F4E5\|
+Scoping the `NpcTalk` port: checking what message/text code already exists in the web port.
+  ▶ Grep "TextPrint|textPrint|20:85|8500|8528|TextWindow|textWindow" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Read mainloop.js
+  ▶ Read machine.js
+  ▶ Grep "irqMsgWindow|irqHandlers\[" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web
+  ▶ python3 tools/dis.py 30 D0C8 0x5B; echo; python3 tools/dis.py 30 D347 0xA4
+  ▶ python3 tools/dis.py 20 8500 0x200
+Disassembling the rest of the bank-20 text printer before writing the port.
+  ▶ python3 tools/dis.py 20 86FF 0x1A0
+  ▶ Grep "SPIN|0x0A\b|0x0B\b|queue_rd|queue_wr|ppu_queue" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Grep "^(export )?(function\*?|const) \w+" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/equip.js
+  ▶ Read ppuqueue.js
+  ▶ sed -n 1,60p web/src/game/states/death.js; grep -n "C17D\|oamClipTop\|spritePass\|800E" -r web/src/game | head -20
+Now the play.js dispatcher and the sprite-pass helper in areaenter.js.
+  ▶ Read play.js
+  ▶ sed -n 120,150p web/src/game/states/areaenter.js; grep -n "C17D\|OamClip\|oamClip" -r web/src REVERSE.md | head; python3
+  ▶ head -1 gfx/compare/s114_emu.csv | tr ',' '\n' | head -40 | tr '\n' ' '; echo; python3 tools/dis.py 30 D896 0x30 --stop;
+  ▶ awk -F, 'NR==1 || ($3==17 || $3==8) && $1>=2650 && $1<=2720 {print $1,$2,$3,$4,$5}' gfx/compare/s114_emu.csv | awk 'NR==
+  ▶ Glob tools/csv_*.py
+  ▶ sed -n 1,25p tools/csv_rows.py
+  ▶ python3 tools/csv_rows.py gfx/compare/s114_emu.csv --cols state,sub,area --frames 2600-2700 | uniq -f1 -c | head; grep -
+Locating the frame where the emulator run enters `sub_state` `$11` (17).
+  ▶ python3 tools/csv_rows.py gfx/compare/s114_emu.csv --cols state,sub,area --frames 2660-2700
+  ▶ python3 tools/csv_rows.py gfx/compare/s114_emu.csv --cols sub --frames 2560-2620; grep -n "CANON_KEYS" tools/compare_ref
+  ▶ python3 tools/csv_rows.py gfx/compare/s114_emu.csv --cols sub --frames 2460-2560 | tr '\n' ' ' | head -c 1500; echo; gre
+  ▶ grep -n "^export\|^function\|^const" web/src/game/world/spawn.js; python3 tools/dis.py 14 8000 0xA0
+  ▶ sed -n 140,165p web/src/game/world/spawn.js; python3 tools/dis.py 14 8112 0x5D
+  ▶ python3 tools/dis.py 30 CAB6 0x28; sed -n 1,40p web/src/game/playsound.js
+I'm about to write the NPC talk + message window port; checking `SwitchBank16`'s Y-register leftover first.
+  ▶ python3 tools/dis.py 30 C40E 0x30 --stop; grep -n "export function" web/src/game/prg.js web/src/game/pads.js
+  ▶ python3 tools/dis.py 30 C900 0x1F
+  ▶ python3 tools/decode_tables.py 30:D123 32 ptr16 2>/dev/null | head -40 || true; python3 tools/dis.py 30 D163 0x39; pytho
+  ▶ Read prg.js
+  ▶ Read death.js +180
+  ▶ grep -n "export function\*\? \?hud\|export function\* hud" web/src/game/states/death.js; grep -n "R6\|0x14\b" web/src/ga
+Writing `web/src/game/states/talk.js` now (NpcTalk, the NpcScript VM, ShowMessage, the bank-20 text printer, and the simple talk actions).
+  ▶ Write talk.js
+Now wiring it in: exports, the substate entry, and IRQ handlers 2/3.
+  ▶ sed -i 's|^function oamClip(m, a) {|export function oamClip(m, a) {|' web/src/game/states/death.js && sed -i 's|^functio
+  ▶ Edit death.js
+  ▶ Read areaenter.js +132
+  ▶ Edit areaenter.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit mainloop.js
+Running the port over the canonical keys to f2700 and comparing against the s114 emulator CSV.
+  ▶ node web/test/run.mjs --frames 2486 --keys 1250:START 1400:START 1600:START 1700:START 2301:START 2340:DOWN:80 --compare
+`core,obj` columns are equal f2540-2699. Now checking pixels and the other columns (palette, sound) with screenshots during and after the window opens.
+  ▶ sed -n 1,40p tools/web_compare.py | grep -n "frames\|out\|usage" | head
+  ▶ timeout 900 python3 tools/web_compare.py --frames 2556,2560,2565,2580,2600,2699 2>&1 | tail -30
+The window itself matches; tile rows 10-29 (the playfield below the window) differ. Looking at the image pair.
+  ▶ ls -t gfx/compare | head; ls gfx/compare/web | grep 2600
+  ▶ Read web_2600.png
+Text matches; the playfield below the window and the HUD are vertically offset in the port. Checking how `ppu.js` handles a mid-frame `$2006` write (fine Y comes from the high byte's bits 4-5).
+  ▶ Grep "case 6|case 5|splits|fineY|renderFrame|_line\(|scanline" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/nes/ppu.js
+  ▶ Read ppu.js +95
+The PPU model looks fine, so the problem is probably split timing. I'll write a small tool that finds, for each port scanline, which emulator scanline it matches.
+  ▶ grep -n "^def \|^import\|^from" tools/compare_frames.py | head -20
+  ▶ sed -n 115,123p tools/compare_frames.py; grep -n "^def " tools/render_compare.py | head
+  ▶ sed -n 24,40p tools/render_compare.py; file gfx/compare/web_2600.png; ls gfx/compare/web | head
+  ▶ Write line_match.py
+  ▶ sed -n 40,76p tools/render_compare.py
+  ▶ python3 tools/line_match.py gfx/compare/web_2600.png
+Port lines after the window match emulator lines +2 (and the HUD +4), so in the emulator each chained IRQ lands 2 lines later. Checking what tools.emu can log about IRQ timing.
+  ▶ ls tools/emu/; grep -n "irq" tools/emu/mapper*.py tools/emu/mmc3*.py 2>/dev/null | head -30
+  ▶ sed -n 1,30p tools/emu/hud_split_probe.py; sed -n 1,25p tools/emu/ppu_lines.py
+  ▶ python3 -m tools.emu --help 2>&1 | head -40; sed -n 30,90p tools/emu/hud_split_probe.py
+I'll save an emulator state inside the talk window and log every IRQ handler entry with its PPU line/dot.
+  ▶ mkdir -p /tmp/s115 && timeout 900 python3 -m tools.emu --frames 2600 --keys 1250:START 1400:START 1600:START 1700:START 
+  ▶ timeout 900 python3 -m tools.emu --frames 2600 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:8
+Now the probe tool for IRQ handler timing.
+  ▶ Write irq_split_probe.py
+  ▶ python3 -m tools.emu.irq_split_probe gfx/compare/s115_talk2600.state --frames 1
+  ▶ grep -n "chainSplit(m, line" web/src/game/mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ timeout 900 python3 tools/web_compare.py --frames 2556,2560,2565,2580,2600,2699 2>&1 | tail -10; python3 tools/line_matc
+  ▶ python3 tools/compare_frames.py gfx/compare/web_emu.csv gfx/compare/web_web.csv --frames 2540-2699 2>&1 | tail -12
+All 117 columns are equal f2540-2699. Next, a full RAM + WRAM diff at the end of the run (f2700).
+  ▶ grep -n "dump-ram\|dump-wram" web/test/run.mjs | head -4; ls tools/mem_diff.py && sed -n 1,15p tools/mem_diff.py
+  ▶ timeout 900 python3 -m tools.emu --load-state gfx/compare/s115_talk2600.state --frames 100 --dump-ram gfx/compare/s115_e
+  ▶ Grep "`\$07FF`|`\$0052`|`\$52`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/xref.py 07FF 2>&1 | head; python3 tools/xref.py 0052 2>&1 | head
+  ▶ timeout 900 python3 -m tools.emu --load-state gfx/compare/s115_talk2600.state --frames 200 --keys 2650:A --compare gfx/c
+  ▶ python3 tools/csv_rows.py gfx/compare/s115_closeA_emu.csv gfx/compare/s115_closeA_web.csv --cols sub,irq,o0E_ai,o0E_x,oa
+  ▶ python3 tools/csv_rows.py gfx/compare/s115_closeA_emu.csv gfx/compare/s115_closeA_web.csv --cols sub,o0E_ai,o0E_x,oam_cr
+  ▶ node web/test/run.mjs --frames 2586 --keys 1250:START 1400:START 1600:START 1700:START 2301:START 2340:DOWN:80 2651:A --
+Only `oam_crc` still differs, on the 8 close-loop frames (f2651-2658); the f2800 screen differs only on line 191. Checking how `oam_crc` is sampled:
+  ▶ grep -n "oam_crc" tools/emu/compare.py web/test/*.mjs | head
+  ▶ sed -n 1,32p tools/emu/compare.py
+  ▶ timeout 600 python3 -m tools.emu --load-state gfx/compare/s115_talk2600.state --frames 55 --keys 2650:A --dump-screen gf
+  ▶ for t in core_check ppu_check serve_check world_check sprite_check obj_check sound_check apu_check; do printf "%s: " $t;
+  ▶ node web/test/core_check.mjs 2>&1 | tail -2; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/serve_check.mjs 2
+  ▶ node web/test/sprite_check.mjs 2>&1 | tail -1; node web/test/obj_check.mjs 2>&1 | tail -1; node web/test/sound_check.mjs
+  ▶ grep -n "AreaSpawnEntry\|AiS0DTransform\|^ROUTINES\|^def \|'bank'\|setup\|usage" tools/emu/routine_capture.py | head -40
+  ▶ Read routine_capture.py +1
+  ▶ grep -n "AreaSpawnEntry\|^const RUN\|^import\|switchBank16\|ObjInit:" web/test/obj_check.mjs | head -20; sed -n 1,30p we
+  ▶ grep -n "AreaSpawnEntry\|RUN = \|RUN\[" web/test/obj_check.mjs | head; grep -n "prgR6\|bank" web/test/obj_check.mjs | he
+Adding the `NpcScript` routine to the capture tool and the replay map:
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Read obj_check.mjs +34
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ grep -n "load-state\|area1_enter\|fuzz_spawn" web/test/obj_frames/README.md | head -5
+  ▶ timeout 900 python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine NpcScript 
+  ▶ sed -n 725,760p tools/emu/routine_capture.py
+  ▶ timeout 900 python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine NpcScript 
+  ▶ Edit routine_capture.py
+  ▶ timeout 900 python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine NpcScript 
+  ▶ grep -n "PPU_ROUTINES\|NO_INT\|irq_flags\|Interrupts(" tools/emu/routine_capture.py | head
+  ▶ Read routine_capture.py +774
+I can't easily see which interrupt path remaps the window. `NpcScript` has no frame timing, so I'll run it without NMI/IRQ, the way the PPU routines are captured:
+  ▶ Read routine_capture.py +314
+  ▶ Edit routine_capture.py
+  ▶ timeout 900 python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine NpcScript 
+575/600 match. The 25 failures make the port read I/O space, so its script pointer went wrong somewhere. Tracing one failing case in the emulator:
+  ▶ timeout 300 python3 -m tools.emu.case_trace --load-state tools/emu/states/gameplay_first.state --cases web/test/obj_fram
+  ▶ timeout 300 python3 -m tools.emu.case_trace --load-state tools/emu/states/gameplay_first.state --cases web/test/obj_fram
+  ▶ sed -n 1,20p tools/obj_case_stats.py
+I'll write a small helper that prints chosen bytes of a capture case:
+  ▶ Write case_ram.py
+  ▶ python3 tools/case_ram.py web/test/obj_frames/fuzz_npc.json 'NpcScript#171' 20-28 6C
+The emulator reads `$2980` too: param `$F9`'s pointer is junk. My pointer filter used the wrong in-bank offsets (`0x195D`/`0x1A5D` instead of `0x095D`/`0x0A5D`). Fixing it:
+  ▶ grep -n "0x195D\|0x1A5D" tools/emu/routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ timeout 900 python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine NpcScript 
+600/600 identical, 14300/14300 overall. Now the docs. Checking which addresses already have labels:
+  ▶ Grep "^(30,D896|30,D38A|20,85F2|20,8607|20,8682|20,86CD|20,86E1|20,8710|20,850F|20,85B6|14,808E|14,808F|31,F5A1)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ Edit labels.csv
+Now REVERSE.md: the s115 note under Web Port Fixes, and the task text.
+  ▶ grep -n "^- \*\*s114\|^### \|^## " REVERSE.md | tail -15
+  ▶ Read REVERSE.md +2460
+  ▶ Edit REVERSE.md
+Updating the task's open-items list:
+  ▶ Edit REVERSE.md
+Now the fuzz README and `docs/architecture_web.md`:
+  ▶ grep -n "fuzz_spawn\|fuzz_collide" web/test/obj_frames/README.md; grep -n "states/play.js\|states/equip.js\|saveload.js"
+  ▶ Read README.md +72
+  ▶ Edit README.md
+  ▶ Edit README.md
+  ▶ Read architecture_web.md +165
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+I ran `web_compare.py` with custom frames, which overwrote `gfx/compare/web.json`. Restoring it with the default reference frames and refreshing COMPARISON.md:
+  ▶ timeout 900 python3 tools/web_compare.py 2>&1 | tail -16 && python3 tools/comparison.py report 2>&1 | tail -3
+I ported the NPC talk and message-window system, `sub_state` `$11`, into the web port. Over the canonical run's talk scene (f2540-2699) it now matches the emulator on all 117 comparison columns. Every web check passes, including 14300/14300 routine cases.
+
+**What was ported** (new file `web/src/game/states/talk.js`):
+- **The talk itself (`30:D0C8`):** decides whether the touched object is a talker, runs its NPC script (`14:8000`), shows the message, then runs the talk action once the window closes.
+- **The message window (`30:D354`):** loads the font, opens the window, prints the message, then waits. SELECT replays the message and A/B closes it.
+- **The whole bank-20 text printer:** window frame, control codes 00-09, dictionary words, the auto-space rule and the uploads through the PPU queue. It copies the ROM's register quirks exactly.
+- **Talk actions:** only the simple ones (the no-ops, 2, 5, 9, 12, 23, 27). The rest log "not ported" because they need `GiveItem` or spawning code.
+
+**Split-timing fix:** I connected the two message-window IRQ handlers, which were written in session 105 but never hooked up. The playfield below the window was then 2 lines off and the HUD 4 lines off. Emulator timing showed both handlers write their next split's counter late, so their next split lands 2 lines later than the port assumed. With that corrected, screens differ only on lines 11, 86 and 191 (94-105 pixels). On those lines the hardware switches graphics partway through the line, which the port doesn't model; this is the same kind of difference as the known line-191 one.
+
+**Checks:**
+- **No button pressed** (the canonical run): the window stays open to f2700. At f2700 the save RAM (WRAM) is identical. The few RAM differences are timing artifacts, because the emulator stops partway through drawing a frame.
+- **Closing the window with A:** after the window closes everything matches. The only differences are 8 sprite-memory checksum rows during the 8-frame close. That is a sampling artifact: the emulator records its row while the sprite pass is still running, and the screen I compared (f2655) matches. The port needs A one frame later than the emulator (`2651:A` vs `2650:A`), the same input delay as the existing `2300`/`2301:START` pair.
+- **Random tests:** 600 randomized cases of the NPC script interpreter all match the emulator (`fuzz_npc.json`).
+
+**Records:** a session-115 note in REVERSE.md under "Web Port Fixes", the task text updated, 11 new labels in labels.csv, plus updates to `docs/architecture_web.md` and the test README. New tools: `tools/line_match.py`, `tools/case_ram.py` and `tools/emu/irq_split_probe.py`. I refreshed COMPARISON.md after restoring `gfx/compare/web.json`, which my custom-frame comparison run had overwritten; the totals are unchanged. Nothing is committed.
+
+**Still open:** the gameplay task stays unchecked under the leftovers rule. What remains is listed in its text: the talk actions that need `GiveItem`/spawns, the other message callers (such as `30:D085` and AI `$70`), AI `$1A`, pits/edge links, the NMI/IRQ leftovers and save-state scenarios.
+
+`gfx/compare/s115_talk2600.state` is a saved emulator state inside the talk window, and the session note refers to it. The other `gfx/compare/s115_*` files are scratch and can be deleted.
+
+SESSION_SUMMARY: Session 115: ported sub_state $11 (NPC talk, NPC script VM, message window and bank-20 text printer) into web/src/game/states/talk.js, wired IRQ handlers 2/3 and fixed their late split timing; the talk scene f2540-2699 matches the emulator on all 117 columns, screens differ only on lines 11/86/191, 600/600 NPC-script fuzz cases match and all web checks pass; the gameplay task stays open for the remaining talk actions and other leftovers.

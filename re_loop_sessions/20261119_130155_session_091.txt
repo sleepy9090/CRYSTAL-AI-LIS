@@ -1,0 +1,157 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_session_09[01].txt re_loop_sessions/*_session_089.txt && tail -c 2500 re_loop_sessions/20261119
+  ▶ ls ref/ | head -50; ls ref | wc -l; cat ref/capture.txt | head -40; ls tools/ref/; wc -l ref/trace.txt; head -20 ref/tra
+  ▶ head -60 tools/emu/lag_probe.py; grep -n "def \|argparse\|add_argument" tools/ref/compare_ref.py | head -30; ls docs/
+Run both (a) trace and (b) screens compare in parallel.
+  ▶ (time python3 -m tools.emu.lag_probe --to 2470 --trace docs/emu_trace.txt) 2>&1 | tail -30
+  ▶ (time python3 tools/ref/compare_ref.py --screens) 2>&1 | tail -40
+  ▶ python3 -m tools.emu.lag_probe --to 2470 --trace docs/emu_trace.txt 2>&1 | tail -30
+  ▶ python3 tools/ref/compare_ref.py --screens 2>&1 | tail -40
+  ▶ ls gfx/compare/screens/ && sed -n 240,275p tools/ref/compare_ref.py && grep -n "screen_" tools/ref/fceux_capture.lua | h
+  ▶ Read screen_status.png
+  ▶ Read status.png
+  ▶ Read fceux_capture.lua
+  ▶ Read screen_death.png
+  ▶ Read death.png
+  ▶ head -30 tools/ref/ref_peek.py
+  ▶ python3 tools/ref/ref_peek.py 40 16 ref/frame_2450.ram ref/screen_*.ram; python3 tools/ref/ref_peek.py 3C0 4 ref/frame_2
+  ▶ md5sum ref/frame_*.png ref/frame_*.nt ref/frame_*.pal | sort | uniq -w32 -c | sort -rn | head -40
+  ▶ md5sum ref/frame_*.png ref/screen_*.nt ref/frame_2450.nt ref/screen_*.pal ref/frame_2450.pal | sort
+  ▶ cat tools/emu/probe_screens.py | head -120; grep -n "def \|ciram\|def read_nt\|nametable" tools/emu/nes.py tools/emu/ppu
+  ▶ Read compare_ref.py
+  ▶ Read compare_ref.py +183
+Now I'll write a state-based screen comparator that reuses `compare_frame`.
+  ▶ Write screen_state_compare.py
+  ▶ python3 tools/ref/screen_state_compare.py --out docs/ref_screens.txt 2>&1 | tail -150
+  ▶ sed -n 38,60p tools/emu/nes.py; grep -n "^==\|RAM \|WRAM\|NT \|PAL \|PIXELS" docs/ref_compare.txt | head -80; ls -la doc
+`docs/ref_compare.txt` dates from Nov 18, before this capture, and it ran with zero RAM fill. I'll check what's already known about the FCEUX fill pattern.
+  ▶ head -30 docs/ref_fill_probe.txt; grep -n "fceux" tools/emu/nes.py | head; grep -n "ref_fill_probe\|ram_fill\|FCEUX fill
+FCEUX fill is already confirmed in REVERSE.md (s74). I'll switch the screen comparator to start from a fill=fceux canonical run to f2450 rather than the zero-fill state file.
+  ▶ grep -n "^def " tools/emu/state.py
+  ▶ cat > /tmp/p.txt <<'EOF'
+  ▶ Read state.py +20
+Now I'll update the comparator to start from a fceux-fill run and also report a "real diffs" count (stack page excluded).
+  ▶ Edit screen_state_compare.py
+  ▶ Edit screen_state_compare.py
+  ▶ Edit screen_state_compare.py
+  ▶ Edit screen_state_compare.py
+  ▶ python3 tools/ref/screen_state_compare.py --out docs/ref_screens.txt > /dev/null; grep -E "^==|OAM|WRAM|NT|PAL|^#" docs/
+  ▶ python3 tools/ref/screen_state_compare.py --search 12 death gameover | grep -E "^==|OAM|WRAM|NT|PAL"
+  ▶ sed -i 's/        nes.run_frames(SCREEN_STATE_FRAME + 1)/        nes.run_frames(SCREEN_STATE_FRAME + 1 + start_delay)/; 
+  ▶ Edit screen_state_compare.py
+  ▶ Edit screen_state_compare.py
+  ▶ Edit screen_state_compare.py
+  ▶ for d in 1 2 3; do echo "delay $d"; python3 tools/ref/screen_state_compare.py --delay $d death status | grep -E "^==|OAM
+  ▶ python3 tools/ref/screen_state_compare.py --delay 1 death status | grep -E "^==|OAM|WRAM"; python3 tools/ref/screen_stat
+  ▶ Edit screen_state_compare.py
+  ▶ python3 tools/ref/screen_state_compare.py --out docs/ref_screens.txt > /dev/null; grep -E "^==|OAM|WRAM|NT|PAL|^#" docs/
+All 8 screens are identical to FCEUX on nametables, palette, and OAM. Next I'll classify the leftover RAM bytes ($45/$46, $54-$56, and the status-screen set).
+  ▶ Grep "^\*,(45|46|54|55|56|10|17|20|6E|6F|4BF|60C|614|617|627|628|629|62A|62B|6FE)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "\$0045|\$0628|\$060C|\$062B|\$6D23|\$70F4" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 1570,1590p REVERSE.md | cut -c1-900
+Residuals are all covered by existing triage items (f), (b), and (d). Now part (a): I'll write a tool to diff the FCEUX per-frame trace against the tools.emu trace.
+  ▶ Write trace_diff.py
+  ▶ python3 tools/ref/trace_diff.py --out docs/ref_trace_diff.txt
+  ▶ awk '$1>=1698 && $1<=1712' ref/trace.txt; echo ---; awk '$1>=1698 && $1<=1712' docs/emu_trace.txt
+  ▶ Read trace.txt +1698
+  ▶ Read emu_trace.txt +1698
+  ▶ Grep "^17(0[5-9]|1\d) 03 00 04 01 00 \w\w 0[BCD]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_trace.txt
+  ▶ Grep "LDA \$06FF|AND #\$07|ram_0617|\$0617" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/xref.py 0617 2>&1 | head -30
+  ▶ python3 tools/dis.py 19 A248 60
+  ▶ Grep "^19,(A1|A2)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+`StatusAnimTick` 19:A212 is already documented (s74). What's new is that its 8-pass gate causes the 5-frame status-chain offset. Next I'll check the boot and the f212-217 intro→title lag.
+  ▶ Read emu_trace.txt
+  ▶ Read emu_trace.txt +209
+  ▶ Read trace.txt +211
+  ▶ Read trace.txt +2296
+  ▶ Read emu_trace.txt +2296
+  ▶ sed -n 75,100p tools/emu/nes.py; grep -n "self.s\b\|self.s =\|'s'" tools/emu/cpu.py | head -5; ls tools/emu/*.py | head 
+  ▶ Grep "on_exec\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ Write caller_probe.py
+  ▶ python3 -m tools.emu.caller_probe 19 A1EC --from 2314 --to 2323
+  ▶ python3 tools/dis.py 19 A015 40 && python3 tools/dis.py 19 A176 40 && python3 tools/dis.py 19 A1EC 40
+  ▶ Grep "self-emu|VERIFIED" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +118
+I'll find the section headings to upgrade (death sequence, menus, status screen).
+  ▶ Grep "^(#+|\*\*).*(Death / game over|[Mm]enu|status screen|Status screen|Boot \(|Main states \(session 63)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "Death / game over sequence|SaveLoadPage|pause / status" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -n "^## \|^### \|COMPARISON" REVERSE.md | head -60; grep -n "§4\|## 4" COMPARISON.md | head
+Next I'll check how `comparison.py` builds §4, so I can add the Reference column.
+  ▶ grep -n "## 4\|def .*screen\|screens.json\|Reference\|def report\|def sec4" tools/comparison.py | head -30; sed -n 240,2
+  ▶ Read comparison.py +470
+I'll make `screen_state_compare.py` write a JSON cache that `comparison.py report` reads for the §4 Reference column.
+  ▶ Edit screen_state_compare.py
+  ▶ Edit screen_state_compare.py
+  ▶ Edit screen_state_compare.py
+  ▶ Edit screen_state_compare.py
+  ▶ Edit screen_state_compare.py
+  ▶ Edit screen_state_compare.py
+  ▶ Edit screen_state_compare.py
+  ▶ Edit comparison.py
+  ▶ grep -n "^import\|^ROOT\|allsev" tools/comparison.py | head -20
+Imports are fine. Now I'll also fix the Lua script's stale-screenshot cause, then run the JSON output and report.
+  ▶ Edit fceux_capture.lua
+  ▶ python3 tools/ref/screen_state_compare.py --out docs/ref_screens.txt | tail -1; python3 tools/comparison.py report 2>&1 
+§4 now shows MATCH for all 8 screens. Next I'll fix `trace_diff.py`'s event matcher so it uses the nearest same-key event, then regenerate its output.
+  ▶ Edit trace_diff.py
+  ▶ python3 tools/ref/trace_diff.py --out docs/ref_trace_diff.txt | sed -n 4,14p
+The event table now lines up cleanly. Before writing up, I'll take a quick look at 19:A1AA (unlabelled), the routine that contains the 19:A1EC loop.
+  ▶ python3 tools/dis.py 19 A1AA 66
+`19:A1AA` drives the 4 status-screen slot animations, and `A1EC` is its countdown branch. I'll label it, then write up REVERSE.md.
+  ▶ grep -n "^19,A212" labels.csv && tail -3 labels.csv
+  ▶ Read labels.csv +1076
+  ▶ Edit labels.csv
+Now the REVERSE.md Verification Log row:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Next, the death section tag and the triage item (k):
+  ▶ grep -n "Death / game over sequence" REVERSE.md | cut -c1-200
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Next I'll add the new tools to the Intermediate Output Files table, then mark the task done.
+  ▶ grep -n "^| \`tools/ref/drift_probe.py\`\|^- \[ \] Ph6 (low priority) FCEUX rerun\|^- \[ \] Ph7 (low priority) menu scre
+  ▶ Grep "^\| `tools/ref/drift_probe.py`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^- \[ \] (Ph6 \(low priority\) FCEUX rerun|Ph7 \(low priority\) menu screens)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2341
+  ▶ Edit REVERSE.md
+I'll clean up a garbled phrase in the `caller_probe` docstring.
+  ▶ Edit caller_probe.py
+  ▶ Edit caller_probe.py
+  ▶ python3 -m tools.emu.caller_probe 19 A1EC --from 2318 --to 2320 | head -2
+I finished session 91's task: the FCEUX reference comparison, parts (a), (b) and (d). Part (c), checking `web/catalog.html` in a real browser, couldn't be done here and is filed as a new task. Nothing is committed.
+
+**(a) Lag frames.** I compared FCEUX's per-frame trace with the tools.emu one, and every point where the two drift apart now has a cause:
+- **Boot:** FCEUX starts the game 4 frames later than tools.emu. This happens before any game code runs, so it's FCEUX's power-on timing.
+- **Intro → title (around f212-217):** tools.emu has one extra lag frame here, which brings the offset from −4 to −3. Session 74 had guessed this happened between f120 and f600.
+- **Status screen (f1705-2248):** tools.emu runs this sequence 5 frames later. `StatusAnimTick` (19:A212) only advances when the frame counter `$06FF` is a multiple of 8. Because of the 3-frame offset, FCEUX hits that point at f1705 and tools.emu at f1710. This is the "FCEUX reaches name entry ~6 frames sooner" that session 74 left open.
+- **START at f2300:** FCEUX acts on it at f2300 and tools.emu at f2301. That single frame is the whole +1 offset during gameplay; both run the same 19 title passes afterwards. My guess at why is that name entry reads the pad early in vblank, but I didn't trace it.
+- **Session 74's "extra call to `19:A1EC` at f2320" was a misread.** A new probe shows the routine only runs in the normal last title pass at f2319, called through 19:A1AA. I labelled the two routines `StatusSlotAnim` and `StatusSlotCountdown`.
+
+**(b) Menu, death and save screens.**
+- **The screenshots can't be used.** All 7 menu/death/save PNGs are byte-for-byte the same file as `frame_2450.png`, and so is `frame_2460.png`. The script ran FCEUX at maximum speed, which skips drawing frames.
+- **The memory dumps are good.** The saved RAM, nametable and palette files are live: the menus really did open.
+- **I compared by machine state instead.** The new comparator starts from the same point as FCEUX's savestate, one frame later than the existing state file. Run that way, all 8 screens have identical nametables, palette and sprite table.
+- **The bytes that still differ are already explained:** frozen title counters, bytes derived from uninitialised RAM, and temporaries caught at a different moment in the frame.
+- **COMPARISON.md:** §4 now has a Reference column, and all 8 rows changed from CRITICAL (unpaired) to MATCH.
+- **Capture script:** `fceux_capture.lua` now runs at normal speed, so a future FCEUX run should save real screenshots.
+
+**(d) Write-up.**
+- **Verification Log:** two new rows in REVERSE.md, plus new notes (k) and (l) in "Reference-compare triage".
+- **Section tags:** Boot, Main loop, Save/load and Death are now marked as verified against FCEUX.
+- **Labels:** the 2 new ones are in `labels.csv`.
+
+**New tools:**
+- `tools/ref/trace_diff.py`: lines up the two per-frame traces.
+- `tools/ref/screen_state_compare.py`: the state-based screen comparator.
+- `tools/emu/caller_probe.py`: logs every entry to a routine with its caller.
+
+**Left over:** a new low-priority task at the end of RE Investigation covers the browser check. It also lists an optional FCEUX rerun, which needs your approval to launch, to get real screenshots. Separately, §4's Web port column still says the death screen is "not ported", although session 89 ported it; that comes from `tools/comparison.py` and I didn't change it.
+
+SESSION_SUMMARY: Session 91 — FCEUX rerun (a)/(b)/(d) done: every frame-offset step placed (boot −4, intro→title −1, a 5-frame status-chain shift from `StatusAnimTick`'s every-8th-frame gate, +1 gameplay from the f2300 START); s74's "A1EC at f2320" was a misread; FCEUX screen PNGs were stale, so the 8 menu/death/save screens were compared by state (8/8 identical nametables, palette and sprites, COMPARISON §4 → MATCH); 3 new tools, 2 labels; browser check filed as a new task.

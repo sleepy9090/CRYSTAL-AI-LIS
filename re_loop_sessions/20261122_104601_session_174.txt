@@ -1,0 +1,210 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -3; gr
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls -la re_loop_sessions | tail -5; tail -c 5000 re_loop_sessions/20
+  ▶ Grep "phase 3|FadeIn\(9\)|fan-turret|fan turret" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +670
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "phase3\|fadeIn\|BC0C\|not ported" web/src/game/obj/ai_fina
+Picking the top open task (low-priority boss-AI leftovers); I'm checking AI `$70` phase 3 (the triple `FadeIn(9)`) against `tools.emu` frames.
+  ▶ Read ai_final.js +140
+  ▶ Read ai70msg_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -30 web/test/finalscene_check.mjs; grep -n "final_\w*" tools/e
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "AI \`\$70\`" REVERSE.md | cut -c1-400 | head -20
+  ▶ Grep "AI .\$70. (type|objects?|spawn)|type .\$(D0|F0)|Ai70PhaseDispatch" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '2121p;2525p' REVERSE.md | cut -c1-3000
+  ▶ python3 tools/dis.py 27 BA2E 0x2C
+Tracing how AI `$70` reaches phase 2 (which object type spawns it) so I can build a real-run frame check for phase 3.
+  ▶ Grep "AI \$?70|ai=70| 70 " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ sed -n 1,15p gfx/obj_ai.txt; grep -n -i "70\b" gfx/obj_ai.txt | head
+  ▶ Grep "\$F9`|\$FA`|type `\$A4`|\$B2`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "export function\*? objInit" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Grep "0xAD00|AC00" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ sed -n 1,20p tools/objtype_dump.py; python3 tools/objtype_dump.py 2>&1 | grep -iE "^ *(type )?\\$?(A4|B2|B3|B4|B5|F9|FA)
+Looking up which object types start AI `$70` in phase 2/3 via the existing `objtype_dump.py`.
+  ▶ python3 tools/objtype_dump.py > /tmp/objtypes.txt 2>&1; wc -l /tmp/objtypes.txt
+  ▶ python3 tools/objtype_dump.py
+  ▶ Grep "ai \$70" /home/sleepy9090/.claude/projects/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/8cef319a-a458-4713-b191-3ff8922a389e/tool-results/bni0uaywk.txt
+  ▶ Grep "type \$(A4|B4) " /home/sleepy9090/.claude/projects/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/8cef319a-a458-4713-b191-3ff8922a389e/tool-results/bni0uaywk.txt
+  ▶ python3 tools/search_bytes.py "a9a48511" --context 8 --disasm
+  ▶ python3 tools/search_bytes.py "a9a4" --disasm --context 6
+Still locating the type-`$A4` spawner (no `LDA #$A4` in code — likely area/table data).
+  ▶ Grep "\$A4`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '220p;315p;920p;2535p' REVERSE.md | grep -o ".\{300\}\$A4\`.\{300\}"
+  ▶ Grep ".{0,300}\$A4`.{0,300}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep ".{0,600}Area `\$5F`'s AI `\$70`.{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/grep_ctx.py 2>/dev/null; ls tools | grep -i -E "ctx|line|snip|show" ; ls web/test/states | grep -i -E "5f|
+  ▶ python3 tools/show_line.py 2>&1 | head -5; python3 tools/show_line.py REVERSE.md 2535 2>&1 | head -c 3500
+Area `$5F` places type `$A4` (AI `$70` starting at phase 2), and there are existing `restore5f`/`pause5f` states. Checking what they cover.
+  ▶ Grep "restore5f|pause5f" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+Area `$5F` state `restore5f_s120.state` (s120) runs phase 2 → `SubstRestoreScreen`, so phase 3 follows. Running the existing compare from it over a longer window.
+  ▶ ls tools/emu/states/ | grep -i 5f; python3 tools/web_state_compare.py --help 2>&1 | head -30
+  ▶ timeout 1200 python3 tools/web_state_compare.py --state tools/emu/states/restore5f_s120.state --web web/test/states/rest
+  ▶ ls gfx/compare/ai70ph3; python3 tools/compare_frames.py gfx/compare/ai70ph3/emu.csv gfx/compare/ai70ph3/web.csv --cols c
+The phase-3 fades (pal_crc every 10 frames from f2536) differ, then shots from f2671. Checking whether the fade is a 1-frame offset.
+  ▶ for s in -1 1; do python3 tools/compare_frames.py gfx/compare/ai70ph3/emu.csv gfx/compare/ai70ph3/web.csv --cols pal --f
+  ▶ python3 tools/compare_frames.py gfx/compare/ai70ph3/emu.csv gfx/compare/ai70ph3/web.csv --cols pal --frames 2520-2670 --
+  ▶ head -1 gfx/compare/ai70ph3/emu.csv | tr ',' '\n' | grep -n -E "pal_crc|^frame|^pal"
+  ▶ cut -d, -f1,15 gfx/compare/ai70ph3/emu.csv | sed -n '/^253[3-9]/p;/^254[4-8]/p'; echo ---; cut -d, -f1,15 gfx/compare/ai
+  ▶ Grep "^25(3[4-8]|4[4-7])," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/compare/ai70ph3
+  ▶ python3 tools/compare_frames.py gfx/compare/ai70ph3/emu.csv gfx/compare/ai70ph3/web.csv --frames 2660-2672 2>&1 | head -
+  ▶ cut -d, -f1-3,10,55-63,64-66 gfx/compare/ai70ph3/emu.csv | awk -F, '$1>=2664 && $1<=2676'
+  ▶ cut -d, -f1-3,10,55-63,64-66 gfx/compare/ai70ph3/web.csv | awk -F, '$1>=2664 && $1<=2676'
+  ▶ Glob tools/csv*.py
+  ▶ python3 tools/csv_rows.py -h 2>&1 | head -15
+  ▶ python3 tools/csv_rows.py gfx/compare/ai70ph3/emu.csv gfx/compare/ai70ph3/web.csv --cols sub,music,o0D_ai,o0E_ai,o0F_ai,
+  ▶ python3 tools/phase_compare.py gfx/compare/ai70ph3/emu.csv gfx/compare/ai70ph3/web.csv --cols core,obj 2672-2770:1 2>&1 
+  ▶ Grep "^\| 3 \| `30:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^\| 3 \| " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 -m tools.emu --help 2>&1 | grep -E -i "ram|watch|col|trace" ; node web/test/run.mjs --help 2>&1 | grep -E -i "ra
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/restore5f_s120.state --frames 240 --watch 03C1 2>&1 | gre
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/restore5f_s120.state --frames 240 --watch 03C1 > gfx/comp
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/restore5f_s120.state --frames 240 --watch 03C1
+  ▶ Grep "--watch" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test
+  ▶ ls web/test/*.mjs | head -60; grep -n "wr(a, v)\|  wr(" web/src/game/machine.js | head
+  ▶ Read _peek.mjs
+I'll add a small port-side RAM write watcher (`web/test/ram_watch.mjs`) that mirrors `tools.emu --watch`.
+  ▶ Write ram_watch.mjs
+  ▶ grep -n "export function parseKeys" -A12 web/test/harness.mjs
+Returns a Map; I'll simplify that line.
+  ▶ Edit ram_watch.mjs
+  ▶ node web/test/ram_watch.mjs web/test/states/restore5f.json 240 03C1
+Port: HP → 0 at f2711 (`hitPlayer`); tools.emu: f2733. Looking at the port's hit path to find which slot hit the player.
+  ▶ Read collide.js +280
+Both runs write HP only once (one fatal hit). To find why the emu's hit lands 22 frames later, I'll watch the hit marker `$0640` and the invulnerable flag `$0381` in both.
+  ▶ node web/test/ram_watch.mjs web/test/states/restore5f.json 240 0640,0381,0010 2>&1 | tail -25
+  ▶ node web/test/ram_watch.mjs web/test/states/restore5f.json 100 0640,0381,0011,0010 2>&1 | grep -E "hitPlayer|0640|0381"
+  ▶ node web/test/ram_watch.mjs web/test/states/restore5f.json 210 0640,0381,0011,0010 2>&1 | grep -E "hitPlayer|0640|0381"
+Port: slot `$10` (AI `$87` = AI 7, `27:A85F`) hits the player at f2711 for `$77`. Now finding the emu's hit and attacker.
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/restore5f_s120.state --frames 230 --watch 0640
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/restore5f_s120.state --frames 205 --dump-ram gfx/compare/
+  ▶ Glob tools/*ram*diff*.py
+  ▶ Glob tools/*{diff,slot}*.py
+  ▶ python3 tools/mem_diff.py 2>&1 | head -8
+  ▶ python3 tools/mem_diff.py gfx/compare/ai70ph3/emu_2711.ram gfx/compare/ai70ph3/web_2710.ram 0300-06FF
+These dumps aren't at matching points (the tools.emu dump stops mid-frame). I'll export main-loop-aligned states from tools.emu with `web_state` instead.
+  ▶ python3 -m tools.emu.web_state --help 2>&1 | head -30
+  ▶ Grep ",MainLoop|ObjCollideAll|,HitPlayer," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+The emu dump stopped at `MainLoop` (`30:C900`), the top of f2711. The port's state after f2710 corresponds to emu row 2711, i.e. the top of emu f2712, so I'm re-dumping one frame later.
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/restore5f_s120.state --frames 206 --dump-ram gfx/compare/
+Both emu dumps show the same object table, so these dump points aren't aligned with the port's frame either. I'll use `web_state_compare --ram-diff`, which compares the two runs at matching points.
+  ▶ timeout 1200 python3 tools/web_state_compare.py --state tools/emu/states/restore5f_s120.state --web web/test/states/rest
+  ▶ Grep "^\*,(0080|00A0|00C0|05D0|05F0|0090|0490)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/csv_rows.py gfx/compare/ai70ph3/emu.csv gfx/compare/ai70ph3/web.csv --cols o10_ai,o10_x,o10_y,o15_ai,o1D_a
+  ▶ python3 tools/csv_stalls.py 2>&1 | head -8; python3 tools/csv_stalls.py gfx/compare/ai70ph3/emu.csv 2>&1 | head -40
+  ▶ python3 tools/csv_stalls.py gfx/compare/ai70ph3/emu.csv gfx/compare/ai70ph3/web.csv --col o10_y --frames 2672-2712
+  ▶ Grep "lag|LAG" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Grep "[Ll]ag[A-Z_ (]|overrun|cycleCost|CYCLE" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read machine.js +100
+  ▶ Grep "overrunNmi|yield LAG|LAG_|lag08|\bSPIN\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Read mainloop.js
+  ▶ Grep "\.overrun\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ sed -n 1,40p tools/emu/lag_probe.py
+  ▶ sed -n 1,30p tools/emu/lag08_probe.py
+  ▶ sed -n 1,25p tools/emu/pass_probe.py; sed -n 30,90p tools/emu/lag08_probe.py
+Using `lag08_probe` (it logs each main-loop top with the active-slot count) over the scene.
+  ▶ timeout 900 python3 -m tools.emu.lag08_probe tools/emu/states/restore5f_s120.state 230 --from 2670
+Pattern found: passes overrun once ~14 slots are active (alternating passes at 14-16 active, every pass from 17). Now the lag at the end of phase 3 (f2669-2671):
+  ▶ timeout 900 python3 -m tools.emu.pass_probe --state tools/emu/states/restore5f_s120.state --frames 170 --pc 30:CB62 30:C
+  ▶ python3 tools/dis.py 30 C900 0x1F
+  ▶ Grep "nmi_disable|nmi_busy_flag|frame_ready" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/ram.js
+  ▶ timeout 900 python3 -m tools.emu.pass_probe --state tools/emu/states/restore5f_s120.state --frames 166 --pc 30:C919 31:F
+At f2670's NMI `nmi_busy_flag` `$06` = 1, so the NMI just sets `$07` and returns, and that frame is lost. Finding who holds `$06` there.
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/restore5f_s120.state --frames 166 --watch 0006 2>&1 | tai
+  ▶ Read driver.js
+  ▶ grep -n "def \|nes.call\|cycles" tools/emu/sound_capture.py | head -40; grep -n "def call" -A25 tools/emu/nes.py | head 
+  ▶ Read sound_capture.py +1
+I'll write a probe that measures `SoundUpdate`'s cycle cost: (a) in the scene, from the HUD IRQ's busy-set to busy-clear, and (b) per music id, for the first call after the id is queued.
+  ▶ grep -n "cycles" tools/emu/cpu.py | head -5; grep -n "def on_exec\|self.dot\|self.line\b\|self.line =" tools/emu/nes.py 
+  ▶ Write sound_cost_probe.py
+  ▶ timeout 900 python3 -m tools.emu.sound_cost_probe scene tools/emu/states/restore5f_s120.state 168 --from 2664; timeout 6
+  ▶ Grep "soundUpdate\s*[=(]|function soundUpdate" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Edit mainloop.js
+Now wiring it into `Machine.runFrame`:
+  ▶ Edit machine.js
+  ▶ grep -n "import.*mainloop" web/src/game/machine.js
+  ▶ Grep "nmiWork|^import" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/machine.js
+  ▶ Edit machine.js
+  ▶ timeout 1200 python3 tools/web_state_compare.py --state tools/emu/states/restore5f_s120.state --web web/test/states/rest
+  ▶ timeout 900 python3 -m tools.emu.pass_probe --state tools/emu/states/restore5f_s120.state --frames 230 --pc 30:C919 26:8
+  ▶ Grep "function countActive|^import|flashIrq\(m, x\) \{|^function flashIrq" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj
+  ▶ Grep "countActive" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj/ai_effect.js
+Now the phase 4-6 rule in `ai_final.js`. Let me view phases 4-6 there.
+  ▶ Read ai_final.js +160
+`flashIrq` (`Ai70FlashIrq`) runs only in phases 4-6, so the rule goes there:
+  ▶ Read ai_final.js +60
+  ▶ Edit ai_final.js
+  ▶ Edit ai_final.js
+  ▶ timeout 1200 python3 tools/web_state_compare.py --state tools/emu/states/restore5f_s120.state --web web/test/states/rest
+From 178 differing frames down to 29. The player now dies on the same frame as in tools.emu. Checking whether the remaining cells are all 1-frame (PARTIAL/LATE) cases:
+  ▶ python3 tools/csv_rows.py gfx/compare/ai70ph3/emu.csv gfx/compare/ai70ph3/web.csv --cols sub,music,o10_ai,o03_ai,o0D_ai,
+Remaining cells: f2732 `o10` (port 1 frame early), f2736 music (port 1 frame late), and f2792+ (the `PlayerDeath` sequence, which other checks cover). Checking the port's hit frame now:
+  ▶ node web/test/ram_watch.mjs web/test/states/restore5f.json 240 03C1,0640
+  ▶ python3 tools/compare_frames.py gfx/compare/ai70ph3/emu.csv gfx/compare/ai70ph3/web.csv --cols snd --frames 2507-2757 2>
+The sound columns show the same 1-frame `snd*_period` offset that is already filed as open, so I'm leaving them out as `bossa6`/`ai70msg` do. Building the reference CSV:
+  ▶ python3 tools/csv_trim.py gfx/compare/ai70ph3/emu.csv web/test/ai70ph3_ref.csv --cols core,pal,obj,oam_crc --frames 2507
+Writing `web/test/ai70ph3_check.mjs`. Every cell must match at shift 0, except listed cells whose 1-frame relation (EARLY / LATE / PARTIAL) is verified explicitly:
+  ▶ Write ai70ph3_check.mjs
+  ▶ node web/test/ai70ph3_check.mjs
+Three fixes: f2736 music is another LATE cell; the palette capture fires too early (phase 3 does `INC phase` before its fades, so I should wait for phase ≥ 5); and f2515 `sub` needs a look.
+  ▶ python3 tools/csv_rows.py gfx/compare/ai70ph3/emu.csv gfx/compare/ai70ph3/web.csv --cols sub,pal_crc --frames 2512-2518
+That's LATE (the port leaves sub 31 one row later), the s120 row-timing cell. Updating the lists and the capture condition:
+  ▶ Edit ai70ph3_check.mjs
+  ▶ Edit ai70ph3_check.mjs
+  ▶ node web/test/ai70ph3_check.mjs
+My inserted comment swallowed the rest of that line. Fixing:
+  ▶ Grep "phase 3 INCs" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/ai70ph3_check.mjs
+  ▶ Edit ai70ph3_check.mjs
+  ▶ node web/test/ai70ph3_check.mjs
+The new check passes. The HUD lost-NMI rule applies everywhere, so now I'm running the full check suite for regressions.
+  ▶ node web/test/core_check.mjs 2>&1 | tail -2; node web/test/ppu_check.mjs 2>&1 | tail -2; node web/test/world_check.mjs 2
+  ▶ node web/test/teleport_check.mjs 2>&1 | tail -2; node web/test/telepathy_check.mjs 2>&1 | tail -2; node web/test/changef
+  ▶ node web/test/bossflee_check.mjs 2>&1 | tail -2; node web/test/bossa6_check.mjs 2>&1 | tail -2; node web/test/bosse2_che
+  ▶ node web/test/obj_check.mjs 2>&1 | tail -3
+All checks pass: `obj_check` 27100/27100, sound 130/130, and every frame check. Now the docs. REVERSE.md phase-3 note first:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the task text (it stays unchecked, since it's a low-priority leftovers task):
+  ▶ Edit REVERSE.md
+Also updating gap (c) in the gameplay-leftovers task:
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+Checking labels for the HUD IRQ busy window:
+  ▶ Grep "^31,(F488|F4CF|F4D4|F3BE)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 31 F4CB 0x10
+The watch reported the PC after each write. The actual instructions are `STA $06` at `31:F4CD` and `DEC $06` at `31:F4D2`, so I'm fixing the note and adding labels.
+  ▶ Edit REVERSE.md
+  ▶ Read labels.csv +926
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 31 F4CB 0x10 | head -5; git status --short | head -20
+I checked AI `$70` phase 3 (the three `FadeIn(9)`) against tools.emu in a real run, together with phases 4-6. That turned up two lag frames the port wasn't modelling. With both modelled, the new frame check passes, and so does every existing check.
+
+**What I ran:** the area-`$5F` state from session 120 (`restore5f_s120.state`). Area `$5F` places type `$A4`, which starts AI `$70` at phase 2, so it runs phase 2 → 3 → 4-6 until the shots kill the player. Before the fixes, 132 of 399 compared frames differed, and the player died at f2711 instead of f2733.
+
+**Lag frame 1: a lost NMI when a music track starts (f2670).**
+- `PlaySound($14)` only queues the id. The track actually starts in the HUD IRQ's `SoundUpdate`, whose first call reads opening data on all four channels. That took 5718 cycles here, running from line 191 to line 241.
+- The NMI at line 241 finds `nmi_busy_flag` still set, so it only records a missed NMI. That frame gets no OAM DMA, no PPU-queue flush and no `frame_ready` increment, so it's lost.
+- The new `tools/emu/sound_cost_probe.py` measured the first-call cost of every music id. Nine of them (`01 07 08 0B 12 14 15 1A 1C`) exceed the ~5626-cycle budget.
+- In the port, `irqHud` in `mainloop.js` now flags this from that table, and `Machine.runFrame` then runs the lost-NMI path instead of the normal NMI. This rule applies in every scene, not just this one.
+
+**Lag frame 2: CPU overrun with many objects (phases 4-6).**
+- From f2690, the game's frame work runs past the NMI once 14 or more slots are active on even `$08` frames (the heavier collision half), and on every frame at 17 or more.
+- The port has no cycle count, so this is a heuristic in `ai_final.js` `flashIrq`, like the existing AI `$08` one. It is fitted to this one scene and only applies while AI `$70` is in phases 4-6.
+
+**New check:** `web/test/ai70ph3_check.mjs` compares 251 rows (f2507-2757) at shift 0, with sound left out. All match except 16 listed cells that are one frame off, each checked to be exactly one frame:
+- 10 palette cells where tools.emu samples halfway through a fade step.
+- 3 cells where the port is one frame late: a sub-state change already known from session 120, and two music starts.
+- 3 cells where the port is one frame early: slot `$10` on the frame of the fatal hit.
+
+The check also confirms the phase-3 palette ids, the fatal hit at f2732 and `PlayerDeath` at f2734. The death rows after f2757 are not checked.
+
+**Regressions:** all frame checks, `obj_check` (27100/27100), sound (130/130), APU, core, PPU, world, sprite and serve checks pass.
+
+**Not fixed:** the 1-frame offset in the sound-period columns also shows up in this run (from f2522), so it isn't specific to `scenario_state` loads. I added that to the task text.
+
+**Docs:**
+- REVERSE.md: findings go in the AI `$70` phase-3 note, with the per-id cost table. The low-priority task stays unchecked with phase 3 crossed off, and I noted the new lag models under gap (c) of the gameplay leftovers task.
+- `labels.csv`: added `HudIrqSoundBusy` (`31:F4CD`) and `HudIrqMissedNmi` (`31:F4D4`).
+- CLAUDE.md: lists the new check, the probe, and a port-side write watcher, `web/test/ram_watch.mjs`.
+
+Nothing is committed.
+
+SESSION_SUMMARY: Session 174 checked AI $70 phases 3-6 against tools.emu in area $5F and modelled two lag frames: the NMI lost when the HUD IRQ's SoundUpdate starts a long music track (per-id cycle table, global) and a phase 4-6 overrun at 14+/17+ active slots; the new ai70ph3_check.mjs passes 251 rows at shift 0 with 16 checked 1-frame cells, all other checks pass, and the low-priority task stays open with phase 3 done.

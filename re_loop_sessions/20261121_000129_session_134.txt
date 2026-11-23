@@ -1,0 +1,170 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## |^### |- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +2273
+  ▶ Grep "^- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +2449
+  ▶ ls re_loop_sessions | tail -3; wc -c dead_ends.md; grep -n "\$64\|warp\|Warp" dead_ends.md | head -30
+Reading the dead ends and recent logs before picking a sub-item.
+  ▶ Grep "\$64|[Ww]arp|talk act" dead_ends.md
+  ▶ Glob re_loop_sessions/*session_13*
+  ▶ tail -c 2500 re_loop_sessions/20261121_000129_session_133.txt
+Picking the type `$64` (talk act 1) sub-item. Searching what's known.
+  ▶ Grep "talk act|type `\$64`" REVERSE.md
+  ▶ Read REVERSE.md +828
+  ▶ Grep "0x64|D19C|talkAct" web/src/game
+  ▶ Grep "D19C|TALK_ACT|case 1:|act === 1|\[1\]" web/src/game/states/talk.js
+  ▶ Read talk.js +400
+Talk act 1 isn't ported. Finding which NPC scripts use it.
+  ▶ Grep "act(ion)? ?1\b|talk act|TalkAction" tools
+  ▶ Glob gfx/*npc*
+  ▶ Grep "act 1\b|act=1\b|a1\b|action 1\b" gfx/npc_scripts.txt
+  ▶ Read npc_scripts.txt
+  ▶ Grep "^param|act  1 " gfx/npc_scripts.txt
+Only real user: NPC param `$2D` (areas `$28`/`$73`, "You cannot pass here! Attack!"). Looking at the handler and type `$64`.
+  ▶ Read npc_scripts.txt +311
+  ▶ python3 tools/dis.py 30 D19C 25
+  ▶ Grep "export function\*? ?objInit|objInit\(" web/src/game
+  ▶ python3 tools/dis.py 30 D63F 30 --stop
+  ▶ python3 tools/dis.py 30 D652 4
+  ▶ Read talk.js
+  ▶ Read objinit.js
+Porting acts 1 and 8 (same NPC uses both).
+  ▶ Edit talk.js
+  ▶ Edit talk.js
+Now a scenario to run it in tools.emu. Looking at how existing talk scenarios are set up.
+  ▶ Grep "^    '[a-z_0-9]+': dict\(|^def |npc|talk" tools/emu/scenario.py
+  ▶ Grep "talk_01|type \$64|`\$64` \(|AI of type `\$64`" REVERSE.md
+  ▶ Read scenario.py +140
+  ▶ python3 tools/objtype_dump.py 64 2>&1 | head -30
+  ▶ Grep "AI `?\$2A`?|ABF8" REVERSE.md
+  ▶ Grep "ABF8|0x2A:" web/src/game/obj
+  ▶ Grep "ABF8" labels.csv
+Type `$64` = AI `$2A` `AiLunger` (already ported). Now finding the real NPC `$2D` in area `$28`/`$73` for a live scenario.
+  ▶ python3 tools/area_dump.py spawns 28 2>&1 | head -40; python3 tools/area_dump.py spawns 73 2>&1 | grep -i -n "2D" | head
+  ▶ python3 tools/area_dump.py spawns 2>&1 | grep -n -B0 "h1 p=\$2D" ; python3 tools/area_dump.py spawns 2>&1 | grep -c "h1"
+  ▶ python3 tools/area_dump.py spawns > /tmp/spawns_all.txt 2>&1
+  ▶ python3 tools/area_dump.py spawns > gfx/spawns_all.txt 2>&1
+  ▶ Grep "^ [0-9A-F]{2} |h1 p=\$2D" gfx/spawns_all.txt
+  ▶ Grep "h1 p=\$2D" gfx
+The two guards (slots `$0F`/`$10`, areas `$28`/`$73`) form the slot pair, so act 1 turns both into lungers. Building a live scenario.
+  ▶ Read scenario.py +1
+  ▶ Read scenario.py +225
+  ▶ Read scenario.py +460
+  ▶ Grep "def (read|write|peek)\b" tools/emu
+Adding the scenario after `npc_reveal_flee`.
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario guard_attack 2>&1 | tail -50
+  ▶ sed -n 1,30p tools/web_state.py
+  ▶ Glob tools/**/web_state*.py
+  ▶ Read web_state_compare.py
+  ▶ Read web_state.py
+The port has `run.mjs --load-state`, fed by `tools.emu.web_state` stopped at a ported routine's entry. I'll stop at `NpcTalk` `30:D0C8` on the area-01 start NPC, first to learn its slot and flags.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --until 30:D0C8 --keys 2440:A 2
+  ▶ Glob tools/*peek*.py
+  ▶ python3 tools/json_peek.py --help 2>&1 | head -15
+  ▶ Read json_peek.py
+I'll add a small byte-peek tool for these state JSONs.
+  ▶ Write state_json_peek.py
+  ▶ python3 tools/state_json_peek.py web/test/states/talk_probe.json 0623 0560+32 05A0+32 6480+8 04A0+32
+Slot `$0E` (param `$65`), all flags clear. Poking its param to `$2D` gives act 1 with pair `$0D`/`$0E`, so the slot math gets tested too.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --poke 056E=2D --until 30:D0C8 
+  ▶ Read web_state_compare.py +39
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/talk_act1.state --web web/test/states/talk_act1.
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/talk_act1.state --web web/test/states/talk_act1.
+First divergence is the A-press frame (emu still in the message at f2608, the port already out), so I'll retry with `--web-key-shift 1`.
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/talk_act1.state --web web/test/states/talk_act1.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --until 30:D0C8 --keys 2440:A 2
+Baseline shows the f2601-2608 OAM CRC diff exists without my change too. So the only act-1 diff is the lungers' movement. Looking at the per-frame rows.
+  ▶ python3 tools/compare_frames.py gfx/compare/talk_act1/emu.csv gfx/compare/talk_act1/web.csv --cols o0D,o0E --frames 2606
+  ▶ Grep "rng|rand|def columns" tools/emu/compare.py
+  ▶ Grep "AiLunger|AiLungeCheck|Rand64" REVERSE.md
+Diffing whole RAM right at the divergence (57 frames → f2610).
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/talk_act1.state --web web/test/states/talk_act1.
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/talk_probe.state --web web/test/states/talk_prob
+  ▶ Grep "Lunger|ABF8|AiChase" web/test
+`AiLunger` is fuzz-verified, so the cause is likely an input such as the RNG. Checking `Rand64`'s state.
+  ▶ Grep "Rand64|rng" labels.csv
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/talk_act1.state --web web/test/states/talk_act1.
+At f2610 the object bytes match (only scratch/sampling bytes differ). The 200-frame end, though, showed slot `$0D`/`$0E` bytes apart. Checking the baseline at 200 frames for comparison.
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/talk_probe.state --web web/test/states/talk_prob
+Baseline ends clean, so the act-1 run has a real divergence later (CSV: AI/x/music at f2628). Bisecting with RAM diffs.
+  ▶ for n in 74 75; do echo "== $n"; timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/talk_act1.state
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/talk_act1.state --web web/test/states/talk_act1.
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/talk_act1.state --web web/test/states/talk_act1.
+  ▶ timeout 600 python3 tools/web_state_compare.py --state tools/emu/states/talk_act1.state --web web/test/states/talk_act1.
+First real split is f2611: the ROM leaves slots `$0D`/`$0E` still (`$048D`/`$04ED` = 0), the port moves them, and `$0068` is `$80` vs `$0A`. Checking what `$0068` is.
+  ▶ Grep "^\*,(0068|068|0043|004F)," labels.csv
+  ▶ python3 tools/xref.py 0068 2>&1 | head -30
+`$68` is `ObjBgProbe`'s BG page pointer, so the ROM's BG probe blocks the lunger and the port's doesn't. Reading the probe.
+  ▶ Grep "ObjBgProbe" labels.csv
+  ▶ Grep "ObjBgProbe|9A6|9A87|9AB1" web/src/game
+  ▶ Read util.js +1
+  ▶ Read util.js +140
+The ROM's lungers are one 2-px step behind from f2611 on and stay so, which looks like one lag frame in the ROM (two more active enemies). Checking for an existing lag-frame tool.
+  ▶ Grep "lag frame|lag_frames|def .*lag" tools
+  ▶ Grep "[Ll]ag frame" REVERSE.md
+  ▶ Read lag_probe.py
+  ▶ python3 tools/csv_stalls.py --help 2>&1 | head -12
+I'll write a small probe: per frame, count main-loop passes and the scanline where each pass starts, from a saved state.
+  ▶ Grep "MainLoop|SubstPlay|,ObjAiAll|ObjRunAll" labels.csv
+  ▶ Grep "def on_exec|scanline|self.line" tools/emu/nes.py
+  ▶ Read nes.py +60
+  ▶ Grep "self\.(line|scanline)\b|frame_no" tools/emu/ppu.py
+  ▶ Write pass_probe.py
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/talk_act1.state --frames 70 --keys 2600:A --peek 00BD 048D 0041
+After f2611 the ROM stops entering `SubstPlay`. Adding the `MainLoop` PC to see what runs.
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/talk_act1.state --frames 75 --keys 2600:A --pc 30:CB62 30:C900 
+`C900` is the wait spin itself, so it's the wrong hook. Switching to logging writes of `frame_ready` `$09` (NMI sets it, the main loop clears it).
+  ▶ Edit pass_probe.py
+  ▶ Edit pass_probe.py
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/talk_act1.state --frames 64 --keys 2600:A --pc 30:CB62 --write 
+  ▶ Grep "\blag\b" web/src
+  ▶ Grep "gameplay lag|lag frames? (in|during) (play|gameplay)|CPU time|cycle budget" REVERSE.md
+  ▶ Read ai_effect.js +125
+  ▶ Grep "overrun" web/src/game
+  ▶ node web/test/core_check.mjs 2>&1 | tail -3; node web/test/obj_check.mjs 2>&1 | tail -3; node web/test/serve_check.mjs 2
+All pass (15200/15200). Act 8 is quick to check the same way: NPC state 5 + F02A set.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --poke 056E=2D --poke 65AD=05 -
+Act 8 ends with the same 8 scratch-byte set as the baseline. Confirming act 8 really ran in that state:
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/talk_act8.state --frames 70 --keys 2600:A --pc 30:D63F 30:D652 
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/talk_act8.state --frames 70 --keys 2600:A --pc 30:D63F 30:D652 
+Act 8 ran (msg `$13.$15` = 19.21, `$04AE`=`$50` so slot `$0E` was re-inited with type `$04CE`=0), and the port matches. Writing up in REVERSE.md.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now updating the talk-action table rows and labels.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^30,(D19C|D63F)," labels.csv
+  ▶ tail -2 labels.csv
+  ▶ printf '%s\n' '30,D19C,TalkSpawnGuardPair,s134: talk act 1: ObjInit type $64 (AI $2A AiLunger) into slots s/s+1 = ((Y-1)
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 30 D19C 3 && node web/test/core_check.mjs 2>&1 | tail -1
+I ported talk actions 1 and 8, which were missing from the web port, and ran action 1 in the emulator from a real conversation. The port matches the ROM for both actions, but after the action-1 spawn the fight drifts from the ROM, and I left that drift unfixed (explained below). The leftovers task stays open because it's a low-priority one.
+
+**What action 1 does**
+- Only one real NPC script uses it: the two guards in slots `$0F`/`$10` of areas `$28` and `$73` ("Who are you? You cannot pass here! Attack!" and "How dare you come here!").
+- `30:D19C` loads type `$64` into a pair of slots. For either guard that pair is the two guards themselves, so both turn into lunging soldiers (AI `$2A` `AiLunger`, already ported) where they stand.
+- Action 8 (`30:D63F`, the same NPC's "Very well… On your way.") re-inits slot `$0E` unless its active value is 8.
+
+**Emulator run:** the new scenario `guard_attack` (area `$73`) shows message 19.20, then both slots become AI `$2A` at f69, and the lunger's melee shot hits the player the same frame.
+
+**Port check:** I compared the port with tools.emu from the same saved states for action 1, action 8 and a plain talk as a baseline.
+- **Action 8:** exactly the same as the baseline.
+- **Action 1:** RAM matches at f2609 and f2610, so both object loads are exact.
+- **Baseline:** even the plain talk differs in 8 OAM frames while the message window is open. That isn't from this change.
+- **The drift:** from f2611 the two new soldiers' y is 2 px apart and the fight drifts. The ROM's frames run long once two more AI objects are active; it doesn't drop a whole frame but runs late each frame. The port doesn't count CPU cycles, so it can't reproduce that. Fixing it would need a cycle model of the object AI.
+
+The web checks I ran pass (core, obj 15200/15200, serve).
+
+**Files changed**
+- `web/src/game/states/talk.js`: actions 1 and 8.
+- `tools/emu/scenario.py`: the `guard_attack` scenario.
+- `tools/emu/pass_probe.py` (new): logs per-frame main-loop passes with their scanlines.
+- `tools/state_json_peek.py` (new): prints RAM/WRAM bytes from a saved-state JSON.
+- `web/test/states/talk_{act1,act8,probe}.json` and matching emulator `.state` files.
+- `REVERSE.md`: s134 note on the task and the two action-table rows.
+- `labels.csv`: `TalkSpawnGuardPair`, `TalkReinitSlot14`.
+
+**Still open in the task:** the Warp Boots pick, the hit rules, the final boss and the ending labels. `docs/emu_scenarios.txt` still needs its ~55-minute rerun.
+
+SESSION_SUMMARY: Session 134: talk act 1 (30:D19C) is NPC $2D's guard pair in areas $28/$73 turning into AI $2A lungers; new scenario guard_attack runs it; ported talk acts 1 and 8 (talk.js), which match tools.emu from web_state NpcTalk states, while the drift after the spawn comes from long ROM frames (new pass_probe.py); added state_json_peek.py; leftovers task stays open.

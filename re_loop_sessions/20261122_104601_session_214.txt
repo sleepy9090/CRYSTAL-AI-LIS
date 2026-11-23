@@ -1,0 +1,99 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -4; wc -l dead_ends.md REVERSE.md; grep 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^- \[ \]" REVERSE.md | cut -c1-200; sed -n 2406,2420p REVE
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions; wc -c *21[1234]*; tail -c 5000 20261122_104601_ses
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "Main-loop pass cost" REVERSE.md | cut -c1-80; tail -c 3000
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 184p REVERSE.md
+Picking the top open task: Ph7 (c), the lag-frame model. I'll check if the current cycle model can already sort passes into LAG / no-LAG (HUD-IRQ + start-line terms).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l tools/pass_fit.py tools/emu/pass_cost.py web/test/pass_count.
+  ▶ Read pass_fit.py +60
+  ▶ Read pass_cost_stats.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls -la /tmp/passfit 2>&1 | head; ls /tmp/*.txt 2>/dev/null | head -
+  ▶ Glob /tmp/passfit/*
+  ▶ Glob /tmp/*.txt
+  ▶ Read c81.txt
+  ▶ Read pass_count.mjs
+  ▶ Grep "soundUpdate|SoundUpdate" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+Plan: (1) check on the tools.emu tables alone whether "wall cycles vs start line" separates LAG passes exactly; (2) add a sound bucket to `pass_count.mjs` to model the HUD-IRQ cost.
+  ▶ Write lag_threshold.py
+  ▶ python3 tools/lag_threshold.py /tmp/c81.txt /tmp/c59.txt /tmp/c5a.txt --list 4
+The short tables have almost no real overruns. Running the full 480-frame tools.emu tables for `$81` and `$59` (s210 counted 18 / 11 LAG there).
+  ▶ mkdir -p /tmp/passfit && (python3 -m tools.emu.pass_cost tools/emu/states/group81.state 480 --split-int --slots --out /t
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group81.state 480 --split-int --slots --out /tmp/passfit/L81.txt --keys 
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group59.state 480 --split-int --slots --out /tmp/passfit/L59.txt --keys 
+While those run: the port's HUD IRQ code, to add a sound bucket.
+  ▶ Read mainloop.js +275
+  ▶ python3 - <<'EOF' 2>/dev/null; sed -n 1,40p web/src/game/sound/soundupdate.js
+  ▶ Read soundupdate.js
+Now add the `snd` bucket to `pass_count.mjs`.
+  ▶ Edit pass_count.mjs
+  ▶ Edit pass_count.mjs
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages --out /tmp/passfit/s81.txt 2506:DOWN:2 2569:DOWN
+The `/tmp/passfit` folder was never created (that earlier command was blocked). I'll write straight to `/tmp`.
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group81.state 480 --split-int --slots --out /tmp/L81.txt --keys 2505:DOW
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group59.state 480 --split-int --slots --out /tmp/L59.txt --keys 2510:UP:
+  ▶ node web/test/pass_count.mjs web/test/states/group81.json 2604 --stages --out /tmp/s81.txt 2506:DOWN:2 2569:DOWN:7 2576:
+  ▶ Read s81.txt
+Port counts now carry `snd=rd/wr/rom`. Adding a HUD-IRQ fit to `pass_fit.py`: `int − 202` against the `snd` bucket on passes the HUD IRQ interrupted.
+  ▶ Edit pass_fit.py
+  ▶ Edit pass_fit.py
+  ▶ python3 tools/pass_fit.py /tmp/c81.txt,/tmp/c59.txt /tmp/s81.txt,/tmp/s59.txt --stages --ai --skip-lag --worst 3 --save 
+HUD fit is poor (rms 290 on 17 passes). To get more samples I'll measure SoundUpdate cost on every frame, not just interrupted passes. Checking `sound_cost_probe`.
+  ▶ sed -n 1,40p tools/emu/sound_cost_probe.py; grep -n "def \|argv\|split.int\|int_" tools/emu/pass_cost.py | head -40
+  ▶ Read pass_cost.py
+I'll extend `pass_cost --split-int` to log every interrupt between two pass tops (vector, line, cycles), whether or not it hit the pass. That gives a HUD-IRQ cost for every frame.
+  ▶ grep -n "def _interrupt" -A12 tools/emu/cpu.py; grep -n "_interrupt(" tools/emu/*.py | head
+  ▶ cat > /tmp/pc_patch.txt <<'EOF'
+  ▶ Edit pass_cost.py
+  ▶ Edit pass_cost.py
+  ▶ Edit pass_cost.py
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group81.state 100 --split-int --slots --out /tmp/c81.txt --keys 2505:DOW
+  ▶ python3 tools/lag_threshold.py /tmp/L81.txt /tmp/L59.txt --list 3
+  ▶ cat /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/968d2d98-0d34-41c2-b80e-65a2f3d2d09b/tasks/b4d6aen
+The short key lists stop early (1-2 LAG passes). I need the full-run keys from the group checks.
+  ▶ grep -n "keys\|KEYS\|2505\|2510" web/test/group81_check.mjs web/test/group5c_check.mjs | head -20; grep -n "group_81\|gr
+  ▶ python3 tools/keyseq.py 2505:DOWN:2 '2569:DOWN:6,+6:B:4*26/16'; python3 tools/keyseq.py 2510:UP:40 '2550:B:4*27/16'
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group81.state 480 --split-int --slots --out /tmp/L81.txt --keys 2505:DOW
+  ▶ python3 -m tools.emu.pass_cost tools/emu/states/group59.state 480 --split-int --slots --out /tmp/L59.txt --keys 2510:UP:
+Meanwhile, the interrupt log on the short `$81` table:
+  ▶ Grep "^f25(0[5-9]|8[0-9])" /tmp/c81.txt
+  ▶ Grep "ints \S*" /tmp/c81.txt
+  ▶ Write int_fit.py
+  ▶ python3 tools/int_fit.py /tmp/c81.txt,/tmp/c59.txt /tmp/s81.txt,/tmp/s59.txt --save /tmp/icoef.json; echo --- ; python3 
+  ▶ cat /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/968d2d98-0d34-41c2-b80e-65a2f3d2d09b/tasks/b2zbs4d
+LAG and non-LAG separate cleanly (window −99 … +1118), but LAG totals include the NMI that lands inside the pass (~1300 cycles). Taking that out should give the real boundary:
+  ▶ Edit lag_threshold.py
+  ▶ Edit lag_threshold.py
+  ▶ Edit lag_threshold.py
+  ▶ python3 tools/lag_threshold.py /tmp/L81.txt /tmp/L59.txt | grep -v "^  LAG f2[0-9]* L2[0-9]* tot [0-9]* int [0-9]* margi
+  ▶ Edit lag_threshold.py
+  ▶ python3 tools/lag_threshold.py /tmp/L81.txt /tmp/L59.txt | grep "within\|separates"
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+Adding the interrupt fit to `tools/passfit_runs.sh` so the whole study is one script, then checking the port side is unchanged:
+  ▶ printf '%s\n' "# s214: HUD IRQ / NMI cost fits (pass_cost ints log + pass_count.mjs snd / nmi buckets), in and out of sa
+  ▶ Read passfit_runs.sh +28
+  ▶ Edit passfit_runs.sh
+  ▶ python3 tools/run_checks.py 2>&1 | tail -4
+I worked on the one open part of the low-priority leftovers task, (c) CPU overruns (lag frames). The main result is an exact rule for when a pass lags in tools.emu. The model is still not switched on in the port, so the task stays unchecked; the next step, (c2), is written into its text. All 52 web checks pass, and no port game code changed.
+
+**What I found:**
+- **The lag rule:** a main-loop pass lags exactly when its cycles, not counting the NMI it overran, are more than (503 − S) × 341/3, where S is the line the pass started on. I tested this on the full 480-frame runs: area `$81` has 461 passes and 18 LAG, area `$59` has 468 passes and 11 LAG. Every pass falls on the correct side, and the gap between the closest LAG and non-LAG pass is under 100 cycles. A LAG pass's total includes the ~1300-cycle NMI it ran into, which is why s210 never saw a pass end on lines 241-250.
+- **The start line comes from the previous NMI's length**, in fixed steps: about 1300 cycles → L252, 1610 → L255, 1820 → L257, 2000 → L258. The port's NMI-time count predicts that length to within 14 cycles rms on the area the fit hadn't seen (`$5A`).
+- **HUD IRQ cost** (the HUD split interrupt plus its sound update, 983-3845 cycles) is now measured on every frame, not just the frames where a pass ran into it. Fitted on the port's new sound-update count, the error on `$5A` is 47 cycles rms (max 132).
+- **Margin:** only 6 of the 929 passes are within 200 cycles of the lag boundary. With the cycle model's combined error of about 65 cycles, it should classify nearly every pass correctly.
+- **One sound timing difference:** when a pass runs past line 191, a `PlaySound` call made later in that pass is played one frame later in tools.emu than in the port (`$81` f2596 / f2597). This is the largest error in the HUD-IRQ fit.
+
+**What I changed:**
+- `tools/emu/pass_cost.py`: `--split-int` rows now end with a log of every interrupt (type, line, cycles).
+- `web/test/pass_count.mjs`: new `snd` count for the sound update.
+- New tools: `tools/int_fit.py` (HUD IRQ and NMI cost fits) and `tools/lag_threshold.py` (the lag rule and the boundary margin).
+- `tools/pass_fit.py`: `hud` fit. `tools/passfit_runs.sh`: now also runs the interrupt fits.
+- REVERSE.md (task (c) text and the Verification Log row "Main-loop pass cost") and CLAUDE.md are updated.
+
+**Next, (c2):** move the fitted per-stage, per-AI, HUD and NMI coefficients into the port as a per-pass cycle estimate. Then add a lag frame when that estimate is over the start-line limit, and extend `group81_check.mjs` / `group5c_check.mjs` past their first lag frame.
+
+Nothing is committed.
+
+SESSION_SUMMARY: s214 found the exact tools.emu lag rule (a pass lags iff its cycles without the overrun NMI exceed (503 − start line) × 341/3; all 929 passes of the full `$81` / `$59` runs separate) and fitted the NMI length (sets the start line, rms 14 out of sample) and HUD-IRQ cost (rms 47) on new `pass_count.mjs` buckets with new `tools/int_fit.py` / `tools/lag_threshold.py`; (c) stays open for (c2), applying the model in the port.

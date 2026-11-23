@@ -1,0 +1,127 @@
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.md |
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_17[89].txt re_loop_sessions/*_180.txt && tail -c 6000 re_loop_sessions/20261122_104601_session_
+  ▶ head -c 6500 re_loop_sessions/20261122_104601_session_179.txt; echo; grep -o "▶.\{0,200\}" re_loop_sessions/20261122_104
+  ▶ Read 20261122_104601_session_179.txt
+Next group: area `$09`. Let me look at its spawns and the `group_08` scenario.
+  ▶ python3 tools/area_dump.py spawns 9 2>&1 | head -40; grep -n "group_08\|def scen_group\|def _group" tools/emu/scenario.p
+  ▶ Read scenario.py +590
+Adding a `group_09` scenario, first with no keys to see where the player starts relative to the spawns.
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario group_09 2>&1 | head -40 | cut -c1-220
+  ▶ python3 -m tools.emu.scenario_state group_09 12 --out web/test/states/group09.json --save-state tools/emu/states/group09
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/group09.state --web web/test/states/group09.json --frames 30
+Idle run matches. Now where are the enemies vs player (81,560)?
+  ▶ python3 tools/csv_cols.py gfx/group09/emu.csv gfx/group09/web.csv o0D_ai,o0D_x,o0D_y,o0F_ai,o0F_x,o0F_y,o11_ai,o11_x,o11
+  ▶ python3 tools/csv_cols.py gfx/group09/emu.csv gfx/group09/web.csv o0D_ai,o0D_x,o0D_y,o0F_ai,o0F_x,o0F_y,o11_ai,o11_x,o11
+Player (81,560); enemies AI `$24` ×3 at y≈138 / 634, AI `$20` at (1048,636), AI `$87` (h3) at (376,396). Checking what AI `$20`/`$24` do, so the walk reaches them.
+  ▶ Grep "^\| `\$(20|24|87)`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "AiChase|`\$20` .{0,40}27:|AI `\$87`|\| `\$87`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+`AiChase` enemies; idle they stay offscreen. Trying a walk up toward slot `$0D` / the h3 at (376,396).
+  ▶ python3 -m tools.emu --help 2>&1 | grep -A2 -E "^\s+--(load-state|keys|watch|compare|frames)" | head -24
+  ▶ python3 -m tools.emu --load-state tools/emu/states/group09.state --frames 400 --keys 2530:UP:150 2690:RIGHT:80 --compare
+  ▶ python3 -m tools.emu --load-state tools/emu/states/group09.state --frames 400 --keys 2530:UP:150 2690:RIGHT:80 --compare
+  ▶ Read csv_cols.py
+Adding an optional `:STEP` to csv_cols' range so I can sample long runs.
+  ▶ Edit csv_cols.py
+  ▶ Edit csv_cols.py
+  ▶ python3 tools/csv_cols.py gfx/group09/try1.csv gfx/group09/try1.csv pos_x,pos_y,o0D_x,o0D_y,o16_x,o16_y,o0E_ai,o0E_x,o0E
+UP stops at y=517 and RIGHT at x=225. Looking at the rendered area map to plan a route.
+  ▶ Glob gfx/areas/*09*
+  ▶ Read area_009_coll.txt
+  ▶ python3 tools/csv_cols.py gfx/group09/try1.csv gfx/group09/try1.csv pos_x,pos_y,o00_x,o00_y,o00_ai 2505-2905:40
+  ▶ python3 -m tools.emu --load-state tools/emu/states/group09.state --frames 700 --keys 2530:UP:50 2585:RIGHT:330 2930:B:4 
+  ▶ head -1 gfx/group09/try2.csv
+No HP column; running it as the scenario with `$03C1` watched (scenario offsets = frame − 2496, as in s179).
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario group_09 2>&1 | sed -n 3,40p | cut -c1-160
+The player takes 7 hits (`$0F` each, `26:9413`) and dies at scenario f646 (sub_state → 3). Checking whether the port's death path is already verified before deciding to include it.
+  ▶ Grep "(sub_state|substate) 3\b.{0,120}|PlayerDied|SubstDeath|death.{0,40}sub_state" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -n -o ".\{0,200\}\(sub_state\|substate\) 3\b.\{0,250\}" REVERSE.md | head -6; grep -n "^30,CB8\|^30,CB7\|^26,94[01]
+  ▶ Grep ".{0,200}(sub_state|substate) 3\b.{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^(30,CB[5-9A-F]|26,94[01])" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Death is ported (`states/death.js`, s88/s89), so a natural-enemy death is good coverage. Re-exporting the state with the new keys and comparing 700 frames.
+  ▶ python3 -m tools.emu.scenario_state group_09 12 --out web/test/states/group09.json --save-state tools/emu/states/group09
+Diffs from f2530 (key timing). Getting per-press/release frames from tools.emu's `$43` writes, as in s179.
+  ▶ python3 -m tools.emu --load-state tools/emu/states/group09.state --frames 700 --keys 2530:UP:50 2585:RIGHT:330 2930:B:4 
+Port keys from those writes (+1 when line ≥ 241): UP 2531:50, RIGHT 2585:330, B 2931/2951/2971:4, RIGHT 2990:21, B 3022:3, B 3040:5, RIGHT 3061:29, B 3101/3121/3141/3161:4.
+  ▶ node web/test/run.mjs --load-state web/test/states/group09.json --frames 699 --keys 2531:UP:50 2585:RIGHT:330 2931:B:4 2
+699/699 rows equal at shift 0. Checking whether the death happened in this window.
+  ▶ python3 tools/csv_cols.py gfx/group09/emu.csv gfx/group09/web2.csv state,sub,o00_x,o00_ai,o11_ai,o11_x,o14_ai,o14_x,o14_
+  ▶ python3 -m tools.emu --load-state tools/emu/states/group09.state --frames 1000 --keys 2530:UP:50 2585:RIGHT:330 2930:B:4
+Hits at f2822…3197, death at f3268 (sub_state 3 at f3269). Extending the compare to 1000 frames to cover the death sequence.
+  ▶ K="2530:UP:50 2585:RIGHT:330 2930:B:4 2950:B:4 2970:B:4 2990:RIGHT:20 3020:B:4 3040:B:4 3060:RIGHT:30 3100:B:4 3120:B:4 
+  ▶ python3 -m tools.emu --load-state tools/emu/states/group09.state --frames 1000 --keys 2530:UP:50 2585:RIGHT:330 2930:B:4
+  ▶ python3 tools/compare_frames.py gfx/group09/emu.csv gfx/group09/web2.csv 2>&1 | grep -v "^  o[01]" | head -30
+Death sequence differs from f3271: music clear, 4 fade `pal_crc` rows, objects cleared at f3327, and `oam_crc` every 8 frames from f3329. Reading how the s88/s89 death check was done.
+  ▶ Read REVERSE.md +162
+  ▶ Read death.js
+  ▶ for s in 1 -1; do python3 tools/compare_frames.py gfx/group09/emu.csv gfx/group09/web2.csv --cols oam_crc,music,pal,o --
+  ▶ python3 tools/compare_frames.py gfx/group09/emu.csv gfx/group09/web2.csv --cols oam_crc,music,pal,o --frames 3268-3504 -
+Shifts don't explain it as a whole; I need a per-cell label. Checking for an existing cell classifier.
+  ▶ Grep "LATE|PARTIAL" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ Grep "LATE|PARTIAL" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/finalscene_check.mjs
+Writing a small classifier `tools/cell_class.py` (LATE = port's next row has the emu value, EARLY = port's previous row has it, else PARTIAL).
+  ▶ Write cell_class.py
+  ▶ python3 tools/cell_class.py gfx/group09/emu.csv gfx/group09/web2.csv "" 2506-3504 | grep -v "^ 3327 o"
+  ▶ python3 -m tools.emu.oam_dump tools/emu/states/group09.state 3337,3338,3339 --keys 2530:UP:50 2585:RIGHT:330 2930:B:4 29
+  ▶ Read group08_check.mjs
+  ▶ Grep "PARTIAL|LATE" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/kill_check.mjs
+  ▶ Read kill_check.mjs +20
+I'll reuse `kill_check`'s `midPass` test for the OAM cells. Trimming the reference CSV next.
+  ▶ python3 tools/csv_trim.py gfx/group09/emu.csv web/test/group09_ref.csv --cols core,snd,pal,obj,oam_crc --frames 2507-350
+  ▶ Write group09_check.mjs
+  ▶ node web/test/group09_check.mjs
+Spawn frame was my sampling guess; the rows match, so it is f2676. Two OAM cells (f3329, f3393) are not a simple f/f+1 mix. Dumping OAM on both sides.
+  ▶ python3 -m tools.emu.oam_dump tools/emu/states/group09.state 3328,3329,3330,3392,3393,3394 --keys 2530:UP:50 2585:RIGHT:
+  ▶ Edit group09_check.mjs
+  ▶ sed -i 's/if (spawnF !== 2680) fail(`h3 chaser (slot $0E AI $24) at f${spawnF}, want f2680`);/if (spawnF !== 2676) fail(
+  ▶ Edit group09_check.mjs
+  ▶ Edit group09_check.mjs
+  ▶ Edit group09_check.mjs
+  ▶ node web/test/group09_check.mjs && python3 tools/run_checks.py 2>&1 | tail -8
+Check passes; suite 32/33 (only the known `world_check` gap (j)). Now the docs: the Verification Log row next to the s179 one, the task text, CLAUDE.md, and labels.
+  ▶ Grep "^\| Area-`\$08` enemy group" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^(26,94[01]|27,AA57|27,A915)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 26 9400 30 2>&1 | head -16
+  ▶ Read REVERSE.md +209
+  ▶ Grep "^26,9(3[89A-F]|40)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "26:9(3[0-9A-F]|40)[0-9A-F]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^26,9[23]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+HP write `26:9410` sits inside `HitPlayer` `26:9357` (damage = attack − defence). Adding the Verification Log row.
+  ▶ Edit REVERSE.md
+Now the AI `$24` table row and the task text.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "group08_check" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CLAUDE.md
+  ▶ Edit CLAUDE.md
+  ▶ printf '26,9410,HitPlayerDamage,s180: STA player HP - damage ($10); BCS 26:941A; else clamp 0 at 26:9415; SFX $5F (area-
+  ▶ Read labels.csv +975
+  ▶ Edit labels.csv
+I checked area `$09`'s enemy group against tools.emu, running through to the player's death. The port matches it frame for frame, so no port code changed. The task (the low-priority Ph7 boss-AI leftovers) stays open because more enemy groups are left.
+
+**What I ran**
+- **New scenario `group_09`** in `tools/emu/scenario.py`, using the area's own spawns:
+  - three chasers (AI `$24` `AiChase`) in slots `$0D`, `$0F` and `$11`;
+  - a walk/pause enemy (AI `$20`) in slot `$14`;
+  - the h3 entry in slot `$16` (AI `$87`), which adds a fourth chaser in slot `$0E` at f2676.
+
+  The player is level 16 with full HP. They climb the shaft, walk right into the corridor enemies and swing B. The swings never land.
+- **The chasers hit the player 7 times** and HP reaches 0 at f3268. `PlayerDeath` starts at f3269, and the death sequence runs to the end of the run at f3504. All of this happens on the same frames in both runs.
+- **New check `web/test/group09_check.mjs`**: 998 rows (f2507-3504) pass at shift 0, sound included.
+  - The gameplay rows (f2507-3268) are equal outright.
+  - The death sequence has 48 cells that are accepted only from a fixed list and pattern. These come from when tools.emu samples its row, not from a port bug, the same kind the s89 death check found. 34 cells have tools.emu one frame ahead (`music` at f3271, every object column at f3327). 4 fade palette rows hold a half-built palette buffer. 10 OAM rows land partway through the next sprite pass.
+  - Two of those OAM rows land inside a single sprite entry: its Y byte is already new, the rest is still old. So the check builds its OAM mix byte by byte, where `kill_check` does it per whole entry.
+- **Full suite:** 32 of 33 checks pass. `world_check` still fails for areas `$3C`, `$3D` and `$BC`, the failure already logged as gap (j).
+
+**Tools**
+- New `tools/cell_class.py` labels each cell that differs at shift 0: LATE (the port's next row has tools.emu's value), EARLY, or PARTIAL.
+- `tools/csv_cols.py` ranges now take `LO-HI:STEP`, for sampling long runs.
+
+**Docs**
+- REVERSE.md has a new Verification Log row, a note on AI `$24`'s row in the AI table, and the task text. The groups still left are areas `$04`/`$05`, `$11`, `$18` and the other enemy AIs that areas place.
+- CLAUDE.md lists the new check and tool, and `labels.csv` has `HitPlayerDamage` at `26:9410`.
+
+New files are the state pair (`web/test/states/group09.json`, `tools/emu/states/group09.state`), `web/test/group09_ref.csv`, the check and `tools/cell_class.py`. The comparison output is in `gfx/group09/`. Nothing is committed.
+
+SESSION_SUMMARY: Session 180 checked area $09's enemy group (AI $24 AiChase ×4 incl. the h3 chaser, AI $20) through 7 contact hits and the player's death against tools.emu with the new group_09 scenario and web/test/group09_check.mjs: 998/998 rows pass at shift 0 including sound, the 48 death-sequence cells being listed LATE / byte-granular PARTIAL row-sampling cells; no port change; new tools/cell_class.py, csv_cols LO-HI:STEP; 32/33 checks pass (world_check is the known gap (j)).

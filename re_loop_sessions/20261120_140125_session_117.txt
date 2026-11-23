@@ -1,0 +1,89 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; gr
+  ▶ Read REVERSE.md +2267
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions; wc -c *session_11[4-7]*; tail -c 3000 20261120_140
+  ▶ Grep "AI `?\$38|Ai38|ai38" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 AFA9 120; grep -n "AiPitShuttle\|AFA9\|AFED
+Picking the gameplay task's sub-item AI `$38` (`AiPitShuttle`) plus its sibling AI `$3C`; locating the web AI dispatch and helpers now.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls web/src/game/obj; grep -n "0x38\|0x3c\|0x3C\|0x05\]\|aiFollowFac
+  ▶ Read util.js
+  ▶ Read ai_effect.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 B01E 24; grep -n "AI_EFFECT\|not ported\|AI
+  ▶ Grep "0x3[8C]:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,40p web/src/game/obj/ai_field.js; grep -n "AI_FIELD = " -A
+Good — `stepFree` already matches the `98A8/8480/9861/9897` tail. Adding both AIs to `ai_field.js`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 40,48p web/src/game/obj/ai_field.js; grep -n "^import" web/s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat > /tmp/s117_patch.py <<'EOF'
+I'll use the Edit tool directly.
+  ▶ Edit ai_field.js
+  ▶ Edit ai_field.js
+  ▶ Edit ai_field.js
+  ▶ Edit ai_field.js
+  ▶ Edit ai_field.js
+Now verify with the s116 pit-fall scenario (area `$6A`, slot `$18` = AI `$38`).
+  ▶ Read REVERSE.md +2488
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls web/test/states/ gfx/compare/ | grep -i "s116\|pit\|json\|README
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls tools/emu/ | head -50; grep -n "pitfall" -r web/test/*.mjs web/t
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,60p tools/emu/web_state.py | grep -v "^import\|^from"
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -o '"frame": *[0-9]*' web/test/states/pitfall.json; F=$(grep -
+  ▶ Grep ""frame": *\d+" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/states/pitfall.json
+AI `$38`/`$3C` are ported; now running the pit scenario in both the emulator and the port to compare slot `$18`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu --load-state gfx/compare/s116_pit.state --fram
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/s116_emu.csv gfx/compar
+Slot `$18` is fixed (30 → 2 rows). But slot `$17` now differs from f2586 in area `$69`; checking it.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/s117_emu.csv gfx/compar
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/s116_emu.csv gfx/compar
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/s116_web.csv gfx/compar
+My `--frame0 2514` shifted the port by a frame (the s116 run started at 2515). Rerunning with the JSON's own frame0.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --load-state web/test/states/pitfall.json --f
+Slot `$18` now matches on every frame; the remaining rows are the known s116 fall-step sampling rows. Next: a fuzz case set for the two AIs via `routine_capture.py`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "B778\|AiCoin\|aiCoin\|ai_field\|AFA9" tools/emu/routine_ca
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 205,265p tools/emu/routine_capture.py; sed -n 440,470p tools
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "_fix_field\|_fix_effect\|def _poke_bg\|obj_frames\|readdir
+  ▶ Read routine_capture.py +690
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.routine_capture --load-state gfx/compare/s116_
+All 600 new platform fuzz cases match (14900/14900 total). Running the remaining web checks, then updating docs.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for t in core_check ppu_check world_check sprite_check serve_check;
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_chec
+Now the records: REVERSE.md task text + session note, labels, README, architecture doc.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "AiCoin\|ai_field" docs/architecture_web.md | head; grep -n
+  ▶ Grep "AiCoin|ai_field|fuzz_field|AiCrumblePlatform|AFFB|PlatformProbeOfs" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Read README.md +30
+  ▶ Edit README.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "ai_field" docs/architecture_web.md
+  ▶ Grep "ai_effect|ai_walk|AI \$0?5\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Read architecture_web.md +60
+Updating the architecture doc and REVERSE.md now.
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+I ported the two pit-platform enemy behaviours (AI `$38` and AI `$3C`) to the web port. The enemy in slot `$18` of the session-116 pit scenario was 1 px off on 30 frames; it now matches the emulator on every frame.
+
+**What changed:** `web/src/game/obj/ai_field.js` now has:
+- **`aiPitShuttle`** (`27:AFA9`, AI `$38`): a platform that moves back and forth over a pit. It checks the cell just ahead of it. While that cell is still pit, it takes one step; otherwise it turns around and pauses for 32 frames.
+- **`aiCrumblePlatform`** (`27:AFF5`, AI `$3C`): the same platform, but once the player has stood on it and stepped off, it counts down, plays sound `$64` along the way, and disappears. As in the ROM, it still takes its movement step on the frame it disappears.
+
+The behaviour was already documented in REVERSE.md, so this was a straight port with no new reverse engineering.
+
+**Checks:**
+- **Pit scenario** (`web/test/states/pitfall.json`, 150 frames against the emulator): slot `$18` matches on every frame. The only remaining differences are the 1-frame sampling rows already explained in session 116 (the fall steps and the area-switch frame). Run `run.mjs` without `--frame0`; passing `--frame0 2514` shifts the port by one frame.
+- **Random tests:** a new set, `web/test/obj_frames/fuzz_platform.json`, runs 300 cases for each of the two routines. They are captured from the area-`$6A` save state so that half of them check real pit cells. All 600 match.
+- **All web checks pass:** core, ppu, world, sprites 552/552, routines 14900/14900, serve.
+
+**Records:**
+- REVERSE.md: a session-117 note, the gameplay task text updated, and the session-116 "1 px off" line marked as fixed.
+- labels.csv: one new label, `27:AFFB` `CrumbleRideCheck`.
+- The test README and `docs/architecture_web.md` are updated.
+- `tools/emu/routine_capture.py` gained the capture setup for the new random tests.
+
+The gameplay task stays unchecked because its other leftovers are still open. The `gfx/compare/s117_*.csv` files are scratch and can be deleted. Nothing is committed.
+
+SESSION_SUMMARY: Session 117: ported AI $38 AiPitShuttle 27:AFA9 and AI $3C AiCrumblePlatform 27:AFF5 into web/src/game/obj/ai_field.js; the pitfall.json slot $18 now matches the emulator on every frame, the new fuzz_platform.json is 600/600, all web checks pass, and the gameplay task stays open for its other leftovers.

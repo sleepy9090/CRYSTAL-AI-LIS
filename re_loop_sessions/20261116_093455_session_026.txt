@@ -1,0 +1,20 @@
+  ▶ Glob {dead_ends.md,REVERSE.md,re_loop_sessions/*}
+  ▶ Read dead_ends.md
+  ▶ Read 20261116_093455_session_025.txt
+  ▶ Read 20261116_093455_session_024.txt
+  ▶ Read 20261116_093455_session_026.txt
+  ▶ Grep "^## |^### |- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1040
+Top task: **Ph4 assets 4/5 — audio + text**. Let me look at the existing sound/text documentation and tools.
+  ▶ Grep "sound_dump|text_dump|font_dump|text\.txt|Sound driver|sound driver|### Sound" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob tools/*.py
+  ▶ Read REVERSE.md +170
+  ▶ Read sound_dump.py
+Sound format is well documented. Let me check the exact loop/call semantics at `24:8584` and the frame-wait logic before writing the exporter.
+  ▶ python3 tools/dis.py 24 8584 0x75 && echo ---- && python3 tools/dis.py 24 8347 0x1E
+  ▶ python3 tools/dis.py 24 8186 0x100 | cut -c1-90
+  ▶ python3 tools/dis.py 24 8287 0xC0 | cut -c1-90
+Key quirk found: SFX tick is skipped if music read ≥20 ops that frame (`$FD`≥`$14` at `24:81E3`). Now the note and envelope handlers, plus the DMC table.
+  ▶ python3 tools/dis.py 24 83E2 0xCD | cut -c1-90 && python3 tools/decode_tables.py 24:8BD8 13 u8x4 2>&1 | head -20
+  ▶ python3 tools/dis.py 24 84AF 0x83 | cut -c1-90 && python3 tools/dis.py 24 8609 0x48 | cut -c1-90; python3 tools/decode_t
+You've hit your 5-hour limit · resets 2:30pm (America/New_York)

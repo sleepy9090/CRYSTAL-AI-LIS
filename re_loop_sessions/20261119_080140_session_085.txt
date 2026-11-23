@@ -1,0 +1,146 @@
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \[ \
+  ▶ sed -n 2141,2290p REVERSE.md | grep -n "^- \[ \]" | head; cat dead_ends.md; tail -40 re_loop_sessions/20261119_080140_se
+  ▶ grep -n "FCEUX rerun" REVERSE.md | head; sed -n 2141,2160p REVERSE.md | cut -c1-200; tail -30 re_loop_sessions/20261118_
+  ▶ git diff REVERSE.md | cut -c1-400; sed -n 2280,2286p REVERSE.md | cut -c1-150; ls ref | head -50
+  ▶ wc -l tools/emu/poke_probe.py docs/emu_tour.txt && sed -n 1,80p tools/emu/poke_probe.py && grep -n -i "never run" -A60 d
+Picked the top open task (Ph6 scripted scenarios). Extending `poke_probe.py` with RAM pokes and coverage now.
+  ▶ sed -n 80,93p tools/emu/poke_probe.py; ls tools/emu/; grep -n "coverage\|def \|executed" tools/emu/tour.py | head -40
+  ▶ sed -n 268,310p tools/emu/tour.py; sed -n 405,430p tools/emu/tour.py; ls tools/emu/states; grep -n "def on_write\|def on
+  ▶ grep -E "^\*," labels.csv | grep -iE "gold|xp|level|hp|mp|item|inv|sword|equip|pad|joy|sub_state|main_state|obj_type|obj
+  ▶ grep -n -o -iE ".{0,200}(PauseScreen|SubstEquipMenu|NpcTalk\b|SubstTeleportMenu|ItemUseMenu|SubstOutOfMp).{0,200}" REVER
+  ▶ Grep ".{0,200}(PauseScreen|SubstEquipMenu|NpcTalk`|SubstTeleportMenu|SubstOutOfMp).{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -n "START\|SELECT\|def parse_keys\|RIGHT" tools/emu/__main__.py tools/emu/pads.py | head -20; grep -n "state.save\|
+  ▶ Read pads.py
+Writing a scenario runner now (`tools/emu/scenario.py`): load state, poke RAM, script keys, report which never-run labels each scenario reaches.
+  ▶ Grep "keys" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/nes.py
+  ▶ Write scenario.py
+  ▶ grep -n "self.pads\|def write\b\|def write(" tools/emu/nes.py tools/emu/memory.py | head; timeout 600 python3 -m tools.e
+  ▶ Edit scenario.py
+  ▶ time timeout 600 python3 -m tools.emu.scenario pause 2>&1 | tail -30
+Pause scenario works (7 new labels, incl. `NpcTalk`). Running the full set.
+  ▶ timeout 900 python3 -m tools.emu.scenario equip equip_save debug_pause out_of_mp gold_xp death 2>&1 | grep -v "^  bank" 
+  ▶ Grep "16:8000|MenuMain|menu page|MenuSave`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 1466p REVERSE.md | cut -c1-1500; sed -n 1480,1481p REVERSE.md | cut -c1-1200
+  ▶ Grep "SELECT|START|0x3C1|poke|area" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/probe_screens.py
+  ▶ grep -rn "probe_screens" REVERSE.md docs/*.txt docs/*.md 2>/dev/null | grep -i "python3\|steps\|w:" | head -8 | cut -c1-
+  ▶ Grep "SCREENS|\{ *name|p:|w:|s:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/ref/fceux_capture.lua
+Refining scenarios with the known menu/death step sequences from `fceux_capture.lua`; adding timed pokes.
+  ▶ python3 tools/decode_tables.py --help 2>&1 | head -8; grep -n "magic_sel\|,magic\|0716\|0717" labels.csv | head; sed -n 
+  ▶ sed -n 1200,1225p REVERSE.md | cut -c1-400
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ python3 tools/decode_tables.py 23:BF00 256 u8 --per-line 32
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+Now the run loop: timed pokes, per-frame hook.
+  ▶ Edit scenario.py
+  ▶ sed -n 136,150p tools/emu/nes.py; time timeout 1200 python3 -m tools.emu.scenario --out /tmp/scn.txt 2>&1 | grep -v "^  
+Big batch worked: ~50 new labels reached. Checking the save-confirm routine (`16:84DA`) before writing findings, since `save_ok` stopped at the YES/NO prompt.
+  ▶ python3 tools/dis.py 16 84DA 0x60 --stop | head -50
+Confirm prompt starts on NO (`$23`=1; any d-pad press toggles, `LSR` → C=cancel). Writing interim findings to REVERSE.md, then fixing the scenarios.
+  ▶ Grep "^## |^### " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 121,161p REVERSE.md | cut -c1-260; sed -n 1470,1483p REVERSE.md | cut -c1-200
+Adding a Verification Log row now (interim), and the confirm-prompt detail to the save section.
+  ▶ Edit REVERSE.md
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ time timeout 1200 python3 -m tools.emu.scenario save_ok load_ok death death_new mp_bridge mp_jump mp_teleport mp_change 
+Save works now (`SaveSlotCopy` + checksum `$70F5`); a successful save closes the menu, so load needs a re-open. The title menu after death needs a closer look.
+  ▶ Grep "TitleMenuInput|TitleMenuStart`|TitleMenuRestart" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 1949p REVERSE.md | cut -c1-2500
+  ▶ Grep "KEYS|keys *=" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/web_compare.py
+  ▶ Grep "CANON_KEYS *=" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/ref/compare_ref.py
+  ▶ Edit scenario.py
+  ▶ time timeout 1200 python3 -m tools.emu.scenario load_ok death_new death_cont 2>&1 | grep -v "^  bank" | grep -v "f0: \$0
+  ▶ timeout 1200 python3 -m tools.emu.scenario load_ok death_new death_cont --out /tmp/scn2.txt > /dev/null 2>&1; echo done
+Still on the load/death scenarios; reading the results.
+  ▶ Grep "^\[|end:|newly|\$0041 <- (0[0-6]|1)|\$0040|\$0082|\$006D" /tmp/scn2.txt
+  ▶ Read scn2.txt +49
+  ▶ grep -n "NES()\|reset()\|power" tools/emu/__main__.py | head -5; grep -n "def reset\|def power" tools/emu/nes.py
+  ▶ grep -n "NES(\|load_state\|reset" tools/emu/__main__.py tools/emu/debug.py | head -10; sed -n 50,72p tools/emu/nes.py
+  ▶ grep -n "def reset\|def irq\|def nmi" tools/emu/cpu.py tools/emu/nes.py
+Adding `boot`, `attract`, and `warm_reset` scenarios.
+  ▶ Edit scenario.py
+  ▶ grep -n "state.load(nes\|while r\[0x41\] != 8\|write_mem(nes, mask, ln)\|if sc.get('area')" tools/emu/scenario.py
+  ▶ Read scenario.py +138
+  ▶ Edit scenario.py
+  ▶ sed -n 76,88p tools/emu/cpu.py; timeout 1500 python3 -m tools.emu.scenario boot attract warm_reset --out /tmp/scn3.txt >
+  ▶ timeout 1500 python3 -m tools.emu.scenario boot attract warm_reset --out /tmp/scn3.txt > /tmp/scn3.log 2>&1; tail -3 /tm
+  ▶ timeout 1500 python3 -m tools.emu.scenario boot attract warm_reset --out /tmp/scn3.txt
+Boot/attract/warm-reset cover the boot and title labels. Writing the findings to REVERSE.md now.
+  ▶ Grep "`ItemUseMenu`|ItemUseMenu` `30:D497|30:D497" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 853,862p REVERSE.md | cut -c1-500
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario use_herb use_fail use_warp opel --out /tmp/scn4.txt
+Item use + Opel revive work too. Running the full scenario set into `docs/emu_scenarios.txt` in the background while I write up.
+  ▶ timeout 3000 python3 -m tools.emu.scenario --out docs/emu_scenarios.txt
+Now the REVERSE.md section. Adding it after the "Tour leftovers" Verification Log row and as a findings section.
+  ▶ grep -n "^| Reference frame 2409" REVERSE.md; grep -n "emu_tour.txt\` " REVERSE.md | head -3; grep -n "poke_probe.py" RE
+  ▶ Grep "^\| Reference frame 2409|tools/emu/poke_probe.py`.{0,60}$|^- `tools/emu/poke_probe" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "poke_probe" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ awk '/poke_probe/{print NR": "substr($0,1,140)}' REVERSE.md
+  ▶ Grep "poke_probe" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2098
+  ▶ Edit REVERSE.md
+Now the Verification Log row with the findings.
+  ▶ Read REVERSE.md +160
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +161
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now updating the task entry: mark done, and fold the remainder into one low-priority task at the end.
+  ▶ Grep "^- \[ \] Ph6 \(low priority\) scripted scenarios" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2304
+  ▶ Edit REVERSE.md
+Checking whether `16:84DA` has a label while the full run finishes.
+  ▶ Grep "^16,(84DA|850D)|^30,D980|^\*,0082" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 30 D970 0x20 | head -14; python3 tools/dis.py 16 850D 0x10 | head -5
+The write hook reports the PC *after* the store, so I need to correct the cited addresses. Checking the menu-load path start:
+  ▶ python3 tools/dis.py 30 D940 0x32 | head -24
+  ▶ Edit REVERSE.md
+  ▶ printf '%s\n' '16,84DA,MenuConfirmYesNo,s85: A=string id ($41->$49); $23=1 cursor on NO; d-pad edge INC $23 + SFX $4B; A
+  ▶ wc -l labels.csv && tail -2 labels.csv
+  ▶ Edit labels.csv
+Waiting on the full scenario run to fill in the union count.
+  ▶ Read b3p25zedn.output
+  ▶ ToolSearch max_results query
+  ▶ Monitor command description timeout_ms
+I'll wait for the run to finish.
+  ▶ Monitor command description timeout_ms
+Still waiting on the full run.
+  ▶ Grep "^union|^\[|newly run \(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_scenarios.txt
+  ▶ Read emu_scenarios.txt +298
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^\[" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_scenarios.txt
+  ▶ sed -i 's/24 scenarios together run 93/26 scenarios together run 93/; s/`tools\/emu\/scenario.py` (24 scenarios, 93/`too
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I took the top open task, "Ph6 scripted scenarios", and it's done: 93 of the 178 code labels the area tour never ran have now run in the emulator. Every path I drove behaved the way REVERSE.md already describes it.
+
+One thing to flag first: you edited the FCEUX rerun task to say the capture is already done. It's still queued below this one, so it's the next task; I didn't start it.
+
+**New tool: `tools/emu/scenario.py`.** Each scenario loads a savestate or powers on, can switch area, pokes RAM/WRAM, plays a key script on pad 1 or 2, runs with instruction tracing, and reports which of the never-run labels it reached. There are 26 built-in scenarios; the full run writes `docs/emu_scenarios.txt` and takes about 25 minutes.
+
+**What the scenarios reached:**
+- **Menus and saves:** the pause screen, the equipment/item menu, a refused save in area `$01`, a successful save in area `$02` (slot copy and checksum), and loading from the menu.
+- **Death and title:** death returns to the title after about 396 frames. From there, "new game" goes through the story, status screen, name entry and wake cutscene; "continue" goes through `MainStateContinue` → `LoadGameAndInit`.
+- **Boot:** power-on boot with all the save checks, the idle title-screen loop with opening pages 2–4, and a warm reset.
+- **Magic:** spells 1–9 each reached their handler, including running out of MP, telepathy, the teleport menu, cure, change form and revert, flight and jump.
+- **Items:** using an item successfully, a failed use ("Nothing happens."), the Warp Boots menu, and the Opel Statue reviving the player.
+- **Combat:** killing an enemy ran the kill, XP and gold-pickup code.
+- **Pad 2:** the debug pause.
+
+**New facts written to REVERSE.md:**
+- The YES/NO prompt `16:84DA` starts on **NO**. Pressing A straight away cancels; any d-pad press switches to YES first.
+- A successful save from the menu closes the whole menu.
+- Loading from the menu runs `LoadGame` and then reloads the area (`30:D942-D984`). It does not use `LoadGameAndInit`; only the title-screen "continue" does.
+- The PCs printed for memory writes point to the instruction *after* the store. I noted this so the addresses aren't misread.
+
+**Not working yet:** after opening the teleport menu (Warp Boots or spell 4), DOWN then A didn't pick a destination.
+
+**Still never run:** bosses, shops, talk actions and event actions, area-edge links and pits, moving platforms, conveyors, a few IRQ modes, two sound opcodes, the s78 hit-rule checks, and areas `$16`/`$6F`. These are now one low-priority task, "Ph6 scenario leftovers", at the end of RE Investigation. The ending is still covered separately by `ending_probe.py`.
+
+I also added a Verification Log row, a findings section and the tool's entry to REVERSE.md, and three labels to labels.csv: `MenuConfirmYesNo`, `MenuConfirmCursor` and `EquipMenuLoadTail`.
+
+SESSION_SUMMARY: Session 85: added tools/emu/scenario.py (26 scripted scenarios); 93 of the 178 never-run labels now run (menus, save/load, death/title, boot, magic, items, enemy kill, pad 2) and match their docs; new facts: the YES/NO prompt starts on NO, a successful menu save closes the menu, menu load = LoadGame + area reload; the rest is queued as "Ph6 scenario leftovers".

@@ -1,0 +1,96 @@
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Read dead_ends.md
+  ▶ Grep "^#|^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1296
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l re_loop_sessions/*_03[012].txt; tail -c 1500 re_loop_sessions
+  ▶ Read nesrom.py
+  ▶ Read REVERSE.md +50
+Working on session 32's task, "Ph5 structs 4/5": I'm building the pointer-table and bank-reference checker tools. Next I'm reading `disasm_all.py` to see what I can reuse.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l tools/disasm_all.py tools/xref.py tools/bank_calls.py; grep -
+  ▶ Read disasm_all.py +1
+  ▶ Read disasm_all.py +580
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^31,F[F]\|Far\|^30,C4[0-3]\|^31,EF3" labels.csv | head -30
+  ▶ Read coverage.txt +36
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; time python3 tools/disasm_all.py --quiet; git status --short disasm
+Status: the existing disassembler's tracer can be reused, so I'm writing `tools/check_bank_refs.py` on top of it.
+  ▶ Write check_bank_refs.py
+  ▶ Edit check_bank_refs.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/check_bank_refs.py; grep -v "^  ROM-WRITE\|^  CODE-RE
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep "CODE-READ" docs/bank_refs.txt; python3 tools/dis.py 15 AB3C 0
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n -o ".\{80\}\(CCA4\|11:BE00\|BE5E\|D40C\|842D\|A8A2\|B2F1\|2
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 A890 0x18; python3 tools/dis.py 27 B2DE 0x1
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n -o ".\{100\}wram_buf.\{100\}" REVERSE.md | head; grep -n "w
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 11:BE00 16 hex16 2>&1 | head -20; py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; awk '/^[A-Za-z_0-9]+:/{l=$0} /\$9E00,Y|9E00,Y/{print FILENAME": "l"
+  ▶ Grep "^\w+:|9E00,Y" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm/bank_30.asm
+  ▶ Write find_ptr_tables.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/find_ptr_tables.py && sed -n 1,200p docs/ptr_tables.t
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 - <<'EOF' 2>/dev/null || true
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 14 8320 0x10; python3 tools/dis.py 30 C7A8 0x1
+  ▶ Edit find_ptr_tables.py
+  ▶ Edit find_ptr_tables.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/find_ptr_tables.py && sed -n '/^## word/,$p' docs/ptr
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/find_ptr_tables.py
+  ▶ Grep "^## word|^## orphan|^\d\d:|^  \d\d:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/ptr_tables.txt
+  ▶ Grep "^\d+,(A17A|9C82|BEB7|8B1F|A11A|8F3B|A193|A6F3|A7BC|AC07|9767|9A6A|84BC|84CC|A072|BA40|DBDC|DDBD|DF0E|E3D9|F6C2|8400|9301|AD00|ABDC|8074|8032|8006|83D4|9EB8|B87F|B941|BAFB|B708|AC99|9664|8015)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "dispatch tables|A17A|untraced" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit check_bank_refs.py
+  ▶ Edit check_bank_refs.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/check_bank_refs.py; grep -A30 "^## labels" docs/bank_
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for s in "14 85BC 0x14" "15 BE78 0x14" "16 86C8 0x18" "18 80E8 0x16
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 14 85BC 0x14; python3 tools/dis.py 15 BE78 0x1
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 20 9734 0x14; python3 tools/dis.py 20 94C0 0x1
+  ▶ Read REVERSE.md +397
+  ▶ Grep "0xBEE0|BEE0" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/filler_scan.py
+  ▶ Read filler_scan.py +38
+  ▶ Edit filler_scan.py
+  ▶ Read labels.csv +366
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Now append the new labels.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 200 labels.csv | od -c | tail -3
+  ▶ Read labels.csv +772
+  ▶ Edit labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/disasm_all.py --quiet; head -36 disasm/coverage.txt |
+  ▶ Grep "round-trip" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm/coverage.txt
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +1104
+  ▶ Grep "^(word|split)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/ptr_tables.txt
+Status: tools and labels are done, and the disassembly still round-trips byte-exact. Now writing the "Pointer Tables" section in REVERSE.md and updating the task list.
+  ▶ Edit REVERSE.md
+  ▶ Grep "Decode the 8 untraced dispatch tables|^- \[ \] Ph5 structs 4/5" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +1412
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +1370
+  ▶ Edit REVERSE.md
+  ▶ Grep "save_layout.txt" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1256
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/filler_scan.py > /dev/null && echo filler ok; python3
+I finished task Ph5 structs 4/5: both new tools run, and the full disassembly still reassembles byte-for-byte after the label changes.
+
+**Bank-reference check** (`tools/check_bank_refs.py` → `docs/bank_refs.txt`): no real cross-bank errors.
+- **Calls:** 2052 of 2057 calls into `$8000-$FFFF` land correctly. The other 5 are not bugs:
+  - 4 calls from bank 16 look wrong only because the tracer assumes bank 17 is mapped beside it; the game actually maps bank 23 there.
+  - One call (`15:AB84`) follows a bank restore the tracer can't follow; it is really `26:9824`.
+- **Bank switches:** every bank-switch call with a constant bank number uses a valid bank. The 24 with a computed value are listed in the report.
+- **One wrong label:** `EventTriggerTable` was recorded as `14:A17A`, but that address is in bank 15. I fixed it to `15:A17A` in `labels.csv` and in every mention in REVERSE.md.
+- **Corrected dead range:** two routines (`30:CCA4`, `19:BE5E`) map bank 11 into the other half of the window and copy `11:BE00-BEFF` into WRAM `$6000`. Part of that block was marked as dead filler, so the dead range now starts at `11:BF00` instead of `11:BEE0`. What reads the copied page is still unknown.
+- **Three quirks:**
+  - `15:AB4E` maps a random bank and reads a word from it as noise.
+  - `27:B2E7` adds bytes of its own code to an object's direction as a cheap random offset.
+  - `27:A8A2` is a 4-byte direction table that the tracer decodes as code.
+
+**Pointer tables** (`tools/find_ptr_tables.py` → `docs/ptr_tables.txt`):
+- 62 pointer tables found by looking at the code that reads them. They are catalogued in a new "Pointer tables + bank references" section under Data Structures. Entry counts are upper bounds, not exact.
+- 4 more untraced dispatch tables, all in bank 19 (`19:A193`, `A6F3`, `A7BC`, `AC07`). I added them to the existing task for the 8 untraced dispatch tables rather than making a new one.
+- The scan for pointer runs with no reader gave 245 runs after filtering; most are coincidences in sprite and area data. I listed the dozen or so plausible ones in the new section.
+
+**Labels:** 23 new labels plus 2 fixes, including the three missing upper halves (`AreaHeaderTableHi`, `AreaPtrTableHi`, `ObjTypeTableHi`) and all 12 untraced dispatch tables.
+
+The leftovers are one low-priority task at the end of RE Investigation: decode the new data tables, find what reads the `$6000` page, check the plausible no-reader runs, and give the disassembler a bank-16 context fix. Nothing is committed.
+
+SESSION_SUMMARY: Session 32 — Ph5 structs 4/5 done: new tools `check_bank_refs.py` (no real bank errors) and `find_ptr_tables.py` (62 pointer tables catalogued under Data Structures); fixed `EventTriggerTable` to `15:A17A`, found 4 more untraced dispatch tables in bank 19 and the `11:BE00`→`$6000` page copy (dead range now starts at `11:BF00`), 3 quirks; 23 new + 2 fixed labels; leftovers queued as one low-priority task.

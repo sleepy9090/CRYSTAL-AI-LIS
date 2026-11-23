@@ -1,0 +1,100 @@
+  ▶ wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.md | 
+  ▶ Read dead_ends.md
+  ▶ for f in 20261118_055659_session_075.txt 20261118_055659_session_074.txt 20261118_015146_session_073.txt; do echo "== $f
+  ▶ tail -c 1500 re_loop_sessions/20261118_055659_session_075.txt; echo ====; tail -c 1200 re_loop_sessions/20261118_055659_
+  ▶ grep -n "Player — movement\|World interaction\|player_probe\|obj1_flash\|PlayerMagic\|PlayerConveyor\|overlapping step" 
+  ▶ Read REVERSE.md +1056
+I'm on session 76's top task, the player leftovers: checking magic and the charged sword shot in the emulator.
+  ▶ sed -n 60,140p tools/emu/player_probe.py; grep -n "SpawnShot\|SpendMp\|,0708,\|,0709,\|,0702,\|player_hp" labels.csv | h
+  ▶ grep -n "sub_state\b\|,orbit_level\|,magic_sel\|,equip_sword\|,sword_power\|,obj1_flash" labels.csv | head; sed -n 1,40p
+Now writing a magic/shot probe tool that hooks `SpawnShot` and `SpendMp` per frame.
+  ▶ Write magic_probe.py
+  ▶ time python3 tools/emu/magic_probe.py --poke 0712=02 --seg NONE:10 A:2 NONE:20 A:2 NONE:10 --every 10
+  ▶ P=tools/emu/magic_probe.py; echo "### m2 rapid"; python3 $P --poke 0712=02 --seg NONE:10 A:1 NONE:1 A:1 NONE:1 A:1 NONE:
+  ▶ echo "### m2 rapid"; python3 tools/emu/magic_probe.py --poke 0712=02 --seg NONE:10 A:1 NONE:1 A:1 NONE:1 A:1 NONE:40 A:1
+Magics 1-7 all match the static table. Now flight (8) and the charged sword shot.
+  ▶ echo "### m8 hold 60"; python3 tools/emu/magic_probe.py --poke 0712=08 --seg NONE:10 A:60 NONE:30 --every 3; echo "### m
+  ▶ echo "### s1 p0 B40"; python3 tools/emu/magic_probe.py --poke 0711=01 0719=00 --seg NONE:10 B:40 NONE:20 --quiet; echo "
+  ▶ echo "### s1 tap"; python3 tools/emu/magic_probe.py --poke 0711=01 0719=00 --seg NONE:10 B:10 NONE:20 --quiet; echo "###
+All of (a) matches the static model. Writing it up now.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 26 9BF6 80 --stop; python3 tools/xref.py 0710 | head -60
+  ▶ python3 tools/dis.py 19 BB30 24; python3 tools/dis.py 19 BBCC 20; python3 tools/dis.py 26 9B68 60; python3 tools/dis.py 
+  ▶ python3 tools/dis.py 26 99A8 16; python3 tools/dis.py 26 9E80 12; python3 tools/dis.py 26 9FA5 12; python3 tools/dis.py 
+  ▶ python3 tools/dis.py 16 9620 32; python3 tools/dis.py 15 BA95 14; grep -n "SubstChangeForm\|,BB9D,\|,9632" labels.csv
+  ▶ python3 tools/dis.py 30 DEC1 120 --stop | grep -n "0710\|obj1_flash\|JMP\|JSR\|RTS\|ORA\|ASL\|STA" | head -40
+  ▶ python3 tools/dis.py 30 DEFA 150 | sed -n 1,90p
+Found the Change-form setter (`30:DF7A`: b7 + form index in b5-4). Checking the form names next.
+  ▶ Grep "What form" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs
+  ▶ Grep "What form will" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ ls tools | grep -i objtype; ls web/src/game 2>/dev/null | head -30; grep -rn "flags2" tools/*.py | head -5
+  ▶ sed -n 1,40p tools/objtype_dump.py; ls docs | grep -i obj
+  ▶ python3 tools/objtype_dump.py > /tmp/ot.txt; head -5 /tmp/ot.txt; grep -c . /tmp/ot.txt
+  ▶ python3 tools/objtype_dump.py 04 06 10 11
+Checking which object types use speeds 4 and 9 (the diagonal step-table quirk).
+  ▶ sed -n 40,120p tools/objtype_dump.py
+  ▶ Write speed_users.py
+  ▶ python3 tools/speed_users.py 4 9
+  ▶ Grep "DirToTarget`? `?\d|AiWander|8 directions|diagonal" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/dis.py 26 8480 28; ls tools/emu/states/; grep -n "CANON\|canonical" tools/web_compare.py | head -5
+  ▶ Write step_probe.py
+  ▶ grep -n "CANON_KEYS\s*=" -A3 tools/emu/compare_ref.py | head; grep -n "def parse_keys" tools/emu/debug.py
+  ▶ Grep "^CANON_KEYS|import compare_ref|from .* import compare_ref" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+Canonical run has little gameplay; I'll fix the import and mainly use the gameplay state with diagonal walking.
+  ▶ Edit step_probe.py
+  ▶ sed -i 's/from compare_ref.CANON_KEYS/from emu.sweep CANON_KEYS/' tools/emu/step_probe.py && echo "## state1 area1 diag 
+  ▶ echo "## area1 diag walk"; timeout 600 python3 tools/emu/step_probe.py tools/emu/states/area1_enter.state --seg DOWN+RIG
+  ▶ timeout 600 python3 tools/emu/step_probe.py --seg DOWN:60 DOWN+RIGHT:200 NONE:300 UP+LEFT:200 NONE:300; grep -n "area1_e
+  ▶ grep -o "| \`\$2[2679E]\` | \`27:[0-9A-F]*\` \`[A-Za-z]*\`[^|]*|[^|]*|[^|]\{0,300\}" REVERSE.md | head; grep -o "| \`\$4
+  ▶ Grep "^\| `\$(22|26|27|29|2E|40)` \|" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "`AiChase` `27:|AiChase`? .{0,40}(DirToTarget|8 dir|diagonal)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1050
+Static answer for (c): speed-4 chasers walk diagonally during `AiChase` detours, and the player hits speed 9 diagonally under status b6 (seen in the emulator). Writing up (c)/(d) now.
+  ▶ grep -n "^30,DF2F\|^30,D280\|^26,9B41\|^26,9B7D\|^30,DF7A\|^15,B1B7\|^26,8497\|^\*,0641" labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now labels, then I'll close out the task.
+  ▶ tail -3 labels.csv; grep -n "^26,9B41\|D280\|^19,BBD5" labels.csv
+  ▶ printf '%s\n' '30,DF2F,ChangeFormApply,s76: change-form menu A key: SFX $39; 31-frame R4=$4D effect; obj1_flash |= ($21<
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 30 DF2F 4 && python3 tools/dis.py 26 9B41 2
+Labels load. Now marking the task done and folding the conveyor/sinking check (b) into the existing world-interaction task.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +150
+  ▶ Edit REVERSE.md
+  ▶ Grep "^\| `tools/emu/player_probe.py`|^\| `tools/bg_coll_dump.py`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+Quick check that `step_probe.py --canon` runs, since I haven't tested that path yet.
+  ▶ timeout 500 python3 tools/emu/step_probe.py --canon
+`tools/dis.py` shadows the stdlib module, so importing `sweep` breaks. I'll copy the key string in directly, as the other tools do.
+  ▶ Edit step_probe.py
+  ▶ Edit step_probe.py
+  ▶ timeout 500 python3 tools/emu/step_probe.py --canon 2>&1 | tail -15
+I finished session 76's task, the Ph3 player leftovers: (a), (c) and (d) are done. I moved (b) into an existing task instead of doing it. Everything was checked in the project's own emulator (tools.emu), not against FCEUX.
+
+**(a) Magic and sword shots match the documented model in every case I tried.** I wrote a new tool, `tools/emu/magic_probe.py`, which logs every shot spawn and MP spend per frame from a save state.
+- **Magic 1–8:** MP costs, shot ids `$10-$12` and the menu substates all match. Flight (magic 8) holds at −21 px while A is held and costs 1 MP every 16 frames.
+- **Magic 2 recast:** a second cast is ignored for about 20 frames while its shot slot is still in use.
+- **Sword release shot:** id = (sword−1)·4 + level in all 7 sword cases. A level-3 shot drops to level 2 when MP is short, and Crystalis fires nothing outside area `$5F`.
+- **New fact:** a quick tap (level 0) still fires a real shot (`$00`, `$04`, …), not nothing.
+
+**(c) Speeds 4 and 9 really are used diagonally, so the port must keep the uneven step-table bytes as they are.** It reads them straight from the ROM, so it already does. Two new tools back this up: `tools/speed_users.py` and `tools/emu/step_probe.py`.
+- **Speed 4:** 14 object types start at speed 4. Several chasing enemies end in the chase routine, whose detour turns them 45°, so they walk diagonally at speed 4. The player also drops from speed 6 to 4 when sinking.
+- **Speed 9:** in the emulator I saw the player take 2 diagonal steps at speed 9 in the warp-exit status, before the status ran out.
+- **Not seen:** I never saw an enemy step at speed 4 in the emulator, because the test room has no enemies. That part rests on reading the code.
+
+**(d) The player status high bits are now named:**
+- **b7:** changed form (magic 7). It is set when you confirm a form in the Change menu, and MP is spent then, not when you press the magic.
+- **b5-4:** which of the 4 forms you picked.
+- **b6:** "warp exit". A warp event sets it; while it is set the player spins at speed 9 and can't jump, and it clears once they walk off obstacle and wall tiles.
+
+**Other changes:**
+- **`labels.csv`:** 3 new labels (`ChangeFormApply` `30:DF2F`, `EvActWarp` `30:D280`, `WarpSpinPoseTable` `26:9B41`), and a corrected comment for `obj1_flash`.
+- **`REVERSE.md`:** results written up, with a new Verification Log row and the three tools added to the tool table.
+- **Leftover:** the conveyor and sinking emulator check (b) is now item (g) of the world-interaction leftovers task.
+
+Nothing is committed.
+
+SESSION_SUMMARY: Session 76 finished the Ph3 player leftovers: magic 1-8 and the sword release shots match in the emulator (a tap still fires a level-0 shot), speeds 4 and 9 are used diagonally so the step tables stay as they are, the status bits are named (b7 changed form, b5-4 form, b6 warp exit), 3 new tools and 3 labels added, and the conveyor/sinking check moved to the world-interaction task.

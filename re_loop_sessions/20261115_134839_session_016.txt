@@ -1,0 +1,18 @@
+  ▶ Glob {dead_ends.md,REVERSE.md,re_loop_sessions/*}
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*01[3-6].txt; tail -c 2500 re_loop_sessions/20261115_134839_session_015.txt; tail -c 2000 re_loop
+  ▶ Grep "^## Next Tasks" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +651
+  ▶ Grep "F05C|F06C|HitSetFlag|boss.gate|Boss gate" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +480
+Reading done; starting task "text follow-ups 5" part (a): finding what sets the boss-gate flags. First, the flag-set code in `HitSetFlag`.
+  ▶ python3 tools/dis.py 26 9011 0x50
+  ▶ Read flag_code_sites.txt
+  ▶ python3 tools/search_bytes.py "A9 64 85" --max 40; python3 tools/search_bytes.py "A9 80 85 ?? A9 64" --max 20; python3 t
+  ▶ python3 tools/dis.py 30 D190 0x40; python3 tools/dis.py 14 8100 0x50
+  ▶ Grep "F05C|F05D|F05E|F060|F062|F066|F067|F06C" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/flag_sites.txt
+  ▶ python3 tools/xref.py 8112 --bank 14; python3 tools/xref.py 810B --bank 14; python3 tools/xref.py 8107 --bank 14
+Hooks 0/1 (`14:826F`/`14:831E`) call `NpcFlagApply`, so they're the likely boss-gate setters. Disassembling them now.
+  ▶ python3 tools/dis.py 14 826F 0x110
+  ▶ python3 tools/dis.py 14 8070 0x20; python3 tools/dis.py 14 814F 0x20; python3 tools/dis.py 14 8380 0x40; python3 tools/d
+You've hit your 5-hour limit · resets 5:50pm (America/New_York)

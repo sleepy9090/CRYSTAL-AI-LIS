@@ -1,0 +1,3 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## |^### |^- \[ \]" REVERSE.md
+You've hit your weekly limit · resets 8am (America/New_York)

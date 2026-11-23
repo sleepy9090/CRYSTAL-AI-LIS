@@ -1,0 +1,6 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -3 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ Read REVERSE.md +2274
+  ▶ Read dead_ends.md
+  ▶ tail -c 3000 re_loop_sessions/20261121_000129_session_136.txt; echo ----; tail -c 1500 re_loop_sessions/20261121_000129_
+  ▶ Grep "BossEBSetElem|AiBowOfTruth9E|BossBgStrip|phase-5" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+You've hit your 5-hour limit · resets 5am (America/New_York)

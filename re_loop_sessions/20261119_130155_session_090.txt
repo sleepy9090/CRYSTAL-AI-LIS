@@ -1,0 +1,133 @@
+  ▶ Grep "^## Next Tasks" REVERSE.md
+  ▶ Glob re_loop_sessions/*
+  ▶ wc -l dead_ends.md REVERSE.md; ls re_loop_sessions | tail -4
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +2173
+  ▶ Grep "^- \[ \]" REVERSE.md
+  ▶ sed -n '2300,2338p' REVERSE.md | cut -c1-3000
+  ▶ Read REVERSE.md +2318
+Reading the top task: port the ending (main states 4/5) to `web/src/game/states/ending.js`. Checking recent session logs and existing web state structure.
+  ▶ tail -c 3000 re_loop_sessions/20261119_130155_session_089.txt; echo ----; tail -c 2500 re_loop_sessions/20261119_130155_
+  ▶ Grep "Ending sequence|EndingInit|EndingTick|EndingPhaseTable" REVERSE.md
+  ▶ Read death.js
+  ▶ Read mainloop.js
+Now the ending section of REVERSE.md.
+  ▶ sed -n '1984,2010p' REVERSE.md
+  ▶ sed -n '2010,2040p' REVERSE.md
+Big task: a line-by-line port of bank 17's ending code. Disassembling it.
+  ▶ python3 tools/dis.py 17 A000 0x1BC
+  ▶ python3 tools/dis.py 30 C944 0x13; python3 tools/dis.py 17 A1BC 0x1D4
+  ▶ python3 tools/dis.py 17 A38F 0x200
+  ▶ python3 tools/dis.py 17 A58E 0xD2; python3 tools/dis.py 17 A696 0x10A
+  ▶ grep -n "^export\|^function\|^const\|^import\|ntFill\|NtFill" web/src/game/states/title.js | head -60; grep -n "^export"
+  ▶ Read title.js
+Disassembly of the step code done; now the bank-17 blit/sprite/palette helpers.
+  ▶ python3 tools/dis.py 17 A7A0 0x1AB
+  ▶ Read ppuqueue.js
+  ▶ python3 tools/dis.py 17 A94B 0x1D2
+  ▶ python3 tools/dis.py 17 AB1D 0x80 --stop
+I have the full routine set. Checking the test harness options (`--load-state`, pokes) and the ending probe before writing `ending.js`.
+  ▶ grep -n "argv\|--[a-z-]*'" web/test/run.mjs | head -40; sed -n 1,60p tools/emu/ending_probe.py; grep -n "def main\|argpa
+  ▶ sed -n 1,30p tools/emu/web_state.py; sed -n 40,140p tools/emu/web_state.py; ls web/test/states; grep -n "web_state\|deat
+  ▶ Read prg.js
+Writing `web/src/game/states/ending.js` now: a line-by-line port of 17:A000-AB94.
+  ▶ Write ending.js
+Checking `R` field names and whether `m.wr` masks to 8 bits.
+  ▶ grep -n "chr_r0_play\|pal_buf\|cam_y_lo\|scroll_shadow0\|irq_mode\b" web/src/game/ram.js | head; grep -n "wr(a, v)\|wr =
+  ▶ grep -n "wr(a, v)" -A4 web/src/game/ram.js | head -12
+Masks fine. Wiring into mainloop.js.
+  ▶ python3 - <<'EOF' 2>/dev/null || echo "need tool"
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+Generating the ending state from tools.emu (poke `$40`=4, stop at `EndingInit` 17:A000).
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --frames 4 --poke 0040=04 --until 17:A000
+  ▶ sed -n 1,40p tools/web_state_compare.py | grep -n "usage\|--" 
+  ▶ python3 tools/web_state_compare.py --state /tmp/ending.state --web web/test/states/ending.json --frames 400 --shots 2456
+  ▶ python3 tools/web_state_compare.py --state /tmp/ending.state --web web/test/states/ending.json --frames 400 --shots 2456
+  ▶ python3 tools/web_state_compare.py --state /tmp/ending.state --web web/test/states/ending.json --frames 6400 --shots 245
+  ▶ python3 tools/web_state_compare.py --state /tmp/ending.state --web web/test/states/ending.json --frames 6400 --shots 245
+While that runs, I'll add labels for the unnamed bank-17 routines I ported.
+  ▶ Grep "^17,(A056|A069|A07C|A0A2|A0BC|A0CF|A120|A14A|A152|A4EC|A57A|A4E3)," labels.csv
+  ▶ printf '%s\n' \
+  ▶ Read labels.csv +986
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read b34sjay73.output
+While the full compare runs, running the existing web checks to confirm nothing regressed.
+  ▶ for t in core_check ppu_check sprite_check obj_check; do node web/test/$t.mjs > /tmp/$t.log 2>&1; echo "$t exit $?"; tai
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/obj_check.mjs 2>&
+Checks unchanged (obj_check's 2 unported-AI gaps are the known ones). Updating docs/architecture_web.md while waiting.
+  ▶ Grep "ending|state ?4|state ?5|17:A000|17:A100" docs/architecture_web.md
+  ▶ sed -n '45,52p;150,158p;230,240p' docs/architecture_web.md
+  ▶ python3 tools/doc_patch.py --help 2>&1 | head -3; ls tools | grep -i -E "patch|replace|edit" 
+I'll use Edit directly.
+  ▶ Read architecture_web.md +49
+  ▶ Edit architecture_web.md
+  ▶ Read architecture_web.md +155
+  ▶ Edit architecture_web.md
+  ▶ Read architecture_web.md +236
+  ▶ Edit architecture_web.md
+  ▶ Read b34sjay73.output
+  ▶ ToolSearch max_results query
+Waiting on the full-ending comparison (~6,400 frames, still running in the background).
+  ▶ until [ -s /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/dd7436f9-9355-40de-a18a-a64d22e0cc5f/tasks/
+I'll write the Verification Log row once the result arrives.
+  ▶ until [ -s /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/dd7436f9-9355-40de-a18a-a64d22e0cc5f/tasks/
+All 6,398 screens match (the filter only ignores tile-row-0 diffs of ≤9 px). Checking the per-frame RAM CSV summary and the final step timing.
+  ▶ python3 tools/compare_frames.py /tmp/wsc_end2/emu.csv /tmp/wsc_end2/web.csv 2>&1 | tail -12
+  ▶ python3 tools/compare_frames.py /tmp/wsc_end2/emu.csv /tmp/wsc_end2/web.csv --cols snd 2>&1 | head -12; python3 tools/co
+  ▶ Grep "_period" web/test/harness.mjs
+  ▶ Read harness.mjs +40
+  ▶ ls web/src/game/sound; grep -n "0x174\|0x17A\|0x0174\|0x017A\|id === 0\|=== 0)" web/src/game/sound/*.js | head -20
+  ▶ grep -n "^export\|^function\|^const [A-Z_]* = 0x" web/src/game/sound/driver.js | head -50; grep -n "period\|0174\|017A" 
+  ▶ python3 tools/compare_frames.py /tmp/wsc_end2/emu.csv /tmp/wsc_end2/web.csv --cols snd > /tmp/snd_diff.txt 2>&1; python3
+I'll add a small tool that groups the differing frames into runs of consecutive frames.
+  ▶ Write diff_runs.py
+  ▶ python3 tools/compare_frames.py /tmp/wsc_end2/emu.csv /tmp/wsc_end2/web.csv | python3 tools/diff_runs.py --min 2
+`tools/dis.py` shadows the stdlib `dis` module that argparse needs, so I'm switching to plain `sys.argv` parsing like the other filter tools.
+  ▶ Edit diff_runs.py
+  ▶ Edit diff_runs.py
+  ▶ Edit diff_runs.py
+  ▶ python3 tools/compare_frames.py /tmp/wsc_end2/emu.csv /tmp/wsc_end2/web.csv | python3 tools/diff_runs.py --min 2
+Counts are lower than the summary, so `compare_frames.py` must cap its per-frame listing. Checking its flags.
+  ▶ Grep "add_argument|argv|max" tools/compare_frames.py
+  ▶ python3 tools/compare_frames.py /tmp/wsc_end2/emu.csv /tmp/wsc_end2/web.csv --max 100000 | python3 tools/diff_runs.py --
+  ▶ Read REVERSE.md +160
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +2324
+  ▶ Edit REVERSE.md
+Registering `tools/diff_runs.py` next to `shot_filter.py` in the Intermediate Output Files table.
+  ▶ Grep "^\| `tools/shot_filter.py`" REVERSE.md
+  ▶ Grep "^\| `tools/web_state_compare.py|^\| `tools/emu/web_state" REVERSE.md
+The neighbouring tools have no table rows either, so the Verification Log row and task note are enough. Final status check:
+  ▶ git status --short | grep -v "^??" ; git status --short web tools labels.csv docs | head
+The ending is now ported to the web version (main states 4 and 5). Over the whole ending, from frame 2456 to 8853 (6,398 frames), every screen matches the emulator.
+
+**What changed**
+- **`web/src/game/states/ending.js`** (new): a line-by-line port of all the bank-17 ending code (`17:A000`–`AB94`). That covers the setup and per-frame dispatch, the four palette sub-effects, all 30 steps, the routines that draw text and pictures one row per frame, the sprite routines, the fades and the screen fill.
+- **`mainloop.js`**: main states 4 and 5 now call the new code instead of the placeholder stubs.
+- **`web/test/states/ending.json`** (new): a saved emulator state. It is made by forcing the game into the ending (writing 4 to `$40`) and stopping at the ending's first instruction (`17:A000`), using the same method as the death screen in session 89.
+
+**Test results**
+- **Screens:** the run covers the opening scroll, the flashing palette, the epilogue with the player's name, the STAFF card, all 9 staff cards, the thanks card and the final picture, where it stays.
+  - The only pixel differences are up to 9 pixels in the top tile row on palette-change frames. Session 89 found this same effect and it is harmless.
+- **Per-frame RAM values:** all the sound, palette and object differences last exactly one frame. This is a timing quirk of when the emulator records its row, already documented in session 82. `$81` (the drawing routines' row counter) differs for 4–9 frames in a row during the row-by-row drawing, but the emulator is always exactly one count ahead, so it's the same quirk.
+- **Other checks:** the core, PPU, sprite and object checks give the same results as before. The object check still has its 2 known cases that reach enemy AIs not yet ported.
+
+**Corrections to REVERSE.md's ending notes**
+- The scroll at the start of the ending is 64 rows, not 44. The end-of-list test only runs after all 32 entries, so the list is read twice. This fits the emulator's measured 104 frames: 64 rows plus 40 frames of flashing.
+- A palette sub-effect runs instead of the current step, not before it, so a staff card's wait only starts once its fade has finished.
+- The sprite routine fills every byte of the sprite table from its start position with `$F0`, not just the vertical-position bytes.
+
+**Also added**
+- 7 labels for the sub-effect routines in `labels.csv`.
+- A Verification Log row "Ending (web port)" with the exact commands.
+- An updated `docs/architecture_web.md`.
+- `tools/diff_runs.py`, which groups the per-frame differences into runs of consecutive frames, so one-frame timing blips stand out from real problems. It can't use `argparse` because `tools/dis.py` hides Python's built-in `dis` module.
+
+The task is marked done. Nothing is committed.
+
+SESSION_SUMMARY: Session 90 — ported the ending (main states 4/5, bank 17) to `web/src/game/states/ending.js`; 0/6398 screens differ from tools.emu over the whole ending; fixed the ending notes (64 scroll rows, sub-effect runs instead of the step); added `tools/diff_runs.py` and 7 labels.

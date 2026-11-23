@@ -1,0 +1,70 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*}
+  ▶ Grep "^## Next Tasks" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read 20261116_093455_session_024.txt
+  ▶ Read 20261116_093455_session_025.txt
+  ▶ Grep "^## |^### |- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1000
+  ▶ Grep "metasprite|Metasprite|LoadAreaChrRecord|frame mask|sprite pal|meta_dump" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +225
+  ▶ Read meta_dump.py
+Working on Ph4 assets 3/5 (per-area sprite sheets). I'm reading the object-type record format and the existing tool APIs now.
+  ▶ Read REVERSE.md +319
+  ▶ Grep "^def |^[A-Z_]+ = " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ Read area_dump.py
+  ▶ Read palette_dump.py
+  ▶ Grep "AC00|0xAC00" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ python3 tools/xref.py 07E4; python3 tools/xref.py 07E5
+  ▶ python3 tools/dis.py 30 C040 0xA0; python3 tools/dis.py 30 CA80 0x10; python3 tools/dis.py 31 EFE8 0x10
+Found sprite palettes 0/1. Recording that now, then looking at `objtype_dump.py`.
+  ▶ Edit REVERSE.md
+  ▶ Read objtype_dump.py
+Sprite palettes in gameplay are `$B0`, `$B0`+sword, `e6+$B0`, and `e7+$B0`. Next I'm checking what metasprite ids the object types start with, and the `render_screen.area_bg` helper.
+  ▶ Read render_screen.py
+  ▶ python3 tools/objtype_dump.py | head -120 | tail -100 | cut -c1-150
+Most enemy types set `$0380` bit 0 (no direction add), so the record's `$0300` is the starting metasprite and the AI changes it later. I'm adding a `sprites` mode to `meta_dump.py`.
+  ▶ Edit meta_dump.py
+  ▶ Edit meta_dump.py
+  ▶ sed -i 's/rows = \[(.player., i, 0) for i in PLAYER_IDS\[::2\]\]   # ids 0,2,4,6 (1,3,5,7 are FF mirrors\/variants)/rows
+  ▶ Edit meta_dump.py
+  ▶ Edit meta_dump.py
+  ▶ Edit meta_dump.py
+  ▶ time python3 tools/meta_dump.py sprites && head -25 gfx/sprites/index.txt | cut -c1-200
+Export ran: 213 area sheets in 4 seconds. Checking a couple of sheets by eye.
+  ▶ Read area_003.png
+  ▶ Read area_002.png
+  ▶ Read area_017.png
+  ▶ python3 tools/meta_dump.py text 4C 58 64 AE
+The sheets match the session-6/7 checks. Next I'm adding summary stats to the export, including a test of the session-8 guess that areas with R4/R5 = `$FF` never show tiles `$80-$FF`.
+  ▶ Edit meta_dump.py
+  ▶ python3 tools/meta_dump.py sprites
+No spawned object's first frames read a `$FF` CHR register, so the session-8 guess holds for initial frames. One more check: what advances the `$04E0` animation counter.
+  ▶ python3 tools/xref.py 04E0 | grep -E "INC|DEC|STA|--"
+Animation timing isn't global. The `$04E0` counter is stepped by each AI handler: about 189 sites in banks 15/27, mostly `DEC`, and some handlers step it twice per frame. Writing this up now.
+  ▶ Grep "^\*,(07E4|07E5|07E6|07E7|04E0|0710|0711)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "gfx/areas|render_rects.py`|meta_dump.py`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Now the REVERSE.md notes, output-file rows, and the task line.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+I finished **Ph4 assets 3/5 (sprites)** in session 25. The export ran over every area, and I checked three of the sheets by eye; nothing has been compared against an emulator yet.
+
+**New output:** `python3 tools/meta_dump.py sprites [areas]` takes about 4 seconds for all areas and writes:
+- **`gfx/sprites/area_NNN.png`** (213 sheets): the first row shows the player's 8 poses, then one cell per enemy or NPC sprite the area places, with up to 4 animation frames each. Each sheet uses that area's real sprite graphics banks and palettes. The sheets for areas `$02` (villagers), `$03` and `$11` look clean.
+- **`gfx/sprites/index.txt`**: one line per area listing its graphics banks, palettes and sprites.
+- **`gfx/sprites.json`**: all 256 sprite records with frames decoded and mirrored versions already flipped, plus each area's graphics banks, palettes and placed objects. It also spells out the drawing rules, for the web port.
+
+**Findings (written to REVERSE.md):**
+- **The other two sprite palettes:** palette 0 (player) is normally id 0, switching to `$4D` during one hit-flash mode. Palette 1 (weapon) follows the equipped sword level, clamped to 1–5. The same value picks the sword's graphics bank, so the weapon's tiles and colours change together.
+- **Tile offsets pick the graphics bank:** some objects add `$40` (or `$C0`) to every tile number. The bank is chosen from the tile number after that addition, so an offset moves a sprite into a different graphics bank.
+- **The sheets show starting frames only:** almost every enemy's AI rewrites its sprite id for facing and poses after it spawns, so the full pose sets belong to the existing "gameplay 3/3" task.
+- **Invisible objects:** 229 of the 711 placed objects use an empty sprite. These are triggers and controllers that draw nothing until their AI gives them a sprite. 77 distinct sprites are visible at spawn.
+- **Session-8 guess about `$FF` banks:** no object's starting frames read from an area's graphics register set to `$FF`. That supports the guess that `$FF` marks an unused bank, but it hasn't been checked for poses set later by the AI.
+- **Animation speed is per enemy type:** there is no global animation timer. Each AI handler steps its own frame counter (about 189 sites), and some step it 2–3 times per frame, so those animate 2–3× faster. The per-type rates are left to "gameplay 3/3".
+
+I added 2 labels (sprite palette ids 0 and 1) and updated 1 (the animation counter). No new follow-up task was needed, since the leftovers fit under "gameplay 3/3".
+
+SESSION_SUMMARY: Session 25 — Ph4 assets 3/5 done: `meta_dump.py sprites` → 213 per-area sprite sheets + `gfx/sprites.json` (256 sprite records, per-area graphics banks/palettes/objects); traced sprite palettes 0/1 (sword level sets palette and graphics bank), tile offsets pick the graphics bank, 229/711 objects invisible, no spawn frame reads a `$FF` bank, animation stepped per AI handler; 2 new labels.

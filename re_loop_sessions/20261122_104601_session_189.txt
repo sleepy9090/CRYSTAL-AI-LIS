@@ -1,0 +1,89 @@
+  ▶ ls re_loop_sessions/ | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | tail -20 && grep -
+  ▶ Read REVERSE.md +2376
+  ▶ Read dead_ends.md
+  ▶ tail -c 6000 re_loop_sessions/20261122_104601_session_188.txt; ls -la re_loop_sessions/ | tail -3
+  ▶ python3 tools/area_dump.py spawns 7F 2>&1 | head -40; grep -n "group_28\|group_7C" tools/emu/scenario.py | head
+  ▶ python3 tools/area_dump.py spawns 0x7F 2>&1 | head -40; sed -n 640,720p tools/emu/scenario.py
+  ▶ python3 tools/enemy_catalog.py --out /tmp/cat.txt >/dev/null 2>&1; grep -n "^\|.*\$84\|^ *84\|^ *6D\|type\b" /tmp/cat.tx
+Building the enemy catalog for area `$7F`'s group (AI `$2E`), next in the s188 list.
+  ▶ python3 tools/enemy_catalog.py --out /tmp/s189_cat.txt
+  ▶ Grep "^(type|.*\$84 |.*\$6D |#)" /tmp/s189_cat.txt
+  ▶ Grep "^ *(\$)?(84|6D)\b" /tmp/s189_cat.txt
+  ▶ Grep "AI `\$2E`|SwordElemBit" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/grep_line.py 2>/dev/null; awk 'NR==702 || NR==1222 || NR==1411' REVERSE.md | grep -o ".\{300\}\$2E\`.\{500
+  ▶ Grep ".{0,300}AI `\$2E`.{0,600}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Looking up what AI `$2E` does before planning the scenario.
+  ▶ Grep "\| `\$2E`[^|]*\|[^|]*\|[^|]*\|" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1183
+  ▶ Grep "SwordAttackTable" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "def place_player|def _run|'area'|scenario_state" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_7F 12 --out web/test/states/group7f.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7f.state --slots 0E,0F,10,11 --every 8 --seg NONE:20 
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7f.state --slots 0E,0F,10,11 --changes --seg NONE:20 
+Two sword hits land (HP 64→46→28); extending the swing sequence for the kill.
+  ▶ S="NONE:20 UP:80"; for i in $(seq 12); do S="$S B:4 NONE:8"; done; S="$S UP:10"; for i in $(seq 22); do S="$S B:4 NONE:8
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7f.state --slots 0E,0F,10,11 --changes --seg NONE:20 
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7f.state --slots 0E,10 --every 6 --seg NONE:20 UP:80 
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7f.state --slots 0E,10 --every 6 --seg NONE:20 UP:80 
+  ▶ Grep "^ +(28[89]\d|29\d\d) " /tmp/s189_probe.txt
+  ▶ mkdir -p gfx/group7f && timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7f.state --slots 0E,10 --ever
+  ▶ Grep "^ +(27[0-9]\d|28[89]\d|29\d\d) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/group7f/probe.txt
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7f.state --slots 0E,10 --every 6 --seg NONE:20 UP:80 
+Third hit at f2886, then the enemy backs off out of reach; adding a step up before more swings.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7f.state --slots 0E,0F,10,11 --changes --seg NONE:20 
+Kill at f2913 (puff AI `$7D`). Trying to also get a contact hit by walking into it first.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group7f.state --slots 0E,0F,10,11 --changes --seg NONE:20 
+Got a contact hit (f2624) plus 4 sword hits and the kill at f2936. Now converting that to scenario keys; checking how s188 did it.
+  ▶ Read group28_check.mjs
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/group7f.state --frames 480 --watch 0043 --watch 03CE --wa
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/group7f.state --frames 480 --watch 0043 --watch 03CE --wa
+Four sword hits ($40→$2E→$1C→$0A→kill f2935) plus the contact hit at f2623, matching the probe. Now building the reference CSV.
+  ▶ timeout 1500 python3 tools/web_state_compare.py --state tools/emu/states/group7f.state --web web/test/states/group7f.jso
+Ref written. Now the check script.
+  ▶ python3 tools/csv_trim.py gfx/group7f/emu.csv web/test/group7f_ref.csv --frames 2506-2984
+  ▶ Write group7f_check.mjs
+  ▶ node web/test/group7f_check.mjs 2>&1 | tail -35
+All 479 rows match at shift 0 on the first run. Checking the comment's claims (slot clear, the linked child) against the ref.
+  ▶ python3 tools/csv_cols.py web/test/group7f_ref.csv web/test/group7f_ref.csv o0E_ai,o0F_ai,o0F_x,o0F_y,o11_ai,o13_ai 2506
+  ▶ Grep "^\| `\$70` " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^\| `\$(70|5A)`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/csv_cols.py web/test/group7f_ref.csv web/test/group7f_ref.csv o0E_ai,o13_ai,o11_x,o11_y,c3c1 2948-2984 2>&
+  ▶ Edit group7f_check.mjs
+Now fill in the scenario keys (for reproducibility) and run the full suite in the background while I update docs.
+  ▶ Edit scenario.py
+  ▶ timeout 3000 python3 tools/run_checks.py 2>&1 | tail -50
+  ▶ Grep "^\| Area-`\$28` enemy group" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +218
+  ▶ Edit REVERSE.md
+Now the task note and the remaining-AI list.
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+  ▶ Grep "^27,(A9B4|ABF8)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Labels already cover it. Waiting on the full check suite.
+  ▶ Read b2e32z73s.output
+  ▶ ToolSearch max_results query
+  ▶ Monitor command description timeout_ms
+  ▶ Read b2e32z73s.output
+I checked area `$7F`'s enemy group against tools.emu, and the web port matches it with no code changes. The new `web/test/group7f_check.mjs` passes all 479 rows (f2506-2984) at shift 0, sound included, with no excused cells.
+
+**Setup.** The area has two type-`$84` enemies (AI `$2E`) in slots `$0E` and `$0F`, and one type-`$6D` enemy (AI `$20`) in slot `$10`. AI `$2E` spawns one linked child object once, then behaves like AI `$2A` (`AiLunger`). Type `$84`'s element 3 blocks swords 1 and 2, so the `group_7F` scenario gives the player sword 3 (attack `$03E1` = `$14`) and the maximum defences from s187. The normal entry point already sits right below slot `$0E`, so no `place_player` was needed.
+
+**What the run showed:**
+- **Contact hit.** Walking up into slot `$0E` costs the player HP at f2623 (`$60` → `$52`) and knocks them back.
+- **Sword hits.** The first 10 swings miss because the enemy lunges and then backs off out of reach. After stepping up, the hits land: `$40` → `$2E` (f2765) → `$1C` (f2821) → `$0A` (f2897), and the kill comes at f2935.
+- **After the kill.** The death puff runs until f2983, and a coin (AI `$7B`) appears in slot `$13` at f2951. The coin is not picked up.
+- **Not reached.** Slot `$0F` and the AI-`$70` object next to it in slot `$11` stay idle all run. The child objects already exist when the state loads, so AI `$2E`'s child spawn never runs in this check.
+
+**Full suite:** 41 of 42 checks pass. The one failure is `world_check` on areas `$3C`, `$3D` and `$BC`, which is the known gap (j).
+
+**Changes:**
+- REVERSE.md has a new Verification Log row ("Area-`$7F` enemy group, AI `$2E`"). The task has an s189 note, and `$2E` is struck from the list of remaining AIs. The task stays open because it is the low-priority leftovers task; `$40` (area `$2B`) and `$4E` (area `$88`) are next.
+- CLAUDE.md lists the new check. The AI `$2E` labels were already in `labels.csv`.
+
+New files are `web/test/group7f_check.mjs`, `web/test/group7f_ref.csv`, `web/test/states/group7f.json` and `tools/emu/states/group7f.state`; the scenario itself is in `tools/emu/scenario.py`. Nothing is committed.
+
+SESSION_SUMMARY: Session 189 checked area $7F's enemy group (AI $2E type $84, elem 3 → sword 3) with the new group_7F scenario; web/test/group7f_check.mjs: 479/479 rows equal at shift 0 including sound (contact hit f2623, 4 sword hits, slot $0E killed at f2935, coin drop), no port change; 41/42 checks pass (world_check is the known gap (j)).
+That notice is just the watcher I set on the full check suite stopping. I'd already read the suite's results: 41 of 42 checks pass, and the one failure is `world_check`, the known gap (j). Nothing has changed since my last message.
+
+SESSION_SUMMARY: Session 189 checked area $7F's enemy group (AI $2E type $84, elem 3 → sword 3) with the new group_7F scenario; web/test/group7f_check.mjs: 479/479 rows equal at shift 0 including sound (contact hit f2623, 4 sword hits, slot $0E killed at f2935, coin drop), no port change; 41/42 checks pass (world_check is the known gap (j)).

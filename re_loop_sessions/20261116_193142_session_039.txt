@@ -1,0 +1,155 @@
+  ▶ Glob {dead_ends.md,REVERSE.md,re_loop_sessions/*}
+  ▶ Read dead_ends.md
+  ▶ Read 20261116_193142_session_038.txt
+  ▶ Read 20261116_193142_session_039.txt
+  ▶ Grep "^## |^### |^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1488
+Top task: **Ph5.5 emu 6/6** (verification checkpoints). Let me look at the emulator CLI first.
+  ▶ wc -l tools/emu/*.py && git status --short | head -30
+  ▶ Read __main__.py
+  ▶ Read nes.py
+  ▶ Read debug.py
+Now the documented behaviour for the functions to trace and the Data Structures section.
+  ▶ Grep "^[0-9*]+,[0-9A-F]+,(SwitchBank16|PlaySound|ObjSpriteDraw|PaletteBuild|SoundTick|SoundDriver\w*|ObjUpdate\w*)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read REVERSE.md +938
+Big task; I'll build `tools/emu/verify.py` for (a)+(b) and add `--compare` to the CLI for (c). First, the documented behaviour for the traced functions.
+  ▶ Grep "Object sprite pass|PlaySound|SwitchBank16 |PaletteBuild|obj_screen_x" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +264
+Let me read the exact code for PlaySound and the sprite pass position math so the checks replicate it precisely.
+  ▶ python3 tools/dis.py 30 C125 0x50 && echo ---- && python3 tools/dis.py 28 800E 0x98 && echo ---- && python3 tools/dis.py
+PlaySound/sprite-pass/SwitchBank16 logic is clear. Now checking which existing tools I can reuse for decoding area records, type records, and palettes.
+  ▶ Grep "^def |^class " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ Read area_dump.py
+  ▶ Read objtype_dump.py
+  ▶ Read palette_dump.py +20
+Now PaletteBuild's exact code (fade + mask) and the sound queue consumer.
+  ▶ python3 tools/dis.py 26 8C0E 0x30 && echo ---- && python3 tools/dis.py 26 8C6E 0x50 && python3 tools/xref.py 0100 2>/dev
+Let me check how existing scripts in tools/emu import the package, and the RAM labels I'll need.
+  ▶ Read first_control.py
+  ▶ Grep "^(\*,(0002|0003|0004|0005|0034|0035|0036|0037|006C|006D|0067|0069|0041|0102|0100|0103)|30,C25D|31,(E14A|E16D|E144|E148)|30,C7A5|24,(8020|8048|8186|812A))," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Now the music-start path, to check channel state against the music header.
+  ▶ python3 tools/dis.py 24 80E4 0x70
+  ▶ Write verify.py
+  ▶ time python3 tools/emu/verify.py --out docs/emu_verify.txt; echo exit=$?
+  ▶ python3 tools/emu/verify.py --out docs/emu_verify.txt
+`tools/dis.py` shadows the stdlib `dis`; append the tools dir to `sys.path` instead of prepending.
+  ▶ Edit verify.py
+  ▶ python3 tools/emu/verify.py --out docs/emu_verify.txt
+Another module (`emu/__init__`) prepends tools to the path. I'll pre-import the stdlib modules argparse needs before any path change.
+  ▶ Edit verify.py
+  ▶ python3 tools/emu/verify.py --out docs/emu_verify.txt
+  ▶ python3 tools/xref.py 67 | head; python3 -m tools.emu --load-state tools/emu/states/name_entry.state --frames 210 --keys
+`$67` low 2 bits get rewritten during the metatile draw at `31:EDCA/EDD9` (they look like the TL/TR/BL/BR page index). A quick look to confirm, plus the autosave write:
+  ▶ python3 tools/dis.py 31 EDBC 0x22; python3 -m tools.emu --load-state tools/emu/states/name_entry.state --frames 210 --ke
+  ▶ Grep "^23,[0-9A-F]+,(SaveGame|SavePlayerState|LoadGameAndInit)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit verify.py
+Cleaning up a leftover no-op line, then fixing the `$67` and template checks and registering the new watch.
+  ▶ Edit verify.py
+  ▶ Edit verify.py
+  ▶ Edit verify.py
+  ▶ Edit verify.py
+  ▶ python3 tools/emu/verify.py --out docs/emu_verify.txt | tail -32
+Everything passes now: 7 routines and 11 struct check groups. Next is part (c), the `--compare` per-frame CSV. I'll look at how `test_cli.py` is laid out so I can add a test.
+  ▶ Read test_cli.py +1
+Writing `tools/emu/compare.py`, the per-frame CSV row builder shared by the CLI and (later) the web harness spec:
+  ▶ Write compare.py
+Wiring `--compare` into the CLI:
+  ▶ python3 - <<'EOF' >/dev/null 2>&1; echo skip
+  ▶ Edit __main__.py
+  ▶ Edit __main__.py
+  ▶ Edit __main__.py
+  ▶ Edit __main__.py
+  ▶ Edit __main__.py
+  ▶ Edit __main__.py
+Now a test case in `test_cli.py` (find its end first):
+  ▶ Read test_cli.py +120
+  ▶ Edit test_cli.py
+  ▶ python3 tools/emu/test_cli.py 2>&1 | tail -4 && python3 -m tools.emu --load-state tools/emu/states/gameplay_first.state 
+  ▶ python3 tools/area_dump.py sub 0 1 | grep -E "header|k2"; python3 -m tools.emu --load-state tools/emu/states/gameplay_fi
+  ▶ Grep "cam_x|cam_y|camXlo|\$34-\$37" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+These labels are wrong for gameplay. I'll rename `$34-$37` to `pos_*` (a shared position cursor) and give `$03-$05` the camera names, since `ObjSpriteDraw` subtracts `$02-$05`. Editing labels.csv:
+  ▶ Read labels.csv +517
+  ▶ Edit labels.csv
+  ▶ Read labels.csv +200
+`CameraClampX` clamps `$34/$35`, so the camera is probably computed in `$34-$37` and then copied to `$02-$05`. Checking `31:E8F0-E930` to get this right:
+  ▶ python3 tools/dis.py 31 E8F8 0x50; python3 tools/xref.py 0004 | grep -E " 85 04| 86 04| 84 04" | head
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Grep "^31,E90A,|^23,BC09|cam_x_lo|cam_y_hi" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Updating `compare.py` column names to match (`pos_x/pos_y` for `$34-$37` and `cam_x/cam_y` for `$02-$05`), plus `struct_dump.py`'s k2 field names:
+  ▶ Edit compare.py
+  ▶ Edit compare.py
+  ▶ Read struct_dump.py +154
+  ▶ Edit struct_dump.py
+  ▶ python3 tools/emu/test_cli.py 2>&1 | tail -1 && python3 -m tools.emu --load-state tools/emu/states/gameplay_first.state 
+All green: PPU 18/18, CLI 10/10, verify all PASS. Now the REVERSE.md updates. First the k2 / `$34-$37` wording at line 363:
+  ▶ Read REVERSE.md +360
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the old `cam_*_hi` mentions in the BG pipeline text (lines ~371/381/386):
+  ▶ sed -i 's/(cam_y_hi<<3 \& `\$78`) | (cam_x_hi \& 7)/(pos_y_hi<<3 \& `$78`) | (pos_x_hi \& 7)/; s/attribute-row offset fo
+I'll do those with Edit instead.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "cam_x_hi|cam_y_hi|cam_y>>|cam_y b3|cam_x_lo" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Now the struct index: update its status column and intro, and add a verification subsection.
+  ▶ Edit REVERSE.md
+Updating the `$05C0/$05E0` field-table row (its frame-order question is now answered):
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +1340
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Marking the task done, and fixing the gameplay 2/3 task's wording about k2:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Session 39 finished the top task, **Ph5.5 emu 6/6 (verification checkpoints)**, and ticked the Ph3 and Ph5 checkpoints. Every check passes. These are checks against our own emulator only, since there is no reference emulator.
+
+**(a) Routine checks: new `tools/emu/verify.py`**
+It plays from the name-entry state to f2460, which covers the new game, the start room, the move into area 1 and 50 frames there. Each call of the routines below is compared with a Python model of what REVERSE.md says it does:
+
+| Routine | Calls checked | Result |
+|---|---|---|
+| `SwitchBank16` | 2390 | all match |
+| `PlaySound` | 4 | all match |
+| `ObjSpriteDraw` | 65 | all match (all 32 slots, each call) |
+| `PaletteBuild` | 3 | all match |
+| `ObjInit` | 11 | all match (every field of the slot) |
+| `AreaLoad` | 2 | all match |
+| `SndStartMusic` | 1 | all match |
+| `SaveGame` | 2 | all match (9 save-image fields each) |
+
+**(b) Data structure checks**
+- **Match the RAM exactly:** the area header fields, object slots, sound channel state, the current save image and its mirror.
+- **Boot copy quirk confirmed:** at the title screen, the story-flag page holds the name/stats page.
+- **Struct index:** the Data Structures table now shows which structs are checked against the emulator, partly checked, or still unchecked.
+- **Report:** the full output is in `docs/emu_verify.txt`.
+
+**(c) `--compare` mode**
+- `python3 -m tools.emu ... --compare out.csv` writes one row per frame: game state, area, camera, music, channel periods, a palette checksum, and position and AI id for all 32 object slots.
+- The columns are defined in the new `tools/emu/compare.py`; the web port's test harness will need to write the same ones.
+- I saved a sample run as `gfx/emu/compare_canonical.csv`.
+- The CLI tests pass 10/10, including a new one for this mode, and the PPU tests still pass 18/18.
+
+**What the emulator showed**
+- **One correction:** the area "entry point" records are **player start positions**, not camera positions.
+  - `$34-$37` is a shared position scratch area, renamed `pos_*`.
+  - The camera the sprites are drawn against is `$02-$05`; `$03-$05` now have camera names.
+  - `31:E90A` is now labelled `CameraUpdate`.
+  - I updated the related text in REVERSE.md, labels.csv and `struct_dump.py`.
+- **Two saves before the player gets control:** a new-game save at f2348, and an autosave 24 frames after entering area 1.
+- **Frame order:** the sprite pass runs before object collision in every gameplay frame, so collision uses that frame's screen positions. This answers an open question in the object field table.
+- Slot 0 follows the player's position.
+
+**Not covered by this run:** the full sound-queue path, sound-effect headers, envelope/vibrato fields, area tables k3-k5, save slots 0/1 and their checksums, and drawing sprites into OAM. I added these to the note on the existing "Ph6 validate 2/4" task rather than opening a new one. There are no new dead ends and nothing is committed.
+
+SESSION_SUMMARY: Session 39 — Ph5.5 emu 6/6 done: new `tools/emu/verify.py` checks 8 routines (all calls match their documented models) and the data structures against RAM (all pass), `--compare` per-frame CSV added (`compare.py`, CLI tests 10/10), Ph3+Ph5 checkpoints ticked; correction: area k2 = player start positions, `$34-$37` → `pos_*`, `$03-$05` = camera, `CameraUpdate` 31:E90A.

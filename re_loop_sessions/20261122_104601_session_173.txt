@@ -1,0 +1,87 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -3 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/20261122_104601_session_17*.txt && tail -c 2500 re_loop_sessions/20261122_104601_session_172.txt;
+  ▶ Grep "EnemyKilled|ObjBecomeNext|9152|not ported" web/src
+  ▶ Grep "unported\(|notPorted\(|todo\(" web/src/game/obj
+  ▶ Grep "showMessage|D354" web/src
+Picked the top task: the low-priority boss-AI leftovers. The sub-item I'm doing is AI `$70` phase 1's `ShowMessage` call, which the port still logs as "not ported". Reading `ai_final.js` now.
+  ▶ Read ai_final.js
+  ▶ Read ai_boss.js +1295
+  ▶ python3 tools/dis.py 27 BB1A 0x40 && python3 tools/dis.py 30 D354 0x50 && grep -n "farRestore" web/src/game/obj/ai_boss.
+  ▶ python3 tools/dis.py 30 D3A2 0x24 && python3 tools/dis.py 27 BB58 0x30 && python3 tools/dis.py 31 FFCF 0x14
+  ▶ Grep "AI \$70.*(phase 1|scenario|BAF5)" REVERSE.md
+  ▶ Grep "BAF5|BB37|1B\.05" REVERSE.md
+  ▶ sed -n 679p REVERSE.md | cut -c1-3000; grep -n "phase 1" REVERSE.md | grep -i "\$70\|BBCE\|orbit" | cut -c1-300
+  ▶ Read REVERSE.md +679
+Checking which `tools.emu` scenario reaches AI `$70` phase 1, so I can capture the real X/Y after `ShowMessage`.
+  ▶ Grep "^\s+'[a-z0-9_]+':|^def |SCENARIOS" tools/emu/scenario.py
+  ▶ Read scenario.py +195
+  ▶ Read scenario.py +700
+  ▶ Glob tools/emu/*probe*.py
+  ▶ Read flee_probe.py
+Writing a matching probe for AI `$70` phase 1's message loop.
+  ▶ Write ai70_msg_probe.py
+  ▶ timeout 600 python3 -m tools.emu.ai70_msg_probe 2>&1 | tail -30
+  ▶ timeout 600 python3 -m tools.emu.ai70_msg_probe 2>&1 | grep -v "RTS  " | head -40
+  ▶ timeout 600 python3 -m tools.emu.scenario final_locked 2>&1 | tail -40
+  ▶ Edit ai70_msg_probe.py
+  ▶ timeout 600 python3 -m tools.emu.ai70_msg_probe 2>&1 | tail -30
+  ▶ Grep "export function\* (hudRedraw|hudHpBar)|export function (hudRedraw|hudHpBar)" web/src/game/states/death.js
+  ▶ Edit ai_final.js
+  ▶ Edit ai_final.js
+  ▶ Edit ai_final.js
+  ▶ grep -n "^import" web/src/game/states/talk.js && wc -l web/test/bossa6_check.mjs && head -c 400 web/test/bossa6_ref.csv 
+  ▶ Read bossa6_check.mjs
+  ▶ sed -n 1,40p tools/emu/scenario_state.py && python3 tools/web_state_compare.py --help 2>&1 | head -30
+  ▶ grep -o '"frame0\?": *[0-9]*' web/test/states/finallocked.json | head
+Next: export a state at f2860, just before the message loop starts at f2864, and run `tools.emu` and the port side by side through the three messages.
+  ▶ timeout 900 python3 -m tools.emu.scenario_state final_locked 365 --out web/test/states/ai70msg.json --save-state tools/e
+  ▶ KEYS=$(for i in $(seq 0 12); do printf "%d:A " $((2865+30*i)); done) && timeout 900 python3 tools/web_state_compare.py -
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/ai70msg.state --web web/test/states/ai70msg.json
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/ai70msg.state --web web/test/states/ai70msg.json
+  ▶ Read talk.js +296
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/ai70msg.state --web web/test/states/ai70msg.json
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/ai70msg.state --web web/test/states/ai70msg.json
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/ai70msg.state --web web/test/states/ai70msg.json
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/ai70msg.state --web web/test/states/ai70msg.json
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/ai70msg.state --web web/test/states/ai70msg.json
+  ▶ sed -n 1,25p tools/csv_trim.py; head -1 web/test/bossa6_ref.csv | tr ',' '\n' | wc -l
+  ▶ python3 tools/csv_trim.py gfx/compare/ai70msg/emu.csv web/test/ai70msg_ref.csv --cols core,snd,pal,obj,oam_crc --frames 
+  ▶ Write ai70msg_check.mjs
+  ▶ Edit ai70msg_check.mjs
+  ▶ node web/test/ai70msg_check.mjs
+  ▶ python3 tools/csv_trim.py gfx/compare/ai70msg/emu.csv web/test/ai70msg_ref.csv --cols core,pal,obj,oam_crc --frames 2861
+Also running `obj_check`, in case a fuzz case reaches the phase-1 table end, which now calls `ShowMessage`.
+  ▶ node web/test/obj_check.mjs 2>&1 | tail -5
+All checks pass. Now updating REVERSE.md (phase-1 note and task text) and CLAUDE.md's check list.
+  ▶ Edit REVERSE.md
+Now the task text (still unchecked: it's a low-priority leftovers task).
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+  ▶ Grep "calls `ShowMessage` `30:D354` ×3 \(not ported" REVERSE.md
+  ▶ sed -n 2533p REVERSE.md | cut -c1-200
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ grep -n "ai70\|README" web/test/states/README.md 2>/dev/null | head -3; git status --short | head
+I ported AI `$70` phase 1's three `ShowMessage` calls in `web/src/game/obj/ai_final.js` (until now the port only logged them as "not ported"). The new frame check matches `tools.emu` on all 319 frames it compares.
+
+**What `tools.emu` showed** (new probe `tools/emu/ai70_msg_probe.py`, scenario `final_locked`):
+- The message loop starts at f2864 with X = slot `$15` and Y = `$18`. The three messages (`$1B.05`, `.06`, `.07`) run f2864–2994, f2994–3114 and f3114–3144.
+- Each `ShowMessage` returns with X = `$00` and Y = `$0A`. As a result:
+  - The 2nd and 3rd `PlaySound($29)` and the `PlaySound($25)` leave `snd_saved_y` (`$010F`) at `$0A`.
+  - `HudRedraw(4)` runs with X = 0, not the slot number. The old port code passed the slot, which was wrong.
+- The slot number is pulled back off the stack only for the last write, which turns the slot off.
+
+**Port change:** `phase1` now calls `showMessage` with the bank save/restore that `FarCall_D354` does, uses Y = `$0A` after the first message, and passes X = 0 to `hudRedraw`.
+
+**New check:** `web/test/ai70msg_check.mjs` loads a new state exported at f2860 (`web/test/states/ai70msg.json`) and compares against `web/test/ai70msg_ref.csv`.
+- **Frames:** f2861–3179 all match at shift 0 in the core, palette, object and OAM columns. The port gets each A press one frame later than `tools.emu`, because the game reads the pad right after the vblank wait.
+- **End state:** it also checks the three messages, player AI 2, slot `$15` off, HP/MP full, and that `snd_saved_y` becomes `$0A`.
+
+**Not covered:** the sound-period columns run one frame behind the reference for the whole run. That looks like a music-timing offset left by loading the state, not something this routine causes. I left sound out of the reference, as `bossa6_check` already does, and recorded it as open in the task.
+
+**Other checks:** `obj_check` (27100/27100), `bossa6`, `finalscene` and `core` still pass.
+
+**Docs:** REVERSE.md has the findings in the AI `$70` phase-1 note. The low-priority boss-AI task stays unchecked; I listed what's still open inside its own text (death chains and drops against real kills, per-enemy scenarios, the fan-turret frame, AI `$70` phase 3, the sound offset). I also crossed this item off in the gameplay leftovers task and added the new check to CLAUDE.md. No new ROM addresses, so `labels.csv` is unchanged. Nothing is committed.
+
+SESSION_SUMMARY: Session 173 ported AI $70 phase 1's three ShowMessage calls (27:BB37) into obj/ai_final.js; ShowMessage returns X=0/Y=$0A, so the later sounds use Y=$0A and HudRedraw(4) gets X=0; the new ai70msg_check.mjs matches tools.emu on all 319 frames (f2861-3179, core/pal/obj/oam, keys +1 frame); the low-priority boss-AI task stays open with its remaining items updated.

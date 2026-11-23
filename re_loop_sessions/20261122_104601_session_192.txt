@@ -1,0 +1,91 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls re_loop_sessions | tail -4 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.md |
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_19[01].txt && tail -c 5000 re_loop_sessions/20261122_104601_session_191.txt
+  ▶ head -c 11000 re_loop_sessions/20261122_104601_session_191.txt | tail -c 9000
+  ▶ python3 tools/area_dump.py spawns 88 2>&1 | head -30; python3 tools/enemy_catalog.py 2>&1 | grep -i "4E\b\|\$4E\| 4e" | 
+  ▶ python3 tools/area_dump.py spawns 88 2>&1 | head -30
+  ▶ python3 tools/enemy_catalog.py --out /tmp/ecat.txt 2>&1 | tail -3
+Picking the next enemy group: AI `$4E` in area `$88`. Looking up its spawns.
+  ▶ python3 tools/area_dump.py spawns 136 2>&1 | head -30
+  ▶ Grep "\b4E\b" /tmp/ecat.txt
+  ▶ Read ecat.txt
+  ▶ Read ecat.txt +160
+  ▶ Grep "`\$4E`|B5D9" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "group_84b|group_7F|def place_player" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Grep "^  8F |^; AI" /tmp/ecat.txt
+  ▶ Grep "^  8F" /tmp/ecat.txt
+  ▶ sed -n 1181p REVERSE.md; grep -n "AiTurret\|type \`\$8F\`\|\`\$8F\` " REVERSE.md | cut -c1-250 | head
+Area `$88` has the AI-`$4E` turret (type `$87`) plus 7 records of type `$8F`; checking what `$8F` is.
+  ▶ Grep "AiTurret|type `\$8F`|`\$8F` \|" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/dis.py 27 B5D9 80 | head -40
+  ▶ sed -n 640,700p tools/emu/scenario.py
+  ▶ Glob gfx/**/area_136_coll*
+  ▶ Read area_136_coll.txt
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_88 12 --out web/test/states/group88.json --save-state tools/emu/st
+Scenario state built. Probing the turret and player over a test run.
+  ▶ timeout 600 python3 tools/emu/group_probe.py -h 2>&1 | head -20; timeout 600 python3 tools/emu/group_probe.py tools/emu/
+  ▶ timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group88.state --slots 0D,0E --changes --seg NONE:20 UP:40 
+  ▶ sed -i 's/exec=\[place_player(0x0180, 0x0090, cam=True)\],\n                             keys=\[\],   # state taken at +
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 -m tools.emu.scenario_state group_88 12 --out web/test/states/group88.json --save-state tools/emu/st
+  ▶ K=$(python3 tools/keyseq.py 2509:RIGHT:6 '2515:B:4*36/12') && echo "$K" | cut -c1-200 && timeout 900 python3 -m tools.em
+  ▶ python3 tools/keyseq.py 2509:RIGHT:6 2515:B:4*36/12 > /tmp/g88keys.txt; cat /tmp/g88keys.txt | cut -c1-200
+The turret dies after 9 sword hits (kill at f2618). Now checking the run for lag frames before building the reference.
+  ▶ python3 tools/keyseq.py 2509:RIGHT:6 2515:B:4*36/12
+  ▶ timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/group88.state 480 --keys 2509:RIGHT:6 2515:B:4 2527:B:4 253
+  ▶ timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/group88.state 480 --keys 2509:RIGHT:6 2515:B:4 2527:B:4 253
+  ▶ timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/group88.state 480 --keys 2509:RIGHT:6 2515:B:4 2527:B:4 253
+  ▶ timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group88.state --slots 0D,0E,0F,10 --every 15 --seg NONE:4 
+  ▶ Read group84b_check.mjs
+No lag frames in the run. Building the tools.emu reference CSV now.
+  ▶ mkdir -p gfx/group88 && timeout 1500 python3 tools/web_state_compare.py --state tools/emu/states/group88.state --web web
+  ▶ mkdir -p gfx/group88
+  ▶ timeout 1500 python3 tools/web_state_compare.py --state tools/emu/states/group88.state --web web/test/states/group88.jso
+The differences are the known key-timing offset (web run used unshifted keys). Deriving the port key frames from tools.emu's `$43` writes.
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/group88.state --frames 480 --watch 0043 --keys 2509:RIGHT
+  ▶ Grep "add_argument" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/web_state_compare.py
+  ▶ sed -n 1,15p tools/csv_trim.py
+  ▶ python3 tools/csv_trim.py gfx/group88/emu.csv web/test/group88_ref.csv --frames 2506-2984
+  ▶ Write group88_check.mjs
+  ▶ node web/test/group88_check.mjs 2>&1 | tail -32
+All 479 rows match at shift 0; only my expected kill frame was off by one (group_probe rows are +1). Fixing the constants.
+  ▶ sed -i 's/const KILLS = \[\[0x0D, 2618\]\];/const KILLS = [[0x0D, 2617]];/; s/hits for 12 (\$03CD \$64 -> \$58 ... \$04 
+  ▶ Edit group88_check.mjs
+  ▶ Edit group88_check.mjs
+  ▶ node web/test/group88_check.mjs
+Passing. Running the full check suite in the background while I update the docs.
+  ▶ timeout 3000 python3 tools/run_checks.py 2>&1 | tail -12
+  ▶ Grep "^\| AI `\$21` `AiShooterWalk`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +221
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+  ▶ Grep "^(26|27),(8409|972D)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit REVERSE.md
+Docs updated (REVERSE.md Verification Log row + task note, CLAUDE.md). Waiting on the full check suite.
+  ▶ Read b1w1g2y02.output
+  ▶ ToolSearch max_results query
+The full check suite is still running in the background; I'll report the result when it finishes.
+  ▶ Read b1w1g2y02.output
+I checked AI `$4E` (`AiTurret`) against tools.emu in area `$88`, and the web port matches it with no code changes. The new `web/test/group88_check.mjs` passes all 479 rows (f2506-2984) at shift 0, sound included, with no excused cells. The full suite passes 45 of 46 checks. The one failure is `world_check` on areas `$3C`, `$3D` and `$BC`, the known gap (j).
+
+**What the turret does:** it is enemy type `$87` in slot `$0D`, sitting at (384, 60) in the top room of screen 1. It never moves. Every 16 frames it aims at the player (`DirToTarget` `26:8409`) and fires one shot (`SpawnShot` `26:972D`).
+
+**How the run went:**
+- **Placement:** the new `group_88` scenario starts the player at (352, 60), right beside the turret. Starting below it didn't work: its shots hit for 12 and pushed the player out of the room.
+- **Kill:** with sword 1 (sword 2 can't hurt this type), 9 swings took its HP from `$64` down to `$F8`, and it died at f2617.
+- **Second turret:** after the kill, a second type-`$87` turret (on screen 3) fills slot `$0E` at f2676. Its shots start off-screen and last one frame.
+- **Exit:** the player then walks down through the bottom door into the corridor, so the run also covers a vertical scroll.
+- **Not covered:** the player is never hit in the run, so the shot-hits-player path isn't tested.
+- **Lag:** `pass_probe` shows no lost frames in this run.
+
+**Changes:**
+- New files: the `group_88` scenario in `tools/emu/scenario.py`, the state files `web/test/states/group88.json` and `tools/emu/states/group88.state`, the reference `web/test/group88_ref.csv`, and the check itself.
+- REVERSE.md has a new Verification Log row ("AI `$4E` `AiTurret`"). The task note strikes `$4E` and lists the AIs still left with an area entry: `$3A` (area `$6E`), `$41` (`$B2`) and `$5C` (`$59 $5A $5B`).
+- CLAUDE.md lists the new check.
+
+The task stays open because it is the low-priority leftovers task. Nothing is committed.
+
+SESSION_SUMMARY: Session 192 checked AI $4E AiTurret (type $87) in area $88 with the new group_88 scenario (place_player beside it, sword 1, max defences): web/test/group88_check.mjs passes 479/479 rows at shift 0 including sound (kill f2617, second turret fills slot $0E at f2676), no port change and no lag frames; 45/46 checks pass (world_check is the known gap (j)).

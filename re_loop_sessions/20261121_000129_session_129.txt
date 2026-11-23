@@ -1,0 +1,140 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +2272
+  ▶ Read dead_ends.md
+  ▶ tail -c 2500 re_loop_sessions/20261121_000129_session_128.txt; echo ----; tail -c 1500 re_loop_sessions/20261120_190200_
+  ▶ Grep "\$91`/`\$B9|AreaPitFall|AreaEdgeLink|RidePlatform" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '1450,1453p;1478,1479p' REVERSE.md | cut -c1-3000; sed -n '2504,2510p' REVERSE.md | cut -c1-2500
+  ▶ ls gfx/areas | head; ls gfx/areas | wc -l; grep -n "^91\|^B9\|^BA\|area 91\|area B9\|area BA\|\$91\b" gfx/areas/coll_ind
+I'm on the top open task: checking whether the player can actually reach the pit cells in areas `$91`/`$B9`/`$BA`. Next I'm looking at the collision index.
+  ▶ Grep "^(area )?\$?(91|B9|BA)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/areas/coll_index.txt
+  ▶ Glob tools/*{area,reach,coll,exit,flood}*
+  ▶ Read coll_index.txt
+  ▶ head -40 tools/area_graph.py; python3 tools/area_dump.py --help 2>&1 | head -20
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools && python3 area_graph.py 0x91 0xB9 0xBA 2>&1 | head -40
+  ▶ python3 /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/area_graph.py 0x91 0xB9 0xBA
+  ▶ python3 tools/area_graph.py 0x91 0xB9 0xBA
+  ▶ sed -n 1,40p tools/bg_coll_dump.py; grep -n "def \|coll" tools/render_level.py | head -60
+Found the links into those three areas. Now I'm building a reachability check (a flood fill on the collision map from each entry point).
+  ▶ sed -n 20,56p tools/render_level.py; ls gfx/areas/ | grep -E "_(145|185|186)" 
+  ▶ grep -n "def \|entry\|k4\|pos" tools/area_dump.py | head -50; grep -n "def " tools/area_graph.py
+  ▶ sed -n 110,175p tools/area_dump.py; python3 tools/area_dump.py sub 0x91 0xB9 0xBA 2>&1 | head -60
+  ▶ sed -n 1438,1449p REVERSE.md | cut -c1-600
+  ▶ sed -n 57,70p tools/render_level.py; grep -n "def area_bg" -A25 tools/render_screen.py | head -40; grep -n "ExitLookup\`
+  ▶ Read render_level.py +57
+  ▶ Grep "def area_bg" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/render_screen.py
+  ▶ Write pit_reach.py
+  ▶ python3 tools/pit_reach.py 91 --entries 0,1 ; python3 tools/pit_reach.py 91 --entries 0,1 --visited; python3 tools/pit_r
+  ▶ python3 tools/pit_reach.py BA --at 170,2E0 --at 170,2D0 --at 180,2C0; python3 tools/pit_reach.py 91 --at 480,6D0 --visit
+  ▶ cd tools && python3 - <<'EOF' 2>/dev/null; cd ..; python3 tools/area_dump.py spawns 0xBA 0xB9 | head -40
+  ▶ python3 tools/area_dump.py spawns 0xBA 0xB9
+The static check says the `$BA` pits can be reached on foot and the `$91`/`$B9` pits cannot. I'm adding a flight mode and path output to confirm that.
+  ▶ python3 - tools/pit_reach.py <<'EOF'
+  ▶ Edit pit_reach.py
+  ▶ Edit pit_reach.py
+  ▶ Edit pit_reach.py
+  ▶ Edit pit_reach.py
+  ▶ python3 tools/pit_reach.py B9 --entries 1,2 --fly; python3 tools/pit_reach.py B9 --entries 1,2 --visited; python3 tools/
+The path crosses a k3 exit cell (`$BA` (18,30) → `$B4`), which would take the player out of the area. I'm making the fill treat exit cells as end points.
+  ▶ Edit pit_reach.py
+  ▶ Edit pit_reach.py
+  ▶ Edit pit_reach.py
+  ▶ Grep "ExitLookup.{0,40}(x_hi|cell|record)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/dis.py 31 EB09 60
+Exit cell format confirmed. Rerunning with exits as end points:
+  ▶ python3 tools/pit_reach.py BA --entries 0,1,2,3,4,5 --at 170,2E0 --at 180,2E0 --path; python3 tools/pit_reach.py BA --en
+With exits as end points, only unused entries reach pits. Now checking whether `$CC`'s link into `$BA` (entry 06) is real:
+  ▶ python3 tools/area_dump.py sub 0xCC 0xBD
+`$CC` and `$BD` are null areas, so their "links" are garbage bytes. That means no real link reaches the pits. Checking whether `RidePlatform` still counts as never run:
+  ▶ Grep "RidePlatform|AreaEdgeLink|AreaPitFall" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_scenarios.txt
+`AreaPitFall`, `AreaEdgeLink` and `RidePlatform` are still listed as never run in the scenario suite. I'll add a scenario for them, using the s128 `conveyor` scenario as the template.
+  ▶ Grep "conveyor|def place_player|final_locked" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Read scenario.py +1
+I'll add two scenarios: `pitfall` (area `$6A` pit column, the s116 spot) and `ride_platform` (the player placed on slot `$18`'s AI `$38` platform in area `$6A`).
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario pitfall ride_platform 2>&1 | tail -40
+`pitfall` now runs `AreaPitFall` and `AreaEdgeLink`. `ride_platform` did not reach `RidePlatform`, so I'm checking its log:
+  ▶ timeout 300 python3 -m tools.emu.scenario ride_platform 2>&1 | grep -v "^  bank" | head -40
+The player landed on the shuttle's position but fell at once, so `RidePlatform` never ran on the placement frame. Checking the collision pairing rules:
+  ▶ Read REVERSE.md +1410
+  ▶ python3 tools/dis.py 26 9395 0xC0 | head -70
+  ▶ Grep "\*\*s117" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario ride_platform 2>&1 | grep -v "^  bank" | head -24
+The pit fall starts the frame after placement, so the hold does not help. `ObjCollideAll` must not be pairing slot `$18` with the player on that frame. Checking its loop:
+  ▶ python3 tools/dis.py 26 8F6E 0x56
+Collision pairs are split by frame parity (`$08` b0). Checking how the pit test at `31:F068` uses `$0541`:
+  ▶ python3 tools/dis.py 31 F05C 0x2C; python3 tools/decode_tables.py 26:96F1 15 4 2>&1 | head -20
+  ▶ python3 tools/decode_tables.py 2>&1 | head -15; grep -n "CollPairTable" REVERSE.md | head -5
+  ▶ python3 tools/decode_tables.py 26:96F1 15 hex4 --per-line 5
+Slot 1 is paired every frame (records 6 and 13), so the overlap test itself is failing. Checking `RidePlatform` and `ObjOverlapScan`:
+  ▶ python3 tools/dis.py 26 943F 0x2E; python3 tools/dis.py 26 95F8 0x60
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario ride_platform 2>&1 | grep -v "^  bank" | grep -v "\$00B1 <-\|\$0071 <-" | head
+  ▶ timeout 300 python3 -m tools.emu.scenario ride_platform 2>&1 | grep -v -e "^  bank" -e "00B1 <-" -e "0071 <-" | head -30
+Still no `$0541` write. I'm adding debug output to the hook to see slot `$18`'s state at placement time:
+  ▶ Edit scenario.py
+  ▶ PLACE_DEBUG=1 timeout 300 python3 -m tools.emu.scenario ride_platform 2>&1 | grep "place #" | head -64 | awk 'NR<4 || NR
+  ▶ PLACE_DEBUG=1 timeout 300 python3 -m tools.emu.scenario ride_platform > /tmp/ride_dbg.txt 2>&1; grep -c "place #" /tmp/r
+The permission setup blocks the env-var prefix, so I'll use a hook parameter instead.
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario ride_platform 2>&1 | grep -e "place #1[0-3]:" -e "place #6" -e "place #5[6-9]"
+  ▶ python3 tools/area_dump.py sub 0x6A
+The entry points are far from the shuttle at `$580`, and the camera only catches up slowly. Checking for a pit near entry 0, so the player and the platform can both be placed on screen:
+  ▶ python3 tools/pit_reach.py 6A --entries 0,1 --no-exits --path
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 400 python3 -m tools.emu.scenario ride_platform 2>&1 | grep -v -e "^  bank" -e "00B1 <-" -e "0071 <-" | head -30
+The camera does follow (player at screen `7F,70`), but the shuttle stays at `obj_flags` b7 with screen coords 0,0. Checking the platform docs:
+  ▶ Grep "\*\*Platforms|AiPitShuttle` `27:AFA9`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 1486p REVERSE.md | cut -c1-2500; grep -n "obj_flags.*b7\|b7.*off-screen" REVERSE.md | head -5 | cut -c1-400
+Both objects are flagged off-screen, so the camera is not tracking the teleported player. Checking how `CameraFollow` works:
+  ▶ Grep "CameraFollow` `31:E" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1456
+The camera drifts only 1 px per frame in x when no pad is held, so a ~600 px teleport takes about 600 frames. I'll set the camera `$3C-$3F` directly when parking. First, the variable layout:
+  ▶ Grep "^\*,3[CDEF]," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "^\*,(00)?3[CDEF],|cam_x|cam_y" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+The camera is `$02-$05` (x lo/hi, y lo/hi, 240-line rows), and `$3C-$3F` is the copy that `CameraUpdate` steps from. I'll set both at the first park frame.
+  ▶ Edit scenario.py
+  ▶ timeout 400 python3 -m tools.emu.scenario ride_platform 2>&1 | grep -v -e "^  bank" -e "00B1 <-" -e "0071 <-" | head -30
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 400 python3 -m tools.emu.scenario ride_platform 2>&1 | grep -v "^  bank" | grep -e end: -e "0541" -e "006D" -e "
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^(26,943F|31,E544|31,E573|31,E603)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+No new addresses, so I'll only update the comments on these labels:
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 26 943F 4 && timeout 300 python3 -m tools.emu.scenario --list 2>&1 | grep -e pitfall -e ride_platfo
+The `ride_platform` note is now out of date, so I'll fix it:
+  ▶ Edit scenario.py
+I picked the top open task (the Ph6 scenario leftovers) and answered its pits/platform item: the possible soft-lock in areas `$91`/`$B9`/`$BA` cannot happen in normal play. `AreaPitFall`, `AreaEdgeLink` and `RidePlatform` now each run in an emulator scenario.
+
+**Can the player reach the pits that soft-lock the game?** These three areas have pit cells but no pit-exit link, so falling in loops forever. I wrote `tools/pit_reach.py`, which walks the collision map cell by cell from each way into an area. It stops at pits and at exit cells.
+- **`$91`:** its 2 pit cells sit in grid row 11, which is really leftover header bytes, and walls surround them. They are not reachable even with flight or after the map changes on revisits.
+- **`$B9`:** only entry point 0 reaches the pits, and no exit in any other area uses entry 0.
+- **`$BA`:** only entry points 3 and 4 reach the pits, and nothing uses them either. The used ways in (entry 5 from `$B7`, and the arrival from `$B4`) stop at an exit cell first. Without that exit check, the path looked reachable, but it would walk out of the area. There are no platforms in this area.
+- **Garbage links:** the links into these areas from `$CC` and `$BD` are not real, because both are null areas.
+
+So only memory pokes, the debug area cycler or an unused entry point lead to the soft-lock. The walk is cell-level (it ignores objects and exact body offsets), so this is strong evidence rather than proof.
+
+**New emulator scenarios** (in `tools/emu/scenario.py`):
+- **`pitfall`:** area `$6A`. The player is placed on the pit column, falls, the pit-exit link matches, and the player drops into area `$69`.
+- **`ride_platform`:** area `$6A`, whose pit strip can be reached on foot from entry 0. The player steps onto the shuttle platform over the pit at f402. There is no fall, and at f600 the player is still riding it.
+- **Trap for future scenarios:** teleporting the player far away doesn't work for collision tests. The collision check uses screen coordinates and skips anything off-screen, and the camera catches up by only 1 px per frame. The new `place_on_slot` hook therefore parks the player next to the target and sets the camera directly before the move.
+
+**Records:**
+- **REVERSE.md:** the soft-lock note now says it is unreachable, the item is struck through, and an s129 note is added. The task stays unchecked, as the rules require for low-priority leftovers tasks.
+- **labels.csv:** comments updated on `AreaPitFall`, `AreaEdgeLink`, the no-match tail at `31:E603` and `RidePlatform`. No new addresses.
+- **Web port:** no changes. It already copies the ROM's pit and platform behaviour.
+
+**Not done:** `docs/emu_scenarios.txt` is still not regenerated (the full run takes about 55 minutes). Still open in the task: the warp pick, the burst, hit rules, the final boss, reveals, the transform, the shot eater, type `$64` and the ending labels.
+
+SESSION_SUMMARY: Session 129: no-k5 pit soft-lock (areas $91/$B9/$BA) shown unreachable in play by new tools/pit_reach.py (walled off or only from unused entries; $CC/$BD links are garbage); new scenarios pitfall and ride_platform run AreaPitFall, AreaEdgeLink and RidePlatform; new place_on_slot hook parks the player and sets the camera first; scenario-leftovers task stays open.

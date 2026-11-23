@@ -1,0 +1,166 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## Next Tasks" REVERSE.md
+  ▶ Glob re_loop_sessions/*session_1[01]*
+  ▶ Grep "^## Next Tasks|^- \[ \]|^### " REVERSE.md
+  ▶ Read REVERSE.md +2266
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/*session_1{09,10,11}.txt; tail -c 3000 re_lo
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/20261120_*; tail -c 3000 re_loop_sessions/20
+Reading dead ends and the player docs next; this session's target is part (e2), the player AIs.
+  ▶ Grep "(?i)player|AI \$0[13]" dead_ends.md
+  ▶ Grep "^#{2,4} .*(Player|World interaction)" REVERSE.md
+  ▶ Read REVERSE.md +1281
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; wc -l obj/*.js states/play.js machine.js world/*.js | 
+  ▶ Read objects.js
+  ▶ Read ai_effect.js
+  ▶ Read move.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^export" web/src/game/obj/util.js web/src/game/obj/sprites
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 9FBC 0x66 ; python3 tools/dis.py 27 A017 0x
+Status: disassembling the player AIs (`PlayerMove`/`PlayerMagic` done; next the conveyor tail and `PlayerUpdate`) so I can port them into a new `obj/player.js`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 A000 0x17; python3 tools/dis.py 26 9B41 0x2
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; grep -rn "8D59\|8CC0\|9AE8\|spendMp\|SpendMp\|HudCharg
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; sed -n 1,40p states/play.js; sed -n 95,135p states/pla
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 9AE8 0x30; cat web/src/game/playsound.js | 
+Disassembly is done. I found two places where REVERSE.md's description of the ROM is wrong; I'll record both. Now writing `obj/player.js`.
+  ▶ Write player.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; grep -n "0x0[123]:" obj/ai_*.js | head; grep -n "^impo
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit objects.js
+  ▶ Edit objects.js
+Now comparing against tools.emu with the canonical keys, the same way session 110 did.
+  ▶ Grep "tools.emu|run.mjs|compare_frames" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions/20261120_090147_session_110.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls gfx/compare/s110_emu.csv && node web/test/run.mjs --frames 2247 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/s110_emu.csv gfx/compar
+The remaining differences come from the exit/area-load path (fade palette every 3 frames from f2398, then music), not from the player. Checking whether that's a one-frame shift:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -1 gfx/compare/s110_emu.csv | tr ',' '\n' | grep -n "frame\|pa
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for s in -1 1 -2 2; do echo "shift $s"; python3 tools/compare_frame
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/s110_emu.csv gfx/compar
+Not a frame shift. Since the player now walks, this run reaches an area exit for the first time, and the exit fade differs. I'll dump `pal_buf` from both runs at f2398.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "'--[a-z-]*'" web/test/run.mjs | head -30; python3 -m tools
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; K="1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu --frames 2399 --keys 1250:START 1400:START 160
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/mem_diff.py gfx/compare/s111_e.wram gfx/compare/s111_
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 E600 0x30; grep -n "E6\|E5\|fadeOut" web/sr
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 8C3D 0x60; grep -n "export function\* fadeO
+  ▶ Grep "fadeOut|function\* fadeSteps|fadeIn" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/death.js
+  ▶ Read death.js +30
+`fadeOut` matches the ROM, so the fade must be starting at a different frame. Testing a 3-frame shift:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/s110_emu.csv gfx/compar
+  ▶ Glob tools/csv*.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -15 tools/csv_rows.py | grep -v "^import"; python3 tools/csv_r
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_rows.py gfx/compare/s110_emu.csv gfx/compare/s111
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_rows.py gfx/compare/s110_emu.csv gfx/compare/s111
+Slot 3 (AI `$05`, placed 4 px toward the player's facing) flips to "up" in the port at f2440, and the emu's temp `pos_*` changes there too. Checking slot 1's meta id and whether anything else moved:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -1 gfx/compare/s110_emu.csv | cut -c1-2000; python3 -m tools.e
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu --frames 2441 --keys 1250:START 1400:START 160
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for t in core_check ppu_check serve_check world_check sprite_check 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/core_check.mjs 2>&1 | tail -2; node web/test/ppu_chec
+All checks pass. Next, fuzz cases for the two player AIs through `routine_capture.py` + `obj_check.mjs`, so the paths a real run never takes (magic, charged shot, conveyor, warp spin) get tested too.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "ROUTINES\|^def \|'AiFollowFacing'\|AiMpDrain\|fuzz_" tools
+  ▶ Read routine_capture.py +1
+  ▶ Read obj_check.mjs
+  ▶ Read routine_capture.py +340
+Adding player fuzz cases: `PlayerMove`/`PlayerMoveLocked` (X=0) and `PlayerUpdate` (X=1), each steered onto its edges.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls web/test/obj_frames/; grep -n "routine_capture" web/test/obj_fra
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; time python3 -m tools.emu.routine_capture --load-state tools/emu/st
+Most cases already match. To track down the `PlayerFacing` mismatch I'm writing a small debug script that prints one case's inputs.
+  ▶ Write case_peek.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/case_peek.py web/test/obj_frames/fuzz_player.json Pla
+The cause: at `A1E2`, `BEQ $A1F9` lands on a `BNE` that tests the Z flag left by `CMP #$FF`, not A. So with `obj_behav`=`$FF` the facing is always taken from slot 0's `obj_meta_dir`. Fixing:
+  ▶ Edit player.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/obj_check.mjs --verbose 2>&1 | grep "FAIL Player" | c
+Next, the `$010F` mismatch: in the air path `ObjBgProbe` changes Y before `PlaySound($56)`. Checking the register state at `ObjBgProbe`'s exit:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 9AB5 0x2B; python3 tools/dis.py 26 98A8 0x1
+After the non-cached `ObjBgProbe` path, Y = `$1B` (`LDY #$1B` at `9AB9`).
+  ▶ Edit player.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/case_peek.py web/test/obj_frames/fuzz_player.json Pla
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 9A30 0x30; python3 tools/case_peek.py web/t
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/case_peek.py web/test/obj_frames/fuzz_player.json Pla
+  ▶ Grep "class Interrupts" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/sprite_capture.py
+The ROM always ends `ObjBgProbe` with `$50`=7, but the emu ends these cases with `$50`=6, and the NMI/IRQ counter doesn't explain it. I'll trace one case's JSRs in the emulator.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "def \|trace" tools/emu/nes.py | head -40; grep -n "_BASE\|
+  ▶ Write case_trace.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.case_trace --load-state tools/emu/states/gamep
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "objBgProbe" web/src/game/obj/util.js | head -3; sed -n 1,2
+  ▶ Edit util.js
+  ▶ Edit util.js
+  ▶ Edit player.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/obj_check.mjs --verbose 2>&1 | grep "FAIL Player\|pla
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.case_trace --load-state tools/emu/states/gamep
+After `SpendMp` → `HudRedraw(4)`, Y = `$18`. Checking `HudRedraw`'s exit Y:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.case_trace --load-state tools/emu/states/gamep
+`HudRedraw(4)` returns with Y = `$18` (= 4·6). Applying that to the flight jump's `PlaySound($30)`:
+  ▶ Edit player.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/obj_check.mjs 2>&1 | grep "FAIL\|player.json\|routine
+All 900 player cases match. I'll run a larger set with a different seed as a stress test, written to a scratch file only:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; mkdir -p gfx/compare/s111_fuzz && python3 -m tools.emu.routine_capt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.routine_capture --load-state tools/emu/states/
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/obj_check.mjs --verbose 2>&1 | grep "FAIL Player\|zz_
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; rm web/test/obj_frames/zz_tmp_player.json; node web/test/run.mjs --
+  ▶ rm /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/obj_frames/zz_tmp_player.json
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --frames 2247 --keys 1250:START 1400:START 16
+`rm` needs approval, so the temporary 4000-case file `web/test/obj_frames/zz_tmp_player.json` is still there. All its cases pass; I'll ask you to delete it at the end. Recording labels next:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^2[67],\(A1B0\|A0B3\|A15C\|A14D\|A00F\|9C6C\|A0E6\|9C03\|9
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; printf '%s\n' \
+  ▶ Read labels.csv +940
+  ▶ Edit labels.csv
+Now REVERSE.md: the corrections in the Player section, the task text, and a Web Port Fixes note.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the task entry (it stays unchecked, with (e2) marked done):
+  ▶ Edit REVERSE.md
+  ▶ Grep "^- \*\*s110" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 2452,2454p REVERSE.md | cut -c1-200
+  ▶ Edit REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "player\|ai_effect.js" docs/architecture_web.md | head -20;
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 48,84p web/test/obj_frames/README.md
+There's already a `tools/case_bytes.py`; checking whether my new `case_peek.py` duplicates it:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -12 tools/case_bytes.py
+It duplicates `case_bytes.py`, so I'll drop `case_peek.py` from the docs and ask you to delete it. Updating the note and the obj_frames README:
+  ▶ Edit REVERSE.md
+  ▶ Edit README.md
+  ▶ Edit README.md
+  ▶ Read architecture_web.md +76
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Final regression pass over all web checks:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_chec
+I ported the player's two objects to the web port (part (e2) of the gameplay-frames task). In the canonical new-game run, every compared `core,obj` column now matches tools.emu from f2322 to f2407; before this, the first difference was at f2357.
+
+**What's new**
+- **`web/src/game/obj/player.js`**, registered in the AI table in `obj/objects.js`:
+  - **AI `$03` `PlayerMove`** (slot 0, the body that moves): the jump timer, all ten magic handlers, sword charge and swing, the 8-frame corner slide, the charge meter, the BG collision probe, sinking, and conveyors.
+  - **AI `$02` `PlayerMoveLocked`**: the cutscene version with the pads cleared.
+  - **AI `$01` `PlayerUpdate`** (slot 1, the drawn body): speed, placement at jump height, facing, status poses, shield overlay, slash shots, and the charged release shot.
+- **Fuzz tests:** 900 new routine-level cases in `web/test/obj_frames/fuzz_player.json`, all identical to tools.emu. A further 4000 cases with another seed were also all identical.
+- **New tool:** `tools/emu/case_trace.py` re-runs one fuzz case in tools.emu and prints its call/return flow with registers.
+
+**ROM behaviour the fuzz turned up** (REVERSE.md is corrected for these)
+- When there's no direction input (`obj_behav`=`$FF`), the facing is always taken from slot 0. REVERSE.md said the facing was kept. A branch lands on a `BNE` that tests the flag from the earlier compare, not the A register.
+- The BG probe decides its cached mode from the caller's N flag, not from bit 7 of A. In normal play this never matters.
+- When standing on the ground, slot 1 takes bits 3–7 of slot 0's `obj_flags` and keeps its own bits 0–2. REVERSE.md said it copied bits 0–2.
+- A level-3 charged shot needs MP strictly greater than its cost; at MP equal to the cost it drops to level 2.
+- The register value passed into the sound call (saved in `$010F`) now matches at each call site. One rare case is approximate: a charge sound on the same frame as a spell cast.
+
+**What still differs in the canonical run**
+- **f2398–2409 (`pal_crc`, `music`, `pos_y`):** a timing artifact of the comparison, not a bug. The emulator's row is captured partway through the palette rebuild during the area-exit fade.
+- **From f2409:** the area-1 enemies (slots `$0D`–`$13`) don't appear, because the spawn handlers aren't ported yet (part e1).
+- **From f2440:** one of those enemies hits the player in the emulator, which freezes slot 0. That needs collision (part e3).
+
+All web checks pass (obj 12000/12000, sprite 552/552, sound 130/130, and the core, ppu, serve, world and apu checks).
+
+The gameplay-frames task stays unchecked; its text now marks (e2) done with these results. I also added 15 labels and updated `docs/architecture_web.md`, `web/test/obj_frames/README.md` and the Web Port Fixes notes.
+
+**Two files to delete:** I wasn't allowed to remove files, so please delete these:
+- `web/test/obj_frames/zz_tmp_player.json`: the 4000-case stress set. It passes, but `obj_check` picks it up and it makes the suite bigger.
+- `tools/case_peek.py`: a debug helper I wrote that does the same job as the existing `tools/case_bytes.py`.
+
+The scratch dumps in `gfx/compare/s111_*` are untracked and can be deleted.
+
+SESSION_SUMMARY: Session 111: ported the player AIs $03 PlayerMove, $02 PlayerMoveLocked and $01 PlayerUpdate (incl. PlayerMagic, SpendMp, conveyor, charged shot) to web/src/game/obj/player.js; fuzz_player.json 900/900 identical; canonical core,obj now match f2322-2407 (was f2357), with later differences from the unported spawns and collision; fixed four ROM descriptions in REVERSE.md (PlayerFacing $FF, ObjBgProbe N flag, slot 1 flags copy, level-3 MP rule); (e2) marked done in the still-open gameplay-frames task.

@@ -1,0 +1,98 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Read dead_ends.md
+  ▶ Grep "^## Next Tasks" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +536
+  ▶ Read 20261115_134839_session_013.txt
+  ▶ Grep "^#+ " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +326
+  ▶ Glob tools/*.py
+Starting session 14 on "text follow-ups 3"; first part is (e), the bank 16 menu string table at `16:8933`.
+  ▶ python3 tools/dis.py 16 8933 0x70 --stop
+  ▶ python3 tools/dis.py 16 896A 0x60 --stop; python3 tools/xref.py 8933 --bank 16 | head; python3 tools/xref.py 8C1B
+  ▶ python3 tools/dis.py 16 8974 0xA7
+  ▶ python3 tools/dis.py 16 8A1A 0x30; echo; python3 tools/dis.py 16 8AB0 0x40 --stop; python3 tools/decode_tables.py 16:8C1
+  ▶ Read text_dump.py
+  ▶ Write menu_dump.py
+Wrote `tools/menu_dump.py` to decode the bank 16 menu strings; running it now.
+  ▶ python3 tools/menu_dump.py --items --out gfx/menu_strings.txt
+  ▶ python3 tools/dis.py 16 9CE0 0x40 --stop
+  ▶ python3 tools/decode_tables.py 16:9D32 8 hex4 --per-line 8
+  ▶ python3 tools/dis.py 20 866B 0x18 --stop; python3 tools/xref.py 6418 | head
+  ▶ Edit REVERSE.md
+  ▶ grep -nE "^(\*,0421|16,(8933|8C1B|9086|8A02|9CE0|9D32|9BE1)|\*,6418|\*,71|\*,77)" labels.csv
+  ▶ tail -3 labels.csv && cat >> labels.csv <<'EOF'
+Part (e), the menu strings, is written up in REVERSE.md. Now adding its labels with the Edit tool, since the shell append was blocked.
+  ▶ wc -l labels.csv
+  ▶ Read labels.csv +305
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 14 81D1 0x50 --stop; python3 tools/decode_tables.py 14:8213 7 u8
+  ▶ python3 tools/dis.py 14 8200 0x13; python3 tools/dis.py 14 8135 0x13 --stop; python3 tools/xref.py 98F4 --bank 14; pytho
+  ▶ python3 tools/dis.py 14 81B8 0x19; grep -n "^def \|^import\|^from" tools/text_dump.py tools/npc_script_dump.py
+  ▶ Read npc_script_dump.py +26
+Now decoding the telepathy hint lists (`14:99F4`), which pick the first entry whose story-flag test is false. Writing `tools/telepathy_dump.py`.
+  ▶ Write telepathy_dump.py
+  ▶ python3 tools/telepathy_dump.py --out gfx/telepathy.txt
+  ▶ Grep "set [^\]]*F0(77|7B|75|63|27|79|5E|2E|7D|8B|10|56|65|7C|41|4E|1E|13|55|57|05F|7A|0A|39)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/npc_scripts.txt
+Hint lists decoded; they name a lot of story flags. Checking `14:80E3` (item hook, table `A17A`) to see which flags item pickups set.
+  ▶ python3 tools/dis.py 14 80E3 0x30 --stop
+  ▶ python3 tools/dis.py 14 8107 0x10; python3 tools/xref.py A17A; python3 tools/decode_tables.py 14:A17A 8 ptr16 --per-line
+  ▶ python3 tools/dis.py 14 8078 0x1A --stop; python3 tools/dis.py 14 8148 0x1F --stop; python3 tools/dis.py 14 8112 0x23 --
+  ▶ Read npc_script_dump.py +69
+  ▶ Write flag_sites.py
+  ▶ python3 tools/flag_sites.py --hook2 --out gfx/flag_sites.txt | head -80; wc -l gfx/flag_sites.txt
+  ▶ Edit flag_sites.py
+  ▶ python3 tools/flag_sites.py --hook2 --out gfx/flag_sites.txt > /dev/null; python3 tools/xref.py A17A >/dev/null; python3
+Next: writing up the telepathy hints, the event-trigger table (`14:A17A`) and the story-flag names. First a quick look at the rest of `GiveItem`'s ≥`$80` path.
+  ▶ python3 tools/dis.py 30 D54B 0x30 --stop
+  ▶ python3 tools/dis.py 30 D552 0x20 --stop
+  ▶ python3 tools/decode_tables.py 30:D563 32 ptr16 --per-line 8
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+Now adding the follow-up task with the leftovers, right after the one just closed.
+  ▶ Edit REVERSE.md
+  ▶ Grep "npc_script_dump|font_dump" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +566
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 16 8933 4 && python3 tools/dis.py 14 81E5 3
+I finished most of "Ph3: text follow-ups 3": parts (c) and (e), the telepathy hint path, and the ≥`$80` path of the give-item routine (`GiveItem`). I marked the task done and moved what's left into a new task, "text follow-ups 4". All three new tools run, their output is in `gfx/`, and the 19 new labels load in `dis.py`. Nothing was added to `dead_ends.md`.
+
+**(e) Menu strings in bank 16**
+- The menus have their own printer at `16:8933` with 59 records at `16:8C1B`. Each record holds a screen position and a string pointer.
+- Strings use four special bytes: `FF` ends the string, `FE` prints a save slot's name, `FD` prints a save slot's level, and `FC` prints an item name.
+- The strings are the shop, inn, pawn shop, drop/use and save/load texts.
+- **`$0421` is now confirmed as the player level (0-16).** The menu prints it as the save slot's level, which is saved from `$0421`. Session 13 had only guessed this.
+- The two save slots are at `$7100` and `$7700`, each with a backup copy at `$7400` and `$7A00`.
+- The menu font is not plain ASCII. Some tile groups seem to stand for whole words: "Sword", "Armor", "Shield", " of ". I worked these out from the item names, not by rendering the tiles, so the new task includes a render check.
+
+**Telepathy hints**
+- Each area belongs to one of 7 hint classes. A sage gives a hint only if the player's level is above that class's threshold.
+- Each hint list shows the first entry whose story flag is not yet set, so the hint is about the next unfinished step. If every flag is set, the sage gives a generic blessing.
+
+**Item ids `$80` and up are event triggers, not items**
+- Their 67 records are at `14:A17A`. Each one has conditions that must all be true, then a message and action, then flags to set.
+- They cover boss intros, the wise men's rescue speeches, the tower messages and many silent one-shot triggers.
+- They use a second 32-entry action table at `30:D563`, separate from the talk-action table. Its handlers are not named yet.
+- The range check at `14:80E6` does nothing: its branch goes to the very next instruction.
+
+**(c) Story flags**
+- About 30 flags are named in a new "Story flags" table in REVERSE.md, for example: Shyron attacked, the three wise men rescued, the boss gates, Kensu found, and the rings and bracelet obtained.
+- These names are guesses from the message text at the places that set or test each flag. Nothing has been checked in an emulator.
+- The full cross-reference lists 453 flags, but that count is too high. Some NPC scripts are invalid, and their entries add flags that are probably meaningless.
+- Code that sets flags directly, such as when a boss is defeated, isn't covered yet.
+
+**New tools** (output files in `gfx/`):
+- `tools/menu_dump.py` → `menu_strings.txt`
+- `tools/telepathy_dump.py` → `telepathy.txt`
+- `tools/flag_sites.py` → `flag_sites.txt`
+
+**Moved to "text follow-ups 4":**
+- Name the 32 event-action handlers.
+- Find the code that sets flags directly.
+- Map each NPC or trigger to the areas it appears in.
+- Trace item hooks 0 and 1, the `$70` item path, and object types `$32`, `$53`, `$54`, `$DE`, `$DF`.
+- Decode the `15:BAFE` event records.
+- Render the menu font tiles to confirm the word tiles.
+
+SESSION_SUMMARY: Session 14 — text follow-ups 3 (c)+(e) done: bank-16 MenuPrint 16:8933 + 59 menu strings (menu_dump.py), $0421=player level confirmed, save slots $7100/$7400/$7700/$7A00; telepathy hint path decoded (telepathy_dump.py); items ≥$80 = event triggers 14:A17A + EventActionTable 30:D563; ~30 story flags named (flag_sites.py); 19 labels; leftovers → "text follow-ups 4".

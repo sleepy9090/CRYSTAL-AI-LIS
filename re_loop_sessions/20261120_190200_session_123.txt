@@ -1,0 +1,89 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ Read REVERSE.md +2258
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/20261120_190200_session_12[0-3].txt && tail -c 6000 re_loop_sessions/20261120_190200_session_122.
+  ▶ python3 tools/dis.py 16 959C 0x40 --stop; grep -n "Inn\|959C\|sub_state 34\|D9A\|D9B" REVERSE.md | head -30; grep -in "i
+  ▶ python3 tools/dis.py 16 95D9 0xA4 --stop; python3 tools/dis.py 30 D997 0x2A
+Porting the inn (sub_state 34). Reading the rest of its body now.
+  ▶ python3 tools/dis.py 16 95F0 0x8A; python3 tools/dis.py 26 8E46 0x30 --stop; python3 tools/decode_tables.py 16:9EAC 16 u
+  ▶ wc -l web/src/game/states/shop.js && grep -rn "96C6\|FadeSaveZpToWram\|fadeSaveZp\|C7D6\|hudHpBar\|8CC0\|export function
+  ▶ Read shop.js
+  ▶ python3 tools/dis.py 30 C7D6 0x40 --stop; grep -rn "function\* hudRedraw\|function\* hudHpBar\|function hudRedraw\|funct
+  ▶ grep -rn "8C3D\|8C49" web/src/game | head; sed -n 25,45p web/src/game/states/death.js; sed -n 105,140p web/src/game/stat
+  ▶ sed -n 55,80p web/src/game/states/death.js; sed -n 40,52p web/src/game/states/title.js; grep -n "substArmorShop\|substTo
+Writing the inn port now; checking the shared tail's X register first.
+  ▶ python3 tools/dis.py 16 96C6 9; grep -n "function\* hideOam" -A12 web/src/game/states/equip.js
+  ▶ Edit shop.js
+  ▶ Edit shop.js
+  ▶ Edit shop.js
+  ▶ sed -n 200,232p web/src/game/states/play.js
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+Now creating the test state (s121 keeper state, poke sub_state $22, stop at the inn entry).
+  ▶ node -e "import('./web/src/game/states/play.js').then(()=>console.log('ok'))" && ls gfx/compare/ | grep -i "s121_keeper\
+  ▶ Grep "s122_tool0" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 173p REVERSE.md | cut -c1-3500
+  ▶ timeout 900 python3 -m tools.emu.web_state --load-state gfx/compare/s121_keeper.state --frames 0 --poke 0041=22 --poke 0
+  ▶ timeout 1500 python3 tools/web_state_compare.py --state tools/emu/states/inn_s123.state --web web/test/states/inn.json -
+  ▶ python3 tools/compare_frames.py gfx/compare/s123a/emu.csv gfx/compare/s123a/web.csv --cols pal_crc,oam_crc,sub_state,are
+Inn runs end-to-end; checking the 16 palette-diff frames during the fade.
+  ▶ python3 tools/compare_frames.py gfx/compare/s123a/emu.csv gfx/compare/s123a/web.csv --cols pal_crc,oam_crc,core --frames
+  ▶ python3 tools/csv_rows.py gfx/compare/s123a/emu.csv gfx/compare/s123a/web.csv --cols pal_crc --frames 2629-2648 2>&1 | h
+The palette diffs are the known mid-`PaletteBuild` row-timing artifact (emu shows an intermediate CRC for one frame, then values agree). Now screenshots and RAM.
+  ▶ python3 tools/web_state_compare.py --help 2>&1 | grep -E "^\s+--" | cut -c1-140
+  ▶ timeout 1500 python3 tools/web_state_compare.py --state tools/emu/states/inn_s123.state --web web/test/states/inn.json -
+Only the documented `$09/$45/$46` snapshot bytes differ. Viewing the post-rest frame to confirm the heal happened.
+  ▶ Glob gfx/compare/s123b/*.png
+  ▶ Read pair_2740.png
+Rest works (gold 1000 → 984, HP/MP refilled, identical in both). Now the NO path and the not-enough-gold path.
+  ▶ timeout 1500 python3 tools/web_state_compare.py --state tools/emu/states/inn_s123.state --web web/test/states/inn.json -
+  ▶ python3 tools/compare_frames.py gfx/compare/s123c/emu.csv gfx/compare/s123c/web.csv --cols pal_crc 2>&1 | head -9; timeo
+  ▶ Read pair_2660.png
+  ▶ python3 tools/compare_frames.py gfx/compare/s123d/emu.csv gfx/compare/s123d/web.csv --cols core 2>&1 | grep -v "pos_[xy]
+Core matches apart from the known one-frame-late walk position. Running the web check suite.
+  ▶ for t in core_check ppu_check serve_check world_check sprite_check obj_check sound_check apu_check; do printf "%s: " $t;
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/serve_check.mjs 2
+  ▶ node web/test/sprite_check.mjs 2>&1 | tail -1; node web/test/obj_check.mjs 2>&1 | tail -1; node web/test/sound_check.mjs
+All 8 checks pass. Recording: labels, REVERSE.md (Verification Log row, substate row 34, task text).
+  ▶ grep -nE "^16,(959C|9506|9EAC|9665|9878)," labels.csv; tail -n 3 labels.csv
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+Now the Verification Log row (after the armor/tool row) and the task text.
+  ▶ sed -n 174p REVERSE.md | cut -c1-120
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I ported the inn (sub_state 34) to the web port. In every test run it matches tools.emu, apart from timing differences that were already known. All 8 web checks pass. The task (SELECT-menu leftovers, low priority) stays unchecked because two items are still open. Nothing is committed.
+
+**What changed**
+- **`web/src/game/states/shop.js`:** adds `substInn`. It uses the shared walk in and out, then:
+  - the inn screen `16:959C`: title, "Need to rest?" text, the price (from the table at `16:9EAC`) and YES/NO;
+  - the rest fade `30:C7D6`: fade out, about 30 frames of wait, fade in;
+  - the result: HP and MP set to max, status bits cleared, gold paid;
+  - at the end, the MP number and HP bar are redrawn.
+- **`play.js`:** sub_state 34 is wired in, plus an entry point so a saved test state can start at the inn.
+
+**Results against tools.emu** (new test state `web/test/states/inn.json`, plus a gold-0 variant in `gfx/compare/s123_inn0.*`)
+- **Rest (YES):** gold 1000 → 984, MP 0 → 34, HP bar full, and the "How do feel today? / Please come again." text all match.
+- **End-of-run RAM:** for a run that stops inside the menu, only the 3 bytes `$09/$45/$46` differ, as in the earlier shop sessions.
+- **NO, and YES with 0 gold:** NO ends with "Please come again." and YES with 0 gold shows "You haven't enough money."; both match, including the walk out and the area reload.
+- **Known differences only:**
+  - the split line (tile row 23) and up to 7 pixels in tile row 1;
+  - during each fade step the palette checksum is off for one frame, because the emulator samples it in the middle of the palette rebuild; the values agree right after;
+  - player position one frame late during the walks;
+  - after the exit, the town NPCs whose AIs (`$30`/`$78`) aren't ported yet.
+
+**Records**
+- **REVERSE.md:**
+  - a new Verification Log row "Inn" with the exact commands;
+  - the sub_state 34 row now has the full routine details;
+  - the task text is updated, and an outdated "not ported yet" note in the pawn-shop row is fixed.
+- **labels.csv:** 3 new labels (`InnBody`, `InnPrices`, `ShopBodyTail`); the `FadeSaveZpToWram` comment is updated.
+
+**Still open in the task:** the empty shop (sub_state 36, `30:D9C1`; `ShowMessage` already exists in `talk.js`) and the pause window that opens one frame early in area `$5F`.
+
+SESSION_SUMMARY: Session 123: ported the inn (sub_state 34: SubstInn 30:D997, InnBody 16:959C, InnPrices 16:9EAC, FadeSaveZpToWram 30:C7D6) into states/shop.js; rest, NO and not-enough-gold paths match tools.emu apart from known artifacts; all 8 web checks pass; the empty shop and the area-$5F pause timing remain in the task.

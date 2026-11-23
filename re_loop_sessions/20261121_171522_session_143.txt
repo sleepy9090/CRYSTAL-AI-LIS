@@ -1,0 +1,122 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -3; wc -l dead_ends.md REVERSE.md; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 3000 re_loop_sessions/20261121_171522_session_141.txt; echo
+  ▶ Grep "DB28|SubstTeleportMenu|TestFlagF2F0|TeleportTable" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "DB28\|teleport\|Teleport" REVERSE.md | cut -c1-600 | head 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 940p REVERSE.md; python3 tools/dis.py 30 DB28 0x243
+Porting the teleport menu (sub_state 20/29 `30:DB28`); I've disassembled it and am now reading the web port's state files.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; ls states; wc -l states/*.js machine.js; grep -n "SUBS
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D8C7 0x60; grep -n "8C0E\|8500\|8528\|C19F\
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src; grep -rn "20:8500\|20:8528\|8500\b\|8528\b\|C19F\|oamClipTo
+Let me read talk.js's showMessage region and giveitem.js (warp branch) to reuse helpers.
+  ▶ Read talk.js +1
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; grep -n "Teleport\|DB28\|D4E7\|import\|^export\|^funct
+  ▶ Read giveitem.js +330
+  ▶ Read talk.js +280
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D4C4 0x2E; python3 tools/dis.py 30 C19F 0x1
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; sed -n 20,70p states/death.js; sed -n 715,732p states/
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src; grep -rn "irq_handler\|0x56\b" --include=*.js . | head; gre
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; sed -n 75,95p mainloop.js; sed -n 225,260p mainloop.js
+Writing the teleport-menu port now; checking `playSound`'s Y handling and the item-use dispatcher signature first.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; sed -n 1,40p playsound.js | grep -n "export\|y\b\|010F
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; sed -n 48,70p pads.js; sed -n 140,190p states/death.js
+Now writing `states/teleport.js`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; grep -n "^function\* textWindowOpen\|^function\* textP
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; sed -i 's/^function\* textWindowOpen(m)/export functio
+  ▶ Edit talk.js
+  ▶ Edit talk.js
+  ▶ Read player.js +1
+  ▶ Edit player.js
+  ▶ Write teleport.js
+  ▶ Edit teleport.js
+  ▶ Edit giveitem.js
+  ▶ Edit giveitem.js
+  ▶ Edit giveitem.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+Wired in. Now building a check against tools.emu — looking at how the s141 itemuse check made its states.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat web/test/itemuse_check.mjs | head -80; grep -n "s141" REVERSE.m
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --help 2>&1 | head -30
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+The menu opens, but the port didn't take the DOWN+A pick that tools.emu took. Writing a small probe to trace the cursor in the port.
+  ▶ Write teleport_probe.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/teleport_probe.mjs web/test/states/teleport_warp.json
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/teleport_probe.mjs web/test/states/teleport_warp.json
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/teleport_probe.mjs web/test/states/teleport_warp.json
+  ▶ Edit teleport.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+Much closer (30 RAM bytes at the end). Looking at the early differences and the RAM diff.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ Edit teleport.js
+  ▶ Edit teleport_probe.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/teleport_probe.mjs web/test/states/teleport_warp.json
+Boots get consumed at f2837 but the save image keeps them. Checking the port's `saveGame`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; grep -n "export function saveGame" -A40 states/saveloa
+`saveGame` reads `AreaSaveFlags` at `23:BF00`, but the Warp Boots path skipped the ROM's `SetR7($17)` (30:D4EA) before `JMP 23:BC00`. Fixing.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; grep -n "saveGame(m)" -B2 states/*.js obj/*.js | head 
+  ▶ Edit giveitem.js
+  ▶ Edit giveitem.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+Save image now matches. Remaining: the port is ~2 frames ahead after the area load (f2696 on), plus the cursor-blink OAM phase. Checking the frames around the area load.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -1 /tmp/tp_warp/emu.csv | cut -c1-300; python3 tools/compare_f
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/teleport/emu.csv gfx/co
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/teleport_probe.mjs web/test/states/teleport_warp.json
+Warp-out matches tools.emu frame for frame (o01 identical to f2700); the area load then starts 2 frames later in tools.emu. Checking whether that's a known AreaEnter timing gap.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "AreaEnter" REVERSE.md | grep -i "lag\|frame late\|frames l
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; grep -n "FSD_LAG\|lag" states/areaenter.js | head -20
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; grep -n "FSD_LAG" -B3 -A12 world/bgstream.js | head -6
+The lag-row model was measured for a normal area entry; the teleport enters AreaEnter at a different point in the frame. Measuring with `pass_probe.py`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.pass_probe --help 2>&1 | head -20
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.pass_probe --state tools/emu/state
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.pass_probe --state tools/emu/state
+  ▶ Read areaenter.js +140
+The `$4x` entry (E533) does the full `SaveGame` (~2 frames of CPU), but unlike the s108 call at line 311 the port didn't model the two lost frames there. Applying the same model.
+  ▶ Edit areaenter.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "SPIN" web/src/game/states/areaenter.js | head -3; timeout 
+`$07FF`/`$08` now match. Remaining: a 1-frame-early fade-in (f2735) and NPC drift later. Looking at those frames.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/teleport/emu.csv gfx/co
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "function\* attrWipe" -A30 web/src/game/states/areaenter.js
+The attr-wipe code matches the ROM structurally, and the wipe doesn't touch the CSV columns, so I'll diff screenshots during it to find the frame where the port gets ahead.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+Wipe frames match pixel-for-pixel (rows 23/29 are the known HUD-split leftover (e)). The offset comes in at the fade-out. Checking the wipe's tail in the ROM.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 E896 0x20; python3 tools/dis.py 26 8C3D 0x3
+The port's fade code matches the ROM too, so I'll trace the fade counters (`$11`/`$17`) per frame in the port.
+  ▶ Edit teleport_probe.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/teleport_probe.mjs web/test/states/teleport_warp.json
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.pass_probe --state tools/emu/state
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ Glob gfx/compare/teleport/*2560*
+  ▶ Read pair_2560.png
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/teleport/emu.csv gfx/co
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_trim.py --help 2>&1 | head -15; head -c 400 web/t
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_trim.py gfx/compare/teleport/emu.csv web/test/tel
+Now the check script.
+  ▶ Write teleport_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/teleport_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C000 8 | head -3
+  ▶ Edit teleport_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/teleport_check.mjs
+Keys are acted on one frame after they're read (PadNewButtonIndex runs after the WaitFrame), so I'll check one frame later.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -i "s/\['2600:B'\], 2600,/['2600:B'], 2601,/; s/\['2630:A'\], 2
+  ▶ Edit teleport_check.mjs
+  ▶ Edit teleport_check.mjs
+  ▶ Edit teleport_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/teleport_check.mjs; for t in core_check ppu_check wak
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/teleport_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/core_check.mjs | tail -2; node web/test/ppu_check.mjs
+All pass. Running the remaining checks that could touch AreaEnter.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/serve_check.mjs 2>&1 | tail -2; node web/test/world_c
+All pass. Now the docs: labels, REVERSE.md (substate rows, s141 item-4 note, Verification Log, task), CLAUDE.md, architecture_web.md.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^30,\(DB28\|DD36\|DBEC\|DCAE\|DBAC\|DD58\|DC64\|DC70\|C19F
+Labels first.
+  ▶ Read labels.csv +1392
+You've hit your 5-hour limit · resets 10:10pm (America/New_York)

@@ -1,0 +1,55 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls re_loop_sessions | tail -4 && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \[ \
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_10[2345].txt && tail -c 2500 re_loop_sessions/20261119_230117_session_102.txt; echo ----; tail 
+  ▶ ls web/src/game web/src/game/states && wc -l web/src/game/states/*.js && grep -n "07DD\|81B4\|8613\|8631\|846C\|8347\|lo
+  ▶ Read equip.js
+  ▶ Grep "SubstPawnShop|07DD|16:9509|MenuSellGold|MenuFarHud|SubstRestoreScreen" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Picked the top task: porting the shop/pawn variants of the SELECT menu (`$07DD` ≠ 0) plus `SubstRestoreScreen`. Now disassembling the pawn shop entry and the shop branches in bank 16.
+  ▶ python3 tools/dis.py 30 D9AD 0x40 && echo ==== && python3 tools/dis.py 16 9509 0x180
+  ▶ Grep "967A|9509|PawnShop|pawn|shop" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ grep -n "sub_state\|SUBST\|0x23\b\|35:" web/src/game/mainloop.js | head -50; grep -n "ShopWalkIn\|ShopWalkOut\|16:967A\|
+  ▶ Read play.js
+  ▶ python3 tools/dis.py 16 967A 0x60 && echo ==== && python3 tools/dis.py 30 DA0C 0xA0
+  ▶ sed -n '2415,2416p;2421p' REVERSE.md | cut -c1-3000
+Shops aren't ported at all, so the menu's shop variant can only be reached by porting the pawn shop substate (35). Next I'm disassembling the shop branches in the menu and the pawn screen setup.
+  ▶ python3 tools/dis.py 16 81A0 0x20; echo ===; python3 tools/dis.py 16 8342 0x20; echo ===; python3 tools/dis.py 16 83C8 0
+  ▶ python3 tools/dis.py 16 81BE 0x30; echo ===; python3 tools/dis.py 16 847B 0x60; echo ===; python3 tools/dis.py 16 9878 0
+  ▶ python3 tools/dis.py 16 815C 0x16; python3 tools/dis.py 16 82B7 0x8; grep -n "8E46\|HudRedraw" REVERSE.md | head -8; gre
+  ▶ python3 tools/dis.py 31 FFA9 0x16; grep -n "export function\* hudRedraw\|export function hudQueue\|export function\* wai
+  ▶ Read death.js +100
+  ▶ Grep "export function" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/prg.js
+  ▶ python3 tools/dis.py 30 DAAB 0x51; echo ===; python3 tools/dis.py 26 9B45 0x40
+Still mapping the shop flow; checking whether the player-update routine the walk-in uses is already ported.
+  ▶ grep -rn "9B45\|playerUpdate\|PlayerUpdate" web/src | head; grep -rn "ExitLookup\|EB09\|exitLookup" web/src | head -5; l
+  ▶ grep -n "pawn\|Pawn" REVERSE.md | cut -c1-400 | head -20; python3 -m tools.emu.web_state --help 2>&1 | head -60
+  ▶ ls tools/*.py | head -100 | tr '\n' ' '; echo; python3 tools/enemy_catalog.py --help 2>&1 | head -20
+  ▶ python3 tools/enemy_catalog.py --all 2>&1 | grep -E "^  43 " ; python3 tools/decode_tables.py 16:9F54 0x21 u8 2>&1 | hea
+  ▶ grep -n "poke\|until\|def \|frames" tools/emu/web_state.py | head -60
+  ▶ sed -n '262,275p' REVERSE.md | cut -c1-200
+Building a tools.emu save state inside a pawn shop (area `$C7`) to compare against.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/gameplay_first.state --frames 2 --poke 006C=C7 --poke 006D=
+  ▶ python3 -m tools.emu.web_state --load-state /tmp/pawn_a.state --frames 30 --poke 0041=23 --until 16:9509 --max-frames 15
+  ▶ Read web_state.py +44
+  ▶ for u in 30:D9AD 30:DA41 30:DA5B 30:DA6D; do python3 -m tools.emu.web_state --load-state /tmp/pawn_a.state --frames 30 -
+  ▶ python3 -m tools.emu.web_state --load-state /tmp/pawn_a.state --frames 30 --poke 0041=23 --until 30:D9AD --max-frames 80
+  ▶ python3 -m tools.emu.web_state --load-state /tmp/pawn_a.state --poke 0041=23 --until 30:D9AD --max-frames 100 --out /tmp
+The pawn shop triggers on its own right after entering area `$C7`. Checking where the walk-in ends.
+  ▶ python3 -m tools.emu.web_state --load-state /tmp/pawn_a.state --until 30:DA6D --max-frames 600 --out /tmp/x.json 2>&1 | 
+  ▶ python3 tools/dis.py 16 9A12 0x50; python3 tools/dis.py 16 8AED 0x10 | head -3; python3 tools/dis.py 16 84DA 0x5
+  ▶ grep -n "nmiMode\|NMI_MODES\|irqHandler\|function irq" web/src/game/mainloop.js | head -30
+  ▶ Read mainloop.js +95
+Pawn screen runs with `irq_mode` 1, whose NMI routine (`31:F731`) isn't ported yet; disassembling it.
+  ▶ python3 tools/dis.py 31 F731 0x22; grep -n "F731" REVERSE.md | cut -c1-600 | head -5
+  ▶ grep -n "function setIrqHandler" -A14 web/src/game/mainloop.js; grep -n "irqHandlers" web/src/game/machine.js; python3 t
+  ▶ Read machine.js +1
+  ▶ python3 tools/dis.py 31 F545 0x9C
+  ▶ grep -n "splits\|writeReg\|case 6\|case 5\|copyX\|scanline" web/src/nes/ppu.js | head -40
+  ▶ Read ppu.js +95
+  ▶ Grep "IrqMsgWindowTop|F4E5" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/dis.py 16 835E 0x6B; python3 tools/dis.py 16 8423 0x12; python3 tools/dis.py 26 8E46 0x6; python3 tools/di
+  ▶ grep -n "^function\|^export function\|^import" web/src/game/mainloop.js; grep -n "unportedMode\|irqHandlers\[" web/src/g
+Writing the NMI mode 1 + message-window IRQ handlers.
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Read mainloop.js +1
+You've hit your 5-hour limit · resets 4am (America/New_York)

@@ -1,0 +1,83 @@
+  ▶ ls re_loop_sessions | tail -3 && wc -l dead_ends.md REVERSE.md && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md | 
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_15[9]*.txt re_loop_sessions/*_16*.txt; tail -c 3500 re_loop_sessions/20261122_031152_session_16
+  ▶ Grep "BossHookA6|final_locked" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ sed -n 1300,1340p REVERSE.md | cut -c1-1500; sed -n 270,290p tools/emu/scenario.py; sed -n 850,920p web/src/game/obj/ai_
+  ▶ grep -n "scenario_state\|web_state_compare\|python3\|node " re_loop_sessions/20261122_031152_session_160.txt | cut -c1-4
+Picking the top task (boss AI leftovers): checking the `BossHookA6` area-`$A6` hook against tools.emu using the `final_locked` scenario.
+  ▶ sed -n 65,75p re_loop_sessions/20261122_031152_session_160.txt | cut -c1-600; cat tools/emu/scenario_state.py | head -60
+  ▶ grep -n "^\*,03C[01]," labels.csv; grep -n "SCENARIOS\['boss_flee'\]" -A8 tools/emu/scenario.py; python3 tools/web_state
+  ▶ mkdir -p /tmp/fl && timeout 300 python3 -m tools.emu.scenario_state final_locked 9 --out web/test/states/finallocked.jso
+  ▶ timeout 300 python3 -m tools.emu.scenario_state final_locked 9 --out web/test/states/finallocked.json --save-state tools
+  ▶ K=$(for i in $(seq 0 39); do echo -n "$((2535+30*i)):A "; done); timeout 900 python3 tools/web_state_compare.py --state 
+  ▶ Write keyseq.py
+Exported the area-`$A6` state; now running tools.emu vs the port from it.
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ python3 tools/keyseq.py 2535 30 40 A
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ timeout 600 python3 -m tools.emu.scenario final_locked 2>&1 | tail -60 | cut -c1-300
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ grep -n "pos_x\|pos_y" tools/emu/compare.py | head; python3 tools/csv_trim.py /tmp/fl/emu.csv /tmp/fl/e.csv --cols core 
+  ▶ Read e.csv
+  ▶ Read w.csv
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ for s in emu web; do python3 tools/csv_trim.py /tmp/fl/$s.csv /tmp/fl/${s}_o.csv --cols pos_x,pos_y,o0D,o0E,o14,o15,o16,
+Comparing object slots frame by frame where the runs first diverge (~f2536, after the first A press).
+  ▶ python3 tools/csv_trim.py /tmp/fl/emu.csv /tmp/fl/emu_o.csv --cols pos_x,pos_y,o0D,o0E,o14,o15,o16,o17 --frames 2533-256
+  ▶ Read emu_o.csv
+  ▶ Read web_o.csv
+  ▶ grep -n "phase 1\|BAF5\|BB6E\|ShowMessage\|not ported\|function" web/src/game/obj/ai_final.js | head -60
+  ▶ Read ai_final.js
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ grep -n "^ *31 \|type \$31\|^\$31\|^31" gfx/objtypes.txt | head; grep -n "type \`\$31\`\|type-\`\$31\`\|AI \`\$14\`" REV
+The keys don't matter; the runs drift apart around f2536 during AI `$70` phase 1's spawn sequence. Looking up what runs there.
+  ▶ Grep "type `\$31`|type-`\$31`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 676p REVERSE.md | grep -o ".\{300\}type \`\$31\`.\{500\}"
+  ▶ Grep ".{300}type `\$31`.{500}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep ".{0,300}type .\$31.{0,500}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "lag" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ grep -n "overrun" -r web/src/game | head -20
+  ▶ Read ai_effect.js +80
+  ▶ Read flee_probe.py
+  ▶ Grep "line \{|scanline" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/web_state.py
+  ▶ Grep "ObjCollideAll|ObjUpdateAll|^31,[0-9A-F]+,Nmi,|frame_ready|AiScreenRedraw08|,Nmi" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "lag frame|lag-frame" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Write csv_active.py
+  ▶ python3 tools/csv_active.py /tmp/fl0/emu.csv /tmp/fl0/web.csv --frames 2530-2560
+  ▶ for n in 8 31; do timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/te
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ Grep "^\*,(0008|00F1|00F2|00F3|00FD),|FSD_LAG" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ grep -n "0x08)" web/src/game/mainloop.js web/src/game/machine.js | head; grep -n "fullScreenDraw\b" -A30 web/src/game/wo
+  ▶ Read bgstream.js +236
+  ▶ Edit bgstream.js
+  ▶ sed -i 's/^import { fullScreenDraw, FSD_LAG } from/import { fullScreenDraw, FSD_LAG, FSD_LAG_WF } from/; s/  yield\* ful
+Editing with the Edit tool instead.
+  ▶ Read ai_boss.js +20
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ Grep "SPIN" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read death.js +8
+  ▶ Edit bgstream.js
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+The hook's 27 frames now match row for row. Checking the remaining `$08` difference.
+  ▶ Grep "wr\(0x08|R\.frame_ctr|0x08\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ Write lag08_probe.py
+  ▶ grep -n "^def \|on_exec\|def step\|def run_frame\|load_state" tools/emu/web_state.py tools/emu/nes.py 2>/dev/null | head
+  ▶ Read web_state.py +31
+  ▶ sed -n 1,30p tools/emu/web_state.py | grep -n "import"; grep -n "F3B6\|Nmi\b" labels.csv | head -3
+Writing a tools.emu probe to find where the real lag frames fall in this scene (the post-hook drift looks like the AI `$08` lag heuristic).
+  ▶ Edit lag08_probe.py
+  ▶ Edit lag08_probe.py
+  ▶ timeout 300 python3 -m tools.emu.lag08_probe tools/emu/states/finallocked.state 60 --from 2531 | head -80
+  ▶ Read bossflee_check.mjs
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/finallocked.state --web web/test/states/finalloc
+  ▶ Glob /tmp/flc/*2520*
+You've hit your 5-hour limit · resets 8:10am (America/New_York)

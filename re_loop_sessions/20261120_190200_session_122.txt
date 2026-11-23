@@ -1,0 +1,101 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ grep -n "^- \[ \]" REVERSE.md | head -10; for f in re_loop_sessions/20261120_190200_session_12[01].txt re_loop_sessions/
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read 20261120_190200_session_121.txt
+  ▶ sed -n 2269,2282p REVERSE.md | cut -c1-400; echo ----; sed -n 2444,2448p REVERSE.md
+  ▶ Read shop.js
+  ▶ python3 tools/dis.py 30 D96D 0x60 --stop; echo ----; python3 tools/dis.py 16 9509 0xA0
+Working on the top task: porting the armor/tool shop bodies (sub_states 32/33). Reading the buy loop `16:96CF` now.
+  ▶ python3 tools/dis.py 16 96C6 0x1C0 --stop; echo ----; python3 tools/dis.py 16 988A 0x88 --stop
+  ▶ python3 tools/dis.py 16 96CF 0x1A0 | head -150; echo ----; python3 tools/dis.py 16 98D1 0x41
+  ▶ grep -n "^export\|^function\|^const\|86D3\|88A8\|8613\|8A9F\|84DA" web/src/game/states/equip.js | head -80; python3 tool
+  ▶ python3 tools/dis.py 16 9843 0x35; python3 tools/dis.py 16 9988 0x8A; echo ---; python3 tools/dis.py 16 9A37 0x2B --stop
+  ▶ grep -rn "Picture\|88A8\|892A\|9F96" web/src | head; python3 tools/dis.py 16 88FB 0x40 --stop; python3 tools/dis.py 16 9
+  ▶ Read saveload.js +45
+  ▶ Read equip.js +110
+  ▶ Read equip.js +424
+Have the full buy loop disassembled; now checking the two wait helpers and then writing the armor/tool shop port.
+  ▶ python3 tools/dis.py 16 9878 0x12 --stop; python3 tools/dis.py 16 9A2A 0x0D --stop; grep -n "sub_state 3[2-6]\|^| 3[2-6]
+  ▶ python3 tools/dis.py 30 D985 0x28; python3 tools/dis.py 16 9500 9; grep -n "MenuWaitPad\|9884" web/src/game/states/*.js 
+  ▶ python3 tools/dis.py 16 9884 6 ; grep -n "SUBSTATES\[3\|substPawnShop\|35:" web/src/game/states/play.js | head
+  ▶ python3 tools/dis.py 16 9A54 0x10 --stop; grep -n "^import\|confirm(m, 0x41)" web/src/game/states/equip.js | head -20
+Writing the armor/tool shop port into `shop.js` now.
+  ▶ sed -i 's/^function\* menuFarHud(m, a) {/export function* menuFarHud(m, a) {/' web/src/game/states/equip.js && sed -i 's
+  ▶ Edit equip.js
+  ▶ Edit saveload.js
+Now the shop code.
+  ▶ Edit shop.js
+  ▶ Edit shop.js
+Wiring sub_states 32/33 into `play.js`.
+  ▶ Read play.js +200
+  ▶ python3 tools/edit_helper.py 2>/dev/null; true
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+Now making test states. Looking up the exact s121 recipe.
+  ▶ Grep "^\| Pawn shop" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 173p REVERSE.md | fold -w 400
+Using the s121 keeper state (`gfx/compare/s121_keeper.state`) to make armor/tool shop states, with gold poked so a purchase can succeed.
+  ▶ ls gfx/compare/s121_keeper.state && timeout 900 python3 -m tools.emu.web_state --load-state gfx/compare/s121_keeper.stat
+States created at f2503. Running the armor shop comparison: YES, move right, buy, then NO and leave.
+  ▶ python3 tools/web_state_compare.py --help 2>&1 | grep -E "^\s+--" | cut -c1-150
+  ▶ timeout 1200 python3 tools/web_state_compare.py --state tools/emu/states/armorshop_s122.state --web web/test/states/armo
+Very close: only the known one-frame position artifacts, a few OAM frames, and the `$09/$45/$46` end-snapshot bytes. Checking the screenshots to confirm a real purchase happened.
+  ▶ ls gfx/compare/s122a/ | head -30; python3 tools/csv_rows.py gfx/compare/s122a/emu.csv gfx/compare/s122a/web.csv --cols o
+  ▶ python3 tools/compare_frames.py gfx/compare/s122a/emu.csv gfx/compare/s122a/web.csv --cols oam_crc --frames 2540-2832
+  ▶ Glob gfx/compare/s122a/*.png
+OAM differences are single frames right after key presses (the known sampling phase). Viewing the after-purchase frame.
+  ▶ Read pair_2740.png
+Purchase matches exactly (Carapace Shield, gold 1000→920). Now the full loop: B ("anything else"), NO, leave message, walk-out and area reload.
+  ▶ timeout 1200 python3 tools/web_state_compare.py --state tools/emu/states/armorshop_s122.state --web web/test/states/armo
+  ▶ Read pair_2770.png
+Armor shop matches through the whole loop. Now the tool shop: two purchases, then SELECT to leave immediately.
+  ▶ timeout 1200 python3 tools/web_state_compare.py --state tools/emu/states/toolshop_s122.state --web web/test/states/tools
+Tool shop matches too (only the known artifacts; RAM end = the documented `$09/$45/$46` snapshot bytes). Checking which paths the run took.
+  ▶ Read pair_2720.png
+  ▶ Read pair_2870.png
+Two tool purchases match (1000→970→930, the tool palette branch). One more run to cover the not-enough-gold message and the SELECT exit, from a gold-0 state.
+  ▶ timeout 900 python3 -m tools.emu.web_state --load-state gfx/compare/s121_keeper.state --frames 0 --poke 0041=21 --poke 0
+  ▶ Read pair_2690.png
+Not-enough-money message and the SELECT exit both match (positions one frame late during the walk, the documented artifact). Running the web check suite.
+  ▶ for t in core_check ppu_check serve_check world_check sprite_check obj_check sound_check apu_check; do printf "%s: " $t;
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/serve_check.mjs 2
+  ▶ node web/test/sprite_check.mjs 2>&1 | tail -1; node web/test/obj_check.mjs 2>&1 | tail -1; node web/test/sound_check.mjs
+All 8 checks pass. Now the records: shop.js header, labels.csv, REVERSE.md.
+  ▶ Grep "^16,(9558|957A|96CF|9815|9837|9970|9874|9F96|8F5A|8FA5|8FF0|97DD)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -n 4 labels.csv
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ Edit labels.csv
+Now the shop.js header and REVERSE.md (Verification Log row, substate rows, task text).
+  ▶ Edit shop.js
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I ported the armor shop and tool shop (sub_states 32 and 33) to the web port. In every test run they match tools.emu, apart from timing differences that were already known. All 8 web checks pass. The task (SELECT-menu leftovers, low priority) stays unchecked because the inn and the empty shop are still open. Nothing is committed.
+
+**What changed**
+- **`web/src/game/states/shop.js`:** adds `substArmorShop` and `substToolShop`. They reuse the walk in and out from session 121 and port the shop screens (`16:9558` / `16:957A`), the setup that loads the goods, prices and item pictures, and the buy loop `16:96CF`. In the buy loop LEFT/RIGHT move the cursor, SELECT leaves, B asks "Anything else?" and A buys through `16:9970` (not enough money / no room / bought).
+- **`play.js`:** sub_states 32 and 33 are wired in, plus entry points so saved test states can start there.
+- **`equip.js` / `saveload.js`:** two existing helpers are now exported for reuse (`menuFarHud`, `slotPicture`).
+
+**Results against tools.emu** (new test states `web/test/states/armorshop.json` and `toolshop.json`, plus a gold-0 tool-shop state)
+- **Armor shop:** buying the Carapace Shield (gold 1000 → 920) matches. So does pressing A on an empty slot, then "Please come again.", the walk out and the area reload.
+- **Tool shop:** two purchases (1000 → 970 → 930) match, with the tool-shop palette.
+- **With 0 gold:** "You haven't enough money." and leaving with SELECT both match.
+- **Known differences only:**
+  - the split line (tile row 23) and up to 7 pixels in tile row 1;
+  - after the exit, the town NPCs whose AIs (`$30`/`$78`) aren't ported yet;
+  - player position one frame late during the walks;
+  - sprite data off for one frame after a key press;
+  - 3 bytes of RAM (`$09/$45/$46`) at the end of a run that stops inside the menu.
+
+**Not tested:** the "no room in inventory" result, and the tool-shop case where item `$29` with a full row overwrites the last slot. No run reached either one.
+
+**Records**
+- **REVERSE.md:** a new Verification Log row "Armor / tool shops" with the exact commands, the sub_state 33 row expanded with the routine details, and the task text updated. Still open there: the inn (sub_state 34), the empty shop (sub_state 36, needs `ShowMessage`), and the pause window that opens one frame early in area `$5F`.
+- **labels.csv:** 8 new labels (`ArmorShopBody`, `ToolShopBody`, `ShopBuyLoop`, `ShopCursorSpr`, `ShopItemSpr`, `ShopSlotX`, `ShopBuy`, `ShopPictureCols`).
+
+The gold-0 test state is in `gfx/compare/s122_tool0.*`, and the Verification Log row refers to it.
+
+SESSION_SUMMARY: Session 122: ported the armor/tool shops (sub_states 32/33: ArmorShopBody 16:9558, ToolShopBody 16:957A, ShopBuyLoop 16:96CF, ShopBuy 16:9970) into states/shop.js; buys, not-enough-money, SELECT/NO exits, walk-out and area reload match tools.emu apart from known artifacts; all 8 web checks pass; inn, empty shop and the area-$5F pause timing remain in the task.

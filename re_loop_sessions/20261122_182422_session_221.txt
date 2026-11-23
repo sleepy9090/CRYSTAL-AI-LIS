@@ -1,0 +1,71 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +2410
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ wc -c re_loop_sessions/*session_22*.txt re_loop_sessions/*session_219.txt re_loop_sessions/*session_218.txt; tail -c 250
+  ▶ Read architecture_web.md
+Refreshing the two architecture docs (the only open task). Checking the actual web/src module layout next.
+  ▶ find web/src -name '*.js' | sort | xargs wc -l | sort -k2; ls web/test/*.mjs | wc -l; ls web/data
+  ▶ Glob web/src/**/*.js
+  ▶ wc -l web/src/*.js web/src/nes/*.js web/src/game/*.js web/src/game/*/*.js
+  ▶ Write module_summary.py
+  ▶ python3 tools/module_summary.py web/src --head 3 --width 200 > /tmp/modsum.txt; wc -c /tmp/modsum.txt
+  ▶ python3 tools/module_summary.py web/src --head 3 --width 200
+Collected a summary of all 58 web modules; reading it now to rewrite the web doc.
+  ▶ Read bk5dn6g1a.txt
+  ▶ Read architecture_exe.md
+  ▶ Write doc_section_links.py
+  ▶ python3 tools/doc_section_links.py
+  ▶ python3 tools/doc_section_links.py --levels 2,3,4 --all
+  ▶ Grep "irqHandlers\[|NMI_MODES = |^  \[?\d\]?: |irqIndex" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read mainloop.js +405
+  ▶ Read machine.js +1
+Rewriting the web doc now; quickly confirming the irq_mode meanings for the EXE doc's NMI/IRQ section first.
+  ▶ Grep "irq_mode` (7|9|2|1|6)\b.{0,120}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob web/data/*
+  ▶ Glob web/test/*.mjs
+  ▶ Grep "SUBSTATES|^  \d+: |^  0x[0-9A-F]+: " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/play.js
+  ▶ Read play.js +230
+  ▶ Grep "DE04|0x16\b|sub_state, 0x16|substate 22|sub_state 22" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/telepathy.js
+  ▶ python3 tools/run_checks.py
+All checks are running in the background. Meanwhile I'm writing the refreshed `docs/architecture_web.md`.
+  ▶ Write architecture_web.md
+  ▶ Read ble7ni6sh.output
+  ▶ Grep "palettes|playerStatusTick|EF55" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+Checks: 52/52 pass. Fixing two small claims in the web doc (palettes.json is read by palette.js too; Opel revive goes back to sub_state 8).
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Now updating `docs/architecture_exe.md`: the IRQ/NMI-mode lists are stale (handlers 2-5 and 7 are now known), plus adding a REVERSE.md section index.
+  ▶ Edit architecture_exe.md
+  ▶ Edit architecture_exe.md
+  ▶ Edit architecture_exe.md
+  ▶ Grep "^#{2,4} " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Now appending the §7 section index to the EXE doc so every REVERSE.md section is linked from one of the two docs.
+  ▶ cat >> docs/architecture_exe.md <<'EOF'
+  ▶ Edit architecture_exe.md
+  ▶ python3 tools/doc_section_links.py --levels 2,3,4
+All 50 REVERSE.md sections are now linked. Marking the task done in REVERSE.md and noting the two new tools in CLAUDE.md.
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+  ▶ Glob tools/emu/pass_cost.py
+I refreshed both architecture docs to match the finished port. That was the last open task, so it's marked done in REVERSE.md. All 52 checks pass (`python3 tools/run_checks.py`), and every REVERSE.md section is now linked from one of the two docs. Nothing is committed.
+
+**`docs/architecture_web.md`** was still the session-49 design, written before the port existed. Several modules it listed were never built:
+- **Where things actually live:** the HUD, fades and frame waits are in `states/death.js`, and the text printer is in `states/talk.js`. Exits are handled in `world/camera.js`, `PlayerStatusTick` is in `states/play.js`, and `Rand64` is in `obj/util.js`.
+- **Module graph:** now covers all 58 modules under `web/src/`. It also notes that the bank shadow registers turned out to be needed; the design had planned to drop them.
+- **ROM-to-web tables:** one row per routine family, including every substate the dispatcher handles. Substate 4 is a debug pause the game never sets, and 22 runs inside `telepathy.js`. The 8 IRQ handlers and 10 NMI modes are listed too.
+- **State machine:** now includes how the multi-frame routines yield and the lag-frame model from sessions 215-220.
+- **Data files:** each one now lists what really reads it. Most code reads the ROM bytes in `prg.bin` directly; several JSON files are only used by the asset catalog and the tests.
+- **Verification:** describes the check suite as it exists now.
+
+**`docs/architecture_exe.md`:**
+- IRQ handlers 2-5 and 7 are now named and explained; the old text said 4 and 7 were "never seen".
+- Added the list of NMI modes and a note on lag frames in the per-frame flow.
+- Added a new §7 that maps every REVERSE.md section to the doc section that summarises it.
+
+**New tools** (both noted in CLAUDE.md):
+- `tools/module_summary.py` prints each web module's header comment, imports, exports and the ROM addresses it cites.
+- `tools/doc_section_links.py` lists REVERSE.md sections not named in the docs. It reports 50 sections, 0 missing.
+
+SESSION_SUMMARY: s221 finished the "Final docs refresh" task: rewrote docs/architecture_web.md to match the 58-module port and updated docs/architecture_exe.md (IRQ handlers, NMI modes, lag frames, new §7 section index), added tools/module_summary.py and tools/doc_section_links.py (50/50 REVERSE.md sections linked); 52/52 checks pass.

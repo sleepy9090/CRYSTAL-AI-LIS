@@ -1,0 +1,112 @@
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ grep -n "\- \[ \]" REVERSE.md | head; for f in re_loop_sessions/*session_10[123].txt; do echo "== $f"; tail -c 2500 $f; 
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ tail -c 3000 re_loop_sessions/20261119_230117_session_103.txt; echo ====; tail -c 1500 re_loop_sessions/20261119_230117_
+  ▶ Read REVERSE.md +2405
+  ▶ wc -l web/src/game/obj/ai_boss.js && grep -n "Boss phase bodies\|Bank 15 bosses (web port" REVERSE.md && grep -n "BOSS_A
+Working on session 104's top task: porting more bank 15 boss AIs to the web port. Reading the existing boss port and the phase docs now.
+  ▶ Read REVERSE.md +1187
+  ▶ Read ai_boss.js
+  ▶ cat gfx/boss_phases.txt | head -40; python3 tools/dis.py 15 AC7B 0x159
+  ▶ grep -n "^export" web/src/game/obj/util.js; grep -n "97D7\|8409\|8480\|9861\|9897\|98A8\|9824" labels.csv | head
+  ▶ python3 tools/dis.py 15 ADD4 0x154 | cut -c1-70
+  ▶ Read util.js +15
+  ▶ python3 tools/dis.py 15 AF48 0x16E | cut -c1-70
+Disassembled bosses $E6, $E7 and $E8; now writing their ports into `ai_boss.js`, then I'll extend the fuzz capture to check them.
+  ▶ Read routine_capture.py +165
+  ▶ Read routine_capture.py +395
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+  ▶ Edit ai_boss.js
+Now the capture side: add the three bosses to `BOSS_AIS` and widen `_fix_boss` steers.
+  ▶ grep -n "fuzz_boss\|BOSS_AIS\|def main\|argparse\|add_argument" tools/emu/routine_capture.py | head -30; grep -n "fuzz_b
+  ▶ Read obj_check.mjs +85
+  ▶ Read routine_capture.py +480
+  ▶ python3 - <<'EOF' 2>/dev/null || echo "inline python not allowed - use Edit"
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ Grep "fuzz_boss\.json|--out web/test/obj_frames/fuzz_(boss|final)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Read README.md +40
+Ports written; now recapturing the boss fuzz cases from the emulator and diffing them against the JS port.
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine BossAiE0,B
+All 2100 boss cases match the emulator, including the 900 new ones. Checking phase coverage, then regenerating `fuzz_update.json` so `ObjUpdateAll` also runs the new boss ids.
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -i boss; for n in BossAiE6 AiBoss88 BossAiE8; do echo "== $n"; python3 tools/obj
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -i boss; python3 tools/obj_case_stats.py --help 2>&1 | head -20
+  ▶ Read obj_case_stats.py
+  ▶ python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_boss.json --col 0600 --col 0600=1 --col 0600=2 --col 0600=3 --c
+`$E6` coverage is thin (its intro rarely completes and the fly/turn path rarely runs). Adding per-boss steers for it.
+  ▶ Edit routine_capture.py
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routine BossAiE0,B
+One `$E6` case differs at `$0012` and the stack byte `$0112`. Inspecting it.
+  ▶ python3 tools/case_slots.py web/test/obj_frames/fuzz_boss.json BossAiE6 2>&1 | head -5; python3 tools/case_slots.py 2>&1
+  ▶ python3 tools/case_slots.py web/test/obj_frames/fuzz_boss.json 'BossAiE6#195'
+  ▶ python3 tools/dis.py 26 8480 0x3C | cut -c1-60
+  ▶ Write case_bytes.py
+  ▶ python3 tools/case_bytes.py web/test/obj_frames/fuzz_boss.json 'BossAiE6#195' 0012 0112 col:0600 col:0360 col:0620 col:0
+The port writes `$80` to `$0112` where the ROM writes it to `$0012`, which looks like a zero-page-indexed wrap. Looking for the write in the port.
+  ▶ Grep "0x(E[0-9A-F]|F[0-9A-F]) \+ |m\.wr\(0x(E|F)[0-9A-F] \+" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read obj_check.mjs +1
+  ▶ Read obj_check.mjs +98
+  ▶ Grep "m\.wr\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj/objinit.js
+  ▶ Write case_trace.mjs
+  ▶ node web/test/case_trace.mjs web/test/obj_frames/fuzz_boss.json 'BossAiE6#195' 112 12
+  ▶ Edit util.js
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -v "^ok" 
+Fixed: 7100/7100. Now regenerating `fuzz_update.json` so `ObjUpdateAll` runs the new boss ids, then running the other checks.
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 --routine ObjMoveSli
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 --routine ObjMoveSli
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/sprite_check.mjs 
+All checks pass. Now the docs: labels first. Checking which handler addresses already have labels.
+  ▶ Grep "^15,(AC8F|ACF5|AD82|AD86|AD96|ADE8|AE35|AE43|AE5A|AEC9|AEEC|AF28|AF5C|AFAD|B02B|B051|B077|B0A5|AEBA)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv && cat >> labels.csv <<'EOF'
+  ▶ wc -l labels.csv && tail -2 labels.csv
+  ▶ Read labels.csv +1256
+  ▶ Edit labels.csv
+Labels added. Now REVERSE.md: the s100 Verification Log row format first.
+  ▶ Grep "Bank 15 bosses \(web port\)|^\| .*s100|session 100\)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "fuzz_boss" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '173p' REVERSE.md | cut -c1-1500; sed -n '174,176p' REVERSE.md | cut -c1-200
+Adding the s104 Verification Log row and the port notes.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the task list: mark this one done for `$E6`-`$E8` and add the remaining bosses as one task at the end of RE Investigation.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Updating the obj_frames README (description and regenerate command) and the web architecture doc's mention.
+  ▶ Edit README.md
+  ▶ Edit README.md
+  ▶ Grep "ai_boss|fuzz_boss" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Read architecture_web.md +67
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ python3 tools/dis.py 15 AE35 8 | head -4 && git status --short | head -20
+I worked the top task, the remaining-boss AI port, and ported three more bank 15 bosses to the web port. All three match the ROM in every emulator-captured test case. Nothing is committed.
+
+**Ported** (in `web/src/game/obj/ai_boss.js`, 11 phase handlers):
+- **`$E6` `BossAiE6`** (flyer, `15:AC7B`): the intro and the main fight phase: the fire fan, turning toward the player, faster movement at low HP, and the orbiter spawns in area `$AC`.
+- **`$E7` `AiBoss88`** (bouncer, `15:ADD4`): all 6 phases, including the arena-edge bounces with sound and screen shake, and the curve-shot volley with its known "always aims 45° off" quirk.
+- **`$E8` `BossAiE8`** (waypoint flyer, `15:AF48`): the intro, flying the route by reusing the existing homing-move code, and the attack phase.
+
+**Results:**
+- The boss test cases now come out identical between the port and the emulator: **2100/2100**, up from 1200 (300 cases per routine).
+- I regenerated the general object-update cases with the new boss ids included: 400/400.
+- All routine cases pass: **7100/7100**, with nothing hitting unported code.
+- The other web checks all pass: core, ppu, sprite, serve, world and sound.
+
+**Bug fixed in older shared code:** `objPosToTemp`/`tempToObjPos` in `obj/util.js` didn't wrap zero-page writes the way the 6502 does. A test case with a garbage shot record put a new object in slot `$42`, and the ROM's position write landed on `$0012` while the port wrote `$0112`. The bug predates this session; only random shot ids can trigger it.
+
+**New debug helpers:**
+- `web/test/case_trace.mjs` replays one test case and prints a JS stack trace for every port write to the addresses you name.
+- `tools/case_bytes.py` shows a test case's bytes before and after.
+
+**Docs:**
+- REVERSE.md has notes on details the old summary missed (for example, `$E6` re-requests the boss music on every frame of its intro), a new Verification Log row, and the task marked done.
+- `labels.csv` has 16 new labels.
+- The test README and `docs/architecture_web.md` are updated.
+- The remaining bosses (`$E9`, `$EA`, the `$E5` talk event, `$6C-$6F`, then the two that draw to the background, `$E2` and the final boss), plus the death chains and per-enemy scenarios, are now one low-priority task at the end of RE Investigation.
+
+SESSION_SUMMARY: Session 104: ported bosses $E6 BossAiE6, $E7 AiBoss88 and $E8 BossAiE8 to web/src/game/obj/ai_boss.js (fuzz_boss 2100/2100, all routine cases 7100/7100), fixed the zero-page,X wrap in objPosToTemp/tempToObjPos, added the case_trace.mjs/case_bytes.py debug tools and 16 labels; the remaining bosses are filed as one new last task.

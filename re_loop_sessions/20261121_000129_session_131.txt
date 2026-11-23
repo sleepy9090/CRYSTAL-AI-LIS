@@ -1,0 +1,47 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -3 && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md
+  ▶ sed -n 2272,2283p REVERSE.md | cut -c1-400 && grep -n "^- \[ \]" REVERSE.md | cut -c1-200 && cat dead_ends.md | cut -c1-
+  ▶ Grep "BurstRadius|06C1" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ python3 tools/search_bytes.py "8D C1 06" --context 0 | head; python3 tools/search_bytes.py "8D C0 06" --context 0 | head
+  ▶ python3 tools/dis.py 26 9C80 0x70 && python3 tools/dis.py 26 9E00 0x40
+Status: working the Ph6 scenario leftovers task, item `BurstRadius` (sword-charge burst). Found that `$06C1`←`$0E` when orbit_level hits 8 at `26:9E1F`; now checking the charge entry conditions.
+  ▶ python3 tools/dis.py 26 9DD0 0x33 && grep -n "^    '\|^    \"" tools/emu/scenario.py | head -80
+  ▶ grep -n "thunder_transform\|'kill'\|'conveyor'\|def magic\|pcs=\|peek=" tools/emu/scenario.py | head -20
+  ▶ Read scenario.py +120
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario sword_charge sword_charge2 2>&1 | tail -60
+  ▶ sed -i "s/keys=\['20:B:80'\], frames=200,/keys=['20:B:80' if _pw == 0 else '20:B:120'], frames=240,/; s/B held 80 frames
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario sword_charge sword_charge2 2>&1 | grep -v "^  bank\|still never\|06C1 <- 0[1-9
+Status: both charge scenarios run — burst ring fires at the 8th charge step (f51, 14 frames), and full charge at power 2 costs 8 MP. Now checking the web port has the burst, then recording.
+  ▶ Grep "06C1|0x6c1|burstRadius|BurstRadius|orbit" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Grep "80D6|81A5|9E13|9E1F|81FE" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Grep "SwordChargeCap|0x9D7E|charge" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ grep -n -o ".\{80\}\`BurstRadius\` \`28:81A5\` (player orbit burst.\{40\}" REVERSE.md; sed -n 2445p REVERSE.md | cut -c1
+  ▶ Grep ".{0,60}`BurstRadius` `28:81A5` \(player orbit burst.{0,30}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^.{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Status: recording results in REVERSE.md (the 2445 match is an old closed task, so I'm only striking the item in the open task).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+I ran `BurstRadius` `28:81A5` in the emulator for the first time. The burst ring is the short flash you get when you charge the sword. The tour never ran it because it never holds B. The Ph6 scenario-leftovers task stays open, as the rules require for a leftovers task.
+
+**Two new scenarios** in `tools/emu/scenario.py`: `sword_charge` (sword power 0, B held 80 frames) and `sword_charge2` (power 2, B held 120 frames). Run them with `python3 -m tools.emu.scenario sword_charge sword_charge2`. Both ran and behaved as the disassembly predicts:
+- **Charging:** holding B with a sword raises the charge level `$06C0` by 1 every 4th frame (`26:9E13`).
+- **Burst:** when the level reaches 8 (f51), `26:9E1F` sets the burst timer `$06C1` to `$0E`. `BurstRadius` first runs at f52 and the ring lasts 14 frames.
+- **Level cap:** `SwordChargeCap` limits the level by sword power. At power 0 it stops at 8; at power 2 it climbs to `$18`.
+- **Release:**
+  - Power 0: letting go at level 8 fires the charged shot. This newly ran `AiDirShot` `27:B0A8` and cost no MP.
+  - Power 2: letting go at level `$18` newly ran `SpendMp`, which took 8 MP (`$40` → `$38`).
+  - Either way, `26:9CD1` then clears both bytes.
+
+**Web port:** I made no changes. Both halves are already there: the charge in `obj/player.js` and the burst drawing in `obj/sprites.js`. I didn't run the port against these scenarios, because they start from an emulator save state and the port starts from power-on.
+
+**Records:**
+- **REVERSE.md:** the item is struck through in the task, with an s131 note at the end of it. I also added a "Burst trigger" line under "Object sprite pass".
+- **labels.csv:** the comment for `orbit_burst_timer` now says where it is set and cleared.
+
+**Not done:** `docs/emu_scenarios.txt` still hasn't been regenerated (it takes about 55 minutes). Still open in the task: the warp pick, hit rules, the final boss, reveals, the shot eater, type `$64` and the ending labels.
+
+SESSION_SUMMARY: Session 131: new scenarios sword_charge/sword_charge2 run BurstRadius 28:81A5 for the first time (burst timer $06C1=$0E at charge level 8, 14-frame ring), plus AiDirShot and SpendMp (full power-2 charge costs 8 MP); the port already has both halves; scenario-leftovers task stays open.

@@ -1,0 +1,65 @@
+  ▶ Glob {dead_ends.md,REVERSE.md,re_loop_sessions/*,tools/*.py,labels.csv}
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md
+  ▶ Read 20261115_112834_session_002.txt
+Top task: identify the sound driver (bank 28 `$800E` vs bank 24 `$8020`). Let me look at both entry points and search for APU writes.
+  ▶ python3 tools/dis.py 28 8000 64; echo ----; python3 tools/dis.py 24 8000 64
+Bank 24 `$8000-$801F` is a 16-word pointer table; code starts at `$8020`. Let's disassemble `$8020` properly and search for APU writes across banks.
+  ▶ python3 tools/dis.py 24 8020 120; echo ----; python3 tools/search_bytes.py "8D ?? 40" --max 200 | head -80
+Bank 24 holds all APU writes in swappable banks — it's the sound driver. Now find who calls the update entry `$8048` and who writes the command byte `$0110`.
+  ▶ python3 tools/xref.py 24:8048; echo ----; python3 tools/xref.py 0110; echo ----; python3 tools/xref.py 24:8020; echo ---
+SFX path maps bank 12 into `$A000` and indexes `$9FC0+id*2` → for id≥`$20` that's `12:$A000+(id-$20)*2`. Let me see the fixed-bank callers and the music path `$80E4`.
+  ▶ python3 tools/dis.py 31 F820 70; echo ----; python3 tools/dis.py 24 80E4 70; echo ----; python3 tools/xref.py F830 ; pyt
+Wait — `$8048` is called with a command, so it's the "play request" entry. Need the routine start in bank 31 and the per-frame tick.
+  ▶ python3 tools/dis.py 31 F7F0 48; echo ----; python3 tools/dis.py 31 F866 50; echo; python3 tools/search_bytes.py "20 ?? 
+  ▶ python3 tools/dis.py 31 F7F0 48; echo ----; python3 tools/dis.py 31 F866 50
+`31:F7FE` is the per-frame sound entry (maps 24/25 directly, drains a queue, calls `24:$8186` tick, restores banks). Find its caller and peek at `$8186`.
+  ▶ python3 tools/xref.py F7FE; echo ----; python3 tools/xref.py 0100; echo ----; python3 tools/dis.py 24 8186 40
+Real `$0100` users are `30:C144/C15D` (likely the enqueue API) and the queue drain. Check the enqueue routine and its call count.
+  ▶ python3 tools/dis.py 30 C130 64; echo ----; python3 tools/dis.py 31 F4C8 12; python3 tools/dis.py 31 F60A 10
+  ▶ python3 tools/dis.py 30 C118 26; echo ----; python3 tools/xref.py C11C; python3 tools/xref.py C120; python3 tools/xref.p
+  ▶ python3 tools/xref.py C125 --all
+Enough to write up. Let me check labels.csv format, then record findings.
+  ▶ wc -l labels.csv && python3 tools/dis.py 31 F2E0 12
+  ▶ Read labels.csv +40
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ Read labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Now REVERSE.md: fix the bank table rows, add a sound driver section, and mark the task.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Comments I added contain commas (`$04A0,X`); confirm the label loader tolerates that.
+  ▶ python3 tools/dis.py 28 800E 3 && python3 tools/dis.py 31 F810 6
+The comment gets cut off at the comma. I'll reword it without commas.
+  ▶ Edit labels.csv
+I finished this session's task. Bank 24/25 is the sound driver. Bank 28 `$800E` is not sound code; it draws game objects as sprites.
+
+**How I confirmed it:** I searched every swappable bank for direct writes to the sound hardware registers. All 19 hits are in bank 24 and bank 28 has none.
+
+**How sound works, from the game's side down:**
+- **`30:C125` PlaySound** is the call the game uses to start a sound, from 85 places in the code. A = sound ID. IDs below `$20` are music and are skipped if that track is already playing. IDs `$20` and up are sound effects. Each request goes into a 6-slot queue at `$0103-$0108` (count in `$0100`, a lock byte in `$0101`).
+- **`31:F7FE` SoundUpdate** runs every frame from the vblank interrupt and from some of the scanline interrupt handlers. It maps banks 24/25 in, takes at most one ID from the queue per frame, runs the per-frame player, then puts the previous banks back.
+- **Inside bank 24:**
+  - `$8020` silences everything and is called once at reset.
+  - `$8048` handles one command: none, pause toggle, start music or start a sound effect.
+  - `$8094` starts a sound effect. It maps bank 12 in, so the sound-effect pointer table effectively starts at `12:$A000`. The first byte of each effect is a priority, so a lower-priority effect can't cut off one that's playing.
+  - `$80E4` starts music on 4 channels.
+  - `$8186` is the per-frame player.
+- **`24:$8000-$801F`** is a table of 16 pointers to sound data. That's why the bank's code starts at `$8020`.
+
+**Bank 28 `$800E`:** it loops over game objects, subtracts the scroll position from each object's position, and builds sprite data. Each call it decrements `$07FF` and uses it to pick a different starting object, so sprites flicker in rotation when too many share a line.
+
+**Files changed:**
+- `labels.csv`: I renamed the bank 28 routine (it was `Bank28_FrameTick`) and added labels for the sound routines and sound RAM. Comments in that file can't contain commas, because the disassembler cuts them off at the first one. I hit this and reworded my comment.
+- `REVERSE.md`: I added a "Sound driver" section to Key Findings, with a note on how to do sound in the web port. I corrected the bank 24 and bank 28 rows in the bank table and marked this task done. I also ticked the separate "identify sound driver" item, since this work covers it.
+- **Two new tasks:** decode the music and sound-effect data formats, and trace the sprite routine in full.
+
+**Still open:**
+- I haven't decoded what the 16-pointer table holds.
+- Two calls from bank 6 point one byte before PlaySound (`$C120`). They may be false matches in data, but I haven't checked.
+
+SESSION_SUMMARY: Session 6 — confirmed bank 24/25 is the sound driver (PlaySound `30:C125` → 6-slot queue → SoundUpdate `31:F7FE`, one command per frame → bank 24 init/command/tick; sound-effect table at `12:$A000`); bank 28 `$800E` is the object sprite routine; labels and REVERSE.md updated, 2 follow-up tasks added.

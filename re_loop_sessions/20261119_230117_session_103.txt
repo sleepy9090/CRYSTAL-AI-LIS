@@ -1,0 +1,82 @@
+  ▶ ls re_loop_sessions | tail -3 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ grep -n "^- \[ \]" REVERSE.md | head -5; wc -c re_loop_sessions/*_10[12].txt
+  ▶ sed -n 2400,2424p REVERSE.md | cut -c1-300; ls docs/ | head; tail -c 4000 re_loop_sessions/20261119_230117_session_102.t
+  ▶ head -c 2500 re_loop_sessions/20261119_230117_session_101.txt; echo; wc -l tools/emu/scenario.py docs/emu_scenarios.txt;
+  ▶ sed -n 895,917p docs/emu_scenarios.txt; sed -n 1,80p tools/emu/scenario.py
+I'm on the top task (Ph6 scenario leftovers); reading the scenario harness to pick a tractable subset.
+  ▶ Read scenario.py +80
+  ▶ grep -n "BossAiE2\|BossFleeSpeech\|AiShopEmpty\|SaveSumSlot\|SlotCopy\b" REVERSE.md | cut -c1-400 | head -30; grep -in "
+  ▶ Read REVERSE.md +1843
+  ▶ Read REVERSE.md +1018
+  ▶ sed -n 1233,1240p REVERSE.md | cut -c1-1500; python3 tools/dis.py 31 F0A4 0x80
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ time python3 -m tools.emu.scenario boss_flee boss_e2 shop_empty_ai slot_repair_a slot_repair_b 2>&1 | grep -v "^    f.*\
+  ▶ python3 -m tools.emu.scenario boss_flee boss_e2 shop_empty_ai slot_repair_a slot_repair_b > /tmp/s103.txt 2>&1; echo rc=
+  ▶ python3 -m tools.emu.scenario boss_flee boss_e2 shop_empty_ai slot_repair_a slot_repair_b --out /tmp/s103.txt > /dev/nul
+  ▶ Read s103.txt
+  ▶ python3 tools/dis.py 14 84B3 0x30; grep -n "Insect Flute\|0715.*0B\|use_item_sel" REVERSE.md | head -8 | cut -c1-300
+Slot `$0D` was never filled in area `$1A`, so the boss wasn't spawned there in this state. I'll spawn type `$5E` into slot `$0D` before using the flute, and move the `AiShopEmpty` spawn to area 03.
+  ▶ python3 tools/dis.py 14 84A8 0x0C; python3 tools/presence_dump.py 2>/dev/null | grep -i "5E\b" | head -5
+  ▶ python3 - <<'EOF' 2>&1 || true
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario boss_e2 shop_empty_ai --out /tmp/s103b.txt > /dev/null 2>&1
+  ▶ Read s103b.txt
+All five scenarios now reach their targets. Starting the full scenario rerun (~50 min) in the background while I write up the results.
+  ▶ python3 -m tools.emu.scenario --out docs/emu_scenarios.txt > /tmp/s103_full.log 2>&1
+  ▶ grep -n "Spawned-enemy\|s99.*scenarios\|^- \*\*.*scenarios" REVERSE.md | head; sed -n 160,204p REVERSE.md | cut -c1-200
+  ▶ python3 -m tools.emu.scenario --out docs/emu_scenarios.txt > /dev/null 2>&1
+  ▶ grep -n "obj_explode\*\*" REVERSE.md | head -2; awk 'NR>=204 && NR<=212' REVERSE.md | cut -c1-250
+  ▶ Read REVERSE.md +198
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^\| \*\*Scripted scenarios\*\*" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 166p REVERSE.md | fold -w 400
+  ▶ Grep "^14,84B|^27,A5C|^15,B7B|^15,B85" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 14 8399 0x60 | grep -n "84b3\|84B3\|84 b3\|b3 84" ; grep -n "^14,84" labels.csv
+The table at `14:8399` confirms that item `$27`'s handler is `$84B3` (word at `83E7`). I'll add a label for it.
+  ▶ printf '%s\n' '14,84B3,UseInsectFlute,ItemUseHandlers[$27]: area $1A + $038D b7 clear + obj_active_s0D != 0 + player x >
+  ▶ Read labels.csv +416
+  ▶ Edit labels.csv
+Waiting for the full rerun to finish. Then I'll fill in the final count and update the task list.
+  ▶ ToolSearch max_results query
+  ▶ Monitor command description timeout_ms
+Rerun in progress. Meanwhile, checking whether `irq_mode` 7 (`IrqRowStretch`) is the handler the `$E2` boss phase 1 should have reached:
+  ▶ Grep "IrqRowStretch|irq_mode` 7|irq_mode` = 7" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+`IrqRowStretch` is dead code (handler 4, reached only from the dead `ShopDoorOpen`/`ShopDoorClose`), so it belongs with the dead labels. I'll wait for the rerun.
+  ▶ Monitor command description timeout_ms
+Waiting for the rerun to finish.
+  ▶ ToolSearch max_results query
+  ▶ TaskStop task_id
+The rerun is still in progress; I'll be notified when it completes.
+  ▶ Monitor command description timeout_ms
+The full rerun is still going (~50 min total). I'll be notified when it finishes.
+  ▶ Monitor command description timeout_ms
+Still running; waiting for completion.
+  ▶ Monitor command description timeout_ms
+Waiting for the rerun.
+  ▶ Monitor command description timeout_ms
+Waiting for the rerun.
+  ▶ TaskStop task_id
+  ▶ Grep "^union:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_scenarios.txt
+The full rerun runs **136 of 178** (was 130), with 42 left. Now updating REVERSE.md: the entry count, the table row, and the task list.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Quick check that the new scenarios gave the same results in the full rerun:
+  ▶ Grep "^\[(boss_flee|boss_e2|shop_empty_ai|slot_repair_a|slot_repair_b)\]|CRASH" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_scenarios.txt
+I worked the top task (Ph6 scenario leftovers) and covered the boss-flee, live-boss, empty-shop and save-slot-repair groups with five new emulator scenarios. All five reached their target code. The full rerun now runs **136 of the 178** labels the tour never ran (was 130), leaving 42. Nothing is committed.
+
+**New scenarios** (in `tools/emu/scenario.py`, plus a small hook helper `set_from()`)
+- **`boss_flee`**: spawning the boss-defeat object (`$CF`) in boss area `$28` runs `BossDefeated`, which hands off to `BossFleeSpeech`: music change, flee message, then back to play. No crash, because this is the real path in the right area.
+- **`boss_e2`**: area `$1A` didn't place the dormant boss in this saved state, so the first try just gave "Nothing happens". With boss `$5E` spawned into slot `$0D` and the Insect Flute used, the flute handler wakes it (`$E2`) and `BossAiE2` runs. The fight starts and the boss kills the player. The flute is used up by this. I added a label for the flute handler: `UseInsectFlute` `14:84B3`.
+- **`shop_empty_ai`**: spawning type `$4E` in area 03 runs `AiShopEmpty`, which enters the empty-shop screen. The game never left that screen in 400 frames of B/A presses. I didn't look into how it exits; that's in the new leftover task. Spawning it inside a real shop doesn't work, because the shopkeeper's menu stops objects from updating.
+- **`slot_repair_a` / `slot_repair_b`**: I made slot 0's main copy differ from its backup, then did a warm reset. With the checksum forced to match, the boot check runs `SaveSumSlot` and `SlotCopy` in both directions (main→backup and backup→main).
+
+**Finding:** the known checksum bug happens in practice, not just on paper. At the warm reset the running-sum byte `$16` still held `$59` from gameplay, so the sums came out as `$DC`/`$14` instead of the real `$83`. With an honest checksum, both checks would have failed and slot 0 would have been wiped. That's why these scenarios force the checksum.
+
+**Docs:** REVERSE.md has a new Verification Log entry, the scenario table row now shows 136, `docs/emu_scenarios.txt` is regenerated, and `labels.csv` has the one new label. The task is marked done. What's left (pits and edge links, conveyor, sound sweep and fade, teleport pick, hit rules, the final-boss fight, the empty-shop exit, and a few labels whose callers still need finding) is filed as one low-priority task at the end of RE Investigation. In the rerun, the only crash is the one already explained in session 92 (event act 30 forced on the item-use path).
+
+SESSION_SUMMARY: Session 103: 5 new tools.emu scenarios (boss_flee, boss_e2, shop_empty_ai, slot_repair_a/b) run BossFleeSpeech, BossAiE2, AiShopEmpty/SubstShopEmpty, SaveSumSlot and SlotCopy, bringing the never-run union to 136/178 (was 130); the save-checksum `$16` bug shows up in practice (seed `$59` at warm reset); new label UseInsectFlute `14:84B3`; the rest filed as one new last task.

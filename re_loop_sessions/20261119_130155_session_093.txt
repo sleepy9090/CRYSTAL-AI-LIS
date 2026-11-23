@@ -1,0 +1,106 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ grep -n "^- \[ \]" REVERSE.md | head; wc -c re_loop_sessions/*09[0-3].txt
+  ▶ tail -c 2500 re_loop_sessions/20261119_130155_session_092.txt; echo ----; tail -c 1800 re_loop_sessions/20261119_130155_
+  ▶ ls web/src/game/obj/ web/test/ tools/emu/ && wc -l web/src/game/obj/*.js tools/emu/routine_capture.py web/test/obj_check
+  ▶ node web/test/obj_check.mjs 2>&1 | tail -30; ls web/test/obj_frames
+Session 93: top task is the boss/effect AI port; I'm starting with part (a) — the remaining AIs `$57`, `$76`, `$70`, `$04` hit by `ObjUpdateAll` fuzz cases.
+  ▶ grep -n "\$57\b\|AI \$76\|\`\$76\`\|A4DC\|BA2E\|AI \$70\|\`\$70\` " REVERSE.md | head -30; grep -in "ai.*\(57\|76\|70\)\
+  ▶ Grep "A4DC|BA2E|BA40|AI .\$57|AI .\$76|AI .\$70|AiTable|AI dispatch" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^\s*(\$)?(04|57|76|70)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+  ▶ head -12 gfx/obj_ai.txt; grep -n "57\|76\|70\| 04" gfx/obj_ai.txt | head -20
+  ▶ grep -ho "0x[0-9A-F]\{2\}: *[a-zA-Z0-9_]*" web/src/game/obj/ai_*.js | sort | tr '\n' ' '; echo; grep -c "^ai" gfx/obj_ai
+  ▶ python3 tools/dis.py 27 A4DC 120 --stop; echo ----; python3 tools/dis.py 27 B0BE 200 --stop
+Disassembled AI `$76` (MP drain, 27:A4DC) and AI `$57` (27:B0BE = tail of the straight mover). Checking how the existing port handles B0BE and what `26:8E46` is.
+  ▶ grep -n "B0BE\|B0C6\|98C7\|aiStraightMover" web/src/game/obj/*.js | head; grep -in "8E46\|,A4DC\|,A4E0\|,B0BE" labels.cs
+AI `$57` is just `AiStraightMoverTail` (already ported) — a one-line table entry. AI `$76` needs `HudRedraw` `26:8E46`; checking if the port has it.
+  ▶ Grep "hudRedraw|8E46|ppuQueueWaitSrc|C72B|export function playSound" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Read death.js +1
+  ▶ Read objects.js +64
+`objUpdateAll` is already a generator, so a generator AI handler can `yield*` `hudRedraw`. Checking whether `HudRedraw` restores X (A4DC uses X after the call).
+  ▶ python3 tools/dis.py 26 8E80 80 --stop; grep -n "pad_new\|obj_anim\b\|obj_overlay\|mp_cur\|'08'\|0x08" web/src/game/ram.
+X is restored from `$14`. Now the port's AI conventions (playSound usage, register helpers):
+  ▶ Read ai_static.js
+Now AI `$04` (27:B2FC, types `$21/$22`):
+  ▶ python3 tools/dis.py 27 B2FC 160 --stop
+  ▶ grep -in "^26,98A8\|^26,9897\|^27,B2FC\|^27,A4DC" labels.csv; grep -n "^export function" web/src/game/obj/util.js
+AI `$04` = keep slot `$0C` on the player's position and count its `obj_anim` down by `obj_timer2` (ignores its own X). Now the capture/check wiring:
+  ▶ grep -n "ROUTINES\|AiShellOnHit\|AiTurret\|fuzz_walk\|def _fix_case\|GROUPS\|'out'" tools/emu/routine_capture.py | head 
+  ▶ Read routine_capture.py +60
+  ▶ Read obj_check.mjs +24
+  ▶ Grep "export function runNow" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/world/bgstream.js
+  ▶ Read playsound.js
+  ▶ grep -n "playSound" web/src/game/obj/*.js | head; python3 tools/dis.py 30 CD00 0x2C
+Y at the AI dispatch is `id*2` (`TAY` at `30:CD07`), so AI `$76`'s `PlaySound` stores `$EC` in `snd_saved_y`. Writing the port:
+  ▶ Write ai_effect.js
+Wiring into `objects.js` (generator-aware dispatch):
+  ▶ python3 - <<'EOF' 2>/dev/null || echo use-edit
+  ▶ Edit objects.js
+  ▶ Edit objects.js
+  ▶ Edit objects.js
+Now the capture side. Checking how `run()` treats interrupts during a case:
+  ▶ Read routine_capture.py +479
+Cases that spin or take an interrupt are discarded, so the capture is safe. Checking how the fuzz files were generated:
+  ▶ Read README.md
+Adding an `EFFECT_AIS` group + steer to `routine_capture.py`:
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+Now the check side:
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 100 --routine AiPlayerFo
+All 4800 identical, and the 2 old gap cases now pass too (they hit `$04`/`$57`/`$76`). Checking that the MP-drain cases actually took the HudRedraw path:
+  ▶ python3 tools/obj_case_stats.py --help 2>&1 | head -15
+  ▶ Read obj_case_stats.py
+I'll add an `--abs ADDR` option (absolute address, not slot-relative) to the stats tool:
+  ▶ Edit obj_case_stats.py
+  ▶ Edit obj_case_stats.py
+  ▶ Edit obj_case_stats.py
+  ▶ Edit obj_case_stats.py
+  ▶ python3 tools/obj_case_stats.py web/test/obj_frames/fuzz_effect.json --col 04A0=0 --abs 0708 --abs 607B --abs 0108 --abs
+Coverage is good (49 MP drains, 18 despawns, 19 slot-`$0C` expiries). Regenerating `fuzz_update.json` so the object loop also places `$04/$57/$76` (generator dispatch path):
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 200 --routine ObjMoveSli
+  ▶ Edit objects.js
+  ▶ Edit ai_effect.js
+  ▶ node web/test/obj_check.mjs --verbose 2>&1 | grep -v "^ok "
+Bug in my guard: `r === x` (the real case, the object in slot `$0C` itself) is normal, only `r < x` loops. Fixing:
+  ▶ Edit objects.js
+  ▶ node web/test/obj_check.mjs 2>&1 | tail -1; for t in core_check sprite_check; do node web/test/$t.mjs 2>&1 | tail -1; do
+  ▶ node web/test/obj_check.mjs 2>&1 | tail -1; node web/test/core_check.mjs 2>&1 | tail -1; node web/test/sprite_check.mjs 
+Checks pass. Now what spawns these objects, for the write-up (types `$21/$22` → AI `$04`, `$0B` → `$76`, `$B8/$BA` → `$57`):
+  ▶ Grep "type .?\$(21|22|0B|B8|BA)\b|types? .?\$21|\$21/\$22|\$B8/\$BA" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '1340,1352p' REVERSE.md | cut -c1-400; grep -o ".\{250\}type .\$21.\{250\}" REVERSE.md | head -2
+  ▶ Read REVERSE.md +1336
+  ▶ Grep ".{0,200}type .\$21.{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Types `$21` (magic-6 shot eater) and `$22` (heal sparkle) use AI `$04`; type `$0B` is what an MP-drain shot (param 3) becomes. Quick check on which slot those magic objects occupy:
+  ▶ Grep "slot .?\$0C" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep ".{0,160}slot .\$0C.{0,160}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "AiShotAnimDec|^#+ .*Enemies|^\*\*.*effect AI" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ awk 'NR>=1042 && NR<=1135 && /^(####|\*\*|- \*\(s8)/ {print NR": "substr($0,1,160)}' REVERSE.md
+  ▶ Grep "^(####|\*\*[A-Z(])" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1053
+Adding rows to the generic-AI table:
+  ▶ Edit REVERSE.md
+  ▶ printf '%s\n' '27,B2FC,AiPlayerFollowC,s93: AI $04 (types $21/$22 magic in slot $0C): slot $0C <- player pos; slot $0C a
+  ▶ wc -l labels.csv && tail -2 labels.csv
+  ▶ Read labels.csv +1166
+  ▶ Edit labels.csv
+Now the fixtures README:
+  ▶ Edit README.md
+  ▶ Edit README.md
+  ▶ Read REVERSE.md +2347
+Marking the task done and filing the remainder ($70, bank-15 bosses, scenarios) once at the end of RE Investigation:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "ai_shot" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Grep "ai_field|ai_walk|obj/" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Read architecture_web.md +58
+  ▶ Read architecture_web.md +198
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Last: a Verification Log row. Checking its format:
+  ▶ Read REVERSE.md +121
+  ▶ Grep "^\| (Ending \(web port\)|.*87)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +163
+You've hit your 5-hour limit · resets 6pm (America/New_York)

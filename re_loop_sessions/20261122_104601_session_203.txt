@@ -1,0 +1,119 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ cat dead_ends.md | cut -c1-400 && for f in re_loop_sessions/20261122_104601_session_20{0,1,2}.txt; do echo "== $f"; tail
+  ▶ Read dead_ends.md
+  ▶ tail -c 2500 re_loop_sessions/20261122_104601_session_202.txt; echo; tail -c 1500 re_loop_sessions/20261122_104601_sessi
+  ▶ grep -n "not ported\|EVENT_ACTIONS" web/src/game/states/giveitem.js | head -30; grep -n "D5A4\|EvAct.*7\b\|D563" REVERSE
+  ▶ python3 tools/dis.py 30 D5A4 0x50 && echo ---- && python3 tools/dis.py 30 D5E6 0x40
+Picking the top open task (Ph7 leftovers, item (i)): porting event acts 1 (Sword of Thunder warp) and 7 (Mesia message). Disassembled both; now reading act 7's tail and the existing port code.
+  ▶ python3 tools/dis.py 30 D623 0x60 && python3 tools/dis.py 31 FF8C 0x10
+  ▶ python3 tools/dis.py 26 9897 0x30; grep -n "^26,98\(97\|A8\)" labels.csv; grep -rn "98A8\|9897" web/src/game --include=*
+  ▶ Read giveitem.js +1
+  ▶ Read giveitem.js +270
+  ▶ python3 tools/dis.py 30 D539 0x1A; grep -n "swordRaisePose\|export" web/src/game/states/swordraise.js | head; grep -n "e
+  ▶ Read swordraise.js
+  ▶ python3 tools/dis.py 30 C40E 0x14; grep -n "export function\* showMessage\|export function switchBank16\|export function
+Writing the two event acts now; checking what Y value ShowMessage leaves for the following PlaySound.
+  ▶ grep -rn "ShowMessage" web/src/game --include=*.js | grep -i " y\b\|Y =\|Y register" | head; grep -n "0x0623\|TALK_SLOT"
+  ▶ grep -n "FarCall_C25D\|^30,C25D" labels.csv; grep -n "export function farObjInit\|export function objInit" -B3 -A3 web/s
+  ▶ python3 tools/dis.py 30 C25D 0x40 | grep -n "X\|TAX\|LDX\|TXA\|PLA\|PHA\|RTS" ; python3 tools/dis.py 30 C3F0 0x18
+  ▶ python3 tools/dis.py 30 D552 0x11; grep -n "^import\|swordraise" web/src/game/states/play.js | head -40
+Now editing `giveitem.js` to add acts 1 and 7.
+  ▶ cat > /tmp/edit203.py <<'EOF'
+  ▶ Edit giveitem.js
+  ▶ Edit giveitem.js
+  ▶ Edit giveitem.js
+Acts added. Now looking for an existing tools.emu scenario that runs acts 1/7, so I can build a run-level ref.
+  ▶ Grep "ev_act|event_act|evact|act_1\b|'act" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Read scenario.py +70
+Scenarios `event_01` and `event_07` exist (item-use path with `$22` forced). Checking how an existing check consumes such a scenario.
+  ▶ grep -ln "event_\|scenario_state" web/test/*.mjs | head; grep -n "EVENT_PC\|def force" -A4 tools/emu/scenario.py | head 
+  ▶ sed -n 1,80p web/test/swordraise_check.mjs
+  ▶ sed -n 1,40p web/test/itemuse_check.mjs; python3 -m tools.emu.scenario --help 2>&1 | head -20
+  ▶ python3 tools/web_state_compare.py --help 2>&1 | head -40; python3 -m tools.emu.web_state --help 2>&1 | head -30
+  ▶ grep -n "until\|poke\|exec\|def \|add_argument" tools/emu/web_state.py | head -60; sed -n 51,62p tools/emu/scenario.py; 
+  ▶ Read web_state.py +44
+  ▶ Read play.js +255
+I'll add a `--force BB:AAAA:HHHH=VV` exec-hook option to `web_state.py` (same as scenario.py's `force`).
+  ▶ python3 - <<'EOF' 2>&1 | head -0
+  ▶ Grep "^import|^from|def write_mem" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ Edit web_state.py
+  ▶ Edit web_state.py
+Now building a base state from scenario `event_01` (area 03, item $1D selected) before the B press.
+  ▶ python3 -m tools.emu.scenario_state --help 2>&1 | head -15; python3 -m tools.emu.scenario_state event_01 10 --out /dev/n
+  ▶ for a in 01:D5A4 07:D5E6; do n=${a%%:*}; pc=${a##*:}; python3 -m tools.emu.web_state --load-state tools/emu/states/event
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --keys 2516:B --force 30:D552:0022=01 --un
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --keys 2510:B:4 2530:B:4 2550:B:4 --until 
+  ▶ rm -f web/test/states/tmp_iu.json && python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --key
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --keys 2510:B:4 --force 30:D552:0022=01 --
+Still exporting the tools.emu states for acts 1/7; the item use needs two B presses to reach the dispatch. Retrying with that.
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --keys 2510:B:4 2530:B:4 --force 30:D552:0
+States exported (both at f2540). Adding `ENTRY_POINTS` for the two act entries in `play.js`.
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event07.state --web web/test/states/event07.json --frames 20
+Act 7: 199/199 frames identical (core, pal, obj). Now act 1 (sword pose + message + warp to `$F2`).
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event01.state --web web/test/states/event01.json --frames 46
+  ▶ python3 tools/compare_frames.py /tmp/ev01/emu.csv /tmp/ev01/web.csv 2>&1 | grep -v "^  o1\|^  o0" | head -40; python3 to
+The sword-pose part only has 1-frame LATE cells (tools.emu enters at L251 here, vs L256 in swordraise_check). Looking at the `sub` divergence from f2863.
+  ▶ python3 tools/csv_cols.py /tmp/ev01/emu.csv /tmp/ev01/web.csv sub,music,pos_x,pos_y,area 2826-2875 2>&1 | head -60
+  ▶ python3 tools/csv_cols.py /tmp/ev01/emu.csv /tmp/ev01/web.csv sub,pos_x,pos_y 2876-2999:6 2>&1 | head -30; python3 tools
+  ▶ python3 tools/csv_trim.py --help 2>&1 | head -15
+  ▶ python3 tools/csv_trim.py /tmp/ev07/emu.csv web/test/event07_ref.csv --cols core,pal,obj --frames 2541-2739 && python3 t
+  ▶ python3 tools/csv_trim.py /tmp/ev07/emu.csv web/test/event07_ref.csv --cols core,pal,obj --frames 2541-2739 && python3 t
+  ▶ Write event_check.mjs
+  ▶ grep -n "export function parseKeys" -A8 web/test/harness.mjs | head -12; grep -n "keys\.\|keys)" web/test/itemuse_check.
+  ▶ grep -n "run.mjs\|key_shift\|keys" tools/web_state_compare.py | head -20
+Fixing the check: act 7 clears the trigger slot (`$0623` = 3 on the item-use path), not slot 13, and act 1 has 4 more PARTIAL pal cells (f2852-2861, the fade-in) I'd missed.
+  ▶ python3 tools/cell_class.py /tmp/ev01/emu.csv /tmp/ev01/web.csv 2>&1 | grep "pal_crc\| 2541"; python3 tools/csv_cols.py 
+  ▶ python3 tools/edit_event_check_s203.py 2>/dev/null; echo
+  ▶ Edit event_check.mjs
+  ▶ Edit event_check.mjs
+  ▶ node web/test/event_check.mjs
+Both pass. Running the full check suite.
+  ▶ Edit event_check.mjs
+  ▶ python3 tools/run_checks.py 2>&1 | tail -15
+All 51 checks pass. Now updating REVERSE.md (event table, leftovers task), CLAUDE.md test list.
+  ▶ grep -n "^| 7 | \`D5E6\`\|^| 1 | \`D5A4\`" REVERSE.md
+  ▶ Grep "^\| (1|7) \| `D5" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +912
+Moving the port notes into the Effect column (the table has 4 columns).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the leftovers task item (i) — it stays unchecked (low-priority leftovers task), with acts 1/7 marked done.
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+  ▶ Edit giveitem.js
+  ▶ Grep "^\| Sword raise" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 177p REVERSE.md | cut -c1-300
+  ▶ Edit REVERSE.md
+  ▶ sed -n 178p REVERSE.md | rev | cut -c1-120 | rev; git status --short | head -20
+The last column is the session number, not a status. Fixing my row.
+  ▶ Edit REVERSE.md
+  ▶ Glob web/test/states/event*.json
+Event acts 1 and 7 are now ported, so all 32 entries of the event action table run in the web port. Both match tools.emu frame by frame, and all 51 checks pass, including the new one. Nothing is committed.
+
+**What the two acts do**
+- **Act 1** (`30:D5A4`, Sword of Thunder warp): clears a few object fields, plays the existing sword-raise pose, shows message 28.17, plays SFX `$23` and warps to area `$F2`.
+- **Act 7** (`30:D5E6`, Mesia's message): changes slot 13's sprite to `$D2` for 32 frames, then to `$2E`. It then spawns effect type `$DE` in slot `$1E` at slot 13's position and shows message 14.5.
+- **Correction to the docs:** the "trigger slot" act 7 clears is `obj_active[$0623]`, not slot 13. On the item-use path that is slot 3.
+- Both are in `web/src/game/states/giveitem.js`.
+
+**How it's checked**
+- **Test states:** I added a `--force BB:AAAA:HHHH=VV` option to `tools/emu/web_state.py`. It writes one RAM byte the first time the given address runs. That forces `$22` to the act number at `30:D552`, so tools.emu stops at the act's first instruction. Two new entry points in `states/play.js` let the port start from those states.
+- **Act 7:** 199 of 199 frames identical, with no exceptions.
+- **Act 1:** 459 frames, including sound. Some cells differ, and the check lists each one:
+  - During the sword pose, two kinds of cells are one frame late in the port: the music flag on the first frame and the sprite data every 8th frame. This is the missing CPU-timing model in leftovers item (c).
+  - About 1 frame of cells is caught mid-update: the palette fades out and in, the spawn pass when the area loads, and 4 frames of the entry slide.
+  - From f2863 one column, `sub_state`, differs: the player stands on one of area `$F2`'s event triggers, and tools.emu samples 8 where the port samples 7. This is the same known end-of-frame difference that `itemuse_check` and `group18_check` already list.
+- **New check:** `web/test/event_check.mjs`, with the two references `event01_ref.csv` and `event07_ref.csv`.
+
+**Docs**
+- In REVERSE.md I updated the event table's act 1 and act 7 rows and added a Verification Log row.
+- In the leftovers task, item (i) now says every act is ported.
+- The new check is listed in CLAUDE.md.
+
+The leftovers task stays unchecked, as the rules say for a low-priority task. What's left in item (i) is run-level references for the event acts that wait for frames (2, 8, 11-13, 15, 19-21, 23 and 28); the same `--force` approach should work for each.
+
+SESSION_SUMMARY: Session 203 ported EventActionTable acts 1 (EvActThunderWarp 30:D5A4) and 7 (EvActMesiaMessage 30:D5E6), so all 32 event acts are ported; new web_state.py --force option, ENTRY_POINTS and event_check.mjs (act 7 199/199 rows identical, act 1 459 rows with listed LATE/PARTIAL/trigger cells); all 51 checks pass.

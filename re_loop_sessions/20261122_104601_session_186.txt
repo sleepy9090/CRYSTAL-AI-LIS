@@ -1,0 +1,102 @@
+  ▶ Skill skill
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md | 
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_18[456].txt && tail -c 6000 re_loop_sessions/20261122_104601_session_185.txt
+  ▶ Read 20261122_104601_session_185.txt
+Next is AI `$27` in area `$40`. Let me look at the group_6B scenario and the area's spawns.
+  ▶ grep -n "group_6B\|group_29\|def _group\|^def \|SCENARIOS" tools/emu/scenario.py | tail -40; python3 tools/area_dump.py 
+  ▶ Read scenario.py +625
+  ▶ Grep "\$6A|AI \$27|^; type \$6A" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/enemy_catalog.txt
+  ▶ sed -n 1,12p gfx/enemy_catalog.txt; grep -n "A9DB\|AI \`\$27\`" REVERSE.md | head; grep -n "SwordElemBit" REVERSE.md | h
+  ▶ Read enemy_catalog.txt
+  ▶ Grep "A9DB|AI `\$27`|SwordElemBit` `" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Type `$6A`: hp 32, atk `$2C`, def 4, ed `$52` (elem 2 → sword 1). Adding a keyless `group_40` scenario first to probe.
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_40 12 --out web/test/states/group40.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group40.state --slots 12,18,19 --every 10 --seg NONE:60 2>
+Player at (112,112), enemy at (536,780) — far. Rendering the collision map.
+  ▶ python3 tools/render_level.py 40 --coll 2>&1 | tail -3
+  ▶ Read area_064_coll.png
+Player position may not match the render; probing movement directly.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group40.state --slots 12 --every 10 --seg NONE:20 DOWN:120
+The player spawned in the small cave-mouth ledge at top-left (render is 1:1); the enemy is in the brown field at about (536,780). Checking how `npc_reveal` repositions the player + camera.
+  ▶ Read scenario.py +388
+Using `place_player` with camera to put the player in the field near the enemy.
+  ▶ sed -i "s/area='40', pokes={0x0421: 16, 0x0711: 1, 0x03E1: 16 + 1, 0x03C1: 0x60, 0x0708: 0x60},/area='40', pokes={0x0421
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_40 12 --out web/test/states/group40.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group40.state --slots 12,18,19 --every 10 --seg NONE:120 2
+The chaser is now active and approaching. Trying: line up at x≈504, face down, swing repeatedly.
+  ▶ S=$(for i in $(seq 1 30); do printf "B:4 NONE:8 "; done); timeout 300 python3 tools/emu/group_probe.py tools/emu/states/
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group40.state --slots 12 --every 6 --seg NONE:20 RIGHT:12 
+First hit at f2681 (32→18, 14 per hit). Extending the swings.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group40.state --slots 12,0D,0E,0F --every 12 --seg NONE:20
+Kill at ~f2830 after 3 hits, coin (AI `$7B`) drop + pickup, and respawned AI `$27` walkers in `$0D`/`$0F`. Now the key-frame mapping; reading the s185 check for the workflow.
+  ▶ Read group6b_check.mjs
+Mapping: emu `--keys` = probe frame − 1 (RIGHT 2528, DOWN 2540, B 2542+12i). Verifying with a plain tools.emu run watching the enemy HP `$03D2` and `$43`.
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group40.state --frames 480 --watch 03D2,0043 --keys 2528:
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group40.state --frames 480 --watch 03D2,0043 --keys 2528:
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group40.state --frames 480 --watch 03D2 --keys 2528:RIGHT
+Three hits and the kill at f2824 in plain tools.emu. Now the `$43` writes for the port key frames.
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group40.state --frames 480 --watch 0043 --keys 2528:RIGHT
+Port keys: `2528:RIGHT:12`, `2540:DOWN:3`, `2543+12i:B:4` (writes at L261 → next pass). Updating the scenario keys (emu frame − 2495) and generating the ref.
+  ▶ Edit scenario.py
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/group40.state --web web/test/states/group40.json
+Expected diffs (that run feeds the emu frames to the port). Trimming the ref and writing the check.
+  ▶ python3 tools/csv_trim.py gfx/group40/emu.csv web/test/group40_ref.csv --frames 2508-2984 && wc -l web/test/group40_ref.
+  ▶ Write group40_check.mjs
+  ▶ node web/test/group40_check.mjs 2>&1 | tail -35
+The state is at f2508 (one later than s185's), so the port's first row is f2509. Shifting the ref window to f2509-2985.
+  ▶ python3 tools/csv_trim.py gfx/group40/emu.csv web/test/group40_ref.csv --frames 2509-2985 && sed -i 's/^const LAST = 298
+  ▶ Edit group40_check.mjs
+  ▶ Edit group40_check.mjs
+  ▶ python3 tools/csv_trim.py gfx/group40/emu.csv web/test/group40_ref.csv --frames 2509-2985 && node web/test/group40_check
+All 477 rows equal. Confirming the ref shows the kill, coin and respawns, and kicking off the full suite.
+  ▶ python3 tools/csv_cols.py web/test/group40_ref.csv web/test/group40_ref.csv o12_ai,o0E_ai,o0D_ai,o0F_ai 2822-2860:6 2>&1
+  ▶ timeout 3000 python3 tools/run_checks.py > /tmp/s186_checks.txt 2>&1; tail -45 /tmp/s186_checks.txt
+  ▶ timeout 3000 python3 tools/run_checks.py 2>&1 | tail -45
+Fixing the comment: slots `$0D`/`$0F` fill with AI `$27` before the kill (probe ~f2674 / f2698), not after.
+  ▶ Edit group40_check.mjs
+  ▶ Grep "^\| Area-`\$6B` enemy group" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +215
+  ▶ Edit REVERSE.md
+Now the task note and the remaining-AI list.
+  ▶ Edit REVERSE.md
+  ▶ Grep "group6b_check.mjs" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CLAUDE.md
+  ▶ Edit CLAUDE.md
+Docs updated; waiting for the full suite.
+  ▶ Read bsyf41zxu.output
+The suite is still running; I'll wait for its completion notification.
+  ▶ ToolSearch max_results query
+The full check suite is still running in the background. I'll write the final summary when it finishes.
+  ▶ Read bsyf41zxu.output
+I checked area `$40`'s enemy group against tools.emu, and the web port matches it with no code changes. The new `web/test/group40_check.mjs` passes all 477 rows (f2509-2985) at shift 0, sound included, with no cells to excuse.
+
+**What's in the area:** one type-`$6A` enemy in slot `$12`, run by AI `$27` (`27:A9DB`). It is the chasing shooter AI, except that it does nothing while offscreen. Its element nibble is 2, which makes it immune to sword 2, so the scenario uses sword 1. The other two spawns are an h3 record and an h2 record.
+
+**Setup:** the player enters the area on a small cave-mouth ledge with walls on every side, so they can't walk to the enemy. The new `group_40` scenario in `tools/emu/scenario.py` uses `place_player` to put the player and camera in the field above the enemy. Once it is on screen, the chaser starts walking up toward the player.
+
+**The run:** the player steps right, faces down and swings every 12 frames.
+- Two sword hits, at f2680 and f2746, take the enemy from HP 32 to 18 to 4.
+- The kill comes at f2824: a death puff, then a coin that the player picks up without moving.
+- Before the kill, the area's respawn entries put two more AI-`$27` chasers in slots `$0F` and `$0D`. Both stay idle offscreen.
+- The enemy never touched the player and never fired, so AI `$27`'s contact and shot paths are still unchecked.
+
+I set the key frames using the s185 one-frame correction. A plain tools.emu run watching the enemy's HP confirmed the hits and the kill before I generated the reference.
+
+**Full suite:** 38 of 39 checks pass. The one failure is `world_check` on areas `$3C`, `$3D` and `$BC`, which is the known gap (j).
+
+**Docs:**
+- REVERSE.md has a new Verification Log row ("Area-`$40` enemy group, AI `$27`").
+- The task has an s186 note and stays open as the low-priority leftovers task. AI `$27` is struck from its list of remaining AIs.
+- CLAUDE.md lists the new check.
+
+New files:
+- `web/test/group40_check.mjs`
+- `web/test/group40_ref.csv`
+- `web/test/states/group40.json`
+- `tools/emu/states/group40.state`
+
+Nothing is committed.
+
+SESSION_SUMMARY: Session 186 checked area $40's enemy group (AI $27, type $6A; sword 1 because elem 2 blocks sword 2) with the new group_40 scenario, which places the player in the field because the entry ledge is walled off, and web/test/group40_check.mjs: 477/477 rows equal at shift 0 including sound, 2 hits plus the kill at f2824 and a coin pickup, no port change; 38/39 checks pass (world_check is the known gap (j)).

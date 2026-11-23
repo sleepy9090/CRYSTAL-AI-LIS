@@ -1,0 +1,107 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | head -50
+  ▶ Read dead_ends.md
+  ▶ for f in re_loop_sessions/*_session_14[789].txt; do echo "== $f"; tail -c 2500 "$f"; done; grep -n "^- \[ \]" REVERSE.md
+  ▶ tail -c 2500 re_loop_sessions/20261121_221108_session_147.txt; echo ====; tail -c 2500 re_loop_sessions/20261121_221108_
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +2297
+  ▶ Grep "BC6B|MesiaReunion" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+Picked the queued task: porting sub_state 27 `SubstMesiaReunion` (`19:BC6B`). Reading the ROM routine and the sword-raise port as a template.
+  ▶ python3 tools/dis.py 19 BC6B 0x187 && sed -n 295,310p REVERSE.md | cut -c1-600
+  ▶ cat web/src/game/states/swordraise.js; python3 tools/dis.py 26 9861 0x60; python3 tools/dis.py 31 FF80 0x18; grep -n "98
+  ▶ grep -rn "8C0E\|export function\* paletteBuild\|export function paletteBuild\|export function objInit\|C25D\|act 30\|EvA
+  ▶ cat web/src/game/obj/objinit.js | head -40; grep -n "swordRaise\|ENTRY_POINTS\|^import" web/src/game/states/play.js | he
+  ▶ grep -n "export function\* statRecalc" -A12 web/src/game/states/death.js; grep -n "export function farSpriteDraw" -A8 we
+  ▶ sed -n 157,175p web/src/game/states/death.js; grep -n "SUBSTATES.get\|h(m" web/src/game/states/play.js | head; python3 t
+Decoded the routine (5-byte step table at `19:BD59`, spawns type `$C2` in slots `$15-$18`, white flashes). Now writing the JS port.
+  ▶ grep -n "xReg" web/src/game/states/death.js; sed -n 276,300p web/src/game/states/play.js; ls tools/emu/states | head -50
+  ▶ grep -rn "export function \(tempAddStep\|tempToObjPos\|objPosToTemp\)" web/src; grep -rn "9861\b" web/src | head -3
+  ▶ Write mesia.js
+  ▶ python3 - <<'EOF' 2>/dev/null || echo use-edit
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+Now exporting a test state from tools.emu the same way session 149 did (poke `sub_state` = `$1B`).
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/town02_enter.state --frames 100 --poke 0041=1B --until 19:B
+  ▶ python3 tools/web_state_compare.py --help 2>&1 | head -30
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/mesia.state --web web/test/states/mesia.json --frames 320 --
+  ▶ ls gfx/compare/mesia/; python3 tools/compare_frames.py gfx/compare/mesia/emu.csv gfx/compare/mesia/web.csv --cols core,p
+  ▶ python3 tools/compare_frames.py gfx/compare/mesia/emu.csv gfx/compare/mesia/web.csv --cols core,pal,obj --shift 1 2>&1 |
+  ▶ python3 tools/compare_frames.py gfx/compare/mesia/emu.csv gfx/compare/mesia/web.csv --cols core,pal,obj --frames 2800-28
+Port runs the whole scene; remaining diffs look like the known post-NMI sampling offset. Checking the palette-flash rows in detail.
+  ▶ python3 tools/compare_frames.py gfx/compare/mesia/emu.csv gfx/compare/mesia/web.csv --cols pal_crc,sub,o18_y --frames 28
+  ▶ python3 tools/csv_trim.py --help 2>&1 | head -15
+  ▶ python3 tools/csv_trim.py gfx/compare/mesia/emu.csv web/test/mesia_ref.csv --cols core,pal,obj --frames 2551-2863 && hea
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/mesia.state --web web/test/states/mesia.json --frames 312 --
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/mesia.state --web web/test/states/mesia.json --frames 312 --
+The end-of-scene RAM matches apart from scratch bytes, the stack, and the bytes written right after the last vblank. Writing `mesia_check.mjs`.
+  ▶ Write mesia_check.mjs
+  ▶ node web/test/mesia_check.mjs
+  ▶ Grep "^28(3[4-9]|4[0-4])," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/compare/mesia/web.csv
+  ▶ python3 tools/csv_trim.py gfx/compare/mesia/emu.csv web/test/mesia_ref.csv --cols core,pal,obj --frames 2551-2862
+  ▶ cat > tools/_tmp_unused.txt </dev/null; rm tools/_tmp_unused.txt; echo ok
+  ▶ Edit mesia_check.mjs
+  ▶ Edit mesia_check.mjs
+  ▶ Edit mesia_check.mjs
+  ▶ Edit mesia_check.mjs
+  ▶ Edit mesia_check.mjs
+  ▶ Edit mesia_check.mjs
+  ▶ node web/test/mesia_check.mjs; for t in swordraise formrevert cure changeform telepathy teleport giveitem itemuse pause1
+  ▶ node web/test/mesia_check.mjs
+  ▶ Edit mesia_check.mjs
+  ▶ Edit mesia_check.mjs
+  ▶ Edit mesia_check.mjs
+Frame compare now passes (312 rows). Fixing the end-state check, then rerunning it with the regression checks.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test && node mesia_check.mjs; node swordraise_check.mjs | tail -
+  ▶ node web/test/mesia_check.mjs && node web/test/swordraise_check.mjs && node web/test/formrevert_check.mjs && node web/te
+  ▶ sed -i 's/if (end.f !== 2861) fail(`sub_state 7 at f${end.f}, want f2861`);/if (end.f !== 2862) fail(`sub_state 7 at f${
+  ▶ Edit mesia_check.mjs
+  ▶ node web/test/mesia_check.mjs && node web/test/swordraise_check.mjs && node web/test/formrevert_check.mjs && node web/te
+All checks pass. Updating the check header comment, then the docs and labels.
+  ▶ Edit mesia_check.mjs
+  ▶ Grep "^19,(BCB0|BD00|BD51|BD59|BD91|BDDC)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "^\| Sword raise|swordraise_check" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ sed -n 177p REVERSE.md; grep -n "^19,BC" labels.csv; tail -3 labels.csv; grep -n "swordraise\|formrevert" docs/architect
+Adding labels and the REVERSE.md updates.
+  ▶ printf '%s\n' '19,BCB0,MesiaScript,s150: X=1 slot 1 walk/pose script over MesiaStepTable ($20*5): dx dy n meta ovl = n s
+  ▶ Edit labels.csv
+Now REVERSE.md: substate row 27, a Verification Log row, and the task note.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+  ▶ Edit CLAUDE.md
+  ▶ Read architecture_web.md +180
+  ▶ Edit architecture_web.md
+I've ported sub_state 27 `SubstMesiaReunion` (`19:BC6B`) to the web port. The new check `web/test/mesia_check.mjs` passes on all 312 rows (f2551–2862) against tools.emu, and all the other web checks still pass (obj_check 16000/16000).
+
+**What the scene does** (`web/src/game/states/mesia.js`)
+- **Entry:** it clears a few player fields and recalculates stats. X is `$1B` at that call, because the dispatcher loads X from sub_state.
+- **Walk script (`19:BCB0`):** it reads 5-byte steps from a table at `19:BD59`. The player walks up 16, left 48, then three times "hold pose, spawn an object, walk right 32", one last hold and spawn, then left 48. The four spawned objects are type `$C2`, placed 24 pixels above the player in slots `$15-$18`. Slot 0 follows slot 1 at every step.
+- **Fly-out (`19:BD91`):** the four objects spread out over 16 frames and three of them are removed. The palette then flashes white 8 times while the last one moves down, and then it is removed too.
+- **Exit:** it rebuilds the palette and hands over to sub_state 7 (GiveItem) with slot `$1F` and parameter 4. GiveItem and the event that starts this scene (act 30 `EvActEnding`) were already ported.
+- **Wiring:** it is entry 27 in `states/play.js`, plus an `ENTRY_POINTS['19:BC6B']` entry so saved states load cleanly.
+
+**Results against tools.emu**
+- **At shift 0:** the spawns, sprite IDs, AIs and white flash rows are identical.
+- **One frame late (gap (c)):** the per-step position writes and the final sub_state 7 come right after a `WaitFrame`. tools.emu's row already includes them; the port shows them one frame later, because it has no CPU cycle model. The check accepts one of these cells only if the port's next row has the tools.emu value; 694 cells needed that.
+- **Skipped:** the last step of each loop (f2837, f2861), where the slot is cleared in the same slice, so the port never shows the late value.
+- **Flash rows:** on the 8 white flash rows tools.emu samples halfway through the palette rebuild, a value the port can't produce. On those rows the check only requires the port to show the all-white palette.
+- **RAM at f2861:** differs only in scratch bytes (`$10-$1C`), the stack, and bytes written right after the last vblank.
+- **Not matched:** the screenshots differ on tile rows 23–29 (the HUD). This is the known load-state HUD issue; I didn't confirm it is unrelated to this handler.
+- **Not compared:** play after GiveItem.
+
+**Files**
+- **New:**
+  - `web/src/game/states/mesia.js` and `web/test/mesia_check.mjs`.
+  - The reference `web/test/mesia_ref.csv`.
+  - The test state `web/test/states/mesia.json` (with `tools/emu/states/mesia.state`), exported from `town02_enter.state` with sub_state poked to `$1B`.
+- **Updated:**
+  - `states/play.js`.
+  - Five new labels in `labels.csv`: `MesiaScript`, `MesiaSpriteDraw`, `MesiaStepTable`, `MesiaSpawnFly`, `MesiaPalFlash`.
+  - REVERSE.md: substate row 27, a new Verification Log row "Mesia reunion", and the task note.
+  - `CLAUDE.md` and `docs/architecture_web.md`.
+- **Leftover:** the comparison runs wrote `gfx/compare/mesia/` and `gfx/compare/mesia_rd/`; you can delete them.
+
+The substates task stays open; next is 28 `SubstOutOfMp` (`30:CC17`).
+
+SESSION_SUMMARY: Session 150 — ported sub_state 27 SubstMesiaReunion 19:BC6B (states/mesia.js + mesia_check.mjs, 312/312 rows vs tools.emu; post-WaitFrame position writes one frame late (gap (c)), spawns and flashes at shift 0; 5 new bank-19 labels); next is 28 SubstOutOfMp.

@@ -1,0 +1,90 @@
+  ▶ ls; ls re_loop_sessions | tail -5; wc -l dead_ends.md REVERSE.md 2>/dev/null; ls disasm | head
+  ▶ Read dead_ends.md
+  ▶ tail -c 3000 re_loop_sessions/20261116_163435_session_028.txt; echo ----; tail -c 1500 re_loop_sessions/20261116_143140_
+  ▶ Grep "^## Next Tasks|^### |^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1038
+  ▶ ls tools docs; head -60 disasm/bank_30.asm; grep -c . labels.csv; grep '^\*' labels.csv | head -20
+  ▶ sed -n 80,120p disasm/bank_30.asm; grep -n "^def \|^class \|^[A-Z_]* = " tools/disasm_all.py | head -60; grep -n "^def "
+Working on the session's top task: writing `tools/ram_map.py` for the RAM map. Checking the disassembly line format now.
+  ▶ grep -n "STA\|LDA" disasm/bank_30.asm | sed -n 1,12p; grep -n "\.db" disasm/bank_30.asm | head -3; sed -n 60,100p tools/
+  ▶ Write ram_map.py
+  ▶ python3 tools/ram_map.py --unlabeled 3 > /tmp/unl.txt; head -1 /tmp/unl.txt; wc -l /tmp/unl.txt; grep -A40 "parallel arr
+  ▶ python3 tools/ram_map.py --unlabeled 3
+  ▶ sed -n '/parallel arrays/,$p' docs/ram_map.txt; grep -E '^\*,0(3|4|5|6)[0-9A-F]0,' labels.csv
+  ▶ Grep "stride" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/ram_map.txt
+  ▶ Grep "^\*,0[0-7][0-9A-F][0-9A-F]," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Tool works (612 addresses found, 118 labelled). Now checking REVERSE.md for already-documented meanings of the unlabeled object arrays before naming them.
+  ▶ for a in 03A0 03E0 0400 0420 0440 0460 0480 04C0 0500 0520 05A0 0600 0620 0640 0660 0680 06A0 06E0 0030 0011 0012 0020 0
+  ▶ Grep "\$(03A0|03E0|0400|0420|0440|0460|0480|04C0|0500|0520|05A0|0600|0620|0640|0660|0680|06A0|06E0)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "(03A0|03E0|0400|0420|0440|0460|0480|04C0|0500|0520|05A0|0600|0620|0640|0660|0680|06A0|06E0)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/dis.py 26 8FD0 0x30; echo; python3 tools/dis.py 26 9100 0x28; echo; python3 tools/dis.py 15 A4E0 0x18
+  ▶ Grep "\$(60[0-9A-F]{2}|61[05][0-9A-F]|642[4-7]|646[A-E]|647[045]|70[0F][0-5]|6[DE]00|7[DEF]00)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+I have enough context. Adding a label-emitter (curated names for documented object columns, slot-field names, auto names for scratch) to the tool.
+  ▶ Edit ram_map.py
+  ▶ Edit ram_map.py
+  ▶ Edit ram_map.py
+  ▶ Edit ram_map.py
+  ▶ Edit ram_map.py
+  ▶ python3 tools/ram_map.py --emit-labels 3
+Refining a few auto-names (gold/xp hi bytes, BG palette ids, story-flag bytes, and title/menu reuse of the object area) before appending.
+  ▶ Edit ram_map.py
+  ▶ Edit ram_map.py
+  ▶ python3 tools/ram_map.py --emit-labels 3 | grep -E "reuse|_s0E|gold_hi|story_flags_F" 
+Labels look right. Appending them to labels.csv and regenerating the map.
+  ▶ tail -c 200 labels.csv | od -c | tail -3 && python3 tools/ram_map.py --append-labels 3 && python3 tools/ram_map.py && py
+  ▶ Grep "stride" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/ram_map.txt
+  ▶ Read REVERSE.md +930
+Save-module notes identify `$70F0-$70F3` as save checksums and `$646B` b0 as the save slot — renaming those auto labels.
+  ▶ Grep "^\*,(70F[0-3]|646B|7000)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +728
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Now writing the RAM Map table into REVERSE.md `### Data Structures`.
+  ▶ Edit REVERSE.md
+Correction: `$71/$B1/$BD/$BE` are object x/y slots (e.g. `$B1` = player y lo), not plain zp. Fixing tool and labels.
+  ▶ Edit ram_map.py
+  ▶ Grep "^\*,00(7[1-3]|8[0-F]|B1|BD|BE)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +563
+  ▶ Read labels.csv +576
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/ram_map.py --emit-labels 3; python3 tools/ram_map.py
+Now marking the task done in Next Tasks and adding the output file to the outputs table.
+  ▶ Grep "catalog_manifest|Intermediate Output|^\| `gfx/boss_phases" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I finished the RAM map task (Ph5 structs 1/5) and marked it done in REVERSE.md. Everything comes from reading the disassembly, not from running the game. Nothing is committed.
+
+**New tool: `tools/ram_map.py` → `docs/ram_map.txt`**
+- It reads the full disassembly (`disasm/bank_NN.asm`) and counts every reference to RAM (`$0000-$07FF`) and WRAM (`$6000-$7FFF`). For each address it lists reads, writes, which index register is used, which banks touch it, and its label.
+- It also finds parallel arrays: bases accessed with the same index register at a fixed spacing.
+- It found **612 addresses** in use. 118 had labels before; **364 do now**. I added 246 labels, one for every address with 3 or more references.
+- About half the new labels are placeholder names (`tmp_XX`, `zp_XX`, `ram_XXXX`, `wram_XXXX`). Each has a comment with its read/write counts and banks so a later session can rename it.
+
+**What the map shows**
+- **Object table:** the 4 position arrays at `$70-$EF` and 30 arrays from `$0300-$06BF`, plus `$06E0`. Each holds one byte per object for 32 objects (slot 0/1 = player).
+- **Newly named object fields:** I named 14 of them from behaviour already written up in REVERSE.md, for example:
+  - `obj_attack` `$03E0` and `obj_defense` `$0400`
+  - `obj_timer` `$0480` and `obj_death_type` `$04C0`
+  - `obj_elem_drop` `$0500`: low half is element bits, high half is the gold-drop class
+  - `obj_phase` `$0600` and `obj_param1/2` `$0680/$06A0`
+  - Slot-specific references get names like `obj_flags_s01`, and `$71`/`$B1` are the player's x/y.
+- **Still unknown:** four object fields (`$03A0`, `$05A0`, `$0640`, `$0660`). They are left for the next object-struct task.
+- **Sound driver:** it keeps 18 small arrays at `$0114-$017F`, 6 bytes apart (one entry per sound channel), used only in bank 24.
+- **Save data:**
+  - `$70F0-$70F3` are the two save slots' checksum bytes.
+  - `$646B` bit 0 is the save slot picked in the menu.
+  - `$7000` is set to one value while the menu Save command runs and another when it exits.
+- **Title/menu reuse:** the title and menu code (banks 17-19) uses `$72-$8F` and `$0600-$06FF` while the object table is cleared. References only from that code got plain `zp_`/`ram_` names instead of object-slot names.
+
+**REVERSE.md:** I added a "RAM Map" table under `### Data Structures`, an entry for the new output file, and the task note.
+
+**Checks:** the disassembler now shows the new names (e.g. `ADC obj_attack,X`, `SBC obj_defense,Y` at `26:9108`). A re-run with `--emit-labels 3` lists nothing left unlabelled. Two caveats:
+- The `.asm` files still show the old names until `disasm_all.py` is re-run.
+- The spacing-6 sound arrays are below the spacings the scan checks (`$10/$20/$40`), so I spotted those by hand.
+
+SESSION_SUMMARY: Session 29 — Ph5 structs 1/5 done: `tools/ram_map.py` → `docs/ram_map.txt` (612 RAM/WRAM addresses, labelled 118 → 364 with 246 new labels), RAM Map table in REVERSE.md Data Structures (object table with 14 newly named fields, sound per-channel arrays `$0114-$017F`, save checksums `$70F0-$70F3`, title/menu reuse of object RAM).

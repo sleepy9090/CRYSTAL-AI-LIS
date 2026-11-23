@@ -1,0 +1,66 @@
+  ▶ ls re_loop_sessions/ | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### \|- \[ \]" REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*06[1-4].txt && tail -c 2500 re_loop_sessions/20261117_205123_session_063.txt
+  ▶ Grep "F3B6|NmiHandler|F421|NMI mode|nmi_mode|\$51" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 141p REVERSE.md | cut -c1-3000; echo ----; sed -n 329p REVERSE.md | cut -c1-2500; echo ---; grep -n "NMI mode\|Nm
+  ▶ grep -n "F6C2\|C67D\|PpuQueueFlush\|F8CB\|PaletteUpload\|irq_mode" REVERSE.md | cut -c1-400 | head -30; grep -in "F6\|F7
+Picked the top task: tracing the NMI fully. The top-level NMI is already documented, so I'm decoding the gaps: the `irq_mode` table `31:F6C2` (modes 0-9) and `PpuQueueFlush` `30:C67D`.
+  ▶ python3 tools/dis.py 31 F6AD 0x160 && python3 tools/decode_tables.py F6C2 10 w 2>&1 | head -20
+  ▶ python3 tools/dis.py 30 C67D 0x80 --stop; python3 tools/dis.py 31 F883 0x48 --stop; python3 tools/dis.py 31 F64F 0x40 --
+  ▶ python3 tools/dis.py 30 C6E7 0x30 --stop; grep -n "C676\|C482\|ppu_queue\|tmp_0A\|tmp_0B\|^\*,5[0-9A-F]\b\|^\*,57" label
+  ▶ python3 tools/dis.py 30 C719 0x20 --stop; python3 tools/search_bytes.py "85 51" | head -60
+  ▶ grep -n "^def " tools/nesrom.py | head -30
+  ▶ sed -n 1,60p tools/nesrom.py
+Writing a small tool to list every `irq_mode` write with the value stored.
+  ▶ Write zp_writers.py
+  ▶ sed -n 61,95p tools/nesrom.py
+  ▶ python3 tools/zp_writers.py 51
+  ▶ python3 tools/dis.py 31 FDF0 0x34 | grep -v "^$"; python3 tools/dis.py 30 D360 0x18; python3 tools/dis.py 30 D89A 0xC; p
+  ▶ python3 tools/dis.py 31 FDF0 0x34 && python3 tools/dis.py 30 D360 0x18 && python3 tools/dis.py 30 D89A 0xC && python3 to
+  ▶ grep -n "F433\|IrqHandler\|F451\|^30,C000\|DelayX" labels.csv | head -20; python3 tools/dis.py 31 F424 0x31
+  ▶ python3 tools/dis.py 31 FE25 0x14 --stop && python3 tools/dis.py 30 C176 0x8 --stop && python3 tools/xref.py FE01 && pyt
+Mode 4's two setters have no direct callers; checking for pointer references before writing up.
+  ▶ python3 tools/search_bytes.py "20 01 fe" ; python3 tools/search_bytes.py "4c 18 fe"; python3 tools/search_bytes.py "20 1
+  ▶ python3 tools/dis.py 30 DA6C 0x10 && python3 tools/dis.py 30 DA08 0x10 && grep -n "FE01\|FE18\|FE17\|FDFE" labels.csv
+Found something: `ShopWalkIn`/`ShopWalkOut` call `$FE00`/`$FE17`, which are bare `RTS`s placed right before the two `irq_mode`=4 bodies, so mode 4 is a disabled shop-door effect. Writing it up now.
+  ▶ Read REVERSE.md +329
+  ▶ Edit REVERSE.md
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now labels, the task tick, and the tool table entry.
+  ▶ grep -n "^31,F6D6\|^31,F731\|^31,F751\|^31,F771\|^31,F782\|^31,F7B5\|^31,F7C5\|^31,F7DB\|^30,C6E7\|^31,FE0\|^31,FE1\|^31
+  ▶ Grep "^(31,(F6D6|F731|F751|F771|F782|F7B5|F7C5|F7DB|FE0|FE1|F6C2)|30,(C67D|C6E7))" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -c 300 labels.csv | od -c | tail -3
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ tail -n 1 labels.csv
+  ▶ Read labels.csv +1
+  ▶ Edit labels.csv
+Labels added. Verifying they load, then ticking the task.
+  ▶ python3 tools/dis.py 31 FE00 0x3 --stop && python3 tools/dis.py 30 DA72 3 --stop
+  ▶ Edit REVERSE.md
+  ▶ Grep "tools/emu/probe_screens.py`, `tools/pixel_peek.py" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I traced the rest of the NMI (`31:F3B6`-`F421`) and marked the task done. This was all done by reading the disassembly; I didn't check any of it in the emulator. The top-level NMI was already documented, so this session filled in what was missing.
+
+**What I found**
+- **PPU update queue (`30:C67D`):** each queue entry is 4 bytes: address high, address low, length, and the source offset in `$6000`.
+  - Bit 6 of the address high byte makes the PPU write down a column instead of across a row.
+  - Bit 7 of the high byte tells it to send the next entry in the same NMI. Without that bit, only one entry goes out per NMI.
+  - If the length byte has bit 7 set, it copies 64 attribute bytes from `$6100` instead (`30:C6E7`).
+  - After an entry is sent, its source byte is set to `$FF`.
+- **Bit 7 of `irq_mode` (`$51`)** only stops the palette upload; the NMI mode still runs. Mode 8 has no entry in the table, so `irq_mode`=8 would crash, but nothing ever sets it.
+- **All 10 NMI modes** now have a table in REVERSE.md. For each mode it lists where the scroll and CHR banks come from, which IRQ split it sets up and at which line, whether the sound driver runs from the NMI, and every place that sets the mode. To find the setters I wrote a small new tool, `tools/zp_writers.py`.
+- **Mode 4 is dead code.** It was a shop-door graphics effect (`31:FE01` opens, `31:FE18` closes). The shop entry and exit routines call the `RTS` bytes just before each one (`31:FE00` and `31:FE17`), so the effect never runs. Mode 4 also writes to `$F451`, which the cartridge mapper treats as "IRQ on". That's harmless, because the next instruction turns the IRQ on anyway.
+- IRQ handlers 3 and 5 aren't set up by any NMI mode, so they can only be reached from another IRQ handler. I left the IRQ handler bodies for the next task in the list.
+
+**Files changed**
+- `REVERSE.md`: new "NMI tail in full" section with the mode table, the task marked done, the `31:F6C2` table noted as decoded in the leftovers task, and the new tool added to the tools table.
+- `labels.csv`: 11 new labels. The disassembler loads them.
+- `tools/zp_writers.py`: new.
+
+Nothing was committed.
+
+SESSION_SUMMARY: Session 64 — traced the NMI tail (static only): PPU queue entry format (chain bit, column writes, 64-byte attribute copy, one entry per NMI), `irq_mode` b7 only skips the palette upload, mode 8 would crash; documented all 10 NMI modes with their IRQ splits, sound rule and setters (new `tools/zp_writers.py`); found that mode 4 is a disabled shop-door effect (`31:FE01`/`FE18`) bypassed by `RTS` stubs; 11 labels added.

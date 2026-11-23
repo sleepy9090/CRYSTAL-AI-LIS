@@ -1,0 +1,89 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; gr
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions; wc -c *session_17[4-7].txt; tail -c 2500 20261122_
+  ▶ Grep "fan.turret|fan turret|skip their AI" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n -o ".\{300\}fan.turret.\{400\}" REVERSE.md | head -20; grep
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls tools/ | head -100; python3 tools/area_dump.py --help 2>&1 | hea
+Picking the fan-turret frame check (the remaining concrete item in the top task). Finding which areas place fan-turret types `$5D`/`$77`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,40p tools/area_dump.py | head -40; python3 tools/enemy_cat
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/enemy_catalog.py 2>/dev/null | head -5; python3 tools
+  ▶ Read REVERSE.md +230
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "obj_fan\|def spawn_obj\|'spawn'" tools/emu/scenario.py | h
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 190,215p tools/emu/scenario.py; sed -n 485,505p tools/emu/sc
+  ▶ Read kill_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,40p tools/web_state_compare.py; sed -n 1,30p tools/emu/sce
+Exporting an `obj_fan` scenario state and diffing tools.emu vs the port over the turret's attack frames.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.scenario_state obj_fan 12 --out web/test/state
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 40,80p tools/web_state_compare.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/fanturr
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/fanturr
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_cols.py 2>&1 | head -5; python3 tools/csv_cols.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "_ai\|_x'\|def columns" tools/emu/compare.py | head; grep -
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_cols.py gfx/fanturret/emu.csv gfx/fanturret/web.c
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_cols.py gfx/fanturret/emu.csv gfx/fanturret/web.c
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_active.py gfx/fanturret/emu.csv 2>&1 | head -40
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/ram_watch.mjs web/test/states/fanturret.json 90 064F,
+  ▶ Read scenario.py +676
+Adding a `fan_skip` scenario: fan turret in slot `$0F` plus a moving dasher in slot `$1C`, so the skipped AI frame becomes visible in object positions.
+  ▶ Edit scenario.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.scenario_state fan_skip 12 --out web/test/stat
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/ram_watch.mjs web/test/states/fanskip.json 230 064F 2
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_cols.py gfx/fanskip/emu.csv gfx/fanskip/web.csv o
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/ram_watch.mjs web/test/states/fanskip.json 230 061C,0
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/ram_watch.mjs web/test/states/fanskip.json 180 04FC,0
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu --help 2>&1 | grep -E "state|watch|frames" | h
+Confirming the same skipped frame on the tools.emu side.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu --load-state tools/emu/states/fanskip.state --
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_cols.py gfx/fanskip/emu.csv gfx/fanskip/web.csv s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_cols.py gfx/fanskip/emu.csv gfx/fanskip/web.csv s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,15p tools/csv_trim.py; head -1 gfx/fanskip/emu.csv | cut -
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_trim.py gfx/fanskip/emu.csv web/test/fanskip_ref.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_trim.py gfx/fanskip/emu.csv web/test/fanskip_ref.
+Writing `web/test/fanskip_check.mjs` (210 rows at shift 0, plus explicit checks on the skipped frame).
+  ▶ Write fanskip_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/fanskip_check.mjs
+  ▶ Read ai_static.js +15
+Negative test: temporarily drop the pop (line 45 → `aiShootCheck(m, x); return false;`) to see the check catch it.
+  ▶ Edit ai_static.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/fanskip_check.mjs | tail -4
+  ▶ Edit ai_static.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/run_checks.py 2>&1 | tail -40
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +1165
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "incl. the fan-turret frame where later slots skip their AI
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "Verification Log" REVERSE.md | head -3; grep -n "s176\|ses
+  ▶ Read REVERSE.md +206
+Adding the Verification Log row, CLAUDE.md entry, and labels.
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n -i "^27,B5D3\|^27,B595\|^27,B714\|^27,B448\|^30,CD28" label
+I checked the fan-turret frame against tools.emu: the port reproduces it and needed no code change. This was the concrete item left in the top unchecked task, the low-priority Ph7 boss-AI leftovers.
+
+**The quirk.** The fan turret's idle routine (`27:B5D3`) jumps into `AiShootCheck` instead of calling it. So when that check starts an attack, its "skip the caller" step drops `ObjUpdateAll`'s return address instead. `ObjUpdateAll` then returns early, and slots `$10-$1E` get no AI update on that frame.
+
+**How I checked it**
+- **New scenario `fan_skip`** in `tools/emu/scenario.py`: area `$03`, a fan turret in slot `$0F` and a dasher in slot `$1C`. The dasher's `obj_phase` (`$061C`) counts down by 1 every frame, so a skipped AI frame shows up in it.
+- **Both runs skip the same frame.** The attack starts at f2679 in tools.emu and in the port. On that frame `$061C` holds at `$0A` and steps again at f2680, in both.
+- **New check `web/test/fanskip_check.mjs`**, with state `web/test/states/fanskip.json`. All 210 frames (f2509-2718) match at shift 0, sound columns included, plus explicit checks on the attack frame and the skipped step.
+- **The check catches the bug.** With the skip removed from `aiFanTurret`, it fails from f2680, where slots `$10` and `$1C` end up 1 px off. I put the code back afterwards.
+- **Full suite:** 30 of 31 checks pass. `world_check` still fails for areas `$3C`, `$3D` and `$BC`, the failure already logged as gap (j).
+
+**New differences found.** The turret's shot knocks the player into area `$02`'s exit, and that entry differs from tools.emu from f2719 on. I stopped the check at f2718 and wrote these into the same task, which stays unchecked:
+- On four mid-fade frames tools.emu shows a palette the port never has.
+- The music change and the object clear come one frame late in the port, at f2729.
+- The player's `pos_y` differs on f2730-2736.
+
+Also still open in that task: save-state scenarios for each enemy group.
+
+**Files**
+- New: `web/test/fanskip_check.mjs`, `web/test/fanskip_ref.csv`, the `fanskip` states in `web/test/states/` and `tools/emu/states/`.
+- Edited: `tools/emu/scenario.py`. In REVERSE.md, the turret's row in the AI table, a Verification Log row and the task text. CLAUDE.md lists the new check.
+- `labels.csv` is unchanged; the addresses involved were already labelled.
+- Two scratch states from a first attempt are still there, because deleting them needed approval: `web/test/states/fanturret.json` and `tools/emu/states/fanturret.state`. You can remove them.
+
+Nothing is committed.
+
+SESSION_SUMMARY: Session 177 checked the fan-turret frame against tools.emu with the new fan_skip scenario: both runs skip slot $1C's AI on the attack-start frame f2679, the new fanskip_check.mjs passes 210/210 rows at shift 0 including sound and fails when the skip is removed, 30/31 checks pass (world_check is the known gap (j)), and the area-$02 entry differences found from f2719 are logged in the still-open low-priority task.

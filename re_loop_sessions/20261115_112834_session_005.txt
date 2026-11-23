@@ -1,0 +1,35 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*}
+  ▶ Grep "^## Next Tasks" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read 20261115_112834_session_005.txt
+  ▶ Grep "^## |^- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +29
+  ▶ python3 tools/dis.py 28 800E 200
+  ▶ python3 tools/dis.py 28 80D6 344 && python3 tools/decode_tables.py 28:83D8 4 u8 && python3 tools/decode_tables.py 28:83D
+Tracing bank 28's `$800E` sprite pass. Main loop and the ring effect are decoded; next I'll write them up, then decode the per-object metasprite drawer at `$822E`.
+  ▶ python3 tools/dis.py 28 822E 430 | head -150 && python3 tools/decode_tables.py 28:83DC 128 hex32
+Write-up so far: object table + metasprite format. Let me see the rest of the entry emitter.
+  ▶ python3 tools/dis.py 28 834B 141
+  ▶ Grep "^(28,|\*,(70|90|B0|D0|4A0|4E0|300|320|340|360|380|580|5C0|5E0|6C0|6C1|7EF|7FF|710|02|03|04|05|08),)" labels.csv
+  ▶ tail -5 labels.csv && grep -n "scroll_shadow0\|jmp_trampoline" labels.csv
+Now writing labels and the REVERSE.md section.
+  ▶ Read labels.csv +30
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+Quick correction — I mislabeled the example addresses (id 0 is `$868E`, the `FF C0 86` redirect is id 3 at `$86F2`).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I've traced the bank 28 `$800E` object sprite pass and marked that task done in `REVERSE.md` (new section "Object sprite pass"). All of this comes from reading the disassembly; nothing has been checked in an emulator yet.
+
+- **Object table:** there are 32 object slots. Each slot's fields live in parallel arrays: position at `$70/$90` (X low/high) and `$B0/$D0` (Y low/high), plus an active flag, sprite id, tile offset, flags, animation counter, an overlay sprite id, and the computed screen X/Y. The flags byte at `$0380` has 7 bits worked out, including "draw behind background", "flicker every other frame" and "offscreen".
+- **Draw order:** each frame, `$07FF` is decremented and its low two bits pick one of 4 fixed 32-slot orderings at `28:83DC`. It is not a simple rotating start slot, as the old label said. OAM sprite 0 is never used here, and unused OAM entries are hidden at the end.
+- **Sprite data format:** each sprite record is: sprite count, frame mask, then per-frame lists of 4-byte entries (x offset, y offset, attributes, tile). The current frame is the animation counter divided by 8, masked. Pointer tables are at `28:845C` (ids `$00-$7F`) and `28:855C` (ids `$80-$FF`). A record starting `FF lo hi` draws another record mirrored left-right, which is how facing variants are stored. An x offset of `$80` ends a frame early. Attribute bit 2 marks lower-body parts that get hidden when the object is sinking (flag bit 6).
+- **Object 1 is the player:**
+  - its sprites flash to palette 0 when `$0710` bit 7 is set (likely damage);
+  - an 8-sprite ring is drawn around it: either an orbit driven by `$06C0` and a sine table at `28:81BA`, or a burst countdown on `$06C1`.
+
+I also found one piece of dead code: a value derived from `$0340` bit 7 is computed but never read.
+
+About 30 labels were added to `labels.csv`. I added one follow-up task: a `tools/meta_dump.py` that renders all 256 sprite ids. It will need to know which CHR banks are loaded for sprites at draw time. Nothing was committed.
+
+SESSION_SUMMARY: Session 9 decoded `28:800E` ObjSpriteDraw: 32-slot object table at `$70`/`$90`/`$B0`/`$D0`/`$0300`-`$0380`/`$04A0`/`$04E0`, 4 draw-order tables, sprite record format (count/mask/frames, `FF` mirrored redirect, `$80` end marker, attr bit 2 half-hide), object 1 = player with hit flash and orbit/burst ring; labels and `REVERSE.md` updated.

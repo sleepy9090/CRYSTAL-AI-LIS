@@ -1,0 +1,124 @@
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +815
+  ▶ for f in re_loop_sessions/*_01[89].txt re_loop_sessions/*_020.txt; do echo "== $f"; tail -c 1200 "$f"; done; ls tools; g
+  ▶ tail -c 1000 re_loop_sessions/20261115_175121_session_018.txt; tail -c 1000 re_loop_sessions/20261115_175121_session_019
+  ▶ Read REVERSE.md +50
+  ▶ Read nesrom.py
+  ▶ Write filler_scan.py
+Wrote `tools/filler_scan.py` for the top task (stale-copy filler scan); running it now.
+  ▶ time python3 tools/filler_scan.py --out gfx/filler_scan.txt
+The tools directory's `dis.py` shadows the stdlib module that argparse needs; switching to manual argument parsing like the other tools.
+  ▶ Edit filler_scan.py
+  ▶ Edit filler_scan.py
+  ▶ time python3 tools/filler_scan.py --out gfx/filler_scan.txt
+Scan runs in 0.2s and finds 32 content runs. Fixing the label match to use in-bank offset (banks 22/23 are mapped at non-default windows), then I'll judge which side of each pair is the live copy.
+  ▶ sed -n 1,40p tools/xref.py; grep -n "^def " tools/xref.py
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Grep "[Ss]tale|filler" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Bank 22/23 text is mapped at `$A000`, so I'll add a window override and a rough reference count per side (abs-mode operands + pointer words pointing into the run) to tell live from stale.
+  ▶ Edit filler_scan.py
+  ▶ Edit filler_scan.py
+  ▶ python3 tools/filler_scan.py --pad --out gfx/filler_scan.txt
+  ▶ ls gfx/ && head -c 600 gfx/text.json; echo; grep -n "^def \|argv" tools/text_dump.py | head -30
+  ▶ sed -n 82,140p tools/text_dump.py; grep -o '"addr": *"[^"]*"' gfx/text.json | head -3
+Adding a text-coverage check: bytes covered by a decoded message span (`gfx/text.json`) are live on that side.
+  ▶ Edit filler_scan.py
+  ▶ Edit filler_scan.py
+  ▶ Edit filler_scan.py
+  ▶ python3 tools/filler_scan.py --pad --out gfx/filler_scan.txt | head -36
+Surprising hits: `30:C8C0-C8FF` and `31:F9BA-F9FF` (fixed banks) match live bank 22/23 text. Checking those and the `20:8899` frame-template overlap.
+  ▶ python3 tools/dis.py 30 C8A8 0x20 | tail -8; echo ---; python3 tools/xref.py 30:C8C0 --data | tail -3; python3 tools/dis
+Confirmed: `30:C8C0-C8FF` and `31:F9BA-F9FF` are stale text sitting right after an `RTS` in the fixed banks. Now the bank 20 frame-template area and the non-text pairs.
+  ▶ grep -n "8899\|889[0-9A-F]\b\|88A[0-9A-F]" REVERSE.md | head; python3 tools/xref.py 20:8899 --data --imm | tail -4; pyth
+  ▶ for a in "27 BE30" "13 BBA4" "15 BBA4" "17 B888" "19 B888" "16 9FA4" "24 9FA4" "18 9F84" "23 BE22" "31 FE22"; do echo "=
+  ▶ python3 tools/dis.py 27 BE30 0x18; python3 tools/dis.py 13 BBA4 0x18; python3 tools/dis.py 15 BBA4 0x18; python3 tools/d
+These are data, not code. `27:BE40` is text (stale copy of bank 21). Checking whether the bank 13 area records (live via `AreaPtrTable`) cover the 13/15 and 05/13 runs.
+  ▶ head -5 gfx/area_spawns.txt; grep -n "^def \|usage\|argv\[" tools/area_dump.py | head -20
+  ▶ Grep "^\s+\d+ \$..  (B[89A-F]|A[3B]).." /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/area_spawns.txt
+  ▶ python3 tools/area_dump.py list > /tmp/areas.txt; awk '{print $3}' /tmp/areas.txt | sort | tail -5; awk '{print $3}' /tm
+  ▶ Grep "^\s+\d+ \$[0-9A-F]{2}\s+[AB][0-9A-F]{3}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/area_spawns.txt
+Area records stop around `13:A9xx`, so they don't reach these runs. Checking `ObjTypeTable` (`13:AC00`) extent and bank 13/15 consumers.
+  ▶ head -4 gfx/objtypes.txt; grep -n "^1[35]," labels.csv | sort -t, -k2 | tail -25
+  ▶ Grep "^(5|13|15|9|11|7|17|19|16|24|18),[AB]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read objtypes.txt
+  ▶ Grep "@B[A-F]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+ObjType records reach `13:BBBE`/`13:BBFD`, so bank 13 is the live side of the 13/15 `BBAF` run. Checking how far ObjType records extend and the remaining pairs.
+  ▶ Grep "@(B[C-F]|A[0-B])" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ python3 tools/dis.py 13 BE80 0x14; python3 tools/dis.py 15 A3B0 0x14; python3 tools/dis.py 15 BF88 0x12
+  ▶ Grep "@B[D-F]|@BC[B-F]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/objtypes.txt
+  ▶ python3 tools/xref.py 15:A3C0 --data | tail -2; python3 tools/xref.py 15:BF97 --data | tail -2; python3 tools/xref.py 13
+  ▶ python3 tools/xref.py 13:ABA3 --data | tail -1; python3 tools/dis.py 23 BE20 0x10; python3 tools/dis.py 31 FE20 0x10; py
+`16:9FB0-9FFF` follows an `FF` terminator and matches bank 24 sound-stream bytes, so bank 16 is the stale side. Checking `31:FE2E-FE7F`, the 09/11/07 group, 17/19 and 18/20/22.
+  ▶ python3 tools/dis.py 31 FE30 0x50 | grep -v "ff        .db \$FF"; python3 tools/xref.py 31:FE60 --data | tail -1; python
+  ▶ python3 tools/dis.py 31 FE60 0x20; python3 tools/xref.py 11:BEE0 --data --all | tail -3; python3 tools/xref.py 9:BEE0 --
+  ▶ Grep "BE00|BCFA|bank 9 .\$B|11:B|bank 11" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Bank 9's `$BE00` substitution tables (32 B per tileset, up to `BFDF`) cover `09:BEE0-BFFF`, so bank 9 is live. Checking the bank 7/9/11 `BF80` triple and the bank 11 side.
+  ▶ python3 tools/decode_tables.py 9:BF80 8 bytes16 2>&1 | head -12; python3 tools/decode_tables.py 11:BCC0 4 bytes16 2>&1 |
+  ▶ python3 tools/decode_tables.py 2>&1 | head -15
+  ▶ python3 tools/decode_tables.py 9:BEE0 9 hex32; python3 tools/decode_tables.py 11:BCC0 4 hex32; python3 tools/decode_tabl
+  ▶ python3 tools/area_dump.py sub --out /tmp/sub.txt; python3 tools/area_dump.py sub 1 2>&1 | head -20
+  ▶ Grep "\$67=[0-9A-F]{2}" /tmp/sub.txt
+  ▶ Grep "\$67=([37BF]|[26AE][4-9A-F])" /tmp/sub.txt
+  ▶ Grep "\$67=[B-F]" /tmp/sub.txt
+  ▶ Grep "quadrant|\$67&\$FC|MetatileQuad" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/decode_tables.py 31:EEEF 16 ptr16 --per-line 8; python3 tools/decode_tables.py 9:BCF0 2 hex16
+Attribute tables only use `9:B000-B2FF`, and bank 11 has pointer-looking records right before `BCFA`. Checking whether area sub-table pointers reach `11:BCFA-BDFF`.
+  ▶ Grep "header B[C-F]|ptrs .*B[CD][0-9A-F]{2}" /tmp/sub.txt
+The last area sub-table record (area `$5F`) ends at `11:BCF9`, so `11:BCFA+` is filler after it. Next: `18/20/22 9F90`, `17/19 B895` and `21/23/27 BF30`.
+  ▶ python3 tools/decode_tables.py 18:9F80 8 hex16; python3 tools/xref.py 18:9F90 --data | tail -2; python3 tools/decode_tab
+  ▶ python3 tools/xref.py 18:9FC2 | tail -2; python3 tools/xref.py 18:9F85 --data --imm | tail -2; python3 tools/decode_tabl
+  ▶ python3 tools/search_bytes.py "30 31 32 33 34 35 36 37 38 39 3A 3B 3F 21 22 26"; python3 tools/search_bytes.py "CE FE 06
+  ▶ python3 tools/xref.py 18:9E5A | tail -3; python3 tools/xref.py 19:ABA1 | tail -3; python3 tools/decode_tables.py 18:9E50
+  ▶ python3 tools/dis.py 19 AB98 0x14; python3 tools/dis.py 18 9F40 0x48 | tail -30
+  ▶ python3 tools/decode_tables.py 18:9EF0 3 hex16; python3 tools/search_bytes.py "B9 ?? 9F" --context 0; python3 tools/sear
+  ▶ python3 tools/search_bytes.py "A9 9F" --context 0; python3 tools/search_bytes.py "A9 9E" --context 0
+I have enough to classify every run. Encoding the verdicts in the tool as a machine-readable `DEAD` list (so `disasm_all.py` can import it) and printing a verdict section.
+  ▶ Edit filler_scan.py
+  ▶ Edit filler_scan.py
+  ▶ python3 tools/filler_scan.py --pad --out gfx/filler_scan.txt | sed -n '/verdicts/,/^live 09/p'
+  ▶ python3 tools/filler_scan.py --pad --out gfx/filler_scan.txt > /dev/null && echo ok
+  ▶ Grep "^(# \d+ dead|live)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/filler_scan.txt
+Tool output is done: 25 dead ranges, 4164 bytes. Now updating REVERSE.md and labels.csv.
+  ▶ Read REVERSE.md +338
+  ▶ Read REVERSE.md +754
+Now the REVERSE.md edits: fix the `20:8466-8527` claim, add a filler table to the Data-Range Map, add the tool to the outputs list, and mark the task done.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding labels for the dead ranges and the character grid.
+  ▶ Grep "^(20,8466|21,BF32|31,FDE0|30,C8C0|31,F9BA|18,9F0|18,9E5A)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 30 C8BC 8
+Labels load correctly. Adding the one leftover (the grid's reader and the `9:B300-BDFF` region) as a single low-priority task at the end of the RE list.
+  ▶ Edit REVERSE.md
+I finished the top task, the stale-copy filler scan. The new tool `tools/filler_scan.py` finds 32 runs of real content that are byte-identical between two banks at the same in-bank offset, plus 18 runs of plain padding. It runs in 0.2 s and writes `gfx/filler_scan.txt`.
+
+**The verdicts are mine, not the tool's.** I added a column counting references into each run, but it's too noisy to decide anything. It even scored the already-known stale copy at `20:8466` the wrong way round. So I judged each run by hand, using decoded-text coverage, known table ends, xrefs and code boundaries. The result is **25 dead ranges (4164 bytes)**, stored as a `DEAD` list in the tool so the full-ROM disassembler task can treat them as data.
+
+**New findings:**
+- **Leftover text inside the two fixed banks.** `30:C8C0-C8FF` sits between an `RTS` and MainLoop, and `31:F9BA-F9FF` follows an `RTS`. Both are copies of dialogue from banks 22 and 23.
+- **Leftover code:** `18:9FC2-9FFF` has the same bytes as live code at `19:ABA1`, and nothing references it.
+- **Unused substitution tables:** no area uses a tileset above `$AC`, so the tables from `9:BF80` on are never selected. Those bytes are a copy of bank 7's last screen page.
+- **Other dead tails:** bank 13's tail (after the last object-type record, which ends at `BE90`), bank 15's copies of bank 13 data, bank 11's copies of bank 9, bank 16's copy of bank 24 sound data, and four more stale text blocks in bank 20.
+- **Correction:** the session-12 note said the stale text at `20:8466` ran to `8527`. It ends at `84FF`, because `20:8500` is live code.
+- **Not filler:** the bank 8/9 matches are two similar tilesets that share rows; both copies are live.
+
+**Two things are still open,** added as one low-priority task at the end of the list:
+- I found no reader for a character grid at `18:9F05-9FC1` (A–Z, a–z, digits, punctuation). It may be read through a pointer, or it may be dead too.
+- `9:B300-BDFF` is the live source of bank 11's copy, but nothing known reads it either.
+
+**Updated:**
+- REVERSE.md:
+  - a "Stale-copy filler" table under the Data-Range Map
+  - the `20:8466` correction
+  - the tool entry
+  - the task marked done
+- labels.csv: 25 new labels, which `dis.py` picks up.
+
+`argparse` fails on this machine's Python 3.14 because `tools/dis.py` shadows the standard `dis` module. The new tool parses its arguments by hand, and any future tool will need to do the same.
+
+SESSION_SUMMARY: Session 21 — stale-copy filler scan: new tools/filler_scan.py (same-offset identical runs across all bank pairs, with text coverage and ref hints) → gfx/filler_scan.txt; 32 content + 18 padding runs judged by hand into 25 dead ranges (4164 B) in filler_scan.DEAD, tabled under the Data-Range Map; new finds: stale text in fixed banks 30:C8C0/31:F9BA, stale code 18:9FC2, substitution tables k≥12 (9:BF80+) unused, 20:8466 filler ends at 84FF; 25 labels; NameCharGrid 18:9F05 reader and 9:B300-BDFF left as one low-priority task.

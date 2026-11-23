@@ -1,0 +1,95 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -3; wc -l dead_ends.md REVERSE.md; grep 
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +1852
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^- \[ \]" REVERSE.md | head -5; tail -c 3000 re_loop_sessi
+  ▶ Read REVERSE.md +1975
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "NtRectBlit\|render_rects\|visited\|62FF" REVERSE.md | head
+Working on task "Ph4 background leftovers" (top unchecked). First sub-item: finding the unmatched `NtRectBlit` caller.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/xref.py 81F0 2>&1 | head -50; python3 tools/render_re
+Every JSR maps to a listed blit except `19:A82A`. Disassembling around it.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 A7FC 0x70
+The odd caller: `19:A80F` — pointer word `19:B162`, with `$06FE`=0 and `cam_y`=0 stored between the setup and the JSR (breaks the pattern). Checking the data and the follow-up calls.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 19:B162 4 u8 2>&1 | head; grep -in "
+Data: W=30 H=3 at `19:B164`, ending exactly at the next record's pointer `19:B1C0`. Checking which step this is and what the text contains.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -in "A7FC\|A843\|,82FD\|,82B3" labels.csv; grep -n "A7FC\|A843
+ASCII caption: row 0 "1997, October 1,", row 2 "The END DAY" — the intro's opening date card. Finding its dispatch entry.
+  ▶ Grep "A7FC|A843|\$82FD|\$82B3" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm
+  ▶ Read bank_19.asm +1125
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 18 82B3 0x0B; python3 tools/dis.py 18 82FD 0x4
+Step 2 of the opening (`sub_19_A7F6`) is the date card. Now fixing `render_rects.py` so it matches this site — reading its matcher.
+  ▶ Grep "def |81F0|NtRectBlit|STA \$8E|0x85, 0x8e|0x8E|screen_starts|STARTS|SCREENS" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/render_rects.py
+  ▶ Read render_rects.py
+Extending the blit pattern to allow simple `LDA #`/`STA` filler before the JSR, and sorting each blit at its JSR so in-between stores (`$06FE`=0 here) apply first.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cp gfx/rects/index.txt /tmp/rects_index_before.txt; ls gfx/rects | 
+  ▶ Glob gfx/rects/*
+  ▶ Grep "screen_19_A7FC|gfx/rects|rects/index" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+Applying the edit to `render_rects.py`.
+  ▶ Edit render_rects.py
+  ▶ Edit render_rects.py
+  ▶ Edit render_rects.py
+  ▶ python3 tools/render_rects.py | sed -n '1,40p'
+All 32 sites matched; 15 screens. Viewing the new date-card render.
+  ▶ Read screen_19_A7FC.png
+Date card renders correctly. Now sub-item 2 (palette per page): checking what the opening steps after each page setup do with palettes.
+  ▶ python3 tools/dis.py 19 A8A6 0xB0
+Step 8 (`19:A92D`) flashes the page between BG sets 0/1 every 2 frames for `$78` frames. Checking `82F1` and the other pages' palette steps.
+  ▶ python3 tools/dis.py 18 82F1 0x0C; python3 tools/dis.py 19 AA05 0x4C; python3 tools/dis.py 19 AAA7 0x4C; python3 tools/d
+Opening palette flow is clear. Checking which rendered groups contain no `MenuPalLoad` of their own (those inherit a stale set, like `19:A95E`).
+  ▶ sed -n '41,80p' gfx/rects/index.txt
+Adding `MenuPalLoad` events to the index log so every group shows its palette loads.
+  ▶ Edit render_rects.py
+  ▶ python3 tools/render_rects.py --list | grep -v " blit \| NtFill "
+Only `19:A95E` lacks its own load. Checking whether `A95E` and `A9B3` are the same step function (no RTS between).
+  ▶ python3 tools/dis.py 19 A953 0x0B; python3 tools/dis.py 19 A9A0 0x14; python3 tools/dis.py 19 AE20 0x20; python3 tools/d
+  ▶ Edit render_rects.py
+  ▶ Edit render_rects.py
+  ▶ python3 tools/render_rects.py | grep "^screen\|^[0-9]"
+Verifying against the emulator: running tools.emu without input so the opening plays.
+  ▶ python3 -m tools.emu --help 2>&1 | head -40
+  ▶ timeout 600 python3 -m tools.emu --frames 2600 --watch 06F1 2>&1 | grep -v "^\s*$" | head -60
+  ▶ timeout 600 python3 -m tools.emu --frames 2600 --watch 06F1 > /tmp/claude_s68_watch.txt 2>&1; wc -l /tmp/claude_s68_watc
+  ▶ python3 -m tools.emu --frames 2600 --watch 06F1
+Date card is live f277-423, the A95E/A9B3 flip runs f859-1188. Dumping emulator screens at f400 and f900 to compare.
+  ▶ python3 -m tools.emu --frames 400 --dump-screen /tmp/claude_s68_f400.png
+  ▶ python3 -m tools.emu --frames 900 --dump-screen /tmp/claude_s68_f900.png
+  ▶ python3 tools/compare_frames.py /tmp/claude_s68_f400.png gfx/rects/screen_19_A7FC.png; python3 tools/compare_frames.py /
+Date card: 0 mismatches. f900 shows the `$2800` frame (A9B3, 0 mismatches). Dumping f916 for the other phase of the flip.
+  ▶ python3 -m tools.emu --frames 916 --dump-screen /tmp/claude_s68_f916.png && python3 tools/compare_frames.py /tmp/claude_
+Both flip frames now match exactly. Checking the remaining opening pages (f600, f1300, f1900).
+  ▶ python3 -m tools.emu --frames 1300 --dump-screen /tmp/claude_s68_f1300.png && python3 tools/compare_frames.py /tmp/claud
+  ▶ python3 -m tools.emu --frames 1900 --dump-screen /tmp/claude_s68_f1900.png && python3 tools/compare_frames.py /tmp/claud
+  ▶ python3 -m tools.emu --frames 600 --dump-screen /tmp/claude_s68_f600.png && python3 tools/compare_frames.py /tmp/claude_
+The diffs are in small boxes, so they are probably sprites drawn by `$80E7`. Looking at the frames to check.
+  ▶ Read claude_s68_f1300.png
+  ▶ Read screen_19_AA51.png
+  ▶ Grep "^def |^class |    def |visited" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/render_screen.py
+  ▶ Read render_screen.py +35
+  ▶ grep -n "0x80\|visited\|def \|grid" tools/render_level.py | head -30; grep -n "def \|k4\|E702\|C765" tools/area_dump.py 
+  ▶ Read area_dump.py +110
+  ▶ Write visited_scan.py
+  ▶ python3 tools/visited_scan.py && head -60 gfx/visited_scan.txt
+Mostly k4 screens, with some substitutions outside k4 (e.g. `$24` cell y4x3, `$29`). Getting totals.
+  ▶ grep -c "\[k4\]" gfx/visited_scan.txt; grep -c "metatiles$" gfx/visited_scan.txt; grep -c "no visible change" gfx/visite
+I'll put the totals in the tool's header line instead.
+  ▶ Edit visited_scan.py
+  ▶ Edit visited_scan.py
+  ▶ Edit visited_scan.py
+  ▶ python3 tools/visited_scan.py
+Now rendering the visited variants for all 79 areas, then running the web world check against them.
+  ▶ python3 tools/visited_scan.py --render | tail -1 && node web/test/world_check.mjs --visited 2>&1 | tail -8
+  ▶ Write bank10_scan.py
+  ▶ python3 tools/bank10_scan.py
+All 32 bank-10 areas are 1×1 single rooms (screens `$00-$02`). The quirk can only show if the camera ever starts a row left of x=0. Checking the tour's emulator BG compare for these areas.
+  ▶ Grep "^\s*(area )?\$?(3C|3D|BC|BE|C2|C3|C4|C7|C8|C9|CB|CF|D0|D1|D2|D3|D9|DA|DC|DD|E5|E7|EB|ED|EE|F0|F5|F6|F7|F8|F9|FB)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/emu_tour.txt
+Every bank-10 room shows the same 38.6% BG diff in the tour. Checking whether COMPARISON.md / REVERSE.md already explain it.
+  ▶ Grep "38\.[56]|bank.?10" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ python3 tools/dis.py 31 EA72 0x40 --stop
+`area_w`=0 forces camera x to exactly 0 (`31:EA77`), and `area_h`=0 fixes y. Checking the row-render width to see if a row ever reaches the next screen.
+  ▶ python3 tools/dis.py 31 EBC1 0x60
+  ▶ Grep "^(18,(82B3|82F1|82FD|81D8|8198|80E7)|19,(A7F6|A843|A8D2|A92D|A953|AA05|AA16|AA30|AAC2|AAF1|AB81|B162|B164|A8C8|A8CD))," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "82B3|82F1|82FD|81D8|8198|80E7|A7F6|A92D|AA16" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 18 81D8 0x18 --stop; python3 tools/dis.py 18 80E7 0x30
+Adding labels.
+  ▶ tail -3 labels.csv
+  ▶ cat >> labels.csv <<'EOF'
+You've hit your 5-hour limit · resets 1:50am (America/New_York)

@@ -1,0 +1,61 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## |^### |- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +1946
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for f in re_loop_sessions/20261117_205123_session_06{3,4,5}.txt; do
+  ▶ Read 20261117_205123_session_065.txt +1
+  ▶ Grep "NameCharGrid|9F05" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+Working on the top unchecked task: finding whatever reads `NameCharGrid` (`18:9F05`). Checking the data and possible pointer references now.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "05 9F"; python3 tools/search_bytes.p
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 18:9E80 0x142 bytes 2>&1 | head -40
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 2>&1 | head; 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 18:9E00 20 hex16
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 18:9D80 8 hex16; python3 tools/decod
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "5A FF FF FF FF FF FF 61 62 63"; pyth
+Grid is unique in the ROM. Now reading the name-entry code (`19:A3E7…`) to see how it picks characters.
+  ▶ Grep "[Nn]ame entry" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "Main states 2/3" REVERSE.md | head -3; grep -n "^19,A[3-5]
+Session 38 already labelled `NameEntryCursor` as reading `9EC2`. Confirming the exact indexing:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 A585 0x90 | grep -v "^$" | head -70
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 A585 0x90
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 A0A5 0x20 --stop; python3 tools/xref.py 9EC
+Index = `($8B−$10)·16 + $8A` → 4 rows × 32 at `9EC2`. Also `A634` reads a second grid at `9F42,Y`. Checking that:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 A616 0x40 --stop; python3 tools/xref.py 9F4
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/search_bytes.py "CD 06" --disasm; python3 tools/dis.p
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 A63A 0x1A; python3 tools/dis.py 19 A429 0x4
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 A430 0x30; python3 tools/search_bytes.py "A
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 83p REVERSE.md; sed -n 50,66p tools/disasm_all.py; grep -n "
+  ▶ Grep "9F0|DEAD|9EC|0x9F" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/filler_scan.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -rn "9DD[0-9A-F]" tools/*.py labels.csv gfx/rects/*.txt docs/*
+The name-entry rectangle (`18:9DD6`, 26×10) also runs into the code grid. Writing it all up now.
+  ▶ Read labels.csv +490
+  ▶ Edit labels.csv
+  ▶ Edit disasm_all.py
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now ticking the task and noting the `$6410` answer in the save leftovers task:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 19 A62E 0x9 --stop; python3 tools/dis.py 18 9E
+The top task is done: the "unread" name-entry character grid in bank 18 is live data, and I found what reads it. All of this comes from reading the disassembly; I didn't check it in the emulator.
+
+**Why no reader was found before:** the session-21 range `18:9F05-9FC1` started 61 bytes too late. The data really starts at `18:9EC2`. It is two tables, each 4 rows × 32 columns. The name-entry code reads them directly with `LDA $9EC2,Y` (5 places in `19:A5A9…A62E`) and `LDA $9F42,Y` (`19:A634`).
+
+- **`NameCellGrid` `18:9EC2-9F41`:** what each cell does.
+  - `$FF` = the cursor can't stop there; it keeps moving in the pressed direction and wraps around the edges.
+  - `$20` = an ordinary letter.
+  - `$F2`/`$F1` = the left/right arrows; `$F0` = END.
+- **`NameGlyphGrid` `18:9F42-9FC1`:** the letter tiles: `A-Z`, `a-z`, `0-9` and punctuation, plus a space.
+- **Cell lookup:** cell = (`$8B`−`$10`)·16 + `$8A`. So the 4 cursor rows (`$8B` = `$10/$12/$14/$16`) each map to one 32-column row of the tables.
+- **Each name letter is saved as two bytes:** a glyph in `player_name` (`$6418+X`) and a top byte in `$6410+X`, which is always `$20` (blank). That answers part of the save-leftovers question about `$6410`; I added a note to that task.
+- **Unused alternate letters:** if `$05` is non-zero, the glyph gets +`$32` (except `$10`/`$0C`). `$05` is 0 on the title, so this alternate character set never appears.
+- **Overlap with the screen layout:** the 26×10 rectangle drawn on screen (`NameEntryRect`, `18:9DD4`, drawn by `19:A10E`) shares its last 26 bytes with the start of `NameCellGrid`. That's harmless only if those tiles show as blank, which I haven't checked.
+
+**Changes:**
+- **`labels.csv`:** removed `NameCharGrid` and added `NameEntryRect`, `NameCellGrid` and `NameGlyphGrid`. I checked that `dis.py` loads them.
+- **`REVERSE.md`:** corrected the Data-Range Map row (now marked LIVE) and changed the wrong `19:9EC2` reference to `18:9EC2`. I added the table layout under "Main states 2/3", noted `$6410` in the save leftovers, and ticked the task.
+- **`tools/disasm_all.py`:** updated the list of names it treats as data. I didn't re-run it, so `disasm/bank_18.asm` still has the old label.
+
+I didn't add the range to `filler_scan.DEAD`; it was never in that list.
+
+SESSION_SUMMARY: Session 66: the "unread" grid at 18:9F05 is live — the name-entry tables actually start at 18:9EC2 (`NameCellGrid` 9EC2 + `NameGlyphGrid` 9F42, 4×32 each), read by `NameEntryCursor` 19:A5A9-A634; `$6410` = the name's top byte row; labels, Data-Range Map and disasm_all updated, task ticked (static only).

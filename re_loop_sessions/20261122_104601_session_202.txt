@@ -1,0 +1,78 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -3 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ sed -n 2396,2410p REVERSE.md | cut -c1-600; cat dead_ends.md | cut -c1-400; tail -c 3000 re_loop_sessions/20261122_10460
+  ▶ grep -n "D1FF\|TalkActionTable" REVERSE.md | cut -c1-300 | head -20; grep -n "^30,D1\|^30,D2" labels.csv
+  ▶ sed -n 870,880p REVERSE.md | cut -c1-1500; grep -n "AreaLoadB\|AreaLoadA" labels.csv; grep -rn "areaLoadB\|areaLoadA\|Ar
+  ▶ sed -n 881,905p REVERSE.md | cut -c1-600; sed -n 1,120p web/src/game/world/area.js
+Picking Ph7 leftovers (a): porting talk acts 16/19/22 (they need `SpawnFxAtSlot` + `AreaLoadA/B`, and `areaLoad` already exists in `area.js`). Disassembling now.
+  ▶ python3 tools/dis.py 30 D1B5 0x60 && python3 tools/dis.py 31 E144 0x30 && python3 tools/dis.py 26 9897 0x24 --stop
+  ▶ grep -n "not ported\|^export function\|^function\|import" web/src/game/states/talk.js | head -60
+  ▶ python3 tools/dis.py 30 D212 0x10 --stop; python3 tools/dis.py 26 98A8 0x14 --stop
+  ▶ Read talk.js +425
+  ▶ grep -n "^export\|returns\|X " web/src/game/obj/objinit.js | head -20; grep -n "TALK_ACTIONS\|GiveItemA\|function\* give
+  ▶ Read objinit.js
+  ▶ Read giveitem.js +270
+  ▶ grep -n "^| 6 \|^| 14 \|^| 17 \|^| 7 \|^| 1 " REVERSE.md | sed -n 1,20p | cut -c1-400
+  ▶ sed -n 915,935p REVERSE.md | cut -c1-500; python3 tools/dis.py 30 D6EC 0x20 --stop
+Porting talk acts 16/19/22 and event acts 6/14/17 (all use `SpawnFxAtSlot`/`AreaLoadA/B`). Checking ObjInit's exit X register.
+  ▶ python3 tools/dis.py 30 C2A9 0x60 --stop | tail -25; grep -n "EVENT_ACTIONS\s*=\|EVENT_ACTIONS\[" web/src/game/states/gi
+  ▶ grep -rn "rd(0x18)\|0x18, \|\$18" web/src/game/world/*.js | head; sed -n 325,345p web/src/game/states/giveitem.js; grep 
+  ▶ grep -n "0x18" web/src/game/world/spawn.js | head; grep -n "tmp_18\|\$18 " REVERSE.md | head -8 | cut -c1-300
+  ▶ Grep "0x18|\$18[ =`]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/world/spawn.js
+  ▶ Grep "AreaLoadA" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Writing the port now: `spawnFxAtSlot` in `talk.js`, acts 19/22 there, act 16 and event acts 6/14/17 in `giveitem.js`.
+  ▶ Edit talk.js
+  ▶ Edit talk.js
+  ▶ Edit talk.js
+  ▶ Edit giveitem.js
+  ▶ Edit giveitem.js
+  ▶ Edit giveitem.js
+  ▶ Edit giveitem.js
+  ▶ Edit giveitem.js
+  ▶ Grep "import .*(setR6|objPosToTemp|areaLoad)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states
+Now verifying. Let me see how s201 fuzz-captured talk acts so I can add 19/14/6 (they don't wait frames).
+  ▶ Grep "talkact|_poke_follow|D2F4|def _poke" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/routine_capture.py
+  ▶ Read routine_capture.py +100
+  ▶ Grep "TalkWarp|EvActTwoFollowers|fuzz_talkacts|fuzz_follow" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test
+  ▶ Read obj_check.mjs
+  ▶ Read README.md +170
+Adding fuzz capture for the synchronous ones (SpawnFxAtSlot, talk act 19, event acts 6/14).
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 150 --seed 202 --routine
+  ▶ node web/test/obj_check.mjs 2>&1 | grep areaload; python3 tools/run_checks.py 2>&1 | tail -4
+All 600 fuzz cases identical, 50/50 checks pass. Now docs: labels, README, REVERSE.md.
+  ▶ Grep "^30,(D1B5|D1CA|D1EB|D6D5|D6EC)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +1172
+  ▶ Edit labels.csv
+  ▶ Edit README.md
+Now REVERSE.md: the talk-action table rows, the event row, and the leftovers task text.
+  ▶ python3 tools/edit_reverse_s202.py 2>/dev/null; echo; grep -c "" REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the leftovers task text (a) and (i):
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I ported the last three NPC talk actions (16, 19 and 22) and three event actions (6, 14 and 17). Four of these routines match tools.emu on all 600 random-RAM test cases, and all 50 checks pass. Nothing is committed.
+
+**What the new actions do**
+- **Talk act 16** (`30:D1EB`): shows the "teach Recover" message, gives Recover, then spawns the effect at slot 14.
+- **Talk act 19** (`30:D1B5`): spawns the effect at the NPC, reloads the area, then the next slot vanishes.
+- **Talk act 22** (`30:D1CA`): plays a sound, shows message 19.0, reloads the area, then spawns the effect at the NPC.
+- **Event acts 6 and 17** (`30:D6D5`): just reload the area.
+- **Event act 14** (`30:D6EC`): reloads the area and spawns the effect object (type `$DF`) at slot 15's position.
+
+The effect spawner they share (`30:D1FF`) is now `spawnFxAtSlot` in `states/talk.js`. The area reload uses the existing `areaLoad` in `world/area.js`. Talk act 16 and the event acts are in `states/giveitem.js`.
+
+**How it's checked**
+- **Effect spawner, talk act 19, event acts 6 and 14:** I added them to `tools/emu/routine_capture.py`, set up on a real area with random story flags. That gave 600 cases in `web/test/obj_frames/fuzz_areaload.json`, and all of them match in `obj_check.mjs`.
+- **Event act 17:** it runs exactly the same routine as act 6, so it has no cases of its own.
+- **Talk acts 16 and 22:** they show a message, which waits for frames, so this single-routine test can't cover them. They have no full-run test yet.
+
+**Docs:**
+- I added five labels to labels.csv and the capture command to `web/test/obj_frames/README.md`.
+- I updated the talk-action and event-action tables in REVERSE.md.
+- I updated the leftovers task text: item (a) now has no unported talk actions left, and in item (i) only event acts 1 and 7 remain. The task stays unchecked, as the rules say for a low-priority leftovers task.
+
+SESSION_SUMMARY: Session 202 ported TalkActionTable acts 16/19/22 (all talk acts now ported), EventActionTable acts 6/14/17 and SpawnFxAtSlot 30:D1FF; 600 fuzz cases identical (fuzz_areaload.json), talk acts 16/22 show a message and have no test yet; all 50 checks pass; event acts 1 and 7 still unported.

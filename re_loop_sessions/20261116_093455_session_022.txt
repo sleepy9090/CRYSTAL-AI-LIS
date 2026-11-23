@@ -1,0 +1,133 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*}
+  ▶ Grep "^## |^### |- \[ \]" REVERSE.md
+  ▶ Read REVERSE.md +845
+  ▶ Read dead_ends.md
+  ▶ wc -l re_loop_sessions/20261116_093455_session_02*.txt re_loop_sessions/20261115_175121_session_020.txt && tail -n 25 re
+  ▶ Read nesrom.py
+  ▶ head -c 3000 tools/instruction_set.py; echo; grep -n "^def \|^DEAD\|^[A-Z_]* =" tools/instruction_set.py tools/filler_sc
+  ▶ Read instruction_set.py +60
+  ▶ Read filler_scan.py +36
+Starting session 22 on the top task, the full-ROM disassembler (`tools/disasm_all.py`). Next I'm collecting the seeds: vectors, labels, far-call trampolines and jump tables.
+  ▶ wc -l labels.csv && grep -in "table\|tramp\|farcall\|far_call\|jump" labels.csv | head -80
+  ▶ Read REVERSE.md +29
+  ▶ Read labels.csv
+  ▶ python3 tools/search_bytes.py "68 85 ?? 68 85" 2>&1 | head -30; python3 tools/search_bytes.py "68 85 ?? 68 85 ??" --disa
+  ▶ python3 tools/dis.py 15 B840 64 && python3 tools/xref.py B84B --bank 15 2>&1 | head; python3 tools/dis.py 16 80B0 40
+No inline-data JSR helpers (all six PLA/STA pairs restore pushed values), so plain recursive descent will work. Checking that `filler_scan` imports cleanly, then I'll write the tool.
+  ▶ Read filler_scan.py +1
+  ▶ tail -5 tools/filler_scan.py; cut -d, -f3 labels.csv | sort | uniq -d
+No duplicate label names and the import is guarded. Writing `tools/disasm_all.py`.
+  ▶ Write disasm_all.py
+  ▶ time python3 tools/disasm_all.py
+Round-trip passes on all 32 banks on the first run. Now checking the warnings, unresolved targets and indirect jumps to find the gaps.
+  ▶ sed -n '/^## indirect/,$p' disasm/coverage.txt; grep -n "entry tables\|auto table" disasm/coverage.txt
+  ▶ Read coverage.txt +38
+  ▶ python3 tools/dis.py 30 C900 0x40; echo ---; python3 tools/dis.py 30 D970 0x48; echo ---; python3 tools/dis.py 16 9BB0 0
+  ▶ python3 tools/dis.py 30 C92F 0x28; echo ---; python3 tools/dis.py 18 9FC2 0x3E; echo ---; python3 tools/dis.py 30 DA0C 8
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+Now rewriting `trace()` with straddling, flag state, callee summaries and the target sanity check:
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+Adding the new state fields and straddle-aware emission:
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+Removing `18:9FC2` from `filler_scan.DEAD`, since it's live state-2 code:
+  ▶ Edit filler_scan.py
+  ▶ Edit filler_scan.py
+  ▶ python3 tools/disasm_all.py --quiet; echo rc=$?
+  ▶ python3 tools/disasm_all.py --quiet
+  ▶ Read coverage.txt
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+  ▶ python3 tools/dis.py 16 9CE0 0x20; echo ---; python3 tools/dis.py 19 B9FB 0x18; echo ---; python3 tools/dis.py 16 9C40 0
+The `19:B9FB` case is a bug in the summary: it resolves the `JMP $8CC0` after `SetR6($1A)` with the stale context. Fixing that now. For bank 16, I'm looking for where bank 23 gets mapped at `$A000`:
+  ▶ Edit disasm_all.py
+  ▶ python3 tools/search_bytes.py "A9 17 20 27 C4" --disasm --context 2; python3 tools/dis.py 16 9CFF 0x20
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+  ▶ python3 tools/disasm_all.py --quiet && echo OK
+  ▶ Read coverage.txt +14
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+  ▶ python3 tools/disasm_all.py --labels | grep ^data | grep -v "Table\|Stale\|Ptrs"
+One more wrong one: `SpawnSetTileHi` is code. Narrowing the `Lo/Hi` rule to the three real tables:
+  ▶ Edit disasm_all.py
+  ▶ python3 tools/disasm_all.py --quiet && grep -A4 "^## unresolved\|^## warn" disasm/coverage.txt && grep "^total\|round-tr
+Last warning: `BNE` followed by `BEQ` (`15:BF1A/BF1C`) is an unconditional pair, and the table at `BF1E` follows it. Teaching the tracer that a not-taken branch fixes that flag for the fall-through:
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+  ▶ python3 tools/disasm_all.py --quiet && grep -A3 "^## unresolved\|^## warn\|^## rej" disasm/coverage.txt && grep "^total\
+No warnings left. One unresolved site, `15:AB84`, follows a `SetR6` whose argument isn't an immediate:
+  ▶ python3 tools/dis.py 15 AB60 0x10
+  ▶ grep -n -m3 "" disasm/bank_30.asm; grep -n "MainLoop:" -A22 disasm/bank_30.asm; grep -n "9FCC\|9FFF" disasm/bank_18.asm;
+  ▶ python3 tools/dis.py 19 A000 0x38
+State 2 (init) ends with `INC main_state`. State 3 is a per-frame loop that dispatches on `$06F3` through a table at `19:A038` (`JMP ($06FC)`). Decoding that table so it can be added as a seed:
+  ▶ python3 tools/decode_tables.py 19:A038 12 ptr16 2>&1 | head -20
+The table has 3 entries: `A03E` (bank 19, right after the table), `18:8310` and `18:834A`. Entry 0 is itself a second dispatcher on `$06F0` through `19:A052`. Decoding that one too:
+  ▶ python3 tools/decode_tables.py 19:A052 14 ptr16 2>&1 | head -16; python3 tools/dis.py 19 A03E 0x14
+`19:A052` holds 7 handlers plus 2 null words (code resumes at `A064`). Adding both state-3 dispatch tables as seeds (context 18/19):
+  ▶ Edit disasm_all.py
+  ▶ python3 tools/disasm_all.py --quiet && grep -A3 "^## unresolved\|^## warn\|^## rej" disasm/coverage.txt && grep "^  1[78
+Bank 19 coverage went from 20% to 29%. Eight indirect-jump sites still have no decoded table. Taking one look at each so the follow-up task can name their tables:
+  ▶ for s in "17 A105" "27 A05C" "27 BA2B" "30 DBC7" "30 DDA8" "30 DEF9" "31 E407" "31 F6AD"; do echo "== $s"; python3 tools
+  ▶ python3 tools/dis.py 17 A105 0x15; python3 tools/dis.py 27 A05C 0x15; python3 tools/dis.py 27 BA2B 0x15; python3 tools/d
+  ▶ python3 tools/dis.py 30 DDA8 0x15; python3 tools/dis.py 30 DEF9 0x15; python3 tools/dis.py 31 E407 0x15; python3 tools/d
+  ▶ Edit labels.csv
+  ▶ python3 tools/disasm_all.py && ls disasm | wc -l
+Final run: 40,170 code bytes, 1,978 auto-named targets, 0 warnings, 1 unresolved, and the round-trip passes on all 32 banks. Now updating REVERSE.md, starting with the output-files section.
+  ▶ Read REVERSE.md +777
+Adding the tool and output entries to the table:
+  ▶ Edit REVERSE.md
+Correcting the session-21 filler table (`18:9FC2` is live, so 24 dead ranges remain) and adding the coverage summary to the Data-Range Map:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I put the new section in front of the filler section's closing sentence. Moving that sentence back where it belongs:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now adding the method and findings section under Key Findings, before Compression:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Fixing one detail: the clear loop at `18:9FDD` writes zero page `$70-$98` (`STA $70,X`), not `$0670`.
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+Marking the task done and adding one follow-up at the end of RE Investigation:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Re-running both tools so the outputs match the final labels and the edited DEAD list:
+  ▶ python3 tools/disasm_all.py --quiet && grep "round-trip\|^total" disasm/coverage.txt && python3 tools/filler_scan.py --o
+I finished the top task, the full-ROM disassembler. It also turned up a mistake from session 21: a range marked as dead filler is actually live code. Nothing is committed.
+
+**Tool:** `tools/disasm_all.py` writes one file per 8KB bank (`disasm/bank_00.asm` to `bank_31.asm`) plus `disasm/coverage.txt`.
+- **Byte-exact:** a small built-in assembler rebuilds each file and compares it with the ROM, and the run fails if any byte differs. All 32 banks pass.
+- **Seeds:** it starts from the vectors, every code label in labels.csv, and 15 dispatch tables (each traced with the banks its dispatcher maps).
+- **Bank tracking:** each path follows which banks are mapped, including banks switched inside called helpers. Instructions that run across a bank edge (18→19, 26→27, 30→31) are handled.
+- **Numbers:** 40,170 bytes of code (15.3% of PRG), 1,978 auto-named targets, 0 warnings. One call target is still unresolved: `15:AB84` follows a bank restore from the stack, almost certainly bank 26.
+
+**Findings:**
+- **Session 21 error:** `18:9FC2-9FFF` is not dead filler. Main state 2 jumps to `18:9FCC` (now labelled `MainState2Init`), and that code runs straight on into `19:A000`. It was missed because a jump from a fixed bank into a swapped bank doesn't show up in `xref.py`. I removed it from `filler_scan.DEAD`, which is now 24 ranges and 4,102 bytes.
+- **State 3:** each frame it branches on `$06F3` through a table at `19:A038`, then on `$06F0` through a second table at `19:A052` (7 handlers).
+- **Bank 16 menus** run with bank 23 mapped at `$A000`. That's why they can call the save routines at `$BC00` without mapping bank 23 themselves.
+- **No jump tables at bank starts:** swappable banks don't start with JMP tables. The fixed offsets like `$8020` are ordinary routine addresses.
+
+**Still open**, added as one low-priority task at the end of RE Investigation:
+- 8 jump tables are found but not yet decoded (for example `17:A11A`, `31:F6C2`).
+- The state-3 modes are not named yet.
+- No code was reached in banks 25 and 29; they are believed to be sound and sprite data, which needs confirming.
+
+**Updated:**
+- REVERSE.md:
+  - task marked done;
+  - new "Full-ROM disassembly" section, including the state 2/3 details;
+  - a code-coverage table in the Data-Range Map;
+  - the corrected filler count and row;
+  - output-file entries.
+- labels.csv: 6 new or changed labels.
+- `gfx/filler_scan.txt`: regenerated.
+
+SESSION_SUMMARY: Session 22 — full-ROM disassembly: new tools/disasm_all.py (recursive descent, per-path bank tracking incl. bank switches inside called helpers, flag-aware branches, code across bank edges) → disasm/bank_00-31.asm + coverage.txt; all 32 banks re-assemble byte-exact; 40,170 code bytes, 1,978 auto-names, 0 warnings, 1 unresolved; corrected session 21: 18:9FC2-9FFF is live main-state-2 code (MainState2Init 18:9FCC → 19:A000), DEAD now 24 ranges; state-3 tables 19:A038/A052 decoded; bank 16 menus run with bank 23 at $A000; 8 undecoded jump tables + banks 25/29 left as one low-priority task; 6 labels.

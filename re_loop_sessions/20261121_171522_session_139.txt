@@ -1,0 +1,142 @@
+  ▶ ls re_loop_sessions/ | tail -4; wc -l dead_ends.md REVERSE.md; grep -n "## Next Tasks" REVERSE.md; grep -n -m5 "^- \[ \]
+  ▶ Read dead_ends.md
+  ▶ cd re_loop_sessions; for f in 20261121_000129_session_137.txt 20261121_171522_session_138.txt 20261121_171522_session_13
+  ▶ tail -c 3000 re_loop_sessions/20261121_171522_session_138.txt; echo ====; tail -c 1500 re_loop_sessions/20261121_000129_
+  ▶ ls web/src/game/states/ web/test/states/ | head -60; wc -l web/src/game/states/*.js; grep -n "SUBSTATES" -A40 web/src/ga
+Now the REVERSE.md documentation on GiveItem 30:D3EB.
+  ▶ Grep "GiveItem|D3EB" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +900
+  ▶ cd web/src/game; grep -rn "D3EB\|ItemGetHook\|itemGetHook\|826F\|EventActionDispatch\|D552\|TALK_ACTIONS\|SwordPowerLeve
+  ▶ Read talk.js +280
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D3C2 0x1A0
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D834 0x60; python3 tools/dis.py 14 826F 0xB
+I'm porting `GiveItem` (sub_state 7, the town-entry hang). I've disassembled the routine and its item hooks, and next I'm reading the event action table and hook 2.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 30:D563 32 word 2>&1 | head -40; pyt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 2>&1 | head; grep -n "EventActionTab
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 30:D563 32 ptr16 --per-line 8; pytho
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --load-state web/test/states/town02_enter.jso
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "'--" web/test/run.mjs | head -30; python3 tools/dis.py 26 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --load-state web/test/states/town02_enter.jso
+I found the trigger: touching the town's item object (AI `$78`) sets sub_state 7. I'm dumping RAM at the hang to see which item is being given.
+  ▶ Glob tools/*peek*.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -15 tools/hexpeek.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; P="python3 tools/hexpeek.py /tmp/t2.bin"; $P 620 4; $P 560 20; $P 4
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/hexpeek.py /tmp/t2.bin 620 4; python3 tools/hexpeek.p
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --load-state web/test/states/town02_enter.jso
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --load-state web/test/states/town02_enter.jso
+Still on the GiveItem port. The RAM dump command was blocked, so I'm re-running it in a form that's allowed.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --load-state web/test/states/town02_enter.jso
+Slot `$12` holds param `$99`, an invisible event trigger, so this is the `D539` hook-2 path. Next I'm looking up trigger `$99` in the docs.
+  ▶ Read REVERSE.md +860
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; grep -rn "export function\*\? \?\(playPaletteRestore\|
+  ▶ Read play.js +40
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; grep -rn "C89E\|area5FIrqOff\|Area5FIrqOff" . | head; 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D9D8 0x34; python3 tools/dis.py 30 C89E 0xB
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D63A 0x20; python3 tools/dis.py 30 D6D5 0x4
+I've read the remaining event-action handlers. Now I'm checking `GiveItemA` (`30:D22B`), which several of them call, and then I'll write the port.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D21D 0x22; python3 tools/dis.py 31 FF80 0x1
+  ▶ Read talk.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; sed -n 145,200p states/death.js; grep -n "statRecalc("
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; grep -rn "E148\|E144\|areaLoadB\|areaLoadA\|RestoreBan
+Writing the port now: a new `states/giveitem.js`, plus exports of the shared helpers from `talk.js`, `equip.js` and `play.js`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; sed -i 's/^function flagTest(m, y)/export function fla
+I'll use Edit instead.
+  ▶ Edit talk.js
+  ▶ Edit talk.js
+  ▶ Edit talk.js
+  ▶ Edit talk.js
+  ▶ Edit talk.js
+  ▶ Edit equip.js
+  ▶ Edit play.js
+  ▶ Read objinit.js
+  ▶ Write giveitem.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game; grep -n "export function farObjInit" obj/objinit.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/run.mjs --load-state web/test/states/town02_enter.jso
+GiveItem no longer logs as unported. The final sub_state is still 7, which fits a trigger whose condition fails, so it re-arms every frame. I'll check that against tools.emu.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,40p tools/web_state_compare.py; python3 tools/hexpeek.py g
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls tools/emu/states/ | grep -i "town\|area1"; grep -n "town02" -r R
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cmp gfx/compare/town02_chk.json web/test/states/town02_enter.json &
+Most of the difference comes from the town NPCs (AI `$30`, slots `$0D`-`$10`), which still aren't ported. Now I'm checking the core and sub_state columns.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls gfx/compare/wsc_town02/; python3 tools/compare_frames.py gfx/com
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -c 300 web/test/states/town02_enter.json; echo; head -c 300 gf
+The checked-in `town02_enter.json` came from a different frame (2460) than my fresh export (2450), so the two runs don't line up. I'm re-running the comparison with the matching pair.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+The emu ends frames in sub 8 while the port ends in 7. I'm checking the trigger slots `$11`-`$13` in both runs.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/wsc_town02/emu.csv gfx/
+Object columns match and only `sub` differs. That could be emu sampling timing (GiveItem plus a second SubstPlay in one frame can run past the NMI). I'll check with `pass_probe.py`.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,30p tools/emu/pass_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 300 python3 -m tools.emu.pass_probe --state tools/emu/state
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "ram-diff\|ram-ignore\|ram-frames" tools/web_state_compare.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 50,62p tools/web_state_compare.py; timeout 600 python3 tools
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.web_state -h 2>&1 | head -40; grep -n "def giv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/s
+  ▶ Edit play.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py gfx/compare/wsc_give/emu.csv gfx/co
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -ln "shopempty\|states/" web/test/*.mjs; ls web/test/*.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "states/\|shopempty\|STATES" web/test/core_check.mjs | head
+  ▶ Grep "\.json" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/core_check.mjs
+There's no state-based regression check yet. I'll model one on `wake_check.mjs`.
+  ▶ Read wake_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 55,110p web/test/run.mjs; head -3 gfx/compare/wsc_give/web.c
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_trim.py gfx/compare/wsc_give/emu.csv web/test/giv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; mv gfx/compare/town02_chk.json web/test/states/town02_enter.json; g
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/s
+  ▶ Write giveitem_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/giveitem_check.mjs
+The new `giveitem_check.mjs` passes. Now I'm running the existing web checks to make sure nothing broke.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for t in core ppu serve world sprite obj sound apu wake; do timeout
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/core_check.mjs | tail -2; node web/test/ppu_check.mjs
+All existing checks pass. Now I'm updating REVERSE.md, labels.csv and the docs.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^30,D539\|^30,D47C\|^14,82A0\|^30,D40C\|^30,D9D8\|^30,D885
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -3 labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 - <<'EOF' 2>/dev/null || echo need-tool
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l labels.csv
+  ▶ Read labels.csv +1401
+  ▶ Edit labels.csv
+Labels are added. Now the REVERSE.md task note and the GiveItem section.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "wake\.js" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -o ".\{300\}wake\.js.\{200\}" docs/architecture_web.md; grep -
+  ▶ Grep ".{0,200}wake\.js.{0,120}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Grep ".{0,150}wake_check.{0,150}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Read CLAUDE.md +30
+  ▶ Edit CLAUDE.md
+Docs are updated. Last step: a Verification Log row in REVERSE.md.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "Wake-up\|wake-up cut-scene" REVERSE.md | cut -c1-160 | hea
+  ▶ Read REVERSE.md +177
+  ▶ Edit REVERSE.md
+I ported `GiveItem` (sub_state 7). Entering the first town no longer hangs: the town02 reproduction runs all 900 frames with no substate logged as unported. The new `giveitem_check.mjs` and all nine existing web checks pass.
+
+**What hung:** entering town `$02` puts the player on an invisible event trigger (`$99`). Touching it switches to sub_state 7, which the port didn't have. In tools.emu the trigger fires every frame while the player stands on it: it has no message and no action, and it is never used up. The ROM then runs a normal gameplay frame in the same pass.
+
+**Port:** the new `web/src/game/states/giveitem.js` covers all three branches of the routine:
+- **Real items:** stores the item in the inventory, shows the "You now have …" message, or the "too many items" message when the inventory is full.
+- **Trap chests (`$70`):** turns the chest into the chest monster.
+- **Event triggers:** checks the trigger's conditions, sets its story flags, and runs its action.
+
+About half of the 32 event actions are ported (the no-ops, the item gifts, push-back, the trigger "consume", and a few others). The rest still log "not ported": the ones that need area reloads, follower spawns or unported cut-scenes. I wired the routine into `states/play.js` and exported a few existing helpers from `talk.js`, `equip.js` and `play.js` so it could reuse them.
+
+**Checked against tools.emu:**
+- **Item pickup:** I made a new state where the trigger slot holds a Medical Herb, so the real-item path runs. Over 200 frames, everything compared matches except the four town NPCs, which still don't move because their AI (`$30`) isn't ported. Inventory and story flags are identical.
+- **Town entry:** objects match. The status column reads 8 in tools.emu and 7 in the port, but that's only where tools.emu samples its row: it records mid-frame, after the frame has already run long.
+- **Sound:** sound pitches are one frame late on each note change. That already happens before this code runs, so it isn't caused by this change.
+
+**ROM finding:** after a pickup the game recalculates the sword power level but throws the result away. The stored level only updates the next time the SELECT menu closes.
+
+**Housekeeping:**
+- I regenerated `web/test/states/town02_enter.json` from its documented command. The old file came from a different frame (2460, not 2450), so it didn't line up with any tools.emu state.
+- I added `web/test/giveitem_check.mjs`, `web/test/states/giveitem.json` and `web/test/giveitem_ref.csv`.
+- I added 13 labels to `labels.csv` and updated REVERSE.md (finding notes plus a Verification Log row), CLAUDE.md and `docs/architecture_web.md`.
+- The task stays open as it asks, with GiveItem struck through. The town NPC AIs `$30` and `$78` are noted as next.
+- Nothing is committed. Scratch files are in `gfx/compare/` (`t2_ram.bin`, `wsc_town02*`, `wsc_give`, `town02_chk.json`).
+
+SESSION_SUMMARY: Session 139 ported GiveItem (sub_state 7, new `states/giveitem.js` with item hooks 0/2 and half the event actions), so entering the first town no longer hangs; it matches tools.emu, and the new `giveitem_check.mjs` plus all existing web checks pass.

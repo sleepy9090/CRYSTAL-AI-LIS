@@ -1,0 +1,111 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -4; wc -l dead_ends.md REVERSE.md; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -c re_loop_sessions/*13[89]* re_loop_sessions/*140*; tail -c 300
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n -i 'AI `\$30`\|AI \$30\|AI `\$78`\|AI \$78' REVERSE.md | cu
+  ▶ Grep "AI `?\$(30|78)`?" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1075
+  ▶ Grep "\$78" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/obj_ai.txt
+Working on session 140's task: porting the town NPC AIs `$30` (`AiNpcWander`) and `$78` into the web port. Checking the port's AI table next.
+  ▶ Grep "0x30|0x31|0x78|0x32|not ported" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj
+  ▶ python3 tools/dis.py 27 A914 2 && python3 tools/dis.py 27 ACD9 0x150
+  ▶ python3 tools/dis.py 27 AE25 0x20 && python3 tools/dis.py 26 9824 0x3D
+  ▶ Grep "AiPathWalk|aiPathWalk|tempAddOffset|objPosToTemp|rand64|objStepVector|tempAddStep|objBgProbe|tempToObjPos|AiNpcStill|aiNpcStill" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ wc -l web/src/game/obj/*.js && sed -n 1,40p web/src/game/obj/ai_field.js && grep -n "AI_FIELD\|^export\|0x3[0-9A-F]:\|0x
+  ▶ Read objects.js
+  ▶ Read util.js
+  ▶ Read ai_field.js +250
+Writing the `AiNpcWander` / `AiNpcStill` port into `ai_field.js` now.
+  ▶ Edit ai_field.js
+  ▶ Edit ai_field.js
+  ▶ node web/test/run.mjs --load-state web/test/states/town02_enter.json --frames 900 2>&1 | tail -15; node web/test/giveite
+  ▶ Grep "NPC|0D|ignore|cols|\$30" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/giveitem_check.mjs
+  ▶ Read giveitem_check.mjs
+  ▶ python3 tools/web_state_compare.py --help 2>&1 | head -30; python3 tools/csv_trim.py --help 2>&1 | head
+  ▶ ls tools/emu/states/ | grep -i "give\|town02"; python3 tools/web_state_compare.py --state tools/emu/states/giveitem.stat
+The NPC objects now match tools.emu over all 199 frames; only 4 OAM-CRC frames during the message window differ. Checking those columns cover slots `$0D-$10` and whether the OAM diff is new.
+  ▶ head -1 gfx/compare/wsc_give140/emu.csv | tr ',' '\n' | grep -i -c "0d\|0e\|0f\|10"; head -1 gfx/compare/wsc_give140/emu
+Before this change, s139's baseline had 81-87 frames differing on the NPC slots and 87 OAM frames. Now only 4 OAM frames differ. Running the RAM diff too, to check the zero-page temps.
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/giveitem.state --web web/test/states/giveitem.json --frames 
+Giveitem: only 8 scratch/frame-phase bytes differ at the end, the same baseline s134 saw. The town run differs more, so I'm looking at its per-frame summary.
+  ▶ python3 tools/compare_frames.py gfx/compare/wsc_town140/emu.csv gfx/compare/wsc_town140/web.csv 2>&1 | tail -25
+The town run diverges from f2466, the frame the NPCs spawn (`o0D_ai` is off for 1 frame), so the NPC paths drift from there. Looking at those frames.
+  ▶ python3 tools/compare_frames.py gfx/compare/wsc_town140/emu.csv gfx/compare/wsc_town140/web.csv --cols core,o0D,o0E,o0F,
+Only a sampling difference at the spawn frame (f2466, emu row is 0 mid-load). From f2467 on they match, so I'm finding where the paths split.
+  ▶ python3 tools/compare_frames.py gfx/compare/wsc_town140/emu.csv gfx/compare/wsc_town140/web.csv --cols o0D,o0E,o0F,o10 -
+  ▶ grep -n "0x41\|MainStateGameplay\|substPlay\|yield\|export" web/src/game/states/giveitem.js | head -40; grep -n "SUBSTAT
+  ▶ Read giveitem.js +185
+  ▶ Read play.js +225
+  ▶ for n in 44 45 46 47; do echo "== $n"; python3 tools/web_state_compare.py --state tools/emu/states/town02_enter.state --
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/town02_enter.state --web web/test/states/town02_enter.json -
+The end-of-run RAM snapshots are taken mid-frame in tools.emu (sub 8 vs 7), so they don't line up. I'll use `pass_probe.py` to count SubstPlay passes per frame around f2495.
+  ▶ sed -n 1,30p tools/emu/pass_probe.py
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/town02_enter.state --frames 52 --pc 30:CB62 27:ACD9 30:D3EB --p
+  ▶ grep -n "ROUTINES = \|AiPitShuttle\|AiNpcBossReveal\|fuzz_reveal\|def main\|argv\|add_argument" tools/emu/routine_captur
+  ▶ sed -n 170,240p tools/emu/routine_capture.py; sed -n 640,700p tools/emu/routine_capture.py; grep -n "AiNpcBossReveal\|AI
+Adding `AiNpcWander` and `AiNpcStill` to the capture, with case pokes that push the fuzz onto the turn, cell-blocked and pause paths.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ sed -n 75,90p web/test/obj_check.mjs; grep -n "fuzz_reveal\|readdirSync\|\.json" web/test/obj_check.mjs | head; grep -rn
+  ▶ Edit obj_check.mjs
+  ▶ python3 -m tools.emu.routine_capture --routine AiNpcWander,AiNpcStill --cases 300 --out web/test/obj_frames/fuzz_npc.jso
+The real-run capture passes 200/200. The fuzz call needs a base state, so I'm checking the README for the fuzz command form.
+  ▶ Grep "fuzz_reveal|fuzz_collide|--cases" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/obj_frames/README.md
+  ▶ Read README.md +36
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/town02_enter.state --cases 300 --routine AiNpcWander,
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -c "^ok"; ls -la web/test/obj_frames/ | grep -i "zz_\|npc"; git status --short w
+`fuzz_npc.json` was already a tracked file, and I overwrote it. Checking what it held.
+  ▶ git show HEAD:web/test/obj_frames/fuzz_npc.json | head -c 400; echo; grep -n "fuzz_npc" web/test/obj_frames/README.md RE
+Restoring the original `NpcScript` file and writing mine under a new name.
+  ▶ mv web/test/obj_frames/fuzz_npc.json web/test/obj_frames/fuzz_wander.json && git checkout -- web/test/obj_frames/fuzz_np
+  ▶ mv /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/obj_frames/fuzz_npc.json /home/sleepy9090/Downloads/nes-por
+  ▶ git -C /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM checkout -- web/test/obj_frames/fuzz_npc.json
+  ▶ mv /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/obj_frames/real_npc.json /home/sleepy9090/Downloads/nes-por
+Moves and `git checkout` need approval here, but running the capture tool doesn't. So I'll regenerate the original `fuzz_npc.json` from its documented command and write my cases under new names.
+  ▶ Read README.md +86
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 600 --seed 115 --routine
+Restored: the regenerated `fuzz_npc.json` matches HEAD byte for byte. Now writing the wander fuzz to `fuzz_wander.json`. I'll keep `real_npc.json` as the real-run capture name.
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/town02_enter.state --cases 300 --routine AiNpcWander,
+All 16000 routine cases are identical. Next I'm adding the NPC slots back into `giveitem_ref.csv`, which s139 had to exclude.
+  ▶ head -1 web/test/giveitem_ref.csv; head -1 gfx/compare/wsc_give140/emu.csv | tr ',' '\n' | tail -25 | tr '\n' ' '
+  ▶ python3 tools/csv_trim.py gfx/compare/wsc_give140/emu.csv web/test/giveitem_ref.csv --cols core,pal,obj --frames 2496-26
+Now updating the check's header comment, then running all the web checks.
+  ▶ Edit giveitem_check.mjs
+  ▶ for t in core_check ppu_check serve_check world_check sprite_check sound_check apu_check wake_check giveitem_check; do p
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/serve_check.mjs 2
+Every check passes. Now the docs: labels, REVERSE.md, the obj_frames README and architecture_web.
+  ▶ Grep "^27,(ADA4|ADC8|AE07|A914|ACD9|AE16)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the obj_frames README and the architecture_web mention.
+  ▶ Edit README.md
+  ▶ Grep "ai_field" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ sed -n 218,222p docs/architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Last, a Verification Log row like s139's.
+  ▶ Grep "GiveItem.*s139|s139.*GiveItem" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 178p REVERSE.md | cut -c1-700
+  ▶ sed -n 178p REVERSE.md | cut -c700-
+  ▶ Edit REVERSE.md
+Town NPCs now walk in the web port: the town NPC AI (`$30`), its stationary variant (`$31`) and the trigger object's AI (`$78`) are ported. Entering the first town no longer logs any unported AI, and all web checks pass.
+
+**What the NPC code does:**
+- **`$30` (`27:ACD9`):** the NPC pauses, picks a new random direction every 16 steps, looks 16 px ahead and turns away when blocked.
+- **New detail:** the look-ahead (`27:ADA4`) checks walls and also other objects. Any active object in that 16 px cell (other NPCs, enemies, or the player) blocks it. So NPCs turn away from each other and from the player.
+- **Turning:** even slots turn one way, odd slots the other, with up to 4 tries per frame.
+- **`$78`:** just a bare `RTS` at `27:A914`, so the trigger object does nothing on its own.
+- **`$31`:** the stationary-NPC routine that `$30` hands off to (no object type uses `$31` directly).
+
+**Checks against tools.emu:**
+- **Routine level:** 800 of 800 cases identical in `obj_check.mjs` (600 random cases in the new `fuzz_wander.json`, 200 real calls from the town entry in `real_npc.json`).
+- **Item pickup run:** I widened `giveitem_ref.csv` to include the four NPC slots that s139 had to leave out. All object slots now match over 199 frames. The only differences are 4 sprite-checksum frames while the message window is up, a baseline s134 had already recorded.
+- **Town entry run:** the NPCs match frame for frame up to f2495, then the port falls one step behind. Once the trigger fires every frame, tools.emu starts each pass very late in the frame and drops some frames entirely (lag). The port has no CPU-cycle model, which is the existing leftover (c), so I left this unfixed.
+
+**Mistake, fixed:** my first fuzz capture overwrote the tracked `web/test/obj_frames/fuzz_npc.json`, which holds the `NpcScript` cases. I regenerated it from its documented command, and `git diff` shows it identical to the committed version. My cases are in `fuzz_wander.json` instead.
+
+**Docs:** 4 new labels, REVERSE.md (routine details, task note, Verification Log row), the `obj_frames` README and `docs/architecture_web.md` are updated. The multi-session town task stays open as it asks, with the AIs struck through. Next is sub_state 6 `ItemUseMenu` `30:D497`. Nothing is committed.
+
+SESSION_SUMMARY: Session 140 ported the town NPC AIs `$30`/`$31` and the trigger's `$78`, so town NPCs now walk; 800/800 routine cases match tools.emu, the item pickup run matches on every object slot, and all web checks pass.

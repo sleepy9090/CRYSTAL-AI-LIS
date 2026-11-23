@@ -1,0 +1,80 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md | 
+  ▶ cat dead_ends.md | cut -c1-400; for f in re_loop_sessions/*_14[01].txt; do echo "== $f"; tail -c 2500 $f; done; wc -c re
+  ▶ Read dead_ends.md
+  ▶ tail -c 3000 re_loop_sessions/20261121_171522_session_141.txt
+  ▶ Grep "PauseWait|BDDB" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ grep -n "SUBSTATES\|^  *[0-9x]*[0-9A-Fa-f]*: \|import" web/src/game/states/play.js | head -60
+Picking up sub_state 13 `PauseWait`; checking how the port's pause code is wired now.
+  ▶ Read play.js +195
+  ▶ Read pause.js +115
+  ▶ python3 tools/dis.py 15 BDDB 0x36 && python3 tools/search_bytes.py "a9 0c 85 41" && python3 tools/search_bytes.py "a9 0d
+  ▶ python3 tools/dis.py 30 CAB6 0x28 && python3 tools/decode_tables.py 30:CADE 40 word 2>/dev/null | head -50; python3 tool
+  ▶ grep -n -o ".\{300\}sub_state.\{0,3\}1[23]\b.\{300\}" REVERSE.md | head -8; grep -n -o ".\{200\}vestigial.\{200\}" REVER
+  ▶ Grep ".{0,250}(sub_state` ?(12|13|\$0C|\$0D)|vestigial).{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +284
+PauseWait is already ported inline in `pauseScreen`. Now checking whether sub_state 13 can ever reach the dispatcher, i.e. who writes `$41`.
+  ▶ python3 tools/search_bytes.py "85 41" --context 6 2>&1 | head -150
+Only one store takes `$41` from a variable (`27:A5C8`, `LDA $0620,X`). Checking what values it can get.
+  ▶ python3 tools/dis.py 27 A5A0 0x2C && python3 tools/xref.py 27:A5C5 && grep -n "A5C5\|A5C4\|A5BF" labels.csv
+Neither 12 nor 13 is ever stored (all 69 immediate stores checked; the variable one only gives `$20-$23`). Checking the main-loop call to see what the `PLA` would pop if 13 were dispatched.
+  ▶ python3 tools/xref.py 30:CAB6 && grep -n "MainLoop\|MainStateTable" labels.csv | head
+  ▶ python3 tools/dis.py 30 C900 0x20
+  ▶ Edit pause.js
+  ▶ Edit pause.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+Now running the web checks, including the pause path.
+  ▶ for t in core_check ppu_check serve_check world_check sprite_check obj_check sound_check apu_check wake_check giveitem_c
+  ▶ Write run_web_checks.sh
+  ▶ sh tools/run_web_checks.sh
+The script needed approval, so I'll run the checks one at a time instead.
+  ▶ node web/test/core_check.mjs 2>&1 | tail -3
+  ▶ node web/test/ppu_check.mjs 2>&1 | tail -2; node web/test/wake_check.mjs 2>&1 | tail -2; node web/test/giveitem_check.mj
+Those pass. Now the pause screen itself, using the check named in its Verification Log row.
+  ▶ Grep "\| Pause / status screen \(web port\).{0,700}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '171p' REVERSE.md | cut -c1-1500
+  ▶ Glob tools/emu/states/pause*
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/area1_enter.state --to-play --frames 10 --keys 2470:START -
+Pause screen still matches (0/76 frames differ). Quick check that a forced sub_state 13 runs instead of hanging:
+  ▶ Grep "--poke|'--[a-z-]+'" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/run.mjs
+No `--poke` option, so I'll write a small check. Looking at how an existing check loads a state first.
+  ▶ Read itemuse_check.mjs
+  ▶ Write pause13_check.mjs
+  ▶ node web/test/pause13_check.mjs
+The poke was overwritten: a pending generator (the town trigger) was still running. Checking how Machine tracks that.
+  ▶ Grep "pending|unported" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/machine.js
+  ▶ Edit pause13_check.mjs
+  ▶ node web/test/pause13_check.mjs
+Check passes. Now the docs: REVERSE.md table row, task note, Verification Log, labels, and CLAUDE.md.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +215
+  ▶ Edit REVERSE.md
+  ▶ grep -n "BDDB\|BE0B\|^30,C916\|^30,C918" labels.csv; grep -n "itemuse_check" CLAUDE.md docs/architecture_web.md | head
+  ▶ python3 - <<'EOF' 2>/dev/null || echo "inline python not allowed; use Edit"
+  ▶ Read labels.csv +990
+  ▶ Read CLAUDE.md +33
+  ▶ Edit labels.csv
+  ▶ Edit CLAUDE.md
+  ▶ Edit architecture_web.md
+I finished sub_state 13 `PauseWait` (`15:BDDB`), the next item in the remaining-substates task. It turned out to need no new game logic. The loop was already ported inside `pauseScreen` back in s94, so I only had to wire up the dispatch-table entry.
+
+**What I found:** entry 13 can never be reached in the ROM.
+- **Nothing sets it:** none of the 70 places that write `sub_state` (`$41`) stores 12 or 13. 69 write fixed values, and the one variable write (`AiSetSubstate` `27:A5C5`) only gives `$20-$23`.
+- **It is only ever 13 inside the pause loop:** `PauseScreen` increments it to 13, and its wait loop never returns to the dispatcher.
+- **Reaching it would crash:** the routine's final `PLA` would pop the main loop's return address (`$C918`, pushed at `30:C916`). `irq_mode` would get `$18`, and the `RTS` at the end of `ReadPads` would jump into garbage.
+
+**Port changes:**
+- In `web/src/game/states/pause.js`, the wait loop is split out as `pauseWait`, and `pauseScreen` falls into it as the ROM does.
+- A new `pauseWaitEntry` is registered as entry 13 in `play.js` `SUBSTATES`. It logs that the entry is unreachable and keeps `irq_mode` instead of copying the crash, so a forced 13 no longer hangs the port.
+
+**Testing:**
+- **New check:** `web/test/pause13_check.mjs` forces sub_state 13 from an idle gameplay frame in the town02 state. It stays 13 until START, goes back to 8 three frames later, and `irq_mode` is unchanged. It passes. There is no tools.emu reference to compare against, because the ROM never takes this path.
+- **Existing pause comparison:** I re-ran the s94 pause-screen compare on fresh exports and still get 0 of 76 frames different.
+- **Other checks:** `core_check`, `ppu_check`, `wake_check`, `giveitem_check` and `itemuse_check` all pass. I didn't run serve, world, sprite, obj, sound or apu, since this change doesn't touch the code they test.
+
+**Docs:** REVERSE.md has the s142 finding in substate table row 13, a new Verification Log row, and the task note with 13 struck through. The task stays open; next is 20/29 `SubstTeleportMenu` `30:DB28`, which also needs hooking into the Warp Boots branch. I also updated the `PauseWait` comment in `labels.csv`, `CLAUDE.md` and `docs/architecture_web.md`.
+
+I also added `tools/run_web_checks.sh`, which runs all the web checks in one go. I didn't use it because running it needed approval, so you can keep or delete it. Nothing is committed.
+
+SESSION_SUMMARY: Session 142 found that sub_state 13 PauseWait is unreachable in the ROM (nothing stores 12/13, and if dispatched its PLA would eat the main loop's return address), split pauseWait out of pauseScreen, registered entry 13 as pauseWaitEntry, and added pause13_check.mjs, which passes along with the re-run s94 pause compare (0/76 frames); SubstTeleportMenu is next.

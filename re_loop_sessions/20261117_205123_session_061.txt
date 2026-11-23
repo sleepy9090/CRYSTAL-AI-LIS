@@ -1,0 +1,32 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +1779
+  ▶ grep -n "^##\|^- \[ \]" REVERSE.md | awk -F: '$1>1770' | head -60; tail -c 3000 re_loop_sessions/20261117_205123_session
+  ▶ Grep "^##|^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ tail -c 2500 re_loop_sessions/20261117_205123_session_060.txt; echo ======; tail -c 1500 re_loop_sessions/20261117_20512
+  ▶ Read REVERSE.md +1880
+  ▶ Grep "EF38" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+Picked the top open task: trace the `31:EF38` packed bank+pointer decoder. Checking what's already documented first.
+  ▶ grep -o ".\{300\}EF38.\{300\}" REVERSE.md; grep -n "^31,EF\|^31,F0[0-4]" labels.csv; python3 tools/dis.py 31 EF00 0x80
+  ▶ Grep "ScreenPagePtr|EF36" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/xref.py EF36; python3 tools/xref.py EF33; python3 tools/xref.py EF1F
+  ▶ sed -n '57p;464p;476,478p;1590p;1794p;1851p' REVERSE.md | cut -c1-900
+The task's premise is already resolved: `31:EF38` is mid-instruction inside `ScreenPagePtr` `31:EF36`, decoded in session 10. Confirming its four callers are labeled, then closing it out.
+  ▶ grep -n "^31,EB[89ABCDEF]\|^31,EC\|^31,ED[0-2]\|^31,E628\|^\*,6300" labels.csv
+Everything is already covered: callers `EBBE`/`EC04` sit in `ScreenRowRender`, `ECBF`/`ED12` in `BgColRender`, and the grid is filled by `AreaLoadMap` `31:E628`. Marking the task done.
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^31,EF33" labels.csv
+  ▶ sed -i '234s/.*/31,EF33,ScreenPageAtCamera,ScreenAtCamera then ScreenPagePtr; no direct JSR\/JMP xrefs (s61)/' labels.cs
+  ▶ Edit REVERSE.md
+  ▶ Read labels.csv +234
+  ▶ Edit labels.csv
+I closed the top open task (trace the `31:EF38` "packed bank+pointer decoder"). It had already been solved in session 10, so this session found nothing new in the ROM.
+
+- **`31:EF38` isn't a routine.** It falls in the middle of an instruction inside `ScreenPagePtr` (`31:EF36`). The task was written in an early session, before that routine was decoded.
+- **There are no pointer tables to find.** The "packed pointer" is just the screen id: the top 2 bits pick which pair of banks 0-7 to use, and the low 6 bits pick a 256-byte page. The ids come from the screen grid at `$6300`, which `AreaLoadMap` (`31:E628`) fills from the area data. This was all already in REVERSE.md.
+- **The routine's 4 callers were already labeled:** two in `ScreenRowRender` and two in `BgColRender` (`31:EC87`).
+- **One small new detail:** nothing calls `ScreenPageAtCamera` (`31:EF33`) directly, so it's probably unused. That's based on static analysis only; I didn't check for indirect calls.
+
+**Files changed:** in `REVERSE.md` I marked the task done with the explanation above. In `labels.csv` I only changed the comment on `ScreenPageAtCamera`; no labels were added. I didn't add any follow-up tasks or `dead_ends.md` entries, and I didn't commit.
+
+SESSION_SUMMARY: Session 61 — closed the `31:EF38` decoder task as already done: it's mid-instruction in `ScreenPagePtr` `31:EF36` (decoded in session 10), there are no pointer tables (the screen id from `$6300` is the bank+page), all 4 callers were already labeled, and `ScreenPageAtCamera` `31:EF33` has no direct callers; REVERSE.md note and one label comment updated.

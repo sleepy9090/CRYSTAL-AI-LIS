@@ -1,0 +1,91 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -3; wc -l dead_ends.md REVERSE.md; grep 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n -- "- \[ \]" REVERSE.md | cut -c1-400 | head -8; ls -la re_
+  ▶ Read REVERSE.md +2296
+  ▶ Read dead_ends.md
+  ▶ Read 20261121_221108_session_148.txt
+Task: port sub_state 26 `SwordRaisePose` `19:BC04`. Reading the ROM routine and existing docs.
+  ▶ Grep "BC04|SwordRaise" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Read REVERSE.md +975
+  ▶ Read bank_19.asm +2590
+  ▶ Read REVERSE.md +296
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 2669,2674p disasm/bank_19.asm; python3 tools/dis.py 30 D5A4 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 D770 40; python3 tools/dis.py 30 C867 20
+Two ways in: event act 22 (`EvActSwordState` 30:D78C) stores `sub_state` $1A, and event act 1 JSRs it directly. Now reading the sibling web port.
+  ▶ Read formrevert.js
+  ▶ Grep "formrevert|FormRevert|ENTRY_POINTS|^  2[4-7]:|\b25:|act 22|act 1\b|0x1a|22:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states
+  ▶ Read play.js +195
+  ▶ Grep "^  1: |not ported|EVENT_ACTS|^const ACTS|^export const" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/giveitem.js
+  ▶ Read cure.js
+  ▶ Read giveitem.js +270
+Act 22 is already ported; it stores $1A. Now I'll find a tools.emu scenario that reaches the handler.
+  ▶ Grep "act 1\b|act 22|BC04|D78C|D5A4|sword" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "Form revert\|^| Cure" REVERSE.md | cut -c1-2500 | head; gr
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.web_state --help 2>&1 | head -40; head -c 600 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for f in cure itemuse_fail; do head -c 400 tools/emu/states/$f.stat
+  ▶ Grep "web_state .*itemuse_fail|web_state .*cure|web_state[^`]*--out web/test/states/(itemuse_fail|cure)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -30 web/test/itemuse_check.mjs; head -30 web/test/cure_check.m
+Porting sub_state 26 `SwordRaisePose`. Next I'll export a tools.emu state at the handler entry by poking `sub_state`=$1A.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for n in 60 100; do timeout 600 python3 -m tools.emu.web_state --lo
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 -m tools.emu.web_state --load-state tools/emu/s
+State exported at f2550. Checking `WaitFrame`'s effect on X (for `StatRecalc`) and the helper signatures.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C169 14; python3 tools/dis.py 30 C17D 30; g
+WaitFrame keeps X, so `StatRecalc` gets X = 0 as in s148. Writing `states/swordraise.js`.
+  ▶ Edit formrevert.js
+  ▶ Write swordraise.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states; python3 - <<'EOF'
+Using Edit instead.
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+Now comparing the port against tools.emu from the exported state.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --help 2>&1 | head -30
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+Close match. Checking the `music` row at f2551 and the `sub` row at f2682.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py /tmp/sr/emu.csv /tmp/sr/web.csv --c
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/compare_frames.py /tmp/sr/emu.csv /tmp/sr/web.csv --c
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_trim.py /tmp/sr/emu.csv /tmp/sr/emu_m.csv --cols 
+  ▶ Read emu_m.csv
+  ▶ Read web_m.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/web_state_compare.py --state tools/emu/st
+  ▶ Read cure_check.mjs +30
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/csv_trim.py /tmp/sr2/emu.csv web/test/swordraise_ref.
+  ▶ Write swordraise_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/swordraise_check.mjs
+Passes. Running the regression sweep over the other checks.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for t in formrevert_check cure_check changeform_check telepathy_che
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test; node formrevert_check.mjs | tail -2; node cure_check.mjs |
+  ▶ node web/test/formrevert_check.mjs | tail -2 && node web/test/cure_check.mjs | tail -2 && node web/test/changeform_check
+All checks pass. Now updating the docs: REVERSE.md substate row 26, the Verification Log, the task note, labels, and CLAUDE.md.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "formrevert_check" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CLAUDE.md
+  ▶ Grep "^30,C867|^30,D78C|^30,D5A4" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read labels.csv +400
+  ▶ Edit CLAUDE.md
+  ▶ Edit labels.csv
+I ported sub_state 26 `SwordRaisePose` (`19:BC04`), and it matches tools.emu on all 132 compared frames.
+
+**What changed**
+- **New `web/src/game/states/swordraise.js`:** a straight port of the ROM routine.
+  - It clears object slots 4–11, switches the player's sprite graphics, and swaps the player to the raised-sword pose. It saves the old sprite IDs first and puts them back afterwards.
+  - It plays jingle `$93`, holds the pose for 127 frames, recalculates stats and returns to sub_state 8.
+  - Unlike the cure and form-revert handlers (rows 24/25), it ends with a plain return and no extra screen update.
+  - It reuses the sprite-pass helper from `formrevert.js`, which is now exported.
+- **`states/play.js`:** the handler is wired in as `SUBSTATES` entry 26 and as a load-state entry point for `19:BC04`.
+- **How the game reaches it:** only event act 22 (`30:D78C`, already ported) stores sub_state `$1A`. Event act 1 (`30:D5A4`, the Sword of Thunder warp) calls the routine directly, but act 1 itself is still unported and logs "not ported".
+- **New test state:** `web/test/states/swordraise.json` plus `tools/emu/states/swordraise.state`. They are exported from `town02_enter.state` with `sub_state` poked to `$1A` after 100 frames. With only 10 frames the town-entry item routine was still running and overwrote the poke.
+
+**Test results**
+- The new `web/test/swordraise_check.mjs` passes: 132/132 rows (f2551–2682) match tools.emu at shift 0 on `core,pal,obj`, plus checks on the pose during the hold and on the end state.
+- Two cells are skipped: `music` at f2551 and `sub` at f2682. Both are writes made right after a vblank; tools.emu's row already includes them and the port makes them one frame later. This is the known no-cycle-model gap (c), not a bug in this handler.
+- RAM at f2682 differs in only 2 bytes (`$09` and `$41`), for the same reason. The restored sprite IDs and the stat recalculation are identical.
+- **Not matched:** the screenshots differ on tile rows 23–29 (the HUD). I treated this as the earlier known HUD issue in load-state runs, but I didn't take a screenshot from before the handler starts to confirm it is unrelated.
+- **Not compared:** play after f2682. The player stands on the town trigger there, and that trigger is one frame apart between the two runs (the same gap).
+- All the other checks still pass: formrevert, cure, changeform, telepathy, teleport, giveitem, itemuse, pause13, wake, core, and obj (16000/16000).
+
+**Docs:** REVERSE.md has substate row 26 filled in, a new Verification Log row "Sword raise", and the task note updated (next is 27 `SubstMesiaReunion` `19:BC6B`). labels.csv has the new label `30:C867 ObjClear4to11`, and CLAUDE.md lists the new check. The substates task stays open.
+
+SESSION_SUMMARY: Session 149 — ported sub_state 26 SwordRaisePose 19:BC04 (states/swordraise.js + swordraise_check.mjs, 132/132 rows vs tools.emu at shift 0, RAM equal apart from the post-NMI $09/$41); next is 27 SubstMesiaReunion.

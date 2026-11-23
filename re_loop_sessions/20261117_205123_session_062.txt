@@ -1,0 +1,40 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "Next Tasks" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +1779
+  ▶ grep -n "^- \[ \]" REVERSE.md | head -5; grep -n "^### " REVERSE.md | awk -F: '$1>1779'
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1779
+  ▶ Read REVERSE.md +1880
+Picked task: "decode jump tables at start of swappable banks". Checking what's already covered.
+  ▶ Grep "(jump table|entry table|JMP table|vector table).*(bank|\$8000)|\$8000-\$802F" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read 20261117_205123_session_061.txt
+Line 507 already says swappable banks have no `$8000` JMP table. Let me read that context and spot-check banks 12 and 18.
+  ▶ Read REVERSE.md +500
+  ▶ python3 tools/dis.py 12 8000 0x30 && echo ==== && python3 tools/dis.py 18 8000 0x30 && echo ==== && grep -n "^1[28],80[0
+  ▶ Grep "^(1[0-9]|2[0-9]|[0-9]),(8000|8028|A000)\b|^18,80" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "18:8000|18:8028|IntroInit|bank 18 `\$80" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Bank 18's start is unlabeled. Finding who calls `$8028` and reads `$8000-$8027` in bank 18.
+  ▶ python3 tools/xref.py 8028; echo ===; python3 tools/xref.py 8000 --data 2>&1 | head -30; echo ===; python3 tools/dis.py 
+`18:805F` reads its own bytes `$8000/$8001` (ROM reads, not MMC3 regs) as a pointer `$8002` → `NtRectBlit`. Confirming the blit format and the caller at `31:F39C`.
+  ▶ grep -n "NtRectBlit\|NtFill\|^31,F39\|^31,F38\|^18,82B3\|^18,81D8" labels.csv; python3 tools/dis.py 31 F390 0x16; python
+  ▶ Grep "F39C|bank-18 intro|18:8028|\$8028" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '153p;161p;189p' REVERSE.md | cut -c1-700
+The intro is documented but `18:8000-8028` has no labels, and the pointer + rect header is new. Adding labels and the REVERSE.md note.
+  ▶ Read labels.csv +253
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+Quick check that the new labels parse:
+  ▶ python3 tools/dis.py 18 8000 4 && python3 tools/dis.py 18 8028 3 && python3 tools/dis.py 31 F39C 3
+A comma in one comment split the CSV field. Fixing it:
+  ▶ Edit labels.csv
+I closed the task "decode jump tables at start of swappable banks". There are no jump tables to decode. Session 22 had already found that the swappable banks have no JMP entry table at `$8000` or `$A000`, and a check of the two banks the task names confirms it:
+
+- **Bank 12** starts with `SfxPtrTable` at `12:8000`, which is data and has been labeled since session 3.
+- **Bank 18** starts with a small data header, which was unlabeled until now:
+  - `18:8000` (`IntroRectPtr`) is a pointer to `$8002`. The intro code reads it with `LDA $8000`/`LDA $8001` at `18:805F`. These are reads of its own ROM bytes, not the MMC3 registers.
+  - `18:8002` (`IntroRect`) is one rectangle record for the existing `NtRectBlit` routine: 12 tiles wide, 3 rows high, then 36 tile bytes (`$8004-$8027`). It is drawn at PPU `$21CA` after both nametables are cleared.
+  - Code starts at `18:8028` (`IntroColdBoot`), the cold-boot intro. Its only caller is `31:F39C`. The routine was already documented in the Boot notes but had no label.
+
+I added these 3 labels to `labels.csv` and checked that `dis.py` loads them; one comment had a comma that split the CSV field, which I fixed. In `REVERSE.md` I marked the task done with this explanation. This is from static analysis only; I didn't confirm it in the emulator. No follow-up tasks, no `dead_ends.md` entry, and nothing committed.
+
+SESSION_SUMMARY: Session 62 — closed the "jump tables at start of swappable banks" task: there are none (already noted in session 22); 12:8000 is SfxPtrTable, 18:8000 is a .dw $8002 pointer to a 12×3 NtRectBlit record drawn by the cold-boot intro, and code starts at 18:8028 (IntroColdBoot, called from 31:F39C); 3 labels added.

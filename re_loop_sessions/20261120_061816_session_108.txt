@@ -1,0 +1,257 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -4; wc -l dead_ends.md REVERSE.md; grep 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat dead_ends.md; tail -c 3500 re_loop_sessions/20261120_061816_ses
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; find web/src -name "*.js" | xargs wc -l | sort -n | tail -50; grep 
+  ▶ Read mainloop.js
+  ▶ Read play.js
+Now the ROM routines: MainStateNewGame and continue.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C957 0x15F 2>&1 | head -120; grep -n "C957\
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -rn "C008\|statRecalc\|objInit\b\|export function\|BA65\|hudWi
+Good — most pieces exist. Let me read saveload.js 160-331 and death.js waitFrame/statRecalc.
+  ▶ Read saveload.js +1
+  ▶ Read saveload.js +150
+Building blocks exist. Now the new-game substate 0 handler:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "SubstNewGameInit\|SubstWakeCutscene" REVERSE.md labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CA5B 0x5B 2>&1; python3 tools/dis.py 31 E3D
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 E3E9 0x180 2>&1 | head -200
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for a in E3E9 800E 8C0E E611 E61B E628 9897 E799 E7C4 E823 9824 EA7
+  ▶ Grep "E3E9|14:800E|8C0E|E611|E61B|E628|9897|E799|E7C4|E823|9824|EA72|9CEF|E8F6|C831|8C49|98A8|9A30|E90A|FE80|8CC0" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "KEYS\|keys" tools/web_compare.py | head; for a in E611 E61
+I'm porting the new-game path (main_state 0 → substate 0 → area load); now checking which callee routines are already labeled.
+  ▶ Grep ",(E611|E61B|E799|E7C4|E823|EA72|9CEF|E8F6|FF8C|800E|E845)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "KEYS|keys" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/web_compare.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^export\|^ \*\|^//" web/src/game/obj/sprites.js | head -20
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 E611 0x17 2>&1; python3 tools/dis.py 31 E79
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 E90A 0x263 2>&1
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -rn "CANON_KEYS =" -A4 tools/ | head; python3 tools/dis.py 26 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 26 9D11 0x3C 2>&1; python3 tools/dis.py 30 C7A
+Status: porting new-game → area-load path; reading prg.js helpers next.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat web/src/game/prg.js; sed -n 1,60p web/src/game/obj/util.js; gre
+  ▶ Read death.js +1
+Now generating the tools.emu reference run to f2460 for comparison.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; mkdir -p gfx/compare/s108; time python3 -m tools.emu --frames 2461 
+  ▶ mkdir -p /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/compare/s108
+  ▶ python3 -m tools.emu --help 2>&1 | head -40
+  ▶ python3 -m tools.emu --frames 2461 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --compare 
+While the reference run goes, checking the remaining pieces (E845, bgstream contracts, objBgProbe).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 E845 0xB1 2>&1; sed -n 1,30p web/src/game/w
+  ▶ Read objinit.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,61p web/src/game/pads.js; grep -n "spriteDraw\|FarCall_B14
+  ▶ Read equip.js +644
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C7C5 0x20 --stop 2>&1
+I have the full picture. Writing `world/camera.js` first (CameraTick/Update/Follow/ClampX/shake + ExitLookup).
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat web/src/game/ram.js | sed -n 1,49p; grep -n "queueAttrAll" -A8 
+  ▶ Write camera.js
+Reference run done. Now `states/areaenter.js` (state 0/8, substates 0/1, AreaEnter, PlayerPlaceBody).
+  ▶ Write areaenter.js
+Wiring into mainloop/play/machine:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 - <<'EOF'
+Mistake on my part (stray heredoc). Editing directly:
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit mainloop.js
+  ▶ Edit play.js
+  ▶ Grep "stubHits|m\.playSound|entryFF|spawnEntry|MAIN_STATES" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web
+  ▶ python3 tools/dis.py 31 E628 0x14 2>&1
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+Now run the port and compare against the emu CSV.
+  ▶ node web/test/run.mjs --frames 2247 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --compare
+Runs through to sub_state 8. Compare:
+  ▶ python3 tools/compare_frames.py gfx/compare/s108_emu.csv gfx/compare/s108_web.csv --frames 2300-2460 --cols core 2>&1 | 
+The port finishes the area load 7 frames early: the ROM's FullScreenDraw is CPU-bound (~6 rows/frame), so it spans several frames. Looking at the emu rows:
+  ▶ head -1 gfx/compare/s108_emu.csv | tr ',' '\n' | head -130 | tr '\n' ' '; echo; grep -E "^(23[1-5][0-9])," gfx/compare/s
+  ▶ grep -E "^(23[2-5][0-9])," gfx/compare/s108_web.csv | cut -d, -f1-14
+Need exact NMI timing inside the load. Checking trace options:
+  ▶ grep -n "trace-range\|trace-frames\|trace_range\|--break\b\|'--break'" -A3 tools/emu/__main__.py | head -40
+  ▶ python3 -m tools.emu --frames 2318 --keys 1250:START 1400:START 1600:START 1700:START 2300:START --save-state gfx/compar
+  ▶ python3 -m tools.emu --load-state gfx/compare/s108_f2318.state --frames 36 --keys 2340:DOWN:80 --trace gfx/compare/s108_
+  ▶ Write trace_summary.py
+  ▶ Grep "^def load_labels" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/nesrom.py
+  ▶ python3 tools/trace_summary.py gfx/compare/s108_trace.txt | head -150
+  ▶ Edit bgstream.js
+  ▶ Edit bgstream.js
+  ▶ Edit bgstream.js
+  ▶ Edit areaenter.js
+  ▶ Edit areaenter.js
+  ▶ Edit areaenter.js
+  ▶ Edit areaenter.js
+Now make `saveGame` return whether the full save ran:
+  ▶ Edit saveload.js
+  ▶ Edit saveload.js
+  ▶ node web/test/run.mjs --frames 2247 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --compare
+Sub-state timing now matches through f2391; after that the emu leaves for area 1 through SubstPlay, which the port doesn't have yet. Checking the remaining pal/pos diffs in f2320-2360:
+  ▶ python3 tools/compare_frames.py gfx/compare/s108_emu.csv gfx/compare/s108_web.csv --frames 2321-2360 --cols core,pal 2>&
+  ▶ sed -n 1,40p web/test/run.mjs | grep -n "\-\-" 
+  ▶ ls tools | grep -i -E "diff|ram|bin" ; python3 -m tools.emu --load-state gfx/compare/s108_f2318.state --frames 36 --keys
+  ▶ python3 tools/mem_diff.py --help 2>&1 | head -12
+  ▶ python3 tools/mem_diff.py gfx/compare/s108_emu_ram.bin gfx/compare/s108_web_ram.bin 0000-07FF; echo ----; python3 tools/
+  ▶ Grep "\$0628|\$6423|\$6420-|0628,|,6423," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+`$0628-$062B` are title-screen leftovers, and `$6423` belongs to the name/status page. Both look like the known f2300 START latency. Rerunning the port with START at 2301 to confirm:
+  ▶ node web/test/run.mjs --frames 2140 --quiet --keys 1250:START 1400:START 1600:START 1700:START 2301:START 2340:DOWN:80 -
+  ▶ python3 -m tools.emu --load-state gfx/compare/s108_f2318.state --frames 35 --keys 2340:DOWN:80 --dump-screen gfx/compare
+  ▶ Read s108_emu_2352.png
+  ▶ Read s108_web_2352.png
+  ▶ python3 tools/dis.py 31 F433 0x9C 2>&1 | sed -n 1,90p
+  ▶ python3 tools/dis.py 31 F4CF 0x16 2>&1; grep -n "irqMsgWindowEnd\|irqHandlers\[" web/src/game/*.js web/src/game/*/*.js |
+Handler 0 (wrap split) and handler 1 (HUD split + the gameplay SoundUpdate) are short, so I'll port both. Handlers will get their split line so handler 0 can chain handler 1.
+  ▶ Edit mainloop.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ Edit machine.js
+  ▶ node web/test/run.mjs --frames 2139 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --dump-sc
+  ▶ Read s108_web_2352.png
+  ▶ Read s108_diff_2352.png
+The port shows an extra "034" (the MP value) in the LIFE row. Checking how HudRedraw's element and X are used:
+  ▶ python3 tools/dis.py 26 8E46 0x30 2>&1 | head -24; python3 tools/dis.py 30 C0E5 0x20 2>&1 | head -14
+  ▶ python3 tools/decode_tables.py 26:8EC5 42 u8 2>&1 | head -12
+No HUD element writes there, so I need a closer look. Writing a small crop/zoom tool:
+  ▶ Write png_zoom.py
+  ▶ python3 tools/png_zoom.py gfx/compare/s108_zoom.png 0 184 128 32 4 gfx/compare/s108_emu_2352.png gfx/compare/s108_web_23
+  ▶ Read s108_zoom.png
+The known `tools/dis.py` shadowing issue. Fixing by dropping the script dir from `sys.path` before importing PIL:
+  ▶ Edit png_zoom.py
+  ▶ python3 tools/png_zoom.py gfx/compare/s108_zoom.png 0 184 128 32 4 gfx/compare/s108_emu_2352.png gfx/compare/s108_web_23
+  ▶ Read s108_zoom.png
+The port has an extra "034" in the LIFE row (NT row 25, around cols 11-13) where the emu shows blank tiles. I need a nametable diff. Checking what dump paths exist:
+  ▶ sed -n 1,30p tools/emu/web_state.py | grep -v "^import\|^from"; grep -n "ciram\|vram" web/test/run.mjs | head
+  ▶ Grep "a\.ram|a\.wram" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/run.mjs
+  ▶ sed -i 's|^      case '"'"'--dump-wram'"'"': a.wram = v(); break;|&\n      case '"'"'--dump-ciram'"'"': a.ciram = v(); b
+I'll use Edit instead.
+  ▶ Read run.mjs +8
+  ▶ Edit run.mjs
+  ▶ Edit run.mjs
+  ▶ Edit run.mjs
+  ▶ python3 -m tools.emu.web_state --load-state gfx/compare/s108_f2318.state --frames 30 --until 30:CAB6 --out gfx/compare/s
+  ▶ python3 -m tools.emu.web_state --help 2>&1 | grep -E "^\s+--" | head -20
+  ▶ python3 -m tools.emu.web_state --load-state gfx/compare/s108_f2318.state --keys 2340:DOWN:80 --frames 33 --until 30:CAB6
+mem_diff read the JSON's `ram`, not `ciram`. Checking how it picks the key:
+  ▶ Grep "json|ram|wram" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/mem_diff.py
+  ▶ Read mem_diff.py
+  ▶ Edit mem_diff.py
+  ▶ Edit mem_diff.py
+  ▶ Edit mem_diff.py
+  ▶ python3 tools/mem_diff.py gfx/compare/s108_cab6.json gfx/compare/s108_web_ciram.bin 0000-07FF --key ciram 2>&1 | tail -3
+  ▶ Read ppuqueue.js +18
+  ▶ python3 -m tools.emu.web_state --load-state gfx/compare/s108_f2318.state --keys 2340:DOWN:80 --frames 1 --until 31:E3E9 
+Off by one frame (the emu stopped inside f2324). Port to f2324:
+  ▶ node web/test/run.mjs --frames 2111 --quiet --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 -
+  ▶ python3 tools/dis.py 31 F3B6 0x60 2>&1 | grep -n "2002\|PPUSTATUS\|C67D\|PpuQueueFlush" ; python3 tools/dis.py 30 C67D 0
+Confirmed: the NMI reads PPUSTATUS at `F3B7` and the port's `nmiWork` doesn't. It didn't matter before because no gameplay IRQ wrote PPUSCROLL. Adding it:
+  ▶ Edit mainloop.js
+  ▶ node web/test/run.mjs --frames 2140 --quiet --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 -
+CIRAM is now identical at f2353. The f2352 screenshot is down to 35 px, all on line 191 (the split line). Zooming in:
+  ▶ python3 tools/png_zoom.py gfx/compare/s108_zoom.png 32 186 72 10 6 gfx/compare/s108_emu_2352.png gfx/compare/s108_web_23
+  ▶ Read s108_zoom.png
+  ▶ cd web/test && for t in core_check ppu_check serve_check world_check sprite_check obj_check sound_check apu_check; do pr
+  ▶ node web/test/core_check.mjs 2>&1 | tail -3; node web/test/ppu_check.mjs 2>&1 | tail -1; node web/test/serve_check.mjs 2
+  ▶ node web/test/sprite_check.mjs 2>&1 | tail -1; node web/test/obj_check.mjs 2>&1 | tail -1; node web/test/sound_check.mjs
+All checks pass. Refreshing the canonical comparison (`web_compare.py` → COMPARISON.md) in the background:
+  ▶ python3 tools/web_compare.py 2>&1 | tail -20 && python3 tools/comparison.py report 2>&1 | tail -5
+While that runs, tidying the `statX` comment in areaenter.js:
+  ▶ Edit areaenter.js
+Now a check of the CONTINUE path (main_state 8). Looking up the key script the earlier sessions used:
+  ▶ Grep "death_cont|SELECT.*START|cont.*keys" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu
+  ▶ python3 -m tools.emu --frames 1900 --keys 1250:START 1400:START 1600:START 1690:SELECT 1700:START --compare gfx/compare/
+  ▶ python3 tools/compare_frames.py gfx/compare/s108_cont_emu.csv gfx/compare/s108_cont_web.csv --frames 1650-1899 --cols co
+Neither side reached CONTINUE with that script. Checking how save_probe.py drives it:
+  ▶ Read save_probe.py +90
+  ▶ python3 tools/csv_stalls.py --help 2>&1 | head -5; awk -F, 'NR>1 && ($123!=pm || $124!=ps) {print $1, $2, $123, $124; pm
+  ▶ Read b0xi3rlbc.output
+  ▶ python3 tools/compare_frames.py gfx/compare/s108_emu.csv gfx/compare/s108_web.csv --frames 2321-2353 --cols obj 2>&1 | t
+  ▶ python3 -m tools.emu --frames 1400 --keys 1240:SELECT 1250:START --compare gfx/compare/s108_cont_emu.csv --dump-ram gfx/
+  ▶ python3 -m tools.emu --frames 1260 --keys 1200:SELECT 1240:SELECT:6 1250:START --watch 82 --watch 40 2>&1 | tail -8
+  ▶ python3 -m tools.emu --frames 1460 --keys 1250:START 1300:SELECT 1400:START --watch 82 --watch 40 2>&1 | tail -6
+  ▶ python3 -m tools.emu --frames 1460 --keys 1250:START 1300:SELECT 1400:START --watch 82 --watch 40 2>&1 | grep -v "pc=19:
+  ▶ python3 tools/dis.py 19 A75A 0x40 2>&1 | head -30
+  ▶ python3 tools/xref.py A768 --bank 19 2>&1 | head; python3 tools/xref.py A77F --bank 19 2>&1 | head
+Status: the new-game area load matches. I'm now working out the key timing that reaches the title CONTINUE path so I can test `main_state` 8.
+  ▶ python3 tools/dis.py 19 A73A 0x20 2>&1 | head -16; python3 -m tools.emu --frames 1460 --keys 1250:START --break 19:A740 
+  ▶ python3 -m tools.emu --frames 1460 --keys 1250:START --break 19:A749 --break-hit 1 2>&1 | head -4; python3 -m tools.emu 
+  ▶ python3 -m tools.emu --frames 1800 --keys 1250:START 1400:START 1600:START 1700:START --break 19:A749 2>&1 | grep -E "fr
+Title menu input starts at f1452 and the f1600 START picks the entry. CONTINUE run: SELECT at 1550, START at 1600.
+  ▶ python3 -m tools.emu --frames 1800 --keys 1250:START 1400:START 1550:SELECT 1600:START --compare gfx/compare/s108_cont_e
+The CONTINUE path reaches sub_state 8 in the port. Looking at the early diffs:
+  ▶ python3 tools/compare_frames.py gfx/compare/s108_cont_emu.csv gfx/compare/s108_cont_web.csv --frames 1600-1660 --cols co
+The port runs 1 frame ahead on CONTINUE (state 8 → 1 at f1602 vs f1603), so there's a lag frame in MainStateContinue. Tracing it:
+  ▶ python3 -m tools.emu --frames 1606 --keys 1250:START 1400:START 1550:SELECT 1600:START --trace gfx/compare/s108_trace_co
+LoadGameAndInit straddles the f1602 NMI, which finds frame_ready=0 after the WaitFrame, so it's a plain `yield`. Adding it:
+  ▶ Edit areaenter.js
+  ▶ node web/test/run.mjs --frames 1586 --quiet --keys 1250:START 1400:START 1550:SELECT 1600:START --compare gfx/compare/s1
+Two leftovers on CONTINUE: the f1602 row (LoadGameAndInit's `$6D`/`sub_state` writes land after the NMI) and a palette sequence offset by one step. Comparing palette rows:
+  ▶ grep -E "^16(0[0-9]|1[0-9]|2[0-9]|3[0-2])," gfx/compare/s108_cont_emu.csv | cut -d, -f1,3,15 | tr '\n' ' '; echo; grep -
+  ▶ Edit areaenter.js
+  ▶ Edit areaenter.js
+  ▶ node web/test/run.mjs --frames 1631 --quiet --keys 1250:START 1400:START 1550:SELECT 1600:START --compare gfx/compare/s1
+f1540-1631 now differ only in the explained row-timing rows (2 pos_y, 5 mid-PaletteBuild pal rows). Running a full RAM/WRAM/CIRAM diff for CONTINUE at the first sub-8 dispatch:
+  ▶ python3 -m tools.emu --frames 1600 --keys 1250:START 1400:START 1550:SELECT --save-state gfx/compare/s108_f1600.state 2>
+  ▶ python3 -m tools.emu --frames 1599 --keys 1250:START 1400:START 1550:SELECT --save-state gfx/compare/s108_f1599.state 2>
+  ▶ Grep "keys" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/web_state.py
+Keys only apply during the `--until` search, so drop `--frames`:
+  ▶ python3 -m tools.emu.web_state --load-state gfx/compare/s108_f1599.state --keys 1600:START --frames 0 --until 30:CAB6 --
+That stopped at the sub-1 dispatch. Using SubstPlay's entry `30:CB62` instead:
+  ▶ python3 -m tools.emu.web_state --load-state gfx/compare/s108_f1599.state --keys 1600:START --frames 0 --until 30:CB62 --
+  ▶ node web/test/run.mjs --frames 1418 --quiet --keys 1250:START 1400:START 1550:SELECT 1600:START --dump-ram gfx/compare/s
+  ▶ python3 -m tools.emu --load-state gfx/compare/s108_f1599.state --keys 1600:START --frames 40 --break 31:E4EC 2>&1 | grep
+Y=`$0A` there, probably left by ObjSpriteDraw at `E4D2`. Checking what Y that routine ends with:
+  ▶ python3 tools/dis.py 28 800E 0x9A 2>&1 | grep -n "RTS\|JMP\|LDY\|TAY\|INY\|DEY\|80A5\|80D6" | head -20; python3 tools/di
+  ▶ python3 tools/dis.py 28 808E 0x50 2>&1 | head -40
+  ▶ python3 tools/dis.py 28 80D3 0x12 2>&1; grep -n "function orbitSprites\|function hideUnusedOam\|export function spriteDr
+  ▶ grep -n "^| \*\*Title side, modes 1-4\|^### Verification Log\|^### Web Port Fixes\|^- \*\*s107\|^### Documentation\|^- \
+  ▶ Grep "^\| Title side, modes 1-4" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +160
+Now writing the Verification Log row (inserted after the s107 row):
+  ▶ Edit REVERSE.md
+Marking the task done with the s108 notes, per the leftovers rule:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding the new tools to REVERSE.md's tool table:
+  ▶ Grep "csv_stalls\.py`? \|" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+Now labels. Checking which of the routines I named are still unlabeled:
+  ▶ Grep "^(31|30),(E439|E611|E61B|E422|E41C|E51C|E533|E799|E823|E845|EA41|EA5F|EADF|EB05|E993|CAA2|C7A5|EB09|E9AD|EA2F|E90A)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv
+  ▶ Read labels.csv +1
+  ▶ Edit labels.csv
+Now `docs/architecture_web.md`. Finding the module list and state map:
+  ▶ Grep "states/title\.js|world/bgstream|state0_newgame|C957|C9DA|F488|irqHandlers|CAB6" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Read architecture_web.md +140
+Updating the rows for the parts that now exist:
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Grep "src/game/world/" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Read architecture_web.md +52
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Final re-run of the checks after all edits:
+  ▶ node web/test/core_check.mjs 2>&1 | tail -1; node web/test/serve_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2
+All pass. Cleaning up my scratch files:
+  ▶ rm -f gfx/compare/s108_*
+I ported the way into gameplay: the port now runs new game and CONTINUE through the area load, reaching the first `SubstPlay` frame byte-exact against tools.emu. At f2352 the screenshot is 35 px off, all on scanline 191, and the palette is equal. All web checks pass (core, ppu, serve, world, sprite 552/552, obj 7100/7100, sound 130/130, apu).
+
+**What changed**
+- **`states/areaenter.js` (new):** main states 0 (new game) and 8 (CONTINUE), substates 0 and 1, and the area load (`AreaEnter` and its common tail, `PlayerPlaceBody`). The pit-fall entry still throws "not ported".
+- **`world/camera.js` (new):** camera tick/update/follow, clamping, the screen shake, and the exit lookup.
+- **IRQ handlers 0 and 1:** the HUD split now renders, and the gameplay sound update runs from it.
+- **Bug fixed:** the port's NMI never read PPUSTATUS (the ROM does at `31:F3B7`). The new HUD handler leaves the PPU write latch half-set, so the next queue flush wrote HUD tiles to the wrong cells.
+- **Lag frames, found from an instruction trace:**
+  - The full-screen draw with rendering off costs about 6 rows per frame, so the NMIs fall after rows 7, 13, 19, 25 and 30.
+  - A full SaveGame runs through 2 NMIs; `saveGame` now returns whether it took that path.
+  - LoadGameAndInit runs through 1 NMI.
+
+**Results**
+- **New game:** f2321–2353 match on the core, palette and object columns, apart from 4 row-timing rows (work the ROM does just after an NMI lands in the emulator's row for that frame). At f2353, WRAM, nametable RAM and RAM `$0200-$07FF` are identical. This uses the known START latency shift (key at 2301 in the port). Sub_state 8 arrives at f2351 on both sides.
+- **CONTINUE** (keys `1250:START 1400:START 1550:SELECT 1600:START`): RAM `$0200-$07FF`, WRAM and nametable RAM are identical at SubstPlay entry. Only `$010F` differs (`$0A` vs `$00`), a saved-Y byte nothing reads; matching it would need the sprite pass to report its final Y.
+- **The 35 px at f2352:** tools.emu applies the HUD split's register writes partway through line 191, while the port applies them per whole line.
+
+**Not done yet:** `SubstPlay` itself (the player, collisions, spawn handlers, pit falls), so f2385 onward still differs. Following the leftovers rule, I marked the task done and filed the rest as one "(low priority)" task at the end of RE Investigation. That means the next session will pick three other low-priority tasks first, even though this is the main remaining port work. If you want it done next, move it back to the top.
+
+**Docs, labels and tools**
+- REVERSE.md has a new Verification Log row ("New game / continue → area load"), a Web Port Fixes note and tool-table entries. There are 17 new labels in `labels.csv`, and `docs/architecture_web.md` is updated.
+- New tools: `tools/trace_summary.py` (shows where NMIs fall inside a routine, i.e. its lag frames), `tools/png_zoom.py`, a `--dump-ciram` option for `run.mjs` and a `--key` option for `tools/mem_diff.py`.
+
+The cleanup of my scratch files (`gfx/compare/s108_*`) was blocked because glob deletes aren't allowed. They're untracked and safe to delete.
+
+SESSION_SUMMARY: Session 108: ported main states 0/8, substates 0/1, AreaEnter, world/camera.js, IRQ handlers 0/1 and the NMI's missing PPUSTATUS read; new game and continue reach SubstPlay with WRAM/CIRAM/RAM $0200-$07FF identical to tools.emu, §6 f2352 = 35 px (split line only), all web checks pass; SubstPlay and the rest filed as "Web fix: gameplay frames, rest after s108".

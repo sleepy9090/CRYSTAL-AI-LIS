@@ -1,0 +1,118 @@
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks" REVERSE.md
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +2076
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '2205,2234p' REVERSE.md | cut -c1-3000
+  ▶ wc -c re_loop_sessions/*_07[89].txt re_loop_sessions/*_080.txt && tail -c 5000 re_loop_sessions/20261118_055659_session_
+Reading prior state done; the top unchecked task is "Ph7 web 5/8 leftovers" (objects + player port). Now looking at what already exists in `web/src/game`.
+  ▶ find web/src web/test -name "*.js" -o -name "*.mjs" | xargs wc -l | sort -n | tail -40; git status --short | head
+  ▶ cat web/src/game/obj/objinit.js web/src/game/obj/ai_static.js web/src/game/machine.js web/test/obj_check.mjs web/src/gam
+Now the ROM side: `ObjUpdateAll` `30:CCCC` and what REVERSE.md says about it.
+  ▶ grep -n "ObjUpdateAll\|ObjFreeSlot\|FindFreeSlot\|AreaSpawnEntry" REVERSE.md | cut -c1-260 | head -30; grep -in "ObjUpda
+  ▶ sed -n '890,905p;1676,1690p' REVERSE.md | cut -c1-2500; python3 tools/dis.py 30 CCCC 200 | head -90
+  ▶ grep -n "^export\|^ \*\|^//" web/src/game/obj/util.js | head -50; grep -n "ROUTINES\s*=\|^    '\|^    \"" tools/emu/rout
+  ▶ python3 tools/dis.py 30 CD8A 120 --stop; python3 tools/dis.py 26 9011 80 --stop
+  ▶ python3 tools/dis.py 26 9020 60 --stop; python3 tools/dis.py 26 98D7 0x150 | head -150
+  ▶ python3 tools/dis.py 26 99C4 0x6C; sed -n '/^export function objBgProbe/,$p' web/src/game/obj/util.js; sed -n '20,120p' 
+  ▶ python3 tools/dis.py 26 99C4 0x6C
+  ▶ Read util.js
+  ▶ python3 tools/xref.py 9947 | head; python3 tools/xref.py 98D7 | head -30; grep -n "function\*\|yield\|export" web/src/ga
+Writing `obj/move.js` (ObjMoveSlide / ObjMoveStep / ObjScreenEdge) as exact ports.
+  ▶ Write move.js
+Now `obj/objects.js`: `HitSetFlag` + `ObjUpdateAll` (generator, since AI `$1A`'s path waits frames).
+  ▶ Write objects.js
+Now the capture side. Reading `routine_capture.py`.
+  ▶ Read routine_capture.py
+Adding `ObjMoveSlide` and `ObjUpdateAll` cases to the capture tool (ObjUpdateAll cases only use AI ids the port has, plus null-table ids, knockback, freeze and hit-flag params).
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+Running the capture (ObjMoveSlide + ObjUpdateAll, 200 cases each).
+  ▶ time python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --routine ObjMoveSlide,ObjU
+Now wiring the two routines into `obj_check.mjs`.
+  ▶ python3 - <<'EOF'
+Right — no inline Python; using Edit instead.
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ node web/test/obj_check.mjs 2>&1 | tail -25
+  ▶ Read obj_check.mjs +50
+I'll make the check count a differing case as "reached unported AI" (not a failure) only when the port logged an unported AI during that case, and report the count.
+  ▶ Edit obj_check.mjs
+  ▶ Read obj_check.mjs +75
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ Edit obj_check.mjs
+  ▶ node web/test/obj_check.mjs --verbose 2>&1 | grep -v "^ok" | sort | uniq -c | sort -rn | head; node web/test/obj_check.m
+All 26 differing cases ran an AI the port lacks; 174/174 others identical. Quick negative test: drop the knockback `DEC obj_timer` and confirm the check catches it.
+  ▶ Edit objects.js
+  ▶ node web/test/obj_check.mjs | tail -2
+  ▶ Edit objects.js
+  ▶ node web/test/obj_check.mjs | tail -1 && for t in core_check world_check sprite_check; do node web/test/$t.mjs 2>&1 | ta
+  ▶ node web/test/obj_check.mjs | tail -1; node web/test/core_check.mjs 2>&1 | tail -1; node web/test/world_check.mjs 2>&1 |
+  ▶ Read README.md
+  ▶ Edit README.md
+  ▶ Edit README.md
+Object loop done and verified. Next piece of (a): the spawn handlers (`AreaSpawnEntry` `31:E1B6`). Checking their size.
+  ▶ python3 tools/dis.py 31 E1B6 0x120 | grep -v "^\s*$" | head -110; grep -n "SpawnHandler\|SpawnCommonTail" labels.csv
+  ▶ python3 tools/dis.py 31 E1B6 0x130
+  ▶ Grep "Spawn|E1B6|98A8" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Spawn handlers 0/3/4 are small; 1 and 2 call bank-14 presence code (`14:80A0`, `ChestPresence` `14:85BF`). Checking how `area.js` calls `m.spawnEntry` and the rest of H1/H2.
+  ▶ grep -n "spawnEntry\|entryFF" -r web/src | head; python3 tools/dis.py 31 E2E2 0xF0
+  ▶ grep -n "^| 79\|^#\+ .*Verification Log\|Row / column streaming, details found\|^#\+ .*World interaction\|ObjScreenEdge\
+  ▶ sed -n '1270,1282p;121,128p' REVERSE.md | cut -c1-900; grep -n "s79\b\|(s79)\|row 79\|^| s79\|^| 79 " REVERSE.md | head;
+Writing the findings into REVERSE.md: a note on the `ObjMoveStep` return path, a web-port bullet under the ObjUpdateAll order, and a Verification Log row.
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^3. AI dispatch via \`ObjAiTable\`" REVERSE.md; grep -n "^| .* | 79 |$" REVERSE.md | cut -c1-120
+  ▶ Grep "^3\. AI dispatch via|\| 79 \|$" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ sed -n '155p' REVERSE.md | cut -c1-400; sed -n '156,160p' REVERSE.md | cut -c1-120
+  ▶ Edit REVERSE.md
+Now the task list: mark 5/8 done for this part and merge what's left into the existing "Web fix: gameplay frames" task (no new chain); also update 6/8's dependency note.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding labels for the two unnamed `ObjUpdateAll` sub-paths, if they're not already there.
+  ▶ Grep "^30,(CD31|CD74|CD7F|CD8A)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -2 labels.csv
+  ▶ Read labels.csv +1070
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 30 CD31 4 | head -3 && grep -n "obj/sprites.js\|objinit.js" docs/architecture_web.md | head -5
+  ▶ Read architecture_web.md +52
+  ▶ Grep "ObjUpdateAll|ObjMoveSlide" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+Final check that everything still passes (object, core, world, sprite, serve suites).
+  ▶ node web/test/obj_check.mjs | tail -1; node web/test/core_check.mjs 2>&1 | tail -1; node web/test/world_check.mjs 2>&1 |
+I've ported the per-frame object loop (`ObjUpdateAll` `30:CCCC`) and the slide mover it uses for knockback. Both produce exactly the same RAM and WRAM as the emulator in the routine-level check. This covers only part of the top task, "Ph7 web 5/8 leftovers". I marked that task done and moved everything left into the existing "Web fix: gameplay frames" task, as the rules require. Nothing in the game calls the new loop yet, because gameplay isn't wired up in the port.
+
+**Results** (`node web/test/obj_check.mjs`):
+- **Mover:** 200/200 cases identical.
+- **Object loop:** 174/200 identical. Each of the other 26 spawns an object mid-loop (a shot or a death type) whose AI the port doesn't have yet. I changed the check so a case like that counts as a "gap", not a failure, but only when the port logged an unported AI for that case. The gap count will drop as more AIs are ported.
+- **Negative test:** with one instruction deliberately removed, 173 of 174 cases failed, so the check does catch errors.
+- **Other suites:** all 1800 object cases, the core, world, sprite and serve checks pass with no failures.
+
+**What's new:**
+- `web/src/game/obj/objects.js`: the object loop. It handles knockback, the freeze timer and hit-flag clear, and the AI dispatch. Each new AI gets added to its table; any AI not in the table logs once and does nothing.
+- `web/src/game/obj/move.js`: the mover and its collision steps, which the enemy AIs will also need.
+- `tools/emu/routine_capture.py` has two new capture routines, and the cases are in `web/test/obj_frames/fuzz_update.json`.
+
+**ROM details found while porting** (in REVERSE.md):
+- The loop clears slot 31 when it starts, so that slot never runs an AI.
+- It remaps the banks before every slot, so one object's bank switch can't affect the next.
+- When a knocked-back object's counter wraps, its AI still runs that same frame.
+- The mover ignores one early-stop return value, so that stop behaves exactly like being blocked by a wall.
+
+I also added two labels, a Verification Log row for session 80, and updated `docs/architecture_web.md`.
+
+**Still to do, now listed in "Web fix: gameplay frames":**
+- Spawn handlers 0, 3 and 4, which are self-contained.
+- Spawn handlers 1 and 2, which need the NPC and chest presence routines in bank 14.
+- The palette/IRQ sequence for AI `$1A`.
+- The player code, collision and status code.
+- Hooking up the gameplay frame order.
+- Exporting emulator save states for the port.
+
+I didn't commit anything.
+
+SESSION_SUMMARY: Session 80 ported ObjUpdateAll (`obj/objects.js`: knockback, freeze/HitSetFlag, AI dispatch) and ObjMoveSlide/ObjMoveStep/ObjScreenEdge (`obj/move.js`) to the web port; routine fuzz check 200/200 and 174/174 identical, plus 26 cases counted as gaps because they reach AIs not ported yet; remaining 5/8 work merged into "Web fix: gameplay frames"; not committed.

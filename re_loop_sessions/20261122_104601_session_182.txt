@@ -1,0 +1,104 @@
+  ▶ ls re_loop_sessions | tail -3 && wc -l dead_ends.md REVERSE.md && grep -n "^## Next Tasks" REVERSE.md && grep -n "^- \[ 
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_18[012].txt && tail -c 6000 re_loop_sessions/20261122_104601_session_181.txt
+  ▶ python3 tools/area_dump.py spawns 11 2>&1 | head -40; grep -n "group_05\|group_09\|def _group\|'group" tools/emu/scenari
+  ▶ python3 tools/area_dump.py --help 2>&1 | head; python3 tools/area_dump.py spawns 0x11 2>&1 | head -40; sed -n 600,660p t
+  ▶ python3 tools/enemy_catalog.py 2>&1 | grep -iE "^ *(type|\\$?6[13])|\b6[13]\b" | head; python3 tools/enemy_catalog.py 2>
+Checking area `$11`'s enemy group (types `$61`/`$63`) for the next scenario.
+  ▶ python3 tools/enemy_catalog.py > /tmp/cat.txt 2>&1; head -4 /tmp/cat.txt; grep -n -E '^ *\$?(61|63) ' /tmp/cat.txt
+  ▶ python3 tools/enemy_catalog.py 2>&1 | head -120
+  ▶ sed -n 1,40p tools/emu/group_probe.py; grep -n "group_05\|group05" tools/*.py tools/emu/*.py | grep -v "scenario.py" | h
+Add a `group_11` scenario with no keys first, export the state, then probe positions.
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_11 12 --out web/test/states/group11.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group11.state --slots 0D,11 --every 15 --seg NONE:20 DOWN:
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group11.state --slots 0D,11 --every 15 --seg NONE:20 DOWN:
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group11.state --slots 0D,11 --every 15 --seg NONE:20 DOWN:
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group11.state --slots 0D,11 --every 30 --seg NONE:20 DOWN:
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group11.state --slots 0D,11 --every 15 --seg NONE:20 DOWN:
+Planning keys so the player can kill the chaser. The probe shows that after a hit at f2694, both enemies stop moving. Next I'll try turning right and swinging.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group11.state --slots 0D,11 --every 10 --seg NONE:20 DOWN:
+  ▶ Grep "^\*,00(08|09|0A)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "sub_state|main_state" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group11.state --frames 330 --keys 2526:DOWN:50 2576:LEFT:
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group11.state --frames 330 --keys 2526:DOWN:50 2576:LEFT:
+  ▶ python3 tools/dis.py 26 9290 32; grep -n "sub_state 10\b\|sub_state \`\$0A\`\|substate 10\b" REVERSE.md | head -5
+Finding why the game freezes at f2726. `sub_state` becomes `$10` at `26:92AA`.
+  ▶ python3 tools/dis.py 26 9290 32
+  ▶ Grep "26:9293|26:929C|sub_state `?\$?10`? |pending_msg_id.*\$19" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "26,92|26,928|26,927" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/dis.py 26 9260 48
+  ▶ Grep "PlayerPoisonRoll|playerPoisonRoll" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+The poison path is ported (`collide.js:239`). I'll try dismissing the message with A, then keep playing so the poisoned state runs.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group11.state --slots 0D,11 --every 15 --seg NONE:20 DOWN:
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_11 12 --out web/test/states/group11.json --save-state tools/emu/st
+Port key frames from the `$0043` writes (+1 when line ≥ 241): DOWN 2527-2576, LEFT 2577-2645, A 2797-2805, B 2841-2843, UP 2864-2893. Copying the group05 check.
+  ▶ Read group05_check.mjs
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/group11.state --web web/test/states/group11.json
+Diffs from f2526 are the known pad-timing offset in this compare. The check uses per-press port keys. Writing `group11_check.mjs`.
+  ▶ Write group11_check.mjs
+  ▶ node web/test/group11_check.mjs
+478 rows, and only a few cells differ. First I'll get the exact HP write frames from tools.emu, because the probe's frame numbering differs.
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group11.state --frames 480 --keys 2526:DOWN:50 2576:LEFT:
+  ▶ sed -n 50,80p web/test/harness.mjs
+The HP frames match tools.emu exactly (2695/2836/2899), so I'll fix HITS. To classify the remaining cells I'll dump a port CSV with the port keys.
+  ▶ timeout 300 node web/test/run.mjs --load-state web/test/states/group11.json --frames 480 --keys 2527:DOWN:50 2577:LEFT:6
+Every differing cell is PARTIAL (the tools.emu row matches neither neighbouring port row). `pos_x/pos_y` are zp scratch `$34-$37`. I'll check the OAM rows at f2797 to see what's different there.
+  ▶ timeout 300 python3 -m tools.emu.oam_dump tools/emu/states/group11.state 2797,2798 2>&1 | head -40
+  ▶ sed -n 1,30p tools/emu/oam_dump.py; sed -n 1,25p web/test/oam_dump.mjs
+  ▶ timeout 300 python3 -m tools.emu.oam_dump tools/emu/states/group11.state 2796,2797,2798 --keys 2526:DOWN:50 2576:LEFT:70
+  ▶ Grep "PARTIAL|LATE|listed|skip" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/kill_check.mjs
+  ▶ Read kill_check.mjs +14
+  ▶ cat > /tmp/g11.patch.py <<'EOF'
+Skipping that; editing the check directly.
+  ▶ Edit group11_check.mjs
+  ▶ Edit group11_check.mjs
+  ▶ Edit group11_check.mjs
+  ▶ Edit group11_check.mjs
+  ▶ node web/test/group11_check.mjs
+Two of the six OAM rows (f2797, f2801) are not an f/f+1 mix. tools.emu's entries 01-02 hold tiles `CC/CD` at Y `$53`. I'll look for which port row has those.
+  ▶ node web/test/oam_dump.mjs web/test/states/group11.json 2790,2791,2792,2793,2794,2795,2799,2803,2805,2806 --keys 2527:DO
+  ▶ Grep "OamClipTop" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit group11_check.mjs
+  ▶ node web/test/group11_check.mjs
+Passes. I haven't confirmed which object the Y `$53` tiles belong to, so I'll make the comment less specific, then run the full suite.
+  ▶ Edit group11_check.mjs
+  ▶ timeout 1800 python3 tools/run_checks.py 2>&1 | tail -8
+34/35 pass (`world_check` is the known gap (j)). Now the docs: the Verification Log row, the task text and CLAUDE.md.
+  ▶ Grep "^\| Area-`\$05` enemy group" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 211p REVERSE.md | cut -c1-400; sed -n 212p REVERSE.md | cut -c1-120
+  ▶ Read REVERSE.md +211
+  ▶ Edit REVERSE.md
+Now updating the task text (it stays unchecked because it's a low-priority leftovers task).
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+Checking whether the poison-tick writer `31:EF9F` already has a label.
+  ▶ python3 tools/dis.py 31 EF80 40 --stop
+  ▶ Grep "^31,EF[4-9A-F]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+The tick is already covered by `PlayerStatusTick` `31:EF55`: the STA is at `31:EF9C`, and the watch reports the next PC. Fixing my references.
+  ▶ grep -n "31:EF9F" REVERSE.md CLAUDE.md web/test/group11_check.mjs | cut -c1-80
+  ▶ Edit REVERSE.md
+  ▶ sed -i 's|next frame, 31:EF9F)|next frame, PlayerStatusTick 31:EF9C)|; s|(26:9413 x2, 31:EF9F tick)|(26:9413 x2, tick 31
+  ▶ Edit group11_check.mjs
+  ▶ Edit group11_check.mjs
+  ▶ node web/test/group11_check.mjs
+Adding the pre-clip finding to the `ShowMessageCloseLoop` label comment.
+  ▶ Edit labels.csv
+I checked area `$11`'s enemy group against tools.emu, and the port matches frame for frame with no code changes. The new `web/test/group11_check.mjs` passes all 478 rows (f2507-2984) at shift 0, sound included, with 9 listed timing cells. The full suite passes 34 of 35; `world_check` still fails on areas `$3C`, `$3D` and `$BC`, the known gap (j).
+
+**What the run covers** (new scenario `group_11`, using the area's own spawns):
+- **The enemies:** type `$61` (AI `$20`, the walk/pause AI) and type `$63` (AI `$24`, the chaser). Type `$63` is poisonous on touch.
+- **First hit and poison:** a contact hit at f2695 (HP `$60` → `$3C`), then the poison roll (`26:927E`) poisons the player at f2726. The poison message comes up and the whole field waits on it. This is the first real-run check of that path.
+- **After the message:** A closes it at f2797. A second hit at f2836 (→ `$18`) knocks the player back, and the poison tick takes HP to `$14` at f2899.
+- **No kill:** the B swings at the chaser never connected, so a type-`$63` death is still unchecked. I noted this in the task.
+
+**The 9 listed cells** are all tools.emu sampling rows in the middle of the game's work, not port bugs:
+- **Six OAM rows (f2797-2804):** these are the message's closing frames, the same case kill_check already handles. In two of them (f2797, f2801) tools.emu sampled after the sprites were drawn but before `OamClipTop` (`30:C17D`) hid entries 1-2 (Y `$53`). The check accepts those only if it can rebuild that unclipped state and the result has the reference crc.
+- **Three scratch cells:** `$34-$37` at f2842 and f2900 hold mid-routine values.
+
+**Docs:** REVERSE.md has a new Verification Log row, and the task text records area `$11` as done. The task stays open, since area `$18` and the other enemy AIs are left. CLAUDE.md lists the new check, and the `ShowMessageCloseLoop` label notes the before-clip case.
+
+New files are the state pair (`web/test/states/group11.json`, `tools/emu/states/group11.state`) and `web/test/group11_ref.csv`, plus the check above; the comparison output is in `gfx/group11/`. Nothing is committed.
+
+SESSION_SUMMARY: Session 182 checked area $11's enemy group (type $61 AI $20 + poisonous type $63 AI $24) against tools.emu with the new group_11 scenario and web/test/group11_check.mjs: 478/478 rows equal at shift 0 including sound, 9 listed timing cells (two sampled before OamClipTop), 2 contact hits, poison + message + poison tick, no port change; 34/35 checks pass (world_check is the known gap (j)).

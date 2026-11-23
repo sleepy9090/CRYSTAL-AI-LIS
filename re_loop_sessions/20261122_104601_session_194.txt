@@ -1,0 +1,108 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls re_loop_sessions | tail -4; grep 
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions; wc -c *_19[123].txt *_194.txt; tail -c 5000 202611
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "group_6E\|group_88\|def place_player\|^def \|^SCENARIOS" t
+  ▶ Read scenario.py +250
+  ▶ Read scenario.py +700
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/area_dump.py spawns B2 2>&1 | head -40; python3 tools
+Picking the top task (enemy group leftovers): checking AI `$41` in area `$B2`. Dumping its spawns now.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/area_dump.py spawns B2 2>&1 | head -40; python3 tools
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/area_dump.py spawns 0xB2 2>&1 | head -40; python3 too
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -3 /tmp/ecat.txt; grep -E "^\s*\\\$?9[12]\b|^ *(91|92) " /tmp/
+  ▶ Read ecat.txt
+  ▶ Grep "^\s*\$?(91|92)\b" /tmp/ecat.txt
+  ▶ Read ecat.txt +120
+  ▶ Grep "B339|SwordElemBit" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Area `$B2`: type `$92` (AI `$41`, elem 7 → only sword 4 hurts it) in slot `$0D`, plus two type `$91`. Adding a `group_B2` scenario and probing positions.
+  ▶ Edit scenario.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,40p tools/emu/group_probe.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.scenario_state group_B2 12 --out w
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,30p tools/emu/pass_probe.py | head -30
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group
+  ▶ Glob gfx/areas/*B2*
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "^ *B2\|area_B2\|^B2" gfx/areas/coll_index.txt | head
+  ▶ Glob gfx/areas/*b2*
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls gfx/areas | head; ls gfx/areas | wc -l; python3 tools/render_lev
+Area renders are numbered in decimal; `$B2` = 178. Viewing its map.
+  ▶ Read area_178.png
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -30 gfx/areas/area_178_coll.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 600 python3 tools/emu/group_probe.py tools/emu/states/group
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/emu/group_probe.py tools/emu/states/group
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 tools/emu/group_probe.py tools/emu/states/group
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat web/test/group84b_check.mjs; grep -n "group84b\|group_84b" re_l
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; K=$(python3 tools/keyseq.py 2512:UP:40 2552:RIGHT:76 2628:DOWN:20 '
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/keyseq.py 2512:UP:40 2552:RIGHT:76 2628:DOWN:20 '2648
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/groupb
+  ▶ timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/groupb2.state 480 --keys 2512:UP:40 2552:RIGHT:76 2628:DOWN
+  ▶ timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/groupb2.state 480 --keys 2512:UP:40 2552:RIGHT:76 2628:DOWN
+Checking tools.emu for lag frames in the planned run (output kept in the tool result instead of a file).
+  ▶ timeout 900 python3 -m tools.emu.pass_probe tools/emu/states/groupb2.state 480 --keys 2512:UP:40 2552:RIGHT:76 2628:DOWN
+Two lag frames (f2832, f2839). Building the ref and the port comparison.
+  ▶ timeout 1500 python3 tools/web_state_compare.py --state tools/emu/states/groupb2.state --web web/test/states/groupb2.jso
+Differences start at f2512, the key timing. Deriving the port key frames from tools.emu's pad writes as in earlier sessions.
+  ▶ sed -n 1,25p tools/pad_watch_keys.py; grep -n "watch 0043\|pad_watch_keys" re_loop_sessions/20261122_104601_session_19[2
+  ▶ timeout 900 python3 -m tools.emu --load-state tools/emu/states/groupb2.state --frames 480 --watch 0043 --keys 2512:UP:40
+  ▶ ls gfx/groupb2 && grep -n "csv_trim" re_loop_sessions/20261122_104601_session_193.txt | head -3 && sed -n 1,15p tools/cs
+Writing the ref and the check, then running it.
+  ▶ python3 tools/csv_trim.py gfx/groupb2/emu.csv web/test/groupb2_ref.csv --frames 2508-2986 && wc -l web/test/groupb2_ref.
+  ▶ Write groupb2_check.mjs
+  ▶ node web/test/groupb2_check.mjs 2>&1 | tail -35
+Nearly all equal. Kill / shell frames were my probe's +1 offset (fixing to the port's values). Left: 6 `oam_crc` cells f2842-2848 and `pos_x/pos_y` at f2874. Classifying them.
+  ▶ node web/test/run.mjs --load-state web/test/states/groupb2.json --frames 479 --keys 2513:UP:40 2553:RIGHT:76 2629:DOWN:1
+  ▶ K="2513:UP:40 2553:RIGHT:76 2629:DOWN:19 2648:B:5 2665:B:4 2681:B:4 2697:B:4 2713:B:4 2729:B:4 2745:B:4 2761:B:4 2777:B:
+  ▶ timeout 900 python3 -m tools.emu.oam_dump tools/emu/states/groupb2.state 2842 --all --keys 2512:UP:40 2552:RIGHT:76 2628
+  ▶ Grep "pos_x|pos_y" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/compare.py
+  ▶ Grep "PARTIAL|pos_" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/group11_check.mjs
+  ▶ Read group11_check.mjs +10
+  ▶ python3 - <<'EOF' 2>/dev/null; true
+  ▶ python3 tools/csv_cols.py gfx/groupb2/emu.csv gfx/groupb2/webk.csv o00_x,o00_y,pos_x,pos_y 2872-2876
+  ▶ node -e "" && sed -n '/^const KILLS/,/^const SHELL/p' web/test/groupb2_check.mjs
+Editing the check directly.
+  ▶ Edit groupb2_check.mjs
+  ▶ Edit groupb2_check.mjs
+  ▶ Edit groupb2_check.mjs
+  ▶ Edit groupb2_check.mjs
+  ▶ Edit groupb2_check.mjs
+  ▶ Edit groupb2_check.mjs
+  ▶ node web/test/groupb2_check.mjs 2>&1 | tail -12
+  ▶ Grep "console.log" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/groupb2_check.mjs
+  ▶ Edit groupb2_check.mjs
+  ▶ node web/test/groupb2_check.mjs 2>&1 | tail -12
+Check passes. Running the full suite in the background while I update the docs.
+  ▶ timeout 3000 python3 tools/run_checks.py
+  ▶ Grep "^\| AI `\$3A` `AiNpcBossReveal`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +223
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+Docs updated. Waiting for the full check suite.
+  ▶ ToolSearch max_results query
+  ▶ Read bnuyir1fm.output
+The suite is still running; I'll report its result when the completion notification arrives.
+  ▶ until [ -s /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/240061bd-5961-4562-955c-c2877bff1127/tasks/
+Waiting for the suite to finish.
+  ▶ grep -v "^ok" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM/240061bd-5961-4562-955c-c2877bff1127/tas
+I checked AI `$41` (`AiShellOnHit`, enemy type `$92`) in area `$B2` against tools.emu. The web port matches it with no code changes. The new `web/test/groupb2_check.mjs` passes all 479 rows (f2508-2986) at shift 0, sound included. The full suite passes 47 of 48 checks. The one failure is `world_check` on areas `$3C`, `$3D` and `$BC`, the known gap (j) that was already failing before this session.
+
+**The run** (new `group_B2` scenario: level 16, sword 4, max defences, starting from the area's entry stairs):
+- **Sword choice:** the type-`$92` enemy has element mask 7, so only sword 4 can hurt it.
+- **Shell close and reopen:** the player walks up, right, then down into the corridor and swings B every 16 frames. The hit at f2666 drops its HP from `$8A` to `$6A`. Its shell closes (`obj_active` `$C1` → `$41`) and reopens at f2742. No later swing reaches it.
+- **Other events:** the type-`$91` enemy in slot `$14` dies at f2870. The player takes hits at f2729 and f2873.
+- **Lag frames:** tools.emu drops 2 frames (f2832, f2839), and the port drops the same 2.
+
+**8 cells match only as known sampling artifacts.** The check accepts them only in these forms:
+- **6 `oam_crc` cells** (f2842-44 and f2846-48): tools.emu reads OAM while the next frame's sprite pass is part-way through writing it. One sprite entry is even half rewritten byte by byte, so the check now also tries mixes at byte level.
+- **2 `pos_x`/`pos_y` cells** at f2874, the player-hit frame: the scratch bytes `$34-$37` still hold the player's position when tools.emu samples the row.
+
+**Changes:**
+- **New files:** the `group_B2` scenario in `tools/emu/scenario.py`, the state files `web/test/states/groupb2.json` and `tools/emu/states/groupb2.state`, the reference `web/test/groupb2_ref.csv`, and the check itself.
+- **REVERSE.md:** a new Verification Log row, and `$41` is struck from the task's list of remaining enemy groups.
+- **CLAUDE.md:** lists the new check.
+
+The task stays open because it is the low-priority leftovers task. The only group left is AI `$5C` (areas `$59`-`$5B`). Nothing is committed.
+
+SESSION_SUMMARY: Session 194 checked AI $41 AiShellOnHit (type $92) in area $B2 with the new group_B2 scenario (sword 4): web/test/groupb2_check.mjs passes 479/479 rows at shift 0 including sound, with 8 accepted PARTIAL cells, the 2 tools.emu lag frames reproduced and no port change; 47/48 checks pass (world_check is the known gap (j)); only AI $5C is left.
+The second background task was a wait loop for the check suite, and it was stopped when it hit its time limit. That loses no result: the suite itself had already finished (47 of 48 checks pass, and the new `groupb2_check.mjs` passes 479/479 rows). The only failure is `world_check`, the known gap (j). I'm not restarting the wait loop.
+
+SESSION_SUMMARY: Session 194 checked AI $41 AiShellOnHit (type $92) in area $B2 with the new group_B2 scenario (sword 4): web/test/groupb2_check.mjs passes 479/479 rows at shift 0 including sound, with 8 accepted PARTIAL cells, the 2 tools.emu lag frames reproduced and no port change; 47/48 checks pass (world_check is the known gap (j)); only AI $5C is left.

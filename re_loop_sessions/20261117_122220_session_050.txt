@@ -1,0 +1,50 @@
+  ▶ Glob {dead_ends.md,REVERSE.md,re_loop_sessions/*}
+  ▶ Read dead_ends.md
+  ▶ Read 20261117_122220_session_050.txt
+  ▶ Read 20261117_122220_session_049.txt
+  ▶ Read 20261117_122220_session_048.txt
+  ▶ Grep "^## |^### |^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1800
+Task: **Ph7 web 2/8 — core**. Let me read the design doc and current web/ contents.
+  ▶ Read architecture_web.md
+  ▶ Glob web/**/*
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node --version; head -c 1500 web/data/manifest.json; echo; head -c 
+  ▶ Grep "^## |^### |^\*\*" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_exe.md
+  ▶ Read architecture_exe.md +60
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls tools/emu tools/emu/states gfx/emu | head -60; wc -l tools/emu/p
+  ▶ Read ppu.py
+  ▶ Read state.py
+Picked **Ph7 web 2/8 (core: index.html, ppu.js, loop, input, main state machine)**. Now checking the emulator's mapper/pads so the JS PPU can be validated against `tools.emu` frames.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "def \|self.r\b\|self.regs\|chr_map\|mirror" tools/emu/mapp
+  ▶ Read mapper.py +93
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "def run_frame" -A25 tools/emu/nes.py; sed -n 1,30p tools/e
+Writing the PPU line-snapshot tool (records per-scanline PPU registers + VRAM from `tools.emu` so `ppu.js` can be checked pixel-for-pixel).
+  ▶ Write ppu_lines.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; time python3 -m tools.emu.ppu_lines --all && ls -la web/test/ppu_fr
+The `dis` shadowing issue the package docstring warns about; drop my `sys.path.insert` and use the package import.
+  ▶ Edit ppu_lines.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; time python3 -m tools.emu.ppu_lines --all && ls -la web/test/ppu_fr
+Snapshots generated. Now checking how the NMI writes scroll/PPUCTRL so `mainloop.js` mirrors it.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 F3B6 0x70 --stop
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 F3C8 0x60; python3 tools/dis.py 31 F6AD 0x4
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 F8FB 0x60 --stop
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 FE80 0x80 --stop; grep -n "FE80\|FED0\|PadD
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 FEE0 0x80 --stop; python3 tools/dis.py 31 F
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 31 FF28 0x30 --stop
+Have all ROM facts needed (NMI skeleton, PaletteUpload, ReadPads/Menu). Writing `web/src/nes/ppu.js` now.
+  ▶ Write ppu.js
+Now the PPU snapshot check.
+  ▶ Write ppu_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/ppu_check.mjs
+Title is pixel-exact. Diffs are only on line 191 (HUD split) and line 0 of name entry — adding verbose output to see what the emulator did mid-line.
+  ▶ Edit ppu_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/ppu_check.mjs --verbose
+  ▶ Edit ppu_lines.py
+  ▶ Read ppu_lines.py +27
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat > /tmp/snap_new.py <<'EOF'
+  ▶ Edit ppu_lines.py
+  ▶ Edit ppu_lines.py
+Now update the check to exclude (and print) emulator mid-line lines; also add `--frames 30` snapshots for more coverage.
+  ▶ Edit ppu_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.ppu_lines --all && for s in title gameplay_fir
+You've hit your 5-hour limit · resets 3:50pm (America/New_York)

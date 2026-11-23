@@ -1,0 +1,75 @@
+  ▶ Skill skill
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.md |
+  ▶ Read REVERSE.md +2365
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions && wc -c *_17[5678].txt && tail -c 3000 20261122_10
+  ▶ tail -c 1500 20261122_104601_session_176.txt; tail -c 1200 20261122_104601_session_175.txt; cd .. && ls web/test/states 
+  ▶ tail -c 1500 /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions/20261122_104601_session_176.txt; ls /home
+Picking the top task (Ph7 boss-AI leftovers): investigating the area-$02 entry diffs after the fan_skip knockback (f2719-2736). Reproducing first.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM && sed -n 1,60p web/test/fanskip_check.mjs
+  ▶ ls gfx/fanskip/ && python3 tools/csv_cols.py 2>&1 | head -5
+  ▶ python3 tools/compare_frames.py gfx/fanskip/emu.csv gfx/fanskip/web.csv --frames 2715-2760 2>&1 | head -60
+  ▶ python3 tools/csv_cols.py gfx/fanskip/emu.csv gfx/fanskip/web.csv pal_crc,sub,music,pos_y 2712-2756
+  ▶ python3 -m tools.emu --help 2>&1 | head -60; ls tools/emu/
+  ▶ head -30 tools/emu/sample_point_probe.py; head -30 tools/emu/pass_probe.py
+Checking where in the frame tools.emu's fade writes `pal_buf`, to see whether the mid-fade rows are a sampling artifact.
+  ▶ grep -i "PaletteBuild\|^26,8C3D\|^26,8C49\|^\*,6140" labels.csv | head; grep -n "PARTIAL" REVERSE.md | head -5
+  ▶ grep -n "PARTIAL\|partial\|crc" web/test/ai70ph3_check.mjs | head -30; grep -n "export function\|pal_crc" web/test/harne
+  ▶ sed -n 30,80p tools/emu/pass_probe.py
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/fanskip.state --frames 250 --pc 26:8C0E 26:8C10 --write 6140 61
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/fanskip.state --frames 250 --pc 26:8C0E 26:8C10 --write 6140 61
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/fanskip.state --frames 250 --pc 26:8C0E 26:8C10 --write 6140 61
+Still probing the fade timing in tools.emu (writing the probe output inside the repo this time).
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/fanskip.state --frames 250 --pc 26:8C0E 26:8C10 --write 6140 61
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/fanskip.state --frames 250 --pc 26:8C0E 26:8C10 --write 6140 61
+The 8 mid-fade `pal_crc` rows are confirmed PARTIAL: each `PaletteBuild` runs from L254 to L9 of the next frame, across tools.emu's frame-end sample. Now looking at the `pos_y` rows.
+  ▶ Read harness.mjs +50
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/fanskip.state --frames 232 --pc 30:C919 --write 0036 0037 | gre
+  ▶ grep -n "FSD_LAG\|export function\* fullScreenDraw\|yield" web/src/game/world/bgstream.js | head -30; grep -rn "FSD_LAG_
+  ▶ Read bgstream.js +225
+Port side: `FullScreenDraw` pauses with `yield SPIN` at fixed rows. Checking which pause rows the area-enter path uses.
+  ▶ grep -rn "fullScreenDraw(\|FSD_LAG" web/src --include=*.js | grep -v "^web/src/game/world/bgstream.js:24"
+  ▶ python3 tools/compare_frames.py gfx/fanskip/emu.csv gfx/fanskip/web.csv --frames 2754-2900 | tail -8; python3 tools/comp
+Everything is equal from f2754 to the end of the run (f2807). Last check: when tools.emu writes the music id and clears the objects on f2729.
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/fanskip.state --frames 223 --pc 30:C919 --write 0102 04AD 04AF 
+  ▶ sed -n 60,200p web/test/fanskip_check.mjs; sed -n 1,25p tools/csv_trim.py
+  ▶ head -1 web/test/fanskip_ref.csv | tr ',' '\n' | wc -l && python3 tools/csv_trim.py gfx/fanskip/emu.csv web/test/fanskip
+Now the check: the listed PARTIAL / LATE / row-phase cells.
+  ▶ Edit fanskip_check.mjs
+  ▶ Edit fanskip_check.mjs
+  ▶ Edit fanskip_check.mjs
+  ▶ Edit fanskip_check.mjs
+  ▶ node web/test/fanskip_check.mjs
+`pos_x` f2736 is the same L261 `AreaEnter` tail write (it sets `$34` together with `$36`). Adding it to the listed cells.
+  ▶ python3 -m tools.emu.pass_probe --state tools/emu/states/fanskip.state --frames 230 --pc 30:C919 --write 0034 | grep -E 
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+  ▶ Edit fanskip_check.mjs
+  ▶ Edit fanskip_check.mjs
+  ▶ node web/test/fanskip_check.mjs && python3 tools/run_checks.py
+Fanskip passes through f2807; the suite is 30/31, and the one failure is `world_check`, the known gap (j). Now updating REVERSE.md.
+  ▶ Grep "fanskip" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n 207p REVERSE.md; sed -n 1166p REVERSE.md | grep -o "s177.\{0,1500\}"
+  ▶ Read REVERSE.md +207
+  ▶ Edit REVERSE.md
+Now the task text (line 2545 after the insert): mark the area-`$02` item done.
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +1166
+Updating the fanskip line in CLAUDE.md to the new range.
+  ▶ Edit CLAUDE.md
+I finished the area-`$02` entry item in the top task, the low-priority Ph7 boss-AI leftovers. No port code needed to change: tools.emu takes its snapshot of each frame at the end of the frame (scanline 261), and every difference comes from what ROM code happens to be running at that moment. Screen and RAM are equal again from f2737.
+
+**What each difference is** (I checked where tools.emu does each write with `pass_probe`):
+- **Mid-fade `pal_crc`** (f2719/22/25/28 fading out, f2744/47/50/53 fading in): each `PaletteBuild` runs from scanline 254 to scanline 9 of the next frame. So tools.emu snapshots a half-rebuilt palette buffer, which is why it matched neither neighbouring row. These are the same "partial" cells other checks already list.
+- **Music and object clear at f2729**: after the fade's last frame wait, tools.emu clears the objects at scanline 253 and starts music `$16` at 258, both before the snapshot. The port does this work at the start of its next frame. Other checks list this as a 1-frame "late" cell.
+- **`pos_y` on f2730-2736**: here `$36` is not the player's position. It is `FullScreenDraw`'s row counter, which moves 8 px per row, so the snapshot catches the screen draw part-way.
+  - tools.emu starts row 1 at f2730 scanline 258.
+  - In area `$02` a row costs about 44-45 scanlines, against about 43 in area 0, where the port's `FSD_LAG` timing was measured. So tools.emu's frame ends fall in rows 7/12/18/24/29, and the port pauses after rows 7/13/19/25/30.
+  - `pos_x` at f2736 is the same kind of end-of-frame write as the last `pos_y` cell.
+
+  I left the port's draw timing alone: it would need a row cost per area, and the drawn screen comes out the same either way.
+
+**Check:** `fanskip_check.mjs` now runs to f2807 against a re-cut `fanskip_ref.csv`. All 299 rows match at shift 0, with 66 listed cells each accepted by its own rule. Everything after f2753 is equal. The full suite passes 30 of 31. The failure is `world_check`, the known gap (j) for areas `$3C`, `$3D` and `$BC`.
+
+**Docs:** REVERSE.md has a new Verification Log row, and the item is crossed out in the task text. The task stays unchecked because per-enemy-group save-state scenarios are still open. CLAUDE.md's fanskip line now gives the new range. `labels.csv` is unchanged, since every address involved was already labelled. Nothing is committed.
+
+SESSION_SUMMARY: Session 178 found that the area-$02 entry differences after the fan_skip knockback are all tools.emu snapshot-timing effects (mid-PaletteBuild partial palettes, post-wait work at f2729, FullScreenDraw's row counter in $36), needing no port change; fanskip_check.mjs now covers f2509-2807 with 299/299 rows and 66 listed cells, and 30/31 checks pass (world_check = known gap (j)).

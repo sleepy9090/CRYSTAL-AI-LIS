@@ -1,0 +1,96 @@
+  ▶ Read dead_ends.md
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## |^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +478
+  ▶ tail -c 3000 re_loop_sessions/20261115_134839_session_012.txt; echo ----; tail -c 2500 re_loop_sessions/20261115_134839_
+  ▶ Grep "Who picks the message|NPC script VM|TalkAction|Text window \+ font|^### " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +366
+  ▶ python3 tools/decode_tables.py --help 2>&1 | head -20; python3 tools/decode_tables.py 30:D123 32 word 2>&1 | head -40
+Working on session 13's task "text follow-ups 2". Right now I'm decoding the 32-entry talk-action table at `30:D123`.
+  ▶ python3 tools/decode_tables.py 30:D123 32 ptr16 --per-line 8
+  ▶ python3 tools/dis.py 30 D163 0x1E0
+  ▶ python3 tools/dis.py 30 D341 0x20; echo; python3 tools/dis.py 30 D3EB 0x40 --stop; echo; python3 tools/dis.py 30 D63F 0x
+  ▶ python3 tools/dis.py 30 D3FB 0x60; grep -E "^\*,(5|6|7)[0-9A-F]{2}," labels.csv | head -60
+  ▶ python3 tools/dis.py 30 D3FB 0x60
+  ▶ Grep "^\*,(0?[3-7][0-9A-Fa-f]{2}|[0-9A-Fa-f]{2})," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ for a in 0702 0703 0708 0709 07D7; do echo "== $a"; python3 tools/xref.py $a 2>&1 | head -25; done
+Still on the talk-action handlers; now checking which game variables they modify (like `$0702`, which gains +100).
+  ▶ python3 tools/xref.py 0702 | head -30
+  ▶ python3 tools/xref.py 0708 | head -30
+  ▶ python3 tools/dis.py 26 8E46 0x50 --stop
+  ▶ python3 tools/decode_tables.py 26:8EC5 7 hex6
+  ▶ python3 tools/dis.py 16 95E8 0x60 --stop; python3 tools/dis.py 26 9460 0x40
+  ▶ python3 tools/dis.py 26 9897 0x40 --stop; python3 tools/dis.py 26 98A8 0x30 --stop
+  ▶ Grep "^(32\.|19\.0 |11\.1 |31\.)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Read text.txt
+Still on the talk actions: I've decoded most of the 32 handlers. Next I'll look up the message text they show so I can name them.
+  ▶ Grep "^\s*(32|19|11|20|31)\.(0|1|12|13|31)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Grep "group 32|group 19|^\s*\[?12\]?" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Grep "^-- (32\.12|11\.1|32\.13) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Grep "^== |^  (09|30|45|48|39|0F|DF|64): " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Talk-action table is written up. Next I'm adding labels, then tracing the remaining message setters.
+  ▶ tail -5 labels.csv && grep -cE "^30,(D123|D22B|D3EB|D31C|D1FF|D16D)," labels.csv; grep -E "^(\*,070[2389]|26,(8E46|9897|
+  ▶ Grep "^30,D123" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ cat >> labels.csv <<'EOF'
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 30 D47C 0x20; echo; python3 tools/dis.py 30 D5A8 0x24; echo; python3 tools/dis.py 30 D610 0x2C
+  ▶ for a in D790 D9B8 DB54 DD62 DE0B DEBD; do python3 tools/dis.py 30 $a 0x22; echo; done
+Tracing the remaining six message-setter sites in bank 30.
+  ▶ python3 tools/dis.py 30 D790 0x22; python3 tools/dis.py 30 D9B8 0x22; python3 tools/dis.py 30 DB54 0x22
+  ▶ python3 tools/dis.py 30 DD62 0x22; python3 tools/dis.py 30 DE0B 0x22; python3 tools/dis.py 30 DEBD 0x22
+  ▶ python3 tools/dis.py 30 DDF0 0x1E; python3 tools/dis.py 14 816F 0x48 --stop
+  ▶ python3 tools/dis.py 14 818B 0x30 --stop; python3 tools/xref.py DE04; python3 tools/dis.py 30 DE2C 0x20 --stop
+  ▶ python3 tools/search_bytes.py "04 DE"; python3 tools/search_bytes.py "03 DE"; python3 tools/dis.py 14 8222 0x20 --stop; 
+  ▶ python3 tools/decode_tables.py 14:9A2C 8 hex2; python3 tools/decode_tables.py 14:822F 64 u8 --per-line 16; python3 tools
+  ▶ python3 tools/dis.py 14 81AF 0x30 --stop; python3 tools/decode_tables.py 14:9A2C 32 hex2 --per-line 8
+  ▶ python3 tools/dis.py 14 81B8 0x40 --stop
+  ▶ Grep "^-- (32\.1[4-7]|29\.(1|13|14|2)|28\.17|14\.5|22\.0|33\.[0-2]) " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/text.txt
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/dis.py 30 D834 0x30 --stop
+  ▶ python3 tools/decode_tables.py 30:D885 3 ptr16; python3 tools/dis.py 30 D866 0x20 --stop
+  ▶ python3 tools/xref.py D834; python3 tools/xref.py 80A0 --bank 30; python3 tools/search_bytes.py "20 A0 80"
+Found who calls the bank-14 helpers (`30:D834` dispatcher and `31:E34B`); checking their context now.
+  ▶ python3 tools/dis.py 30 D512 0x12; python3 tools/dis.py 30 D539 0x10; python3 tools/dis.py 31 E330 0x30
+  ▶ python3 tools/dis.py 15 BAD8 0x16; python3 tools/dis.py 19 BFC4 0x18; python3 tools/dis.py 27 BB18 0x26
+  ▶ python3 tools/decode_tables.py 19:BFE8 8 hex2 --per-line 8; python3 tools/dis.py 15 BAC0 0x18
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+Now add the follow-up task for the remaining parts (c)-(e).
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I finished parts (a) and (b) of "Ph3: text follow-ups 2" and marked the task done. I moved parts (c)-(e) and some new loose ends to a new task, "text follow-ups 3". Everything is written up in REVERSE.md, and I added 34 labels to `labels.csv`.
+
+**(a) The 32 talk actions (`30:D123`)**, now in a new "Talk actions" table in REVERSE.md:
+- **Common helpers:** a "give item" routine at `30:D3EB` that shows "You now have {ITEM}", an NPC-vanish routine at `30:D31C`, and a HUD redraw routine at `26:8E46` with a 7-entry table of values and screen positions.
+- **What the actions do:** they give an item named by the NPC's parameter (this is how "teach magic" works), teach the Recover and Flight spells, fully restore HP and MP, add slot-13/14 followers, warp the player, and give 100 gold.
+- **Gold quirk:** the +100 gold action increments the low byte `$0702` instead of the high byte `$0703` on overflow. When the low byte wraps, the 256 is lost and 1 extra is added. The web port needs to copy this.
+- **Variables named:**
+  - Gold is `$0702/$0703`: 16-bit, and it stops at `$FFFF`.
+  - MP is `$0708`, max MP is `$0709`.
+  - Player HP is `$03C1` and max HP is `$03C0`. This rests only on how the full-restore action uses them; nothing has run in an emulator yet.
+
+**Remaining message setters:** every place that sets the message number is now traced. This turned up four menu substates:
+- 20: teleport menu
+- 21: pick a sage for telepathy
+- 22: the telepathy reply
+- 23: change form
+
+**Telepathy spell (`14:816F`):**
+- It costs 8 MP and shows "too low" if you don't have enough.
+- Otherwise it picks a reply row from a fixed 64-step pseudo-random sequence.
+- One of those rows gives back 32 MP.
+- The last row depends on the area and on `$0421`. I think `$0421` is the player's level, but haven't confirmed it.
+
+**(b) Callers of the other bank 14 entry points:**
+- `14:80A0` is called from a spawn handler at `31:E34B`. When it returns non-zero, the NPC is removed, so it decides whether an NPC appears under the current story flags.
+- `14:80E3` is one of three item hooks run through a dispatcher at `30:D834`. The other two are `14:826F` and `14:831E`. One of them can trigger the "You have too many items!" message.
+
+One entry is a guess: the "Nobody's here." message at `30:D9CB` is probably a spell or action with no target. I haven't traced its caller, and the table says so.
+
+Nothing needed recording in `dead_ends.md`.
+
+SESSION_SUMMARY: Session 13 — text follow-ups 2 (a)+(b) done: all 32 TalkActionTable handlers named (GiveItem 30:D3EB, gold +100 carry bug, full restore, NPC vanish, followers, warp, teach Recover/Flight), all message setters traced (substates 20-23 = teleport/telepathy/change-form, Telepathy 14:816F), NpcHidden 14:80A0 and ItemEventHook 30:D834 callers found, gold/MP/HP RAM named; 34 labels; (c)-(e) moved to "text follow-ups 3".

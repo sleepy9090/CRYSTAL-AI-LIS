@@ -1,0 +1,87 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \[ \
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*14[3456]*.txt && tail -c 3000 re_loop_sessions/20261121_221108_session_145.txt
+  ▶ Grep "DEC1|SubstChangeForm|ChangeForm" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ python3 tools/dis.py 30 DEC1 0xD0 && sed -n 140,165p tools/emu/scenario.py
+  ▶ wc -l web/src/states/telepathy.js web/src/states/play.js && ls web/src/states web/test | head -80
+Porting sub_state 23 (SubstChangeForm `30:DEC1`) next — locating the web port's state files.
+  ▶ Glob web/**/{telepathy,play,teleport}.js
+  ▶ Read telepathy.js
+  ▶ python3 tools/dis.py 30 DFCE 0x32 && python3 tools/dis.py 31 E038 0x50 && python3 tools/dis.py 30 C176 0x30
+  ▶ python3 tools/dis.py 30 DDCD 0x37 && grep -n "spendMp\|9AE8" -r web/src | head; grep -n "ENTRY_POINTS\|SUBSTATES\|telepa
+  ▶ Read player.js +30
+  ▶ Read play.js +195
+  ▶ cat web/test/telepathy_check.mjs | head -120; grep -n "telepathy" REVERSE.md | grep -i "verification\|web_state\|csv_tri
+Writing the change-form port (`states/changeform.js`), reusing telepathy helpers.
+  ▶ sed -i 's/^function hideOam0(m)/export function hideOam0(m)/; s/^function\* selectOpen(m)/export function* selectOpen(m)
+Using Edit instead.
+  ▶ Edit telepathy.js
+  ▶ Edit telepathy.js
+  ▶ Edit telepathy.js
+  ▶ Edit telepathy.js
+  ▶ Grep "export function\*? (playSound|waitFrame|oamClip|objSlot1FDraw|waitPpuQueue)\(" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Write changeform.js
+  ▶ python3 - <<'EOF' 2>/dev/null || echo needs-tool
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+Now exporting a tools.emu state at `30:DEC1` (magic 7 from town `$02`).
+  ▶ time python3 -m tools.emu.web_state --load-state tools/emu/states/town02_enter.state --frames 10 --poke 64DE=E0 --poke 6
+  ▶ python3 tools/web_state_compare.py --help | head -40; python3 tools/csv_trim.py --help | head -20
+  ▶ time python3 tools/web_state_compare.py --state tools/emu/states/changeform.state --web web/test/states/changeform.json 
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/changeform.state --web web/test/states/changeform.json --fra
+  ▶ python3 tools/phase_compare.py gfx/compare/changeform/emu.csv gfx/compare/changeform/web.csv --cols core,pal,obj 2546-25
+  ▶ python3 tools/compare_frames.py gfx/compare/changeform/emu.csv gfx/compare/changeform/web.csv --cols core,pal,obj --fram
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/changeform.state --web web/test/states/changeform.json --fra
+  ▶ grep -n "^\*,\(53\|54\|621F\|6200\|14\|0D\)," labels.csv; grep -n "export function\* hudRedraw" -A15 -r web/src/game | h
+  ▶ python3 tools/dis.py 26 9AE8 0x20 && python3 tools/dis.py 30 C418 0x10
+  ▶ python3 tools/dis.py 30 C169 0xD && python3 tools/dis.py 26 8E46 0x8
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/changeform.state --web web/test/states/changeform.json --fra
+Port matches through the exit. Building the reference CSV and the check script.
+  ▶ python3 tools/csv_trim.py gfx/compare/changeform/emu.csv web/test/changeform_ref.csv --cols core,pal,obj --frames 2546-2
+  ▶ Write changeform_check.mjs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web && node test/changeform_check.mjs; node test/telepathy_check.mjs
+  ▶ node /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/changeform_check.mjs
+  ▶ node web/test/changeform_check.mjs
+  ▶ node web/test/telepathy_check.mjs
+All checks pass. Now documenting: labels, REVERSE.md substate row 23, Verification Log, task note, CLAUDE.md.
+  ▶ grep -n "^31,E0[37]\|^30,DF1E\|^30,DF22\|^30,DF47\|^30,C176\|^30,DEE4" labels.csv; grep -n "^| 2[123] |" REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the Verification Log row (after the telepathy row), labels, and CLAUDE.md.
+  ▶ Read REVERSE.md +173
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^30,DEE4\|^30,DF22\|^31,E038\|^31,E077\|^30,C176\|^30,DFD4\|DF0E" labels.csv
+  ▶ printf '%s\n' \
+  ▶ wc -l labels.csv && tail -2 labels.csv
+  ▶ Read labels.csv +1445
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 30 DF1E 0x11 | head -8 && grep -n "telepathy_check" CLAUDE.md docs/architecture_web.md | head
+Updating CLAUDE.md and docs/architecture_web.md, then wrapping up.
+  ▶ Edit CLAUDE.md
+  ▶ Edit architecture_web.md
+I ported sub_state 23, the magic-7 change-form menu (`SubstChangeForm` `30:DEC1` and its apply step `30:DF2F`), to the web port. The new check `changeform_check.mjs` passes, and the existing `telepathy_check.mjs` still passes. The gameplay-substates task stays open; I marked 23 done and set **24 `SubstCureMagic` `19:BB39`** as next.
+
+**What the port does** (`web/src/game/states/changeform.js`):
+- **Menu:** it opens the "What form will you take?" window and shows the player plus 4 form icons. LEFT and RIGHT move the cursor with a sound and wrap around after 4 forms. B, SELECT or START cancel without spending anything.
+- **Choosing a form (A):** a 31-frame preview animation of the chosen form, then a 32-frame wait. It then records the form in `obj1_flash` (`$0710`): b7 marks a changed form, b5-4 hold which one. It spends 20 MP (`$14`) and returns to play.
+- **Reuse:** it reuses the window, cursor and exit helpers from `telepathy.js`, which I made exportable.
+- **Wiring:** it is registered as entry 23 in `play.js`, plus an `ENTRY_POINTS['30:DEC1']` entry so saved states load cleanly.
+
+**Results against tools.emu:**
+- **Frame by frame:** all 183 frames match with no offset, covering the window, menu, preview, wait and exit. The telepathy menu needed a 1-frame offset for most of its run; this one doesn't.
+- **Skipped columns:** sprite slot `$1F` (tools.emu records it in the middle of the sprite draw), and the palette on two frames (f2555 when the window opens, f2724 at the exit), where tools.emu and the port upload it one frame apart.
+- **RAM at f2727:** MP (`$60` → `$4C`), `obj1_flash` and the restored `irq_mode` are equal. Only 8 scratch / PPU-queue bytes differ.
+- **Other cases checked:** form 2 applied, LEFT wrapping from form 0 to form 3 and applying it, and B cancel keeping MP and the form bits.
+- **After the exit:** play is not compared. The town trigger re-runs the item-give step, and the NPCs are one step apart because of the known lag-frame timing gap.
+
+**Two notes:**
+- **Form bits are ORed in, not replaced:** `obj1_flash` is never cleared here, so changing form twice mixes the old and new form bits. The port does the same.
+- **Unreachable stack bug:** if MP were short at the final spend, the ROM would corrupt its stack. It can't happen because MP is already checked when magic 7 is cast. The port just logs it.
+
+**Files:**
+- **New:** `web/test/states/changeform.json` (with `tools/emu/states/changeform.state`), the reference `web/test/changeform_ref.csv`, and `web/test/changeform_check.mjs`.
+- **Updated:** 7 labels in `labels.csv`; in REVERSE.md, substate row 23, a Verification Log row and the task note; `CLAUDE.md`; `docs/architecture_web.md`.
+- **Leftover:** the comparison runs wrote output folders under `gfx/compare/` (`changeform`, `changeform_end`); you can delete them.
+
+SESSION_SUMMARY: Session 146 ported magic-7 change form (sub_state 23 SubstChangeForm 30:DEC1 + ChangeFormApply 30:DF2F, new labels ChangeFormCasterRecord 31:E038 / OamAttrPalClear 31:E077) as web states/changeform.js; changeform_check.mjs passes 183/183 rows vs tools.emu at shift 0 plus form-bit/MP/LEFT-wrap/cancel cases; gameplay-substates task stays open, next 24 SubstCureMagic 19:BB39.

@@ -1,0 +1,155 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions | head -5 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.m
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*17[2345]* && tail -c 2500 re_loop_sessions/20261122_104601_session_174.txt; echo ----; tail -c 1
+  ▶ Grep "EnemyKilled|ObjBecomeNext" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ grep -n "'kill'\|def _kill\|kill" tools/emu/scenario.py | head -30; sed -n 1030,1045p REVERSE.md; sed -n 170,230p web/sr
+  ▶ sed -n 120,140p tools/emu/scenario.py && sed -n 440,500p tools/emu/scenario.py && ls web/test/*.mjs | head -60 && wc -l 
+Checking enemy deaths and drops against a real kill. Next I'm building a frame check from the existing `kill` scenario.
+  ▶ Read bossa6_check.mjs
+  ▶ sed -n 1,60p tools/emu/scenario_state.py; grep -n "bossa6\|A6" REVERSE.md | grep -i "scenario_state" | head -5
+  ▶ sed -n 1,40p tools/emu/scenario.py | head -60; python3 tools/web_state_compare.py --help 2>&1 | head -30
+Let me run the `kill` scenario with a watch to find the kill frame.
+  ▶ timeout 600 python3 -m tools.emu.scenario --custom --help 2>&1 | grep -i "watch\|each" ; grep -n "watch" tools/emu/scena
+  ▶ grep -n "def run\b\|def run(\|'watch'\|watch\b" tools/emu/scenario.py | sed -n 1,40p | grep -v "watch=\[" ; grep -n "^de
+  ▶ Read scenario.py +702
+  ▶ Read scenario.py +790
+  ▶ timeout 600 python3 -m tools.emu.scenario gold_class_3 --out /tmp/gc3.txt >/dev/null; head -40 /tmp/gc3.txt
+  ▶ mkdir -p gfx/tmp && timeout 600 python3 -m tools.emu.scenario gold_class_3 --out gfx/tmp/gc3.txt >/dev/null; sed -n 1,40
+Running the kill scenario in the emulator to find the kill frame (writing output under `gfx/`).
+  ▶ timeout 600 python3 -m tools.emu.scenario gold_class_3 --out gfx/kill_probe.txt >/dev/null; sed -n 1,40p gfx/kill_probe.
+Kill lands at scenario +37 (abs f2533), the puff turns into a coin at +85, and the gold pickup is at +231. Exporting the port state at +28, just before the killing swing:
+  ▶ timeout 600 python3 -m tools.emu.scenario_state gold_class_3 28 --out web/test/states/killgold.json --save-state tools/e
+  ▶ K=""; B=(RIGHT B A B A B A B A B A RIGHT B A B A B A B A B A); for i in $(seq 1 21); do K="$K $((2496+10+20*i)):${B[$i]}
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/killgold.state --web web/test/states/killgold.js
+  ▶ ls gfx/killgold; timeout 300 python3 tools/compare_frames.py gfx/killgold/emu.csv gfx/killgold/web.csv 2>&1 | head -40
+The port kills the enemy 2 frames early (f2531 vs f2533), and the sword slot `$02` appears at different times. I'll write a small side-by-side column viewer.
+  ▶ Write csv_cols.py
+  ▶ python3 tools/csv_cols.py gfx/killgold/emu.csv gfx/killgold/web.csv --cols o01_x,o01_y,o02_ai,o02_x,o0E_ai,o0E_x,o0E_y,p
+Name clash with `tools/dis.py`; running it as a module from the repo root avoids that.
+  ▶ python3 -m tools.csv_cols gfx/killgold/emu.csv gfx/killgold/web.csv --cols o01_x,o01_y,o02_ai,o02_x,o0E_ai,o0E_x,o0E_y,o
+  ▶ python3 -m tools.csv_cols gfx/killgold/emu.csv gfx/killgold/web.csv --cols o01_x,o01_y,o02_ai,o02_x,o0E_ai,o0E_x,o0E_y,o
+  ▶ python3 -I tools/csv_cols.py gfx/killgold/emu.csv gfx/killgold/web.csv --cols o01_x,o01_y,o02_ai,o02_x,o0E_ai,o0E_x,o0E_
+  ▶ Write csv_cols.py
+  ▶ python3 tools/csv_cols.py gfx/killgold/emu.csv gfx/killgold/web.csv o01_x,o01_y,o02_ai,o02_x,o0E_ai,o0E_x,o0E_y,o0F_ai,o
+Port is consistently 1 frame early on the sword. Retrying with the port's keys shifted +1 frame:
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/killgold.state --web web/test/states/killgold.js
+All object, OAM, and palette columns now match over f2525-2823: kill, puff, coin, gold pickup. Only the known sound-period offset is left. Checking the 24 RAM bytes that still differ at the end:
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/killgold.state --web web/test/states/killgold.js
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario kill_levelup --out gfx/kill_probe.txt >/dev/null; sed -n 3,40p gfx/kill_probe.
+Level-up fires at +37, message sub-state `$10` runs f40-f99. Exporting and comparing the same way:
+  ▶ timeout 600 python3 -m tools.emu.scenario_state kill_levelup 28 --out web/test/states/killlevelup.json --save-state tool
+  ▶ timeout 600 python3 -m tools.emu.scenario_state kill_levelup 28 --out web/test/states/killlevelup.json --save-state tool
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/killlevelup.state --web web/test/states/killleve
+  ▶ python3 tools/compare_frames.py gfx/killlevelup/emu.csv gfx/killlevelup/web.csv 2>&1 | tail -12
+  ▶ python3 tools/compare_frames.py gfx/killlevelup/emu.csv gfx/killlevelup/web.csv 2>&1 | grep -v "^frame .*: snd0_period=[
+  ▶ python3 tools/compare_frames.py gfx/killlevelup/emu.csv gfx/killlevelup/web.csv 2>&1 | head -34
+  ▶ python3 tools/csv_cols.py gfx/killlevelup/emu.csv gfx/killlevelup/web.csv sub,music,o02_ai,o02_x,oam_crc 2533-2540
+Three gaps in the level-up run: `sub_state $10` is set 1 frame late (f2536), one `music` cell differs (f2572), and sword/OAM differences from f2587. Looking closer:
+  ▶ python3 tools/csv_cols.py gfx/killlevelup/emu.csv gfx/killlevelup/web.csv state,sub,music,o02_ai,o02_x,o01_ai,oam_crc 25
+  ▶ grep -n "function\* hudRedraw\|function\* hudHpBar\|function\* statRecalc" -A25 web/src/game/*.js web/src/game/*/*.js | 
+`HudRedraw` spins on `PpuQueueWaitSrc($7B)`, so the frame count depends on how many queue blocks each NMI flushes. Checking the documented NMI flush budget:
+  ▶ Grep "PpuQueueWaitSrc|flush budget|queue budget|blocks per NMI" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ grep -n "PpuQueueWaitSrc" REVERSE.md | cut -c1-20; sed -n 1167p REVERSE.md | cut -c1-2500
+  ▶ sed -n 1,30p web/test/ram_watch.mjs | grep -n "usage\|//" | head; timeout 60 python3 -m tools.emu --help 2>&1 | grep -n 
+  ▶ Grep "^\*,[0-9A-F]+,ppu_q|^\*,[0-9A-F]+,.*queue" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Watching the queue write/read indices `$0B`/`$0A` and `sub_state $41` in both runs from the level-up state:
+  ▶ timeout 300 python3 -m tools.emu --load-state tools/emu/states/killlevelup.state --frames 16 --watch 000B --watch 000A -
+  ▶ timeout 300 python3 -m tools.emu --load-state tools/emu/states/killlevelup.state --frames 16 --watch 000B --watch 000A -
+  ▶ timeout 300 node web/test/ram_watch.mjs web/test/states/killlevelup.json 16 0B,0A,41 --keys 2527:B:4 2>&1 | cut -c1-110 
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/killlevelup.state --web web/test/states/killleve
+  ▶ grep -n "4016" labels.csv | head; grep -n "ReadPad\|PadRead\|pad_held\b" labels.csv | head
+Watching `pad_new` (`$4B`) writes in both runs, before and after the message:
+  ▶ timeout 300 python3 -m tools.emu --load-state tools/emu/states/killlevelup.state --frames 92 --watch 004B --keys 2526:B:
+  ▶ timeout 300 node web/test/ram_watch.mjs web/test/states/killlevelup.json 92 4B --keys 2527:B:4 2547:A:4 2567:B:4 2587:A:
+  ▶ for s in killgold killlevelup; do echo $s; timeout 300 python3 -m tools.emu --load-state tools/emu/states/$s.state --fra
+  ▶ timeout 300 python3 -m tools.emu --load-state tools/emu/states/killlevelup.state --frames 300 --watch 004B --keys 2526:B
+  ▶ timeout 300 python3 -m tools.emu --load-state tools/emu/states/killgold.state --frames 300 --watch 004B --keys 2526:B:4 
+  ▶ sed -n 1,15p tools/csv_trim.py; sed -n 1,40p web/test/ai70ph3_check.mjs
+  ▶ Read ai70ph3_check.mjs +40
+  ▶ grep -n "^export" web/test/harness.mjs; grep -n "keys\|runFrame" web/test/ai70msg_check.mjs | head
+  ▶ Read harness.mjs +15
+Now the ref CSVs (snd columns left out, same as the other checks):
+  ▶ python3 tools/csv_trim.py gfx/killgold/emu.csv web/test/killgold_ref.csv --cols core,pal,obj,oam_crc --frames 2525-2823 
+Writing `web/test/kill_check.mjs` with per-key port frames (from each `$4B` write: port frame = F if the read is at line < 241, F+1 if it is in vblank):
+  ▶ Write kill_check.mjs
+  ▶ timeout 300 node web/test/kill_check.mjs
+  ▶ timeout 300 python3 -m tools.emu --load-state tools/emu/states/killlevelup.state --frames 72 --watch 0043 --watch 004F -
+  ▶ timeout 300 node web/test/ram_watch.mjs web/test/states/killlevelup.json 72 43,4F,45 --keys 2527:B:4 2547:A:4 2567:B:4 2
+The pad bytes line up (+1, and the message doesn't re-read the pad until it closes), so the pad isn't the cause. Taking screenshots at f2587 to see what the OAM difference is:
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/killlevelup.state --web web/test/states/killleve
+The screenshots differ the same way even on matching frames (HUD rows 1/11/23, the known load-state HUD gap (e)), so they don't help. Comparing the OAM bytes directly instead:
+  ▶ sed -n 1,15p web/test/_peek.mjs; grep -n "oam_crc" web/test/harness.mjs tools/emu/compare.py | head -5
+  ▶ sed -n 1,60p tools/emu/__main__.py | grep -n "keys\|parse_keys\|import" | head -20
+  ▶ grep -n "a.keys\|parse_keys\|nes.keys" tools/emu/__main__.py | head
+  ▶ Write oam_dump.py
+  ▶ timeout 300 python3 -m tools.emu.oam_dump tools/emu/states/killlevelup.state 2586,2587,2595 --keys 2526:B:4 2546:A:4 256
+  ▶ Grep "blink|invuln|0x0200 \+ 4|OAM_FIXED|oam\[4|0x204" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ grep -n "0x10\b.*sub\|SUBST\|case 0x10\|16:" web/src/game/states/play.js | head -20; grep -n "sub_state.*\$10\|sub_state
+  ▶ Grep "0x10\]|0x10:|\[16\]|SUBSTATES|SubstMessage|PendingMessage" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/play.js
+  ▶ grep -n "export function\* showPendingMessage" -A30 web/src/game/states/giveitem.js; grep -n "D085" REVERSE.md | cut -c1
+  ▶ Read talk.js +270
+  ▶ timeout 300 python3 -m tools.emu --load-state tools/emu/states/killlevelup.state --frames 70 --watch 0382 --watch 0381 -
+  ▶ timeout 300 node web/test/ram_watch.mjs web/test/states/killlevelup.json 70 382,381 --keys 2527:B:4 2547:A:4 2567:B:4 25
+Flags are the same in both. The blink must be inside the sprite pass itself. Reading `sprites.js`:
+  ▶ Read sprites.js
+The sprite pass has a half-rate flicker (`$0380` b2, keyed on `(slot + $07FF) & 1`). Before going further I'll dump the port's OAM at the same frames for a byte-level comparison:
+  ▶ Write oam_dump.mjs
+  ▶ timeout 300 node web/test/oam_dump.mjs web/test/states/killlevelup.json 2586,2587,2588,2595 --keys 2527:B:4 2547:A:4 256
+  ▶ grep -n "crc" web/test/harness.mjs | head
+  ▶ cat > /dev/null <<'EOF'
+  ▶ Edit kill_check.mjs
+  ▶ Edit kill_check.mjs
+  ▶ Edit kill_check.mjs
+  ▶ Edit kill_check.mjs
+  ▶ Edit kill_check.mjs
+  ▶ Edit kill_check.mjs
+  ▶ timeout 300 node web/test/kill_check.mjs
+  ▶ python3 tools/csv_cols.py web/test/killgold_ref.csv web/test/killgold_ref.csv o0F_ai 2546-2550; python3 tools/csv_cols.p
+  ▶ Edit kill_check.mjs
+  ▶ Edit kill_check.mjs
+  ▶ Edit kill_check.mjs
+  ▶ timeout 300 node web/test/kill_check.mjs
+Both cases pass. Before writing docs, I'm checking the ShowMessage closing-loop address I quoted in the check's comment:
+  ▶ python3 tools/dis.py 30 D390 60 | tail -22
+Loop is `30:D3AA`; fixing the comment, then adding the label and docs.
+  ▶ Edit kill_check.mjs
+  ▶ Grep "^30,D3A|^31,FE97" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -3 labels.csv
+  ▶ printf '%s\n' '30,D3AA,ShowMessageCloseLoop,"s175: 8 x (WaitFrame, sprite pass 28:800E, OamClipTop) after the A/B close;
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit kill_check.mjs
+Now REVERSE.md: a Verification Log row, a findings note under the `EnemyKilled` section, and the task text.
+  ▶ Read REVERSE.md +1036
+  ▶ grep -n "^| " REVERSE.md | sed -n '/^20[0-9]:/p' | cut -c1-80 | tail -5; sed -n 236,240p REVERSE.md | cut -c1-120
+  ▶ Read REVERSE.md +204
+Adding the Verification Log row after the `$6B` row, then a findings note under the `EnemyKilled` section:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Updating the task text (it stays unchecked, with this part crossed off):
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+  ▶ timeout 300 node web/test/kill_check.mjs && timeout 300 node web/test/core_check.mjs 2>&1 | tail -2
+I've checked the port's enemy-kill chain against real kills in tools.emu, and it matches with no port code changes. The new `web/test/kill_check.mjs` passes, and so does `core_check`. I didn't rerun the other checks because no port code changed. The low-priority boss-AI task stays open, with this item crossed off.
+
+**What was compared.** I exported two port states 28 frames before a kill (via `scenario_state`) and compared 299 frames each (f2525-2823) at shift 0:
+- **`gold_class_3`:** the enemy dies at f2533 and turns into the death puff (AI `$7D`), and XP goes 0→1. The gold drop is a separate coin (AI `$7B`) that appears in slot `$0F` at f2549. The puff's own slot ends at f2581, and the pickup adds +2 gold at f2727. Every compared column matches.
+- **`kill_levelup`** (new scenario, level 1 with next-XP poked to 1): this runs the level-up branch at `26:9188`. The player reaches level 2 with max HP `$40`, max MP `$22` and next XP `$3C`, the HUD redraws, and level-up message 32.13 shows. Everything matches except six 1-frame cells, all caused by when tools.emu samples a row, not by port bugs:
+  - **2 cells one frame late in the port:** the sub-state change at f2536 and the music start at f2572. In the ROM, code resuming right after the NMI still counts as the same frame. The port runs it in its next frame.
+  - **4 OAM cells (f2587-2593):** while the message closes, the next sprite pass starts in vblank and is half-done when tools.emu samples. The check accepts these only if mixing the port's rows f and f+1 gives exactly the reference checksum.
+
+**Key timing.** The ROM stores the new pad state (`31:FE97`) at line 260-261 here, so a key at emu frame F reaches the port at F+1. After the level-up message that store slips to line 2-5 of the next frame, so those keys need +0 instead. I suspect the extra sound-driver time of music `$81` but didn't measure it. A single `--web-key-shift` can't match both halves, so the check lists each press's port frame, taken from `tools.emu --watch 004B`.
+
+**Not covered:** sound columns are left out of the references, because the known 1-frame `snd*_period` offset also shows up in the gold run.
+
+**Files:**
+- New check data: `web/test/kill_check.mjs`, `killgold_ref.csv`, `killlevelup_ref.csv`, and states in `web/test/states/` and `tools/emu/states/`.
+- New tools: `tools/csv_cols.py` (two frame CSVs side by side), plus `tools/emu/oam_dump.py` and `web/test/oam_dump.mjs` (OAM entries per frame).
+- Edited: `scenario.py` (new `kill_levelup` scenario).
+- Docs: REVERSE.md has a Verification Log row, an s175 note under "Enemy death `EnemyKilled`", and the updated task text. `labels.csv` gains `ShowMessageCloseLoop` `30:D3AA` and `ReadPadsNew` `31:FE97`. CLAUDE.md lists the new check and tools.
+- Scratch output went to `gfx/kill_probe.txt`, `gfx/killgold*` and `gfx/killlevelup*`.
+
+Nothing is committed.
+
+SESSION_SUMMARY: Session 175 checked the port's EnemyKilled chain against real kills in tools.emu (puff, slot-$0F coin drop, PickupGold, and the level-up branch 26:9188 with msg 32.13 via the new kill_levelup scenario); the new kill_check.mjs passes 2 × 299 rows at shift 0 with 2 LATE and 4 checked mid-sprite-pass OAM cells, using per-press key frames because the ROM's pad store crosses the frame edge after the level-up; no port code changed, and the low-priority boss-AI task stays open with death chains and drops crossed off.

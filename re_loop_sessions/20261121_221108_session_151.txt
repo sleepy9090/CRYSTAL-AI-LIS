@@ -1,0 +1,86 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; wc -l dead_ends.md REVERSE.md; ls -t re_loop_sessions | head -5; gr
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n -- "- \[ \]" REVERSE.md | head -10; grep -n "^### " REVERSE
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 2309p REVERSE.md | tail -c 5000; cat dead_ends.md | cut -c1-
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 3000 re_loop_sessions/20261121_221108_session_150.txt; grep
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 CC17 40 --stop; python3 tools/dis.py 30 C89
+Porting sub_state 28 `SubstOutOfMp` (30:CC17). It's a 10-instruction handler, so I'm wiring it into play.js now.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 195,300p web/src/game/states/play.js; grep -rn "area5FIrqOff
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "pending_msg\|0x06C3\|0x06E3\|playSound(m" web/src/game/sta
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; cat web/test/formrevert_check.mjs; sed -n 300,306p REVERSE.md | cut
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "add_argument" tools/emu/web_state.py tools/web_state_compa
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -i 's|^function area5FIrqOff(m) {|export function area5FIrqOff(
+  ▶ Read giveitem.js +250
+Exporting the existing `area5FIrqOff` helper, then adding the handler to play.js.
+  ▶ Edit giveitem.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 1,20p web/src/game/playsound.js; python3 tools/dis.py 30 CAB
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 30 C40E 40 --stop; grep -n "playSound" web/src
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n 18,32p web/src/game/states/cure.js; grep -n "mainState1\|reg
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n -A8 "ENTRY_POINTS\[" web/src/game/*.js | head -30
+The handler is wired in. Next I'm making the saved-state entry point a generator, because `loadState` expects one, then exporting a test state from tools.emu.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "pending" web/src/game/machine.js | head -20
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -rn "\.pending" web/src/game/*.js web/src/game/states/play.js 
+  ▶ Read mainloop.js +30
+  ▶ Edit play.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.web_state --load-state tools/emu/states/town02
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/outofmp
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/outofmp
+The port runs the out-of-MP state, and so far only stack bytes differ from tools.emu at the end. Next I'm checking the per-frame rows.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/web_state_compare.py --state tools/emu/states/outofmp
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/outofmp.state --web web/test/states/outofmp.json --frames 12
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/outofmp.state --web web/test/states/outofmp.json --frames 12
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/outofmp.state --web web/test/states/outofmp.json --frames 12
+  ▶ sed -n 1,30p tools/csv_trim.py | grep -n "add_argument\|usage\|python3"; grep -n "^frame\|^2545\|^2546\|^2547\|^2600\|^2
+  ▶ python3 tools/csv_trim.py gfx/compare/outofmp/emu.csv web/test/outofmp_ref.csv --cols core,pal,obj --frames 2546-2607 &&
+  ▶ Read web_2580.png
+  ▶ Read emu_2580.png
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/outofmp.state --web web/test/states/outofmp.json --frames 60
+  ▶ Read web_2599.png
+The "too low" message window renders in the port. Now checking a 91-pixel difference against the emulator frame.
+  ▶ Read emu_2599.png
+  ▶ Read playsound.js +20
+  ▶ Write outofmp_check.mjs
+  ▶ grep -n "^export function" web/test/harness.mjs
+  ▶ Read harness.mjs +25
+Returns a Map, so I'll fix the key lookup and run the check.
+  ▶ Edit outofmp_check.mjs
+  ▶ node web/test/outofmp_check.mjs && node web/test/formrevert_check.mjs && node web/test/mesia_check.mjs && node web/test/
+All checks pass. Now updating REVERSE.md, CLAUDE.md and the web architecture doc.
+  ▶ grep -n "Mesia reunion" REVERSE.md | cut -c1-300; grep -n "mesia" docs/architecture_web.md CLAUDE.md | cut -c1-300
+  ▶ sed -n 178p REVERSE.md | cut -c300-2000; sed -n 180,195p docs/architecture_web.md
+Applying the doc edits now.
+  ▶ Edit architecture_web.md
+  ▶ Edit CLAUDE.md
+  ▶ Edit REVERSE.md
+  ▶ sed -n 179p REVERSE.md | cut -c1-200
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I ported sub_state 28 `SubstOutOfMp` (30:CC17) to the web port. It now matches tools.emu on all 62 compared frames, from the handler running through the "Your magic power is too low." message closing. The larger substates task stays open; the next item is 30 `SubstFinalSceneReset` (19:BDF2).
+
+**What the handler does:** in a single frame it runs the area-$5F interrupt-mode clear (`Area5FIrqOff`), plays sound $4E, sets sub_state to $10 and queues message 32.14. It doesn't wait any frames.
+
+**Changes**
+- **`web/src/game/states/play.js`:** new `substOutOfMp` function, added as entry 28 of the substate table. It also has an `ENTRY_POINTS['30:CC17']` entry so a saved state stopped at the handler loads cleanly. That entry is a small generator wrapper, because the state loader expects a generator.
+- **`web/src/game/states/giveitem.js`:** the existing `area5FIrqOff` helper is now exported so the new handler can reuse it.
+- **New test state:** `web/test/states/outofmp.json` (with `tools/emu/states/outofmp.state`). It was exported from the town $02 entry state with magic 2 selected, MP set to 0, and an A press.
+- **New reference and check:** `web/test/outofmp_ref.csv` (frames 2546–2607) and `web/test/outofmp_check.mjs`. The check also runs the handler directly and checks what it writes:
+  - the sound is queued;
+  - interrupt mode stays as it was in town $02;
+  - interrupt mode is cleared in area $5F.
+- **Docs:** REVERSE.md (substate row 28, a new Verification Log row "Out of MP", the task note), `CLAUDE.md` and `docs/architecture_web.md`. No new labels were needed; 30:CC17 was already labeled.
+
+**Results**
+- `outofmp_check.mjs` passes. The existing formrevert, mesia, itemuse and giveitem checks still pass.
+- **Not compared:**
+  - `oam_crc` while the message box closes (f2601–2607).
+  - Play after f2607. There the port runs the town trigger's GiveItem one frame later than tools.emu: the known gap (c), because the port has no CPU cycle model.
+- **Screenshot at f2599, message box up:** 91 pixels differ, on tile rows 1, 11 and 23. Row 23 is the known HUD artifact after loading a state. I didn't look into rows 1 and 11.
+- **Sound call's Y value:** it gets 0, the same default the earlier ported handlers use. The ROM passes whatever Y holds at the dispatch, so `$010F` could differ from tools.emu. Only the check's direct test covers this byte, and it supplies its own Y value.
+
+The comparison runs left two scratch folders, `gfx/compare/outofmp/` and `gfx/compare/outofmp_shot/`; you can delete them.
+
+SESSION_SUMMARY: Session 151 — ported sub_state 28 SubstOutOfMp 30:CC17 (states/play.js + outofmp_check.mjs, 62/62 rows vs tools.emu at shift 0 through msg 32.14); next is 30 SubstFinalSceneReset.

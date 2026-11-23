@@ -1,0 +1,122 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls re_loop_sessions | tail -4 && grep -n "## Next Tasks\|^### \|- \[ \]" REVERSE.md | h
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*18[1234].txt && tail -c 5000 re_loop_sessions/20261122_104601_session_183.txt
+  ▶ Read 20261122_104601_session_183.txt
+Workflow is clear. Next AI to cover: enemy AIs `$25 $26 $40 $44 $45` placed by areas. Let me see the catalog.
+  ▶ python3 tools/enemy_catalog.py 2>&1 | head -70
+  ▶ python3 tools/enemy_catalog.py 2>&1 | awk '/^; AI \$(2[0-9A-F]|4[0-9A-F])/{p=1} /^; AI \$(3|5)/{p=0} p' | head -90
+  ▶ python3 tools/enemy_catalog.py > /tmp/cat184.txt 2>&1; wc -l /tmp/cat184.txt
+  ▶ python3 tools/enemy_catalog.py > /tmp/cat184.txt 2>&1
+  ▶ Grep "^; AI \$(2[5-9A-F]|4[0-9A-F])" /tmp/cat184.txt
+  ▶ python3 tools/enemy_catalog.py > gfx/cat184.txt 2>&1
+  ▶ python3 tools/enemy_catalog.py --help 2>&1 | head -20
+Picking the next enemy group for the Ph7 leftovers task; reading the enemy catalog to choose an area.
+  ▶ Grep "^def |argv|areas" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/enemy_catalog.py
+  ▶ python3 tools/enemy_catalog.py --out gfx/enemy_catalog.txt
+  ▶ Grep "^; AI \$(2[5-9A-F]|4[0-9A-F])" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/gfx/enemy_catalog.txt
+Area `$29` (AI `$25`, type `$65`) is next. Dumping its spawns and the scenario template.
+  ▶ python3 tools/area_dump.py spawns 29 2>&1 | head -40; grep -n "group_11\|group_18\|def _group\|'group_" tools/emu/scenar
+  ▶ python3 tools/area_dump.py spawns 0x29 2>&1 | head -40; python3 tools/area_dump.py spawns '$29' 2>&1 | head -5
+  ▶ Read scenario.py +600
+  ▶ Grep "A9D2|AI `\$25`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Adding a `group_29` scenario (no keys yet) to get a state and probe the slots.
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_29 12 --out web/test/states/group29.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group29.state --slots 0E,14,15,17 --every 20 --seg NONE:60
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group29.state --slots 14,15 --every 8 --seg NONE:20 RIGHT:
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group29.state --slots 14,15 --every 10 --seg NONE:20 DOWN:
+Contact hit seen at f2589. Now trying sword swings facing up at slot `$15`.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group29.state --slots 14,15 --every 6 --seg NONE:20 DOWN:2
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group29.state --slots 15 --every 4 --seg NONE:20 DOWN:20 R
+No damage from upward swings. Trying the row where the player overlaps the chaser after the contact hit (y≈1304), swinging right.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group29.state --slots 15 --every 4 --seg NONE:20 DOWN:20 R
+Player dies from 3 contact hits and swings do no damage. Checking what the catalog's `hitf` field means for type `$65` (value `$06`).
+  ▶ Grep "hitf" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "0x5[0-9A-F]0|hitf|'hp'|0x4A0" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/enemy_catalog.py
+  ▶ Read REVERSE.md +1222
+Type `$65`'s element nibble is 1, so it is immune to sword 1. Switching the scenario to sword 2.
+  ▶ Grep "SwordAttackTable" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "SwordAttackTable|SwordElemBit" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ sed -i "s/area='29', pokes={0x0421: 16, 0x0711: 1,/area='29', pokes={0x0421: 16, 0x0711: 2,/; s/hp \$0F def 4 atk \$24);
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_29 12 --out web/test/states/group29.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group29.state --slots 14,15 --every 4 --seg NONE:20 DOWN:2
+Still no damage: the swing happens while overlapping, and the knockback puts the enemy behind the player. Trying left-facing swings after the second knockback.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group29.state --slots 15 --every 3 --seg NONE:20 DOWN:20 R
+Kill at f2667 (two hits: f2635, f2667 → puff AI `$7D`). Probing the rest of the run to see the drop and whether slot `$14` reaches the player.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group29.state --slots 14,15 --every 15 --seg NONE:20 DOWN:
+Slot `$14` kills the player at f2856. Adding downward swings at ~f2832 to fight it as well.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group29.state --slots 14,15 --every 4 --seg NONE:20 DOWN:2
+One hit on slot `$14` at f2839; it comes back by ~f2930. Adding a later swing for the kill.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group29.state --slots 14,15 --every 3 --seg NONE:20 DOWN:2
+Both chasers die (f2667, f2933). Writing these keys into the scenario.
+  ▶ Edit scenario.py
+Now recalling the s183 compare command and port-key derivation.
+  ▶ Grep "web_state_compare.py --state|--watch 0043" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions/20261122_104601_session_183.txt
+  ▶ Grep "web_state_compare|--watch 0043|csv_trim" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/re_loop_sessions/20261122_104601_session_182.txt
+  ▶ Read group18_check.mjs
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_29 12 --out web/test/states/group29.json --save-state tools/emu/st
+Port key frames derived. Checking `web_state_compare.py` options for separate port keys.
+  ▶ Grep "add_argument" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/web_state_compare.py
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/group29.state --web web/test/states/group29.json
+Ref written (477 rows). Now the check script, modelled on group18's, with kill-frame assertions.
+  ▶ Write group29_check.mjs
+  ▶ node web/test/group29_check.mjs 2>&1 | tail -35
+All 477 rows match; only my kill-frame constant disagrees (port f2665 vs probe f2667). Checking the ref CSV's `o15_ai`/`o14_ai` column directly.
+  ▶ python3 tools/csv_cols.py web/test/group29_ref.csv gfx/group29/emu.csv o15_ai,o14_ai,o15_hp 2662-2668 2>&1 | head -12; p
+The ref itself has slot `$15`'s kill at f2665, so the probe's label was off. Checking the hit frames in the ref for the header comment.
+  ▶ head -1 web/test/group29_ref.csv | tr ',' ' ' | fold -w 200
+  ▶ python3 tools/csv_cols.py web/test/group29_ref.csv gfx/group29/emu.csv o15_ai,o14_ai,o0E_ai,o17_ai,o0F_ai,o10_ai,o16_ai,
+  ▶ python3 tools/csv_cols.py web/test/group29_ref.csv gfx/group29/emu.csv o0D_ai,o11_ai,o12_ai,o13_ai,o19_ai,o1A_ai,o1B_ai,
+  ▶ python3 tools/csv_cols.py web/test/group29_ref.csv gfx/group29/emu.csv o0D_ai,o0E_ai,o0F_ai,o10_ai,o11_ai,o12_ai,o13_ai,
+  ▶ python3 tools/csv_cols.py web/test/group29_ref.csv gfx/group29/emu.csv o0F_ai,o10_ai,o11_ai,o12_ai,o13_ai,o16_ai,o0D_ai 
+Rows all agree. Fixing the kill constant and the header to use the ref's frames (the respawns fill `$16 $13 $12 $11 $10 $0F`, and an AI `$7B` coin sits in `$0D` from ~f2684).
+  ▶ Edit group29_check.mjs
+  ▶ Edit group29_check.mjs
+  ▶ node web/test/group29_check.mjs 2>&1 | tail -5
+Passes. Starting the full suite in the background, then updating the docs.
+  ▶ timeout 1800 python3 tools/run_checks.py 2>&1 | tail -8
+  ▶ Grep "^\| Area-`\$18` town NPCs" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +213
+  ▶ Edit REVERSE.md
+Now the s184 note in the task text.
+  ▶ Edit REVERSE.md
+  ▶ Grep "group18_check.mjs" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CLAUDE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit CLAUDE.md
+Docs updated; waiting for the full check run to finish.
+  ▶ ToolSearch max_results query
+The check suite is still running in the background, and I'll get a notification when it finishes. Nothing else is pending.
+  ▶ Read bhez7ofp3.output
+The suite hasn't printed anything yet; I'm waiting for it to finish.
+  ▶ Read bhez7ofp3.output
+I checked area `$29`'s enemy group (AI `$25`) against tools.emu, and the port matches it exactly with no code changes. The new `web/test/group29_check.mjs` passes all 477 rows (f2508-2984) at shift 0, sound included, with no cells to excuse.
+
+**What's in the area:** four type-`$65` chasers (AI `$25` `27:A9D2`) in slots `$0E $14 $15 $17`. The spawn list's "skip" entries are respawn slots: AI `$25` chasers fill slots `$16 $13 $12 $11 $10 $0F` between f2548 and f2660, and slot `$0D` at about f2948.
+
+**Why the scenario uses sword 2:** type `$65`'s element nibble is 1, which makes it immune to sword 1. All my first swings bounced off for that reason. The new scenario `group_29` therefore pokes sword 2 (`$0711` = 2) along with level 16 and attack `$03E1` = 17.
+
+**The run:**
+- The player walks into slot `$15` and takes two contact hits (HP `$60` → `$1A`).
+- After the knockback the player turns left and swings: one hit takes it from HP `$0F` to 0, and the next kills it at f2665. It turns into a death puff, and a coin appears in slot `$0D`.
+- Slot `$14` then comes up from below. Two downward swings: one hit, then the kill at f2933.
+
+The check also asserts both kill frames and that the four starting slots are AI `$25`.
+
+**Full suite:** 36 of 37 checks pass. The one failure is `world_check` on areas `$3C`, `$3D` and `$BC`, the known gap (j).
+
+**Docs:**
+- REVERSE.md has a new Verification Log row ("Area-`$29` enemy group, AI `$25`").
+- The task has an s184 note and stays open, since it's a low-priority leftovers task. What's left is the other area-placed AIs: `$26 $27 $29 $2A $2E $40 $4E` and so on. `$44` and `$45` aren't placed by any area.
+- CLAUDE.md lists the new check.
+
+New files:
+- `web/test/group29_check.mjs`
+- `web/test/group29_ref.csv`
+- `web/test/states/group29.json`
+- `tools/emu/states/group29.state`
+- `gfx/enemy_catalog.txt`
+
+`tools/emu/scenario.py` has the `group_29` scenario. Nothing is committed.
+
+SESSION_SUMMARY: Session 184 checked area $29's enemy group (AI $25, type $65 ×4 + respawns; sword 2 because elem 1 blocks sword 1) with the new group_29 scenario and web/test/group29_check.mjs: 477/477 rows equal at shift 0 including sound, kills at f2665 and f2933 plus a coin, no listed cells, no port change; 36/37 checks pass (world_check is the known gap (j)).

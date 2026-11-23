@@ -1,0 +1,77 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls re_loop_sessions | tail -4 && grep -n "^## Next Tasks\|^### \|- \[ \]" REVERSE.md | 
+  ▶ sed -n 2396,2410p REVERSE.md | cut -c1-600; grep -n "^- \[ \]" REVERSE.md | cut -c1-300
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_19[89].txt re_loop_sessions/*_20[01].txt; tail -c 3000 re_loop_sessions/20261122_104601_session
+  ▶ grep -n "EventActionTable\|TalkActionTable" REVERSE.md | cut -c1-200 | head -30; grep -n "not ported\|EVENT_ACTIONS\|^ex
+  ▶ sed -n 870,960p REVERSE.md | cut -c1-900
+Picking the low-priority leftovers task; this session I'll port the simple remaining talk actions (20, 21, 24, 25, 26) without area-load dependencies.
+  ▶ grep -n "TALK_ACTIONS\|not ported\|function\|^export\|^import" web/src/game/states/talk.js | head -60
+  ▶ Read talk.js +425
+  ▶ Read giveitem.js +280
+Now disassemble talk acts 20, 21, 24, 25, 26 exactly.
+  ▶ python3 tools/dis.py 30 D16D 0x30 --stop; python3 tools/dis.py 30 D18E 0x10 --stop; python3 tools/dis.py 30 D280 0xC0
+Acts 10/20/21/24/25/26 are all simple. Check existing helpers for `26:98A8`/`26:9897` and `FarCall_C25D`.
+  ▶ grep -rn "98A8\|9897\|C25D\|farObjInit" web/src --include=*.js | grep -v "^\s*//" | head -20; python3 tools/dis.py 31 FF
+  ▶ python3 tools/dis.py 30 D336 0x10 --stop; grep -n "import" web/src/game/states/talk.js web/src/game/obj/util.js | head; 
+Verify the TalkActionTable mapping (the existing label calls `D280` "event act 24").
+  ▶ python3 tools/decode_tables.py 30:D123 32 word 2>&1 | head -40
+  ▶ python3 tools/decode_tables.py 2>&1 | head; python3 tools/decode_tables.py 30:D123 32 ptr 2>&1 | head -40
+  ▶ python3 tools/decode_tables.py 30:D123 32 ptr16 --per-line 8
+`D280` is talk act 24, not event act 24 (that's `D75E`). Check references to the label name before renaming.
+  ▶ grep -rn "EvActWarp" --include=*.md --include=*.js --include=*.py --include=*.csv . | cut -c1-250
+Now write the port code in talk.js (acts 10, 21, 24, 25, 26 are pure RAM/ObjInit; act 20 needs GiveItemA so goes in giveitem.js like 3/17).
+  ▶ Edit talk.js
+  ▶ Edit talk.js
+  ▶ Edit talk.js
+  ▶ Edit giveitem.js
+Now add fuzz cases for the frame-free acts (10, 21, 24). Look at how s199 set up `fuzz_follow`.
+  ▶ grep -n "follow\|type38\|_poke_" tools/emu/routine_capture.py | head -30; grep -n "follow\|type38\|D23F\|D659" web/test/
+  ▶ sed -n 200,260p tools/emu/routine_capture.py; grep -n "MakeFollower13\|EvActSpawnType38\|EvActTwo\|EvActMake\|RUN\b\|con
+  ▶ grep -n "MakeFollower13\|EvActSpawnType38\|_poke_follow\|_poke_type38" tools/emu/routine_capture.py; sed -n 30,50p web/t
+  ▶ Read routine_capture.py +355
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ Grep "import.*(talk|giveitem)\.js|files|fuzz_type38" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test/obj_check.mjs
+  ▶ sed -i "16s/.*/import { npcScript, makeFollower13, TALK_ACTIONS } from '..\/src\/game\/states\/talk.js';/" web/test/obj_
+Ported talk acts 10/20/21/24/25/26; now wiring the fuzz check (using Edit instead of sed).
+  ▶ Edit obj_check.mjs
+  ▶ python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 150 --seed 201 --routine
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -iv "^ok " | head; node web/test/obj_check.mjs 2>&1 | grep -i "talk"
+All 450 match. Full regression run:
+  ▶ python3 tools/run_checks.py 2>&1 | tail -4
+Now docs: labels, README, REVERSE.md.
+  ▶ grep -n "^30,D\(18E\|2AE\|2D3\|2F4\|336\|341\|25A\|1B5\|1CA\|1EB\)," labels.csv
+  ▶ Read labels.csv +1172
+  ▶ Edit labels.csv
+  ▶ grep -n "EvActWarp" REVERSE.md | cut -c1-80; grep -n "s200: EventActionTable act 9" web/test/obj_frames/README.md
+  ▶ sed -n 1618p REVERSE.md | cut -c1-200; sed -n 177,179p web/test/obj_frames/README.md
+  ▶ Edit README.md
+  ▶ Edit REVERSE.md
+Now fix the talk-action table row for 24 (missing `$04BE`=`$0C`) and update the task text (a).
+  ▶ python3 tools/dis.py 30 D1B5 0x50 --stop 2>&1 | head -5; grep -n "^| 24 | \`D280\`" REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I ported six more talk actions this session (10, 20, 21, 24, 25 and 26). Three of them match tools.emu on all 450 random-RAM test cases. The other three have no test yet. All 50 checks pass. The leftovers task stays open, as the rules say for a low-priority leftovers task. Nothing is committed.
+
+**What the new actions do**
+- **Act 10** (`30:D2F4`): spawns object type `$0F` in slot `$1E` at the NPC's position, then the NPC vanishes.
+- **Act 21** (`30:D2D3`): turns slots 13 and 14 into followers, unless slot 14 already is one.
+- **Act 24** (`30:D280`): warps the player to slot `$1E`'s position and starts the warp-exit spin.
+- **Act 20** (`30:D18E`): gives Flight, then fully restores HP and MP.
+- **Act 25** (`30:D2AE`): gives the Shield Ring and turns slot 14 into a follower.
+- **Act 26** (`30:D336`): gives the Ball of Water and sets `$060D` = 4.
+
+Acts 10, 21 and 24 are in `web/src/game/states/talk.js`. Acts 20, 25 and 26 are in `web/src/game/states/giveitem.js`, next to the item-giving routine they use.
+
+**How it's checked**
+- **Acts 10, 21 and 24:** I added them to `tools/emu/routine_capture.py` and saved 450 cases in `web/test/obj_frames/fuzz_talkacts.json`. All 450 match in `obj_check.mjs`.
+- **Acts 20, 25 and 26:** they show the item message, which waits for frames, so this single-routine test can't cover them. They have no full-run test either.
+
+**Label fix:** `30:D280` was labelled `EvActWarp` and described as event act 24. It is actually talk act 24; event act 24 is `30:D75E`. I renamed it `TalkWarp` and corrected the one REVERSE.md line that used the old name.
+
+**Docs:**
+- I added labels for the five other new routines to labels.csv.
+- I added the capture command to `web/test/obj_frames/README.md`.
+- In REVERSE.md, leftovers item (a) now lists only talk acts 16, 19 and 22 as unported. All three need the routines that spawn the effect and reload the area (`30:D1FF`, AreaLoadA/B), which aren't ported yet.
+
+SESSION_SUMMARY: Session 201 ported TalkActionTable acts 10/20/21/24/25/26; acts 10/21/24 match tools.emu on 450 fuzz cases (fuzz_talkacts.json), acts 20/25/26 show a message and have no test yet; relabelled 30:D280 from EvActWarp to TalkWarp (it is talk act 24); all 50 checks pass; leftovers (a) now lists talk acts 16, 19, 22.

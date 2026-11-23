@@ -1,0 +1,92 @@
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls re_loop_sessions | tail -4; wc -l dead_ends.md REVERSE.md; grep 
+  ▶ Read REVERSE.md +2350
+  ▶ Read dead_ends.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; tail -c 5000 re_loop_sessions/20261122_104601_session_165.txt; echo
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls web/src/game/obj/; grep -n "AI_TABLE" -r web/src/game | head; he
+I'll write a small tool to list AI ids in `gfx/obj_ai.txt` that are missing from the port's handler maps.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; ls tools | grep -i "ai\|missing\|port" ; grep -n "0x[0-9A-Fa-f]\{2\
+  ▶ Write ai_missing.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/ai_missing.py; grep -n "AI_HANDLERS\|AI_PLAYER" web/s
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -i 's/re.finditer(r'"'"'export const (AI_\\w+)\\s\*=\\s\*\\{(.\
+  ▶ Edit ai_missing.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/ai_missing.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; for a in B93E A85F A70E A24A A5CB A5ED A5C0 A5C5 B174 B235 B27A B2D
+  ▶ Grep "27:(B93E|A85F|A70E|A24A|A5CB|A5ED|A5C0|A5C5|B174|B235|B27A|B2D5|B2E2|B2F4|B2A4|B02C|B048|AE31|A4C6|B318|B070|A519|B39E|A6C5|A753|A7CD|A802|A616|A4E0|A90C|B9AA)" web/src/game
+Found 32 AI ids still missing from the port (new `tools/ai_missing.py`); now porting a small batch of them.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 B27A 0x7E
+  ▶ Grep "(98C7|972D|98A8|8480|9861|9897)\b" web/src/game/obj
+  ▶ Read ai_shot.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "export function spawnShot" -A12 web/src/game/obj/util.js; 
+  ▶ Grep "AI `?\$(15|1C|18|19|1A)\b" REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -n '1901p;2502p' REVERSE.md | grep -o ".\{200\}AI .\$1[5C89A].\
+  ▶ Grep ".{0,200}AI `?\$(15|1C|18|19)\b.{0,300}" REVERSE.md
+  ▶ Grep ".{0,120}(B27A|B2A4|B2D5|AI .\$15.|AI .\$1C.|AI .\$18.).{0,250}" REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; awk 'NR==1901||NR==2502' REVERSE.md | fold -w 400 | awk '/\$1[5C89A
+  ▶ Read REVERSE.md +1901
+  ▶ Read objects.js +60
+Porting AI `$15`, `$18`, `$19`, `$1C` (small shot/spawner AIs, `27:B27A-B2F3`) plus `$7C` (same address as the ported `$08`) — then fuzz-checking them.
+  ▶ Grep "AiCountdown|AiBounceShot|0x14|'ai_ids'|AI_IDS" tools/emu/routine_capture.py
+  ▶ Read routine_capture.py +205
+  ▶ Read routine_capture.py +470
+Now the port code.
+  ▶ Edit ai_shot.js
+  ▶ Edit ai_shot.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "import.*cpuRd" web/src/game/obj/util.js; grep -n "0x08:" w
+  ▶ Read ai_effect.js +205
+  ▶ Grep "function\*? aiScreenRedraw08" web/src/game/obj/ai_effect.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/dis.py 27 B7F6 8; python3 tools/dis.py 27 B850 0x20
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -i 's/^export function\* aiScreenRedraw08(m, x) {$/export funct
+Wiring AI `$7C` as an alias of AI `$08` with its own Y value.
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+  ▶ Grep "AiScreenRedraw08|AiExplode" tools/emu/routine_capture.py
+  ▶ Grep "AiCountdown|AiBounceShot|AiScreenRedraw|RUN\s*=" web/test/obj_check.mjs
+  ▶ Read obj_check.mjs +86
+  ▶ Edit obj_check.mjs
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "AiCountdown\|ai_shot\|fuzz_shot" web/test/obj_frames/READM
+  ▶ Read README.md +28
+Running the emulator fuzz capture for the 4 new AIs, then the port check.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 -m tools.emu.routine_capture --load-state tools/emu/states/
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; node web/test/obj_check.mjs 2>&1 | grep "fuzz_shot\|gap\|FAIL"; pyt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/decode_tables.py 20:BC5C 4 u8 2>&1 | head; python3 to
+All 1200 new cases match. Now the docs.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "Boss shot / part AIs\|^#### \|^### Bank 15 bosses" REVERSE
+  ▶ Read REVERSE.md +1351
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; head -3 gfx/objtypes.txt; grep -E "^(type )?\\\$?(19|1A|1C|1D|1E)\b
+  ▶ Read objtypes.txt
+  ▶ Edit REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; python3 tools/ai_missing.py | tail -1; tail -2 labels.csv
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; sed -i 's/(s166: 27 of 101)/(s166: 26 of 101)/' REVERSE.md; printf 
+Appending the labels with the editor instead.
+  ▶ Read labels.csv +1
+  ▶ Grep "^19,BDDC" labels.csv
+  ▶ Read labels.csv +1500
+  ▶ Edit labels.csv
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit README.md
+  ▶ Edit REVERSE.md
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM; grep -n "fuzz_shot.json. 1200" REVERSE.md | cut -c1-60; node web/te
+I ported five more missing enemy-shot AIs and hooked up a sixth as an alias of an existing one. All their test cases match the emulator and the existing checks still pass. The low-priority task (`boss AI port, rest after s104`) stays open as the rules require.
+
+**What I added**
+- **`tools/ai_missing.py`** (new): lists the AI ids in the ROM's AI table that the port doesn't handle yet. 31 were missing at the start, 26 are left now: `$06 $07 $0A-$0F $12 $13 $1D $2F $32 $33 $34 $36 $39 $40 $51-$55 $77 $79 $7D`.
+- **In `web/src/game/obj/ai_shot.js`**, the AIs at `27:B27A-B2F4`:
+  - `$15` `AiTrailShot` (type `$19`): flies straight and drops a type-`$1C` shot every 2nd frame for 48 frames.
+  - `$1C` `AiRingSpawner` (type `$1A`): fires 8 shots, directions 0-7, one every 2 frames, then removes itself.
+  - `$18` / `$19` `AiShotTurnMeta` / `AiShotTurn`: one frame of setup, then the shot becomes a normal straight mover. The extra turn comes from a "table" at `B2F1` that is really the routine's own code bytes, read by slot number. So the spread depends on which slot the shot lands in.
+  - `$1A`: just an `RTS` in the table, but the object loop routes id `$1A` elsewhere first (`30:CD7F`), so this entry is never used.
+- **AI `$7C`**: it starts at the same address as `$08`, with Y = `$F8`. I added a Y parameter to `aiScreenRedraw08` and made `$7C` call it with that value. No object type uses `$7C`.
+
+**Checks**
+- New test file `web/test/obj_frames/fuzz_shot.json`: 300 random cases per AI, captured from the emulator. All 1200 match, and `obj_check.mjs` passes 19300/19300 overall.
+- `core_check.mjs`, `finalboss_check.mjs` and `bosse2_check.mjs` still pass.
+- **Gaps:**
+  - In the ring spawner's 300 cases, none of its shots found a free slot, so only its counting path is tested, not the actual spawning.
+  - `$7C` has no test cases of its own; `$08` never had any either.
+
+**Docs:** I added a paragraph under "Boss shot / part AIs" in REVERSE.md and updated the task text with the list of what's left. I also added 5 labels and documented `fuzz_shot.json` and how to regenerate it in the fuzz README. Nothing is committed.
+
+SESSION_SUMMARY: Session 166 ported AI $15/$18/$19/$1A/$1C (27:B27A-B2F4, obj/ai_shot.js, fuzz_shot.json 1200/1200 identical) and $7C as an alias of $08 with Y=$F8, and added tools/ai_missing.py (26 ObjAiTable ids still unported); the low-priority boss-AI task stays open with that list.

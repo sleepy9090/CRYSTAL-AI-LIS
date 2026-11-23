@@ -1,0 +1,90 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*,REVERSE.md}
+  ▶ Read dead_ends.md
+  ▶ Read 20261116_143140_session_027.txt
+  ▶ Read 20261116_143140_session_026.txt
+  ▶ Grep "^## |^### |- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read 20261116_093455_session_025.txt
+Top unchecked task: **Ph4 assets 5/5 — `web/catalog.html` asset browser**. Let me survey existing data.
+  ▶ Read REVERSE.md +900
+  ▶ ls -la web web/data gfx | head -80; ls gfx/* -d | head -50
+  ▶ Glob tools/*.py
+I'll write a small JSON-shape inspector to learn the structures of the data files.
+  ▶ Write json_peek.py
+  ▶ python3 tools/json_peek.py gfx/sprites.json --depth 3 --items 8; echo ====; python3 tools/json_peek.py gfx/palettes.json
+  ▶ python3 tools/json_peek.py gfx/sprites.json format --depth 1 --items 10 | cut -c1-400; python3 tools/json_peek.py gfx/sp
+  ▶ sed -i 's/^def short(v, n=70):/WIDTH = 70\n\n\ndef short(v, n=None):\n    n = n or WIDTH/' tools/json_peek.py && sed -i 
+  ▶ Edit json_peek.py
+  ▶ Edit json_peek.py
+  ▶ python3 tools/json_peek.py gfx/sprites.json format --width 600; python3 tools/json_peek.py web/data/sound.json music.1.c
+  ▶ Grep "Tick timing \+ flow exact" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +205
+Building the Ph4 5/5 asset browser (`web/catalog.html`). Checking a few sound-event field semantics in `sound_export.py` before writing the WebAudio player.
+  ▶ Grep "'k'|holdVol|retrig|'drum'|'dmc'|'next'|'env'|'vib'|'ctl'" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/sound_export.py
+  ▶ Read sound_export.py +140
+  ▶ sed -n '1,6p' gfx/areas/index.txt; echo; sed -n '1,4p' gfx/rects/index.txt; echo; sed -n '1,4p' gfx/sprites/index.txt | 
+Now writing the exporter that feeds the catalog (raw CHR + file manifest).
+  ▶ Write catalog_export.py
+  ▶ Grep "^def |^class |self\.\w+ =" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/nesrom.py
+  ▶ Read nesrom.py +1
+  ▶ Edit catalog_export.py
+  ▶ python3 tools/catalog_export.py && python3 tools/json_peek.py web/data/catalog_manifest.json --width 160 --items 4 --dep
+  ▶ python3 tools/json_peek.py web/data/catalog_manifest.json rects --width 160 --items 2 --depth 2; python3 tools/json_peek
+Exporter works (213 areas, 259 screens, 14 rects, 128 KB CHR). Now writing the APU preview renderer for the sound tab.
+  ▶ Write apu_preview.js
+Now the catalog page itself.
+  ▶ Write catalog.html
+  ▶ Grep "tile_add|f380" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/meta_dump.py
+  ▶ Read meta_dump.py +185
+`tile_add` already includes the `$0380` b5 offset. Writing `catalog.js`.
+  ▶ Write catalog.js
+Writing a Node smoke test for the sound renderer and syntax-checking the page script.
+  ▶ Write apu_preview_check.mjs
+  ▶ node --version && node --check web/catalog.js && node --check web/apu_preview.js && node web/test/apu_preview_check.mjs
+  ▶ node web/test/apu_preview_check.mjs
+All tracks render (only `$00`, the silence track, is silent; no NaN/clipping). Syntax-checking the page script:
+  ▶ node --check web/catalog.js
+I can't run `node --check` here, so I'll test the page in a real browser: start a local server and take a screenshot.
+  ▶ python3 -m http.server 8765 --bind 127.0.0.1
+  ▶ ToolSearch max_results query
+  ▶ which chromium chromium-browser google-chrome google-chrome-stable 2>/dev/null; ls /snap/bin 2>/dev/null | grep -i chrom
+  ▶ Glob {/usr/bin/chrom*,/usr/bin/google-chrome*,/snap/bin/chrom*,/opt/google/chrome/chrome}
+No browser is installed, so I'll do a Node load test of `catalog.js` with stubbed DOM/fetch (catches syntax errors and exercises boot + CHR/sprite drawing paths).
+  ▶ Write catalog_check.mjs
+Let me make the button stubs persistent so the test can click each tab.
+  ▶ Edit catalog_check.mjs
+  ▶ Edit catalog_check.mjs
+  ▶ node web/test/catalog_check.mjs
+Every tab initialises cleanly against the real data: 12 sprite cells for area `$03`, 14 title/menu pages, 103 sound rows, and text search works. Stopping the server and documenting.
+  ▶ ToolSearch max_results query
+  ▶ TaskStop task_id
+  ▶ Read REVERSE.md +1060
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Adding the browser visual check to the existing Ph6 4/4 task, as the note says.
+  ▶ Edit REVERSE.md
+I finished **Ph4 assets 5/5**: the asset browser at `web/catalog.html`. I could only test it headless, because there's no browser on this machine. Nobody has looked at it on screen or heard the sound output yet.
+
+**To run it:** `python3 tools/catalog_export.py`, then `python3 -m http.server` in the repo root, then open `http://localhost:8000/web/catalog.html`.
+
+**Tabs**
+- **CHR:** all 128 graphics banks, drawn straight from the ROM's graphics data. You can view them in grayscale or any of the 256 palettes, and click a bank to enlarge it.
+- **Palettes:** the 256 palettes and the 64-colour master palette. Hovering a palette shows which areas use it for backgrounds or sprites.
+- **Sprites:** for each area, the player's 8 poses plus every enemy/NPC sprite that area places. They use that area's own graphics banks and palettes and play their animation frames at 60 fps. A toggle shows all 256 sprite records, and the session-25 sprite sheet sits below for comparison.
+- **Areas / Screens:** the 213 area maps, the 14 title and menu pages, and the 259 screen pages, with a filter box.
+- **Sound:** all 103 tracks (29 music, 74 sound effects). You can mute individual channels, and the first 40 note events of each channel are listed.
+- **Text:** the 511 messages and the 4 word/name tables, with search.
+
+**New files**
+- `tools/catalog_export.py` writes the raw graphics data (`web/data/chr.bin`) and a list of all the rendered images with their notes (`web/data/catalog_manifest.json`).
+- `web/catalog.html` and `web/catalog.js` are the page itself.
+- `web/apu_preview.js` turns the sound data into audio. It follows the driver's envelope, vibrato (including the original's off-by-one bug), rest/hold and drum rules. It's only a preview, though: it skips pitch sweeps and fades, and plays sound effects on their own. The exact sound driver is still the Ph7 web 7/8 task.
+- `tools/json_peek.py` prints the structure of a JSON file.
+
+**Testing**
+- `node web/test/catalog_check.mjs` loads the page with stand-ins for the browser and opens every tab against the real data. All 7 tabs open with no errors.
+- `node web/test/apu_preview_check.mjs` renders all 103 tracks. None are broken (no invalid samples, no clipping), and the only silent one is music `$00`, which is meant to be silent. Adding `--wav music 0x13 out.wav` saves a track as a WAV file.
+- Two checks are still open, and I added them to the existing Ph6 validate 4/4 task: confirm in a real browser that the live sprites and graphics banks match the saved images, and that the Sound tab actually plays.
+
+REVERSE.md now has the task note and 9 new entries in the output-files table. I didn't add any labels, since no new ROM addresses were involved, and I didn't commit anything.
+
+SESSION_SUMMARY: Session 27 — Ph4 assets 5/5 done: `web/catalog.html` asset browser (graphics banks, palettes, animated per-area sprites, areas, screens, sound, text) with the `apu_preview.js` sound renderer, fed by `tools/catalog_export.py`; tested headless with two Node checks (all tabs load, all 103 tracks render cleanly); real-browser check added to Ph6 4/4.

@@ -1,0 +1,69 @@
+  ▶ Glob {dead_ends.md,re_loop_sessions/*,REVERSE.md}
+  ▶ Read dead_ends.md
+  ▶ wc -l re_loop_sessions/*_00{7,8,9}.txt re_loop_sessions/*_010.txt REVERSE.md && grep -n "^## " REVERSE.md
+  ▶ wc -l re_loop_sessions/20261115_131127_session_00[789].txt re_loop_sessions/20261115_131127_session_010.txt REVERSE.md; 
+  ▶ Read 20261115_131127_session_009.txt
+  ▶ Read REVERSE.md
+Top unchecked task: **Ph2 — find compressed data + decompressors**. Starting with the screen-layout reader and the bank 0-7 stream decoder.
+  ▶ python3 tools/dis.py 31 EBC1 0x60 && echo ---- && python3 tools/dis.py 31 ED80 0x90
+  ▶ python3 tools/dis.py 31 ED50 0x39 && echo ---- && python3 tools/dis.py 31 EF00 0x80 && echo ---- && python3 tools/xref.p
+Key insight: `EF36` turns a screen-grid byte into a bank (top 2 bits) + page (`$80 | id&$3F`). Let me see the caller setup and the metatile expansion stage.
+  ▶ python3 tools/dis.py 31 EB90 0x31 && echo ---- && python3 tools/dis.py 31 EC21 0x50
+  ▶ python3 tools/dis.py 31 EC6C 0x14 && echo ---- && python3 tools/xref.py ED99 && python3 tools/xref.py EDBA && python3 to
+Screen pipeline is clear: raw 240-byte metatile pages → metatile quadrant pages. Writing this down now, then hunting for any actual RLE/LZ uploader.
+  ▶ Edit REVERSE.md
+  ▶ python3 tools/search_bytes.py "8D 07 20" --max 80 | tail -n 60
+The fixed-bank hits are unrolled buffer blits. The only data-stream candidates are in banks 17 and 18:
+  ▶ python3 tools/dis.py 18 8190 0xB0 && echo ---- && python3 tools/dis.py 17 A740 0x50
+`18:81F0` is a raw rectangle blitter (W, H header, then W×H tiles + `$06FE` bias) — not compressed. Let me confirm its loop end and callers.
+  ▶ python3 tools/dis.py 18 8240 0x10 && python3 tools/xref.py 18:81F0 && python3 tools/xref.py 18:81A1 && python3 tools/sea
+There's a second stream reader right after at `18:824B`. Checking it:
+  ▶ python3 tools/dis.py 18 824B 0x70 && python3 tools/xref.py 18:824B
+Same W×H format, but deferred one row per frame through the `$6200` queue. Recording, then a broader heuristic scan for RLE-style control bytes in stream readers.
+  ▶ Edit REVERSE.md
+  ▶ for p in "B1 ?? 29 7F" "B1 ?? 29 80" "B1 ?? 30 ?? " "B1 ?? 10 ??" "B1 ?? 4A 4A 4A 4A"; do echo "== $p"; python3 tools/se
+  ▶ python3 tools/search_bytes.py "B1 ?? 29 7F" --max 40 | tail -n 15; python3 tools/search_bytes.py "B1 ?? 30" --max 60 | t
+Few candidates. Let me look at each in context.
+  ▶ python3 tools/dis.py 17 A960 0x50; echo ----; python3 tools/dis.py 27 B180 0x60
+Bank 17 is a signed-offset sprite list, bank 27 is false positive. Checking remaining hits plus per-bank entropy as corroborating evidence.
+  ▶ python3 tools/dis.py 20 9528 0x30; echo ----; python3 tools/dis.py 14 8288 0x28; echo ----; python3 tools/nes_header.py 
+Both are false positives (sprite records, object script). The strings dump also shows bank 0 as visibly raw 16-byte metatile rows (`WWWW…`). One more piece of evidence: a per-bank entropy tool.
+  ▶ Write bank_entropy.py
+  ▶ Grep "^def |^class |prg" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/nesrom.py
+  ▶ Edit bank_entropy.py
+  ▶ python3 tools/bank_entropy.py --block 1024
+  ▶ Grep "^31,(EF1F|EF33|EF36|ED89|ED99|EDBA|EDE5|EC6C|EBC1|ED64|EEEF)|^18,|^17," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ tail -n 3 labels.csv
+  ▶ cat >> labels.csv <<'EOF'
+Using Edit instead:
+  ▶ Edit labels.csv
+Now the Compression section, Data-Range Map, tool table and task list in REVERSE.md.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Session 10 is done. The task was to find compressed data and its decompressors. **There is no compression in the ROM.** Everything was checked statically; none of it has been run in an emulator.
+
+**How the level graphics are stored**
+- **Screens:** each byte in the `$6300` screen grid points straight at its screen. `31:EF36` uses the top 2 bits to pick which pair of ROM banks to map (banks 0–7) and the low 6 bits to pick a 256-byte page in it.
+- **Screen pages:** each page is a plain 16×15 grid of metatile ids (the 16×16-pixel blocks levels are built from). The last 16 bytes of each page hold other tables: palette records in banks 2/3 and spawn records in banks 4/5. That explains the "page tail" layout seen in sessions 8–9.
+- **Metatiles:** each metatile is drawn from four 256-byte pages in banks 8/9, one per 8×8 corner, chosen by the area's tileset value `$67`.
+- **Visited screens:** if a screen has been visited, metatile ids below `$20` are swapped through a lookup table in bank 9 at `$BE00`. My guess is this shows opened doors or broken blocks; I haven't confirmed it.
+- **Title/menu screens:** banks 17 and 18 share a small drawing library. It fills a whole screen with one tile, or copies a plain "width, height, then tiles" rectangle, either at once or one row per frame.
+
+**Why I'm confident nothing is compressed**
+- I checked all 49 places that write to the PPU's video memory. The ones in the fixed banks copy from RAM buffers, and the only ones reading ROM data are the plain rectangle copiers above.
+- I searched for the byte patterns compression code usually uses (a data read followed by a high-bit test). All 10 hits turned out to be something else: sprite offsets, an object script, or data that only looks like code.
+- I wrote `tools/bank_entropy.py`, which measures how random each bank's bytes are. No 1KB block reaches 7.0 bits/byte; compressed data would be 7.5 or more.
+
+So `tools/decompress.py` isn't needed, and the web port can read screens, metatiles and tile maps straight from ROM offsets.
+
+**Records updated**
+- REVERSE.md has a new "Compression" section, a "Screen / metatile pipeline" write-up, notes on the screen-drawing routines, and an updated Data-Range Map.
+- 15 new labels are in `labels.csv`.
+- The task is marked done, and I added two follow-ups:
+  - write `tools/screen_dump.py` to render a whole area as an image;
+  - look into banks 21–23, whose byte statistics are unusually uniform. They might hold dialogue text stored with a dictionary scheme.
+- Nothing needed recording in `dead_ends.md`.
+
+SESSION_SUMMARY: Session 10 — the ROM has no compression: screen ids point straight at raw 16×15 metatile pages in banks 0–7, metatiles are four corner pages in banks 8/9 plus a visited-screen swap table, and title/menu screens are plain width×height rectangles; added `bank_entropy.py`, a Compression section and 15 labels, with screen_dump and banks 21–23 text as follow-ups.

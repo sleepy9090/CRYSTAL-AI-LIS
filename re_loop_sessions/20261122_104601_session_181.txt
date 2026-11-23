@@ -1,0 +1,112 @@
+  ▶ ls re_loop_sessions | tail -5 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | grep -A8 "Next Task
+  ▶ Read dead_ends.md
+  ▶ grep -n "^- \[ \]" REVERSE.md | head -5; for f in re_loop_sessions/*_17[89].txt re_loop_sessions/*_180.txt; do echo "== 
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ tail -c 3000 re_loop_sessions/20261122_104601_session_180.txt; echo ====; tail -c 2000 re_loop_sessions/20261122_104601_
+  ▶ Read REVERSE.md +2540
+  ▶ Read REVERSE.md +2547
+Picking the top task (Ph7 enemy-group scenarios); next group is area `$04/$05`. Looking at the spawns and the s180 scenario first.
+  ▶ python3 tools/area_dump.py spawns 04; python3 tools/area_dump.py spawns 05; grep -n "group_09\|group_08" tools/emu/scena
+  ▶ python3 tools/area_dump.py spawns 0x04 0x05 0x11 0x18 2>&1 | head -60
+  ▶ Read scenario.py +560
+Area `$04`/`$05` both place type `$52`. Let me look at the s180 check and the group-09 state workflow to replicate it.
+  ▶ wc -l web/test/group0*_check.mjs && python3 tools/enemy_catalog.py 2>&1 | grep -i "\$52\| 52 " | head; grep -n "Area-\`\
+  ▶ wc -l web/test/group0*_check.mjs; python3 tools/enemy_catalog.py > /tmp/enemy_catalog.txt 2>&1; echo $?
+  ▶ Read group08_check.mjs
+  ▶ python3 tools/enemy_catalog.py --help 2>&1 | head -20
+  ▶ python3 tools/enemy_catalog.py > gfx/enemy_catalog.txt 2>&1
+  ▶ python3 tools/enemy_catalog.py 2>&1 | python3 tools/csv_cols.py --help 2>&1 | head -3; python3 tools/enemy_catalog.py 2>
+  ▶ Grep "type `?\$52|\$52`? \(|AI `\$2[0-9A-F]`.*\$52" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/enemy_catalog.py types 0x52 0x50 0x51 2>&1 | tail -12
+  ▶ Grep "argv|^def main" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/enemy_catalog.py
+  ▶ python3 tools/enemy_catalog.py --out /tmp/claude_ec.txt
+  ▶ Grep "^; AI|^  5[0-9A-F] " /tmp/claude_ec.txt
+Type `$52` uses AI `$20` (already covered by `$50`/`$53`), so for area `$05` I'll aim for actual sword kills (def 2 damage path + `EnemyKilled` for a new type). Checking the scenario CLI.
+  ▶ Grep "add_argument|def run_scenario|area=" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ python3 -m tools.emu.scenario --help 2>&1 | tail -25; grep -c "" tools/emu/scenario.py
+  ▶ Grep "^\*,(04[0-9A-F]0|03[0-9A-F]0|0[2-6][0-9A-F]0),obj" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "obj_x|obj_y|obj_pos" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+Let me do a probe run of area `$05` with no keys to see where the player and the `$52` enemies are.
+  ▶ timeout 300 python3 -m tools.emu.scenario --custom --area 05 --poke 0421=10 03C1=60 0708=60 --frames 200 --watch 0071 00
+Player starts at (560,175); the `$52` in slot `$0D` is at (472,124), close by. Next: walk left into it with B swings and watch both HPs.
+  ▶ timeout 300 python3 -m tools.emu.scenario --custom --area 05 --poke 0421=10 03C1=60 0708=60 --frames 500 --keys 30:LEFT:
+  ▶ Grep "peek" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Grep "'peek'|get\('peek|every" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Glob tools/emu/*.py
+  ▶ Grep "^def |^    def run|nes.run_frame|def main" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Read player_probe.py
+I'll add a `group_05` scenario (no keys yet), export a state at +12, then write a small probe that prints the player and enemy slots per frame so I can design the key sequence.
+  ▶ Edit scenario.py
+  ▶ python3 -m tools.emu.scenario_state --help 2>&1 | tail -12
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_05 12 --out web/test/states/group05.json --save-state tools/emu/st
+Now the probe tool.
+  ▶ Write group_probe.py
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group05.state --slots 0D,13 --every 10 --seg NONE:120 2>&1
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group05.state --slots 0D --every 6 --seg NONE:20 UP:40 LEF
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group05.state --slots 0D --every 8 --seg NONE:20 UP:25 LEF
+  ▶ Grep "gold_class_3|kill_levelup" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+Swings never land — likely no sword equipped (`$0711` = 0). Adding sword 1 to the pokes and re-exporting.
+  ▶ sed -i "s/area='05', pokes={0x0421: 16, 0x03C1: 0x60, 0x0708: 0x60}/area='05', pokes={0x0421: 16, 0x0711: 1, 0x03C1: 0x6
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_05 12 --out web/test/states/group05.json --save-state tools/emu/st
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group05.state --slots 0D --every 12 --seg NONE:20 UP:25 LE
+Swings now connect (enemy knocked back) but deal no damage: the pokes skip `StatRecalc`, so attack `$03E1` stays at the level-1 value. Adding `$03E1 = $11` (level 16 + sword 1).
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_05 12 --out web/test/states/group05.json --save-state tools/emu/st
+Kill at ~f2660 (slot `$0D` → AI `$7D` puff, then empty). Let me see whether a gold drop spawns and where.
+  ▶ timeout 300 python3 tools/emu/group_probe.py tools/emu/states/group05.state --slots 0D,0E,0F,10 --every 30 --seg NONE:20
+Respawns of AI `$20` into slots `$0E`/`$0F`/`$10` after the kill, extra coverage. Writing the final keys into the scenario.
+  ▶ Edit scenario.py
+  ▶ timeout 500 python3 -m tools.emu.scenario group_05 2>&1 | sed -n '1,40p' | cut -c1-150
+Kill at f2663, coin hop (`ChestHop`) and `PickupGold` at f2706: gold 2, XP 2. Re-exporting the state and comparing against the port.
+  ▶ timeout 300 python3 -m tools.emu.scenario_state group_05 12 --out web/test/states/group05.json --save-state tools/emu/st
+Player Y is off by one frame from f2527, the known pad-read timing issue (s179). I need per-press port key frames from `tools.emu --watch 0043`.
+  ▶ python3 -m tools.emu --help 2>&1 | grep -n "watch\|load\|keys\|state" | head
+  ▶ timeout 600 python3 -m tools.emu --load-state tools/emu/states/group05.state --frames 480 --keys 2527:UP:25 2552:LEFT:34
+Converting to port key frames (pass frame = write frame, +1 when line ≥ 241):
+  ▶ timeout 900 python3 tools/web_state_compare.py --state tools/emu/states/group05.state --web web/test/states/group05.json
+No port-key option; as in s179/s180 the check itself runs the port with its own keys against the trimmed tools.emu CSV. Cutting the ref and looking at the group09 check to copy its structure.
+  ▶ python3 tools/csv_trim.py --help 2>&1 | head -5
+  ▶ Read group09_check.mjs
+  ▶ python3 tools/csv_trim.py gfx/group05/emu.csv web/test/group05_ref.csv --cols core,snd,pal,obj,oam_crc --frames 2507-298
+One contact hit (f2579, HP `$60`→`$55`), one killing sword hit (f2662, enemy HP 5 → `$F5`). Writing the check.
+  ▶ Write group05_check.mjs
+  ▶ node web/test/group05_check.mjs
+All 479 rows equal at shift 0 on the first run, sound included. Running the full suite.
+  ▶ timeout 1800 python3 tools/run_checks.py 2>&1 | tail -12
+Now the docs. Finding the Verification Log rows for s179/s180 and the CLAUDE.md group09 line.
+  ▶ Grep "Area-`\$09` enemy group" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "AI `\$20` |^\| `\$20`|\| \$20 " /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ python3 tools/csv_cols.py --help 2>&1 | head -2; awk 'NR>=205 && NR<=211 {print NR": "substr($0,1,300)}' REVERSE.md; awk
+  ▶ Read REVERSE.md +1124
+  ▶ Grep "^\| Area-`\$09` enemy group.{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Adding the Verification Log row after line 210, a note in the AI `$20` section, and updating the task.
+  ▶ Read REVERSE.md +211
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +209
+Moving my row after the s180 one to keep the log chronological.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now CLAUDE.md: add the check and the probe tool.
+  ▶ Edit CLAUDE.md
+I checked area `$05`'s enemy group against tools.emu, and the port matches it frame for frame with no code changes. The Ph7 leftovers task stays open, since areas `$11` and `$18` and some other enemy AIs are still unchecked.
+
+**What the run covers** (new scenario `group_05`, using the area's own spawns):
+- **The enemies:** two of type `$52` in slots `$0D` and `$13`. They run AI `$20`, the same walk/pause AI as types `$50` and `$53`. Area `$04` places the same enemy, so this covers both areas.
+- **The fight:** the player climbs to the enemy's row and walks left into it. It hits the player once at f2579 (HP `$60` → `$55`).
+- **The kill:** a sword swing kills slot `$0D` at f2662. It turns into the death puff, the player gets 2 XP, the coin it drops hops, and the player picks it up at f2706 for 2 gold. These are the first real kill and pickup outside area `$03`.
+- **Respawns:** the area then refills slots `$10`, `$0F` and `$0E` with new walkers, and the player walks into them and swings.
+
+**Result:** the new `web/test/group05_check.mjs` passes all 479 rows (f2507-2985) at shift 0, sound included. No cells needed a timing exception. It also checks the hit, kill and gold frames. The full suite passes 33 of 34; `world_check` still fails on areas `$3C`, `$3D` and `$BC`, the known gap (j).
+
+**Why the s179/s180 swings never did damage:** those scenarios had no sword equipped (`$0711` = 0). The attack value `$03E1` also stayed at its level-1 value, because the RAM pokes skip the routine that recalculates it. `group_05` sets both. Any future group scenario that wants kills needs the same two pokes; this is noted in REVERSE.md and CLAUDE.md.
+
+**New tool:** `tools/emu/group_probe.py` loads a save state, plays a button sequence, and prints the player's and chosen slots' position, HP and AI each frame. I used it to plan this run's keys.
+
+**Docs:** REVERSE.md has a new Verification Log row, a note in the AI `$20` section, and the task text updated with what's left. CLAUDE.md lists the new check and tool.
+
+New files are the state pair (`web/test/states/group05.json`, `tools/emu/states/group05.state`) and `web/test/group05_ref.csv`, plus the check and probe above. The comparison output is in `gfx/group05/`. Nothing is committed.
+
+SESSION_SUMMARY: Session 181 checked area $05's enemy group (type $52, AI $20) with a sword kill, coin pickup and respawned walkers against tools.emu using the new group_05 scenario and web/test/group05_check.mjs: 479/479 rows equal at shift 0 including sound, no port change; found that the earlier group runs' swings never did damage because no sword or attack value was set; new tools/emu/group_probe.py; 33/34 checks pass (world_check is the known gap (j)).

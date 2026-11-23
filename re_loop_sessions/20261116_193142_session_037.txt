@@ -1,0 +1,87 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \[ \
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +1370
+  ▶ Read REVERSE.md +1394
+  ▶ Grep "^(- \[ \]|###|## )" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ awk 'NR>=1396 && NR<=1528 && /^- \[ \]/ {print NR": "$0}' REVERSE.md | cut -c1-200
+Picking the session's task from REVERSE.md: I'm finding the first unchecked item in Next Tasks.
+  ▶ Read REVERSE.md +1485
+Top task is **Ph5.5 emu 4/6 — CLI + scripting**. Reviewing the last session log and the current emulator code.
+  ▶ ls -la tools/emu/ && wc -l tools/emu/*.py re_loop_sessions/20261116_193142_session_036.txt re_loop_sessions/20261116_193
+  ▶ Read 20261116_193142_session_036.txt
+  ▶ Read __main__.py
+  ▶ Read nes.py
+  ▶ Read __init__.py
+  ▶ Read cpu.py
+  ▶ Read memory.py
+  ▶ Read shots.py
+  ▶ Read pads.py
+Now the mapper/PPU state fields (for save-states) and the disassembler/label helpers (for `--trace`).
+  ▶ grep -n "self\.[a-z_0-9]* = \|def \|^class\|^def " tools/emu/mapper.py tools/emu/ppu.py tools/emu/apu.py tools/emu/loade
+  ▶ sed -n 1,60p tools/dis.py; sed -n 40,100p tools/nesrom.py; sed -n 70,120p tools/emu/mapper.py; sed -n 95,120p tools/emu/
+  ▶ sed -n 1,39p tools/emu/ppu.py; sed -n 245,330p tools/emu/ppu.py; grep -n "def decode\|def fmt_operand\|^TERMINATORS\|^HW
+  ▶ Read instruction_set.py +40
+  ▶ Write state.py
+Now the hook API in `nes.py`:
+  ▶ Write nes.py
+Now `debug.py` (tracer, dumps, label lookup, key scripts):
+  ▶ Write debug.py
+Now the CLI:
+  ▶ Write __main__.py
+  ▶ python3 -m tools.emu --boot-test --frames 300; echo rc=$?; python3 -m tools.emu --frames 5 --break SwitchBank16; python3
+  ▶ python3 -m tools.emu --boot-test --frames 300
+  ▶ python3 -m tools.emu --frames 5 --break SwitchBank16
+  ▶ python3 -m tools.emu --frames 2 --trace --trace-max 12
+Boot test, break with dump, and trace all work. Next, a test file covering state round-trip determinism, run-func, hooks and key parsing:
+  ▶ Write test_cli.py
+  ▶ python3 tools/emu/test_cli.py
+Two test-side problems: a brittle column split, and `test_cli.py` putting `tools/` at the front of `sys.path` (the known `dis` shadowing). Fixing both by importing via the repo root:
+  ▶ python3 - <<'EOF' 2>/dev/null || true
+I'll use Edit instead.
+  ▶ Edit test_cli.py
+  ▶ Edit test_cli.py
+  ▶ python3 tools/emu/test_cli.py
+9/9 pass. Now benchmarks (plain, with an exec hook installed, full trace to a file) and the older suites as a regression check:
+  ▶ python3 -m tools.emu --frames 600 --bench && python3 -m tools.emu --frames 600 --bench --break 31:0000 && python3 -m too
+  ▶ python3 tools/emu/test_cpu.py --rom | tail -1 && python3 tools/emu/test_mapper.py | tail -1 && python3 tools/emu/test_pp
+  ▶ python3 -m tools.emu --frames 600 --bench && python3 -m tools.emu --frames 600 --bench --break 31:0000 && python3 -m too
+Benchmarks recorded: 25.2 fps plain, 24.2 fps with an exec hook, 6.9 fps with a full trace (~11k lines/frame). Removing the large trace file I just generated:
+  ▶ rm gfx/emu/bench_trace.txt && python3 -m tools.emu --frames 30 --trace --trace-range 30:C40E-C420 --trace-max 8 && pytho
+  ▶ rm gfx/emu/bench_trace.txt
+  ▶ python3 -m tools.emu --frames 30 --trace --trace-range 30:C40E-C420 --trace-max 8
+  ▶ python3 -m tools.emu --frames 1260 --keys 1250:START --watch 4B
+Everything works. `--watch` is too noisy for per-frame variables, so I'll make it print only value changes by default (with `--watch-all` for every write):
+  ▶ Edit __main__.py
+  ▶ Edit __main__.py
+  ▶ Edit __main__.py
+  ▶ python3 -m tools.emu --frames 1260 --keys 1250:START --watch 4B
+The keys script and watch work (`pad_new $4B` = `$10` on frame 1250). Now the docs: package docstring, then REVERSE.md.
+  ▶ Edit __init__.py
+  ▶ Grep "emu 3/6|tools/emu/" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ sed -n '1366,1376p;1484p' REVERSE.md | cut -c1-400
+Now adding the Intermediate Output Files row and marking the task done:
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I finished task **Ph5.5 emu 4/6 (CLI + scripting)**. You can now script, debug and save/load the emulator from the command line or from Python.
+
+**Tests:** the new `python3 tools/emu/test_cli.py` passes 9/9. The CPU (24/24), mapper (9/9) and PPU (18/18) suites still pass. The most important new test checks save states: loading a state saved at frame 1300 and running 200 frames gives the same RAM, WRAM, screen, PC and cycle count as one straight run.
+
+**What's new in `tools/emu/`:**
+- **`__main__.py`** — `python3 -m tools.emu --help` lists all options:
+  - **Running:** `--frames`, `--keys 120:START 300:A+RIGHT:8` (also `@file`), `--load-state`, `--boot-test`.
+  - **Debugging:** `--trace` (filter with `--trace-range`, `--trace-frames`, `--trace-max`). `--break` takes a label or `BB:AAAA`, checks the bank, stops before that instruction, and dumps the registers, stack and zero page. `--watch ADDR` prints writes that change the value.
+  - **Calling a function:** `--run-func LABEL` with `--a/--x/--y/--set` runs one routine like a `JSR` and stops at its `RTS`.
+  - **Output:** `--dump-regs`, `--dump-ram`, `--dump-wram`, `--dump-screen`, `--save-state`, `--log-apu`, `--bench`.
+- **`nes.py`** — hook API for Python scripts: `on_exec(bank, addr, fn)`, `on_write`, `on_read`, `on_frame`, `set_tracer`, `clear_hooks`. A hook raises `Stop` to end a run, and `nes.call()` runs one routine. Instruction hooks only slow things down while one is installed.
+- **`state.py`** — save/load of the whole machine (CPU, RAM, WRAM, mapper, PPU incl. the picture, APU, controllers).
+- **`debug.py`** — the tracer (same decoder and labels as `dis.py`), the state dump, label lookup and the `--keys` parser.
+
+**Speed** (600 frames from power-on): 25.2 fps with no hooks, 24.2 fps with a breakpoint set, and 6.9 fps with a full trace (about 11,000 lines per frame).
+
+**Spot checks:** a trace of `SwitchBank16` shows the labelled RAM names. With `--keys 1250:START --watch 4B`, the pad variable at `$4B` reads `$10` on frame 1250 and nowhere else.
+
+**Records:** REVERSE.md has the task marked done and a full entry under Intermediate Output Files. No new ROM addresses (`labels.csv` unchanged), no dead ends, nothing committed.
+
+**One file to delete:** the trace benchmark left a 3.3-million-line file at `gfx/emu/bench_trace.txt`. My `rm` was blocked by a permission prompt, so please delete it.
+
+SESSION_SUMMARY: Session 37 — Ph5.5 emu 4/6 done: new `tools/emu/{state,debug,test_cli}.py`, hook API + `call()` in `nes.py`, full `python3 -m tools.emu` CLI (keys/boot-test/trace/break/watch/run-func/dumps/save-load state/bench); test_cli 9/9 (deterministic state round-trip), older suites still pass; 25.2 fps plain / 24.2 hooked / 6.9 tracing.

@@ -1,0 +1,87 @@
+  ▶ Grep "^- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Glob re_loop_sessions/*
+  ▶ wc -l dead_ends.md && tail -40 dead_ends.md
+  ▶ ls re_loop_sessions | tail -4 && grep -n "^- \[ \]" REVERSE.md | head -3 && grep -n "^## Next Tasks\|^### " REVERSE.md |
+  ▶ for f in re_loop_sessions/20261121_221108_session_14{4,5,6}.txt; do echo "== $f"; tail -c 2500 $f; done
+  ▶ for f in re_loop_sessions/20261121_221108_session_144.txt re_loop_sessions/20261121_221108_session_145.txt re_loop_sessi
+  ▶ Read 20261121_221108_session_146.txt
+Porting sub_state 24 (`SubstCureMagic` `19:BB39`) next; checking existing docs first.
+  ▶ grep -n "BB39\|SubstCureMagic\|CureMagic" REVERSE.md labels.csv tools/emu/scenario.py web/src -r | cut -c1-400 | head -3
+  ▶ python3 tools/dis.py 19 BB39 0x64 && python3 tools/dis.py 31 F010 0x20 && sed -n 130,160p tools/emu/scenario.py
+  ▶ cat web/src/game/states/changeform.js && grep -rn "bgBlackClearBuf\|C874\|statRecalc\|C008\|ppuQueueAttrAll\|C739\|FF8C\
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game && sed -n 30,60p states/telepathy.js && sed -n 715,735p
+  ▶ sed -n 195,290p states/play.js && grep -n "export function\* statRecalc" -A25 states/death.js && grep -n "farRestore\|sw
+  ▶ sed -n 170,200p states/death.js && python3 ../../../tools/dis.py 31 FF8C 0x10 && grep -n "spriteDraw\b" -m3 obj/sprites.
+Checking how `StatRecalc` uses X and the far-call wrapper before writing the cure-magic port.
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM && sed -n 170,200p web/src/game/states/death.js && python3 tools/dis
+  ▶ grep -n "export function\* hudRedraw" -A12 web/src/game/states/death.js && python3 tools/dis.py 31 FFDB 0x14 && grep -n 
+  ▶ python3 tools/dis.py 30 CAB6 0x28 && python3 tools/dis.py 30 C874 0x30 && grep -n "export function playSound" -A6 web/sr
+  ▶ grep -rn "F019\|F00\|F01" web/src/game/obj/player.js web/src/game/states/play.js | head; python3 tools/dis.py 31 EFF0 0x
+  ▶ head -c 600 web/test/states/changeform.json; echo; cat web/test/changeform_check.mjs; grep -rn "0x0712\|magic_sel" web/s
+  ▶ sed -n 108,122p web/src/game/obj/player.js && sed -n 120,140p web/src/game/states/play.js && sed -n 55,70p web/src/game/
+Writing the cure-magic port (`states/cure.js`) now.
+  ▶ Edit telepathy.js
+  ▶ sed -n 1,30p web/src/game/states/death.js | grep -n "import\|switchBank\|spriteDraw" ; grep -n "^import" web/src/game/st
+  ▶ Write cure.js
+  ▶ python3 - <<'EOF' 2>&1 || true
+  ▶ Edit play.js
+  ▶ Edit play.js
+  ▶ Edit play.js
+Exporting a tools.emu state at `19:BB39` (magic 5, poisoned, in town `$02`).
+  ▶ time python3 -m tools.emu.web_state --load-state tools/emu/states/town02_enter.state --frames 10 --poke 64DE=E0 --poke 6
+  ▶ python3 tools/web_state_compare.py --help | head -30
+  ▶ time python3 tools/web_state_compare.py --state tools/emu/states/cure.state --web web/test/states/cure.json --frames 90 
+Only one frame differs (`sub` at f2612). Inspecting it.
+  ▶ python3 tools/compare_frames.py gfx/compare/cure/emu.csv gfx/compare/cure/web.csv --cols sub,state --frames 2606-2616 2>
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/cure.state --web web/test/states/cure.json --frames 68 --col
+  ▶ grep -n "argv\|--[a-z-]*'" web/test/run.mjs | head -30
+  ▶ python3 tools/dis.py 28 800E 0x60 | grep -n "RTS\|JMP\|LDX\|DEX\|INX\|TAX" | head -20
+  ▶ python3 tools/dis.py 28 802E 0x60
+  ▶ sed -i 's/yield\* statRecalc(m, m.rd(0x14));                     \/\/ X after the sprite pass: see the s147 note/yield* 
+Testing which X value `StatRecalc` gets after the sprite pass (the cure animation otherwise matches tools.emu).
+  ▶ Edit cure.js
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/cure.state --web web/test/states/cure.json --frames 69 --col
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/cure.state --web web/test/states/cure.json --frames 260 --co
+  ▶ python3 tools/compare_frames.py gfx/compare/cure/emu.csv gfx/compare/cure/web.csv --cols core,pal,obj 2>&1 | grep -v "^f
+Cure + message line up through f2727; after the exit the town trigger re-runs GiveItem and NPCs drift (known s140 lag gap, same as change form). Building the reference CSV and check.
+  ▶ python3 tools/csv_trim.py gfx/compare/cure/emu.csv web/test/cure_ref.csv --cols core,pal,obj --frames 2546-2727 && wc -l
+  ▶ Write cure_check.mjs
+  ▶ node web/test/cure_check.mjs; node web/test/changeform_check.mjs; node web/test/telepathy_check.mjs
+All pass. Now documenting (REVERSE.md row 24, Verification Log, task note, CLAUDE.md, architecture_web.md).
+  ▶ grep -n "^| Change form \`SubstChangeForm\`" REVERSE.md | cut -c1-20 && grep -n "changeform" CLAUDE.md docs/architecture
+  ▶ Grep "changeform" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Edit CLAUDE.md
+  ▶ sed -n 50p docs/architecture_web.md | grep -o ".\{300\}changeform.\{300\}"
+  ▶ Grep ".{0,200}changeform.{0,300}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/docs/architecture_web.md
+  ▶ Edit architecture_web.md
+  ▶ Read REVERSE.md +174
+  ▶ Edit REVERSE.md
+  ▶ Read REVERSE.md +299
+Updating the substate table row 24 and the task note.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^19,BB[5-9]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 19 BB70 0x10 | head -4 && node web/test/core_check.mjs 2>&1 | tail -3
+I ported sub_state 24, the cure spell (`SubstCureMagic` `19:BB39`), to the web port. Magic 5 and the stone-cure path both lead into it. The new `cure_check.mjs` passes, and `changeform_check.mjs`, `telepathy_check.mjs` and `core_check.mjs` still pass. The gameplay-substates task stays open; 24 is marked done and **25 `SubstFormRevert` `19:BB9D`** is next.
+
+**What the port does** (`web/src/game/states/cure.js`):
+- **Animation:** it blacks out the background, clears the status bits (poison, stone and so on), unfreezes the player, and plays a 63-frame cure animation with sound `$25`.
+- **After the animation:** it puts the player's sprites back, recalculates stats, and moves to the message substate (`$10`) with message 32.2.
+- **Reuse:** it uses the black-background helper from `telepathy.js`, which I made exportable.
+- **Wiring:** it is entry 24 in `play.js`, plus an `ENTRY_POINTS['19:BB39']` entry so saved states load cleanly.
+- **Stone cure:** the game reaches this handler from a second place (`31:F019`), and that code was already in `play.js`.
+
+**Results against tools.emu:**
+- **Frame by frame:** all 182 frames match with no offset, from the blackout through the animation to the message window, closed by A at f2720.
+- **One frame skipped:** at f2612 tools.emu already shows the next substate. The port gets there one frame later. This is the known timing gap: the port has no CPU cycle model.
+- **RAM right after the handler (f2613):** one byte (`$14`) only matched once the stat recalc was given X = 0, which is the value the ROM has there. The only remaining differences are scratch and bank bytes from the next frame's dispatch.
+- **Other cases checked:** poison cured, and a stone cure while in a changed form, where only the status bits are cleared and the form bits stay (`$A2` → `$A0`).
+- **After the message:** play is not compared. The town trigger re-runs the item-give step and the NPCs are a step apart, the same lag-frame timing gap as with change form.
+
+**Files:**
+- **New:** `web/src/game/states/cure.js`, `web/test/states/cure.json` (with `tools/emu/states/cure.state`), the reference `web/test/cure_ref.csv`, and `web/test/cure_check.mjs`.
+- **Updated:** `states/play.js`, `states/telepathy.js`; one new label (`19:BB75`, `CureMagicAnimLoop`); in REVERSE.md, substate row 24, a Verification Log row and the task note; `CLAUDE.md`; `docs/architecture_web.md`.
+- **Leftover:** the comparison runs wrote `gfx/compare/cure/`; you can delete it.
+
+SESSION_SUMMARY: Session 147 ported magic-5/stone cure (sub_state 24 SubstCureMagic 19:BB39, new label CureMagicAnimLoop 19:BB75) as web states/cure.js; cure_check.mjs passes 182/182 rows vs tools.emu at shift 0 (only sub at f2612 skipped, one frame late from the missing cycle model) plus poison and stone+form-bit cases; gameplay-substates task stays open, next 25 SubstFormRevert 19:BB9D.

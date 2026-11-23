@@ -1,0 +1,91 @@
+  ▶ wc -l dead_ends.md REVERSE.md && ls -t re_loop_sessions/ | head -5 && grep -n "^## Next Tasks\|^### \|^- \[ \]" REVERSE.
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*_20[1-4].txt; tail -c 3500 re_loop_sessions/20261122_104601_session_203.txt; tail -c 1500 re_loo
+  ▶ head -c 7000 re_loop_sessions/20261122_104601_session_203.txt
+  ▶ Read event_check.mjs
+  ▶ grep -n "^| \(2\|8\|11\|12\|13\|15\|19\|20\|21\|23\|28\) | \`D" REVERSE.md | cut -c1-600
+Looking up the event table rows for the remaining acts (picking the next piece of the leftovers task: run-level refs for frame-waiting event acts).
+  ▶ Grep "^\| (2|8|11|12|13|15|19|20|21|23|28) \| `D" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ ls tools/emu/states/event* && for a in 08:D654 0B:D6D8 0D:D6E7 15:D746; do n=${a%%:*}; pc=${a##*:}; python3 -m tools.emu
+  ▶ Write event_states.sh
+  ▶ sh tools/event_states.sh 08:D654 0B:D6D8 0D:D6E7 15:D746
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --keys 2510:B:4 2530:B:4 --force 30:D552:0
+  ▶ python3 -m tools.emu.web_state --load-state tools/emu/states/event_base.state --keys 2510:B:4 2530:B:4 --force 30:D552:0
+Exported states for event acts 8, 21, 23; now adding port entry points for them.
+  ▶ Grep "ENTRY_POINTS|0xd5a4|0xD5A4|D5E6" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states/play.js
+  ▶ Edit play.js
+  ▶ grep -n "EVENT_ACTIONS = \|^  \(8\|21\|23\):\|^  /\* *\(8\|21\|23\)" web/src/game/states/giveitem.js | head; python3 too
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event08.state --web web/test/states/event08.json --frames 30
+Act 8: 299/299 frames identical. Now acts 21 and 23.
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event21.state --web web/test/states/event21.json --frames 30
+Act 23 identical too. Classifying act 21's 10 differing cells.
+  ▶ python3 tools/cell_class.py /tmp/ev21/emu.csv /tmp/ev21/web.csv 2>&1 | head -20; python3 tools/csv_cols.py /tmp/ev21/emu
+All 10 are 1-frame cells (8 PARTIAL mid-palette-write, 2 LATE), the same classes act 1 lists. Writing the refs.
+  ▶ python3 tools/csv_trim.py /tmp/ev08/emu.csv web/test/event08_ref.csv --cols core,pal,obj,snd --frames 2541-2839 && pytho
+  ▶ grep -n "export function\* giveItemA\|export function giveItemA" -A25 web/src/game/states/giveitem.js | head -40; sed -n
+  ▶ Grep "giveItemA" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/states
+  ▶ Read giveitem.js +225
+  ▶ grep -n "pending\b\|this.pending\|this.gen\b" web/src/game/machine.js | head -8; grep -n "inv\w*\s*=\s*0x\|INV\w* = 0x" 
+  ▶ Edit event_check.mjs
+  ▶ node web/test/event_check.mjs
+Rows all match; three of my extra sanity asserts were wrong (wrong addresses / act 23 needs more frames). Fixing those.
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event23.state --web web/test/states/event23.json --frames 70
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event23.state --web web/test/states/event23.json --frames 70
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event23.state --web web/test/states/event23.json --frames 70
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event23.state --web web/test/states/event23.json --frames 70
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event23.state --web web/test/states/event23.json --frames 70
+  ▶ Read machine.js +95
+Act 23 rows match through f3239; checking when the act's generator actually finishes.
+  ▶ Write pending_probe.mjs
+  ▶ node web/test/pending_probe.mjs web/test/states/event23.json 3239 2621:A 2661:A 2701:A 2741:A 2781:A 2821:A 2861:A 2901:
+Act 23 needs 11 message pages (returns f3029); regenerating its ref with 12 A presses.
+  ▶ python3 tools/web_state_compare.py --state tools/emu/states/event23.state --web web/test/states/event23.json --frames 56
+Now fixing the check's asserts (done-frame from the probe, correct slot-13 AI address, drop the inventory guess).
+  ▶ grep -n "o0D_ai\|'_ai'\|_ai:" web/test/harness.mjs | head -5; grep -n "0x057F\|Paralysis\|0x42" web/src/game/states/give
+  ▶ Edit event_check.mjs
+  ▶ Edit event_check.mjs
+  ▶ Edit event_check.mjs
+  ▶ node web/test/event_check.mjs
+All five acts pass. Updating the check header, then the full suite.
+  ▶ Edit event_check.mjs
+  ▶ rm tools/event_states.sh; python3 tools/run_checks.py 2>&1 | tail -6
+  ▶ python3 tools/run_checks.py
+51/51 pass. Now updating REVERSE.md (event table rows, Verification Log, leftovers task) and CLAUDE.md.
+  ▶ grep -n "event_check" REVERSE.md | cut -c1-300
+  ▶ Read REVERSE.md +177
+  ▶ Read REVERSE.md +921
+  ▶ cat > tools/edit_reverse_s204.py <<'EOF'
+I'll use direct edits instead.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "event_check.mjs" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CLAUDE.md
+  ▶ Edit CLAUDE.md
+  ▶ git status --short | head -20
+I added full-run tests for three more event acts, 8, 21 and 23. Acts 8 and 23 match tools.emu on every frame. Act 21 matches except 10 cells that are each one frame off, and the check lists them. All 51 checks pass. Nothing is committed.
+
+**Results** (each act starts from the s203 base state, with the act number forced at `30:D552`):
+
+| Act | What it does | Frames compared | Differences | Act returns |
+|---|---|---|---|---|
+| 8 (`30:D654`) | gives item `$42` (Paralysis) | 299 | none | f2629, after one A press |
+| 23 (`30:D791`) | wise-men history messages 22.0–22.6 | 559 | none | f3029, after 11 message pages |
+| 21 (`30:D746`) | SFX, stops the music, spawns object type `$9E` in slot 13 | 299 | 10 cells, all listed | f2596 |
+
+Act 21's 10 cells fall into the two kinds already listed for act 1:
+- **One frame late (2 cells):** slot 13's AI at f2595 (the spawn) and the music start at f2682.
+- **Caught mid-write (8 cells):** type `$9E` changes the palette every 17 frames, and on those frames tools.emu samples it half-written.
+
+**Changes**
+- `web/src/game/states/play.js`: three new entry points so the port can start from these states.
+- `web/test/event_check.mjs`: covers the three acts, using the new reference files `event08_ref.csv`, `event21_ref.csv` and `event23_ref.csv`. It also checks the frame each act returns on, the item given, slot 13's new AI and the cleared `$0381` bit 2.
+- New `web/test/pending_probe.mjs`: prints the frame on which a loaded state's starting routine finishes. I used it to get the return frames above.
+- REVERSE.md: updated the event table rows for these acts, added a Verification Log row and updated the leftovers task. CLAUDE.md lists the new tool.
+
+The leftovers task stays unchecked, as the rules say. What's left of item (i) is acts 2, 11–13, 15, 19, 20 and 28. Acts 19 and 20 need slots 13 and 14 occupied in the base state.
+
+`tools/event_states.sh` is a leftover helper script I wrote but never ran (running it needed approval). Removing it needed approval too, so it is still in `tools/`. It can be deleted.
+
+SESSION_SUMMARY: Session 204 added full-run tests for EventActionTable acts 8, 21 and 23 (new entry points, event_check.mjs with 3 new reference CSVs: acts 8 and 23 match on every frame, act 21 has 10 listed one-frame cells) and new pending_probe.mjs; all 51 checks pass.

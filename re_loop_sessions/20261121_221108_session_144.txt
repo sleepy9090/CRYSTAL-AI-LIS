@@ -1,0 +1,56 @@
+  ▶ Glob re_loop_sessions/*
+  ▶ Grep "^## Next Tasks|^- \[ \]" REVERSE.md
+  ▶ Glob re_loop_sessions/*session_14*
+  ▶ Read REVERSE.md +2291
+  ▶ wc -l dead_ends.md; tail -c 6000 dead_ends.md
+  ▶ tail -c 5000 re_loop_sessions/20261121_171522_session_143.txt; echo ----; tail -c 3000 re_loop_sessions/20261121_171522_
+  ▶ wc -c re_loop_sessions/20261121_171522_session_143.txt; grep -v "^  ▶" re_loop_sessions/20261121_171522_session_143.txt 
+  ▶ Read teleport.js
+  ▶ git show HEAD -- web/src/game/obj/player.js web/src/game/states/areaenter.js web/src/game/states/giveitem.js web/src/gam
+Session 143's teleport-menu code and checks are in and passing. I'm now finishing the documentation it didn't get to (labels, REVERSE.md, CLAUDE.md, architecture_web.md).
+  ▶ grep -n "^30,\(DB28\|DD36\|DBEC\|DCAE\|DBAC\|DD58\|DC64\|DC70\|C19F\|DC58\|C210\|DBDC\|DCA9\|DD1D\|DCE8\)," labels.csv; 
+  ▶ Read teleport_check.mjs
+  ▶ Read REVERSE.md +286
+  ▶ Read REVERSE.md +938
+  ▶ grep -n "pause13_check\|PauseWait entry (s142)\|^## Verification Log\|s142 note" REVERSE.md | cut -c1-250
+  ▶ Read REVERSE.md +169
+  ▶ grep -n "^30,C19F\|^30,C1A\|^30,DD3\|^30,DCA\|^30,DBA\|^30,DD1\|^30,DCE" labels.csv; sed -n '1390,1396p' labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+Labels are done. Next I'm updating the REVERSE.md substate rows, the Warp Boots note, the Verification Log and the task entry.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the task entry, CLAUDE.md and architecture_web.md.
+  ▶ Edit REVERSE.md
+  ▶ Read architecture_web.md +50
+  ▶ Edit architecture_web.md
+  ▶ Edit CLAUDE.md
+Docs are done. Re-running the other web checks to confirm session 143's AreaEnter change didn't break anything.
+  ▶ for t in core_check ppu_check wake_check giveitem_check itemuse_check pause13_check; do echo "== $t"; node web/test/$t.m
+  ▶ node web/test/core_check.mjs 2>&1 | tail -2; node web/test/ppu_check.mjs 2>&1 | tail -2; node web/test/wake_check.mjs 2>
+I finished the teleport-menu item (sub_state 20/29 `SubstTeleportMenu` `30:DB28`). Session 143 had written and tested the code but ran out of usage before writing the docs; this session did the docs.
+
+**Checks:** I re-ran `teleport_check.mjs` and it passes.
+- **Warp Boots and magic 4:** 189 of 189 rows match tools.emu for each.
+- **End state:** you land in area `$D5` / `$18`. The boots are used up both in RAM and in the save image. MP goes `$60` → `$4C`.
+- **Extra cases:** cancel with B, a locked town, picking the town you're in, and the boss-lock refusal all pass.
+
+The other checks that could be affected also pass: core, ppu, wake, giveitem, itemuse and pause13.
+
+**Known gap:** from frame 2735, the area-entry fade-out after the warp runs one frame early in the port. The check compares frame by frame only up to f2734 and checks just the end state after that.
+
+**What session 143 changed and found:**
+- **New code:** `web/src/game/states/teleport.js` holds the menu, the town locks, the cursor, the pick and the warp-out → area load → warp-in. It is registered as entries 20 and 29, and the Warp Boots item now opens it.
+- **Boots save fix:** the boots path was missing the ROM's bank switch to bank 23 (`SetR7($17)`, `30:D4EA`) before saving, so the save image kept the used-up boots.
+- **Area-entry timing:** that entry runs a full save that takes 2 frames, which the port didn't model. `areaenter.js` now waits 2 frames there.
+
+**Docs written this session:**
+- **`labels.csv`:** 5 new labels (`HideOam0`, `TeleportMenuLocks`, `TeleportMenuLoop`, `TeleportHudWait`, `TeleportWarp`) and an expanded `SubstTeleportMenu` comment.
+- **REVERSE.md:** substate table rows 20/29, the Warp Boots note under item use, a new Verification Log row, and the task note.
+- **`CLAUDE.md` and `docs/architecture_web.md`:** now list `teleport_check.mjs` and `teleport.js`.
+
+The substates task stays open; next is 21 `SubstTelepathySelect` `30:DD6B`. Nothing is committed.
+
+SESSION_SUMMARY: Session 144 wrote the missing docs for session 143's teleport-menu port (labels, REVERSE.md substate rows 20/29, Warp Boots note, Verification Log row, task note, CLAUDE.md, architecture_web.md); teleport_check and the other web checks pass, and SubstTelepathySelect is next.

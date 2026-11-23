@@ -1,0 +1,121 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## Next Tasks" -A3 REVERSE.md | head; grep -
+  ▶ Read dead_ends.md
+  ▶ Read REVERSE.md +1831
+  ▶ grep -n -- "^- \[ \]\|^###" REVERSE.md | awk -F: '$1>1830' | cut -c1-400
+  ▶ Grep "^- \[ \]|^###" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1944
+  ▶ wc -c re_loop_sessions/*_06[4-7].txt && tail -c 1500 re_loop_sessions/20261117_205123_session_066.txt
+Picked the top open task: the session-22 disassembly-coverage leftovers (dispatch tables, state-3 modes, banks 25/29, `15:AB84`). Looking at the existing table list first.
+  ▶ Grep "JUMP_TABLES" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/disasm_all.py
+  ▶ Read REVERSE.md +524
+  ▶ python3 tools/dis.py 17 A100 0x30; echo ---; python3 tools/dis.py 27 A050 0x40; echo ---; python3 tools/dis.py 27 BA20 0
+  ▶ python3 tools/decode_tables.py --help 2>&1 | head -20; python3 tools/decode_tables.py 27:A072 16 ptr16; python3 tools/de
+  ▶ python3 tools/dis.py 27 A000 0x54 | head -50; python3 tools/dis.py 27 A092 0x14; python3 tools/xref.py 27:BA2E; python3 
+  ▶ Grep "MagicButtonSel|27:A01F|27:A072|BA40|BA2E" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ for a in DBC0 DDA0 DEF0; do python3 tools/dis.py 30 $a 0x30 | tail -14; echo ---; done; python3 tools/decode_tables.py 3
+The two bank-27 tables are sorted out: the magic dispatch has 16 entries, and the AI `$70` phase table has 13. Next I'm checking the three bank-30 menu dispatchers.
+  ▶ python3 tools/dis.py 30 DBB0 0x2C; echo ---; python3 tools/dis.py 30 DD90 0x2D; echo ---; python3 tools/dis.py 30 DEE0 0
+  ▶ python3 tools/decode_tables.py 30:DBDC 8 ptr16; python3 tools/decode_tables.py 30:DDBD 8 ptr16; python3 tools/decode_tab
+  ▶ python3 tools/dis.py 30 C210 0x20 --stop; python3 tools/dis.py 30 DBEC 8; python3 tools/dis.py 30 DDCD 4
+  ▶ python3 tools/dis.py 30 C21F 3; python3 tools/decode_tables.py 30:C222 8 u8; grep -n "C210\|C222" labels.csv
+  ▶ python3 tools/dis.py 31 E3FC 0x20; python3 tools/decode_tables.py 31:E3D9 8 ptr16; python3 tools/decode_tables.py 31:F6C
+Bank-30 menus decoded (all three are 8-way button dispatches via `30:C210`). Now the four bank-19 `JMP ($06FC)` tables.
+  ▶ python3 tools/xref.py 19:A193; python3 tools/xref.py 19:A6F3; python3 tools/xref.py 19:A7BC; python3 tools/xref.py 19:AC
+  ▶ python3 tools/dis.py 19 A176 0x1D; python3 tools/dis.py 19 A6DF 0x14; python3 tools/dis.py 19 A79F 0x1D; python3 tools/d
+  ▶ python3 tools/decode_tables.py 19:A193 8 ptr16; python3 tools/decode_tables.py 19:A6F3 3 ptr16; python3 tools/decode_tab
+  ▶ python3 tools/dis.py 19 ABB4 0x36 --stop; echo ---; python3 tools/dis.py 19 A653 0x40 --stop; echo ---; python3 tools/di
+  ▶ python3 tools/dis.py 19 A690 0x50 --stop; echo ---; python3 tools/dis.py 19 ABAB 0x9 --stop; echo ---; python3 tools/dis
+  ▶ python3 tools/dis.py 18 8310 0x60 --stop; echo ---; python3 tools/dis.py 18 8344 6; grep -n "^18,83\|^18,82B3\|^19,B15C\
+  ▶ python3 tools/dis.py 18 8318 0x2C; echo ---; python3 tools/dis.py 18 834A 0x41 --stop; echo ---; python3 tools/dis.py 19
+Mode handlers are named. Now checking banks 25/29 and the `15:AB84` unresolved call.
+  ▶ python3 tools/dis.py 15 AB60 0x2A
+  ▶ Grep "^\s*(25|29)\b|bank 25|bank 29" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm/coverage.txt
+  ▶ python3 tools/dis.py 15 AB40 0x22; python3 tools/xref.py 26:9824; grep -n "^26,98" labels.csv
+  ▶ Grep "^\d+,9824," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Grep "SubstTeleportMenu|SubstTelepathySelect|SubstChangeForm|^30,C9(44|4C)|^17,A000|^17,A100" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ Read disasm_all.py +462
+Now updating `JUMP_TABLES` with the 12 tables (and fixing the `MainStateTable` count to 9 per session 63).
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+  ▶ Edit disasm_all.py
+  ▶ Grep "JUMP_TABLES" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ cp disasm/coverage.txt /tmp/coverage_before.txt && python3 tools/disasm_all.py --quiet 2>&1 | tail -30
+  ▶ Read coverage.txt
+Baseline is 40,170 code bytes. Running the disassembler now.
+  ▶ python3 tools/disasm_all.py --quiet
+  ▶ Read coverage.txt
+  ▶ Grep "(JSR|JMP|B..) +\$?(8BD8|9907|9AE0|9C66|A017|EF07|EF17|F26D|F298|FA00)\b" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/disasm
+  ▶ Grep "rejected|ShotOffsets|outside bank window" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/disasm_all.py
+  ▶ Grep "^(26,(8BD8|9907|9AE0|9C66)|27,A017|31,(EF07|EF17|F26D|F298|FA00)|20,BD80)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+  ▶ python3 tools/decode_tables.py 20:BD80 32 s8 --per-line 16; python3 tools/xref.py 21:BD80
+  ▶ python3 tools/search_bytes.py "80 bd" --disasm --context 0 | head -20
+  ▶ python3 tools/decode_tables.py 27:BD80 32 s8 --per-line 16; python3 tools/decode_tables.py 15:BD80 32 s8 --per-line 16; 
+  ▶ Grep "ShotOffsets|BD80" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Edit disasm_all.py
+  ▶ python3 tools/disasm_all.py --quiet
+  ▶ Read coverage.txt +14
+Clean: 0 unresolved, 0 rejected, 0 warnings. Tracing the ending code exposed two new indirect jumps (`17:A13D`, `17:A163`), so I'm taking a quick look at them.
+  ▶ python3 tools/dis.py 17 A12C 0x3A; grep -n "^17,A1" labels.csv
+The `17:A140` table has an exact size of 5 entries (entry 0 is null, and code starts at `A14A`). I'm adding it now and leaving the open-ended `EndingPhaseTable` for the ending-trace work.
+  ▶ Edit disasm_all.py
+  ▶ python3 tools/disasm_all.py --quiet && python3 tools/find_ptr_tables.py > /dev/null; echo rc=$?
+  ▶ python3 tools/disasm_all.py --quiet && python3 tools/find_ptr_tables.py | tail -3
+  ▶ Read coverage.txt +18
+  ▶ Grep "JmpTable(27_A072|27_BA40|30_DBDC|30_DDBD|30_DF0E|19_A193|19_A6F3|19_A7BC|19_AC07)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Grep "JmpTable|^31,(E3D9|F6C2),|^30,C2(10|22),|^18,(9FC2|8310|834A|8344),|^19,(A064|A79F|ABB4|A0B5|A653|A6DF|ABAB|B15C|A7EE|A6FE|A796),|^27,(BA2E|A01F)," /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/labels.csv
+I'll keep the existing `JmpTable*` names, since generated traces reference them 62 times, and only update their comments. New labels go on the handlers and helpers.
+  ▶ Grep "Sub18_9FC2" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ Read labels.csv +800
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ Edit labels.csv
+  ▶ python3 tools/dis.py 30 DBCD 4 && python3 tools/dis.py 19 A79F 3 && python3 tools/disasm_all.py --quiet && sed -n '36,38
+Labels load and the run is clean. Now writing to REVERSE.md, starting with the coverage section.
+  ▶ Read REVERSE.md +97
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+Now the dispatcher table in the Full-ROM disassembly section, the `15:AB84` note, and the state-3 mode names.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+I need to recount the filler entries I quoted. From the decoded lists: opening = 7 wait + 5 fade (13 real steps), story = 8 wait + 4 fade (16 real steps). Fixing that.
+  ▶ Edit REVERSE.md
+  ▶ Edit labels.csv
+Now the Data-Range Map row, the method paragraph's table count, and marking the task done.
+  ▶ Grep "\*\*Untraced dispatch tables\*\*|15 dispatch tables, each" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Grep "^- \[ \].*(Ending|ending)" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Grep "^- \[ \].{0,200}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+Line 1996 already covers the ending leftovers, so I'll add a short note there instead of creating a new task.
+  ▶ Edit REVERSE.md
+I finished the session-22 disassembly-coverage task (statically, no emulator run) and ticked it in REVERSE.md.
+
+**What changed**
+- **Dispatch tables:** I found the exact size of all 12 remaining dispatch tables. Each count comes from the index range, or from where the table runs into its first handler. All 12 are now in `disasm_all.JUMP_TABLES`. Tracing them exposed one more table, `EndingSubTable` at `17:A140` (5 entries), which I added too. `MainStateTable` now has 9 entries instead of 6.
+- **Disassembler re-run:**
+  - Code went from 40,170 to 46,162 bytes (about 17.6% of the ROM), with 0 unresolved targets, 0 rejected and 0 warnings. The byte-for-byte rebuild check still passes on all 32 banks.
+  - Bank 30 went from 77% to 83% code, 31 from 72% to 80%, 27 from 68% to 82%, and 19 from 29% to 70%.
+  - The first run listed 10 rejected targets and 1 warning. They were older data labels whose names the tool didn't recognise as data, not a problem with the new tables. I added those names to the tool's data-name list.
+
+**What the tables turned out to be**
+- The three bank-30 menus (teleport, telepathy, change form) all pick their handler with a new helper, `PadNewButtonIndex` at `30:C210`. It turns a single newly pressed button into 0–7 (A, B, Select, Start, Up, Down, Left, Right).
+- `27:A072` is the magic-cast table: 16 entries, including Flight and Jump, with the unused slots going to a plain return.
+- `27:BA40` is the phase table for AI `$70`: 13 entries, two of them empty.
+- The four bank-19 tables are the steps of the title screens. `Sub18_9FC2` is a "wait, then go to the next step" helper reached through these tables, which explains why it seemed to have no caller.
+
+**Title-screen modes named**
+- The title modes run in a cycle: 0 opening → 5 title-menu setup → 6 title menu → 1 story setup → 2 story → 3 status-screen setup → 4 status screen and name entry → new game.
+- This corrects session 38: mode 1 is not the title menu. It is the value the menu writes when you start a new game. The menu itself is mode 6.
+- `state3_mode` 1 and 2 are a palette fade-in and fade-out.
+
+**Other subtasks**
+- **Banks 25 and 29** contain no code reached by any traced path. I haven't confirmed that with an emulator watch.
+- **`15:AB84`** calls `26:TempAddOffset`. The bank put back just before the call is the one already mapped at `$8000`, which is bank 26.
+
+**Records:** 25 labels added or updated in `labels.csv` (I kept the existing `JmpTable*` names to avoid churn and updated their comments). In REVERSE.md: a new section listing all the decoded tables, the state-3 mode list, a session-67 line in the coverage notes, and updated rows in the Data-Range Map.
+
+**Left over:** the size of `EndingPhaseTable` (`17:A166`) is still unknown. I noted it in the existing ending-leftovers task rather than adding a new one.
+
+SESSION_SUMMARY: Session 67: decoded all 12 leftover dispatch tables plus the new `17:A140` with exact counts (button-index menus via `30:C210`, magic cast table, AI $70 phases, title step tables) and added them to `disasm_all.JUMP_TABLES`; code coverage 40,170 → 46,162 bytes with 0 unresolved/rejected/warnings; title modes named (mode 6 = menu, correcting session 38); `15:AB84` = `26:TempAddOffset`; banks 25/29 have no code (static only); 25 labels.

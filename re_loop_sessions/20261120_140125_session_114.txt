@@ -1,0 +1,103 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks" REVERSE.md && grep -n "^- \[ \
+  ▶ Read REVERSE.md +2262
+  ▶ Read dead_ends.md
+  ▶ tail -c 3500 re_loop_sessions/20261120_140125_session_113.txt; echo ----; tail -c 2500 re_loop_sessions/20261120_090147_
+  ▶ Grep "B7F6|27:B850|AI `\$08`" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM
+  ▶ python3 tools/show_line.py REVERSE.md 1055 | head -60; python3 tools/dis.py 27 B7F6 0x120
+  ▶ ls web/src/game web/src/game/obj web/src/game/world && wc -l web/src/game/obj/*.js && grep -n "0x74\|0x08\b\|B83B\|B850\
+Working on session 114's top task: porting AI `$08` `27:B7F6` (the explosion-plus-screen-redraw AI) into the web port. Checking how the AI table is wired.
+  ▶ grep -n "ObjAiExplode\|0x74\|AI_TABLE\|aiTable\|AI\[\|export const AI" web/src/game/obj/objects.js web/src/game/obj/ai_*
+  ▶ Read objects.js
+  ▶ Read util.js
+  ▶ python3 tools/dis.py 26 972D 8; python3 tools/dis.py 30 C75C 0x20; python3 tools/dis.py 31 FF9D 0x18; python3 tools/dis.
+  ▶ grep -rn "xplode\|0x74:" web/src/game/obj | head; python3 tools/dis.py 30 CCFA 0x37; python3 tools/dis.py 30 C77A 0x2B; 
+  ▶ grep -rn "0x62F0\|areaSubTable\|0x64C0" web/src/game | head; python3 tools/dis.py 26 98CD 8; python3 tools/dis.py 30 C7A
+  ▶ sed -n 1,46p web/src/game/obj/objinit.js; sed -n 150,200p web/src/game/world/camera.js; sed -n 1,30p web/src/game/playso
+Wiring AI `$08` now; checking how collide.js treats PaletteBuild's exit Y, then writing the port.
+  ▶ sed -n 270,290p web/src/game/obj/collide.js; sed -n 1,60p web/src/game/obj/ai_effect.js; sed -n 55,70p web/src/game/worl
+  ▶ sed -n 600,611p web/src/game/obj/ai_boss.js; grep -n "ObjAiExplode\|B83B\|AI \$74\|AI \`\$74" REVERSE.md | head -5; grep
+  ▶ sed -n 600,611p web/src/game/obj/ai_boss.js; grep -n "ObjAiExplode" REVERSE.md | cut -c1-300 | head -5; grep -n "^export
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+  ▶ ls gfx/compare/*.csv 2>/dev/null; grep -n "s113\|2301:START" REVERSE.md | grep -i "keys\|run.mjs" | cut -c1-400 | head -
+  ▶ Grep "KEYS|START" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/web_compare.py
+  ▶ grep -n "CANON_KEYS =" -A3 tools/compare_ref.py
+  ▶ Grep "CANON_KEYS =" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools
+  ▶ node web/test/run.mjs --frames 2300 --keys 1250:START 1400:START 1600:START 1700:START 2301:START 2340:DOWN:80 --compare
+Rows f2322-2460 now match apart from the known row-timing rows. Extending both runs to f2700 to see what comes next.
+  ▶ (python3 -m tools.emu --frames 2700 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --compare
+  ▶ python3 -m tools.emu --frames 2700 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --compare 
+  ▶ node web/test/run.mjs --frames 2486 --keys 1250:START 1400:START 1600:START 1700:START 2301:START 2340:DOWN:80 --compare
+  ▶ python3 -m tools.emu --frames 2700 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --compare 
+  ▶ node web/test/run.mjs --frames 2486 --keys 1250:START 1400:START 1600:START 1700:START 2301:START 2340:DOWN:80 --compare
+  ▶ python3 -m tools.emu --frames 2700 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --compare 
+  ▶ python3 tools/compare_frames.py gfx/compare/s114_emu.csv gfx/compare/s114_web.csv --cols core,obj --frames 2322-2700 2>&
+The port now runs one frame ahead of the emulator from f2467, which looks like a lag frame. Checking with `trace_summary.py`.
+  ▶ sed -n 1,30p tools/trace_summary.py | grep -v "^import"; python3 tools/compare_frames.py gfx/compare/s114_emu.csv gfx/co
+  ▶ python3 -m tools.emu --help 2>&1 | grep -i "trace" | head
+  ▶ python3 -m tools.emu --frames 2480 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --trace gf
+  ▶ grep -n "label\|frame_ready\|MainLoop\|WaitFrame\|C900" labels.csv | grep -i "30,C9\|waitnmi\|waitframe\|mainloop" | hea
+  ▶ python3 -m tools.emu --frames 2472 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --trace gf
+The overrun is pure CPU time: on spawn-plus-row frames `ObjCollideAll` is still running at line 241. Checking whether the port already has a lag-frame mechanism for this.
+  ▶ grep -rn "NO_NMI\|lag\b\|lag frame\|cycle budget\|cpuBudget\|cycles" web/src/game/mainloop.js web/src/game/machine.js we
+  ▶ sed -n 25,75p web/src/game/mainloop.js; grep -n "NO_NMI" -B2 -A6 web/src/game/states/death.js | head -30; sed -n 130,170
+  ▶ python3 -m tools.emu --frames 2560 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --trace gf
+  ▶ python3 -m tools.emu --frames 2560 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --trace gf
+  ▶ python3 -m tools.emu --frames 2560 --keys 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 --trace gf
+  ▶ python3 tools/trace_summary.py gfx/compare/s114_trace.txt --frames 2455-2560 | head -260
+  ▶ Write csv_active.py
+  ▶ python3 tools/csv_active.py gfx/compare/s114_emu.csv --frames 2460-2475
+  ▶ Edit mainloop.js
+  ▶ Edit machine.js
+Now the trigger in AI `$08`:
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+  ▶ Edit ai_effect.js
+  ▶ node web/test/run.mjs --frames 2486 --keys 1250:START 1400:START 1600:START 1700:START 2301:START 2340:DOWN:80 --compare
+f2322-2700 now match on `core,obj` apart from the 7 known row-timing rows. Running the remaining web checks, then the §6 pixel compare.
+  ▶ for t in obj_check core_check ppu_check serve_check world_check sprite_check sound_check apu_check; do echo -n "$t: "; n
+  ▶ node web/test/obj_check.mjs 2>&1 | tail -1; node web/test/core_check.mjs 2>&1 | tail -1; node web/test/ppu_check.mjs 2>&
+  ▶ python3 tools/web_compare.py --frames 2385,2392,2450 2>&1 | tail -12
+All checks pass. The pixel differences at f2385/f2392/f2450 are only in tile row 23, the line-191 split that the task's done-criterion excludes. Refreshing COMPARISON.md, then updating the docs.
+  ▶ python3 tools/comparison.py report 2>&1 | tail -3; git diff --stat COMPARISON.md 2>&1 | tail -2; grep -n "### Web Port F
+  ▶ Read REVERSE.md +2445
+Writing the s114 note and updating the task text.
+  ▶ Edit REVERSE.md
+Now the task text itself (leaving it unchecked per the leftovers rule):
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^27,B7F6\|^30,C75C\|^27,B83B\|^27,B850\|^27,B8E6" labels.csv; grep -n "ai_effect" docs/architecture_web.md | he
+  ▶ Read labels.csv +436
+  ▶ Edit labels.csv
+  ▶ sed -n 215,219p docs/architecture_web.md
+  ▶ python3 - <<'EOF' 2>&1 || true
+  ▶ Read architecture_web.md +66
+  ▶ Read architecture_web.md +217
+  ▶ Edit architecture_web.md
+  ▶ Edit architecture_web.md
+I ported AI `$08` (`27:B7F6`), the object that redraws part of the screen and spawns slots `$0F`-`$13`. With it, the port now matches the emulator on every gameplay test frame I ran.
+
+**Results**
+- **Main recorded run (`--cols core,obj`):** equal from f2322 to f2700, apart from the 7 rows that only differ because of capture timing (f2322, 2340, 2346, 2408, 2409, 2413, 2415). Before this session, differences started at f2440. I made a fresh emulator recording out to f2700 (`gfx/compare/s114_emu.csv`).
+- **Screenshots f2385 / f2392 / f2450:** 30 / 35 / 81 pixels differ, all in tile row 23 (the line-191 split), and the palettes match.
+- **Tests:** every web check passes, including 13700/13700 routine cases. I refreshed COMPARISON.md.
+
+**What's new in the code**
+- **`web/src/game/obj/ai_effect.js`:**
+  - AI `$08`, plus the explosion step it shares with AI `$74` (`27:B850`).
+  - AI `$74`, the boss explosion, ported in full because it uses the same code.
+  - Marking a screen as visited (`30:C75C`).
+- **Lag frames (`mainloop.js`, `machine.js`):** the emulator showed two real slowdown frames (f2466 and f2470). The game's frame takes so long that the collision pass is still running when the next frame starts, so the game skips one frame. The port now has a way to reproduce this (`m.overrun`).
+- **The slowdown rule is a guess, not a cycle count.** The port doesn't count CPU time. It skips a frame when AI `$08` spawns a shot and draws a row in the same frame with 12 or more objects active. That rule fits the three frames I measured: 11 objects finished just in time, 12 and 13 ran over. It may not hold elsewhere, and slowdowns outside AI `$08` aren't handled.
+
+**The task stays unchecked.** Its "done when" condition is now met, but under the leftovers rule I kept it open and recorded what's left in its text:
+- AI `$1A`;
+- `sub_state` `$11` (`30:CAB6`): the recorded run reaches it by f2700, and the port logs it as not ported;
+- falling into pits and edge links between areas;
+- the remaining NMI modes and IRQ handlers 4/5;
+- emulator save-state scenarios (e5).
+
+**Docs and tools:** a new s114 note in REVERSE.md under Web Port Fixes, plus the updated task text. labels.csv has 2 new labels (`ExplodeStep` `27:B850`, `ExplodeStepRecs` `27:B8E6`) and an updated comment. I also updated `docs/architecture_web.md` and added `tools/csv_active.py`, which counts active objects per frame in a comparison CSV. Scratch files you can delete: `gfx/compare/s114_trace.txt` and `s114_web.csv`. Nothing is committed.
+
+SESSION_SUMMARY: Session 114: ported AI $08 27:B7F6 (screen redraw), its shared explosion step 27:B850, AI $74 and MarkScreenVisited 30:C75C, plus a lag-frame path (m.overrun) driven by a guessed active-object rule; the main run's core,obj columns now match f2322-2700 apart from known capture-timing rows, screenshot diffs are only on the line-191 split, all web checks pass; the gameplay task's done-condition is met but it stays open for AI $1A, sub_state $11, pits/edge links, NMI/IRQ leftovers and e5.

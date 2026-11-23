@@ -1,0 +1,13 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "## Next Tasks" REVERSE.md && grep -n -- "- \[
+  ▶ Read dead_ends.md
+  ▶ wc -c re_loop_sessions/*session_11[0-3].txt && tail -c 4000 re_loop_sessions/20261120_090147_session_112.txt
+  ▶ ls web/src/game/obj web/src/game/states web/src/game/world && wc -l web/src/game/obj/*.js web/src/game/states/play.js &&
+  ▶ grep -n "ObjCollideAll" REVERSE.md | cut -c1-300 | head -30; grep -n -i "collid\|8F6E\|HitPlayer\|^26,8\|^26,9" labels.c
+  ▶ sed -n 1395,1434p REVERSE.md; sed -n 1798,1830p REVERSE.md
+Picking up the top task: the collision part (e3) of the gameplay-frames work, which means porting `ObjCollideAll` `26:8F6E` and its hit handlers. Disassembling that now.
+  ▶ python3 tools/dis.py 26 8F6E 0x150
+  ▶ python3 tools/dis.py 26 90BB 0x1C5
+  ▶ python3 tools/dis.py 26 927E 0x242
+  ▶ python3 tools/dis.py 26 94C0 0x100; python3 tools/dis.py 26 95C0 0xD1
+  ▶ grep -rn "ObjCollideAll\|collide" web/src/game/states/play.js | head; grep -rn "export function\|export const" web/src/g
+You've hit your 5-hour limit · resets 2pm (America/New_York)

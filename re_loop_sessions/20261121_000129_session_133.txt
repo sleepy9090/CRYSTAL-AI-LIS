@@ -1,0 +1,127 @@
+  ▶ ls re_loop_sessions | tail -4 && wc -l dead_ends.md REVERSE.md && grep -n "^## \|^### " REVERSE.md | head -60
+  ▶ Read dead_ends.md
+  ▶ grep -n "\- \[ \]" REVERSE.md | head -10; for f in re_loop_sessions/*session_13{0,1,2}.txt; do echo "== $f"; tail -c 150
+  ▶ grep -n "\- \[ \]" REVERSE.md | head -10; for f in re_loop_sessions/20261121_000129_session_130.txt re_loop_sessions/202
+  ▶ Grep "- \[ \]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read 20261121_000129_session_132.txt
+  ▶ Read REVERSE.md +2449
+Picking task line 2449 (scenario leftovers) and taking the area-`$6E` reveal (type `$7D`) item. First I'm checking what's already documented about it.
+  ▶ Grep ".{0,250}(area `\$6E`|area-`\$6E`|type `\$7D`).{0,250}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1283
+Static analysis is already done (s86); what's left is a live scenario. Looking at how existing scenarios are defined.
+  ▶ Grep "shot_eater|thunder_transform|def follow_enemy|def place_player|def place_on_slot|^def |^SCENARIOS" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/tools/emu/scenario.py
+  ▶ Read scenario.py +1
+  ▶ Read scenario.py +225
+Next: check the reveal AI's exact conditions before writing the scenario.
+  ▶ python3 tools/dis.py 27 A555 0x70
+Writing the `npc_reveal` scenario: area `$6E`, player placed below the NPC at (128, `$016C`), facing up, sword swings plus A taps for the messages.
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario npc_reveal 2>&1 | head -70
+The player walked straight up past the NPC (ended at y `$00D8`) and no hit registered. Checking where slots `$0D`/`$0E` actually sit.
+  ▶ sed -i "s/peek=\[0x04AD, 0x04AE, 0x04AF, 0x060E, 0x03CE, 0x0071, 0x0091, 0x00B1, 0x00D1\])/peek=[0x04AD, 0x04AE, 0x04AF,
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ NPC_REVEAL_FRAMES=5 timeout 300 python3 -m tools.emu.scenario npc_reveal 2>&1 | sed -n 3,6p
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario npc_reveal 2>&1 | sed -n 3,6p
+NPC/shadow are at (`$0080`, `$016C`) as documented. The player still ends up on screen row 0, so I'm logging the player's y-hi writes to see if the placement takes.
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario npc_reveal 2>&1 | sed -n 5,40p
+A is magic/talk here; the sword is on B (as in `sword_charge`). Switching to one UP tap to face the NPC, then B swings from y `$0180`.
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario npc_reveal 2>&1 | sed -n 3,45p | grep -v "^  bank\|^union"
+Still no hit flag on slot `$0E`. Next I'm checking whether the swing spawns a shot and whether any hit handler runs.
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario npc_reveal 2>&1 | sed -n 3,45p | grep -v "^  bank\|^union"; grep -n "^26,90BB\
+The sword shot spawns (`26:9CBA` at +28) but never hits. Suspecting the s129 placement trap: the teleport leaves objects flagged off-screen. Peeking the flags, screen coords, and camera.
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario npc_reveal 2>&1 | sed -n 4p
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario npc_reveal 2>&1 | sed -n 3,60p | grep -v "^  bank\|^union"
+  ▶ sed -i "s/exec=\[place_player(0x0080, 0x0180, cam=True)\],/exec=[place_player(0x0080, 0x0188, cam=True)],/; s/keys=\['16
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario npc_reveal 2>&1 | sed -n 3,60p | grep -v "^  bank\|^union"
+Still no hit with the player on screen and swinging. Checking whether a player-shot pair in `CollPairTable` covers group `$10` at all.
+  ▶ Grep "CollPairTable.{0,600}" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/REVERSE.md
+  ▶ Read REVERSE.md +1160
+Neither `HitByPlayerShot` path ran, so the shot box never overlaps the shadow. Next: log the player's facing (`$0301`) and move 12 px closer (y `$0178`).
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 300 python3 -m tools.emu.scenario npc_reveal 2>&1 | sed -n 3,60p | grep -v "^  bank\|^union"
+  ▶ Edit scenario.py
+  ▶ timeout 500 python3 -m tools.emu.scenario npc_reveal_flee 2>&1 | sed -n 3,90p | grep -v "^  bank\|^union\|034E"
+  ▶ timeout 500 python3 -m tools.emu.scenario npc_reveal_flee 2>&1 | sed -n 4p
+Boss HP stayed `$94`. The player ends facing down (`$0301`=2) after the knockback, so the boss parked above was behind the sword. I'm changing the park to follow the player's facing.
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 500 python3 -m tools.emu.scenario npc_reveal_flee 2>&1 | sed -n 3,90p | grep -v "^  bank\|^union"
+After the transform the sword-2 hit takes the miss path `26:9125`. Checking the element/level test.
+  ▶ python3 tools/dis.py 26 90F6 0x48
+Three miss causes: level gate (`obj_hitflags` & `$1F`), element AND, or attack minus defense < 0. Holding `$03E1`=`$20` (as in `thunder_transform`) and peeking the boss's elem/def/level bytes.
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 500 python3 -m tools.emu.scenario npc_reveal_flee 2>&1 | sed -n 3,90p | grep -v "^  bank\|^union"
+  ▶ Grep "A555|NpcBossReveal|0x3A\]|0x3a:" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src
+  ▶ Grep "0x3A|AiShopEmpty|A5C0" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game/obj
+  ▶ Grep "AI_TABLE|export const AI|^\s+0x3[89ABab]\s*:|\[0x3[89ABab]\]" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ grep -n -A14 "^export const AI_" web/src/game/obj/ai_static.js web/src/game/obj/ai_field.js web/src/game/obj/ai_effect.j
+  ▶ sed -n 1,40p web/src/game/obj/ai_field.js; grep -n "objInit\|PENDING_MSG\|0x06C3\|SUB_STATE\|0x41\b" web/src/game/obj/ai
+  ▶ Grep "export function objInit|objInit\(m" /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/src/game
+  ▶ Read objinit.js
+Now adding the port to `ai_field.js`, instruction by instruction.
+  ▶ sed -n 270,300p web/src/game/obj/ai_field.js
+  ▶ Edit ai_field.js
+  ▶ Edit ai_field.js
+  ▶ Edit ai_field.js
+Now verifying the port the documented way: a routine capture plus `obj_check.mjs`. Checking how the s117 AIs were registered.
+  ▶ grep -n "AFF5\|AFA9\|ai_field\|aiCrumble" tools/emu/routine_capture.py web/test/obj_check.mjs | head; grep -n "^def \|^R
+  ▶ sed -n 210,262p tools/emu/routine_capture.py; sed -n 470,490p tools/emu/routine_capture.py; sed -n 650,700p tools/emu/ro
+  ▶ grep -n "json\|argv" web/test/obj_check.mjs | head -20; grep -rn "AiCrumblePlatform\|fuzz_platform\|fuzz_field" REVERSE.
+  ▶ ls web/test/obj_frames/ && grep -n "fuzz_platform\|fuzz_field\|routine_capture" web/test/obj_frames/README.md | head -30
+I'll register `AiNpcBossReveal` in `routine_capture.py` with a steer for its paths, add it to `obj_check.mjs` `RUN`, and capture a new `fuzz_reveal.json`.
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit routine_capture.py
+  ▶ Edit obj_check.mjs
+  ▶ timeout 500 python3 -m tools.emu.routine_capture --load-state tools/emu/states/gameplay_first.state --cases 300 --routin
+  ▶ node web/test/obj_check.mjs 2>&1 | grep -i "reveal\|fail"; ls tools/obj_case_stats.py && timeout 120 python3 tools/obj_c
+All 300 fuzz cases match (2284 changed bytes, so the phase-3 `ObjInit` path is in there too). Writing the results to REVERSE.md, labels.csv, and the obj_frames README.
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ Edit REVERSE.md
+  ▶ grep -n "^27,A555" labels.csv; sed -n 36,44p web/test/obj_frames/README.md
+  ▶ Edit README.md
+  ▶ Edit labels.csv
+Last step: fixing the two scenario notes, which still describe the old setup and an unverified element claim.
+  ▶ Edit scenario.py
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario npc_reveal npc_reveal_flee 2>&1 | grep -E "^\[|newly run|end:" | cut -c1-200
+  ▶ Edit scenario.py
+  ▶ timeout 600 python3 -m tools.emu.scenario npc_reveal npc_reveal_flee 2>&1 | grep -E "^\[|newly run|end:" | cut -c1-200
+Both run correctly together now. One clarification for REVERSE.md: the flee-run offsets are shifted by a touch-talk at +17.
+  ▶ Edit REVERSE.md
+I ran the area-`$6E` reveal end to end in the emulator, and I added AI `$3A` to the web port, which didn't have it. I'm leaving the scenario-leftovers task unchecked, as the rules say for a leftovers task.
+
+**What the emulator showed** (new scenarios `npc_reveal` and `npc_reveal_flee`, run with `python3 -m tools.emu.scenario npc_reveal npc_reveal_flee`):
+- **Reveal:** the player starts 12 px below the NPC and swings the sword. Hits at +30, +104 and +200 frames on the hidden slot `$0E` show messages `$10.$10`, `$10.$11` and `$10.$12`. At +346 the NPC and slot `$0F` are removed and slot `$0E` turns into the type-`$7D` boss (`BossAiE6`, HP `$94`). Its attack phase starts at +513.
+- **Flee:** with sword 2 and the attack value `$03E1` held at `$20`, the boss goes down in 6 hits of `$1A` damage. It takes no damage during its intro. Its death runs `BossDefeated` and `BossFleeSpeech`, then the reward object, then the music change.
+- **One open question:** without the `$03E1` hold, the sword-2 hit after the reveal missed at `26:9125`. That miss path has three possible causes (level, element, or attack minus defence). The run didn't record which one it was, so I didn't write down a cause.
+- **Two setup traps, now documented:**
+  - **Camera:** moving the player to another screen row leaves the camera behind. Nearby objects then count as off-screen and never collide. `place_player()` has a new `cam=True` option that centres the camera too.
+  - **Walking into the NPC:** pressing UP into the NPC starts a conversation instead of a sword hit.
+
+**Port:** AI `$3A` is now `aiNpcBossReveal` in `web/src/game/obj/ai_field.js`. I captured 300 test cases into `web/test/obj_frames/fuzz_reveal.json`. All 300 match the ROM, and the full `obj_check.mjs` run is 15200/15200.
+
+**Files changed:**
+- `REVERSE.md`: results under "Boss `$7D` in area `$6E`"; the task item is struck through with an s133 note.
+- `labels.csv`: `27:A555` comment.
+- `tools/emu/routine_capture.py`: `AiNpcBossReveal` entry with steering for its rare paths.
+- `web/test/obj_check.mjs`: added to the `RUN` map.
+- `web/test/obj_frames/README.md`: how to recapture the new case file.
+
+**Still open in the task:** the Warp Boots pick, the hit rules, the final boss, type `$64` and the ending labels. `docs/emu_scenarios.txt` is still not regenerated (about 55 minutes).
+
+SESSION_SUMMARY: Session 133: new scenarios npc_reveal/npc_reveal_flee run the area-$6E reveal (3 sword hits on hidden slot $0E → msgs $10.$10-$12 → type $7D BossAiE6 → 6 hits → $CF BossDefeated+BossFleeSpeech); added place_player cam=True; ported AI $3A aiNpcBossReveal (fuzz_reveal.json 300/300); leftovers task stays open.
