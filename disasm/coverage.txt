@@ -1,0 +1,76 @@
+# disasm/coverage.txt — tools/disasm_all.py (session 22)
+
+bank  win     code   data  unknown  code%   (data = vectors, jump tables, labelled data runs, DEAD filler, known data banks)
+   0  $8000       0   8192      0     0.0%
+   1  $A000       0   8192      0     0.0%
+   2  $8000       0   8192      0     0.0%
+   3  $A000       0   8192      0     0.0%
+   4  $8000       0   8192      0     0.0%
+   5  $A000       0   8192      0     0.0%
+   6  $8000       0   8192      0     0.0%
+   7  $A000       0   8192      0     0.0%
+   8  $8000       0   8192      0     0.0%
+   9  $A000       0   8192      0     0.0%
+  10  $8000       0   7424    768     0.0%
+  11  $A000       0    774   7418     0.0%
+  12  $8000       0   8192      0     0.0%
+  13  $A000       0   5213   2979     0.0%
+  14  $8000    1256   6927      9    15.3%
+  15  $A000    3456   1509   3227    42.2%
+  16  $8000    4818   3199    175    58.8%
+  17  $A000     673     76   7443     8.2%
+  18  $8000     929   4231   3032    11.3%
+  19  $A000    5742    281   2169    70.1%
+  20  $8000    1558   5430   1204    19.0%
+  21  $A000       0   8192      0     0.0%
+  22  $A000       0   8192      0     0.0%
+  23  $A000     455   7560    177     5.6%
+  24  $8000    1762   6420     10    21.5%
+  25  $A000       0      0   8192     0.0%
+  26  $8000    4636   3511     45    56.6%
+  27  $A000    6712    943    537    81.9%
+  28  $8000     863   7324      5    10.5%
+  29  $A000       0      0   8192     0.0%
+  30  $C000    6829    882    481    83.4%
+  31  $E000    6541   1440    211    79.8%
+total         46230 169640  46274
+
+round-trip: OK, all 32 banks
+
+auto-named targets: 2048
+swappable-bank JMP entry tables: 
+auto table counts: 15:A413=25
+
+## indirect jumps (38)
+14:8351  JMP ($0026)
+15:A410  JMP ($0010)
+17:A117  JMP ($008E)
+17:A13D  JMP ($008E)
+17:A163  JMP ($008E)
+19:A035  JMP ($06FC)
+19:A04F  JMP ($06FC)
+19:A190  JMP ($06FC)
+19:A6F0  JMP ($06FC)
+19:A7B9  JMP ($06FC)
+19:AC04  JMP ($06FC)
+20:859F  JMP ($002C)
+24:8361  JMP ($00F8)
+27:A06E  JMP ($0010)
+27:BA3D  JMP ($0010)
+30:CADB  JMP ($0010)
+30:D120  JMP ($0010)
+30:D560  JMP ($0010)
+30:DBD9  JMP ($0010)
+30:DDBA  JMP ($0010)
+30:DF0B  JMP ($0010)
+31:E215  JMP ($0012)
+31:E419  JMP ($0010)
+31:F44E  JMP ($0054)
+31:F6BF  JMP ($0052)
+
+## unresolved $8000-$BFFF targets, unknown bank context (0)
+
+## rejected targets: no bank context gave a decodable target (0)
+
+## warnings (1)
+27:A86C -> 27:A8A2 runs into data (AiDirTable_A8A2)

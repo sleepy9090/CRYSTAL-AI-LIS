@@ -1,0 +1,1006 @@
+[
+{
+"scene": "area01",
+"area": 1,
+"slot": 0,
+"ai": 3,
+"meta": 167,
+"chr": [
+64,
+66,
+75,
+78
+],
+"nspr": 2,
+"n": 1,
+"ok": 1,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area01_s00_mA7.png",
+"pos": [
+176,
+90
+]
+},
+{
+"scene": "area01",
+"area": 1,
+"slot": 1,
+"ai": 1,
+"meta": 2,
+"chr": [
+64,
+66,
+75,
+78
+],
+"nspr": 6,
+"n": 236,
+"ok": 236,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area01_s01_m02.png",
+"pos": [
+176,
+90
+]
+},
+{
+"scene": "area01",
+"area": 1,
+"slot": 3,
+"ai": 5,
+"meta": 76,
+"chr": [
+64,
+66,
+75,
+78
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area01",
+"area": 1,
+"slot": 13,
+"ai": 8,
+"meta": 76,
+"chr": [
+64,
+66,
+75,
+78
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area01",
+"area": 1,
+"slot": 14,
+"ai": 80,
+"meta": 57,
+"chr": [
+64,
+66,
+75,
+78
+],
+"nspr": 6,
+"n": 233,
+"ok": 233,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area01_s0E_m39.png",
+"pos": [
+120,
+128
+]
+},
+{
+"scene": "area01",
+"area": 1,
+"slot": 15,
+"ai": 20,
+"meta": 236,
+"chr": [
+64,
+66,
+75,
+78
+],
+"nspr": 4,
+"n": 119,
+"ok": 119,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area01_s0F_mEC.png",
+"pos": [
+161,
+67
+]
+},
+{
+"scene": "area01",
+"area": 1,
+"slot": 16,
+"ai": 20,
+"meta": 235,
+"chr": [
+64,
+66,
+75,
+78
+],
+"nspr": 8,
+"n": 145,
+"ok": 145,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area01_s10_mEB.png",
+"pos": [
+185,
+75
+]
+},
+{
+"scene": "area01",
+"area": 1,
+"slot": 17,
+"ai": 20,
+"meta": 236,
+"chr": [
+64,
+66,
+75,
+78
+],
+"nspr": 4,
+"n": 119,
+"ok": 119,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area01_s11_mEC.png",
+"pos": [
+161,
+67
+]
+},
+{
+"scene": "area01",
+"area": 1,
+"slot": 19,
+"ai": 20,
+"meta": 235,
+"chr": [
+64,
+66,
+75,
+78
+],
+"nspr": 8,
+"n": 145,
+"ok": 145,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area01_s13_mEB.png",
+"pos": [
+185,
+75
+]
+},
+{
+"scene": "area01",
+"area": 1,
+"slot": 20,
+"ai": 20,
+"meta": 236,
+"chr": [
+64,
+66,
+75,
+78
+],
+"nspr": 4,
+"n": 119,
+"ok": 119,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area01_s14_mEC.png",
+"pos": [
+161,
+67
+]
+},
+{
+"scene": "area01",
+"area": 1,
+"slot": 21,
+"ai": 20,
+"meta": 236,
+"chr": [
+64,
+66,
+75,
+78
+],
+"nspr": 4,
+"n": 119,
+"ok": 119,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area01_s15_mEC.png",
+"pos": [
+161,
+67
+]
+},
+{
+"scene": "area01",
+"area": 1,
+"slot": 22,
+"ai": 20,
+"meta": 235,
+"chr": [
+64,
+66,
+75,
+78
+],
+"nspr": 8,
+"n": 145,
+"ok": 145,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area01_s16_mEB.png",
+"pos": [
+185,
+75
+]
+},
+{
+"scene": "area01",
+"area": 1,
+"slot": 23,
+"ai": 20,
+"meta": 235,
+"chr": [
+64,
+66,
+75,
+78
+],
+"nspr": 8,
+"n": 145,
+"ok": 145,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area01_s17_mEB.png",
+"pos": [
+185,
+75
+]
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 0,
+"ai": 3,
+"meta": 167,
+"chr": [
+64,
+66,
+100,
+96
+],
+"nspr": 2,
+"n": 33,
+"ok": 33,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area03_s00_mA7.png",
+"pos": [
+127,
+175
+]
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 1,
+"ai": 1,
+"meta": 2,
+"chr": [
+64,
+66,
+100,
+96
+],
+"nspr": 6,
+"n": 236,
+"ok": 236,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area03_s01_m02.png",
+"pos": [
+127,
+175
+]
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 3,
+"ai": 5,
+"meta": 76,
+"chr": [
+64,
+66,
+100,
+96
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 13,
+"ai": 127,
+"meta": 76,
+"chr": [
+64,
+66,
+100,
+96
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 14,
+"ai": 36,
+"meta": 88,
+"chr": [
+64,
+66,
+100,
+96
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 16,
+"ai": 36,
+"meta": 88,
+"chr": [
+64,
+66,
+100,
+96
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 18,
+"ai": 36,
+"meta": 88,
+"chr": [
+64,
+66,
+100,
+96
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 19,
+"ai": 36,
+"meta": 88,
+"chr": [
+64,
+66,
+100,
+96
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 20,
+"ai": 36,
+"meta": 88,
+"chr": [
+64,
+66,
+100,
+96
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 21,
+"ai": 32,
+"meta": 100,
+"chr": [
+64,
+66,
+100,
+96
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 23,
+"ai": 32,
+"meta": 100,
+"chr": [
+64,
+66,
+100,
+96
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 24,
+"ai": 32,
+"meta": 100,
+"chr": [
+64,
+66,
+100,
+96
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 25,
+"ai": 32,
+"meta": 100,
+"chr": [
+64,
+66,
+100,
+96
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 27,
+"ai": 81,
+"meta": 174,
+"chr": [
+64,
+66,
+100,
+96
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area03",
+"area": 3,
+"slot": 28,
+"ai": 120,
+"meta": 76,
+"chr": [
+64,
+66,
+100,
+96
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area29",
+"area": 41,
+"slot": 0,
+"ai": 3,
+"meta": 167,
+"chr": [
+64,
+66,
+102,
+255
+],
+"nspr": 2,
+"n": 33,
+"ok": 33,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area29_s00_mA7.png",
+"pos": [
+127,
+112
+]
+},
+{
+"scene": "area29",
+"area": 41,
+"slot": 1,
+"ai": 1,
+"meta": 2,
+"chr": [
+64,
+66,
+102,
+255
+],
+"nspr": 6,
+"n": 236,
+"ok": 236,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area29_s01_m02.png",
+"pos": [
+127,
+112
+]
+},
+{
+"scene": "area29",
+"area": 41,
+"slot": 3,
+"ai": 5,
+"meta": 76,
+"chr": [
+64,
+66,
+102,
+255
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area29",
+"area": 41,
+"slot": 14,
+"ai": 37,
+"meta": 152,
+"chr": [
+64,
+66,
+102,
+255
+],
+"nspr": 6,
+"n": 230,
+"ok": 230,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area29_s0E_m98.png",
+"pos": [
+227,
+129
+]
+},
+{
+"scene": "area29",
+"area": 41,
+"slot": 20,
+"ai": 37,
+"meta": 152,
+"chr": [
+64,
+66,
+102,
+255
+],
+"nspr": 6,
+"n": 230,
+"ok": 230,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area29_s14_m98.png",
+"pos": [
+227,
+129
+]
+},
+{
+"scene": "area29",
+"area": 41,
+"slot": 21,
+"ai": 37,
+"meta": 152,
+"chr": [
+64,
+66,
+102,
+255
+],
+"nspr": 6,
+"n": 230,
+"ok": 230,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area29_s15_m98.png",
+"pos": [
+227,
+129
+]
+},
+{
+"scene": "area29",
+"area": 41,
+"slot": 23,
+"ai": 37,
+"meta": 152,
+"chr": [
+64,
+66,
+102,
+255
+],
+"nspr": 6,
+"n": 230,
+"ok": 230,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area29_s17_m98.png",
+"pos": [
+227,
+129
+]
+},
+{
+"scene": "area2B",
+"area": 43,
+"slot": 0,
+"ai": 3,
+"meta": 167,
+"chr": [
+64,
+66,
+96,
+108
+],
+"nspr": 2,
+"n": 33,
+"ok": 33,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area2B_s00_mA7.png",
+"pos": [
+127,
+127
+]
+},
+{
+"scene": "area2B",
+"area": 43,
+"slot": 1,
+"ai": 1,
+"meta": 2,
+"chr": [
+64,
+66,
+96,
+108
+],
+"nspr": 6,
+"n": 236,
+"ok": 236,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area2B_s01_m02.png",
+"pos": [
+127,
+127
+]
+},
+{
+"scene": "area2B",
+"area": 43,
+"slot": 3,
+"ai": 5,
+"meta": 76,
+"chr": [
+64,
+66,
+96,
+108
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area2B",
+"area": 43,
+"slot": 13,
+"ai": 40,
+"meta": 101,
+"chr": [
+64,
+66,
+96,
+108
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area2B",
+"area": 43,
+"slot": 15,
+"ai": 40,
+"meta": 101,
+"chr": [
+64,
+66,
+96,
+108
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area2B",
+"area": 43,
+"slot": 16,
+"ai": 40,
+"meta": 101,
+"chr": [
+64,
+66,
+96,
+108
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area2B",
+"area": 43,
+"slot": 18,
+"ai": 40,
+"meta": 101,
+"chr": [
+64,
+66,
+96,
+108
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area2B",
+"area": 43,
+"slot": 19,
+"ai": 40,
+"meta": 101,
+"chr": [
+64,
+66,
+96,
+108
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area2B",
+"area": 43,
+"slot": 20,
+"ai": 64,
+"meta": 100,
+"chr": [
+64,
+66,
+96,
+108
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area2B",
+"area": 43,
+"slot": 21,
+"ai": 135,
+"meta": 76,
+"chr": [
+64,
+66,
+96,
+108
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area2B",
+"area": 43,
+"slot": 22,
+"ai": 135,
+"meta": 76,
+"chr": [
+64,
+66,
+96,
+108
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area28",
+"area": 40,
+"slot": 0,
+"ai": 3,
+"meta": 167,
+"chr": [
+64,
+66,
+119,
+81
+],
+"nspr": 2,
+"n": 13,
+"ok": 13,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area28_s00_mA7.png",
+"pos": [
+135,
+56
+]
+},
+{
+"scene": "area28",
+"area": 40,
+"slot": 1,
+"ai": 1,
+"meta": 2,
+"chr": [
+64,
+66,
+119,
+81
+],
+"nspr": 6,
+"n": 236,
+"ok": 236,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area28_s01_m02.png",
+"pos": [
+135,
+56
+]
+},
+{
+"scene": "area28",
+"area": 40,
+"slot": 3,
+"ai": 5,
+"meta": 76,
+"chr": [
+64,
+66,
+119,
+81
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area28",
+"area": 40,
+"slot": 13,
+"ai": 227,
+"meta": 211,
+"chr": [
+64,
+66,
+119,
+81
+],
+"nspr": 12,
+"n": 544,
+"ok": 544,
+"pct": 100.0,
+"img": "gfx/compare/sprites/area28_s0D_mD3.png",
+"pos": [
+127,
+84
+]
+},
+{
+"scene": "area28",
+"area": 40,
+"slot": 14,
+"ai": 127,
+"meta": 76,
+"chr": [
+64,
+66,
+119,
+81
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area28",
+"area": 40,
+"slot": 15,
+"ai": 48,
+"meta": 90,
+"chr": [
+64,
+66,
+119,
+81
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area28",
+"area": 40,
+"slot": 16,
+"ai": 48,
+"meta": 90,
+"chr": [
+64,
+66,
+119,
+81
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area28",
+"area": 40,
+"slot": 24,
+"ai": 120,
+"meta": 76,
+"chr": [
+64,
+66,
+119,
+81
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area28",
+"area": 40,
+"slot": 25,
+"ai": 120,
+"meta": 76,
+"chr": [
+64,
+66,
+119,
+81
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area28",
+"area": 40,
+"slot": 26,
+"ai": 120,
+"meta": 76,
+"chr": [
+64,
+66,
+119,
+81
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area28",
+"area": 40,
+"slot": 27,
+"ai": 120,
+"meta": 76,
+"chr": [
+64,
+66,
+119,
+81
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+},
+{
+"scene": "area28",
+"area": 40,
+"slot": 28,
+"ai": 120,
+"meta": 76,
+"chr": [
+64,
+66,
+119,
+81
+],
+"error": "no frame of this meta id in OAM (hidden / flicker / off screen)"
+}
+]

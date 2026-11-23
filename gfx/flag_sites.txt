@@ -1,0 +1,2213 @@
+Story flag sites (232 flags referenced)
+F000 ($6480&01)
+    clr  get item 04 Crystalis
+    clr  get item 0D Carapace Shield
+    clr  get item 0E Bronze Shield
+    clr  get item 0F Platinum Shield
+    clr  get item 11 Ceramic Shield
+    clr  get item 13 Battle Shield
+    clr  get item 15 Tanned Hide
+    clr  get item 16 Leather Armor
+    clr  get item 17 Bronze Armor
+    clr  get item 18 Platinum Armor
+    clr  get item 19 Soldier Suit
+    clr  get item 1A Ceramic Suit
+    clr  get item 27 Insect Flute
+    clr  get item 29 Gas Mask
+    clr  get item 2B Warrior Ring
+    clr  get item 30 Shield Ring
+    clr  get item 31 Alarm Flute
+    clr  get item 32 Windmill Key
+    clr  get item 34 Key to Stxy
+    clr  get item 37 Eye Glasses
+    clr  get item 39 Glowing Lamp
+    clr  get item 3A Statue of Gold
+    clr  get item 3E Bow of Moon
+    clr  get item 45 Recover
+    clr  get item 46 Barrier
+    clr  get item 48 Flight
+    clr  get item 49                  
+    clr  hook2 item 85 msg 3.0 act 24
+    clr  hook2 item 86 msg 28.15 act 25
+    clr  hook2 item 8A msg 29.16 act 25
+    clr  hook2 item 9A msg 25.4 act 29
+    clr  hook2 item B0 msg 0.0 act 31
+    clr  hook2 item B1 msg 0.0 act 29
+    clr  hook2 item B8 msg 0.0 act 0
+    clr  hook2 item BA msg 28.15 act 25
+    clr  hook2 item BB msg 0.0 act 27
+    clr  hook2 item BC msg 0.0 act 27
+    clr  hook2 item BD msg 0.0 act 27
+    clr  npc 25 B+00 msg 18.7
+    clr  npc 7E B+00 msg 19.6
+    clr  use item 1D Medical Herb
+    clr  use item 1E Antidote
+    clr  use item 1F Lysis Plant
+    clr  use item 20 Fruit of Lime
+    clr  use item 21 Fruit of Power
+    clr  use item 22 Magic Ring
+    clr  use item 23 Fruit of Repun
+    clr  use item 24 Warp Boots
+    clr  use item 26 Opel Statue
+    clr  use item 27 Insect Flute
+    clr  use item 34 Key to Stxy on param AE
+    clr  use item 37 Eye Glasses in area E4
+    clr  use item 39 Glowing Lamp
+F00A ($6481&04)
+    clr  npc 7E B+00 msg 19.6
+    set  use item 32 Windmill Key in area 0F
+    test hook2 item B4 msg 0.27 act 15
+    test npc 0D B+05 msg 0.15 (F00A)
+    test npc 0E B+05 msg 0.11 (F00A)
+    test npc 10 B+05 msg 0.7 (F00A)
+    test npc 5E B+0F msg 0.27 (F00A)
+F00B ($6481&08)
+    pres param 5E in area 10 needs F00B
+    set  get item 00 Sword of Wind
+    set  get item 4A ?
+    set  get item 4B ?
+    set  get item 4C ?
+    set  get item 4D ?
+    set  get item 4E ?
+    set  get item 4F ?
+    set  get item 67 ?
+    set  get item 68 ?
+    set  npc 0D B+0A msg 0.14
+    test npc 0D B+0A msg 0.14 (!F00B)
+F00C ($6481&10)
+    set  npc 0E B+0A msg 0.10
+    test npc 0E B+0A msg 0.10 (!F00C)
+F00D ($6481&20)
+    set  use item 33 Key to Prison on param AD
+    test npc 0E B+00 msg 0.13 (F00D)
+    test npc 0E B+16 msg 0.13 (F00D)
+    test npc 0F B+00 msg 0.2 (F00D)
+    test npc 0F B+13 msg 0.2 (F00D)
+    test npc 10 B+00 msg 0.8 (F00D)
+    test npc 10 B+0F msg 0.8 (F00D)
+    test npc 11 B+00 msg 0.5 (F00D)
+    test npc 11 B+13 msg 0.5 (F00D)
+    test npc 12 B+00 msg 0.25 (F00D)
+    test npc 12 B+0A msg 0.25 (F00D)
+    test npc 13 B+0A msg 0.23 (F00D)
+    test npc 2A B+00 msg 5.6 (F00D)
+    test npc 5E B+00 msg 0.29 (F00D)
+F00E ($6481&40)
+    pres param 5F in area 1E needs !F00E
+    set  get item 43 Telepathy
+    test hook2 item 85 msg 3.0 act 24 (!)
+    test npc 13 B+00 msg 0.20 (!F00E)
+    test npc 1D A+00 msg 4.26 (!F00E)
+    test npc 1E A+00 msg 4.26 (!F00E)
+    test npc 1F A+00 msg 4.26 (!F00E)
+    test npc 20 A+00 msg 4.26 (!F00E)
+    test npc 21 A+00 msg 4.26 (!F00E)
+    test npc 22 A+00 msg 4.26 (!F00E)
+    test npc 7C A+00 msg 4.26 (!F00E)
+    test npc 7D A+00 msg 4.26 (!F00E)
+F00F ($6481&80)
+    pres param 14 in area 0E needs F00F
+    pres param 15 in area 0E needs !F00F
+    set  use item 31 Alarm Flute on param 15
+F010 ($6482&01)
+    hint tele class 2 Asina until set: 29.4 "<CLR>{Kirisa Plant} is the base for a fine perfume"
+    set  use item 3C Kirisa Plant on param 23
+    test npc 23 B+05 msg 18.17 (F010)
+F011 ($6482&02)
+    set  npc 23 B+0A msg 18.14
+    test npc 23 B+0A msg 18.14 (!F011)
+F012 ($6482&04)
+    pres param 2C in area 28 needs !F012
+    set  npc 2C B+00 msg 5.14
+    test npc 1C B+05 msg 2.12 (F012)
+    test npc 29 B+05 msg 30.25 (F012)
+    test npc 2C B+00 msg 5.14 (!F012)
+F013 ($6482&08)
+    hint tele class 3 Tornel until set: 28.25 "<CLR>Use maximum {power} against the enemies you c"
+    hint tele class 4 Tornel until set: 28.25 "<CLR>Use maximum {power} against the enemies you c"
+    pres param 09 in area 65 needs F013
+    pres param 0A in area 65 needs F013
+    pres param 45 in area 65 needs F013
+    pres param 46 in area 65 needs F013
+    pres param 47 in area E8 needs F013
+    pres param 84 in area 6E needs !F013
+    pres param 8E in area 6E needs !F013
+    set  get item 38 Broken Statue
+    test hook2 item B6 msg 16.14 act 0 (!)
+    test npc 3D B+00 msg 15.0 (!F013)
+    test npc 3E B+00 msg 15.5 (!F013)
+    test npc 3F B+00 msg 15.8 (!F013)
+    test npc 40 B+00 msg 15.10 (!F013)
+    test npc 41 B+00 msg 15.12 (!F013)
+    test npc 42 B+00 msg 15.15 (!F013)
+    test npc 43 B+00 msg 15.18 (!F013)
+    test npc 44 B+05 msg 16.0 (!F013)
+F016 ($6482&40)
+    set  npc 38 B+13 msg 10.13
+    test npc 38 B+0C msg 10.14 (F016)
+F017 ($6482&80)
+    set  get item 02 Sword of Water
+    test npc 38 B+13 msg 10.13 (F017)
+    test npc 39 B+09 msg 10.3 (F017)
+    test npc C3 B+00 msg 14.3 (F017)
+F018 ($6483&01)
+    set  hook2 item 92 msg 0.0 act 0
+    test npc 38 B+21 msg 10.12 (F018)
+F019 ($6483&02)
+    clr  hook2 item 97 msg 0.0 act 0
+    set  npc 38 B+33 msg 10.4
+    set  npc 38 B+3E msg 10.9
+    set  npc 38 B+4D msg 10.8
+    set  npc 38 B+58 msg 10.7
+    set  npc 38 B+63 msg 10.6
+    test npc 38 B+2C msg 10.10 (F019)
+F01A ($6483&04)
+    set  npc 38 B+33 msg 10.4
+    test npc 38 B+33 msg 10.4 (!F01A)
+F01B ($6483&08)
+    set  hook2 item 95 msg 0.0 act 7
+    test npc 35 B+00 msg 8.14 (!F01B)
+    test npc 37 B+00 msg 8.12 (F01B)
+    test npc 39 B+00 msg 10.1 (F01B)
+F01C ($6483&10)
+    set  get item 10 Mirrored Shield
+F01D ($6483&20)
+    set  npc 39 B+1E msg 10.0
+    test npc 39 B+17 msg 10.1 (F01D)
+F01E ($6483&40)
+    hint tele class 0 Asina until set: 29.3 "<CLR>I'm {Asina}. I'm looking forward to seeing yo"
+    hint tele class 0 Kensu until set: 29.20 "<CLR>___"
+    hint tele class 1 Asina until set: 29.3 "<CLR>I'm {Asina}. I'm looking forward to seeing yo"
+    hint tele class 1 Kensu until set: 29.20 "<CLR>___"
+    hint tele class 2 Kensu until set: 29.20 "<CLR>___"
+    hint tele class 2 Zebu until set: 28.3 "<CLR>You must talk to {Asina}, but I tell you, it'"
+    hint tele class 3 Kensu until set: 29.20 "<CLR>___"
+    hint tele class 4 Kensu until set: 29.20 "<CLR>___"
+    pres param 38 in area E1 needs !F01E
+    pres param 62 in area E1 needs F01E
+    pres param 63 in area 64 needs F01E
+    set  npc 38 B+05 msg 11.0
+    set  npc 62 B+05 msg 11.0
+    test npc 00 B+00 msg 8.21 (F01E)
+    test npc 34 B+00 msg 8.7 (F01E)
+    test npc 36 B+00 msg 8.10 (F01E)
+    test npc 38 B+00 msg 11.2 (F01E)
+    test npc 62 B+05 msg 11.0 (!F01E)
+F01F ($6483&80)
+    pres param 38 in area DF needs !F01F
+    pres param 38 in area E1 needs F01F
+    pres param 39 in area D8 needs !F01F
+    set  get item 09 Ball of Water
+    set  npc 39 B+00 msg 10.1
+    test hook2 item BB msg 0.0 act 27 (!)
+    test npc 34 B+05 msg 8.5 (F01F)
+    test npc 38 B+05 msg 11.0 (F01F)
+F020 ($6484&01)
+    clr  npc 39 B+09 msg 10.3
+    clr  npc 39 B+10 msg 10.2
+    clr  npc 39 B+17 msg 10.1
+    clr  npc 39 B+1E msg 10.0
+    pres param 33 in area DE needs F020
+    pres param 33 in area DF needs !F020
+    pres param 38 in area DF needs !F020
+    pres param 39 in area D8 needs F020
+    set  get item 09 Ball of Water
+    set  hook2 item B7 msg 0.0 act 0
+    set  npc 39 B+00 msg 10.1
+    test hook2 item BB msg 0.0 act 27
+    test npc 33 B+00 msg 8.3 (!F020)
+    test npc 34 B+0A msg 8.4 (!F020)
+F021 ($6484&02)
+    set  use item 35 Fog Lamp on param 64
+    test hook2 item B0 msg 0.0 act 31
+    test npc 64 B+00 msg 9.2 (F021)
+    test npc 7B B+05 msg 9.5 (F021)
+F022 ($6484&04)
+    set  npc 5B B+00 msg 26.5
+    test npc 5B B+00 msg 26.5 (!F022)
+F023 ($6484&08)
+    set  npc 5C B+00 msg 26.8
+    test npc 5C B+00 msg 26.8 (!F023)
+F024 ($6484&10)
+    pres param 0B in area 8E needs !F024
+    pres param 0B in area BF needs !F024
+    pres param 0C in area 72 needs !F024
+    pres param 0C in area EF needs !F024
+    pres param 4A in area EF needs !F024
+    pres param 81 in area 8E needs !F024
+    set  get item 3D Ivory Statue
+    test npc 48 B+00 msg 19.10 (F024)
+    test npc 54 B+00 msg 23.4 (!F024)
+    test npc 55 B+00 msg 23.16 (F024)
+    test npc 56 B+00 msg 23.13 (F024)
+    test npc 57 B+00 msg 23.11 (F024)
+    test npc 58 B+00 msg 23.9 (F024)
+    test npc 6F B+00 msg 19.12 (F024)
+    test npc 77 B+00 msg 19.8 (F024)
+    test npc 78 B+00 msg 23.1 (F024)
+    test npc 79 B+00 msg 19.14 (F024)
+    test npc 7A B+00 msg 23.3 (F024)
+F025 ($6484&20)
+    pres param 63 in area 64 needs !F025
+    set  use item 04 Crystalis on param 63
+    set  use item 1D Medical Herb on param 63
+F026 ($6484&40)
+    pres param 80 in area 8E needs !F026
+    pres param 81 in area 8E needs F026
+    set  hook2 item 81 msg 0.0 act 0
+    test hook2 item BD msg 0.0 act 27 (!)
+    test npc 4E B+00 msg 20.4 (F026)
+    test npc 6D B+0C msg 30.26 (!F026)
+    test npc 80 B+00 msg 30.20 (F026)
+    test npc 81 B+00 msg 30.20 (F026)
+F027 ($6484&80)
+    hint tele class 0 Kensu until set: 29.24 "<CLR>I have my own things to do. Don't bother me."
+    hint tele class 1 Kensu until set: 29.24 "<CLR>I have my own things to do. Don't bother me."
+    hint tele class 2 Kensu until set: 29.24 "<CLR>I have my own things to do. Don't bother me."
+    hint tele class 3 Asina until set: 29.8 "<CLR>Did you find the {Bow of Moon}?"
+    hint tele class 3 Kensu until set: 29.24 "<CLR>I have my own things to do. Don't bother me."
+    hint tele class 3 Tornel until set: 28.27 "<CLR>Did you master the {magic} of Change? Go to {"
+    hint tele class 3 Zebu until set: 28.7 "<CLR>They say Leather Boots will allow you to walk"
+    hint tele class 4 Asina until set: 29.8 "<CLR>Did you find the {Bow of Moon}?"
+    hint tele class 4 Kensu until set: 29.24 "<CLR>I have my own things to do. Don't bother me."
+    hint tele class 4 Tornel until set: 28.27 "<CLR>Did you master the {magic} of Change? Go to {"
+    hint tele class 4 Zebu until set: 28.7 "<CLR>They say Leather Boots will allow you to walk"
+    pres param 16 in area 8C needs !F027
+    pres param 4E in area 7E needs !F027
+    pres param 4E in area 8C needs !F027
+    pres param 4E in area F3 needs !F027
+    pres param 4E in area F4 needs !F027
+    pres param 4F in area 7E needs !F027
+    pres param 4F in area 8C needs !F027
+    pres param 4F in area F3 needs !F027
+    pres param 4F in area F4 needs !F027
+    pres param 50 in area 7E needs !F027
+    pres param 50 in area 8C needs !F027
+    pres param 50 in area F3 needs !F027
+    pres param 50 in area F4 needs !F027
+    pres param 51 in area 7E needs !F027
+    pres param 51 in area 8C needs !F027
+    pres param 51 in area F3 needs !F027
+    pres param 51 in area F4 needs !F027
+    pres param 52 in area 7E needs !F027
+    pres param 52 in area 8C needs !F027
+    pres param 52 in area F3 needs !F027
+    pres param 52 in area F4 needs !F027
+    pres param 53 in area 7E needs !F027
+    pres param 53 in area 8C needs !F027
+    pres param 53 in area F3 needs !F027
+    pres param 53 in area F4 needs !F027
+    pres param 5D in area 8C needs F027
+    pres param 5E in area F2 needs !F027
+    pres param 5F in area F2 needs !F027
+    pres param 5F in area F3 needs !F027
+    pres param 60 in area 8C needs !F027
+    pres param 62 in area F2 needs !F027
+    pres param 62 in area F4 needs !F027
+    pres param 6D in area 8E needs !F027
+    pres param 70 in area 8C needs F027
+    pres param 71 in area 8C needs F027
+    pres param 72 in area 8C needs F027
+    pres param 76 in area 7E needs F027
+    pres param 76 in area 8C needs F027
+    set  hook2 item 80 msg 29.19 act 0
+    test code 31:E829 LDA $6484
+    test hook2 item 80 msg 29.19 act 0 (!)
+    test hook2 item 9A msg 25.4 act 29
+    test hook2 item BD msg 0.0 act 27 (!)
+    test npc 60 B+16 msg 25.3 (F027)
+F028 ($6485&01)
+    test hook2 item BC msg 0.0 act 27 (!)
+    test npc 01 B+00 msg 30.15 (F028)
+    test npc 01 B+19 msg 26.4 (F028)
+    test npc 04 B+00 msg 8.8 (F028)
+    test npc 04 B+28 msg 18.0 (!F028)
+    test npc 05 B+00 msg 18.2 (!F028)
+    test npc 07 B+00 msg 8.0 (F028)
+    test npc 07 B+19 msg 17.0 (F028)
+    test npc 09 A+00 msg 30.0 (F028)
+    test npc 0A A+00 msg 30.1 (F028)
+    test npc 0D A+00 msg 0.18 (F028)
+    test npc 0E A+00 msg 30.2 (F028)
+    test npc 0F A+00 msg 30.0 (F028)
+    test npc 10 A+00 msg 30.1 (F028)
+    test npc 11 A+00 msg 30.4 (F028)
+    test npc 12 A+00 msg 0.24 (F028)
+    test npc 13 A+00 msg 0.20 (F028)
+    test npc 14 A+00 msg 1.4 (F028)
+    test npc 16 A+00 msg 21.1 (F028)
+    test npc 1C A+00 msg 30.16 (F028)
+    test npc 1D A+04 msg 30.23 (F028)
+    test npc 1E A+04 msg 4.26 (F028)
+    test npc 1F A+04 msg 4.26 (F028)
+    test npc 20 A+04 msg 4.26 (F028)
+    test npc 21 A+04 msg 4.26 (F028)
+    test npc 22 A+04 msg 4.26 (F028)
+    test npc 23 B+00 msg 18.18 (!F028)
+    test npc 24 A+00 msg 18.4 (!F028)
+    test npc 25 A+00 msg 18.6 (!F028)
+    test npc 26 A+00 msg 18.11 (!F028)
+    test npc 27 A+00 msg 18.11 (!F028)
+    test npc 29 A+00 msg 30.1 (F028)
+    test npc 2A A+00 msg 5.7 (F028)
+    test npc 32 A+00 msg 8.1 (F028)
+    test npc 33 A+00 msg 8.2 (F028)
+    test npc 34 A+00 msg 8.6 (F028)
+    test npc 35 A+00 msg 8.14 (F028)
+    test npc 36 A+00 msg 8.10 (F028)
+    test npc 37 A+00 msg 8.10 (F028)
+    test npc 3D A+00 msg 15.3 (F028)
+    test npc 3E A+00 msg 30.1 (F028)
+    test npc 3F A+00 msg 30.1 (F028)
+    test npc 40 A+00 msg 30.2 (F028)
+    test npc 41 A+00 msg 30.2 (F028)
+    test npc 42 A+00 msg 30.2 (F028)
+    test npc 43 A+00 msg 30.1 (F028)
+    test npc 44 A+00 msg 15.22 (F028)
+    test npc 45 A+00 msg 30.3 (F028)
+    test npc 46 A+00 msg 30.2 (F028)
+    test npc 47 A+00 msg 30.4 (F028)
+    test npc 48 A+00 msg 30.2 (F028)
+    test npc 4A A+00 msg 30.19 (F028)
+    test npc 4E A+00 msg 20.0 (F028)
+    test npc 4F A+00 msg 20.5 (F028)
+    test npc 50 A+00 msg 20.6 (F028)
+    test npc 52 A+00 msg 21.9 (F028)
+    test npc 54 A+04 msg 30.2 (F028)
+    test npc 55 A+00 msg 30.3 (F028)
+    test npc 56 A+00 msg 30.1 (F028)
+    test npc 57 A+00 msg 30.15 (F028)
+    test npc 58 A+00 msg 30.1 (F028)
+    test npc 59 A+00 msg 26.18 (F028)
+    test npc 5A A+00 msg 26.19 (F028)
+    test npc 5B A+00 msg 30.3 (F028)
+    test npc 5C A+00 msg 30.5 (F028)
+    test npc 5E A+00 msg 21.12 (F028)
+    test npc 5F A+00 msg 21.3 (F028)
+    test npc 60 A+00 msg 21.5 (F028)
+    test npc 62 A+00 msg 21.7 (F028)
+    test npc 64 A+00 msg 9.0 (F028)
+    test npc 6F A+00 msg 30.3 (F028)
+    test npc 77 A+00 msg 30.0 (F028)
+    test npc 78 A+00 msg 30.0 (F028)
+    test npc 79 A+00 msg 30.1 (F028)
+    test npc 7A A+00 msg 30.1 (F028)
+    test npc 7B A+00 msg 9.5 (F028)
+    test npc 7C A+04 msg 4.26 (F028)
+    test npc 7D A+04 msg 4.26 (F028)
+    test npc 88 A+00 msg 21.1 (F028)
+F029 ($6485&02)
+    test npc 01 B+0F msg 30.15 (F029)
+    test npc 01 B+28 msg 26.4 (F029)
+    test npc 04 B+0F msg 8.8 (F029)
+    test npc 07 B+0F msg 8.0 (F029)
+    test npc 07 B+28 msg 17.0 (F029)
+    test npc 09 A+0C msg 30.0 (F029)
+    test npc 0A A+0C msg 30.1 (F029)
+    test npc 0D A+0C msg 0.18 (F029)
+    test npc 0E A+0C msg 30.2 (F029)
+    test npc 0F A+0C msg 30.0 (F029)
+    test npc 10 A+0C msg 30.1 (F029)
+    test npc 11 A+0C msg 30.4 (F029)
+    test npc 12 A+0C msg 0.24 (F029)
+    test npc 13 A+0C msg 0.20 (F029)
+    test npc 14 A+0C msg 1.4 (F029)
+    test npc 16 A+0C msg 21.0 (F029)
+    test npc 1C A+0C msg 30.16 (F029)
+    test npc 1D A+10 msg 30.23 (F029)
+    test npc 1E A+10 msg 4.26 (F029)
+    test npc 1F A+10 msg 4.26 (F029)
+    test npc 20 A+10 msg 4.26 (F029)
+    test npc 21 A+10 msg 4.26 (F029)
+    test npc 22 A+10 msg 4.26 (F029)
+    test npc 29 A+0C msg 30.1 (F029)
+    test npc 2A A+0C msg 5.7 (F029)
+    test npc 32 A+0C msg 8.1 (F029)
+    test npc 33 A+0C msg 8.2 (F029)
+    test npc 34 A+0C msg 8.6 (F029)
+    test npc 35 A+0C msg 8.14 (F029)
+    test npc 36 A+0C msg 8.10 (F029)
+    test npc 37 A+0C msg 8.10 (F029)
+    test npc 3D A+0C msg 15.3 (F029)
+    test npc 3E A+0C msg 30.1 (F029)
+    test npc 3F A+0C msg 30.1 (F029)
+    test npc 40 A+0C msg 30.2 (F029)
+    test npc 41 A+0C msg 30.2 (F029)
+    test npc 42 A+0C msg 30.2 (F029)
+    test npc 43 A+0C msg 30.1 (F029)
+    test npc 44 A+0C msg 15.22 (F029)
+    test npc 45 A+0C msg 30.3 (F029)
+    test npc 46 A+0C msg 30.2 (F029)
+    test npc 47 A+0C msg 30.4 (F029)
+    test npc 48 A+0C msg 30.2 (F029)
+    test npc 4A A+0C msg 30.19 (F029)
+    test npc 4E A+0C msg 20.0 (F029)
+    test npc 4F A+0C msg 20.5 (F029)
+    test npc 50 A+0C msg 20.6 (F029)
+    test npc 52 A+0C msg 21.9 (F029)
+    test npc 54 B+05 msg 23.5 (!F029)
+    test npc 55 A+0C msg 30.3 (F029)
+    test npc 56 A+0C msg 30.1 (F029)
+    test npc 57 A+0C msg 30.15 (F029)
+    test npc 58 A+0C msg 30.1 (F029)
+    test npc 59 A+0C msg 26.18 (F029)
+    test npc 5A A+08 msg 26.19 (F029)
+    test npc 5B A+0C msg 30.3 (F029)
+    test npc 5C A+0C msg 30.5 (F029)
+    test npc 5E A+0C msg 21.12 (F029)
+    test npc 5F A+0C msg 21.3 (F029)
+    test npc 60 A+0C msg 21.5 (F029)
+    test npc 62 A+0C msg 21.7 (F029)
+    test npc 64 A+0C msg 9.0 (F029)
+    test npc 6F A+0C msg 30.3 (F029)
+    test npc 77 A+0C msg 30.0 (F029)
+    test npc 78 A+0C msg 30.0 (F029)
+    test npc 79 A+0C msg 30.1 (F029)
+    test npc 7A A+0C msg 30.1 (F029)
+    test npc 7B A+0C msg 9.5 (F029)
+    test npc 7C A+10 msg 4.26 (F029)
+    test npc 7D A+10 msg 4.26 (F029)
+    test npc 88 A+0C msg 21.0 (F029)
+F02A ($6485&04)
+    test npc 00 A+00 msg 30.9 (F02A)
+    test npc 01 B+05 msg 30.14 (F02A)
+    test npc 01 B+1E msg 30.10 (F02A)
+    test npc 02 A+00 msg 30.7 (F02A)
+    test npc 03 A+00 msg 30.7 (F02A)
+    test npc 04 B+05 msg 30.8 (F02A)
+    test npc 04 B+1E msg 30.8 (F02A)
+    test npc 05 B+0A msg 30.8 (F02A)
+    test npc 06 A+00 msg 30.8 (F02A)
+    test npc 07 B+05 msg 30.13 (F02A)
+    test npc 07 B+1E msg 30.13 (F02A)
+    test npc 08 A+00 msg 30.7 (F02A)
+    test npc 09 A+04 msg 30.9 (F02A)
+    test npc 0A A+04 msg 30.8 (F02A)
+    test npc 0B B+00 msg 30.18 (F02A)
+    test npc 0C B+00 msg 30.18 (F02A)
+    test npc 0C B+0A msg 30.18 (F02A)
+    test npc 0D A+04 msg 0.19 (F02A)
+    test npc 0E A+04 msg 30.9 (F02A)
+    test npc 0F A+04 msg 30.7 (F02A)
+    test npc 10 A+04 msg 30.8 (F02A)
+    test npc 11 A+04 msg 30.11 (F02A)
+    test npc 12 A+04 msg 30.12 (F02A)
+    test npc 13 A+04 msg 0.20 (F02A)
+    test npc 14 A+04 msg 1.5 (F02A)
+    test npc 16 A+04 msg 21.2 (F02A)
+    test npc 17 A+00 msg 30.9 (F02A)
+    test npc 18 A+00 msg 30.8 (F02A)
+    test npc 19 A+00 msg 30.10 (F02A)
+    test npc 1A A+00 msg 30.8 (F02A)
+    test npc 1C A+04 msg 30.9 (F02A)
+    test npc 1D A+08 msg 30.23 (F02A)
+    test npc 1E A+08 msg 4.26 (F02A)
+    test npc 1F A+08 msg 4.26 (F02A)
+    test npc 20 A+08 msg 4.26 (F02A)
+    test npc 21 A+08 msg 4.26 (F02A)
+    test npc 22 A+08 msg 4.26 (F02A)
+    test npc 28 A+00 msg 5.1 (F02A)
+    test npc 29 A+04 msg 30.8 (F02A)
+    test npc 2A A+04 msg 30.9 (F02A)
+    test npc 2B A+00 msg 30.9 (F02A)
+    test npc 2D B+05 msg 19.21 (F02A)
+    test npc 2E A+00 msg 30.16 (F02A)
+    test npc 2F A+00 msg 30.15 (F02A)
+    test npc 30 A+00 msg 30.15 (F02A)
+    test npc 31 A+00 msg 30.15 (F02A)
+    test npc 32 A+04 msg 30.13 (F02A)
+    test npc 33 A+04 msg 30.13 (F02A)
+    test npc 34 A+04 msg 30.13 (F02A)
+    test npc 35 A+04 msg 30.7 (F02A)
+    test npc 36 A+04 msg 30.8 (F02A)
+    test npc 37 A+04 msg 30.8 (F02A)
+    test npc 3A A+00 msg 30.7 (F02A)
+    test npc 3B A+00 msg 30.8 (F02A)
+    test npc 3C A+00 msg 30.9 (F02A)
+    test npc 3D A+04 msg 15.4 (F02A)
+    test npc 3E A+04 msg 30.8 (F02A)
+    test npc 3F A+04 msg 30.8 (F02A)
+    test npc 40 A+04 msg 30.9 (F02A)
+    test npc 41 A+04 msg 30.9 (F02A)
+    test npc 42 A+04 msg 30.9 (F02A)
+    test npc 43 A+04 msg 30.8 (F02A)
+    test npc 44 A+04 msg 15.23 (F02A)
+    test npc 45 A+04 msg 30.10 (F02A)
+    test npc 46 A+04 msg 30.9 (F02A)
+    test npc 47 A+04 msg 30.11 (F02A)
+    test npc 48 A+04 msg 30.9 (F02A)
+    test npc 4A A+04 msg 30.18 (F02A)
+    test npc 4E A+04 msg 20.2 (F02A)
+    test npc 4F A+04 msg 20.2 (F02A)
+    test npc 50 A+04 msg 20.3 (F02A)
+    test npc 52 A+04 msg 21.10 (F02A)
+    test npc 54 A+00 msg 30.9 (F02A)
+    test npc 55 A+04 msg 30.10 (F02A)
+    test npc 56 A+04 msg 30.8 (F02A)
+    test npc 57 A+04 msg 30.14 (F02A)
+    test npc 58 A+04 msg 30.8 (F02A)
+    test npc 59 A+04 msg 26.18 (F02A)
+    test npc 5A A+04 msg 26.19 (F02A)
+    test npc 5B A+04 msg 30.10 (F02A)
+    test npc 5C A+04 msg 30.12 (F02A)
+    test npc 5E A+04 msg 21.12 (F02A)
+    test npc 5F A+04 msg 21.4 (F02A)
+    test npc 60 A+04 msg 21.5 (F02A)
+    test npc 62 A+04 msg 21.8 (F02A)
+    test npc 64 A+04 msg 30.10 (F02A)
+    test npc 6F A+04 msg 30.10 (F02A)
+    test npc 77 A+04 msg 30.7 (F02A)
+    test npc 78 A+04 msg 30.7 (F02A)
+    test npc 79 A+04 msg 30.8 (F02A)
+    test npc 7A A+04 msg 30.8 (F02A)
+    test npc 7B A+04 msg 30.12 (F02A)
+    test npc 7C A+08 msg 4.26 (F02A)
+    test npc 7D A+08 msg 4.26 (F02A)
+    test npc 85 A+00 msg 30.7 (F02A)
+    test npc 86 A+00 msg 30.8 (F02A)
+    test npc 87 A+00 msg 30.9 (F02A)
+    test npc 88 A+04 msg 21.2 (F02A)
+F02B ($6485&08)
+    test hook2 item BD msg 0.0 act 27 (!)
+    test npc 00 B+0A msg 26.12 (F02B)
+    test npc 01 B+0A msg 30.15 (F02B)
+    test npc 01 B+23 msg 26.13 (F02B)
+    test npc 03 B+0A msg 26.9 (F02B)
+    test npc 04 B+0A msg 8.8 (F02B)
+    test npc 04 B+19 msg 26.11 (F02B)
+    test npc 06 B+05 msg 26.11 (F02B)
+    test npc 07 B+0A msg 8.0 (F02B)
+    test npc 07 B+23 msg 17.0 (F02B)
+    test npc 09 A+08 msg 30.0 (F02B)
+    test npc 0A A+08 msg 30.1 (F02B)
+    test npc 0D A+08 msg 0.18 (F02B)
+    test npc 0E A+08 msg 30.2 (F02B)
+    test npc 0F A+08 msg 30.0 (F02B)
+    test npc 10 A+08 msg 30.1 (F02B)
+    test npc 11 A+08 msg 30.4 (F02B)
+    test npc 12 A+08 msg 0.24 (F02B)
+    test npc 13 A+08 msg 0.20 (F02B)
+    test npc 14 A+08 msg 1.4 (F02B)
+    test npc 16 A+08 msg 21.1 (F02B)
+    test npc 1C A+08 msg 30.16 (F02B)
+    test npc 1D A+0C msg 30.23 (F02B)
+    test npc 1E A+0C msg 4.26 (F02B)
+    test npc 1F A+0C msg 4.26 (F02B)
+    test npc 20 A+0C msg 4.26 (F02B)
+    test npc 21 A+0C msg 4.26 (F02B)
+    test npc 22 A+0C msg 4.26 (F02B)
+    test npc 29 A+08 msg 30.1 (F02B)
+    test npc 2A A+08 msg 5.7 (F02B)
+    test npc 32 A+08 msg 8.1 (F02B)
+    test npc 33 A+08 msg 8.2 (F02B)
+    test npc 34 A+08 msg 8.6 (F02B)
+    test npc 35 A+08 msg 8.14 (F02B)
+    test npc 36 A+08 msg 8.10 (F02B)
+    test npc 37 A+08 msg 8.10 (F02B)
+    test npc 3D A+08 msg 15.3 (F02B)
+    test npc 3E A+08 msg 30.1 (F02B)
+    test npc 3F A+08 msg 30.1 (F02B)
+    test npc 40 A+08 msg 30.2 (F02B)
+    test npc 41 A+08 msg 30.2 (F02B)
+    test npc 42 A+08 msg 30.2 (F02B)
+    test npc 43 A+08 msg 30.1 (F02B)
+    test npc 44 A+08 msg 15.22 (F02B)
+    test npc 45 A+08 msg 30.3 (F02B)
+    test npc 46 A+08 msg 30.2 (F02B)
+    test npc 47 A+08 msg 30.4 (F02B)
+    test npc 48 A+08 msg 30.2 (F02B)
+    test npc 4A A+08 msg 30.19 (F02B)
+    test npc 4E A+08 msg 20.1 (F02B)
+    test npc 4F A+08 msg 20.5 (F02B)
+    test npc 50 A+08 msg 20.6 (F02B)
+    test npc 52 A+08 msg 21.11 (F02B)
+    test npc 54 A+08 msg 30.2 (F02B)
+    test npc 55 A+08 msg 30.3 (F02B)
+    test npc 56 A+08 msg 30.1 (F02B)
+    test npc 57 A+08 msg 30.15 (F02B)
+    test npc 58 A+08 msg 30.1 (F02B)
+    test npc 59 A+08 msg 26.18 (F02B)
+    test npc 5A B+05 msg 26.16 (F02B)
+    test npc 5B A+08 msg 26.13 (F02B)
+    test npc 5C A+08 msg 30.5 (F02B)
+    test npc 5E A+08 msg 21.12 (F02B)
+    test npc 5F A+08 msg 21.3 (F02B)
+    test npc 60 A+08 msg 21.6 (F02B)
+    test npc 62 A+08 msg 21.7 (F02B)
+    test npc 64 A+08 msg 9.0 (F02B)
+    test npc 6F A+08 msg 30.3 (F02B)
+    test npc 71 B+05 msg 25.2 (F02B)
+    test npc 77 A+08 msg 30.0 (F02B)
+    test npc 78 A+08 msg 30.0 (F02B)
+    test npc 79 A+08 msg 30.1 (F02B)
+    test npc 7A A+08 msg 30.1 (F02B)
+    test npc 7B A+08 msg 9.5 (F02B)
+    test npc 7C A+0C msg 4.26 (F02B)
+    test npc 7D A+0C msg 4.26 (F02B)
+    test npc 88 A+08 msg 21.1 (F02B)
+F02C ($6485&10)
+    test code 30:C063 LDA $6485
+F02D ($6485&20)
+    pres param 6E in area F2 needs !F02D
+    set  hook2 item 82 msg 0.0 act 23
+    test code 30:C063 LDA $6485
+    test hook2 item 82 msg 0.0 act 23 (!)
+    test npc 16 B+11 msg 20.9 (F02D)
+    test npc 4F B+00 msg 20.4 (F02D)
+    test npc 50 B+00 msg 20.4 (F02D)
+    test npc 52 B+00 msg 20.20 (F02D)
+    test npc 5E B+22 msg 22.3 (F02D)
+    test npc 5F B+16 msg 22.5 (F02D)
+    test npc 60 B+1B msg 20.13 (F02D)
+    test npc 62 B+11 msg 22.7 (F02D)
+    test npc 88 B+11 msg 20.9 (F02D)
+F02E ($6485&40)
+    hint tele class 5 Zebu until set: 28.10 "<CLR>There is a cave hidden in an oasis in the poi"
+    hint tele class 6 Tornel until set: 28.31 "<CLR>When you search a plain in the poisonous dese"
+    set  get item 2D Deo's Pendant
+    set  npc 5A B+05 msg 26.16
+    test code 30:C063 LDA $6485
+    test npc 5A B+00 msg 26.17 (F02E)
+F02F ($6485&80)
+    test code 30:C063 LDA $6485
+F030 ($6486&01)
+    test npc 45 B+05 msg 16.3 (!F030)
+    test npc 45 B+0A msg 0.0 (F030)
+F031 ($6486&02)
+    set  npc 46 B+05 msg 16.5
+    test npc 46 B+05 msg 16.5 (!F031)
+F032 ($6486&04)
+    set  npc 44 B+0A msg 16.1
+F034 ($6486&10)
+    pres param 16 in area 57 needs !F034
+    set  npc 16 B+05 msg 13.1
+    set  npc 88 B+05 msg 13.1
+F035 ($6486&20)
+    pres param 16 in area 57 needs F035
+    pres param 88 in area 57 needs !F035
+    set  use item 28 Flute of Lime on param 88
+    test npc 16 B+05 msg 13.1 (F035)
+    test npc 88 B+05 msg 13.1 (F035)
+F036 ($6486&40)
+    set  npc 16 B+16 msg 20.7
+    set  npc 16 B+1D msg 20.8
+    set  npc 88 B+16 msg 20.7
+    set  npc 88 B+1D msg 20.8
+    test npc 16 B+16 msg 20.7 (!F036)
+    test npc 88 B+16 msg 20.7 (!F036)
+F037 ($6486&80)
+    set  get item 42 Paralysis
+    set  hook2 item B2 msg 28.16 act 8
+    test hook2 item 8D msg 0.0 act 0
+    test hook2 item B2 msg 28.16 act 8 (!)
+F038 ($6487&01)
+    pres param 14 in area 0E needs !F038
+    set  hook2 item 8C msg 0.0 act 0
+    test hook2 item 8C msg 0.0 act 0 (!)
+    test npc 13 B+05 msg 0.21 (!F038)
+    test npc 5E B+05 msg 0.28 (F038)
+F039 ($6487&02)
+    set  get item 41 Refresh
+    set  hook2 item B4 msg 0.27 act 15
+    set  npc 5E B+0F msg 0.27
+    test hook2 item B4 msg 0.27 act 15 (!)
+    test npc 5E B+0A msg 0.29 (F039)
+F03A ($6487&04)
+    pres param 14 in area C5 needs !F03A
+    pres param 15 in area 0E needs F03A
+    set  npc 5E B+16 msg 0.26
+    test npc 5E B+16 msg 0.26 (!F03A)
+F03B ($6487&08)
+    set  npc 5E B+27 msg 20.23
+    test hook2 item 81 msg 0.0 act 0 (!)
+    test npc 5E B+27 msg 20.23 (!F03B)
+    test npc 62 B+16 msg 20.18 (F03B)
+F03C ($6487&10)
+    set  get item 3B Love Pendant
+    set  use item 3B Love Pendant on param 7E
+    test npc 62 B+00 msg 11.3 (F03C)
+F03D ($6487&20)
+    set  npc 62 B+1B msg 20.16
+    test npc 62 B+1B msg 20.16 (!F03D)
+F03E ($6487&40)
+    pres param 6C in area F1 needs !F03E
+    pres param 7E in area F1 needs F03E
+    set  npc 6C B+05 msg 19.6
+    test npc 6C B+00 msg 19.1 (F03E)
+F03F ($6487&80)
+    set  get item 44 Teleport
+    set  npc 5F B+0A msg 5.11
+    test hook2 item BA msg 28.15 act 25 (!)
+    test npc 5F B+05 msg 5.13 (F03F)
+F040 ($6488&01)
+    set  npc 5F B+20 msg 20.10
+    test npc 5F B+1B msg 20.11 (F040)
+F041 ($6488&02)
+    hint tele class 0 Tornel until set: 28.19 "<CLR>Grant the {Oak} {people}'s reguest, and then "
+    set  get item 07 Ball of Fire
+    test npc 1E B+00 msg 4.3 (F041)
+    test npc 20 B+00 msg 4.11 (F041)
+    test npc 21 B+00 msg 4.15 (F041)
+    test npc 22 B+00 msg 4.18 (F041)
+    test npc 60 B+00 msg 3.5 (F041)
+    test npc 7C B+00 msg 4.11 (F041)
+    test npc 7D B+00 msg 4.15 (F041)
+F043 ($6488&08)
+    set  hook2 item AA msg 0.0 act 0
+    test npc 1D B+00 msg 4.25 (F043)
+F044 ($6488&10)
+    set  get item 07 Ball of Fire
+    test npc 1D B+0C msg 4.23 (F044)
+    test npc 1F B+00 msg 4.7 (F044)
+F045 ($6488&20)
+    pres param 1F in area 1A needs !F045
+    pres param 1F in area CE needs F045
+    pres param 20 in area 1C needs F045
+    pres param 21 in area 1C needs F045
+    pres param 7C in area 1C needs !F045
+    pres param 7D in area 1C needs !F045
+    set  code 31:E7DC LDA $6488
+    test npc 1D B+18 msg 4.21 (F045)
+    test npc 1E B+0A msg 4.1 (F045)
+    test npc 1F B+05 msg 4.5 (!F045)
+    test npc 20 B+05 msg 4.10 (F045)
+    test npc 21 B+05 msg 4.14 (F045)
+    test npc 22 B+05 msg 4.17 (F045)
+    test npc 7C B+05 msg 4.10 (F045)
+    test npc 7D B+05 msg 4.14 (F045)
+F047 ($6488&80)
+    set  hook2 item 8D msg 0.0 act 0
+    test hook2 item 8D msg 0.0 act 0 (!)
+    test npc 0D B+00 msg 0.17 (F047)
+F048 ($6489&01)
+    pres param 1B in area C6 needs !F048
+    pres param 2C in area 28 needs F048
+    set  npc 1B B+00 msg 2.8
+    test npc 1C B+00 msg 2.9 (!F048)
+F049 ($6489&02)
+    set  get item 01 Sword of Fire
+    set  npc 1D B+18 msg 4.21
+    test npc 1D B+13 msg 4.22 (F049)
+F04A ($6489&04)
+    set  npc 64 B+05 msg 9.0
+    test npc 64 B+05 msg 9.0 (!F04A)
+F04B ($6489&08)
+    clr  npc 53 B+00 msg 20.21
+    set  npc 53 B+07 msg 20.22
+    test npc 53 B+00 msg 20.21 (F04B)
+F04C ($6489&10)
+    clr  npc 51 B+00 msg 20.15
+    set  npc 51 B+10 msg 20.14
+    test npc 51 B+09 msg 20.14 (F04C)
+F04D ($6489&20)
+    clr  npc 51 B+00 msg 20.15
+    set  npc 51 B+09 msg 20.14
+    test npc 51 B+00 msg 20.15 (F04D)
+F04E ($6489&40)
+    hint tele class 0 Zebu until set: 28.0 "<CLR>Use {Telepathy} to speak to us."
+    set  get item 06 Tornado Bracelet
+    test npc 5F B+0A msg 5.11 (F04E)
+F04F ($6489&80)
+    set  npc 54 B+0A msg 23.6
+    test npc 54 B+0A msg 23.6 (!F04F)
+F050 ($648A&01)
+    pres param 16 in area 18 needs !F050
+    set  use item 25 Statue of Onyx on param 16
+F051 ($648A&02)
+    pres param 16 in area 57 needs !F051
+    pres param 5E in area 10 needs !F051
+    pres param 5F in area 21 needs !F051
+    pres param 60 in area 1E needs !F051
+    pres param 88 in area 57 needs !F051
+    set  hook2 item 84 msg 29.18 act 11
+    test hook2 item 84 msg 29.18 act 11 (!)
+F052 ($648A&04)
+    pres param 1F in area 1A needs F052
+    set  npc 1E B+11 msg 4.0
+F053 ($648A&08)
+    clr  code 31:E81A LDA $648A
+    pres param 1F in area 1A needs !F053
+    set  npc 1F B+05 msg 4.5
+    test code 31:E7D5 LDA $648A
+F054 ($648A&10)
+    set  use item 36 Shell Flute
+F055 ($648A&20)
+    hint tele class 5 Zebu until set: 28.9 "<CLR>{Draygonia}'s main fortress is getting strong"
+    pres param 5E in area AA needs !F055
+    set  npc 5E B+33 msg 24.1
+F056 ($648A&40)
+    hint tele class 5 Tornel until set: 28.29 "<CLR>Even though they've captured me, don't worry."
+    pres param 5F in area AC needs !F056
+    set  npc 5F B+27 msg 24.3
+F057 ($648A&80)
+    hint tele class 5 Asina until set: 29.10 "<CLR>We are wise men. We won't lose our pride, no "
+    pres param 62 in area B9 needs !F057
+    set  npc 62 B+27 msg 24.5
+F05B ($648B&08)
+    pres param 2D in area 28 needs !F05B
+    set  hook2 item 94 msg 0.0 act 0
+F05E ($648B&40)
+    hint tele class 6 Asina until set: 29.13 "<CLR>We wise men_     {Azteca}_ wishing your safet"
+    hint tele class 6 Kensu until set: 29.27 "<CLR>I have nothing to say."
+    hint tele class 6 Tornel until set: 29.0 "<CLR>The Emperor's {power} far exceeds that of his"
+    hint tele class 6 Zebu until set: 28.12 "<CLR>{NAME}, when you battle the emperor, you must"
+    pres param 5E in area A6 needs F05E
+    pres param 5F in area A6 needs F05E
+    pres param 62 in area A6 needs F05E
+F05F ($648B&80)
+    hint tele class 0 Kensu until set: 29.23 "<CLR>How is_ {Asina}_ Ok? <CLR>I have my own thing"
+    hint tele class 1 Kensu until set: 29.23 "<CLR>How is_ {Asina}_ Ok? <CLR>I have my own thing"
+    hint tele class 2 Kensu until set: 29.23 "<CLR>How is_ {Asina}_ Ok? <CLR>I have my own thing"
+    hint tele class 3 Kensu until set: 29.23 "<CLR>How is_ {Asina}_ Ok? <CLR>I have my own thing"
+    hint tele class 4 Kensu until set: 29.23 "<CLR>How is_ {Asina}_ Ok? <CLR>I have my own thing"
+    pres param 5F in area F2 needs F05F
+    pres param 5F in area F3 needs !F05F
+    pres param 62 in area F2 needs F05F
+    pres param 62 in area F4 needs !F05F
+    pres param 6E in area F2 needs F05F
+    set  get item 03 Sword of Thunder
+    test hook2 item 80 msg 29.19 act 0
+    test hook2 item 82 msg 0.0 act 23
+F061 ($648C&02)
+    pres param 60 in area EC needs !F061
+    pres param 6D in area EF needs F061
+    set  npc 60 B+0F msg 19.15
+F062 ($648C&04)
+    set  get item 51 ?
+F063 ($648C&08)
+    hint tele class 0 Kensu until set: 29.22 "<CLR>I lost it! I can't believe it! Maybe it's in "
+    hint tele class 1 Kensu until set: 29.22 "<CLR>I lost it! I can't believe it! Maybe it's in "
+    hint tele class 2 Kensu until set: 29.22 "<CLR>I lost it! I can't believe it! Maybe it's in "
+    hint tele class 3 Asina until set: 29.7 "<CLR>I now hear {Kensu}'s changed form and is wand"
+    hint tele class 3 Kensu until set: 29.22 "<CLR>I lost it! I can't believe it! Maybe it's in "
+    hint tele class 3 Tornel until set: 28.26 "<CLR>{Kensu} is very intelligent. It was very inco"
+    hint tele class 3 Zebu until set: 28.6 "<CLR>{Kensu} is good with his {magic}. If you need"
+    hint tele class 4 Asina until set: 29.7 "<CLR>I now hear {Kensu}'s changed form and is wand"
+    hint tele class 4 Kensu until set: 29.22 "<CLR>I lost it! I can't believe it! Maybe it's in "
+    hint tele class 4 Tornel until set: 28.26 "<CLR>{Kensu} is very intelligent. It was very inco"
+    hint tele class 4 Zebu until set: 28.6 "<CLR>{Kensu} is good with his {magic}. If you need"
+    pres param 7E in area F1 needs !F063
+    set  get item 47 Change
+F064 ($648C&10)
+    set  hook2 item 83 msg 0.0 act 0
+    test hook2 item 83 msg 0.0 act 0 (!)
+F065 ($648C&20)
+    hint tele class 5 Kensu until set: 29.20 "<CLR>___"
+    hint tele class 5 Tornel until set: 28.30 "<CLR>{Kensu} will teach you your last magical skil"
+    pres param 75 in area BA needs !F065
+    pres param 7E in area BA needs F065
+    set  use item 3D Ivory Statue on param 75
+F066 ($648C&40)
+    pres param 2C in area 28 needs !F066
+F067 ($648C&80)
+    set  get item 0B Ball of Thunder
+    test hook2 item 9A msg 25.4 act 29 (!)
+F068 ($648D&01)
+    set  hook2 item A4 msg 27.11 act 30
+    test hook2 item A4 msg 27.11 act 30 (!)
+F069 ($648D&02)
+    set  use item 28 Flute of Lime on param 86
+F06A ($648D&04)
+    pres param 3A in area 55 needs F06A
+    pres param 85 in area 55 needs !F06A
+    set  use item 28 Flute of Lime on param 85
+    test hook2 item BF msg 0.0 act 0
+    test npc 3A B+00 msg 30.7 (!F06A)
+    test npc 3B B+00 msg 13.2 (F06A)
+    test npc 85 B+00 msg 30.7 (!F06A)
+    test npc 86 B+00 msg 13.2 (F06A)
+F06B ($648D&08)
+    set  use item 28 Flute of Lime on param 87
+    test npc 3C B+00 msg 13.3 (F06B)
+    test npc 87 B+00 msg 13.3 (F06B)
+F06C ($648D&10)
+    pres param 83 in area 9C needs F06C
+    set  get item 1C Psycho Armor
+F070 ($648E&01)
+    test npc 6D B+00 msg 19.6 (F070)
+F071 ($648E&02)
+    test npc 6C B+05 msg 19.6 (F071)
+F072 ($648E&04)
+    pres param 6C in area F1 needs F072
+    pres param 6D in area EF needs !F072
+    pres param 7E in area EF needs F072
+    set  npc 6D B+00 msg 19.6
+    test hook2 item C1 msg 0.0 act 0
+F073 ($648E&08)
+    pres param 65 in area 01 needs !F073
+    set  npc 65 B+00 msg 0.9
+F075 ($648E&20)
+    hint tele class 3 Zebu until set: 28.5 "<CLR>In order to get to the lighthouse, you need s"
+    hint tele class 4 Zebu until set: 28.5 "<CLR>In order to get to the lighthouse, you need s"
+    pres param 7E in area 62 needs !F075
+    set  npc 7E B+0A msg 15.24
+F076 ($648E&40)
+    set  npc 6D B+0C msg 30.26
+F077 ($648E&80)
+    hint tele class 0 Zebu until set: 28.2 "<CLR>The {Flame Bracelet} will maximize the Sword "
+    hint tele class 1 Tornel until set: 28.21 "<CLR>When you great General {Kelbesque},use the {S"
+    hint tele class 1 Zebu until set: 28.2 "<CLR>The {Flame Bracelet} will maximize the Sword "
+    set  get item 08 Flame Bracelet
+F078 ($648F&01)
+    set  get item 0C Storm Bracelet
+F079 ($648F&02)
+    hint tele class 6 Asina until set: 29.12 "<CLR>Have you located both Bows?"
+    hint tele class 6 Kensu until set: 29.26 "<CLR>In order to find certain objects, you will ne"
+    hint tele class 6 Tornel until set: 28.28 "<CLR>When you have the {Warrior Ring} you can shoo"
+    hint tele class 6 Zebu until set: 28.11 "<CLR>We don't know what the inside of the Pyramid "
+    pres param 83 in area 9C needs !F079
+    set  get item 40 Bow of Truth
+    set  npc 83 B+00 msg 27.1
+F07A ($648F&04)
+    hint tele class 2 Tornel until set: 28.24 "<CLR>{Amazones} village is south east of {Brynmaer"
+    set  get item 0A Blizzard Bracelet
+F07B ($648F&08)
+    hint tele class 2 Tornel until set: 28.22 "<CLR>I hear that a traveling merchant has the {Shi"
+    set  get item 09 Ball of Water
+F07C ($648F&10)
+    hint tele class 5 Tornel until set: 28.28 "<CLR>When you have the {Warrior Ring} you can shoo"
+F07D ($648F&20)
+    hint tele class 5 Asina until set: 29.11 "<CLR>There must have been a cave in {Mt.Hydra} you"
+    hint tele class 6 Asina until set: 29.11 "<CLR>There must have been a cave in {Mt.Hydra} you"
+    set  get item 3F Bow of Sun
+F07E ($648F&40)
+    set  hook2 item A5 msg 5.15 act 0
+    test hook2 item A5 msg 5.15 act 0 (!)
+F07F ($648F&80)
+    set  hook2 item 91 msg 32.18 act 0
+    test hook2 item 91 msg 32.18 act 0 (!)
+F082 ($6490&04)
+    set  npc 83 B+00 msg 27.1
+    test npc 83 B+00 msg 27.1 (!F082)
+F083 ($6490&08)
+    set  hook2 item B2 msg 28.16 act 8
+    set  npc 0D B+16 msg 7.9
+    test npc 0D B+16 msg 7.9 (!F083)
+F084 ($6490&10)
+    clr  use item 33 Key to Prison on param AD
+    pres param 0E in area 02 needs !F084
+    pres param 0E in area 32 needs F084
+    pres param 0F in area 02 needs !F084
+    pres param 0F in area 32 needs F084
+    pres param 10 in area 02 needs !F084
+    pres param 10 in area 32 needs F084
+    pres param 11 in area 32 needs F084
+    pres param 11 in area C0 needs !F084
+    pres param 12 in area 02 needs !F084
+    pres param 12 in area 32 needs F084
+    pres param 2E in area 30 needs F084
+    pres param 2F in area 30 needs F084
+    pres param 30 in area 30 needs F084
+    set  hook2 item 8C msg 0.0 act 0
+F085 ($6490&20)
+    clr  hook2 item 8D msg 0.0 act 0
+    pres param 0D in area 35 needs F085
+    pres param 0D in area C0 needs !F085
+    set  hook2 item 8C msg 0.0 act 0
+F086 ($6490&40)
+    set  use item 40 Bow of Truth on param CB
+F087 ($6490&80)
+    set  get item 05 Ball of Wind
+F088 ($6491&01)
+    set  npc 14 B+00 msg 1.1
+    test npc 14 B+00 msg 1.1 (!F088)
+F089 ($6491&02)
+    pres param 71 in area 8C needs !F089
+    set  npc 71 B+05 msg 25.2
+    set  npc 71 B+0C msg 25.1
+    test npc 71 B+00 msg 32.16 (F089)
+F08A ($6491&04)
+    pres param 72 in area 8C needs !F08A
+    set  npc 72 B+00 msg 25.3
+    test npc 72 B+00 msg 25.3 (!F08A)
+F08B ($6491&08)
+    hint tele class 2 Asina until set: 29.5 "<CLR>Locate the {Shell Flute} before using the boa"
+    pres param 64 in area D6 needs F08B
+    set  get item 36 Shell Flute
+    test npc 7B B+00 msg 9.6 (!F08B)
+F08C ($6491&10)
+    pres param 2D in area 73 needs !F08C
+    set  hook2 item B3 msg 0.0 act 0
+F08D ($6491&20)
+    set  npc 44 B+0A msg 16.1
+    test npc 44 B+0A msg 16.1 (!F08D)
+F08E ($6491&40)
+    set  hook2 item B6 msg 16.14 act 0
+F08F ($6491&80)
+    pres param 44 in area E4 needs F08F
+    pres param 44 in area E9 needs !F08F
+    pres param 62 in area E1 needs !F08F
+    set  use item 3A Statue of Gold on param AF
+    test npc 09 B+00 msg 16.9 (F08F)
+    test npc 0A B+00 msg 16.11 (F08F)
+    test npc 3D B+05 msg 15.2 (F08F)
+    test npc 3E B+05 msg 15.7 (F08F)
+    test npc 3F B+05 msg 30.1 (F08F)
+    test npc 40 B+05 msg 30.2 (F08F)
+    test npc 41 B+05 msg 15.14 (F08F)
+    test npc 42 B+05 msg 15.17 (F08F)
+    test npc 43 B+05 msg 15.20 (F08F)
+    test npc 45 B+00 msg 30.3 (F08F)
+    test npc 46 B+00 msg 16.7 (F08F)
+    test npc 47 B+00 msg 16.13 (F08F)
+F090 ($6492&01)
+    pres param 3A in area 55 needs !F090
+    set  hook2 item BF msg 0.0 act 0
+F092 ($6492&04)
+    set  npc 38 B+21 msg 10.12
+    test npc 38 B+1C msg 10.14 (F092)
+F093 ($6492&08)
+    set  hook2 item AD msg 0.0 act 0
+F094 ($6492&10)
+    set  hook2 item AE msg 0.0 act 0
+F095 ($6492&20)
+    set  hook2 item AF msg 0.0 act 0
+F096 ($6492&40)
+    clr  npc 11 B+05 msg 0.4
+    set  npc 11 B+0C msg 0.3
+    test npc 11 B+05 msg 0.4 (F096)
+F097 ($6492&80)
+    clr  npc 0F B+05 msg 0.1
+    set  npc 0F B+0C msg 0.0
+    test npc 0F B+05 msg 0.1 (F097)
+F098 ($6493&01)
+    set  npc 29 B+05 msg 30.25
+    set  npc 29 B+0C msg 5.2
+    test npc 29 B+00 msg 5.4 (F098)
+F099 ($6493&02)
+    test hook2 item BC msg 0.0 act 27 (!)
+F09B ($6493&08)
+    set  npc 68 B+00 msg 17.1
+    test use item 36 Shell Flute
+F09C ($6493&10)
+    clr  hook2 item B7 msg 0.0 act 0
+    set  npc 38 B+0C msg 10.14
+    set  npc 38 B+13 msg 10.13
+    set  npc 38 B+21 msg 10.12
+    set  npc 38 B+2C msg 10.10
+    set  npc 38 B+33 msg 10.4
+    set  npc 38 B+3E msg 10.9
+    set  npc 38 B+4D msg 10.8
+    set  npc 38 B+58 msg 10.7
+    set  npc 38 B+63 msg 10.6
+    test hook2 item B7 msg 0.0 act 0
+F09E ($6493&40)
+    test hook2 item BB msg 0.0 act 27 (!)
+F0A0 ($6494&01)
+    set  npc 1E B+0A msg 4.1
+    test npc 1E B+05 msg 4.2 (F0A0)
+F0A1 ($6494&02)
+    clr  hook2 item 90 msg 0.0 act 0
+F0A2 ($6494&04)
+    clr  hook2 item B7 msg 0.0 act 0
+F0A3 ($6494&08)
+    set  npc 38 B+21 msg 10.12
+    test npc 39 B+10 msg 10.2 (F0A3)
+F0A4 ($6494&10)
+    pres param 6B in area 62 needs !F0A4
+    pres param 7E in area 62 needs F0A4
+    set  use item 31 Alarm Flute on param 6B
+    test npc 7E B+0A msg 15.24 (F0A4)
+F0A5 ($6494&20)
+    pres param 5E in area 10 needs F0A5
+    set  npc 14 B+0C msg 0.12
+    test npc 14 B+0C msg 0.12 (!F0A5)
+F0A6 ($6494&40)
+    set  npc 1D B+0C msg 4.23
+    test npc 1D B+05 msg 4.24 (F0A6)
+F0A7 ($6494&80)
+    clr  npc 4B B+07 msg 10.11
+    set  npc 4B B+00 msg 19.17
+    test npc 4B B+00 msg 19.17 (!F0A7)
+F0A8 ($6495&01)
+    set  npc 1D B+05 msg 4.24
+    test hook2 item AA msg 0.0 act 0
+F0A9 ($6495&02)
+    set  npc 13 B+0F msg 0.22
+    test hook2 item 86 msg 28.15 act 25 (!)
+F0AA ($6495&04)
+    set  get item 1D Medical Herb
+F0AB ($6495&08)
+    set  get item 50 ?
+F0AD ($6495&20)
+    set  get item 52 ?
+F0AE ($6495&40)
+    set  get item 53 ?
+F0AF ($6495&80)
+    set  get item 54 ?
+F0B0 ($6496&01)
+    set  get item 55 ?
+F0B1 ($6496&02)
+    set  get item 56 ?
+F0B2 ($6496&04)
+    set  get item 57 ?
+F0B3 ($6496&08)
+    set  get item 58 ?
+F0B4 ($6496&10)
+    set  get item 59 ?
+F0B5 ($6496&20)
+    set  get item 5A ?
+F0B6 ($6496&40)
+    set  get item 1F Lysis Plant
+F0B7 ($6496&80)
+    set  get item 5C ?
+F0B8 ($6497&01)
+    set  get item 5D ?
+F0B9 ($6497&02)
+    set  get item 1E Antidote
+F0BA ($6497&04)
+    set  get item 5E ?
+F0BB ($6497&08)
+    set  get item 5F ?
+F0BC ($6497&10)
+    set  get item 60 ?
+F0BD ($6497&20)
+    set  get item 20 Fruit of Lime
+F0BE ($6497&40)
+    set  get item 21 Fruit of Power
+F0BF ($6497&80)
+    set  get item 62 ?
+F0C0 ($6498&01)
+    set  get item 63 ?
+F0C1 ($6498&02)
+    set  get item 64 ?
+F0C2 ($6498&04)
+    set  get item 22 Magic Ring
+F0C3 ($6498&08)
+    set  get item 65 ?
+F0C4 ($6498&10)
+    set  get item 66 ?
+F0C5 ($6498&20)
+    set  get item 6B ?
+F0C6 ($6498&40)
+    set  get item 6C ?
+F0C7 ($6498&80)
+    set  get item 23 Fruit of Repun
+F0C8 ($6499&01)
+    set  get item 24 Warp Boots
+F0C9 ($6499&02)
+    set  get item 6A ?
+F0CA ($6499&04)
+    set  get item 3D Ivory Statue
+F0CB ($6499&08)
+    set  get item 2A Power Ring
+F0CC ($6499&10)
+    set  get item 1C Psycho Armor
+F0CD ($6499&20)
+    set  get item 14 Psycho Shield
+F0CE ($6499&40)
+    set  get item 25 Statue of Onyx
+F0CF ($6499&80)
+    set  get item 33 Key to Prison
+F0D0 ($649A&01)
+    set  get item 28 Flute of Lime
+F0D1 ($649A&02)
+    set  get item 35 Fog Lamp
+F0D2 ($649A&04)
+    set  get item 69 ?
+F0D3 ($649A&08)
+    set  get item 26 Opel Statue
+F0D4 ($649A&10)
+    set  get item 5B ?
+F0D5 ($649A&20)
+    clr  npc 38 B+3E msg 10.9
+    set  npc 38 B+63 msg 10.6
+    test npc 38 B+58 msg 10.7 (F0D5)
+F0D6 ($649A&40)
+    clr  npc 38 B+3E msg 10.9
+    set  npc 38 B+58 msg 10.7
+    test npc 38 B+4D msg 10.8 (F0D6)
+F0D7 ($649A&80)
+    clr  npc 38 B+3E msg 10.9
+    set  npc 38 B+4D msg 10.8
+    test npc 38 B+3E msg 10.9 (F0D7)
+F0D8 ($649B&01)
+    pres param 7E in area BA needs !F0D8
+    set  npc 7E B+16 msg 24.7
+F0D9 ($649B&02)
+    clr  npc 3A B+05 msg 13.0
+    clr  npc 85 B+05 msg 13.0
+    set  npc 3A B+0C msg 13.3
+    set  npc 85 B+0C msg 13.3
+    test npc 3A B+05 msg 13.0 (F0D9)
+    test npc 85 B+05 msg 13.0 (F0D9)
+F0DA ($649B&04)
+    pres param 7E in area EF needs !F0DA
+    set  hook2 item C1 msg 0.0 act 0
+F0DB ($649B&08)
+    clr  hook2 item C2 msg 0.0 act 0
+    set  hook2 item B6 msg 16.14 act 0
+    test hook2 item B6 msg 16.14 act 0 (!)
+F0DC ($649B&10)
+    set  get item 6F ?
+F0DD ($649B&20)
+    set  get item 70 ? [unreachable]
+F0DE ($649B&40)
+    set  get item 2C Iron Necklace
+F0DF ($649B&80)
+    set  get item 1B Battle Armor
+F0E0 ($649C&01)
+    pres param 70 in area 8C needs !F0E0
+    set  npc 70 B+00 msg 25.0
+    test npc 70 B+00 msg 25.0 (!F0E0)
+F0E4 ($649C&10)
+    set  get item 3C Kirisa Plant
+F0E5 ($649C&20)
+    set  get item 6E ?
+F0E6 ($649C&40)
+    set  get item 6D ?
+F0E7 ($649C&80)
+    set  get item 2F Leather Boots
+F0E8 ($649D&01)
+    pres param 5D in area 8C needs !F0E8
+    set  npc 5D B+00 msg 32.16
+F0E9 ($649D&02)
+    pres param 76 in area 7E needs !F0E9
+    set  npc 76 B+00 msg 32.16
+F0EA ($649D&04)
+    set  hook2 item A1 msg 27.8 act 0
+    test hook2 item A1 msg 27.8 act 0 (!)
+F0EB ($649D&08)
+    set  hook2 item A2 msg 27.9 act 0
+    test hook2 item A2 msg 27.9 act 0 (!)
+F0EC ($649D&10)
+    set  hook2 item A3 msg 27.10 act 0
+    test hook2 item A3 msg 27.10 act 0 (!)
+F0ED ($649D&20)
+    set  npc 8E B+00 msg 27.12
+    test npc 8E B+00 msg 27.12 (!F0ED)
+F100 ($64A0&01)
+    pres param C0 in area 0A needs !F100
+    set  get item 2E Rabbit Boots
+F101 ($64A0&02)
+    pres param C1 in area 1A needs !F101
+    set  get item 07 Ball of Fire
+F102 ($64A0&04)
+    pres param C2 in area 28 needs !F102
+    set  get item 08 Flame Bracelet
+F103 ($64A0&08)
+    pres param C3 in area 43 needs !F103
+    set  get item 09 Ball of Water
+F105 ($64A0&20)
+    pres param C5 in area A9 needs !F105
+    set  get item 26 Opel Statue
+F106 ($64A0&40)
+    pres param C6 in area AC needs !F106
+    set  get item 23 Fruit of Repun
+F107 ($64A0&80)
+    pres param C7 in area B9 needs !F107
+    set  get item 12 Sacred Shield
+F108 ($64A1&01)
+    pres param C8 in area B6 needs !F108
+    set  get item 3D Ivory Statue
+F109 ($64A1&02)
+    pres param C9 in area A0 needs !F109
+    set  use item 3E Bow of Moon on param C9
+F10A ($64A1&04)
+    pres param CA in area A0 needs !F10A
+    set  use item 3F Bow of Sun on param CA
+F10B ($64A1&08)
+    pres param CB in area 9F needs !F10B
+    set  get item 1C Psycho Armor
+F10C ($64A1&10)
+    pres param CC in area 6C needs !F10C
+    set  get item 61 ?
+F261 ($64CC&02)
+    set  npc 7E B+00 msg 19.6
+F283 ($64D0&08)
+    set  use item 3A Statue of Gold on param AF
+F2F5 ($64DE&20)
+    set  hook2 item 99 msg 0.0 act 0
+F2F6 ($64DE&40)
+    set  hook2 item A6 msg 0.0 act 0
+F2F7 ($64DE&80)
+    pres param 5F in area 1E needs F2F7
+    set  hook2 item 8E msg 0.0 act 0
+    test hook2 item 85 msg 3.0 act 24
+    test npc 60 B+05 msg 3.6 (F2F7)
+F2F8 ($64DF&01)
+    set  hook2 item A7 msg 0.0 act 0
+F2F9 ($64DF&02)
+    set  hook2 item A8 msg 0.0 act 0
+F2FA ($64DF&04)
+    set  hook2 item 90 msg 0.0 act 0
+F2FB ($64DF&08)
+    pres param 68 in area 61 needs !F2FB
+    set  hook2 item 8B msg 0.0 act 0
+    test hook2 item 8A msg 29.16 act 25 (!)
+F2FC ($64DF&10)
+    set  hook2 item A9 msg 0.0 act 0
+F2FD ($64DF&20)
+    set  hook2 item 81 msg 0.0 act 0
+F2FE ($64DF&40)
+    set  hook2 item AB msg 0.0 act 0
+F2FF ($64DF&80)
+    set  hook2 item AC msg 0.0 act 0
+F400 ($6500&01)
+    set  npc 45 B+0A msg 0.0
+F451 ($650A&02)
+    clr  npc 7E B+00 msg 19.6
+F540 ($6528&01)
+    set  npc 7E B+00 msg 19.6
+
+unplaced-only: 193 flags referenced only by hook-2 triggers that no area places (placed: 80 81 82 83 84 85 86 8A 8B 8C 8D 8E 90 91 92 94 95 97 99 9A A1 A2 A3 A4 A5 A6 A7 A8 A9 AA AB AC AD AE AF B0 B1 B2 B3 B4 B6 B7 B8 BA BB BC BD BF C1 C2) or by junk NPC scripts (unplaced, misaligned: 74 CB D0 D4 D5 DA DD E3 E6 EB F0)
+F002 ($6480&04)
+    clr  npc DD B+C9 msg 7.5 [junk script]
+    clr  npc E3 B+86 msg 7.5 [junk script]
+    test npc CB B+110 msg 15.31 [junk script] (!F002)
+    test npc D0 B+110 msg 15.31 [junk script] (!F002)
+    test npc D5 B+110 msg 15.31 [junk script] (!F002)
+    test npc DA B+110 msg 15.31 [junk script] (!F002)
+    test npc DD B+D0 msg 0.2 [junk script] (!F002)
+    test npc DD B+DE msg 8.2 [junk script] (!F002)
+    test npc E3 B+8D msg 0.2 [junk script] (!F002)
+    test npc E3 B+A1 msg 8.6 [junk script] (F002)
+F003 ($6480&08)
+    set  npc DD B+C9 msg 7.5 [junk script]
+    set  npc E3 B+86 msg 7.5 [junk script]
+    set  npc E3 B+A0 msg 21.9 [junk script]
+    set  npc E3 B+D5 msg 4.6 [junk script]
+    test npc E3 B+A9 msg 7.31 [junk script] (!F003)
+    test npc E3 B+DE msg 4.0 [junk script] (!F003)
+F004 ($6480&10)
+    clr  npc DD B+A4 msg 6.1 [junk script]
+    clr  npc E3 B+61 msg 6.1 [junk script]
+    set  npc DD B+0E msg 0.0 [junk script]
+    set  npc DD B+24 msg 0.0 [junk script]
+    test npc DD B+2B msg 8.0 [junk script] (F004)
+    test npc DD B+7F msg 33.13 [junk script] (!F004)
+    test npc DD B+9D msg 8.7 [junk script] (!F004)
+    test npc DD B+A9 msg 1.11 [junk script] (F004)
+    test npc DD B+B8 msg 6.23 [junk script] (F004)
+    test npc E3 B+75 msg 6.23 [junk script] (F004)
+    test npc E3 B+D5 msg 4.6 [junk script] (!F004)
+F005 ($6480&20)
+    test npc DD B+BF msg 12.0 [junk script] (F005)
+    test npc E3 B+7C msg 12.0 [junk script] (F005)
+F006 ($6480&40)
+    clr  npc DD B+68 msg 4.29 [junk script]
+    clr  npc DD B+BD msg 0.5 [junk script]
+    clr  npc DD B+C9 msg 7.5 [junk script]
+    clr  npc E3 B+21 msg 2.12 [junk script]
+    clr  npc E3 B+78 msg 8.2 [junk script]
+    clr  npc E3 B+86 msg 7.5 [junk script]
+    test npc DD B+A4 msg 6.1 [junk script] (F006)
+    test npc DD B+CE msg 0.2 [junk script] (!F006)
+    test npc E3 B+2F msg 8.7 [junk script] (F006)
+    test npc E3 B+61 msg 6.1 [junk script] (F006)
+    test npc E3 B+8B msg 0.2 [junk script] (!F006)
+F007 ($6480&80)
+    test npc E3 B+38 msg 9.26 [junk script] (!F007)
+F008 ($6481&01)
+    clr  npc CB B+5D msg 5.5 [junk script]
+    clr  npc D0 B+5D msg 5.5 [junk script]
+    clr  npc D5 B+5D msg 5.5 [junk script]
+    clr  npc DA B+5D msg 5.5 [junk script]
+    set  npc CB B+103 msg 4.1 [junk script]
+    set  npc D0 B+103 msg 4.1 [junk script]
+    set  npc D5 B+103 msg 4.1 [junk script]
+    set  npc DA B+103 msg 4.1 [junk script]
+F015 ($6482&20)
+    test npc CB B+29 msg 3.24 [junk script] (!F015)
+    test npc D0 B+29 msg 3.24 [junk script] (!F015)
+    test npc D5 B+29 msg 3.24 [junk script] (!F015)
+    test npc DA B+29 msg 3.24 [junk script] (!F015)
+F042 ($6488&04)
+    test npc D4 B+80 msg 13.0 [junk script] (F042)
+F058 ($648B&01)
+    clr  npc DD B+47 msg 2.8 [junk script]
+    clr  npc E3 B+04 msg 2.8 [junk script]
+F05C ($648B&10)
+    test hook2 item 9E msg 24.8 act 29 (!)
+F05D ($648B&20)
+    test hook2 item 9B msg 24.0 act 29 (!)
+F060 ($648C&01)
+    clr  npc CB B+68 msg 10.0 [junk script]
+    clr  npc D0 B+68 msg 10.0 [junk script]
+    clr  npc D5 B+68 msg 10.0 [junk script]
+    clr  npc DA B+68 msg 10.0 [junk script]
+    set  npc CB B+110 msg 15.31 [junk script]
+    set  npc D0 B+110 msg 15.31 [junk script]
+    set  npc D5 B+110 msg 15.31 [junk script]
+    set  npc DA B+110 msg 15.31 [junk script]
+    test hook2 item 9C msg 24.2 act 29 (!)
+F06D ($648D&20)
+    test npc E3 B+B3 msg 24.4 [junk script] (!F06D)
+F080 ($6490&01)
+    test npc E3 B+E0 msg 33.0 [junk script] (!F080)
+F091 ($6492&02)
+    set  hook2 item C0 msg 0.0 act 0
+F09D ($6493&20)
+    clr  npc DD B+BD msg 0.5 [junk script]
+    clr  npc DD B+C9 msg 7.5 [junk script]
+    clr  npc E3 B+78 msg 8.2 [junk script]
+    clr  npc E3 B+86 msg 7.5 [junk script]
+    set  npc E3 B+36 msg 0.7 [junk script]
+    set  npc E3 B+38 msg 9.26 [junk script]
+    test npc DD B+6A msg 0.4 [junk script] (F09D)
+    test npc DD B+90 msg 0.3 [junk script] (F09D)
+    test npc DD B+9B msg 0.4 [junk script] (F09D)
+    test npc E3 B+27 msg 0.4 [junk script] (F09D)
+    test npc E3 B+58 msg 0.4 [junk script] (F09D)
+    test npc E3 B+7F msg 0.6 [junk script] (F09D)
+    test npc E3 B+91 msg 0.3 [junk script] (F09D)
+F09F ($6493&80)
+    clr  hook2 item B9 msg 0.0 act 0
+F0F0 ($649E&01)
+    clr  npc E3 B+A0 msg 21.9 [junk script]
+    test npc E3 B+A5 msg 28.29 [junk script] (!F0F0)
+F0F8 ($649F&01)
+    test npc CB B+6C msg 5.9 [junk script] (!F0F8)
+    test npc D0 B+6C msg 5.9 [junk script] (!F0F8)
+    test npc D5 B+6C msg 5.9 [junk script] (!F0F8)
+    test npc DA B+6C msg 5.9 [junk script] (!F0F8)
+F104 ($64A0&10)
+    clr  npc E3 B+128 msg 8.9 [junk script]
+    clr  npc E3 B+CA msg 8.9 [junk script]
+F110 ($64A2&01)
+    set  npc E3 B+C9 msg 3.9 [junk script]
+F120 ($64A4&01)
+    set  npc E3 B+2F msg 8.7 [junk script]
+    set  npc E3 B+6D msg 8.15 [junk script]
+F124 ($64A4&10)
+    clr  npc CB B+110 msg 15.31 [junk script]
+    clr  npc CB B+29 msg 3.24 [junk script]
+    clr  npc D0 B+110 msg 15.31 [junk script]
+    clr  npc D0 B+29 msg 3.24 [junk script]
+    clr  npc D5 B+110 msg 15.31 [junk script]
+    clr  npc D5 B+29 msg 3.24 [junk script]
+    clr  npc DA B+110 msg 15.31 [junk script]
+    clr  npc DA B+29 msg 3.24 [junk script]
+    test npc CB B+A8 msg 6.8 [junk script] (!F124)
+    test npc D0 B+A8 msg 6.8 [junk script] (!F124)
+    test npc D5 B+A8 msg 6.8 [junk script] (!F124)
+    test npc DA B+A8 msg 6.8 [junk script] (!F124)
+F128 ($64A5&01)
+    test npc DD B+39 msg 28.25 [junk script] (F128)
+F137 ($64A6&80)
+    test npc DD B+3F msg 31.31 [junk script] (!F137)
+F139 ($64A7&02)
+    clr  npc E3 B+36 msg 0.7 [junk script]
+    clr  npc E3 B+38 msg 9.26 [junk script]
+F13A ($64A7&04)
+    test npc DD B+7D msg 0.4 [junk script] (!F13A)
+    test npc E3 B+3A msg 0.4 [junk script] (!F13A)
+F140 ($64A8&01)
+    set  npc CB B+5D msg 5.5 [junk script]
+    set  npc CB B+F6 msg 3.4 [junk script]
+    set  npc D0 B+5D msg 5.5 [junk script]
+    set  npc D0 B+F6 msg 3.4 [junk script]
+    set  npc D5 B+5D msg 5.5 [junk script]
+    set  npc D5 B+F6 msg 3.4 [junk script]
+    set  npc DA B+5D msg 5.5 [junk script]
+    set  npc DA B+F6 msg 3.4 [junk script]
+    test npc CB B+6A msg 7.24 [junk script] (!F140)
+    test npc D0 B+6A msg 7.24 [junk script] (!F140)
+    test npc D5 B+6A msg 7.24 [junk script] (!F140)
+    test npc DA B+6A msg 7.24 [junk script] (!F140)
+F147 ($64A8&80)
+    clr  npc DD B+37 msg 9.8 [junk script]
+F160 ($64AC&01)
+    test npc DD B+98 msg 8.0 [junk script] (F160)
+F171 ($64AE&02)
+    test npc E3 B+1B msg 7.7 [junk script] (!F171)
+F178 ($64AF&01)
+    set  npc D4 B+BD msg 1.23 [junk script]
+F185 ($64B0&20)
+    clr  npc CB B+B1 msg 24.10 [junk script]
+    clr  npc D0 B+B1 msg 24.10 [junk script]
+    clr  npc D5 B+B1 msg 24.10 [junk script]
+    clr  npc DA B+B1 msg 24.10 [junk script]
+    test npc E3 B+FF msg 5.5 [junk script] (F185)
+F198 ($64B3&01)
+    set  npc E3 B+104 msg 3.9 [junk script]
+    set  npc E3 B+DE msg 4.0 [junk script]
+    set  npc E3 B+E4 msg 4.23 [junk script]
+    test npc E3 B+E4 msg 4.23 [junk script] (!F198)
+    test npc E3 B+EF msg 4.23 [junk script] (!F198)
+F1A0 ($64B4&01)
+    set  npc D4 B+07 msg 0.0 [junk script]
+    set  npc D4 B+13 msg 0.0 [junk script]
+    set  npc D4 B+BD msg 1.23 [junk script]
+F1A6 ($64B4&40)
+    set  npc E3 B+36 msg 0.7 [junk script]
+    set  npc E3 B+38 msg 9.26 [junk script]
+    test npc DD B+8C msg 5.9 [junk script] (F1A6)
+    test npc E3 B+49 msg 5.9 [junk script] (F1A6)
+F1B5 ($64B6&20)
+    test npc DD B+C9 msg 7.5 [junk script] (!F1B5)
+    test npc E3 B+86 msg 7.5 [junk script] (!F1B5)
+F1BD ($64B7&20)
+    set  npc DD B+99 msg 4.29 [junk script]
+    set  npc DD B+9D msg 8.7 [junk script]
+F1C0 ($64B8&01)
+    set  npc E6 B+A3 msg 2.21 [junk script]
+    set  npc EB B+A3 msg 2.21 [junk script]
+    set  npc F0 B+A3 msg 2.21 [junk script]
+F1C8 ($64B9&01)
+    test npc CB B+55 msg 9.4 [junk script] (!F1C8)
+    test npc D0 B+55 msg 9.4 [junk script] (!F1C8)
+    test npc D5 B+55 msg 9.4 [junk script] (!F1C8)
+    test npc DA B+55 msg 9.4 [junk script] (!F1C8)
+F1DE ($64BB&40)
+    test npc DD B+A7 msg 0.4 [junk script] (F1DE)
+F1FF ($64BF&80)
+    clr  npc CB B+B1 msg 24.10 [junk script]
+    clr  npc D0 B+B1 msg 24.10 [junk script]
+    clr  npc D5 B+B1 msg 24.10 [junk script]
+    clr  npc DA B+B1 msg 24.10 [junk script]
+    set  npc CB B+F0 msg 13.5 [junk script]
+    set  npc D0 B+F0 msg 13.5 [junk script]
+    set  npc D5 B+F0 msg 13.5 [junk script]
+    set  npc DA B+F0 msg 13.5 [junk script]
+    set  npc E3 B+FB msg 3.9 [junk script]
+    test npc CB B+4A msg 18.10 [junk script] (!F1FF)
+    test npc D0 B+4A msg 18.10 [junk script] (!F1FF)
+    test npc D5 B+4A msg 18.10 [junk script] (!F1FF)
+    test npc DA B+4A msg 18.10 [junk script] (!F1FF)
+    test npc E3 B+104 msg 3.9 [junk script] (F1FF)
+    test npc E3 B+B1 msg 3.13 [junk script] (F1FF)
+    test npc E3 B+C9 msg 3.9 [junk script] (F1FF)
+    test npc E3 B+FB msg 3.9 [junk script] (F1FF)
+F201 ($64C0&02)
+    test npc E3 B+21 msg 2.12 [junk script] (!F201)
+F20E ($64C1&40)
+    clr  npc E3 B+DE msg 4.0 [junk script]
+    clr  npc E3 B+E4 msg 4.23 [junk script]
+F213 ($64C2&08)
+    clr  npc E3 B+104 msg 3.9 [junk script]
+    test npc E3 B+10B msg 5.8 [junk script] (!F213)
+F240 ($64C8&01)
+    set  npc D4 B+5D msg 7.12 [junk script]
+    set  npc D4 B+69 msg 3.31 [junk script]
+F244 ($64C8&10)
+    test npc E6 B+00 msg 18.10 [junk script] (!F244)
+    test npc EB B+00 msg 18.10 [junk script] (!F244)
+    test npc F0 B+00 msg 18.10 [junk script] (!F244)
+F249 ($64C9&02)
+    set  npc E3 B+A9 msg 7.31 [junk script]
+F24A ($64C9&04)
+    test npc CB B+4C msg 20.5 [junk script] (F24A)
+    test npc D0 B+4C msg 20.5 [junk script] (F24A)
+    test npc D5 B+4C msg 20.5 [junk script] (F24A)
+    test npc DA B+4C msg 20.5 [junk script] (F24A)
+F264 ($64CC&10)
+    test npc E6 B+08 msg 19.10 [junk script] (!F264)
+    test npc EB B+08 msg 19.10 [junk script] (!F264)
+    test npc F0 B+08 msg 19.10 [junk script] (!F264)
+F268 ($64CD&01)
+    test npc CB B+50 msg 8.7 [junk script] (!F268)
+    test npc D0 B+50 msg 8.7 [junk script] (!F268)
+    test npc D5 B+50 msg 8.7 [junk script] (!F268)
+    test npc DA B+50 msg 8.7 [junk script] (!F268)
+F272 ($64CE&04)
+    test npc E6 B+0C msg 23.20 [junk script] (!F272)
+    test npc EB B+0C msg 23.20 [junk script] (!F272)
+    test npc F0 B+0C msg 23.20 [junk script] (!F272)
+F280 ($64D0&01)
+    test npc E6 B+10 msg 20.6 [junk script] (!F280)
+    test npc EB B+10 msg 20.6 [junk script] (!F280)
+    test npc F0 B+10 msg 20.6 [junk script] (!F280)
+F298 ($64D3&01)
+    test npc E6 B+18 msg 20.30 [junk script] (!F298)
+    test npc EB B+18 msg 20.30 [junk script] (!F298)
+    test npc F0 B+18 msg 20.30 [junk script] (!F298)
+F2A0 ($64D4&01)
+    set  npc D4 B+BD msg 1.23 [junk script]
+    set  npc E3 B+36 msg 0.7 [junk script]
+    test npc D4 B+CA msg 11.24 [junk script] (F2A0)
+F2A3 ($64D4&08)
+    test npc E6 B+55 msg 21.3 [junk script] (F2A3)
+    test npc EB B+55 msg 21.3 [junk script] (F2A3)
+    test npc F0 B+55 msg 21.3 [junk script] (F2A3)
+F2A9 ($64D5&02)
+    test npc E3 B+9C msg 22.0 [junk script] (F2A9)
+F2AA ($64D5&04)
+    test npc E6 B+1E msg 21.16 [junk script] (!F2AA)
+    test npc EB B+1E msg 21.16 [junk script] (!F2AA)
+    test npc F0 B+1E msg 21.16 [junk script] (!F2AA)
+F2B0 ($64D6&01)
+    clr  npc CB B+6C msg 5.9 [junk script]
+    clr  npc D0 B+6C msg 5.9 [junk script]
+    clr  npc D5 B+6C msg 5.9 [junk script]
+    clr  npc DA B+6C msg 5.9 [junk script]
+F2BE ($64D7&40)
+    test npc E6 B+24 msg 22.4 [junk script] (!F2BE)
+    test npc EB B+24 msg 22.4 [junk script] (!F2BE)
+    test npc F0 B+24 msg 22.4 [junk script] (!F2BE)
+F2C0 ($64D8&01)
+    set  npc DD B+DC msg 0.2 [junk script]
+    set  npc E3 B+99 msg 0.2 [junk script]
+    test npc D4 B+38 msg 5.0 [junk script] (F2C0)
+F2CB ($64D9&08)
+    test npc E6 A+00 msg 13.12 [junk script] (F2CB)
+    test npc EB A+00 msg 13.12 [junk script] (F2CB)
+    test npc F0 A+00 msg 13.12 [junk script] (F2CB)
+F2D6 ($64DA&40)
+    test npc E6 B+2C msg 22.28 [junk script] (!F2D6)
+    test npc EB B+2C msg 22.28 [junk script] (!F2D6)
+    test npc F0 B+2C msg 22.28 [junk script] (!F2D6)
+F2E8 ($64DD&01)
+    test npc E6 B+32 msg 23.14 [junk script] (!F2E8)
+    test npc EB B+32 msg 23.14 [junk script] (!F2E8)
+    test npc F0 B+32 msg 23.14 [junk script] (!F2E8)
+F2EB ($64DD&08)
+    set  npc D4 B+37 msg 0.0 [junk script]
+F300 ($64E0&01)
+    set  npc D4 B+07 msg 0.0 [junk script]
+    test npc D4 B+31 msg 0.0 [junk script] (!F300)
+F302 ($64E0&04)
+    clr  npc D4 B+BD msg 1.23 [junk script]
+    clr  npc D4 B+CF msg 1.31 [junk script]
+    clr  npc D4 B+D3 msg 1.31 [junk script]
+    test npc D4 B+37 msg 0.0 [junk script] (!F302)
+F304 ($64E0&10)
+    clr  npc E3 B+B1 msg 3.13 [junk script]
+    clr  npc E3 B+BE msg 3.9 [junk script]
+    test npc D4 B+3D msg 0.0 [junk script] (!F304)
+    test npc E3 B+C7 msg 15.31 [junk script] (!F304)
+F308 ($64E1&01)
+    test npc D4 B+43 msg 0.0 [junk script] (!F308)
+F30A ($64E1&04)
+    set  npc CB B+6C msg 5.9 [junk script]
+    set  npc D0 B+6C msg 5.9 [junk script]
+    set  npc D5 B+6C msg 5.9 [junk script]
+    set  npc DA B+6C msg 5.9 [junk script]
+F30C ($64E1&10)
+    test npc E6 B+3E msg 24.18 [junk script] (!F30C)
+    test npc EB B+3E msg 24.18 [junk script] (!F30C)
+    test npc F0 B+3E msg 24.18 [junk script] (!F30C)
+F312 ($64E2&04)
+    test npc E6 B+40 msg 24.26 [junk script] (!F312)
+    test npc EB B+40 msg 24.26 [junk script] (!F312)
+    test npc F0 B+40 msg 24.26 [junk script] (!F312)
+F320 ($64E4&01)
+    clr  npc E6 B+55 msg 21.3 [junk script]
+    clr  npc EB B+55 msg 21.3 [junk script]
+    clr  npc F0 B+55 msg 21.3 [junk script]
+    set  npc DD B+A7 msg 0.4 [junk script]
+F340 ($64E8&01)
+    clr  npc D4 B+BD msg 1.23 [junk script]
+    clr  npc D4 B+CF msg 1.31 [junk script]
+    set  npc D4 B+BD msg 1.23 [junk script]
+    test npc D4 B+68 msg 5.0 [junk script] (!F340)
+F360 ($64EC&01)
+    clr  npc D4 B+42 msg 6.0 [junk script]
+F369 ($64ED&02)
+    test npc D4 B+5B msg 7.11 [junk script] (F369)
+F36A ($64ED&04)
+    clr  npc E6 B+55 msg 21.3 [junk script]
+    clr  npc EB B+55 msg 21.3 [junk script]
+    clr  npc F0 B+55 msg 21.3 [junk script]
+F36B ($64ED&08)
+    clr  npc D4 B+60 msg 18.0 [junk script]
+F374 ($64EE&10)
+    clr  npc E6 B+55 msg 21.3 [junk script]
+    clr  npc EB B+55 msg 21.3 [junk script]
+    clr  npc F0 B+55 msg 21.3 [junk script]
+F37A ($64EF&04)
+    clr  npc E6 B+55 msg 21.3 [junk script]
+    clr  npc EB B+55 msg 21.3 [junk script]
+    clr  npc F0 B+55 msg 21.3 [junk script]
+F380 ($64F0&01)
+    clr  npc E6 B+55 msg 21.3 [junk script]
+    clr  npc EB B+55 msg 21.3 [junk script]
+    clr  npc F0 B+55 msg 21.3 [junk script]
+    set  npc D4 B+07 msg 0.0 [junk script]
+    test npc D4 B+0E msg 24.0 [junk script] (F380)
+    test npc E6 B+60 msg 28.6 [junk script] (!F380)
+    test npc EB B+60 msg 28.6 [junk script] (!F380)
+    test npc F0 B+60 msg 28.6 [junk script] (!F380)
+F386 ($64F0&40)
+    clr  npc E6 B+55 msg 21.3 [junk script]
+    clr  npc EB B+55 msg 21.3 [junk script]
+    clr  npc F0 B+55 msg 21.3 [junk script]
+F390 ($64F2&01)
+    clr  npc E6 B+55 msg 21.3 [junk script]
+    clr  npc EB B+55 msg 21.3 [junk script]
+    clr  npc F0 B+55 msg 21.3 [junk script]
+    test npc D4 B+BD msg 1.23 [junk script] (F390)
+F398 ($64F3&01)
+    clr  npc E6 B+55 msg 21.3 [junk script]
+    clr  npc EB B+55 msg 21.3 [junk script]
+    clr  npc F0 B+55 msg 21.3 [junk script]
+F39D ($64F3&20)
+    set  npc E3 B+A0 msg 21.9 [junk script]
+    test npc DD B+EA msg 0.3 [junk script] (F39D)
+    test npc E3 B+A7 msg 0.3 [junk script] (F39D)
+F3A0 ($64F4&01)
+    clr  npc D4 B+BD msg 1.23 [junk script]
+    set  npc D4 B+01 msg 0.0 [junk script]
+    set  npc D4 B+BD msg 1.23 [junk script]
+    set  npc D4 B+CF msg 1.31 [junk script]
+    set  npc D4 B+D3 msg 1.31 [junk script]
+    test npc D4 B+08 msg 1.24 [junk script] (F3A0)
+    test npc D4 B+A2 msg 0.0 [junk script] (F3A0)
+    test npc D4 B+D8 msg 24.2 [junk script] (F3A0)
+F3A1 ($64F4&02)
+    set  npc CB B+B1 msg 24.10 [junk script]
+    set  npc D0 B+B1 msg 24.10 [junk script]
+    set  npc D5 B+B1 msg 24.10 [junk script]
+    set  npc DA B+B1 msg 24.10 [junk script]
+F3A2 ($64F4&04)
+    clr  npc E6 B+55 msg 21.3 [junk script]
+    clr  npc EB B+55 msg 21.3 [junk script]
+    clr  npc F0 B+55 msg 21.3 [junk script]
+F3A8 ($64F5&01)
+    clr  npc E6 B+55 msg 21.3 [junk script]
+    clr  npc EB B+55 msg 21.3 [junk script]
+    clr  npc F0 B+55 msg 21.3 [junk script]
+    test npc CB B+BD msg 5.29 [junk script] (!F3A8)
+    test npc D0 B+BD msg 5.29 [junk script] (!F3A8)
+    test npc D5 B+BD msg 5.29 [junk script] (!F3A8)
+    test npc DA B+BD msg 5.29 [junk script] (!F3A8)
+F3A9 ($64F5&02)
+    clr  npc DD B+37 msg 9.8 [junk script]
+    test npc DD B+D7 msg 5.20 [junk script] (F3A9)
+F3AE ($64F5&40)
+    clr  npc E6 B+55 msg 21.3 [junk script]
+    clr  npc EB B+55 msg 21.3 [junk script]
+    clr  npc F0 B+55 msg 21.3 [junk script]
+F3B4 ($64F6&10)
+    clr  npc E6 B+55 msg 21.3 [junk script]
+    clr  npc EB B+55 msg 21.3 [junk script]
+    clr  npc F0 B+55 msg 21.3 [junk script]
+F3BA ($64F7&04)
+    clr  npc E6 B+55 msg 21.3 [junk script]
+    clr  npc EB B+55 msg 21.3 [junk script]
+    clr  npc F0 B+55 msg 21.3 [junk script]
+F3BC ($64F7&10)
+    test npc CB B+22 msg 3.5 [junk script] (!F3BC)
+    test npc D0 B+22 msg 3.5 [junk script] (!F3BC)
+    test npc D5 B+22 msg 3.5 [junk script] (!F3BC)
+    test npc DA B+22 msg 3.5 [junk script] (!F3BC)
+F3BD ($64F7&20)
+    set  npc CB B+6C msg 5.9 [junk script]
+    set  npc D0 B+6C msg 5.9 [junk script]
+    set  npc D5 B+6C msg 5.9 [junk script]
+    set  npc DA B+6C msg 5.9 [junk script]
+F3D0 ($64FA&01)
+    test npc E3 B+F6 msg 21.5 [junk script] (F3D0)
+F3DE ($64FB&40)
+    test npc DD B+93 msg 0.0 [junk script] (F3DE)
+F403 ($6500&08)
+    test npc D4 B+60 msg 18.0 [junk script] (!F403)
+F412 ($6502&04)
+    set  npc D4 B+68 msg 5.0 [junk script]
+F418 ($6503&01)
+    set  npc E3 B+C9 msg 3.9 [junk script]
+    test npc E3 B+D0 msg 8.16 [junk script] (F418)
+F428 ($6505&01)
+    set  npc CB B+103 msg 4.1 [junk script]
+    set  npc D0 B+103 msg 4.1 [junk script]
+    set  npc D5 B+103 msg 4.1 [junk script]
+    set  npc DA B+103 msg 4.1 [junk script]
+F42C ($6505&10)
+    test npc CB B+07 msg 5.17 [junk script] (F42C)
+    test npc CB B+12 msg 4.24 [junk script] (F42C)
+    test npc D0 B+07 msg 5.17 [junk script] (F42C)
+    test npc D0 B+12 msg 4.24 [junk script] (F42C)
+    test npc D5 B+07 msg 5.17 [junk script] (F42C)
+    test npc D5 B+12 msg 4.24 [junk script] (F42C)
+    test npc DA B+07 msg 5.17 [junk script] (F42C)
+    test npc DA B+12 msg 4.24 [junk script] (F42C)
+F42E ($6505&40)
+    test npc CB B+F0 msg 13.5 [junk script] (F42E)
+    test npc D0 B+F0 msg 13.5 [junk script] (F42E)
+    test npc D5 B+F0 msg 13.5 [junk script] (F42E)
+    test npc DA B+F0 msg 13.5 [junk script] (F42E)
+F448 ($6509&01)
+    test npc CB B+48 msg 15.31 [junk script] (!F448)
+    test npc D0 B+48 msg 15.31 [junk script] (!F448)
+    test npc D5 B+48 msg 15.31 [junk script] (!F448)
+    test npc DA B+48 msg 15.31 [junk script] (!F448)
+F44C ($6509&10)
+    set  npc E3 B+36 msg 0.7 [junk script]
+    set  npc E3 B+38 msg 9.26 [junk script]
+F470 ($650E&01)
+    test npc E3 B+97 msg 1.16 [junk script] (!F470)
+F478 ($650F&01)
+    test npc DD B+32 msg 6.4 [junk script] (F478)
+F47F ($650F&80)
+    test npc E3 B+18 msg 7.9 [junk script] (F47F)
+F485 ($6510&20)
+    test npc CB B+58 msg 6.8 [junk script] (!F485)
+    test npc D0 B+58 msg 6.8 [junk script] (!F485)
+    test npc D5 B+58 msg 6.8 [junk script] (!F485)
+    test npc DA B+58 msg 6.8 [junk script] (!F485)
+F48D ($6511&20)
+    set  npc E3 B+B1 msg 3.13 [junk script]
+F4A0 ($6514&01)
+    test npc D4 B+64 msg 7.19 [junk script] (!F4A0)
+F4A6 ($6514&40)
+    test npc CB B+0B msg 28.29 [junk script] (!F4A6)
+    test npc D0 B+0B msg 28.29 [junk script] (!F4A6)
+    test npc D5 B+0B msg 28.29 [junk script] (!F4A6)
+    test npc DA B+0B msg 28.29 [junk script] (!F4A6)
+F4A9 ($6515&02)
+    set  npc DD B+99 msg 4.29 [junk script]
+F4AD ($6515&20)
+    set  npc E3 B+BE msg 3.9 [junk script]
+    test npc E3 B+123 msg 24.4 [junk script] (F4AD)
+    test npc E3 B+B9 msg 24.4 [junk script] (F4AD)
+    test npc E3 B+C5 msg 24.4 [junk script] (F4AD)
+F4BD ($6517&20)
+    set  npc CB B+B1 msg 24.10 [junk script]
+    set  npc D0 B+B1 msg 24.10 [junk script]
+    set  npc D5 B+B1 msg 24.10 [junk script]
+    set  npc DA B+B1 msg 24.10 [junk script]
+    test npc CB B+89 msg 12.6 [junk script] (!F4BD)
+    test npc D0 B+89 msg 12.6 [junk script] (!F4BD)
+    test npc D5 B+89 msg 12.6 [junk script] (!F4BD)
+    test npc DA B+89 msg 12.6 [junk script] (!F4BD)
+F4C0 ($6518&01)
+    set  npc D4 B+4B msg 2.30 [junk script]
+    test npc D4 B+2C msg 5.0 [junk script] (!F4C0)
+F4C5 ($6518&20)
+    set  npc E3 B+08 msg 6.7 [junk script]
+    test npc DD B+50 msg 8.8 [junk script] (!F4C5)
+    test npc E3 B+0D msg 8.8 [junk script] (!F4C5)
+F4D0 ($651A&01)
+    test npc DD B+AA msg 25.0 [junk script] (F4D0)
+    test npc E3 B+67 msg 25.0 [junk script] (F4D0)
+F4DE ($651B&40)
+    set  npc DD B+68 msg 4.29 [junk script]
+    set  npc E3 B+21 msg 2.12 [junk script]
+F4EB ($651D&08)
+    set  npc D4 B+3D msg 0.0 [junk script]
+    set  npc D4 B+43 msg 0.0 [junk script]
+    test npc D4 B+42 msg 6.0 [junk script] (F4EB)
+F4FF ($651F&80)
+    set  npc E3 B+08 msg 6.7 [junk script]
+    set  npc E3 B+0A msg 1.20 [junk script]
+    set  npc E3 B+1F msg 16.1 [junk script]
+F500 ($6520&01)
+    test npc DD A+00 msg 30.8 [junk script] (F500)
+F501 ($6520&02)
+    clr  npc E3 B+07 msg 2.24 [junk script]
+F520 ($6524&01)
+    clr  npc CB B+6C msg 5.9 [junk script]
+    clr  npc D0 B+6C msg 5.9 [junk script]
+    clr  npc D5 B+6C msg 5.9 [junk script]
+    clr  npc DA B+6C msg 5.9 [junk script]
+    test npc CB B+2A msg 4.0 [junk script] (F520)
+    test npc D0 B+2A msg 4.0 [junk script] (F520)
+    test npc D5 B+2A msg 4.0 [junk script] (F520)
+    test npc DA B+2A msg 4.0 [junk script] (F520)
+    test npc DD B+91 msg 30.30 [junk script] (F520)
+    test npc E3 B+4E msg 30.30 [junk script] (F520)
+F521 ($6524&02)
+    test npc CB B+D3 msg 5.5 [junk script] (F521)
+    test npc D0 B+D3 msg 5.5 [junk script] (F521)
+    test npc D5 B+D3 msg 5.5 [junk script] (F521)
+    test npc DA B+D3 msg 5.5 [junk script] (F521)
+F522 ($6524&04)
+    test npc CB B+4F msg 1.9 [junk script] (F522)
+    test npc D0 B+4F msg 1.9 [junk script] (F522)
+    test npc D5 B+4F msg 1.9 [junk script] (F522)
+    test npc DA B+4F msg 1.9 [junk script] (F522)
+F523 ($6524&08)
+    clr  npc CB B+B1 msg 24.10 [junk script]
+    clr  npc D0 B+B1 msg 24.10 [junk script]
+    clr  npc D5 B+B1 msg 24.10 [junk script]
+    clr  npc DA B+B1 msg 24.10 [junk script]
+    test npc CB A+00 msg 21.10 [junk script] (!F523)
+    test npc D0 A+00 msg 21.10 [junk script] (!F523)
+    test npc D5 A+00 msg 21.10 [junk script] (!F523)
+    test npc DA A+00 msg 21.10 [junk script] (!F523)
+F524 ($6524&10)
+    set  npc CB B+10 msg 33.12 [junk script]
+    set  npc CB B+12 msg 4.24 [junk script]
+    set  npc D0 B+10 msg 33.12 [junk script]
+    set  npc D0 B+12 msg 4.24 [junk script]
+    set  npc D5 B+10 msg 33.12 [junk script]
+    set  npc D5 B+12 msg 4.24 [junk script]
+    set  npc DA B+10 msg 33.12 [junk script]
+    set  npc DA B+12 msg 4.24 [junk script]
+    test npc CB B+19 msg 8.0 [junk script] (F524)
+    test npc D0 B+19 msg 8.0 [junk script] (F524)
+    test npc D5 B+19 msg 8.0 [junk script] (F524)
+    test npc DA B+19 msg 8.0 [junk script] (F524)
+F525 ($6524&20)
+    test npc CB B+C8 msg 1.21 [junk script] (F525)
+    test npc D0 B+C8 msg 1.21 [junk script] (F525)
+    test npc D5 B+C8 msg 1.21 [junk script] (F525)
+    test npc DA B+C8 msg 1.21 [junk script] (F525)
+F526 ($6524&40)
+    clr  npc CB B+110 msg 15.31 [junk script]
+    clr  npc CB B+F6 msg 3.4 [junk script]
+    clr  npc D0 B+110 msg 15.31 [junk script]
+    clr  npc D0 B+F6 msg 3.4 [junk script]
+    clr  npc D5 B+110 msg 15.31 [junk script]
+    clr  npc D5 B+F6 msg 3.4 [junk script]
+    clr  npc DA B+110 msg 15.31 [junk script]
+    clr  npc DA B+F6 msg 3.4 [junk script]
+    test npc CB B+35 msg 10.0 [junk script] (!F526)
+    test npc CB B+60 msg 10.0 [junk script] (!F526)
+    test npc CB B+E4 msg 0.11 [junk script] (!F526)
+    test npc D0 B+35 msg 10.0 [junk script] (!F526)
+    test npc D0 B+60 msg 10.0 [junk script] (!F526)
+    test npc D0 B+E4 msg 0.11 [junk script] (!F526)
+    test npc D5 B+35 msg 10.0 [junk script] (!F526)
+    test npc D5 B+60 msg 10.0 [junk script] (!F526)
+    test npc D5 B+E4 msg 0.11 [junk script] (!F526)
+    test npc DA B+35 msg 10.0 [junk script] (!F526)
+    test npc DA B+60 msg 10.0 [junk script] (!F526)
+    test npc DA B+E4 msg 0.11 [junk script] (!F526)
+F527 ($6524&80)
+    clr  npc CB B+110 msg 15.31 [junk script]
+    clr  npc D0 B+110 msg 15.31 [junk script]
+    clr  npc D5 B+110 msg 15.31 [junk script]
+    clr  npc DA B+110 msg 15.31 [junk script]
+F530 ($6526&01)
+    clr  npc E3 B+A9 msg 7.31 [junk script]
+    clr  npc E3 B+FB msg 3.9 [junk script]
+F531 ($6526&02)
+    clr  npc E3 B+104 msg 3.9 [junk script]
+    clr  npc E3 B+FB msg 3.9 [junk script]
+F560 ($652C&01)
+    test npc E3 B+A8 msg 25.0 [junk script] (F560)
+F570 ($652E&01)
+    set  npc DD B+AB msg 6.23 [junk script]
+    test npc E3 B+6D msg 8.15 [junk script] (!F570)
+F57A ($652F&04)
+    clr  npc CB B+B1 msg 24.10 [junk script]
+    clr  npc D0 B+B1 msg 24.10 [junk script]
+    clr  npc D5 B+B1 msg 24.10 [junk script]
+    clr  npc DA B+B1 msg 24.10 [junk script]
+F580 ($6530&01)
+    clr  npc CB B+07 msg 5.17 [junk script]
+    clr  npc CB B+103 msg 4.1 [junk script]
+    clr  npc CB B+29 msg 3.24 [junk script]
+    clr  npc D0 B+07 msg 5.17 [junk script]
+    clr  npc D0 B+103 msg 4.1 [junk script]
+    clr  npc D0 B+29 msg 3.24 [junk script]
+    clr  npc D5 B+07 msg 5.17 [junk script]
+    clr  npc D5 B+103 msg 4.1 [junk script]
+    clr  npc D5 B+29 msg 3.24 [junk script]
+    clr  npc DA B+07 msg 5.17 [junk script]
+    clr  npc DA B+103 msg 4.1 [junk script]
+    clr  npc DA B+29 msg 3.24 [junk script]
+    test npc DD B+B7 msg 33.0 [junk script] (F580)
+    test npc E3 B+74 msg 33.0 [junk script] (F580)
+F581 ($6530&02)
+    test npc CB B+27 msg 0.21 [junk script] (!F581)
+    test npc D0 B+27 msg 0.21 [junk script] (!F581)
+    test npc D5 B+27 msg 0.21 [junk script] (!F581)
+    test npc DA B+27 msg 0.21 [junk script] (!F581)
+F591 ($6532&02)
+    clr  npc DD B+C7 msg 13.21 [junk script]
+    clr  npc E3 B+84 msg 13.21 [junk script]
+F597 ($6532&80)
+    set  npc E3 B+36 msg 0.7 [junk script]
+    set  npc E3 B+38 msg 9.26 [junk script]
+F5A5 ($6534&20)
+    set  npc CB B+29 msg 3.24 [junk script]
+    set  npc D0 B+29 msg 3.24 [junk script]
+    set  npc D5 B+29 msg 3.24 [junk script]
+    set  npc DA B+29 msg 3.24 [junk script]
+F5A6 ($6534&40)
+    test npc CB B+20 msg 29.28 [junk script] (!F5A6)
+    test npc D0 B+20 msg 29.28 [junk script] (!F5A6)
+    test npc D5 B+20 msg 29.28 [junk script] (!F5A6)
+    test npc DA B+20 msg 29.28 [junk script] (!F5A6)
+F5A9 ($6535&02)
+    set  npc E3 B+78 msg 8.2 [junk script]
+    test npc DD B+C0 msg 4.29 [junk script] (F5A9)
+F5C8 ($6539&01)
+    set  npc CB B+07 msg 5.17 [junk script]
+    set  npc D0 B+07 msg 5.17 [junk script]
+    set  npc D5 B+07 msg 5.17 [junk script]
+    set  npc DA B+07 msg 5.17 [junk script]
+    test npc CB B+10 msg 33.12 [junk script] (!F5C8)
+    test npc D0 B+10 msg 33.12 [junk script] (!F5C8)
+    test npc D5 B+10 msg 33.12 [junk script] (!F5C8)
+    test npc DA B+10 msg 33.12 [junk script] (!F5C8)
+F5E0 ($653C&01)
+    clr  npc E3 B+21 msg 2.12 [junk script]
+F5EA ($653D&04)
+    set  npc E3 B+1B msg 7.7 [junk script]
+    test npc E3 B+20 msg 8.8 [junk script] (!F5EA)
+F5EE ($653D&40)
+    clr  npc E3 B+BE msg 3.9 [junk script]
+F5EF ($653D&80)
+    test npc E3 B+BD msg 32.24 [junk script] (F5EF)
+F5F1 ($653E&02)
+    clr  npc E3 B+C9 msg 3.9 [junk script]
+F600 ($6540&01)
+    test npc D4 B+DC msg 26.0 [junk script] (F600)
+    test npc DD B+0F msg 0.0 [junk script] (!F600)
+F610 ($6542&01)
+    set  npc CB B+3B msg 20.1 [junk script]
+    set  npc D0 B+3B msg 20.1 [junk script]
+    set  npc D5 B+3B msg 20.1 [junk script]
+    set  npc DA B+3B msg 20.1 [junk script]
+    test npc DD B+8D msg 10.0 [junk script] (!F610)
+F611 ($6542&02)
+    test npc DD B+97 msg 5.9 [junk script] (!F611)
+    test npc E3 B+54 msg 5.9 [junk script] (!F611)
+F623 ($6544&08)
+    clr  npc CB B+07 msg 5.17 [junk script]
+    clr  npc CB B+29 msg 3.24 [junk script]
+    clr  npc D0 B+07 msg 5.17 [junk script]
+    clr  npc D0 B+29 msg 3.24 [junk script]
+    clr  npc D5 B+07 msg 5.17 [junk script]
+    clr  npc D5 B+29 msg 3.24 [junk script]
+    clr  npc DA B+07 msg 5.17 [junk script]
+    clr  npc DA B+29 msg 3.24 [junk script]
+    test npc CB B+2E msg 9.4 [junk script] (!F623)
+    test npc D0 B+2E msg 9.4 [junk script] (!F623)
+    test npc D5 B+2E msg 9.4 [junk script] (!F623)
+    test npc DA B+2E msg 9.4 [junk script] (!F623)
+F629 ($6545&02)
+    set  npc CB B+103 msg 4.1 [junk script]
+    set  npc D0 B+103 msg 4.1 [junk script]
+    set  npc D5 B+103 msg 4.1 [junk script]
+    set  npc DA B+103 msg 4.1 [junk script]
+F62F ($6545&80)
+    test npc E3 B+D8 msg 5.8 [junk script] (F62F)
+F660 ($654C&01)
+    clr  npc CB B+AB msg 7.25 [junk script]
+    clr  npc D0 B+AB msg 7.25 [junk script]
+    clr  npc D5 B+AB msg 7.25 [junk script]
+    clr  npc DA B+AB msg 7.25 [junk script]
+F670 ($654E&01)
+    test npc DD B+45 msg 6.6 [junk script] (F670)
+    test npc E3 B+02 msg 6.6 [junk script] (F670)
+F686 ($6550&40)
+    set  npc E3 B+36 msg 0.7 [junk script]
+    set  npc E3 B+38 msg 9.26 [junk script]
+    test npc DD B+8A msg 13.6 [junk script] (F686)
+    test npc E3 B+47 msg 13.6 [junk script] (F686)
+F690 ($6552&01)
+    clr  npc CB B+B1 msg 24.10 [junk script]
+    clr  npc D0 B+B1 msg 24.10 [junk script]
+    clr  npc D5 B+B1 msg 24.10 [junk script]
+    clr  npc DA B+B1 msg 24.10 [junk script]
+F6A8 ($6555&01)
+    test npc DD B+48 msg 6.7 [junk script] (F6A8)
+F6B5 ($6556&20)
+    test npc DD B+C5 msg 6.5 [junk script] (F6B5)
+F6BD ($6557&20)
+    test npc DD B+70 msg 0.6 [junk script] (F6BD)
+    test npc E3 B+2D msg 0.6 [junk script] (F6BD)
+F6D0 ($655A&01)
+    test npc DD B+94 msg 5.6 [junk script] (F6D0)
+    test npc DD B+A5 msg 14.30 [junk script] (F6D0)
+    test npc E3 B+62 msg 14.30 [junk script] (F6D0)
+F6D3 ($655A&08)
+    set  npc E6 B+A3 msg 2.21 [junk script]
+    set  npc EB B+A3 msg 2.21 [junk script]
+    set  npc F0 B+A3 msg 2.21 [junk script]
+F6E8 ($655D&01)
+    set  npc D4 B+07 msg 0.0 [junk script]
+    set  npc D4 B+13 msg 0.0 [junk script]
+F6FE ($655F&40)
+    clr  npc DD B+00 msg 31.30 [junk script]
+    test npc DD B+00 msg 31.30 [junk script] (!F6FE)
+    test npc DD B+0E msg 0.0 [junk script] (!F6FE)
+F703 ($6560&08)
+    set  npc E6 B+55 msg 21.3 [junk script]
+    set  npc EB B+55 msg 21.3 [junk script]
+    set  npc F0 B+55 msg 21.3 [junk script]
+F704 ($6560&10)
+    test npc E3 B+BE msg 3.9 [junk script] (!F704)
+F718 ($6563&01)
+    test npc DD B+B3 msg 9.0 [junk script] (F718)
+    test npc E3 B+128 msg 8.9 [junk script] (!F718)
+    test npc E3 B+70 msg 9.0 [junk script] (F718)
+    test npc E3 B+CA msg 8.9 [junk script] (!F718)
+F720 ($6564&01)
+    set  npc D4 B+BD msg 1.23 [junk script]
+    set  npc D4 B+CF msg 1.31 [junk script]
+F738 ($6567&01)
+    clr  npc E3 B+A9 msg 7.31 [junk script]
+F73D ($6567&20)
+    test npc CB B+F6 msg 3.4 [junk script] (!F73D)
+    test npc D0 B+F6 msg 3.4 [junk script] (!F73D)
+    test npc D5 B+F6 msg 3.4 [junk script] (!F73D)
+    test npc DA B+F6 msg 3.4 [junk script] (!F73D)
+F740 ($6568&01)
+    test npc D4 B+C0 msg 29.0 [junk script] (!F740)
+F74C ($6569&10)
+    set  npc DD B+55 msg 7.4 [junk script]
+    set  npc E3 B+12 msg 7.4 [junk script]
+F765 ($656C&20)
+    test npc DD B+AF msg 1.9 [junk script] (F765)
+    test npc E3 B+6C msg 1.9 [junk script] (F765)
+F76D ($656D&20)
+    set  npc E3 B+1A msg 10.0 [junk script]
+    test npc E3 B+1F msg 16.1 [junk script] (!F76D)
+F777 ($656E&80)
+    test npc DD B+55 msg 7.4 [junk script] (!F777)
+    test npc E3 B+12 msg 7.4 [junk script] (!F777)
+F778 ($656F&01)
+    set  npc D4 B+BD msg 1.23 [junk script]
+F780 ($6570&01)
+    set  npc E6 B+55 msg 21.3 [junk script]
+    set  npc EB B+55 msg 21.3 [junk script]
+    set  npc F0 B+55 msg 21.3 [junk script]
+F785 ($6570&20)
+    set  npc DD B+99 msg 4.29 [junk script]
+    test npc CB B+53 msg 14.8 [junk script] (F785)
+    test npc D0 B+53 msg 14.8 [junk script] (F785)
+    test npc D5 B+53 msg 14.8 [junk script] (F785)
+    test npc DA B+53 msg 14.8 [junk script] (F785)
+    test npc DD B+A0 msg 13.29 [junk script] (F785)
+    test npc E3 B+5D msg 13.29 [junk script] (F785)
+F788 ($6571&01)
+    clr  npc DD B+47 msg 2.8 [junk script]
+    clr  npc E3 B+04 msg 2.8 [junk script]
+F790 ($6572&01)
+    clr  npc E3 B+36 msg 0.7 [junk script]
+    clr  npc E3 B+38 msg 9.26 [junk script]
+F797 ($6572&80)
+    clr  npc DD B+A7 msg 0.4 [junk script]
+    clr  npc E3 B+2F msg 8.7 [junk script]
+    test npc E3 B+36 msg 0.7 [junk script] (F797)
+    test npc E3 B+78 msg 8.2 [junk script] (F797)
+F798 ($6573&01)
+    clr  npc E3 B+DE msg 4.0 [junk script]
+    test npc E3 B+E7 msg 16.14 [junk script] (F798)
+F7A0 ($6574&01)
+    clr  npc E3 B+01 msg 2.24 [junk script]
+    set  npc D4 B+07 msg 0.0 [junk script]
+    set  npc D4 B+69 msg 3.31 [junk script]
+    test npc D4 B+9C msg 0.0 [junk script] (!F7A0)
+    test npc E3 B+08 msg 6.7 [junk script] (F7A0)
+F7A9 ($6575&02)
+    clr  npc E3 B+20 msg 8.8 [junk script]
+    test npc CB B+CE msg 4.5 [junk script] (F7A9)
+    test npc D0 B+CE msg 4.5 [junk script] (F7A9)
+    test npc D5 B+CE msg 4.5 [junk script] (F7A9)
+    test npc DA B+CE msg 4.5 [junk script] (F7A9)
+    test npc DD B+68 msg 4.29 [junk script] (!F7A9)
+    test npc DD B+7C msg 21.0 [junk script] (F7A9)
+    test npc DD B+83 msg 9.0 [junk script] (F7A9)
+    test npc E3 B+39 msg 21.0 [junk script] (F7A9)
+    test npc E3 B+40 msg 9.0 [junk script] (F7A9)
+F7B1 ($6576&02)
+    clr  npc CB B+3B msg 20.1 [junk script]
+    clr  npc D0 B+3B msg 20.1 [junk script]
+    clr  npc D5 B+3B msg 20.1 [junk script]
+    clr  npc DA B+3B msg 20.1 [junk script]
+F7C0 ($6578&01)
+    test npc D4 B+00 msg 5.0 [junk script] (F7C0)
+    test npc E6 B+A2 msg 5.0 [junk script] (F7C0)
+    test npc EB B+A2 msg 5.0 [junk script] (F7C0)
+    test npc F0 B+A2 msg 5.0 [junk script] (F7C0)
+F7C4 ($6578&10)
+    set  npc DD B+0E msg 0.0 [junk script]
+    set  npc DD B+24 msg 0.0 [junk script]
+    set  npc DD B+32 msg 6.4 [junk script]
+    test npc DD B+37 msg 9.8 [junk script] (F7C4)
+F7D0 ($657A&01)
+    test npc DD B+75 msg 9.0 [junk script] (F7D0)
+    test npc E3 B+32 msg 9.0 [junk script] (F7D0)
+F7EB ($657D&08)
+    set  npc D4 B+25 msg 1.7 [junk script]
+F7F0 ($657E&01)
+    test npc CB B+93 msg 30.5 [junk script] (!F7F0)
+    test npc D0 B+93 msg 30.5 [junk script] (!F7F0)
+    test npc D5 B+93 msg 30.5 [junk script] (!F7F0)
+    test npc DA B+93 msg 30.5 [junk script] (!F7F0)

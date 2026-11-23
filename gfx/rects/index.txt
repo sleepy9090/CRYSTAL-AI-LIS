@@ -1,0 +1,88 @@
+15 screens, 32 blit sites matched (pattern), events 119
+screen_18_802E.png: 10 events, R0=28 R1=0E pal set 10 nametables $2000 $2800
+  18:8048 NtFill $2000 tile FF attr 00
+  18:8051 NtFill $2800 tile FF attr 00
+  18:805F blit ptr@8000 data 18:8002 12x3 -> $21CA bias 00 R0=28 R1=0E pal 0
+  18:808A MenuPalLoad 0A (BG set 10)
+  18:808F MenuPalLoad 89 (sprite set 9)
+screen_19_A0C9.png: 8 events, R0=3C R1=36 pal set 13 nametables $2000
+  19:A0DD MenuPalLoad 09 (BG set 9)
+  19:A0E2 MenuPalLoad 8B (sprite set 11)
+  19:A0EA MenuPalLoad 0D (BG set 13)
+  19:A0F9 blit ptr@99D0 data 18:99D2 32x32 -> $2000 bias 00 R0=3C R1=36 pal 13
+  19:A10E blit ptr@9DD4 data 18:9DD6 26x10 -> $2203 bias 00 R0=3C R1=36 pal 13
+screen_19_A662.png: 6 events, R0=1C R1=1E pal set 12 nametables $2000
+  19:A698 blit ptr@94BE data 18:94C0 32x32 -> $2000 bias 00 R0=1C R1=1E pal 13
+  19:A6AD MenuPalLoad 0C (BG set 12)
+  19:A6B2 MenuPalLoad 8E (sprite set 14)
+screen_19_A7FC.png: 8 events, R0=3C R1=34 pal set 0 nametables $2000
+  19:A806 NtFill $2000 tile 10 attr FF
+  19:A80F blit ptr@B162 data 19:B164 30x3 -> $21A0 bias 00 R0=3C R1=34 pal 12
+  19:A82D MenuPalLoad 00 (BG set 0)
+screen_19_A859.png: 10 events, R0=3C R1=16 pal set 0 nametables $2000
+  19:A859 NtFill $2000 tile 10 attr FF
+  19:A867 blit ptr@847B data 18:847D 28x14 -> $2042 bias 00 R0=3C R1=16 pal 0
+  19:A87C blit ptr@8C37 data 18:8C39 32x1 -> $23C0 bias 00 R0=3C R1=16 pal 0
+  19:A891 blit ptr@B1C0 data 19:B1C2 30x5 -> $2240 bias 00 R0=3C R1=16 pal 0
+  19:A8A6 MenuPalLoad 00 (BG set 0)
+  19:A8AB MenuPalLoad 80 (sprite set 0)
+  19:A947 MenuPalLoad 00 (BG set 0)
+screen_19_A95E.png: 6 events, R0=3C R1=10 pal set 2 nametables $2000
+  19:A95E NtFill $2000 tile 10 attr FF
+  19:A96C blit ptr@8607 data 18:8609 28x14 -> $2042 bias 80 R0=3C R1=10 pal 0
+  19:A986 blit ptr@8C37 data 18:8C39 32x1 -> $23C0 bias 00 R0=3C R1=10 pal 0
+  19:A99B blit ptr@B25A data 19:B25C 31x7 -> $2240 bias 00 R0=3C R1=10 pal 0
+screen_19_A9B3.png: 9 events, R0=3C R1=10 pal set 2 nametables $2800
+  19:A9B3 NtFill $2800 tile 10 attr FF
+  19:A9C1 blit ptr@8793 data 18:8795 28x14 -> $2842 bias 80 R0=3C R1=10 pal 0
+  19:A9DB blit ptr@8C37 data 18:8C39 32x1 -> $2BC0 bias 00 R0=3C R1=10 pal 0
+  19:A9F0 blit ptr@B25A data 19:B25C 31x7 -> $2A40 bias 00 R0=3C R1=10 pal 0
+  19:AA05 MenuPalLoad 02 (BG set 2)
+screen_19_AA51.png: 9 events, R0=3C R1=10 pal set 3 nametables $2000
+  19:AA51 NtFill $2000 tile 10 attr FF
+  19:AA63 blit ptr@891F data 18:8921 28x14 -> $2042 bias 80 R0=3C R1=10 pal 2
+  19:AA7D blit ptr@8C37 data 18:8C39 32x1 -> $23C0 bias 00 R0=3C R1=10 pal 2
+  19:AA92 blit ptr@B337 data 19:B339 30x7 -> $2240 bias 00 R0=3C R1=10 pal 2
+  19:AAA7 MenuPalLoad 03 (BG set 3)
+  19:AAAC MenuPalLoad 88 (sprite set 8)
+screen_19_AB1E.png: 8 events, R0=3C R1=10 pal set 4 nametables $2000
+  19:AB1E NtFill $2000 tile 10 attr FF
+  19:AB2C blit ptr@8AAB data 18:8AAD 28x14 -> $2042 bias 80 R0=3C R1=10 pal 3
+  19:AB46 blit ptr@8C5B data 18:8C5D 32x1 -> $23C0 bias 00 R0=3C R1=10 pal 3
+  19:AB5B blit ptr@B40D data 19:B40F 30x1 -> $2240 bias 00 R0=3C R1=10 pal 3
+  19:AB70 MenuPalLoad 04 (BG set 4)
+screen_19_AC3F.png: 11 events, R0=3C R1=12 pal set 5 nametables $2000 $2800
+  19:AC61 NtFill $2000 tile 80 attr 00
+  19:AC6A NtFill $2800 tile 80 attr 00
+  19:AC78 blit ptr@8C7F data 18:8C81 10x24 -> $2814 bias 80 R0=3C R1=12 pal 4
+  19:AC92 blit ptr@8EAF data 18:8EB1 32x2 -> $2BC0 bias 00 R0=3C R1=12 pal 4
+  19:ACA7 MenuPalLoad 05 (BG set 5)
+  19:ACAC MenuPalLoad 89 (sprite set 9)
+screen_19_AE09.png: 5 events, R0=3C R1=12 pal set 0 nametables $2800
+  19:AE09 NtFill $2800 tile 10 attr FF
+  19:AE17 blit ptr@B42F data 19:B431 30x7 -> $29A0 bias 00 R0=3C R1=12 pal 5
+  19:AE2C MenuPalLoad 00 (BG set 0)
+screen_19_AE3D.png: 8 events, R0=3C R1=12 pal set 7 nametables $2000 $2800
+  19:AE3D NtFill $2000 tile 80 attr 00
+  19:AE46 NtFill $2800 tile 80 attr 00
+  19:AE5A blit ptr@8D73 data 18:8D75 10x24 -> $28C2 bias 80 R0=3C R1=12 pal 0
+  19:AE74 blit ptr@8EAF data 18:8EB1 32x2 -> $2BC0 bias 00 R0=3C R1=12 pal 0
+  19:AE89 MenuPalLoad 07 (BG set 7)
+  19:AE8E MenuPalLoad 89 (sprite set 9)
+screen_19_AFD5.png: 5 events, R0=3C R1=12 pal set 0 nametables $2800
+  19:AFD5 NtFill $2800 tile 10 attr FF
+  19:AFE3 blit ptr@B505 data 19:B507 30x7 -> $29A0 bias 00 R0=3C R1=12 pal 7
+  19:AFF8 MenuPalLoad 00 (BG set 0)
+screen_19_B00C.png: 8 events, R0=3C R1=16 pal set 6 nametables $2000
+  19:B00C NtFill $2000 tile 10 attr FF
+  19:B023 blit ptr@8E67 data 18:8E69 8x4 -> $20CC bias 00 R0=3C R1=16 pal 0
+  19:B038 blit ptr@8EF3 data 18:8EF5 32x1 -> $23C0 bias 00 R0=3C R1=16 pal 0
+  19:B04D blit ptr@B5DB data 19:B5DD 30x9 -> $21C0 bias 00 R0=3C R1=16 pal 0
+  19:B062 MenuPalLoad 06 (BG set 6)
+  19:B067 MenuPalLoad 86 (sprite set 6)
+screen_19_B0FE.png: 7 events, R0=3C R1=16 pal set 6 nametables $2000
+  19:B0FE NtFill $2000 tile 10 attr FF
+  19:B10C blit ptr@8E8B data 18:8E8D 8x4 -> $20CC bias 00 R0=3C R1=16 pal 6
+  19:B121 blit ptr@8F17 data 18:8F19 32x1 -> $23C0 bias 00 R0=3C R1=16 pal 6
+  19:B136 blit ptr@B6ED data 19:B6EF 30x7 -> $2200 bias 00 R0=3C R1=16 pal 6
+  19:B14B MenuPalLoad 06 (BG set 6)

@@ -1,0 +1,252 @@
+  0 $00  1x1 $67=98 R0=28 R1=00 pal=7C 7D 7E 7F  grid FF
+  1 $01  1x1 $67=80 R0=00 R1=0C pal=00 01 02 7F  grid 2D
+  2 $02  2x2 $67=84 R0=0C R1=00 pal=4D 4E 4F 7F  grid 63 64 / 65 66
+  3 $03  5x7 $67=80 R0=00 R1=0C pal=00 01 02 7F  grid 00 00 2B 00 00 / 00 2C 2A 00 00 / 0C 16 16 0D 00 / 15 29 24 04 00 / 01 27 23 0B 0D / 0E 07 37 1D 03 / 00 00 0E 1E 0F
+  4 $04  3x3 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 80 83 97 / 83 8E 96 / 9E 85 96
+  5 $05  4x3 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 80 83 97 80 / 83 8D 96 80 / 9E 85 82 96
+  6 $06  3x1 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 98 82 9C
+  7 $07  3x6 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 80 9B 9B / 80 81 8F / 98 88 89 / 9C 86 8C / 80 80 81 / 80 80 9B
+  8 $08  1x3 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 9B / 81 / 9A
+  9 $09  5x3 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 99 8A 95 9C 80 / 80 8F 80 80 80 / 99 8B 82 95 97
+ 10 $0A  3x2 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 80 80 91 / 99 82 86
+ 11 $0B  null/garbage header (not rendered)
+ 12 $0C  2x3 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 99 84 / 80 8F / 80 9E
+ 13 $0D  null/garbage header (not rendered)
+ 14 $0E  3x4 $67=88 R0=14 R1=02 pal=03 04 05 7F  grid 80 9B 80 / 80 81 80 / 83 8B 84 / 9E 80 9E
+ 15 $0F  1x1 $67=A0 R0=34 R1=36 pal=73 74 75 7F  grid 4F
+ 16 $10  4x4 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 99 84 80 80 / 80 9E 80 80 / 80 92 83 84 / 80 85 86 9E
+ 17 $11  2x4 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 83 96 / 8C 80 / 85 84 / 80 9E
+ 18 $12  null/garbage header (not rendered)
+ 19 $13  null/garbage header (not rendered)
+ 20 $14  8x8 $67=90 R0=02 R1=04 pal=09 0A 0B 7F  grid 00 00 00 2A 00 0C 16 0D / 00 0C 11 16 0D 0E 33 0F / 0C 34 14 17 18 0C 16 0D / 15 06 20 21 30 26 32 10 / 1C 05 2E 09 22 37 32 04 / 0E 37 2F 03 00 0E 07 0F / 0C 34 2E 35 0D 00 00 00 / 1A 07 22 33 0F 00 00 00
+ 21 $15  8x8 $67=90 R0=02 R1=04 pal=09 0A 0B 7F  grid 00 00 00 2A 00 0C 16 0D / 00 0C 11 16 0D 0E 33 0F / 0C 34 14 17 18 0C 16 0D / 15 06 20 21 30 26 32 10 / 1C 05 2E 09 22 37 32 04 / 0E 37 2F 03 00 0E 07 0F / 0C 34 2E 35 0D 00 00 00 / 1A 07 22 33 0F 00 00 00
+ 22 $16  null/garbage header (not rendered)
+ 23 $17  null/garbage header (not rendered)
+ 24 $18  3x1 $67=84 R0=0C R1=00 pal=0A 51 52 7F  grid 52 50 51
+ 25 $19  1x1 $67=80 R0=00 R1=0C pal=09 0A 0B 7F  grid 25
+ 26 $1A  5x5 $67=A0 R0=0E R1=20 pal=84 85 86 7F  grid 7F 76 7E 7F 7C / 76 7A 78 76 78 / 76 77 77 7A 75 / 7A 77 7D 77 7B / 79 75 76 75 7F
+ 27 $1B  2x1 $67=84 R0=0C R1=00 pal=0A 51 52 7F  grid 55 56
+ 28 $1C  2x2 $67=84 R0=0C R1=00 pal=4D 58 4F 7F  grid 6C 6D / 6E 6F
+ 29 $1D  null/garbage header (not rendered)
+ 30 $1E  1x1 $67=A0 R0=34 R1=36 pal=70 68 59 7F  grid 4E
+ 31 $1F  null/garbage header (not rendered)
+ 32 $20  6x5 $67=94 R0=14 R1=0C pal=12 13 14 7F  grid BF BF BF A9 AA BF / BF BF AE A7 AC AD / B0 AE BD AD AB B3 / A9 B2 B7 B4 AC AD / AB B4 B2 AD AB B4
+ 33 $21  6x5 $67=94 R0=14 R1=0C pal=12 13 14 7F  grid BF BF BF A9 AA BF / BF BF AE A7 AC AD / B0 AE BE AD AB AD / A9 B2 B7 B4 AC AD / AB B4 B2 AD AB B4
+ 34 $22  5x5 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 80 80 80 9A / 83 84 80 83 86 / 9A 8F 80 8F 80 / 80 85 8A 86 80 / 80 80 9E 80 80
+ 35 $23  5x3 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 9C 8A 82 84 80 / 80 9A 83 94 97 / 80 80 9E 80 80
+ 36 $24  4x5 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 9A 80 80 80 / 81 80 80 80 / 87 84 80 80 / 8F 85 95 9C / 9E 80 80 08
+ 37 $25  2x1 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 98 97
+ 38 $26  2x5 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 83 97 / 8C 80 / 8F 80 / 85 84 / 80 9E
+ 39 $27  3x5 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 83 9C / 83 94 84 / 85 8A 86 / 80 8F 80 / 80 9E 80
+ 40 $28  8x8 $67=94 R0=14 R1=0C pal=12 13 14 7F  grid BF BF BF BF B5 BF BF BF / BF BF BF BF B6 AE B9 BF / BF BF BF B1 B7 B8 AF BF / A9 AD AE B4 BE B4 B9 BF / AB B4 B2 AD BA B1 AF BF / BF B1 AD A9 B2 BC B9 BF / BF BF BB AF BF A9 AF BF / BF BF BF BF BF AB B4 B9
+ 41 $29  8x8 $67=94 R0=14 R1=0C pal=12 13 14 7F  grid BF BF BF BF B5 BF BF BF / BF BF BF BF B6 AE B9 BF / BF BF BF B1 B7 B8 AF BF / A9 AD AE B4 BD B4 B9 BF / AB B4 B2 AD BA B1 AF BF / BF B1 AD A9 B2 BC B9 BF / BF BF BB AF B5 A9 AF BF / BF BF BF BF B5 AB B4 B9
+ 42 $2A  4x4 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 83 8E 82 9C / 8F 83 97 80 / 85 89 80 80 / 80 9E 80 80
+ 43 $2B  4x6 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 9A 80 80 / 80 81 80 80 / 80 8C 80 80 / 80 8F 80 9A / 80 87 90 86 / 99 86 80 80
+ 44 $2C  3x5 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 83 97 / 83 86 80 / 8D 82 80 / 85 82 84 / 80 80 9E
+ 45 $2D  3x3 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 83 95 97 / 87 90 9C / 85 97 80
+ 46 $2E  6x4 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 80 80 80 80 80 / 80 9A 80 83 90 97 / 80 81 80 81 80 80 / 99 8B 90 86 80 80
+ 47 $2F  5x1 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 9C 82 94 94 97
+ 48 $30  1x1 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 92
+ 49 $31  1x2 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 9B / 81
+ 50 $32  1x1 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 92
+ 51 $33  1x2 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 9A / 81
+ 52 $34  2x3 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 99 84 / 80 81 / 99 86
+ 53 $35  3x3 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 83 82 84 / 9E 80 8C / 92 80 9E
+ 54 $36  null/garbage header (not rendered)
+ 55 $37  null/garbage header (not rendered)
+ 56 $38  1x4 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 9A / 81 / 81 / 9E
+ 57 $39  2x2 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 99 84 / 80 9E
+ 58 $3A  null/garbage header (not rendered)
+ 59 $3B  null/garbage header (not rendered)
+ 60 $3C  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00
+ 61 $3D  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01
+ 62 $3E  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 46
+ 63 $3F  null/garbage header (not rendered)
+ 64 $40  5x9 $67=90 R0=02 R1=04 pal=0C 0D 0E 7F  grid 3E 00 0C 31 0D / 13 11 26 2F 19 / 12 17 21 28 03 / 0E 07 33 22 0F / 00 00 2A 00 00 / 00 0C 16 0D 00 / 0C 26 14 18 00 / 01 32 2F 10 0A / 1A 07 22 0F 00
+ 65 $41  5x9 $67=90 R0=02 R1=04 pal=0C 0D 0E 7F  grid 3E 00 0C 31 0D / 13 11 26 2F 19 / 12 17 21 28 03 / 0E 07 33 22 0F / 00 00 2A 00 00 / 00 0C 16 0D 00 / 0C 26 14 18 00 / 01 32 2F 10 0A / 1A 07 22 0F 00
+ 66 $42  3x3 $67=90 R0=02 R1=04 pal=09 0A 0B 7F  grid 0C 16 0D / 0E 37 10 / FF 0E 0F
+ 67 $43  1x1 $67=94 R0=0E R1=20 pal=18 19 1A 7F  grid 74
+ 68 $44  2x4 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 83 97 / 8F 80 / 85 84 / 80 9E
+ 69 $45  4x4 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 9C 95 8A 9C / 80 80 87 84 / 83 90 86 8F / 9A 80 80 9B
+ 70 $46  3x4 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 98 84 80 / 83 86 80 / 85 90 84 / 80 80 9E
+ 71 $47  2x3 $67=80 R0=00 R1=0C pal=4D 80 81 7F  grid 0C 3F / 15 04 / 0E 0F
+ 72 $48  3x5 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 83 90 9C / 87 82 84 / 87 84 81 / 9B 8F 9A / 80 9E 80
+ 73 $49  2x1 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 98 97
+ 74 $4A  4x5 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 80 80 80 9B / 80 80 80 8F / 80 80 98 89 / 9C 8A 90 86 / 98 94 82 97
+ 75 $4B  3x2 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 83 84 80 / 85 94 97
+ 76 $4C  4x5 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 83 8A 82 97 / 8F 8F 83 96 / 9A 8F 8F 9A / 81 85 8D 86 / 85 95 86 80
+ 77 $4D  4x5 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 83 8A 82 97 / 8F 8F 83 96 / 9A 8F 8F 9A / 81 85 8E 86 / 85 95 86 80
+ 78 $4E  4x5 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 80 9B 83 84 / 80 8F 8F 9A / 80 85 8D 86 / 80 83 86 80 / 80 9A 80 80
+ 79 $4F  4x5 $67=88 R0=14 R1=00 pal=03 04 05 7F  grid 80 9B 83 84 / 80 8F 8F 9A / 80 85 8E 86 / 80 83 86 80 / 80 9A 80 80
+ 80 $50  2x2 $67=84 R0=0C R1=00 pal=4D 80 81 7F  grid 58 59 / 5A 5B
+ 81 $51  1x1 $67=84 R0=0C R1=00 pal=4D 80 81 7F  grid 5D
+ 82 $52  1x1 $67=98 R0=28 R1=00 pal=7C 9D 9E 7F  grid FF
+ 83 $53  null/garbage header (not rendered)
+ 84 $54  5x6 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 80 80 83 96 / 83 90 84 8F 80 / 8F 83 88 86 80 / 85 86 85 84 80 / 80 80 80 81 80 / 80 80 80 9E 80
+ 85 $55  3x2 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid 80 83 96 / 99 86 80
+ 86 $56  5x5 $67=A8 R0=14 R1=2A pal=0F 10 11 7F  grid E9 80 80 80 E9 / E0 E3 80 E2 E1 / 80 72 80 72 80 / 80 E0 E8 E1 80 / 80 80 71 80 80
+ 87 $57  5x5 $67=88 R0=14 R1=04 pal=0F 10 11 7F  grid 80 9B F0 80 80 / 80 81 DF 90 9C / 83 8B DE 83 84 / 81 80 DF 86 81 / 9A 80 F0 80 9A
+ 88 $58  1x1 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 3D
+ 89 $59  6x4 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 40 39 42 38 40 00 / 40 38 41 39 40 00 / 40 41 41 38 39 40 / 40 42 41 41 38 40
+ 90 $5A  6x4 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 40 39 42 38 40 00 / 40 38 41 39 40 00 / 40 41 41 38 39 40 / 40 42 41 41 38 40
+ 91 $5B  6x4 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 40 39 42 38 40 00 / 40 38 41 39 40 00 / 40 41 41 38 39 40 / 40 42 41 41 38 40
+ 92 $5C  6x4 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 40 39 42 38 40 00 / 40 38 41 39 40 00 / 40 41 41 38 39 40 / 40 42 41 41 38 40
+ 93 $5D  1x2 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 3A / 3B
+ 94 $5E  1x1 $67=AC R0=2A R1=20 pal=90 91 92 7F  grid 3C
+ 95 $5F  1x1 $67=AC R0=30 R1=32 pal=AF AF AF 7F  grid 5C
+ 96 $60  8x9 $67=94 R0=02 R1=04 pal=24 01 26 7F  grid 0D 0C 0D C5 0D 0C 0D 0C / 35 34 35 34 35 34 35 34 / C3 C4 C3 C3 C3 C3 C3 C3 / CA 36 37 80 C6 80 80 80 / 36 0F 02 80 36 C0 37 80 / 35 C1 34 80 04 00 02 80 / 37 80 80 C6 C7 C8 34 36 / 0E 37 36 C0 C0 37 36 0F / 00 0E C2 00 00 0E C9 D1
+ 97 $61  1x1 $67=A0 R0=34 R1=36 pal=75 5C 5D 7F  grid 46
+ 98 $62  1x1 $67=A0 R0=34 R1=36 pal=70 71 72 7F  grid 4F
+ 99 $63  null/garbage header (not rendered)
+100 $64  4x3 $67=88 R0=14 R1=04 pal=1E 1F 20 7F  grid 9F D2 A0 80 / 80 80 A1 80 / 80 A2 A3 A4
+101 $65  1x3 $67=84 R0=0C R1=00 pal=4D 80 81 7F  grid 5E / 61 / 62
+102 $66  null/garbage header (not rendered)
+103 $67  null/garbage header (not rendered)
+104 $68  3x1 $67=88 R0=14 R1=04 pal=1E 1F 20 7F  grid 9F D2 D0
+105 $69  7x7 $67=88 R0=14 R1=04 pal=1E 04 20 7F  grid F0 80 80 80 80 9B 80 / DF 96 83 96 80 8F 9B / F2 80 8F 80 83 88 86 / D4 D8 DC F3 DC DC D9 / F5 D4 83 DE 80 80 D6 / DA DB 81 DA D7 F1 DB / 80 80 9A 80 80 80 80
+106 $6A  7x5 $67=88 R0=14 R1=04 pal=1E 04 20 7F  grid 83 97 83 97 83 8A 9C / 8F 80 87 8A 89 EC 80 / 85 8A 86 8F 9B 81 80 / 80 85 82 86 87 86 80 / 80 80 80 99 86 80 80
+107 $6B  2x3 $67=88 R0=14 R1=04 pal=1E 04 20 7F  grid F0 80 / DF 96 / F2 80
+108 $6C  6x7 $67=A4 R0=18 R1=20 pal=2D 2E 2F 7F  grid 80 83 96 80 80 80 / 80 9E 80 80 80 80 / 80 FD 80 80 80 80 / E5 72 80 80 9A 80 / E0 E6 E3 80 FD 80 / 80 E0 E6 EA E1 80 / 80 80 71 80 80 80
+109 $6D  5x7 $67=A4 R0=18 R1=20 pal=2D 2E 2F 7F  grid 83 97 80 83 84 / 81 80 80 81 9B / 81 80 83 89 EE / 85 84 81 9A ED / 80 EC 87 EB 86 / 80 81 81 80 9A / 80 9B 85 82 86
+110 $6E  1x3 $67=A4 R0=18 R1=20 pal=2D 2E 2F 7F  grid FE / FD / 71
+111 $6F  null/garbage header (not rendered)
+112 $70  2x2 $67=88 R0=14 R1=04 pal=03 04 05 7F  grid 83 97 / 9E 80
+113 $71  2x2 $67=84 R0=0C R1=00 pal=4D 4E 4F 7F  grid 63 6A / 68 6B
+114 $72  3x1 $67=84 R0=0C R1=00 pal=53 54 4F 7F  grid 53 50 54
+115 $73  1x1 $67=84 R0=0C R1=00 pal=53 54 4F 7F  grid 1F
+116 $74  null/garbage header (not rendered)
+117 $75  null/garbage header (not rendered)
+118 $76  null/garbage header (not rendered)
+119 $77  null/garbage header (not rendered)
+120 $78  5x5 $67=80 R0=00 R1=0C pal=42 8B 8C 7F  grid 00 00 00 00 00 / 00 0C 11 08 0D / 0C 34 29 24 03 / 1A 37 27 23 10 / 00 0E 33 07 0F
+121 $79  null/garbage header (not rendered)
+122 $7A  null/garbage header (not rendered)
+123 $7B  null/garbage header (not rendered)
+124 $7C  6x8 $67=9C R0=14 R1=04 pal=33 34 35 7F  grid BF BF A5 AD BF BF / B5 BF BA BF BF BF / A6 B4 BD AC AD BF / BF A9 A8 AF B1 AA / BF AB BD AD B0 BF / BF BF BA A9 AD BF / BF B1 A8 A7 B9 BF / BF BF BF BF AB B4
+125 $7D  2x2 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 99 84 / 80 9E
+126 $7E  2x1 $67=94 R0=14 R1=0C pal=33 34 35 7F  grid BB AD
+127 $7F  3x2 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 99 8A 97 / 80 9E 80
+128 $80  5x3 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 80 80 9A 80 80 / 98 8A 89 83 97 / 80 9E 85 86 80
+129 $81  3x2 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 99 8A 96 / 80 85 97
+130 $82  2x2 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 98 84 / 80 9B
+131 $83  2x3 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 80 9A / 80 8F / 99 86
+132 $84  2x3 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 80 E9 / E2 E1 / 71 80
+133 $85  2x2 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 83 84 / 9E 9E
+134 $86  4x3 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 83 96 99 84 / 87 90 95 86 / 9A 80 80 80
+135 $87  2x3 $67=88 R0=14 R1=04 pal=36 37 38 7F  grid 99 84 / 80 8F / 80 9E
+136 $88  5x5 $67=A4 R0=18 R1=20 pal=30 31 32 7F  grid 80 FD 80 FD 80 / 80 E0 E8 E1 80 / 80 80 72 80 80 / 80 80 72 80 80 / 80 80 71 80 80
+137 $89  5x6 $67=A4 R0=18 R1=20 pal=30 31 32 7F  grid 80 9B F0 F0 80 / 80 81 D6 D6 80 / D8 DC F4 DB F0 / DF 82 96 9C DE / DA DD F1 DD DB / 80 9E 80 9E 80
+138 $8A  4x6 $67=A4 R0=18 R1=20 pal=30 31 32 7F  grid 80 9B 80 80 / 80 EE 80 80 / 83 EF 82 9C / EC ED 80 80 / 87 86 80 80 / 85 97 80 80
+139 $8B  null/garbage header (not rendered)
+140 $8C  1x3 $67=84 R0=0C R1=00 pal=53 54 4F 7F  grid 5E / 5F / 60
+141 $8D  null/garbage header (not rendered)
+142 $8E  2x2 $67=84 R0=0C R1=00 pal=55 56 57 7F  grid 67 64 / 68 69
+143 $8F  1x3 $67=A4 R0=18 R1=20 pal=27 28 29 7F  grid 9B / 8F / 9E
+144 $90  6x6 $67=9C R0=16 R1=04 pal=06 07 01 7F  grid 00 0C 16 11 0D 00 / 0C 34 80 09 0F 00 / 02 CD C6 35 11 0D / 0E CF 80 CE 80 04 / 00 02 C6 80 36 0F / 00 0E C0 C0 0F 00
+145 $91  8x12 $67=88 R0=14 R1=04 pal=06 07 01 7F  grid 83 82 9C 80 80 80 80 80 / 81 80 F2 80 80 80 80 80 / 81 D8 F4 F3 F3 F3 D5 D9 / 85 DE D8 F4 D3 F4 D9 D6 / 80 F5 D6 D8 F4 D9 F6 F6 / 80 D6 F5 F6 80 D6 F5 D6 / 80 DF DE F5 9A DF DE F5 / 98 DE D6 DA DC DB F6 D4 / 80 F5 DA F3 D7 F3 DB D6 / 80 DA F3 F4 D7 F4 D5 DB / 80 80 F0 80 80 80 80 80 / 06 07 01 88 B5 14 04 D0
+146 $92  3x3 $67=88 R0=14 R1=00 pal=06 07 01 7F  grid 99 82 84 / 80 80 81 / 80 80 9A
+147 $93  2x1 $67=84 R0=0C R1=00 pal=82 87 83 7F  grid 55 57
+148 $94  1x1 $67=9C R0=16 R1=04 pal=06 07 01 7F  grid 0A
+149 $95  3x3 $67=88 R0=14 R1=04 pal=03 04 05 7F  grid 80 83 97 / 80 81 80 / 99 86 80
+150 $96  3x2 $67=80 R0=00 R1=0C pal=09 0A 0B 7F  grid 0C C1 0D / 0E 1E 0F
+151 $97  null/garbage header (not rendered)
+152 $98  4x6 $67=9C R0=16 R1=20 pal=06 07 01 7F  grid 00 0C 11 0D / 0C 34 CC 04 / 02 C6 36 0F / 0E 37 35 0D / 00 15 CB 04 / 00 0E C0 0F
+153 $99  null/garbage header (not rendered)
+154 $9A  null/garbage header (not rendered)
+155 $9B  null/garbage header (not rendered)
+156 $9C  1x2 $67=8C R0=1A R1=20 pal=39 3A 3B 7F  grid FD / 71
+157 $9D  3x2 $67=8C R0=1A R1=20 pal=39 3A 3B 7F  grid 98 8A 97 / 80 9E 80
+158 $9E  7x11 $67=8C R0=1A R1=20 pal=39 3A 3B 7F  grid 80 80 80 9A 80 80 80 / 80 80 80 9E 80 80 80 / 80 80 9A 91 9A 80 80 / 80 80 9E 9A 9E 80 80 / 99 84 91 9A 91 83 96 / 99 88 88 88 88 88 96 / 99 88 88 8B 88 88 96 / 99 88 88 95 88 88 96 / 80 85 88 8A 88 86 F9 / 80 80 9A 9A 9A 80 72 / 80 80 80 80 80 80 71
+159 $9F  1x3 $67=8C R0=1A R1=20 pal=39 3A 3B 7F  grid F9 / 72 / 71
+160 $A0  3x5 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid 80 80 9A / 80 80 81 / 80 80 81 / F8 80 81 / 85 82 86
+161 $A1  4x5 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid 80 80 80 FD / E2 E3 E2 E1 / 72 E5 72 80 / E0 E6 E1 80 / 80 71 80 80
+162 $A2  5x5 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid 80 9B 9A 9B 80 / 80 EC EE EC 80 / 80 87 EF 89 80 / 80 EC ED EC 80 / 99 86 9E 85 97
+163 $A3  2x5 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid 80 9B / 80 EE / 80 F7 / 80 ED / 98 86
+164 $A4  2x5 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid 9B 80 / EE 80 / F7 80 / ED 80 / 85 96
+165 $A5  3x6 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid 83 8A 84 / EE 9A EE / F7 EC F7 / ED EC ED / 85 86 81 / 80 80 9B
+166 $A6  1x2 $67=8C R0=1A R1=20 pal=3C 2C 3E 7F  grid FA / FB
+167 $A7  null/garbage header (not rendered)
+168 $A8  1x3 $67=A4 R0=18 R1=20 pal=27 28 29 7F  grid E9 / 72 / 71
+169 $A9  7x9 $67=A4 R0=18 R1=20 pal=27 28 29 7F  grid 80 80 80 80 80 80 73 / E2 EA EA EA E3 80 72 / E4 E2 EA E3 E5 E2 E1 / E0 E6 EA E6 E7 E1 80 / 80 E4 80 E0 E3 80 80 / 80 E0 E3 80 E5 80 80 / 80 80 E4 80 E4 80 80 / 80 80 E0 E8 E1 80 80 / 80 80 80 71 80 80 80
+170 $AA  1x3 $67=A4 R0=18 R1=20 pal=45 46 47 7F  grid 9A / 9E / 91
+171 $AB  8x9 $67=A4 R0=18 R1=20 pal=45 46 47 7F  grid 80 9B 80 80 80 80 9A 80 / 80 81 80 80 F0 80 8F 80 / 80 91 80 D8 D3 D5 DC D9 / 80 8F 80 F5 DA D9 80 F2 / D8 DC F3 DB 80 D6 80 F2 / DA D5 D3 DD F3 D3 DD DB / 80 80 F5 81 F6 F0 85 84 / 80 83 DE 85 DE DA 80 9B / 80 9A DA D7 DB 80 80 80
+172 $AC  1x7 $67=A4 R0=18 R1=20 pal=48 49 4A 7F  grid 9A / 9E / 91 / 9E / 91 / 81 / 9A
+173 $AD  5x8 $67=A4 R0=18 R1=20 pal=48 49 4A 7F  grid 80 80 9B 80 80 / 98 84 EE 83 96 / 80 EE ED EE 80 / 9C EF 88 EF 84 / 83 EF 88 EF 86 / 85 EF 88 EF 9C / 80 ED 81 ED 80 / 98 86 9A 9B 80
+174 $AE  3x7 $67=A4 R0=18 R1=20 pal=4B 4C 08 7F  grid 80 99 84 / 80 80 EC / 9C 82 89 / 80 9B EC / 80 8F EC / 80 85 89 / 80 99 86
+175 $AF  4x11 $67=A4 R0=18 R1=20 pal=4B 4C 08 7F  grid 9A 80 80 80 / 9E 80 80 80 / 91 80 80 80 / 9E 80 80 80 / 91 83 97 80 / 9A EC 80 80 / 81 87 82 9C / EC EC 80 80 / 9E 81 80 80 / 91 EC 80 80 / 85 86 80 80
+176 $B0  3x4 $67=A4 R0=18 R1=20 pal=25 2B 43 7F  grid 9A 80 9A / 85 8A 86 / 83 86 80 / 9A 80 80
+177 $B1  2x4 $67=A4 R0=18 R1=20 pal=25 2B 43 7F  grid 83 97 / 8C 80 / 81 80 / 9A 80
+178 $B2  3x6 $67=A4 R0=18 R1=20 pal=25 2B 43 7F  grid 80 99 84 / 80 98 8D / 98 82 8D / 80 83 89 / 80 9A 9A / 80 86 85
+179 $B3  2x2 $67=A4 R0=18 R1=20 pal=25 2B 43 7F  grid 9A 9A / 85 86
+180 $B4  7x9 $67=A4 R0=18 R1=20 pal=25 2B 43 7F  grid 80 83 97 80 80 80 80 / 80 9E 80 80 80 80 80 / 80 91 80 80 80 80 80 / 99 8B EB EB EB 8A 97 / 80 80 80 99 84 8F 80 / 80 80 80 98 8E 8B 84 / 80 80 98 82 8E 8A 86 / 80 80 80 83 89 81 80 / 80 80 80 9A 9A 9A 80
+181 $B5  6x5 $67=A4 R0=18 R1=20 pal=44 28 29 7F  grid 80 9A 9B 9B 80 80 / 80 EE EE EE 80 80 / 98 EF EF EF 82 96 / 80 ED ED ED 80 80 / 80 9B 9B 9B 80 80
+182 $B6  1x5 $67=A4 R0=18 R1=20 pal=44 28 29 7F  grid 9B / 9E / FD / 72 / 71
+183 $B7  null/garbage header (not rendered)
+184 $B8  4x10 $67=88 R0=14 R1=02 pal=03 5E 05 7F  grid 80 80 83 96 / 80 80 EE 80 / 80 80 F7 80 / 80 80 F7 80 / 80 80 F7 80 / 80 80 F7 80 / 80 80 ED 80 / F1 DD DC F1 / 80 87 97 80 / 80 9A 80 80
+185 $B9  4x11 $67=A4 R0=18 R1=20 pal=4B 4C 08 7F  grid 9A 80 80 80 / 9E 80 80 80 / 91 80 80 80 / 9E 80 80 80 / 91 83 97 80 / 9A EC 80 80 / 81 87 82 9C / EC EC 80 80 / 9E 81 80 80 / 91 EC 80 80 / 85 86 80 80
+186 $BA  7x9 $67=A4 R0=18 R1=20 pal=25 2B 43 7F  grid 80 83 97 80 80 80 80 / 80 9E 80 80 80 80 80 / 80 91 80 80 80 80 80 / 99 8B EB EB EB 8A 97 / 80 80 80 99 84 8F 80 / 80 80 80 98 8E 8B 84 / 80 80 98 82 8E 8A 86 / 80 80 80 83 89 81 80 / 80 80 80 9A 9A 9A 80
+187 $BB  1x1 $67=A0 R0=34 R1=36 pal=50 5C 5D 7F  grid 46
+188 $BC  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00
+189 $BD  null/garbage header (not rendered)
+190 $BE  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01
+191 $BF  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 45
+192 $C0  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 43
+193 $C1  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 44
+194 $C2  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00
+195 $C3  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01
+196 $C4  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02
+197 $C5  1x1 $67=A0 R0=34 R1=36 pal=50 5C 5D 7F  grid 46
+198 $C6  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 45
+199 $C7  1x1 $67=A0 R0=34 R1=36 pal=64 65 66 7F bank10  grid 01
+200 $C8  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00
+201 $C9  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02
+202 $CA  null/garbage header (not rendered)
+203 $CB  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01
+204 $CC  null/garbage header (not rendered)
+205 $CD  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 43
+206 $CE  1x1 $67=A0 R0=34 R1=36 pal=50 5C 5D 7F  grid 46
+207 $CF  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01
+208 $D0  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00
+209 $D1  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00
+210 $D2  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01
+211 $D3  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02
+212 $D4  1x1 $67=A0 R0=34 R1=36 pal=6D 6E 6F 7F  grid 47
+213 $D5  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F  grid 1B
+214 $D6  1x1 $67=A0 R0=34 R1=36 pal=75 5C 5D 7F  grid 46
+215 $D7  1x1 $67=A0 R0=34 R1=36 pal=76 77 78 7F  grid 4A
+216 $D8  1x1 $67=A0 R0=34 R1=36 pal=79 7A 7B 7F  grid 4C
+217 $D9  1x1 $67=A0 R0=34 R1=36 pal=64 65 66 7F bank10  grid 01
+218 $DA  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02
+219 $DB  null/garbage header (not rendered)
+220 $DC  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00
+221 $DD  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01
+222 $DE  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 46
+223 $DF  1x1 $67=A0 R0=34 R1=36 pal=6D 6E 6F 7F  grid 4B
+224 $E0  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 46
+225 $E1  1x1 $67=A0 R0=34 R1=36 pal=76 77 78 7F  grid 4D
+226 $E2  1x1 $67=A0 R0=34 R1=36 pal=6D 6E 6F 7F  grid 49
+227 $E3  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 43
+228 $E4  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 44
+229 $E5  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01
+230 $E6  null/garbage header (not rendered)
+231 $E7  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00
+232 $E8  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 48
+233 $E9  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 49
+234 $EA  null/garbage header (not rendered)
+235 $EB  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01
+236 $EC  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 44
+237 $ED  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00
+238 $EE  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02
+239 $EF  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 45
+240 $F0  1x1 $67=A0 R0=34 R1=36 pal=64 65 66 7F bank10  grid 01
+241 $F1  1x1 $67=A0 R0=34 R1=36 pal=70 68 59 7F  grid 4E
+242 $F2  1x1 $67=A0 R0=34 R1=36 pal=5A 5B 6A 7F  grid 70
+243 $F3  1x1 $67=A0 R0=34 R1=36 pal=70 68 59 7F  grid 4E
+244 $F4  1x1 $67=A0 R0=34 R1=36 pal=6A 6B 6C 7F  grid 46
+245 $F5  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02
+246 $F6  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01
+247 $F7  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00
+248 $F8  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 00
+249 $F9  1x1 $67=A0 R0=34 R1=36 pal=60 62 63 7F bank10  grid 01
+250 $FA  1x1 $67=A0 R0=34 R1=36 pal=67 68 69 7F  grid 43
+251 $FB  1x1 $67=A0 R0=34 R1=36 pal=5F 3D 61 7F bank10  grid 02

@@ -1,0 +1,243 @@
+213 areas scanned; 79 with a visible visited substitution: 01 03 07 09 0C 10 14 15 22 23 24 26 27 28 29 2A 2B 2D 2E 2F 30 32 35 40 41 42 43 44 45 46 48 4A 4B 4C 4D 4E 4F 50 54 56 57 59 5A 5B 5C 60 64 65 69 6A 6B 6C 6E 73 7C 83 84 86 87 88 89 8C 8F 91 9C 9E 9F A0 A1 A6 A8 AB AE B4 B6 BA C1 E4 EC
+changed cells listed in k4 (persist across loads): 102; changed cells not in k4 (change only while the area stays loaded): 47 in areas 15 24 29 40 41 42 4C 4D 4E 4F 59 5A 5B 5C 60 65 6C 6E 88 8C 91 9C 9E A1 B6 BA C1 EC
+k4 entries whose screen shows no change: 6: 00:fEF@00 02:f82@00 1B:f82@00 1E:f82@00 2C:f82@00 51:f82@00
+area $00  tileset $67=98  cells changed 0  metatiles 0  k4 1 (0 of them changed)
+    k4 fEF@scr00: no visible change
+area $01  tileset $67=80  cells changed 1  metatiles 4  k4 1 (1 of them changed)
+    cell y0 x0 screen $2D: 4 metatiles  [k4]
+area $02  tileset $67=84  cells changed 0  metatiles 0  k4 1 (0 of them changed)
+    k4 f82@scr00: no visible change
+area $03  tileset $67=80  cells changed 1  metatiles 6  k4 1 (1 of them changed)
+    cell y1 x1 screen $2C: 6 metatiles  [k4]
+area $07  tileset $67=88  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y1 x2 screen $8F: 20 metatiles  [k4]
+area $09  tileset $67=88  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y1 x1 screen $8F: 20 metatiles  [k4]
+area $0C  tileset $67=88  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y1 x1 screen $8F: 20 metatiles  [k4]
+area $10  tileset $67=A8  cells changed 1  metatiles 16  k4 1 (1 of them changed)
+    cell y2 x1 screen $92: 16 metatiles  [k4]
+area $14  tileset $67=90  cells changed 1  metatiles 4  k4 1 (1 of them changed)
+    cell y5 x2 screen $2F: 4 metatiles  [k4]
+area $15  tileset $67=90  cells changed 1  metatiles 4  k4 0
+    cell y5 x2 screen $2F: 4 metatiles
+area $1B  tileset $67=84  cells changed 0  metatiles 0  k4 1 (0 of them changed)
+    k4 f82@scr00: no visible change
+area $1E  tileset $67=A0  cells changed 0  metatiles 0  k4 1 (0 of them changed)
+    k4 f82@scr00: no visible change
+area $22  tileset $67=A8  cells changed 2  metatiles 40  k4 2 (2 of them changed)
+    cell y2 x1 screen $8F: 20 metatiles  [k4]
+    cell y2 x3 screen $8F: 20 metatiles  [k4]
+area $23  tileset $67=A8  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y1 x3 screen $94: 20 metatiles  [k4]
+area $24  tileset $67=A8  cells changed 2  metatiles 45  k4 1 (1 of them changed)
+    cell y3 x0 screen $8F: 20 metatiles  [k4]
+    cell y4 x3 screen $08: 25 metatiles
+area $26  tileset $67=A8  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y2 x0 screen $8F: 20 metatiles  [k4]
+area $27  tileset $67=A8  cells changed 2  metatiles 40  k4 2 (2 of them changed)
+    cell y1 x1 screen $94: 20 metatiles  [k4]
+    cell y3 x1 screen $8F: 20 metatiles  [k4]
+area $28  tileset $67=94  cells changed 1  metatiles 6  k4 1 (1 of them changed)
+    cell y0 x4 screen $B5: 6 metatiles  [k4]
+area $29  tileset $67=94  cells changed 3  metatiles 18  k4 0
+    cell y0 x4 screen $B5: 6 metatiles
+    cell y6 x4 screen $B5: 6 metatiles
+    cell y7 x4 screen $B5: 6 metatiles
+area $2A  tileset $67=A8  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y1 x0 screen $8F: 20 metatiles  [k4]
+area $2B  tileset $67=A8  cells changed 2  metatiles 33  k4 2 (2 of them changed)
+    cell y3 x1 screen $8F: 20 metatiles  [k4]
+    cell y4 x2 screen $90: 13 metatiles  [k4]
+area $2C  tileset $67=A8  cells changed 0  metatiles 0  k4 1 (0 of them changed)
+    k4 f82@scr00: no visible change
+area $2D  tileset $67=A8  cells changed 1  metatiles 13  k4 1 (1 of them changed)
+    cell y1 x1 screen $90: 13 metatiles  [k4]
+area $2E  tileset $67=A8  cells changed 2  metatiles 26  k4 2 (2 of them changed)
+    cell y1 x4 screen $90: 13 metatiles  [k4]
+    cell y3 x2 screen $90: 13 metatiles  [k4]
+area $2F  tileset $67=A8  cells changed 2  metatiles 40  k4 2 (2 of them changed)
+    cell y0 x2 screen $94: 20 metatiles  [k4]
+    cell y0 x3 screen $94: 20 metatiles  [k4]
+area $30  tileset $67=A8  cells changed 1  metatiles 16  k4 1 (1 of them changed)
+    cell y0 x0 screen $92: 16 metatiles  [k4]
+area $32  tileset $67=A8  cells changed 1  metatiles 16  k4 1 (1 of them changed)
+    cell y0 x0 screen $92: 16 metatiles  [k4]
+area $35  tileset $67=A8  cells changed 1  metatiles 16  k4 1 (1 of them changed)
+    cell y2 x0 screen $92: 16 metatiles  [k4]
+area $40  tileset $67=90  cells changed 2  metatiles 8  k4 1 (1 of them changed)
+    cell y1 x3 screen $2F: 4 metatiles  [k4]
+    cell y7 x2 screen $2F: 4 metatiles
+area $41  tileset $67=90  cells changed 2  metatiles 8  k4 1 (1 of them changed)
+    cell y1 x3 screen $2F: 4 metatiles
+    cell y7 x2 screen $2F: 4 metatiles  [k4]
+area $42  tileset $67=90  cells changed 1  metatiles 1  k4 0
+    cell y2 x0 screen $FF: 1 metatiles
+area $43  tileset $67=94  cells changed 1  metatiles 6  k4 1 (1 of them changed)
+    cell y0 x0 screen $74: 6 metatiles  [k4]
+area $44  tileset $67=88  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y1 x0 screen $8F: 20 metatiles  [k4]
+area $45  tileset $67=88  cells changed 2  metatiles 33  k4 2 (2 of them changed)
+    cell y2 x1 screen $90: 13 metatiles  [k4]
+    cell y2 x3 screen $8F: 20 metatiles  [k4]
+area $46  tileset $67=88  cells changed 1  metatiles 13  k4 1 (1 of them changed)
+    cell y2 x1 screen $90: 13 metatiles  [k4]
+area $48  tileset $67=88  cells changed 2  metatiles 33  k4 2 (2 of them changed)
+    cell y0 x1 screen $90: 13 metatiles  [k4]
+    cell y3 x1 screen $8F: 20 metatiles  [k4]
+area $4A  tileset $67=88  cells changed 3  metatiles 53  k4 3 (3 of them changed)
+    cell y1 x3 screen $8F: 20 metatiles  [k4]
+    cell y3 x2 screen $90: 13 metatiles  [k4]
+    cell y4 x1 screen $94: 20 metatiles  [k4]
+area $4B  tileset $67=88  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y1 x1 screen $94: 20 metatiles  [k4]
+area $4C  tileset $67=88  cells changed 4  metatiles 80  k4 1 (1 of them changed)
+    cell y1 x0 screen $8F: 20 metatiles
+    cell y1 x1 screen $8F: 20 metatiles
+    cell y2 x1 screen $8F: 20 metatiles
+    cell y2 x2 screen $8F: 20 metatiles  [k4]
+area $4D  tileset $67=88  cells changed 4  metatiles 80  k4 3 (3 of them changed)
+    cell y1 x0 screen $8F: 20 metatiles  [k4]
+    cell y1 x1 screen $8F: 20 metatiles  [k4]
+    cell y2 x1 screen $8F: 20 metatiles  [k4]
+    cell y2 x2 screen $8F: 20 metatiles
+area $4E  tileset $67=88  cells changed 2  metatiles 40  k4 1 (1 of them changed)
+    cell y1 x1 screen $8F: 20 metatiles
+    cell y1 x2 screen $8F: 20 metatiles  [k4]
+area $4F  tileset $67=88  cells changed 2  metatiles 40  k4 1 (1 of them changed)
+    cell y1 x1 screen $8F: 20 metatiles  [k4]
+    cell y1 x2 screen $8F: 20 metatiles
+area $50  tileset $67=84  cells changed 1  metatiles 4  k4 1 (1 of them changed)
+    cell y0 x0 screen $58: 4 metatiles  [k4]
+area $51  tileset $67=84  cells changed 0  metatiles 0  k4 1 (0 of them changed)
+    k4 f82@scr00: no visible change
+area $54  tileset $67=A8  cells changed 3  metatiles 53  k4 3 (3 of them changed)
+    cell y1 x1 screen $90: 13 metatiles  [k4]
+    cell y1 x3 screen $8F: 20 metatiles  [k4]
+    cell y2 x0 screen $8F: 20 metatiles  [k4]
+area $56  tileset $67=A8  cells changed 2  metatiles 40  k4 2 (2 of them changed)
+    cell y0 x0 screen $E9: 20 metatiles  [k4]
+    cell y0 x4 screen $E9: 20 metatiles  [k4]
+area $57  tileset $67=88  cells changed 1  metatiles 13  k4 1 (1 of them changed)
+    cell y1 x3 screen $90: 13 metatiles  [k4]
+area $59  tileset $67=AC  cells changed 4  metatiles 48  k4 0
+    cell y0 x3 screen $38: 12 metatiles
+    cell y1 x1 screen $38: 12 metatiles
+    cell y2 x3 screen $38: 12 metatiles
+    cell y3 x4 screen $38: 12 metatiles
+area $5A  tileset $67=AC  cells changed 4  metatiles 48  k4 0
+    cell y0 x3 screen $38: 12 metatiles
+    cell y1 x1 screen $38: 12 metatiles
+    cell y2 x3 screen $38: 12 metatiles
+    cell y3 x4 screen $38: 12 metatiles
+area $5B  tileset $67=AC  cells changed 4  metatiles 48  k4 0
+    cell y0 x3 screen $38: 12 metatiles
+    cell y1 x1 screen $38: 12 metatiles
+    cell y2 x3 screen $38: 12 metatiles
+    cell y3 x4 screen $38: 12 metatiles
+area $5C  tileset $67=AC  cells changed 4  metatiles 48  k4 0
+    cell y0 x3 screen $38: 12 metatiles
+    cell y1 x1 screen $38: 12 metatiles
+    cell y2 x3 screen $38: 12 metatiles
+    cell y3 x4 screen $38: 12 metatiles
+area $60  tileset $67=94  cells changed 3  metatiles 54  k4 1 (1 of them changed)
+    cell y2 x1 screen $C4: 6 metatiles  [k4]
+    cell y3 x4 screen $C6: 24 metatiles
+    cell y6 x3 screen $C6: 24 metatiles
+area $64  tileset $67=88  cells changed 3  metatiles 12  k4 3 (3 of them changed)
+    cell y1 x2 screen $A1: 4 metatiles  [k4]
+    cell y2 x1 screen $A2: 4 metatiles  [k4]
+    cell y2 x3 screen $A4: 4 metatiles  [k4]
+area $65  tileset $67=84  cells changed 1  metatiles 4  k4 0
+    cell y0 x0 screen $5E: 4 metatiles
+area $69  tileset $67=88  cells changed 5  metatiles 56  k4 5 (5 of them changed)
+    cell y1 x5 screen $8F: 20 metatiles  [k4]
+    cell y2 x0 screen $F2: 8 metatiles  [k4]
+    cell y2 x2 screen $8F: 20 metatiles  [k4]
+    cell y4 x6 screen $D6: 4 metatiles  [k4]
+    cell y5 x4 screen $D7: 4 metatiles  [k4]
+area $6A  tileset $67=88  cells changed 2  metatiles 40  k4 2 (2 of them changed)
+    cell y1 x0 screen $8F: 20 metatiles  [k4]
+    cell y2 x3 screen $8F: 20 metatiles  [k4]
+area $6B  tileset $67=88  cells changed 1  metatiles 8  k4 1 (1 of them changed)
+    cell y2 x0 screen $F2: 8 metatiles  [k4]
+area $6C  tileset $67=A4  cells changed 2  metatiles 144  k4 0
+    cell y2 x1 screen $FD: 72 metatiles
+    cell y4 x4 screen $FD: 72 metatiles
+area $6E  tileset $67=A4  cells changed 1  metatiles 72  k4 0
+    cell y1 x0 screen $FD: 72 metatiles
+area $73  tileset $67=84  cells changed 1  metatiles 4  k4 1 (1 of them changed)
+    cell y0 x0 screen $1F: 4 metatiles  [k4]
+area $7C  tileset $67=9C  cells changed 3  metatiles 14  k4 3 (3 of them changed)
+    cell y1 x0 screen $B5: 6 metatiles  [k4]
+    cell y3 x2 screen $A8: 4 metatiles  [k4]
+    cell y6 x2 screen $A8: 4 metatiles  [k4]
+area $83  tileset $67=88  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y1 x1 screen $8F: 20 metatiles  [k4]
+area $84  tileset $67=88  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y0 x1 screen $E9: 20 metatiles  [k4]
+area $86  tileset $67=88  cells changed 1  metatiles 13  k4 1 (1 of them changed)
+    cell y1 x1 screen $90: 13 metatiles  [k4]
+area $87  tileset $67=88  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y1 x1 screen $8F: 20 metatiles  [k4]
+area $88  tileset $67=A4  cells changed 2  metatiles 144  k4 0
+    cell y0 x1 screen $FD: 72 metatiles
+    cell y0 x3 screen $FD: 72 metatiles
+area $89  tileset $67=A4  cells changed 2  metatiles 8  k4 2 (2 of them changed)
+    cell y1 x2 screen $D6: 4 metatiles  [k4]
+    cell y1 x3 screen $D6: 4 metatiles  [k4]
+area $8C  tileset $67=84  cells changed 1  metatiles 4  k4 0
+    cell y0 x0 screen $5E: 4 metatiles
+area $8F  tileset $67=A4  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y1 x0 screen $8F: 20 metatiles  [k4]
+area $91  tileset $67=88  cells changed 12  metatiles 151  k4 11 (11 of them changed)
+    cell y1 x2 screen $F2: 8 metatiles  [k4]
+    cell y3 x4 screen $D3: 4 metatiles  [k4]
+    cell y3 x7 screen $D6: 4 metatiles  [k4]
+    cell y4 x2 screen $D6: 4 metatiles  [k4]
+    cell y5 x1 screen $D6: 4 metatiles  [k4]
+    cell y5 x5 screen $D6: 4 metatiles  [k4]
+    cell y5 x7 screen $D6: 4 metatiles  [k4]
+    cell y7 x2 screen $D6: 4 metatiles  [k4]
+    cell y8 x4 screen $D7: 4 metatiles  [k4]
+    cell y8 x7 screen $D6: 4 metatiles  [k4]
+    cell y9 x4 screen $D7: 4 metatiles  [k4]
+    cell yB x4 screen $B5: 103 metatiles
+area $9C  tileset $67=8C  cells changed 1  metatiles 70  k4 0
+    cell y0 x0 screen $FD: 70 metatiles
+area $9E  tileset $67=8C  cells changed 1  metatiles 48  k4 0
+    cell y8 x6 screen $F9: 48 metatiles
+area $9F  tileset $67=8C  cells changed 1  metatiles 48  k4 1 (1 of them changed)
+    cell y0 x0 screen $F9: 48 metatiles  [k4]
+area $A0  tileset $67=8C  cells changed 1  metatiles 8  k4 1 (1 of them changed)
+    cell y3 x0 screen $F8: 8 metatiles  [k4]
+area $A1  tileset $67=8C  cells changed 1  metatiles 70  k4 0
+    cell y0 x3 screen $FD: 70 metatiles
+area $A6  tileset $67=8C  cells changed 1  metatiles 12  k4 1 (1 of them changed)
+    cell y0 x0 screen $FA: 12 metatiles  [k4]
+area $A8  tileset $67=A4  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y0 x0 screen $E9: 20 metatiles  [k4]
+area $AB  tileset $67=A4  cells changed 9  metatiles 76  k4 9 (9 of them changed)
+    cell y1 x6 screen $8F: 20 metatiles  [k4]
+    cell y2 x4 screen $D3: 4 metatiles  [k4]
+    cell y3 x1 screen $8F: 20 metatiles  [k4]
+    cell y3 x7 screen $F2: 8 metatiles  [k4]
+    cell y4 x5 screen $D6: 4 metatiles  [k4]
+    cell y4 x7 screen $F2: 8 metatiles  [k4]
+    cell y5 x2 screen $D3: 4 metatiles  [k4]
+    cell y5 x5 screen $D3: 4 metatiles  [k4]
+    cell y8 x3 screen $D7: 4 metatiles  [k4]
+area $AE  tileset $67=A4  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y4 x1 screen $8F: 20 metatiles  [k4]
+area $B4  tileset $67=A4  cells changed 1  metatiles 20  k4 1 (1 of them changed)
+    cell y4 x5 screen $8F: 20 metatiles  [k4]
+area $B6  tileset $67=A4  cells changed 1  metatiles 72  k4 0
+    cell y2 x0 screen $FD: 72 metatiles
+area $BA  tileset $67=A4  cells changed 1  metatiles 20  k4 0
+    cell y4 x5 screen $8F: 20 metatiles
+area $C1  tileset $67=A0  cells changed 1  metatiles 4  k4 0
+    cell y0 x0 screen $44: 4 metatiles
+area $E4  tileset $67=A0  cells changed 1  metatiles 4  k4 1 (1 of them changed)
+    cell y0 x0 screen $44: 4 metatiles  [k4]
+area $EC  tileset $67=A0  cells changed 1  metatiles 4  k4 0
+    cell y0 x0 screen $44: 4 metatiles

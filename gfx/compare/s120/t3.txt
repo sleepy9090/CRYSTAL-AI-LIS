@@ -1,0 +1,88 @@
+SubstRestoreScreen:
+ 2506 254, 80 30:CC4D  20 76 c6  JSR WaitPpuQueue             A:00 X:1F Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2516 253,327 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:94 P:nvUbdiZc S:FD
+SubstPlay:
+ 2671 253,337 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2672 253, 45 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2673 253, 34 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2674 255,269 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2675 253,334 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2676 253,333 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2677 253,331 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2678 256,222 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2679 253, 46 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2680 253, 36 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2681 253, 43 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2682 255,275 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:11 P:nvUbdiZc S:FD
+SubstPlay:
+ 2683 253,337 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2684 253,333 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2685 253,337 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2686 256,231 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2687 253, 46 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2688 253, 45 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2689 253, 34 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2691 253, 37 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2692 253,333 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2694 254,  4 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2695 253,334 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2697 253,331 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2699 253, 37 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2701 253, 40 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2703 253, 46 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2705 253, 40 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2707 253,337 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2709 253,340 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2711 253,328 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2713 253,337 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2715 253, 40 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2717 253, 43 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2719 253, 37 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2721 253, 40 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2723 254,  2 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2725 253,340 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2727 254,  2 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2729 253,331 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2731 253, 46 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD
+SubstPlay:
+ 2733 255,318 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:00 P:nvUbdiZc S:FD

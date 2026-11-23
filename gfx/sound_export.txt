@@ -1,0 +1,103 @@
+music $00: SQ1 2ev 1f end next=$00 | SQ2 2ev 1f end next=$00 | TRI 2ev 1f end next=$00 | NOISE 2ev 1f end next=$00
+music $01: SQ1 238ev 2688f end next=$01 | SQ2 237ev 2688f end next=$01 | TRI 238ev 2688f end next=$01 | NOISE 131ev 2688f end next=$01
+music $03: SQ1 53ev 1342f end next=$03 | SQ2 54ev 1342f end next=$03 | TRI 91ev 1337f end next=$03 | NOISE 2ev 1f end next=$00
+music $04: SQ1 83ev 1568f end next=$04 | SQ2 83ev 1568f end next=$04 | TRI 159ev 1568f end next=$04 | NOISE 2ev 1f end next=$00
+music $06: SQ1 142ev 2688f end next=$06 | SQ2 116ev 2688f end next=$06 | TRI 195ev 2688f end next=$06 | NOISE 332ev 2688f end next=$06
+music $07: SQ1 110ev 1344f end next=$07 | SQ2 110ev 1344f end next=$07 | TRI 71ev 1344f end next=$07 | NOISE 117ev 1344f end next=$07
+music $08: SQ1 88ev 1536f end next=$08 | SQ2 88ev 1536f end next=$08 | TRI 135ev 1536f end next=$08 | NOISE 114ev 1536f end next=$08
+music $09: SQ1 117ev 2432f end next=$09 | SQ2 281ev 2432f end next=$09 | TRI 68ev 2432f end next=$09 | NOISE 2ev 1f end next=$00
+music $0A: SQ1 94ev 1817f end next=$00 | SQ2 97ev 1817f end next=$00 | TRI 95ev 1817f end next=$00 | NOISE 2ev 1f end next=$00
+music $0B: SQ1 36ev 409f end next=$00 | SQ2 36ev 409f end next=$00 | TRI 30ev 385f end next=$00 | NOISE 30ev 385f end next=$00
+music $0C: SQ1 92ev 1248f end next=$0C | SQ2 92ev 1248f end next=$0C | TRI 136ev 1248f end next=$0C | NOISE 2ev 1f end next=$00
+music $0D: SQ1 76ev 1536f end next=$0D | SQ2 58ev 1536f end next=$0D | TRI 76ev 1536f end next=$0D | NOISE 2ev 1f end next=$00
+music $0E: SQ1 50ev 1152f end next=$0E | SQ2 69ev 1152f end next=$0E | TRI 70ev 1152f end next=$0E | NOISE 2ev 1f end next=$00
+music $0F: SQ1 35ev 672f end next=$0F | SQ2 33ev 672f end next=$0F | TRI 15ev 672f end next=$0F | NOISE 2ev 1f end next=$00
+music $11: SQ1 98ev 1152f end next=$11 | SQ2 98ev 1152f end next=$11 | TRI 88ev 1152f end next=$11 | NOISE 2ev 1f end next=$00
+music $12: SQ1 128ev 1248f end next=$12 | SQ2 100ev 1248f end next=$12 | TRI 128ev 1248f end next=$12 | NOISE 97ev 1248f end next=$12
+music $13: SQ1 11ev 121f end next=$00 | SQ2 11ev 121f end next=$00 | TRI 9ev 121f end next=$00 | NOISE 2ev 1f end next=$00
+music $14: SQ1 137ev 1152f end next=$14 | SQ2 137ev 1152f end next=$14 | TRI 129ev 1152f end next=$14 | NOISE 103ev 1152f end next=$14
+music $15: SQ1 186ev 2880f end next=$15 | SQ2 195ev 2880f end next=$15 | TRI 291ev 2880f end next=$15 | NOISE 250ev 2880f end next=$15
+music $16: SQ1 105ev 2688f end next=$16 | SQ2 190ev 2688f end next=$16 | TRI 143ev 2688f end next=$16 | NOISE 2ev 1f end next=$00
+music $17: SQ1 169ev 2464f end next=$17 | SQ2 170ev 2463f end next=$17 | TRI 128ev 2464f end next=$17 | NOISE 2ev 1f end next=$00
+music $18: SQ1 162ev 2304f end next=$18 | SQ2 176ev 2304f end next=$18 | TRI 235ev 2304f end next=$18 | NOISE 292ev 2304f end next=$18
+music $19: SQ1 111ev 2686f end next=$19 | SQ2 195ev 2688f end next=$19 | TRI 92ev 2688f end next=$19 | NOISE 2ev 1f end next=$00
+music $1A: SQ1 107ev 2137f end next=$00 | SQ2 111ev 2137f end next=$00 | TRI 167ev 2137f end next=$00 | NOISE 167ev 2113f end next=$00
+music $1B: SQ1 81ev 1600f end next=$1B | SQ2 201ev 1600f end next=$1B | TRI 2ev 1f end next=$00 | NOISE 2ev 1f end next=$00
+music $1C: SQ1 164ev 2688f end next=$1A | SQ2 174ev 2688f end next=$1A | TRI 218ev 2688f end next=$1A | NOISE 222ev 2688f end next=$1A
+music $1D: SQ1 32ev 1152f end next=$1C | SQ2 177ev 1152f end next=$1C | TRI 35ev 1152f end next=$1C | NOISE 2ev 1f end next=$00
+music $1E: SQ1 22ev 44f end next=$1E | SQ2 22ev 44f end next=$1E | TRI 22ev 44f end next=$1E | NOISE 6ev 44f end next=$1E
+music $1F: SQ1 63ev 219f end next=$00 | SQ2 64ev 220f end next=$00 | TRI 17ev 118f end next=$00 | NOISE 35ev 136f end next=$00
+sfx $20: SFX-SQ2 6ev 18f end next=$00 | SFX-NOISE 5ev 4f end next=$00
+sfx $21: SFX-SQ2 5ev 7f end next=$00 | SFX-NOISE 6ev 8f end next=$00
+sfx $23: SFX-SQ2 80ev 115f end next=$00 | SFX-NOISE 9ev 55f end next=$00
+sfx $24: SFX-SQ2 3ev 25f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $25: SFX-SQ2 18ev 49f end next=$00 | SFX-NOISE 8ev 7f end next=$00
+sfx $26: SFX-SQ2 3ev 25f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $27: SFX-SQ2 27ev 26f end next=$00 | SFX-NOISE 15ev 14f end next=$00
+sfx $28: SFX-SQ2 10ev 9f end next=$00 | SFX-NOISE 10ev 9f end next=$00
+sfx $29: SFX-SQ2 10ev 17f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $2A: SFX-SQ2 7ev 6f end next=$00 | SFX-NOISE 7ev 6f end next=$00
+sfx $2B: SFX-SQ2 18ev 17f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $2C: SFX-SQ2 22ev 67f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $2E: SFX-SQ2 11ev 15f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $2F: SFX-SQ2 2ev 1f end next=$00 | SFX-NOISE 6ev 37f end next=$00
+sfx $30: SFX-SQ2 4ev 25f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $31: SFX-SQ2 4ev 33f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $32: SFX-SQ2 38ev 73f end next=$00 | SFX-NOISE 17ev 16f end next=$00
+sfx $33: SFX-SQ2 38ev 37f end next=$00 | SFX-NOISE 17ev 16f end next=$00
+sfx $36: SFX-SQ2 4ev 5f end next=$00 | SFX-NOISE 6ev 17f end next=$00
+sfx $37: SFX-SQ2 3ev 7f end next=$00 | SFX-NOISE 12ev 21f end next=$00
+sfx $39: SFX-SQ2 26ev 49f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $3A: SFX-SQ2 6ev 18f end next=$00 | SFX-NOISE 5ev 4f end next=$00
+sfx $3B: SFX-SQ2 5ev 55f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $3C: SFX-SQ2 26ev 25f end next=$00 | SFX-NOISE 48ev 93f end next=$00
+sfx $3D: SFX-SQ2 6ev 37f end next=$00 | SFX-NOISE 16ev 22f end next=$00
+sfx $3E: SFX-SQ2 80ev 235f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $3F: SFX-SQ2 42ev 81f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $40: SFX-SQ2 32ev 61f end next=$00 | SFX-NOISE 38ev 103f end next=$00
+sfx $41: SFX-SQ2 29ev 28f end next=$00 | SFX-NOISE 11ev 28f end next=$00
+sfx $42: SFX-SQ2 20ev 37f end next=$00 | SFX-NOISE 26ev 49f end next=$00
+sfx $43: SFX-SQ2 23ev 22f end next=$00 | SFX-NOISE 25ev 70f end next=$00
+sfx $45: SFX-SQ2 19ev 24f end next=$00 | SFX-NOISE 3ev 4f end next=$00
+sfx $47: SFX-SQ2 16ev 15f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $48: SFX-SQ2 14ev 89f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $49: SFX-SQ2 9ev 8f end next=$00 | SFX-NOISE 15ev 40f end next=$00
+sfx $4A: SFX-SQ2 17ev 16f end next=$00 | SFX-NOISE 31ev 88f end next=$00
+sfx $4B: SFX-SQ2 3ev 49f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $4C: SFX-SQ2 10ev 17f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $4E: SFX-SQ2 15ev 14f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $50: SFX-SQ2 39ev 38f end next=$00 | SFX-NOISE 15ev 14f end next=$00
+sfx $51: SFX-SQ2 38ev 73f end next=$00 | SFX-NOISE 17ev 16f end next=$00
+sfx $52: SFX-SQ2 21ev 24f end next=$00 | SFX-NOISE 14ev 73f end next=$00
+sfx $53: SFX-SQ2 73ev 72f end next=$00 | SFX-NOISE 77ev 76f end next=$00
+sfx $54: SFX-SQ2 41ev 40f end next=$00 | SFX-NOISE 54ev 81f end next=$00
+sfx $55: SFX-SQ2 34ev 65f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $56: SFX-SQ2 4ev 39f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $57: SFX-SQ2 19ev 69f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $58: SFX-SQ2 3ev 7f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $5A: SFX-SQ2 45ev 44f end next=$00 | SFX-NOISE 8ev 7f end next=$00
+sfx $5B: SFX-SQ2 50ev 49f end next=$00 | SFX-NOISE 62ev 121f end next=$00
+sfx $5C: SFX-SQ2 24ev 23f end next=$00 | SFX-NOISE 3ev 5f end next=$00
+sfx $5D: SFX-SQ2 4ev 61f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $5E: SFX-SQ2 4ev 61f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $5F: SFX-SQ2 4ev 10f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $60: SFX-SQ2 19ev 277f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $61: SFX-SQ2 11ev 57f end next=$00 | SFX-NOISE 24ev 46f end next=$00
+sfx $62: SFX-SQ2 21ev 54f end next=$00 | SFX-NOISE 31ev 60f end next=$00
+sfx $63: SFX-SQ2 4ev 25f end next=$00 | SFX-NOISE 17ev 16f end next=$00
+sfx $64: SFX-SQ2 28ev 27f end next=$00 | SFX-NOISE 32ev 61f end next=$00
+sfx $65: SFX-SQ2 16ev 15f end next=$00 | SFX-NOISE 9ev 22f end next=$00
+sfx $66: SFX-SQ2 74ev 73f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $67: SFX-SQ2 4ev 25f end next=$00 | SFX-NOISE 17ev 16f end next=$00
+sfx $68: SFX-SQ2 18ev 49f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $69: SFX-SQ2 10ev 9f end next=$00 | SFX-NOISE 10ev 9f end next=$00
+sfx $6A: SFX-SQ2 10ev 10f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $6B: SFX-SQ2 8ev 54f end next=$00 | SFX-NOISE 23ev 41f end next=$00
+sfx $6C: SFX-SQ2 14ev 25f end next=$00 | SFX-NOISE 26ev 49f end next=$00
+sfx $6D: SFX-SQ2 74ev 73f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $6E: SFX-SQ2 86ev 85f end next=$00 | SFX-NOISE 47ev 91f end next=$00
+sfx $6F: SFX-SQ2 35ev 34f end next=$00 | SFX-NOISE 21ev 29f end next=$00
+sfx $72: SFX-SQ2 9ev 8f end next=$00 | SFX-NOISE 26ev 49f end next=$00
+sfx $74: SFX-SQ2 34ev 33f end next=$00 | SFX-NOISE 2ev 1f end next=$00
+sfx $75: SFX-SQ2 11ev 57f end next=$00 | SFX-NOISE 31ev 57f end next=$00
+sfx $76: SFX-SQ2 34ev 33f end next=$00 | SFX-NOISE 2ev 1f end next=$00

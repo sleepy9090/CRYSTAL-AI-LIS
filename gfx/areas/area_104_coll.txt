@@ -1,0 +1,16 @@
+# area $68 3x1 screens, $69=B5; . 00  D b7 damage floor  p b0 pit  c b5 conveyor  # b2 wall  o b1-only low obstacle  s b6 sink  f b4-only (behind BG)  v b3-only (substitutable)
+0.00 ################|################|################
+0.10 ################|################|################
+0.20 ################|################|################
+0.30 ################|################|#######..#######
+0.40 #############o##|#############o##|#..####..#######
+0.50 ####oooo####oooo|o####ooo####oooo|o...###..#######
+0.60 ###ooooooooooooo|oooooooooooooooo|ooo.........####
+0.70 ##oooooooooooooo|oooooooooooooooo|oooooo.......###
+0.80 ##oooooooooooooo|oooooooooooooooo|ooooooooo.....##
+0.90 ##oooooooooooooo|oooooooooooooooo|ooooooooo....###
+0.A0 ###oooooooo####o|oo#####oo#######|o########...####
+0.B0 #####oo#########|################|################
+0.C0 #####oo#########|################|################
+0.D0 #####oo#########|################|################
+0.E0 #####oo#########|################|################

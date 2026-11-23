@@ -1,0 +1,138 @@
+p=$00 rec 4:80F0 00 00 02 2c  type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00 areas 50 93
+p=$01 rec 4:80F4 00 00 0e 32  type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=0E tile+=00 y|=0E areas 93 C6
+p=$02 rec 4:80F8 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas 50 C6
+p=$03 rec 4:80FC 00 00 0e 3a  type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=0E tile+=00 y|=0E areas 50 93
+p=$04 rec 4:81F0 00 00 02 2c  type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00 areas 1B 93 E0
+p=$05 rec 4:81F4 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas 1B 50
+p=$06 rec 4:81F8 00 00 02 38  type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas 50 93
+p=$07 rec 4:81FC 00 00 02 38  type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas 61 DE
+p=$08 rec 4:82F0 00 00 02 2c  type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00 areas 18 D5
+p=$09 rec 4:82F4 00 00 02 2c  type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00 areas 65
+p=$0A rec 4:82F8 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas 65
+p=$0B rec 4:82FC 00 00 02 30  type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00 areas 8E BF
+p=$0C rec 4:83F0 00 00 02 32  type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=02 tile+=00 areas 72 EF
+p=$0D rec 4:83F4 00 42 06 32  type=$30 $0680=00 $06A0=42 meta/$06C0=32 $06E0=06 tile+=00 areas 35 C0
+p=$0E rec 4:83F8 00 00 02 38  type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas 02 32
+p=$0F rec 4:83FC 00 00 02 2c  type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00 areas 02 32
+p=$10 rec 4:84F0 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas 02 32
+p=$11 rec 4:84F4 00 00 02 3e  type=$30 $0680=00 $06A0=00 meta/$06C0=3E $06E0=02 tile+=00 areas 32 C0
+p=$12 rec 4:84F8 00 00 02 40  type=$30 $0680=00 $06A0=00 meta/$06C0=40 $06E0=02 tile+=00 areas 02 32
+p=$13 rec 4:84FC 00 00 02 4a  type=$30 $0680=00 $06A0=00 meta/$06C0=4A $06E0=02 tile+=00 areas C1
+p=$14 rec 4:85F0 32 00 06 2e  type=$30 $0680=32 $06A0=00 meta/$06C0=2E $06E0=06 tile+=00 areas 0E C5
+p=$15 rec 4:85F4 00 00 25 4f  type=$30 $0680=00 $06A0=00 meta/$06C0=4F $06E0=25 tile+=20 areas 0E
+p=$16 rec 4:85F8 01 00 06 46  type=$30 $0680=01 $06A0=00 meta/$06C0=46 $06E0=06 tile+=00 areas 18 57 8C
+p=$17 rec 4:85FC 00 00 02 38  type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas 18
+p=$18 rec 4:86F0 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas 18
+p=$19 rec 4:86F4 00 00 02 30  type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00 areas 18
+p=$1A rec 4:86F8 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas 18
+p=$1B rec 4:86FC 00 00 06 31  type=$30 $0680=00 $06A0=00 meta/$06C0=31 $06E0=06 tile+=00 areas C6
+p=$1C rec 4:87F0 00 00 06 2f  type=$30 $0680=00 $06A0=00 meta/$06C0=2F $06E0=06 tile+=00 areas C6
+p=$1D rec 4:87F4 01 00 04 51  type=$30 $0680=01 $06A0=00 meta/$06C0=51 $06E0=04 tile+=00 areas CD
+p=$1E rec 4:87F8 27 00 06 42  type=$30 $0680=27 $06A0=00 meta/$06C0=42 $06E0=06 tile+=00 areas CE
+p=$1F rec 4:87FC 00 00 06 4a  type=$30 $0680=00 $06A0=00 meta/$06C0=4A $06E0=06 tile+=00 areas 1A CE
+p=$20 rec 4:88F0 00 00 02 3c  type=$30 $0680=00 $06A0=00 meta/$06C0=3C $06E0=02 tile+=00 areas 1C
+p=$21 rec 4:88F4 00 00 02 40  type=$30 $0680=00 $06A0=00 meta/$06C0=40 $06E0=02 tile+=00 areas 1C
+p=$22 rec 4:88F8 00 00 02 3c  type=$30 $0680=00 $06A0=00 meta/$06C0=3C $06E0=02 tile+=00 areas 1C
+p=$23 rec 4:88FC 3e 00 14 4d  type=$30 $0680=3E $06A0=00 meta/$06C0=4D $06E0=14 tile+=10 areas D4
+p=$24 rec 4:89F0 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas 1B
+p=$25 rec 4:89F4 02 00 06 2e  type=$30 $0680=02 $06A0=00 meta/$06C0=2E $06E0=06 tile+=00 areas 1B
+p=$26 rec 4:89F8 00 00 06 2e  type=$30 $0680=00 $06A0=00 meta/$06C0=2E $06E0=06 tile+=00 areas D4
+p=$27 rec 4:89FC 00 00 06 2e  type=$30 $0680=00 $06A0=00 meta/$06C0=2E $06E0=06 tile+=00 areas D4
+p=$28 rec 4:8AF0 00 00 02 30  type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00 areas D5
+p=$29 rec 4:8AF4 00 00 02 2c  type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00 areas 3E
+p=$2A rec 4:8AF8 00 00 02 38  type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas D5
+p=$2B rec 4:8AFC 00 00 02 38  type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas 3E
+p=$2C rec 4:8BF0 00 00 04 ad  type=$30 $0680=00 $06A0=00 meta/$06C0=AD $06E0=04 tile+=00 areas 28
+p=$2D rec 4:8BF4 00 00 06 5a  type=$30 $0680=00 $06A0=00 meta/$06C0=5A $06E0=06 tile+=00 areas 28 28 73 73
+p=$2E rec 4:8BF8 00 00 02 30  type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00 areas 30
+p=$2F rec 4:8BFC 00 00 02 38  type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas 30
+p=$30 rec 4:8CF0 00 00 02 30  type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00 areas 30
+p=$32 rec 4:8CF8 00 00 02 38  type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas DE
+p=$33 rec 4:8CFC 00 00 06 3a  type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=06 tile+=00 areas DE DF
+p=$34 rec 4:8DF0 00 00 06 3a  type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=06 tile+=00 areas D7
+p=$35 rec 4:8DF4 00 00 06 32  type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=06 tile+=00 areas DE
+p=$36 rec 4:8DF8 00 00 06 3a  type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=06 tile+=00 areas E0
+p=$37 rec 4:8DFC 00 00 06 36  type=$30 $0680=00 $06A0=00 meta/$06C0=36 $06E0=06 tile+=00 areas E0
+p=$38 rec 4:8EF0 28 45 1c 4d  type=$30 $0680=28 $06A0=45 meta/$06C0=4D $06E0=1C tile+=10 y|=0E areas DF E1
+p=$39 rec 4:8EF4 00 00 0c 4e  type=$30 $0680=00 $06A0=00 meta/$06C0=4E $06E0=0C tile+=00 y|=0E areas D8
+p=$3A rec 4:8EF8 00 00 02 44  type=$30 $0680=00 $06A0=00 meta/$06C0=44 $06E0=02 tile+=00 areas 55 55
+p=$3D rec 4:8FF4 00 00 06 31  type=$30 $0680=00 $06A0=00 meta/$06C0=31 $06E0=06 tile+=00 areas E3
+p=$3E rec 4:8FF8 00 00 02 38  type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas E3
+p=$3F rec 4:8FFC 00 00 02 2c  type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00 areas E3
+p=$40 rec 4:90F0 00 00 02 30  type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00 areas 71
+p=$41 rec 4:90F4 00 00 02 38  type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas 71
+p=$42 rec 4:90F8 00 00 02 38  type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas 71
+p=$43 rec 4:90FC 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas 71
+p=$44 rec 4:91F0 37 00 06 32  type=$30 $0680=37 $06A0=00 meta/$06C0=32 $06E0=06 tile+=00 areas E4 E9
+p=$45 rec 4:91F4 00 00 02 30  type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00 areas 65
+p=$46 rec 4:91F8 00 00 02 38  type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas 65
+p=$47 rec 4:91FC 00 00 02 3c  type=$30 $0680=00 $06A0=00 meta/$06C0=3C $06E0=02 tile+=00 areas E8
+p=$48 rec 4:92F0 00 00 02 38  type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas 72
+p=$49 rec 4:92F4 00 00 0e 3a  type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=0E tile+=00 y|=0E areas EF
+p=$4A rec 4:92F8 00 00 02 32  type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=02 tile+=00 areas EF EF
+p=$4B rec 4:92FC 00 00 02 2e  type=$30 $0680=00 $06A0=00 meta/$06C0=2E $06E0=02 tile+=00 areas F1 F1
+p=$4C rec 4:93F0 00 00 0f 32  type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=0F tile+=00 y|=0E areas F1
+p=$4D rec 4:93F4 00 00 07 36  type=$30 $0680=00 $06A0=00 meta/$06C0=36 $06E0=07 tile+=00 areas F1
+p=$4E rec 4:93F8 00 00 06 36  type=$30 $0680=00 $06A0=00 meta/$06C0=36 $06E0=06 tile+=00 areas 7E 7E
+p=$4F rec 4:93FC 00 00 02 2c  type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00 areas 8C
+p=$50 rec 4:94F0 00 00 02 30  type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00 areas 8C
+p=$51 rec 4:94F4 00 00 05 56  type=$30 $0680=00 $06A0=00 meta/$06C0=56 $06E0=05 tile+=00 areas F3 F3 F3
+p=$52 rec 4:94F8 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas 8C
+p=$53 rec 4:94FC 00 00 04 36  type=$30 $0680=00 $06A0=00 meta/$06C0=36 $06E0=04 tile+=00 areas F4 F4
+p=$54 rec 4:95F0 2b 00 02 38  type=$30 $0680=2B $06A0=00 meta/$06C0=38 $06E0=02 tile+=00 areas BB
+p=$55 rec 4:95F4 00 00 02 30  type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00 areas 8E
+p=$56 rec 4:95F8 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas 8E
+p=$57 rec 4:95FC 00 00 0e 32  type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=0E tile+=00 y|=0E areas BF
+p=$58 rec 4:96F0 00 00 06 36  type=$30 $0680=00 $06A0=00 meta/$06C0=36 $06E0=06 tile+=00 areas BF
+p=$59 rec 4:96F4 00 00 02 4a  type=$30 $0680=00 $06A0=00 meta/$06C0=4A $06E0=02 tile+=00 areas 96 96 96 96
+p=$5A rec 4:96F8 2d 00 02 4a  type=$30 $0680=2D $06A0=00 meta/$06C0=4A $06E0=02 tile+=00 areas 96
+p=$5B rec 4:96FC 00 00 06 3a  type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=06 tile+=00 areas FA
+p=$5C rec 4:97F0 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas FA
+p=$5D rec 4:97F4 00 00 04 ad  type=$30 $0680=00 $06A0=00 meta/$06C0=AD $06E0=04 tile+=00 areas 8C 8C
+p=$5E rec 4:97F8 41 34 06 32  type=$30 $0680=41 $06A0=34 meta/$06C0=32 $06E0=06 tile+=00 areas 10 AA F2
+p=$5F rec 4:97FC 44 44 06 2e  type=$30 $0680=44 $06A0=44 meta/$06C0=2E $06E0=06 tile+=00 areas 1E 21 AC F2 F3
+p=$60 rec 4:98F0 00 00 06 2e  type=$30 $0680=00 $06A0=00 meta/$06C0=2E $06E0=06 tile+=00 areas 1E 8C EC
+p=$61 rec 4:98F4 00 00 04 4c  type=$30 $0680=00 $06A0=00 meta/$06C0=4C $06E0=04 tile+=00 areas 52
+p=$62 rec 4:98F8 46 00 0e 36  type=$30 $0680=46 $06A0=00 meta/$06C0=36 $06E0=0E tile+=00 y|=0E areas B9 E1 F2 F4
+p=$63 rec 4:98FC 04 36 04 bf  type=$30 $0680=04 $06A0=36 meta/$06C0=BF $06E0=04 tile+=00 areas 64
+p=$64 rec 4:99F0 00 00 06 32  type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=06 tile+=00 areas D6
+p=$65 rec 4:99F4 00 00 d0 39  type=$30 $0680=00 $06A0=00 meta/$06C0=39 $04A0/$06E0=50 areas 01
+p=$68 rec 4:9AF0 00 00 04 4d  type=$30 $0680=00 $06A0=00 meta/$06C0=4D $06E0=04 tile+=00 areas 61
+p=$6B rec 4:9AFC 00 00 05 4f  type=$30 $0680=00 $06A0=00 meta/$06C0=4F $06E0=05 tile+=00 areas 62
+p=$6C rec 4:9BF0 00 00 07 36  type=$30 $0680=00 $06A0=00 meta/$06C0=36 $06E0=07 tile+=00 areas F1
+p=$6D rec 4:9BF4 00 00 06 32  type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=06 tile+=00 areas 8E EF
+p=$6E rec 4:9BF8 40 00 04 db  type=$30 $0680=40 $06A0=00 meta/$06C0=DB $06E0=04 tile+=00 areas F2
+p=$6F rec 4:9BFC 00 00 02 30  type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00 areas 72
+p=$70 rec 4:9CF0 00 00 34 ad  type=$30 $0680=00 $06A0=00 meta/$06C0=AD $06E0=34 tile+=30 areas 8C
+p=$71 rec 4:9CF4 00 00 24 ad  type=$30 $0680=00 $06A0=00 meta/$06C0=AD $06E0=24 tile+=20 areas 8C
+p=$72 rec 4:9CF8 00 00 14 50  type=$30 $0680=00 $06A0=00 meta/$06C0=50 $06E0=14 tile+=10 areas 8C
+p=$75 rec 4:9DF4 00 00 04 64  type=$30 $0680=00 $06A0=00 meta/$06C0=64 $06E0=04 tile+=00 areas BA
+p=$76 rec 4:9DF8 00 00 14 ad  type=$30 $0680=00 $06A0=00 meta/$06C0=AD $06E0=14 tile+=10 areas 7E 7E
+p=$77 rec 4:9DFC 00 00 02 2c  type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00 areas 72
+p=$78 rec 4:9EF0 00 00 02 2c  type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00 areas 8E
+p=$79 rec 4:9EF4 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas 72
+p=$7A rec 4:9EF8 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas 8E
+p=$7B rec 4:9EFC 00 00 02 34  type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00 areas D6
+p=$7C rec 4:9FF0 00 00 06 3e  type=$30 $0680=00 $06A0=00 meta/$06C0=3E $06E0=06 tile+=00 areas 1C
+p=$7D rec 4:9FF4 00 00 06 42  type=$30 $0680=00 $06A0=00 meta/$06C0=42 $06E0=06 tile+=00 areas 1C
+p=$7E rec 4:9FF8 47 48 34 4d  type=$30 $0680=47 $06A0=48 meta/$06C0=4D $06E0=34 tile+=30 areas 62 BA EF F1
+p=$80 rec 5:A0F0 00 00 06 32  type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=06 tile+=00 areas 8E 8E
+p=$81 rec 5:A0F4 00 00 02 32  type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=02 tile+=00 areas 8E 8E
+p=$83 rec 5:A0FC 40 00 04 db  type=$30 $0680=40 $06A0=00 meta/$06C0=DB $06E0=04 tile+=00 areas 9C
+p=$84 rec 5:A1F0 00 00 04 2e  type=$30 $0680=00 $06A0=00 meta/$06C0=2E $06E0=04 tile+=00 areas 6E
+p=$85 rec 5:A1F4 00 00 04 3a  type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=04 tile+=00 areas 55 55
+p=$88 rec 5:A2F0 00 00 04 3a  type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=04 tile+=00 areas 57
+p=$8E rec 5:A3F8 00 00 04 2e  type=$30 $0680=00 $06A0=00 meta/$06C0=2E $06E0=04 tile+=00 areas 5E 6E
+p=$C0 rec 5:B0F0 ff 57 ff ff  type=$57                                             areas 0A
+p=$C1 rec 5:B0F4 ff 5e ff ff  type=$5E                                             areas 1A
+p=$C2 rec 5:B0F8 ff 68 ff ff  type=$68                                             areas 28
+p=$C3 rec 5:B0FC ff 70 ff ff  type=$70                                             areas 43
+p=$C5 rec 5:B1F4 ff 8b ff ff  type=$8B                                             areas A9
+p=$C6 rec 5:B1F8 ff 90 ff ff  type=$90                                             areas AC
+p=$C7 rec 5:B1FC ff 93 ff ff  type=$93                                             areas B9
+p=$C8 rec 5:B2F0 ff 97 ff ff  type=$97                                             areas B6
+p=$C9 rec 5:B2F4 ff 9c ff ff  type=$9C                                             areas A0
+p=$CA rec 5:B2F8 ff 9d ff ff  type=$9D                                             areas A0
+p=$CB rec 5:B2FC ff 9b ff ff  type=$9B                                             areas 9F A6
+p=$CC rec 5:B3F0 ff a5 ff ff  type=$A5                                             areas 6C
+-- 137 distinct params

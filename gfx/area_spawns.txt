@@ -1,0 +1,1449 @@
+; AreaPtrTable 12:9201, 252 entries (table end $93F9)
+  0 $00  BFF0 e6=20 e7=20 R4=6F R5=6F spawns=0 slots=0
+  1 $01  9453 e6=FF e7=0A R4=4B R5=4E spawns=2 slots=2
+      slot 0D: x= 168 y=  76 h4 p=$28 b2=$04  type=p (p&F0=40: flag item)
+      slot 0E: x= 120 y= 124 h1 p=$65 b2=$01  via 4:$80F0 rec
+  2 $02  A78F e6=11 e7=0A R4=4E R5=4B spawns=6 slots=6
+      slot 0D: x= 232 y= 220 h1 p=$0E b2=$81  via 4:$80F0 rec
+      slot 0E: x= 376 y=  60 h1 p=$0F b2=$81  via 4:$80F0 rec
+      slot 0F: x= 456 y= 300 h1 p=$12 b2=$01  via 4:$80F0 rec
+      slot 10: x= 136 y= 428 h1 p=$10 b2=$81  via 4:$80F0 rec
+      slot 11: x= 488 y= 316 h2 p=$99 b2=$02  type $0D/$0E (p bit7)
+      slot 12: x= 488 y= 348 h2 p=$99 b2=$02  type $0D/$0E (p bit7)
+  3 $03  9461 e6=21 e7=20 R4=64 R5=60 spawns=10 slots=16
+      slot 0D: x= 312 y= 348 h4 p=$28 b2=$04  type=p (p&F0=40: flag item)
+      slot 0E: x= 376 y= 588 h0 p=$01 b2=$80  type=p+$50
+      slot 0F: b1 bit7 (skip)
+      slot 10: x= 536 y= 860 h0 p=$01 b2=$80  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 744 y= 940 h0 p=$01 b2=$80  type=p+$50
+      slot 13: x= 264 y=1052 h0 p=$01 b2=$80  type=p+$50
+      slot 14: x= 456 y=1100 h0 p=$01 b2=$80  type=p+$50
+      slot 15: x= 616 y= 140 h0 p=$00 b2=$00  type=p+$50
+      slot 16: b1 bit7 (skip)
+      slot 17: x= 632 y= 348 h0 p=$00 b2=$00  type=p+$50
+      slot 18: b1 bit7 (skip)
+      slot 19: b1 bit7 (skip)
+      slot 1A: b1 bit7 (skip)
+      slot 1B: x= 408 y= 332 h3 p=$E0 b2=$83  type=p+$D0
+      slot 1C: x= 328 y= 380 h2 p=$B4 b2=$02  type $0D/$0E (p bit7)
+  4 $04  94A7 e6=22 e7=FF R4=65 R5=FF spawns=2 slots=3
+      slot 0D: b1 bit7 (skip)
+      slot 0E: x= 488 y= 380 h0 p=$02 b2=$00  type=p+$50
+      slot 0F: x= 120 y= 524 h0 p=$02 b2=$00  type=p+$50
+  5 $05  94B9 e6=22 e7=FF R4=65 R5=FF spawns=2 slots=7
+      slot 0D: x= 472 y= 124 h0 p=$02 b2=$00  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: x= 792 y= 636 h0 p=$02 b2=$00  type=p+$50
+  6 $06  94DB e6=23 e7=FF R4=64 R5=FF spawns=3 slots=3
+      slot 0D: x= 328 y= 108 h0 p=$03 b2=$00  type=p+$50
+      slot 0E: x= 392 y= 140 h0 p=$03 b2=$00  type=p+$50
+      slot 0F: x= 472 y= 124 h2 p=$1D b2=$02  type $0D/$0E (p bit7)
+  7 $07  94ED e6=21 e7=24 R4=60 R5=6C spawns=4 slots=9
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 632 y= 396 h3 p=$00 b2=$03  type=p+$D0
+      slot 13: x= 640 y= 284 h2 p=$1E b2=$42  type $0D/$0E (p bit7)
+      slot 14: x= 280 y= 892 h2 p=$50 b2=$02  type $0D/$0E (p bit7)
+      slot 15: x= 640 y=1228 h2 p=$05 b2=$42  type $0D/$0E (p bit7)
+  8 $08  9517 e6=21 e7=24 R4=60 R5=6C spawns=2 slots=2
+      slot 0D: x= 136 y= 300 h0 p=$04 b2=$00  type=p+$50
+      slot 0E: x= 128 y= 284 h2 p=$24 b2=$42  type $0D/$0E (p bit7)
+  9 $09  9525 e6=23 e7=22 R4=64 R5=66 spawns=5 slots=10
+      slot 0D: x= 232 y= 140 h0 p=$06 b2=$80  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: x= 696 y= 140 h0 p=$06 b2=$80  type=p+$50
+      slot 10: b1 bit7 (skip)
+      slot 11: x= 952 y= 636 h0 p=$06 b2=$80  type=p+$50
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: x=1048 y= 636 h0 p=$03 b2=$00  type=p+$50
+      slot 15: b1 bit7 (skip)
+      slot 16: x= 376 y= 396 h3 p=$00 b2=$03  type=p+$D0
+ 10 $0A  9553 e6=21 e7=21 R4=6C R5=6C spawns=1 slots=1
+      slot 0D: x= 640 y=  76 h1 p=$C0 b2=$41  via 4:$80F0 rec
+ 12 $0C  955D e6=FF e7=FF R4=FF R5=FF spawns=1 slots=1
+      slot 0D: x= 376 y= 396 h3 p=$00 b2=$03  type=p+$D0
+ 14 $0E  9579 e6=0B e7=0B R4=51 R5=4C spawns=2 slots=2
+      slot 0D: x= 384 y= 284 h1 p=$15 b2=$41  via 4:$80F0 rec
+      slot 0E: x= 384 y= 284 h1 p=$14 b2=$C1  via 4:$80F0 rec
+ 15 $0F  9587 e6=20 e7=FF R4=60 R5=FF spawns=2 slots=2
+      slot 0D: x= 104 y=  92 h3 p=$E1 b2=$03  type=p+$D0
+      slot 0E: x= 120 y=  92 h3 p=$E1 b2=$03  type=p+$D0
+ 16 $10  9567 e6=FF e7=0C R4=FF R5=50 spawns=3 slots=3
+      slot 0D: x= 376 y= 556 h3 p=$01 b2=$03  type=p+$D0
+      slot 0E: x= 384 y= 652 h1 p=$5E b2=$C1  via 4:$80F0 rec
+      slot 0F: x= 392 y= 476 h2 p=$8C b2=$82  type $0D/$0E (p bit7)
+ 17 $11  96B1 e6=27 e7=23 R4=67 R5=66 spawns=2 slots=8
+      slot 0D: x= 120 y= 172 h0 p=$11 b2=$00  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: x= 136 y= 140 h0 p=$13 b2=$80  type=p+$50
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+ 20 $14  9595 e6=21 e7=24 R4=64 R5=65 spawns=1 slots=12
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: x= 632 y=1404 h3 p=$02 b2=$03  type=p+$D0
+ 21 $15  95CB e6=21 e7=24 R4=64 R5=65 spawns=2 slots=13
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: x= 712 y= 796 h2 p=$25 b2=$02  type $0D/$0E (p bit7)
+      slot 19: x=1672 y=  60 h2 p=$BA b2=$02  type $0D/$0E (p bit7)
+ 24 $18  A7CF e6=15 e7=10 R4=4B R5=4D spawns=7 slots=7
+      slot 0D: x= 664 y= 156 h1 p=$16 b2=$81  via 4:$80F0 rec
+      slot 0E: x= 424 y= 108 h1 p=$18 b2=$81  via 4:$80F0 rec
+      slot 0F: x= 232 y= 156 h1 p=$19 b2=$01  via 4:$80F0 rec
+      slot 10: x= 280 y= 140 h1 p=$17 b2=$01  via 4:$80F0 rec
+      slot 11: x=  56 y= 124 h1 p=$1A b2=$01  via 4:$80F0 rec
+      slot 12: x= 600 y=  76 h1 p=$08 b2=$01  via 4:$80F0 rec
+      slot 13: x= 712 y= 156 h2 p=$A6 b2=$02  type $0D/$0E (p bit7)
+ 25 $19  9605 e6=FF e7=FF R4=FF R5=FF spawns=0 slots=0
+ 26 $1A  960B e6=10 e7=23 R4=6F R5=4F spawns=2 slots=14
+      slot 0D: x=1152 y=  92 h1 p=$C1 b2=$41  via 4:$80F0 rec
+      slot 0E: x= 648 y=1164 h1 p=$1F b2=$81  via 4:$80F0 rec
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: b1 bit7 (skip)
+      slot 19: b1 bit7 (skip)
+      slot 1A: b1 bit7 (skip)
+ 27 $1B  A869 e6=14 e7=14 R4=4A R5=49 spawns=8 slots=9
+      slot 0D: x= 376 y= 108 h1 p=$25 b2=$01  via 4:$80F0 rec
+      slot 0E: FE (skip)
+      slot 0F: x= 200 y= 108 h1 p=$04 b2=$81  via 4:$80F0 rec
+      slot 10: x= 296 y= 172 h1 p=$05 b2=$81  via 4:$80F0 rec
+      slot 11: x=  56 y= 156 h1 p=$24 b2=$01  via 4:$80F0 rec
+      slot 12: x= 232 y= 108 h2 p=$90 b2=$02  type $0D/$0E (p bit7)
+      slot 13: x= 360 y= 124 h2 p=$BC b2=$02  type $0D/$0E (p bit7)
+      slot 14: x= 392 y= 156 h2 p=$BC b2=$02  type $0D/$0E (p bit7)
+      slot 15: x= 424 y= 124 h2 p=$BC b2=$02  type $0D/$0E (p bit7)
+ 28 $1C  A82F e6=10 e7=10 R4=4F R5=4F spawns=7 slots=7
+      slot 0D: x= 376 y= 428 h1 p=$7C b2=$01  via 4:$80F0 rec
+      slot 0E: x= 360 y= 428 h1 p=$20 b2=$01  via 4:$80F0 rec
+      slot 0F: x= 120 y= 268 h1 p=$7D b2=$01  via 4:$80F0 rec
+      slot 10: x= 104 y= 268 h1 p=$21 b2=$01  via 4:$80F0 rec
+      slot 11: x= 376 y= 172 h1 p=$22 b2=$01  via 4:$80F0 rec
+      slot 12: x= 264 y= 428 h2 p=$8E b2=$02  type $0D/$0E (p bit7)
+      slot 13: x= 280 y= 460 h2 p=$AA b2=$02  type $0D/$0E (p bit7)
+ 30 $1E  A807 e6=06 e7=FF R4=50 R5=4D spawns=3 slots=3
+      slot 0D: x=  56 y= 108 h1 p=$60 b2=$81  via 4:$80F0 rec
+      slot 0E: x= 120 y= 108 h1 p=$5F b2=$01  via 4:$80F0 rec
+      slot 0F: x= 136 y= 188 h2 p=$85 b2=$02  type $0D/$0E (p bit7)
+ 32 $20  9649 e6=06 e7=21 R4=67 R5=50 spawns=1 slots=12
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: x= 120 y= 636 h2 p=$6A b2=$02  type $0D/$0E (p bit7)
+ 33 $21  967F e6=06 e7=21 R4=67 R5=50 spawns=2 slots=11
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: x=1144 y= 124 h1 p=$5F b2=$81  via 4:$80F0 rec
+      slot 17: x=1224 y= 124 h2 p=$69 b2=$02  type $0D/$0E (p bit7)
+ 34 $22  96D7 e6=27 e7=FF R4=67 R5=FF spawns=7 slots=14
+      slot 0D: x= 184 y= 380 h0 p=$11 b2=$00  type=p+$50
+      slot 0E: x=1144 y= 348 h0 p=$11 b2=$00  type=p+$50
+      slot 0F: b1 bit7 (skip)
+      slot 10: x= 120 y= 428 h0 p=$11 b2=$00  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 728 y= 908 h0 p=$11 b2=$00  type=p+$50
+      slot 13: x=1096 y= 380 h0 p=$11 b2=$00  type=p+$50
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: b1 bit7 (skip)
+      slot 19: x= 376 y= 652 h3 p=$01 b2=$03  type=p+$D0
+      slot 1A: x= 888 y= 652 h3 p=$01 b2=$03  type=p+$D0
+ 35 $23  9715 e6=27 e7=23 R4=67 R5=66 spawns=7 slots=11
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: x= 632 y= 556 h0 p=$12 b2=$00  type=p+$50
+      slot 10: x= 440 y= 108 h0 p=$13 b2=$80  type=p+$50
+      slot 11: x= 392 y= 124 h0 p=$13 b2=$80  type=p+$50
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: x= 952 y= 380 h0 p=$11 b2=$00  type=p+$50
+      slot 15: x= 840 y= 380 h0 p=$11 b2=$00  type=p+$50
+      slot 16: x= 888 y= 316 h3 p=$01 b2=$03  type=p+$D0
+      slot 17: x= 280 y= 124 h2 p=$52 b2=$02  type $0D/$0E (p bit7)
+ 36 $24  9747 e6=27 e7=23 R4=67 R5=66 spawns=6 slots=12
+      slot 0D: x= 712 y= 892 h0 p=$13 b2=$80  type=p+$50
+      slot 0E: x= 120 y=1068 h0 p=$13 b2=$80  type=p+$50
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 120 y= 972 h0 p=$13 b2=$80  type=p+$50
+      slot 13: x= 120 y= 396 h0 p=$12 b2=$00  type=p+$50
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: x= 600 y= 892 h0 p=$12 b2=$00  type=p+$50
+      slot 18: x= 120 y= 908 h3 p=$01 b2=$03  type=p+$D0
+ 37 $25  977D e6=27 e7=FF R4=67 R5=FF spawns=2 slots=2
+      slot 0D: x= 248 y= 124 h0 p=$11 b2=$00  type=p+$50
+      slot 0E: x= 296 y= 108 h0 p=$11 b2=$00  type=p+$50
+ 38 $26  978B e6=27 e7=23 R4=67 R5=66 spawns=4 slots=8
+      slot 0D: x= 120 y= 140 h0 p=$13 b2=$80  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: x= 392 y= 892 h0 p=$13 b2=$80  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 376 y= 892 h0 p=$11 b2=$00  type=p+$50
+      slot 13: b1 bit7 (skip)
+      slot 14: x= 120 y= 652 h3 p=$01 b2=$03  type=p+$D0
+ 39 $27  97B1 e6=27 e7=23 R4=67 R5=66 spawns=5 slots=13
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: x= 376 y=1084 h0 p=$11 b2=$00  type=p+$50
+      slot 16: x= 392 y=1004 h0 p=$11 b2=$00  type=p+$50
+      slot 17: x= 376 y= 316 h3 p=$01 b2=$03  type=p+$D0
+      slot 18: x= 376 y= 908 h3 p=$01 b2=$03  type=p+$D0
+      slot 19: x= 472 y= 124 h2 p=$06 b2=$02  type $0D/$0E (p bit7)
+ 40 $28  97EB e6=0C e7=09 R4=6B R5=51 spawns=13 slots=16
+      slot 0D: x=1152 y=  92 h1 p=$C2 b2=$41  via 4:$80F0 rec
+      slot 0E: x=1160 y=  60 h4 p=$2C b2=$04  type=p (p&F0=40: flag item)
+      slot 0F: x= 632 y=1644 h1 p=$2D b2=$01  via 4:$80F0 rec
+      slot 10: x= 648 y=1644 h1 p=$2D b2=$01  via 4:$80F0 rec
+      slot 11: x=1112 y= 380 h0 p=$14 b2=$00  type=p+$50
+      slot 12: x=1192 y= 412 h0 p=$14 b2=$00  type=p+$50
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: x= 552 y=1420 h0 p=$14 b2=$00  type=p+$50
+      slot 17: x=1144 y=1372 h1 p=$2C b2=$81  via 4:$80F0 rec
+      slot 18: x= 696 y=1708 h2 p=$A5 b2=$02  type $0D/$0E (p bit7)
+      slot 19: x= 744 y=1676 h2 p=$91 b2=$02  type $0D/$0E (p bit7)
+      slot 1A: x=1864 y=1964 h2 p=$86 b2=$02  type $0D/$0E (p bit7)
+      slot 1B: x=1912 y=1964 h2 p=$86 b2=$02  type $0D/$0E (p bit7)
+      slot 1C: x=1160 y=  76 h2 p=$AD b2=$02  type $0D/$0E (p bit7)
+ 41 $29  9831 e6=21 e7=21 R4=66 R5=FF spawns=4 slots=11
+      slot 0D: b1 bit7 (skip)
+      slot 0E: x= 296 y= 892 h0 p=$15 b2=$00  type=p+$50
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: x= 552 y=1420 h0 p=$15 b2=$00  type=p+$50
+      slot 15: x= 488 y=1404 h0 p=$15 b2=$00  type=p+$50
+      slot 16: b1 bit7 (skip)
+      slot 17: x=1576 y=1148 h0 p=$15 b2=$00  type=p+$50
+ 42 $2A  986D e6=23 e7=FF R4=67 R5=FF spawns=5 slots=11
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: x= 408 y= 380 h0 p=$16 b2=$00  type=p+$50
+      slot 11: x= 280 y= 636 h0 p=$16 b2=$00  type=p+$50
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: x= 408 y= 428 h0 p=$16 b2=$00  type=p+$50
+      slot 16: x= 120 y= 396 h3 p=$01 b2=$03  type=p+$D0
+      slot 17: x= 728 y= 124 h2 p=$5E b2=$02  type $0D/$0E (p bit7)
+ 43 $2B  989F e6=23 e7=21 R4=60 R5=6C spawns=8 slots=10
+      slot 0D: x= 376 y= 444 h0 p=$17 b2=$00  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: x= 376 y=1292 h0 p=$17 b2=$00  type=p+$50
+      slot 10: x= 888 y=1068 h0 p=$17 b2=$00  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 376 y= 332 h0 p=$17 b2=$00  type=p+$50
+      slot 13: x= 856 y=1148 h0 p=$17 b2=$00  type=p+$50
+      slot 14: x= 648 y= 636 h0 p=$05 b2=$80  type=p+$50
+      slot 15: x= 376 y= 908 h3 p=$01 b2=$03  type=p+$D0
+      slot 16: x= 632 y=1132 h3 p=$01 b2=$03  type=p+$D0
+ 44 $2C  98CD e6=FF e7=21 R4=60 R5=6C spawns=3 slots=7
+      slot 0D: x= 376 y= 172 h0 p=$17 b2=$00  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: x= 632 y= 892 h0 p=$17 b2=$00  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: x= 648 y= 988 h0 p=$17 b2=$00  type=p+$50
+ 45 $2D  98EF e6=23 e7=23 R4=67 R5=66 spawns=4 slots=10
+      slot 0D: b1 bit7 (skip)
+      slot 0E: x= 216 y= 124 h0 p=$16 b2=$00  type=p+$50
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 216 y= 124 h0 p=$16 b2=$00  type=p+$50
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: x= 376 y= 364 h3 p=$01 b2=$03  type=p+$D0
+      slot 16: x= 456 y= 380 h2 p=$53 b2=$02  type $0D/$0E (p bit7)
+ 46 $2E  991D e6=FF e7=20 R4=6B R5=FF spawns=4 slots=8
+      slot 0D: x= 376 y= 620 h0 p=$14 b2=$00  type=p+$50
+      slot 0E: x= 408 y= 892 h0 p=$14 b2=$00  type=p+$50
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: x= 632 y= 876 h3 p=$01 b2=$03  type=p+$D0
+      slot 14: x=1144 y= 364 h3 p=$01 b2=$03  type=p+$D0
+ 47 $2F  9955 e6=FF e7=20 R4=6B R5=FF spawns=4 slots=6
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: x= 984 y= 108 h0 p=$14 b2=$00  type=p+$50
+      slot 10: x= 856 y=1420 h0 p=$14 b2=$00  type=p+$50
+      slot 11: x= 632 y=  60 h3 p=$01 b2=$03  type=p+$D0
+      slot 12: x= 888 y=  60 h3 p=$01 b2=$03  type=p+$D0
+ 48 $30  9973 e6=0B e7=0B R4=4A R5=4A spawns=4 slots=4
+      slot 0D: x= 120 y=  44 h3 p=$01 b2=$03  type=p+$D0
+      slot 0E: x= 104 y=  92 h1 p=$30 b2=$01  via 4:$80F0 rec
+      slot 0F: x=  72 y= 156 h1 p=$2F b2=$01  via 4:$80F0 rec
+      slot 10: x= 184 y= 172 h1 p=$2E b2=$01  via 4:$80F0 rec
+ 49 $31  9989 e6=FF e7=FF R4=64 R5=FF spawns=1 slots=1
+      slot 0D: x= 128 y= 284 h2 p=$33 b2=$42  type $0D/$0E (p bit7)
+ 50 $32  9993 e6=11 e7=0A R4=4E R5=4B spawns=6 slots=6
+      slot 0D: x= 120 y=  44 h3 p=$01 b2=$03  type=p+$D0
+      slot 0E: x= 120 y= 172 h1 p=$0E b2=$81  via 4:$80F0 rec
+      slot 0F: x= 184 y= 156 h1 p=$0F b2=$81  via 4:$80F0 rec
+      slot 10: x=  72 y= 140 h1 p=$10 b2=$81  via 4:$80F0 rec
+      slot 11: x=  88 y=  92 h1 p=$11 b2=$01  via 4:$80F0 rec
+      slot 12: x= 184 y=  92 h1 p=$12 b2=$01  via 4:$80F0 rec
+ 51 $33  99B1 e6=FF e7=FF R4=FF R5=FF spawns=0 slots=0
+ 52 $34  99B7 e6=FF e7=20 R4=6B R5=FF spawns=3 slots=4
+      slot 0D: b1 bit7 (skip)
+      slot 0E: x= 328 y= 124 h0 p=$14 b2=$00  type=p+$50
+      slot 0F: x= 392 y= 172 h0 p=$14 b2=$00  type=p+$50
+      slot 10: x= 392 y= 540 h0 p=$14 b2=$00  type=p+$50
+ 53 $35  99CD e6=09 e7=0B R4=48 R5=FF spawns=6 slots=6
+      slot 0D: x= 128 y= 652 h1 p=$0D b2=$41  via 4:$80F0 rec
+      slot 0E: x= 120 y= 556 h3 p=$01 b2=$03  type=p+$D0
+      slot 0F: x= 632 y= 700 h2 p=$B2 b2=$02  type $0D/$0E (p bit7)
+      slot 10: x= 664 y= 700 h2 p=$B2 b2=$02  type $0D/$0E (p bit7)
+      slot 11: x= 120 y= 716 h2 p=$8D b2=$02  type $0D/$0E (p bit7)
+      slot 12: x= 152 y= 716 h2 p=$8D b2=$02  type $0D/$0E (p bit7)
+ 56 $38  9863 e6=FF e7=FF R4=FF R5=FF spawns=1 slots=1
+      slot 0D: x= 136 y=1004 h2 p=$94 b2=$02  type $0D/$0E (p bit7)
+ 57 $39  9943 e6=FF e7=20 R4=6B R5=FF spawns=3 slots=3
+      slot 0D: x= 328 y= 124 h0 p=$14 b2=$00  type=p+$50
+      slot 0E: x= 392 y= 188 h0 p=$14 b2=$00  type=p+$50
+      slot 0F: x= 632 y= 284 h0 p=$14 b2=$00  type=p+$50
+ 60 $3C  93F9 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$40 b2=$44  type=p (p&F0=40: flag item)
+ 61 $3D  9403 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$41 b2=$44  type=p (p&F0=40: flag item)
+ 62 $3E  A8C5 e6=11 e7=0E R4=49 R5=4C spawns=2 slots=2
+      slot 0D: x= 104 y= 124 h1 p=$2B b2=$81  via 4:$80F0 rec
+      slot 0E: x= 168 y= 156 h1 p=$29 b2=$01  via 4:$80F0 rec
+ 64 $40  99EB e6=23 e7=26 R4=65 R5=66 spawns=3 slots=13
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 536 y= 828 h0 p=$1A b2=$00  type=p+$50
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: x= 888 y= 380 h3 p=$02 b2=$03  type=p+$D0
+      slot 19: x= 152 y= 380 h2 p=$8D b2=$02  type $0D/$0E (p bit7)
+ 65 $41  9A25 e6=23 e7=26 R4=65 R5=66 spawns=1 slots=11
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: x= 632 y=1916 h3 p=$02 b2=$03  type=p+$D0
+ 66 $42  9B17 e6=25 e7=FF R4=68 R5=FF spawns=0 slots=2
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+ 67 $43  9B25 e6=2A e7=03 R4=53 R5=45 spawns=3 slots=3
+      slot 0D: x= 128 y= 108 h1 p=$C3 b2=$41  via 4:$80F0 rec
+      slot 0E: x= 120 y= 108 h3 p=$02 b2=$03  type=p+$D0
+      slot 0F: x= 120 y=  92 h3 p=$02 b2=$03  type=p+$D0
+ 68 $44  9C7D e6=23 e7=25 R4=67 R5=66 spawns=3 slots=8
+      slot 0D: x= 120 y= 140 h0 p=$24 b2=$00  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: x= 376 y= 636 h0 p=$24 b2=$00  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: x= 120 y= 396 h3 p=$00 b2=$03  type=p+$D0
+ 69 $45  9CA3 e6=2B e7=25 R4=66 R5=65 spawns=6 slots=13
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: x= 456 y= 124 h0 p=$22 b2=$00  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: x= 536 y= 124 h0 p=$13 b2=$00  type=p+$50
+      slot 14: b1 bit7 (skip)
+      slot 15: x= 232 y= 620 h0 p=$21 b2=$80  type=p+$50
+      slot 16: b1 bit7 (skip)
+      slot 17: x= 376 y= 620 h3 p=$00 b2=$03  type=p+$D0
+      slot 18: x= 888 y= 652 h3 p=$00 b2=$03  type=p+$D0
+      slot 19: x= 896 y= 732 h2 p=$5F b2=$42  type $0D/$0E (p bit7)
+ 70 $46  9CDD e6=2B e7=25 R4=66 R5=65 spawns=3 slots=8
+      slot 0D: x= 376 y= 172 h0 p=$22 b2=$00  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: x= 632 y= 700 h0 p=$22 b2=$00  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: x= 376 y= 620 h3 p=$00 b2=$03  type=p+$D0
+ 71 $47  9D03 e6=2C e7=23 R4=6F R5=FF spawns=1 slots=2
+      slot 0D: b1 bit7 (skip)
+      slot 0E: x= 376 y= 156 h2 p=$3C b2=$02  type $0D/$0E (p bit7)
+ 72 $48  9B45 e6=23 e7=2C R4=67 R5=66 spawns=3 slots=12
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: x= 376 y= 108 h3 p=$00 b2=$03  type=p+$D0
+      slot 17: x= 376 y= 908 h3 p=$00 b2=$03  type=p+$D0
+      slot 18: x= 456 y= 124 h2 p=$1F b2=$02  type $0D/$0E (p bit7)
+ 73 $49  9B7B e6=FF e7=2C R4=67 R5=66 spawns=2 slots=2
+      slot 0D: x= 216 y= 124 h0 p=$22 b2=$80  type=p+$50
+      slot 0E: x= 264 y= 108 h0 p=$22 b2=$80  type=p+$50
+ 74 $4A  9B89 e6=2B e7=2C R4=65 R5=6C spawns=5 slots=13
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: x= 896 y= 300 h2 p=$70 b2=$C2  type $0D/$0E (p bit7)
+      slot 16: x= 280 y= 892 h2 p=$70 b2=$82  type $0D/$0E (p bit7)
+      slot 17: x= 376 y=1084 h3 p=$00 b2=$03  type=p+$D0
+      slot 18: x= 632 y= 876 h3 p=$00 b2=$03  type=p+$D0
+      slot 19: x= 888 y= 396 h3 p=$00 b2=$03  type=p+$D0
+ 75 $4B  9BC3 e6=23 e7=2C R4=67 R5=66 spawns=1 slots=6
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 376 y= 316 h3 p=$00 b2=$03  type=p+$D0
+ 76 $4C  9BE1 e6=2B e7=2C R4=65 R5=66 spawns=4 slots=8
+      slot 0D: x= 120 y= 972 h0 p=$21 b2=$00  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: x= 632 y= 748 h0 p=$21 b2=$00  type=p+$50
+      slot 10: x= 312 y=1148 h0 p=$21 b2=$00  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: x= 632 y= 652 h3 p=$00 b2=$03  type=p+$D0
+ 77 $4D  9C07 e6=2B e7=2C R4=65 R5=66 spawns=4 slots=10
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: x= 888 y= 844 h0 p=$21 b2=$00  type=p+$50
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: x= 120 y= 396 h3 p=$00 b2=$03  type=p+$D0
+      slot 15: x= 376 y= 396 h3 p=$00 b2=$03  type=p+$D0
+      slot 16: x= 376 y= 652 h3 p=$00 b2=$03  type=p+$D0
+ 78 $4E  9C35 e6=23 e7=23 R4=67 R5=66 spawns=4 slots=8
+      slot 0D: x= 376 y= 892 h0 p=$24 b2=$00  type=p+$50
+      slot 0E: x= 536 y= 892 h0 p=$24 b2=$00  type=p+$50
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: x= 840 y= 124 h0 p=$13 b2=$80  type=p+$50
+      slot 14: x= 632 y= 396 h3 p=$00 b2=$03  type=p+$D0
+ 79 $4F  9C5B e6=23 e7=23 R4=67 R5=66 spawns=4 slots=7
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: x= 888 y= 604 h0 p=$13 b2=$80  type=p+$50
+      slot 10: b1 bit7 (skip)
+      slot 11: x= 808 y= 636 h0 p=$24 b2=$00  type=p+$50
+      slot 12: x= 376 y= 396 h3 p=$00 b2=$03  type=p+$D0
+      slot 13: x= 384 y= 316 h2 p=$35 b2=$42  type $0D/$0E (p bit7)
+ 80 $50  A8D3 e6=0F e7=14 R4=48 R5=49 spawns=8 slots=8
+      slot 0D: x= 360 y= 220 h1 p=$00 b2=$01  via 4:$80F0 rec
+      slot 0E: x= 152 y= 428 h1 p=$02 b2=$01  via 4:$80F0 rec
+      slot 0F: x=  56 y= 444 h1 p=$03 b2=$01  via 4:$80F0 rec
+      slot 10: x= 200 y= 300 h1 p=$06 b2=$81  via 4:$80F0 rec
+      slot 11: x= 440 y= 444 h1 p=$05 b2=$81  via 4:$80F0 rec
+      slot 12: x= 472 y= 428 h2 p=$A8 b2=$02  type $0D/$0E (p bit7)
+      slot 13: x= 136 y= 108 h2 p=$B7 b2=$02  type $0D/$0E (p bit7)
+      slot 14: x= 312 y= 140 h2 p=$B8 b2=$02  type $0D/$0E (p bit7)
+ 81 $51  A8F9 e6=08 e7=FF R4=52 R5=52 spawns=2 slots=2
+      slot 0D: x=  88 y=  92 h4 p=$39 b2=$04  type=p (p&F0=40: flag item)
+      slot 0E: x=  88 y=  92 h2 p=$B0 b2=$02  type $0D/$0E (p bit7)
+ 82 $52  9B37 e6=06 e7=FF R4=47 R5=FF spawns=2 slots=2
+      slot 0D: x= 136 y= 108 h1 p=$61 b2=$01  via 4:$80F0 rec
+      slot 0E: x= 144 y= 188 h2 p=$95 b2=$42  type $0D/$0E (p bit7)
+ 84 $54  9A57 e6=23 e7=28 R4=68 R5=6C spawns=7 slots=11
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: x= 776 y= 636 h0 p=$1D b2=$00  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 888 y=1196 h0 p=$1D b2=$00  type=p+$50
+      slot 13: x= 128 y= 380 h2 p=$70 b2=$C2  type $0D/$0E (p bit7)
+      slot 14: x= 120 y= 652 h3 p=$01 b2=$03  type=p+$D0
+      slot 15: x= 376 y= 364 h3 p=$01 b2=$03  type=p+$D0
+      slot 16: x= 888 y= 396 h3 p=$01 b2=$03  type=p+$D0
+      slot 17: x=1064 y=  92 h2 p=$BF b2=$02  type $0D/$0E (p bit7)
+ 85 $55  9A89 e6=FF e7=28 R4=FF R5=48 spawns=4 slots=4
+      slot 0D: x= 552 y= 108 h1 p=$85 b2=$81  via 4:$80F0 rec
+      slot 0E: x= 568 y= 108 h1 p=$85 b2=$81  via 4:$80F0 rec
+      slot 0F: x= 552 y= 108 h1 p=$3A b2=$81  via 4:$80F0 rec
+      slot 10: x= 568 y= 108 h1 p=$3A b2=$81  via 4:$80F0 rec
+ 86 $56  9A9F e6=29 e7=28 R4=6E R5=FF spawns=5 slots=14
+      slot 0D: x= 104 y= 172 h0 p=$1C b2=$00  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: x=1144 y= 156 h0 p=$1C b2=$00  type=p+$50
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: x= 120 y=  60 h3 p=$01 b2=$03  type=p+$D0
+      slot 19: x=1144 y=  60 h3 p=$01 b2=$03  type=p+$D0
+      slot 1A: x= 648 y=1196 h2 p=$BF b2=$02  type $0D/$0E (p bit7)
+ 87 $57  9ADD e6=29 e7=28 R4=6E R5=4D spawns=5 slots=13
+      slot 0D: x= 384 y= 284 h1 p=$88 b2=$C1  via 4:$80F0 rec
+      slot 0E: x= 384 y= 284 h1 p=$16 b2=$C1  via 4:$80F0 rec
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: x= 888 y= 364 h3 p=$01 b2=$03  type=p+$D0
+      slot 18: x= 968 y= 380 h2 p=$02 b2=$02  type $0D/$0E (p bit7)
+      slot 19: x= 592 y= 316 h2 p=$5B b2=$42  type $0D/$0E (p bit7)
+ 88 $58  A6AB e6=FF e7=FF R4=FF R5=FF spawns=0 slots=0
+ 89 $59  A6B1 e6=3C e7=3D R4=57 R5=56 spawns=11 slots=12
+      slot 0D: x= 656 y= 860 h0 p=$51 b2=$C0  type=p+$50
+      slot 0E: x= 656 y= 860 h0 p=$51 b2=$C0  type=p+$50
+      slot 0F: x= 656 y= 860 h0 p=$51 b2=$C0  type=p+$50
+      slot 10: x= 912 y= 860 h0 p=$51 b2=$C0  type=p+$50
+      slot 11: x= 912 y= 860 h0 p=$51 b2=$C0  type=p+$50
+      slot 12: x= 912 y= 860 h0 p=$51 b2=$C0  type=p+$50
+      slot 13: x= 600 y= 908 h0 p=$50 b2=$00  type=p+$50
+      slot 14: x= 968 y= 924 h0 p=$50 b2=$00  type=p+$50
+      slot 15: x=1144 y= 924 h0 p=$50 b2=$00  type=p+$50
+      slot 16: x= 824 y= 828 h0 p=$52 b2=$00  type=p+$50
+      slot 17: b1 bit7 (skip)
+      slot 18: x= 264 y= 780 h4 p=$DA b2=$84  type=p (p&F0=40: flag item)
+ 90 $5A  A6E7 e6=3C e7=3D R4=57 R5=56 spawns=12 slots=13
+      slot 0D: x= 400 y= 604 h0 p=$51 b2=$C0  type=p+$50
+      slot 0E: x= 400 y= 604 h0 p=$51 b2=$C0  type=p+$50
+      slot 0F: x= 656 y= 604 h0 p=$51 b2=$C0  type=p+$50
+      slot 10: x= 656 y= 604 h0 p=$51 b2=$C0  type=p+$50
+      slot 11: x=1168 y= 604 h0 p=$51 b2=$C0  type=p+$50
+      slot 12: x=1168 y= 604 h0 p=$51 b2=$C0  type=p+$50
+      slot 13: x= 344 y= 652 h0 p=$50 b2=$00  type=p+$50
+      slot 14: x= 968 y= 636 h0 p=$50 b2=$00  type=p+$50
+      slot 15: x=1240 y= 668 h0 p=$50 b2=$00  type=p+$50
+      slot 16: x= 568 y= 572 h0 p=$52 b2=$00  type=p+$50
+      slot 17: b1 bit7 (skip)
+      slot 18: x= 264 y= 524 h4 p=$DA b2=$84  type=p (p&F0=40: flag item)
+      slot 19: x=1176 y= 748 h2 p=$A1 b2=$82  type $0D/$0E (p bit7)
+ 91 $5B  A721 e6=3C e7=3D R4=57 R5=56 spawns=12 slots=13
+      slot 0D: x= 656 y= 348 h0 p=$51 b2=$C0  type=p+$50
+      slot 0E: x= 656 y= 348 h0 p=$51 b2=$C0  type=p+$50
+      slot 0F: x= 656 y= 348 h0 p=$51 b2=$C0  type=p+$50
+      slot 10: x= 912 y= 348 h0 p=$51 b2=$C0  type=p+$50
+      slot 11: x= 912 y= 348 h0 p=$51 b2=$C0  type=p+$50
+      slot 12: x= 912 y= 348 h0 p=$51 b2=$C0  type=p+$50
+      slot 13: x= 360 y= 380 h0 p=$50 b2=$00  type=p+$50
+      slot 14: x= 824 y= 396 h0 p=$50 b2=$00  type=p+$50
+      slot 15: x= 600 y= 396 h0 p=$50 b2=$00  type=p+$50
+      slot 16: x= 568 y= 316 h0 p=$52 b2=$00  type=p+$50
+      slot 17: b1 bit7 (skip)
+      slot 18: x= 264 y= 268 h4 p=$DA b2=$84  type=p (p&F0=40: flag item)
+      slot 19: x= 920 y= 492 h2 p=$A2 b2=$82  type $0D/$0E (p bit7)
+ 92 $5C  A75B e6=FF e7=FF R4=FF R5=FF spawns=1 slots=1
+      slot 0D: x= 264 y=  12 h4 p=$DA b2=$84  type=p (p&F0=40: flag item)
+ 93 $5D  A765 e6=FF e7=FF R4=FF R5=FF spawns=1 slots=1
+      slot 0D: x= 120 y= 156 h2 p=$A3 b2=$02  type $0D/$0E (p bit7)
+ 94 $5E  A76F e6=06 e7=1D R4=47 R5=FF spawns=2 slots=2
+      slot 0D: x= 128 y= 124 h1 p=$8E b2=$41  via 4:$80F0 rec
+      slot 0E: x= 136 y= 172 h2 p=$A4 b2=$02  type $0D/$0E (p bit7)
+ 95 $5F  A77D e6=3E e7=3F R4=78 R5=7B spawns=3 slots=3
+      slot 0D: x= 112 y=  92 h4 p=$A4 b2=$44  type=p (p&F0=40: flag item)
+      slot 0E: x=  72 y=  76 h4 p=$B4 b2=$04  type=p (p&F0=40: flag item)
+      slot 0F: x= 184 y=  76 h4 p=$B4 b2=$04  type=p (p&F0=40: flag item)
+ 96 $60  9D2F e6=08 e7=2D R4=6A R5=52 spawns=5 slots=15
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: x= 424 y=1388 h2 p=$8A b2=$02  type $0D/$0E (p bit7)
+      slot 18: x= 376 y= 620 h2 p=$84 b2=$02  type $0D/$0E (p bit7)
+      slot 19: x= 408 y= 620 h2 p=$84 b2=$02  type $0D/$0E (p bit7)
+      slot 1A: x= 152 y= 892 h2 p=$AF b2=$02  type $0D/$0E (p bit7)
+      slot 1B: x=2024 y=2204 h4 p=$3A b2=$04  type=p (p&F0=40: flag item)
+ 97 $61  A97D e6=0C e7=0C R4=51 R5=4A spawns=2 slots=2
+      slot 0D: x= 104 y= 108 h1 p=$68 b2=$01  via 4:$80F0 rec
+      slot 0E: x= 152 y= 140 h1 p=$07 b2=$81  via 4:$80F0 rec
+ 98 $62  A9C9 e6=0C e7=0C R4=51 R5=78 spawns=2 slots=2
+      slot 0D: x= 120 y= 124 h1 p=$6B b2=$01  via 4:$80F0 rec
+      slot 0E: x= 120 y= 124 h1 p=$7E b2=$81  via 4:$80F0 rec
+100 $64  9D11 e6=08 e7=08 R4=52 R5=52 spawns=6 slots=6
+      slot 0D: x= 664 y= 156 h1 p=$63 b2=$01  via 4:$80F0 rec
+      slot 0E: x= 456 y= 636 h3 p=$02 b2=$03  type=p+$D0
+      slot 0F: x= 696 y= 396 h3 p=$02 b2=$03  type=p+$D0
+      slot 10: x= 824 y= 636 h3 p=$02 b2=$03  type=p+$D0
+      slot 11: x= 368 y=  92 h2 p=$3B b2=$42  type $0D/$0E (p bit7)
+      slot 12: x= 312 y= 732 h2 p=$92 b2=$02  type $0D/$0E (p bit7)
+101 $65  A9E1 e6=09 e7=24 R4=4B R5=67 spawns=5 slots=10
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 168 y= 284 h1 p=$45 b2=$01  via 4:$80F0 rec
+      slot 13: x=  88 y= 412 h1 p=$09 b2=$01  via 4:$80F0 rec
+      slot 14: x= 168 y= 460 h1 p=$0A b2=$01  via 4:$80F0 rec
+      slot 15: x= 168 y= 636 h1 p=$46 b2=$01  via 4:$80F0 rec
+      slot 16: x=  56 y= 700 h2 p=$8A b2=$02  type $0D/$0E (p bit7)
+104 $68  9D77 e6=08 e7=2D R4=6A R5=52 spawns=6 slots=6
+      slot 0D: x= 184 y= 124 h0 p=$26 b2=$00  type=p+$50
+      slot 0E: x= 408 y= 172 h0 p=$26 b2=$00  type=p+$50
+      slot 0F: x= 472 y=  92 h0 p=$26 b2=$00  type=p+$50
+      slot 10: x= 136 y= 172 h0 p=$26 b2=$00  type=p+$50
+      slot 11: x= 312 y= 140 h0 p=$26 b2=$00  type=p+$50
+      slot 12: x= 568 y= 156 h0 p=$26 b2=$00  type=p+$50
+105 $69  9D95 e6=23 e7=2F R4=66 R5=65 spawns=6 slots=17
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: x= 104 y= 716 h3 p=$02 b2=$03  type=p+$D0
+      slot 19: x=1128 y=1420 h3 p=$02 b2=$03  type=p+$D0
+      slot 1A: x=1656 y=1164 h3 p=$02 b2=$03  type=p+$D0
+      slot 1B: x= 632 y= 652 h3 p=$00 b2=$03  type=p+$D0
+      slot 1C: x=1400 y= 396 h3 p=$00 b2=$03  type=p+$D0
+      slot 1D: x=1408 y= 284 h2 p=$22 b2=$42  type $0D/$0E (p bit7)
+106 $6A  9DF5 e6=2C e7=2F R4=66 R5=62 spawns=5 slots=13
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: x=1080 y=1148 h0 p=$28 b2=$00  type=p+$50
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: x= 120 y= 396 h3 p=$00 b2=$03  type=p+$D0
+      slot 17: x= 888 y= 652 h3 p=$00 b2=$03  type=p+$D0
+      slot 18: x=1408 y= 348 h0 p=$2E b2=$C0  type=p+$50
+      slot 19: x=1152 y= 796 h2 p=$5C b2=$42  type $0D/$0E (p bit7)
+107 $6B  9DDF e6=23 e7=2F R4=66 R5=6C spawns=4 slots=4
+      slot 0D: x= 168 y= 444 h0 p=$28 b2=$00  type=p+$50
+      slot 0E: x= 160 y= 284 h2 p=$70 b2=$C2  type $0D/$0E (p bit7)
+      slot 0F: x=  80 y= 284 h2 p=$2C b2=$42  type $0D/$0E (p bit7)
+      slot 10: x= 120 y= 540 h3 p=$02 b2=$03  type=p+$D0
+108 $6C  9E2F e6=25 e7=20 R4=6B R5=68 spawns=1 slots=11
+      slot 0D: x=1152 y=1100 h1 p=$CC b2=$41  via 4:$80F0 rec
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+109 $6D  9E61 e6=2E e7=23 R4=69 R5=62 spawns=6 slots=18
+      slot 0D: x= 120 y= 156 h0 p=$2B b2=$00  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 384 y=1100 h0 p=$2E b2=$C0  type=p+$50
+      slot 13: x= 384 y=1484 h2 p=$21 b2=$42  type $0D/$0E (p bit7)
+      slot 14: b1 bit7 (skip)
+      slot 15: x= 984 y=1660 h0 p=$2B b2=$00  type=p+$50
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: b1 bit7 (skip)
+      slot 19: b1 bit7 (skip)
+      slot 1A: b1 bit7 (skip)
+      slot 1B: b1 bit7 (skip)
+      slot 1C: b1 bit7 (skip)
+      slot 1D: x= 832 y=1148 h0 p=$2F b2=$C0  type=p+$50
+      slot 1E: x=1152 y= 540 h2 p=$55 b2=$42  type $0D/$0E (p bit7)
+110 $6E  9EAF e6=06 e7=1D R4=47 R5=75 spawns=6 slots=6
+      slot 0D: x= 128 y= 364 h1 p=$84 b2=$41  via 4:$80F0 rec
+      slot 0E: x= 128 y= 364 h4 p=$2A b2=$C4  type=p (p&F0=40: flag item)
+      slot 0F: x= 128 y=  60 h1 p=$8E b2=$41  via 4:$80F0 rec
+      slot 10: x= 128 y= 108 h4 p=$29 b2=$44  type=p (p&F0=40: flag item)
+      slot 11: x= 136 y= 172 h2 p=$B6 b2=$02  type $0D/$0E (p bit7)
+      slot 12: x= 136 y= 716 h2 p=$C2 b2=$02  type $0D/$0E (p bit7)
+112 $70  9D71 e6=FF e7=FF R4=FF R5=FF spawns=0 slots=0
+113 $71  A98B e6=11 e7=07 R4=4A R5=4B spawns=6 slots=6
+      slot 0D: x= 136 y= 204 h1 p=$42 b2=$01  via 4:$80F0 rec
+      slot 0E: x= 472 y= 396 h1 p=$43 b2=$01  via 4:$80F0 rec
+      slot 0F: x= 328 y= 236 h1 p=$41 b2=$81  via 4:$80F0 rec
+      slot 10: x= 136 y= 428 h1 p=$40 b2=$81  via 4:$80F0 rec
+      slot 11: x= 136 y= 476 h2 p=$8B b2=$02  type $0D/$0E (p bit7)
+      slot 12: x= 168 y= 476 h2 p=$8B b2=$02  type $0D/$0E (p bit7)
+114 $72  AA19 e6=12 e7=0C R4=4D R5=4B spawns=6 slots=6
+      slot 0D: x=  88 y= 156 h1 p=$79 b2=$81  via 4:$80F0 rec
+      slot 0E: x= 200 y= 108 h1 p=$6F b2=$81  via 4:$80F0 rec
+      slot 0F: x= 328 y= 140 h1 p=$0C b2=$01  via 4:$80F0 rec
+      slot 10: x= 472 y= 172 h1 p=$48 b2=$81  via 4:$80F0 rec
+      slot 11: x= 616 y= 140 h1 p=$77 b2=$81  via 4:$80F0 rec
+      slot 12: x= 584 y= 172 h2 p=$A9 b2=$02  type $0D/$0E (p bit7)
+115 $73  AA81 e6=FF e7=09 R4=6B R5=FF spawns=4 slots=4
+      slot 0D: x=  24 y=  76 h2 p=$B3 b2=$02  type $0D/$0E (p bit7)
+      slot 0E: x= 168 y=  76 h4 p=$2C b2=$04  type=p (p&F0=40: flag item)
+      slot 0F: x= 104 y= 124 h1 p=$2D b2=$01  via 4:$80F0 rec
+      slot 10: x= 152 y= 124 h1 p=$2D b2=$01  via 4:$80F0 rec
+120 $78  9ECD e6=25 e7=22 R4=68 R5=6B spawns=0 slots=10
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+124 $7C  9EFB e6=23 e7=2F R4=68 R5=6D spawns=8 slots=15
+      slot 0D: b1 bit7 (skip)
+      slot 0E: x= 136 y= 316 h4 p=$2C b2=$04  type=p (p&F0=40: flag item)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: x=1128 y= 908 h0 p=$32 b2=$80  type=p+$50
+      slot 15: b1 bit7 (skip)
+      slot 16: x= 632 y= 908 h3 p=$02 b2=$03  type=p+$D0
+      slot 17: x= 632 y=1676 h3 p=$02 b2=$03  type=p+$D0
+      slot 18: x= 640 y= 108 h2 p=$3F b2=$42  type $0D/$0E (p bit7)
+      slot 19: x=1480 y= 876 h2 p=$65 b2=$02  type $0D/$0E (p bit7)
+      slot 1A: x=1144 y=1148 h2 p=$20 b2=$02  type $0D/$0E (p bit7)
+      slot 1B: x= 136 y= 348 h2 p=$AE b2=$02  type $0D/$0E (p bit7)
+125 $7D  9F3D e6=FF e7=FF R4=FF R5=FF spawns=0 slots=0
+126 $7E  9F43 e6=0B e7=0B R4=51 R5=4F spawns=6 slots=6
+      slot 0D: x= 104 y= 108 h1 p=$4E b2=$81  via 4:$80F0 rec
+      slot 0E: x= 152 y= 108 h1 p=$4E b2=$81  via 4:$80F0 rec
+      slot 0F: x= 104 y= 124 h1 p=$76 b2=$01  via 4:$80F0 rec
+      slot 10: x= 168 y= 108 h1 p=$76 b2=$01  via 4:$80F0 rec
+      slot 11: x= 120 y= 156 h2 p=$BD b2=$02  type $0D/$0E (p bit7)
+      slot 12: x= 152 y= 156 h2 p=$BD b2=$02  type $0D/$0E (p bit7)
+127 $7F  9F61 e6=23 e7=2F R4=68 R5=71 spawns=3 slots=4
+      slot 0D: b1 bit7 (skip)
+      slot 0E: x= 376 y= 284 h0 p=$34 b2=$80  type=p+$50
+      slot 0F: x= 488 y= 124 h0 p=$34 b2=$80  type=p+$50
+      slot 10: x= 392 y= 204 h0 p=$1D b2=$00  type=p+$50
+128 $80  9F77 e6=23 e7=2F R4=68 R5=71 spawns=5 slots=10
+      slot 0D: x= 632 y= 284 h0 p=$1D b2=$00  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: x= 296 y= 396 h0 p=$1D b2=$00  type=p+$50
+      slot 10: x= 648 y= 412 h0 p=$1D b2=$00  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: x= 376 y= 492 h0 p=$34 b2=$80  type=p+$50
+      slot 15: x= 648 y= 380 h0 p=$34 b2=$80  type=p+$50
+      slot 16: b1 bit7 (skip)
+129 $81  9FA5 e6=25 e7=2F R4=5E R5=71 spawns=4 slots=4
+      slot 0D: x= 392 y= 124 h0 p=$35 b2=$00  type=p+$50
+      slot 0E: x= 376 y= 300 h0 p=$35 b2=$00  type=p+$50
+      slot 0F: x= 280 y= 124 h0 p=$34 b2=$80  type=p+$50
+      slot 10: x= 424 y= 380 h0 p=$34 b2=$80  type=p+$50
+130 $82  9FBB e6=23 e7=FF R4=68 R5=FF spawns=3 slots=3
+      slot 0D: x= 328 y= 124 h0 p=$1D b2=$00  type=p+$50
+      slot 0E: x= 392 y= 156 h0 p=$1D b2=$00  type=p+$50
+      slot 0F: x= 384 y= 220 h2 p=$56 b2=$42  type $0D/$0E (p bit7)
+131 $83  9FCD e6=25 e7=2F R4=5E R5=71 spawns=4 slots=5
+      slot 0D: b1 bit7 (skip)
+      slot 0E: x= 392 y= 604 h0 p=$35 b2=$00  type=p+$50
+      slot 0F: x= 376 y= 540 h0 p=$34 b2=$80  type=p+$50
+      slot 10: x= 360 y= 332 h0 p=$34 b2=$80  type=p+$50
+      slot 11: x= 376 y= 396 h3 p=$00 b2=$03  type=p+$D0
+132 $84  9FE7 e6=25 e7=2F R4=5E R5=6C spawns=5 slots=10
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: x= 200 y= 396 h0 p=$35 b2=$00  type=p+$50
+      slot 12: x= 216 y= 476 h0 p=$05 b2=$80  type=p+$50
+      slot 13: x=  40 y= 540 h0 p=$05 b2=$80  type=p+$50
+      slot 14: b1 bit7 (skip)
+      slot 15: x= 200 y= 172 h0 p=$05 b2=$80  type=p+$50
+      slot 16: x= 376 y=  60 h3 p=$00 b2=$03  type=p+$D0
+133 $85  A015 e6=23 e7=23 R4=64 R5=6C spawns=6 slots=11
+      slot 0D: x= 120 y= 188 h0 p=$03 b2=$00  type=p+$50
+      slot 0E: x= 152 y= 124 h0 p=$03 b2=$00  type=p+$50
+      slot 0F: x= 232 y= 124 h0 p=$03 b2=$00  type=p+$50
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: x= 376 y= 204 h0 p=$03 b2=$00  type=p+$50
+      slot 16: x= 120 y= 140 h0 p=$03 b2=$00  type=p+$50
+      slot 17: x= 384 y= 124 h2 p=$70 b2=$C2  type $0D/$0E (p bit7)
+134 $86  A047 e6=23 e7=2F R4=68 R5=71 spawns=8 slots=11
+      slot 0D: b1 bit7 (skip)
+      slot 0E: x= 136 y= 236 h0 p=$1D b2=$00  type=p+$50
+      slot 0F: x= 120 y= 348 h0 p=$1D b2=$00  type=p+$50
+      slot 10: x= 520 y= 380 h0 p=$1D b2=$00  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: x= 136 y= 284 h0 p=$34 b2=$80  type=p+$50
+      slot 14: x= 888 y= 204 h0 p=$34 b2=$80  type=p+$50
+      slot 15: x= 456 y= 380 h0 p=$34 b2=$80  type=p+$50
+      slot 16: x= 904 y= 140 h0 p=$34 b2=$80  type=p+$50
+      slot 17: x= 376 y= 364 h3 p=$00 b2=$03  type=p+$D0
+135 $87  A079 e6=23 e7=2F R4=68 R5=71 spawns=5 slots=6
+      slot 0D: x= 376 y= 300 h0 p=$34 b2=$80  type=p+$50
+      slot 0E: x= 376 y= 588 h0 p=$34 b2=$80  type=p+$50
+      slot 0F: x= 328 y= 108 h0 p=$1D b2=$00  type=p+$50
+      slot 10: x= 376 y= 140 h0 p=$1D b2=$00  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 376 y= 396 h3 p=$00 b2=$03  type=p+$D0
+136 $88  A097 e6=18 e7=23 R4=61 R5=69 spawns=8 slots=9
+      slot 0D: x= 384 y=  60 h0 p=$37 b2=$C0  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: x= 680 y= 540 h0 p=$3F b2=$00  type=p+$50
+      slot 10: x= 600 y= 636 h0 p=$3F b2=$00  type=p+$50
+      slot 11: x= 680 y= 732 h0 p=$3F b2=$00  type=p+$50
+      slot 12: x= 600 y= 796 h0 p=$3F b2=$00  type=p+$50
+      slot 13: x= 680 y= 892 h0 p=$3F b2=$00  type=p+$50
+      slot 14: x= 600 y= 988 h0 p=$3F b2=$00  type=p+$50
+      slot 15: x= 680 y=1100 h0 p=$3F b2=$00  type=p+$50
+137 $89  A0C1 e6=23 e7=2F R4=6D R5=6C spawns=7 slots=17
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: x= 384 y= 300 h2 p=$70 b2=$C2  type $0D/$0E (p bit7)
+      slot 14: x=1104 y= 796 h2 p=$70 b2=$C2  type $0D/$0E (p bit7)
+      slot 15: x= 792 y=1132 h2 p=$70 b2=$82  type $0D/$0E (p bit7)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: b1 bit7 (skip)
+      slot 19: b1 bit7 (skip)
+      slot 1A: x= 632 y= 396 h3 p=$02 b2=$03  type=p+$D0
+      slot 1B: x= 888 y= 396 h3 p=$02 b2=$03  type=p+$D0
+      slot 1C: x=1032 y= 892 h2 p=$14 b2=$02  type $0D/$0E (p bit7)
+      slot 1D: x= 456 y=1116 h2 p=$57 b2=$02  type $0D/$0E (p bit7)
+138 $8A  A10B e6=25 e7=25 R4=5E R5=62 spawns=2 slots=15
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: b1 bit7 (skip)
+      slot 19: b1 bit7 (skip)
+      slot 1A: x= 128 y= 860 h0 p=$2E b2=$C0  type=p+$50
+      slot 1B: x= 728 y= 636 h2 p=$03 b2=$02  type $0D/$0E (p bit7)
+140 $8C  AA97 e6=06 e7=10 R4=4C R5=4D spawns=12 slots=12
+      slot 0D: x= 120 y= 300 h1 p=$60 b2=$81  via 4:$80F0 rec
+      slot 0E: x=  56 y= 572 h1 p=$16 b2=$81  via 4:$80F0 rec
+      slot 0F: x= 200 y= 380 h1 p=$52 b2=$01  via 4:$80F0 rec
+      slot 10: x= 184 y= 460 h1 p=$50 b2=$01  via 4:$80F0 rec
+      slot 11: x= 120 y= 716 h1 p=$4F b2=$01  via 4:$80F0 rec
+      slot 12: x=  72 y= 732 h2 p=$81 b2=$02  type $0D/$0E (p bit7)
+      slot 13: x= 120 y= 300 h1 p=$72 b2=$81  via 4:$80F0 rec
+      slot 14: x=  56 y= 572 h1 p=$70 b2=$81  via 4:$80F0 rec
+      slot 15: x= 200 y= 380 h1 p=$71 b2=$81  via 4:$80F0 rec
+      slot 16: x= 184 y= 460 h1 p=$5D b2=$81  via 4:$80F0 rec
+      slot 17: x= 120 y= 716 h1 p=$5D b2=$81  via 4:$80F0 rec
+      slot 18: x=  72 y= 732 h2 p=$81 b2=$02  type $0D/$0E (p bit7)
+142 $8E  AB25 e6=14 e7=0A R4=4B R5=4D spawns=12 slots=12
+      slot 0D: x= 184 y=  76 h1 p=$0B b2=$81  via 4:$80F0 rec
+      slot 0E: x= 328 y=  60 h1 p=$6D b2=$81  via 4:$80F0 rec
+      slot 0F: x= 200 y= 300 h1 p=$56 b2=$81  via 4:$80F0 rec
+      slot 10: x= 296 y= 172 h1 p=$7A b2=$01  via 4:$80F0 rec
+      slot 11: x= 456 y= 268 h1 p=$55 b2=$01  via 4:$80F0 rec
+      slot 12: x= 136 y= 428 h1 p=$78 b2=$01  via 4:$80F0 rec
+      slot 13: x=  72 y= 412 h1 p=$80 b2=$81  via 4:$80F0 rec
+      slot 14: x=  88 y= 412 h1 p=$81 b2=$81  via 4:$80F0 rec
+      slot 15: x= 296 y= 412 h1 p=$80 b2=$81  via 4:$80F0 rec
+      slot 16: x= 312 y= 412 h1 p=$81 b2=$81  via 4:$80F0 rec
+      slot 17: x= 152 y= 476 h2 p=$AB b2=$02  type $0D/$0E (p bit7)
+      slot 18: x= 184 y= 476 h2 p=$AB b2=$02  type $0D/$0E (p bit7)
+143 $8F  A487 e6=18 e7=19 R4=61 R5=6C spawns=2 slots=3
+      slot 0D: x= 120 y= 396 h3 p=$03 b2=$03  type=p+$D0
+      slot 0E: b1 bit7 (skip)
+      slot 0F: x= 128 y= 284 h2 p=$2A b2=$42  type $0D/$0E (p bit7)
+144 $90  A417 e6=23 e7=24 R4=67 R5=68 spawns=0 slots=9
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+145 $91  A441 e6=2C e7=2C R4=6F R5=6F spawns=14 slots=16
+      slot 0D: x= 616 y= 460 h3 p=$02 b2=$03  type=p+$D0
+      slot 0E: x=1128 y= 956 h3 p=$02 b2=$03  type=p+$D0
+      slot 0F: x=1912 y= 908 h3 p=$02 b2=$03  type=p+$D0
+      slot 10: x= 376 y=1420 h3 p=$02 b2=$03  type=p+$D0
+      slot 11: x=1400 y=1420 h3 p=$02 b2=$03  type=p+$D0
+      slot 12: x=1912 y=1420 h3 p=$02 b2=$03  type=p+$D0
+      slot 13: x= 632 y=1932 h3 p=$02 b2=$03  type=p+$D0
+      slot 14: x=1128 y=2188 h3 p=$02 b2=$03  type=p+$D0
+      slot 15: x=1912 y=2188 h3 p=$02 b2=$03  type=p+$D0
+      slot 16: x=1128 y=2444 h3 p=$02 b2=$03  type=p+$D0
+      slot 17: x= 632 y=1164 h3 p=$02 b2=$03  type=p+$D0
+      slot 18: b1 bit7 (skip)
+      slot 19: b1 bit7 (skip)
+      slot 1A: x= 488 y= 124 h2 p=$2F b2=$02  type $0D/$0E (p bit7)
+      slot 1B: x= 416 y=2252 h2 p=$64 b2=$42  type $0D/$0E (p bit7)
+      slot 1C: x=1184 y= 780 h2 p=$1B b2=$42  type $0D/$0E (p bit7)
+146 $92  A553 e6=30 e7=30 R4=69 R5=FF spawns=0 slots=3
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+147 $93  AB77 e6=09 e7=0E R4=49 R5=48 spawns=6 slots=6
+      slot 0D: x= 216 y= 124 h1 p=$04 b2=$01  via 4:$80F0 rec
+      slot 0E: x= 408 y= 140 h1 p=$06 b2=$01  via 4:$80F0 rec
+      slot 0F: x=  56 y=  92 h1 p=$00 b2=$81  via 4:$80F0 rec
+      slot 10: x= 312 y= 156 h1 p=$03 b2=$81  via 4:$80F0 rec
+      slot 11: x=  72 y= 140 h1 p=$01 b2=$81  via 4:$80F0 rec
+      slot 12: x= 232 y= 108 h2 p=$AC b2=$02  type $0D/$0E (p bit7)
+148 $94  A499 e6=FF e7=FF R4=FF R5=FF spawns=0 slots=0
+149 $95  A565 e6=30 e7=30 R4=69 R5=FF spawns=0 slots=6
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+150 $96  A49F e6=13 e7=FF R4=4E R5=FF spawns=5 slots=5
+      slot 0D: x= 328 y= 204 h1 p=$59 b2=$01  via 4:$80F0 rec
+      slot 0E: x= 456 y= 220 h1 p=$59 b2=$01  via 4:$80F0 rec
+      slot 0F: x= 296 y= 268 h1 p=$59 b2=$01  via 4:$80F0 rec
+      slot 10: x= 568 y= 300 h1 p=$59 b2=$01  via 4:$80F0 rec
+      slot 11: x= 408 y= 332 h1 p=$5A b2=$01  via 4:$80F0 rec
+152 $98  A4B9 e6=24 e7=24 R4=6D R5=63 spawns=0 slots=9
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+156 $9C  A4E3 e6=06 e7=0C R4=FF R5=53 spawns=1 slots=1
+      slot 0D: x= 128 y=  76 h1 p=$83 b2=$C1  via 4:$80F0 rec
+157 $9D  A4ED e6=2E e7=23 R4=69 R5=FF spawns=5 slots=5
+      slot 0D: x= 328 y= 124 h0 p=$46 b2=$00  type=p+$50
+      slot 0E: x= 376 y= 172 h0 p=$46 b2=$00  type=p+$50
+      slot 0F: x= 440 y= 124 h0 p=$46 b2=$00  type=p+$50
+      slot 10: x= 392 y= 140 h0 p=$3C b2=$00  type=p+$50
+      slot 11: x= 392 y= 268 h0 p=$3C b2=$00  type=p+$50
+158 $9E  A507 e6=2C e7=30 R4=5E R5=5F spawns=1 slots=15
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: b1 bit7 (skip)
+      slot 19: b1 bit7 (skip)
+      slot 1A: b1 bit7 (skip)
+      slot 1B: x= 896 y= 620 h2 p=$6C b2=$42  type $0D/$0E (p bit7)
+159 $9F  A549 e6=41 e7=40 R4=79 R5=FF spawns=1 slots=1
+      slot 0D: x= 128 y=  92 h1 p=$CB b2=$41  via 4:$80F0 rec
+160 $A0  A583 e6=1A e7=02 R4=74 R5=62 spawns=5 slots=5
+      slot 0D: x=  88 y= 844 h1 p=$C9 b2=$81  via 4:$80F0 rec
+      slot 0E: x= 168 y= 844 h1 p=$CA b2=$81  via 4:$80F0 rec
+      slot 0F: x= 120 y= 844 h4 p=$28 b2=$04  type=p (p&F0=40: flag item)
+      slot 10: x= 104 y= 940 h2 p=$B1 b2=$02  type $0D/$0E (p bit7)
+      slot 11: x= 152 y= 940 h2 p=$B1 b2=$02  type $0D/$0E (p bit7)
+161 $A1  A59D e6=30 e7=30 R4=5F R5=5F spawns=0 slots=10
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+162 $A2  A5CB e6=2F e7=30 R4=5F R5=62 spawns=4 slots=11
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: x= 384 y= 364 h0 p=$4F b2=$C0  type=p+$50
+      slot 15: x= 384 y= 876 h0 p=$4F b2=$C0  type=p+$50
+      slot 16: x= 896 y= 348 h0 p=$4F b2=$C0  type=p+$50
+      slot 17: x= 896 y= 860 h0 p=$4F b2=$C0  type=p+$50
+163 $A3  A5FD e6=24 e7=30 R4=6D R5=6C spawns=2 slots=5
+      slot 0D: x= 384 y= 284 h2 p=$70 b2=$C2  type $0D/$0E (p bit7)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: x= 376 y=1100 h0 p=$48 b2=$00  type=p+$50
+      slot 11: b1 bit7 (skip)
+164 $A4  A617 e6=FF e7=28 R4=6D R5=68 spawns=0 slots=4
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+165 $A5  A62D e6=2C e7=30 R4=5F R5=62 spawns=3 slots=14
+      slot 0D: x= 384 y= 636 h0 p=$4F b2=$C0  type=p+$50
+      slot 0E: x= 384 y= 956 h0 p=$4F b2=$C0  type=p+$50
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: b1 bit7 (skip)
+      slot 19: b1 bit7 (skip)
+      slot 1A: x= 640 y=1244 h2 p=$6D b2=$42  type $0D/$0E (p bit7)
+166 $A6  A66B e6=06 e7=0C R4=79 R5=7A spawns=2 slots=8
+      slot 0D: x= 128 y= 108 h1 p=$CB b2=$41  via 4:$80F0 rec
+      slot 0E: FE (skip)
+      slot 0F: FE (skip)
+      slot 10: FE (skip)
+      slot 11: FE (skip)
+      slot 12: FE (skip)
+      slot 13: FE (skip)
+      slot 14: x= 128 y=  60 h4 p=$2C b2=$44  type=p (p&F0=40: flag item)
+168 $A8  A14D e6=18 e7=19 R4=61 R5=61 spawns=9 slots=10
+      slot 0D: x=  88 y= 172 h0 p=$3F b2=$00  type=p+$50
+      slot 0E: x= 168 y= 284 h0 p=$3F b2=$00  type=p+$50
+      slot 0F: x=  88 y= 380 h0 p=$3F b2=$00  type=p+$50
+      slot 10: x= 168 y= 476 h0 p=$3F b2=$00  type=p+$50
+      slot 11: x=  88 y= 588 h0 p=$3F b2=$00  type=p+$50
+      slot 12: x= 120 y=  60 h3 p=$03 b2=$03  type=p+$D0
+      slot 13: b1 bit7 (skip)
+      slot 14: x= 120 y= 124 h2 p=$80 b2=$02  type $0D/$0E (p bit7)
+      slot 15: x= 152 y= 124 h2 p=$80 b2=$02  type $0D/$0E (p bit7)
+      slot 16: x= 136 y= 684 h2 p=$83 b2=$02  type $0D/$0E (p bit7)
+169 $A9  A17B e6=23 e7=30 R4=63 R5=5F spawns=1 slots=11
+      slot 0D: x=1680 y= 108 h1 p=$C5 b2=$41  via 4:$80F0 rec
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+170 $AA  A1B7 e6=FF e7=0C R4=FF R5=50 spawns=2 slots=2
+      slot 0D: x= 128 y= 636 h1 p=$5E b2=$C1  via 4:$80F0 rec
+      slot 0E: x= 128 y= 492 h4 p=$29 b2=$C4  type=p (p&F0=40: flag item)
+171 $AB  A1C5 e6=23 e7=2C R4=6F R5=71 spawns=13 slots=18
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 384 y= 604 h0 p=$3D b2=$40  type=p+$50
+      slot 13: x= 376 y= 908 h3 p=$03 b2=$03  type=p+$D0
+      slot 14: x=1656 y= 396 h3 p=$03 b2=$03  type=p+$D0
+      slot 15: x=1128 y= 700 h3 p=$02 b2=$03  type=p+$D0
+      slot 16: x=1912 y= 796 h3 p=$02 b2=$03  type=p+$D0
+      slot 17: x=1400 y=1164 h3 p=$02 b2=$03  type=p+$D0
+      slot 18: x=1896 y=1228 h3 p=$02 b2=$03  type=p+$D0
+      slot 19: x= 616 y=1468 h3 p=$02 b2=$03  type=p+$D0
+      slot 1A: x=1384 y=1468 h3 p=$02 b2=$03  type=p+$D0
+      slot 1B: x= 872 y=2188 h3 p=$02 b2=$03  type=p+$D0
+      slot 1C: x= 384 y= 284 h2 p=$62 b2=$42  type $0D/$0E (p bit7)
+      slot 1D: x= 928 y= 972 h2 p=$5D b2=$42  type $0D/$0E (p bit7)
+      slot 1E: x=1920 y=1756 h2 p=$66 b2=$42  type $0D/$0E (p bit7)
+172 $AC  A213 e6=06 e7=1D R4=75 R5=50 spawns=3 slots=3
+      slot 0D: x= 128 y=1084 h1 p=$C6 b2=$41  via 4:$80F0 rec
+      slot 0E: x= 128 y= 636 h1 p=$5F b2=$C1  via 4:$80F0 rec
+      slot 0F: x= 128 y= 636 h4 p=$29 b2=$C4  type=p (p&F0=40: flag item)
+173 $AD  A225 e6=29 e7=29 R4=6E R5=63 spawns=2 slots=15
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: b1 bit7 (skip)
+      slot 18: b1 bit7 (skip)
+      slot 19: b1 bit7 (skip)
+      slot 1A: x= 640 y= 284 h2 p=$63 b2=$42  type $0D/$0E (p bit7)
+      slot 1B: x= 896 y=1756 h2 p=$6F b2=$42  type $0D/$0E (p bit7)
+174 $AE  A267 e6=2E e7=31 R4=70 R5=62 spawns=6 slots=11
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: x= 640 y= 348 h0 p=$2E b2=$C0  type=p+$50
+      slot 13: x= 640 y= 860 h0 p=$2E b2=$C0  type=p+$50
+      slot 14: x= 640 y=1100 h0 p=$2E b2=$C0  type=p+$50
+      slot 15: x= 376 y=1164 h3 p=$03 b2=$03  type=p+$D0
+      slot 16: x= 296 y= 636 h2 p=$60 b2=$02  type $0D/$0E (p bit7)
+      slot 17: x= 384 y=1052 h2 p=$6B b2=$42  type $0D/$0E (p bit7)
+175 $AF  A299 e6=2F e7=23 R4=69 R5=62 spawns=6 slots=15
+      slot 0D: x= 384 y=1164 h0 p=$2C b2=$C0  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: b1 bit7 (skip)
+      slot 17: x= 128 y=1884 h0 p=$2E b2=$C0  type=p+$50
+      slot 18: x= 384 y=1372 h0 p=$2E b2=$C0  type=p+$50
+      slot 19: x= 384 y=1884 h0 p=$2E b2=$C0  type=p+$50
+      slot 1A: x= 384 y=2396 h0 p=$2E b2=$C0  type=p+$50
+      slot 1B: x= 728 y=1660 h2 p=$54 b2=$02  type $0D/$0E (p bit7)
+176 $B0  A2ED e6=2E e7=30 R4=69 R5=72 spawns=2 slots=7
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: x= 152 y= 380 h0 p=$3C b2=$00  type=p+$50
+      slot 11: x= 152 y= 636 h0 p=$3C b2=$00  type=p+$50
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+177 $B1  A30F e6=23 e7=22 R4=68 R5=6B spawns=4 slots=8
+      slot 0D: x= 168 y= 124 h0 p=$30 b2=$80  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: x= 120 y= 588 h0 p=$30 b2=$80  type=p+$50
+      slot 10: x= 120 y= 156 h0 p=$30 b2=$80  type=p+$50
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: x= 152 y= 556 h0 p=$1D b2=$00  type=p+$50
+178 $B2  A335 e6=2E e7=28 R4=70 R5=68 spawns=3 slots=9
+      slot 0D: x= 632 y= 220 h0 p=$42 b2=$80  type=p+$50
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: b1 bit7 (skip)
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: x= 648 y= 124 h0 p=$41 b2=$00  type=p+$50
+      slot 15: x= 392 y= 908 h0 p=$41 b2=$00  type=p+$50
+179 $B3  A35F e6=2E e7=30 R4=69 R5=72 spawns=3 slots=4
+      slot 0D: b1 bit7 (skip)
+      slot 0E: x= 120 y= 332 h0 p=$45 b2=$80  type=p+$50
+      slot 0F: x= 168 y= 380 h0 p=$45 b2=$80  type=p+$50
+      slot 10: x= 392 y= 316 h0 p=$45 b2=$80  type=p+$50
+180 $B4  A375 e6=2C e7=2F R4=5E R5=62 spawns=6 slots=10
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: b1 bit7 (skip)
+      slot 11: x=1408 y= 796 h0 p=$2C b2=$C0  type=p+$50
+      slot 12: x=1568 y=1500 h0 p=$2C b2=$C0  type=p+$50
+      slot 13: x= 624 y= 892 h0 p=$2F b2=$C0  type=p+$50
+      slot 14: x= 848 y= 892 h0 p=$2F b2=$C0  type=p+$50
+      slot 15: x=1104 y= 892 h0 p=$2F b2=$C0  type=p+$50
+      slot 16: x=1400 y=1164 h3 p=$03 b2=$03  type=p+$D0
+181 $B5  A3B9 e6=24 e7=28 R4=6D R5=6C spawns=5 slots=12
+      slot 0D: b1 bit7 (skip)
+      slot 0E: b1 bit7 (skip)
+      slot 0F: b1 bit7 (skip)
+      slot 10: x= 280 y= 636 h0 p=$48 b2=$00  type=p+$50
+      slot 11: x=1144 y= 620 h0 p=$48 b2=$00  type=p+$50
+      slot 12: b1 bit7 (skip)
+      slot 13: b1 bit7 (skip)
+      slot 14: b1 bit7 (skip)
+      slot 15: b1 bit7 (skip)
+      slot 16: x= 392 y= 300 h0 p=$36 b2=$00  type=p+$50
+      slot 17: x= 640 y= 972 h2 p=$58 b2=$42  type $0D/$0E (p bit7)
+      slot 18: x= 384 y= 972 h2 p=$6E b2=$42  type $0D/$0E (p bit7)
+182 $B6  A3EF e6=18 e7=18 R4=61 R5=74 spawns=6 slots=6
+      slot 0D: x= 128 y= 588 h1 p=$C8 b2=$C1  via 4:$80F0 rec
+      slot 0E: x= 168 y= 796 h0 p=$3F b2=$00  type=p+$50
+      slot 0F: x=  88 y= 892 h0 p=$3F b2=$00  type=p+$50
+      slot 10: x= 168 y= 988 h0 p=$3F b2=$00  type=p+$50
+      slot 11: x=  88 y=1100 h0 p=$3F b2=$00  type=p+$50
+      slot 12: x= 128 y= 284 h2 p=$0C b2=$C2  type $0D/$0E (p bit7)
+184 $B8  A40D e6=FF e7=FF R4=5E R5=5E spawns=1 slots=1
+      slot 0D: x= 280 y=1884 h2 p=$5A b2=$02  type $0D/$0E (p bit7)
+185 $B9  A2DB e6=06 e7=1E R4=76 R5=50 spawns=3 slots=3
+      slot 0D: x= 128 y=1116 h1 p=$C7 b2=$41  via 4:$80F0 rec
+      slot 0E: x= 128 y= 636 h1 p=$62 b2=$C1  via 4:$80F0 rec
+      slot 0F: x= 128 y= 636 h4 p=$29 b2=$C4  type=p (p&F0=40: flag item)
+186 $BA  A3A3 e6=0C e7=0C R4=64 R5=78 spawns=4 slots=4
+      slot 0D: x= 384 y= 636 h1 p=$75 b2=$41  via 4:$80F0 rec
+      slot 0E: x= 384 y= 636 h4 p=$29 b2=$C4  type=p (p&F0=40: flag item)
+      slot 0F: x= 384 y= 636 h1 p=$7E b2=$C1  via 4:$80F0 rec
+      slot 10: x= 384 y= 636 h4 p=$29 b2=$C4  type=p (p&F0=40: flag item)
+187 $BB  AB6D e6=FF e7=0A R4=4B R5=FF spawns=1 slots=1
+      slot 0D: x= 120 y= 108 h1 p=$54 b2=$01  via 4:$80F0 rec
+188 $BC  93F9 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$40 b2=$44  type=p (p&F0=40: flag item)
+190 $BE  9403 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$41 b2=$44  type=p (p&F0=40: flag item)
+191 $BF  AB5B e6=09 e7=0A R4=4D R5=4A spawns=3 slots=3
+      slot 0D: x=  56 y=  76 h1 p=$0B b2=$01  via 4:$80F0 rec
+      slot 0E: x= 104 y= 108 h1 p=$58 b2=$81  via 4:$80F0 rec
+      slot 0F: x= 184 y=  60 h1 p=$57 b2=$81  via 4:$80F0 rec
+192 $C0  A7AD e6=11 e7=0B R4=48 R5=4E spawns=2 slots=2
+      slot 0D: x= 152 y= 108 h1 p=$0D b2=$01  via 4:$80F0 rec
+      slot 0E: x= 120 y=  76 h1 p=$11 b2=$81  via 4:$80F0 rec
+193 $C1  A7BB e6=09 e7=0B R4=48 R5=4E spawns=1 slots=1
+      slot 0D: x= 168 y=  92 h1 p=$13 b2=$81  via 4:$80F0 rec
+194 $C2  93F9 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$40 b2=$44  type=p (p&F0=40: flag item)
+195 $C3  9403 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$41 b2=$44  type=p (p&F0=40: flag item)
+196 $C4  940D e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$42 b2=$44  type=p (p&F0=40: flag item)
+197 $C5  A7C5 e6=0B e7=FF R4=4C R5=FF spawns=1 slots=1
+      slot 0D: x= 128 y= 108 h1 p=$14 b2=$41  via 4:$80F0 rec
+198 $C6  A7F1 e6=12 e7=0C R4=48 R5=4C spawns=4 slots=4
+      slot 0D: x= 168 y= 140 h1 p=$1B b2=$81  via 4:$80F0 rec
+      slot 0E: x= 200 y= 140 h1 p=$1C b2=$01  via 4:$80F0 rec
+      slot 0F: x=  56 y=  60 h1 p=$02 b2=$01  via 4:$80F0 rec
+      slot 10: x= 168 y=  60 h1 p=$01 b2=$01  via 4:$80F0 rec
+199 $C7  9417 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$43 b2=$44  type=p (p&F0=40: flag item)
+200 $C8  93F9 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$40 b2=$44  type=p (p&F0=40: flag item)
+201 $C9  940D e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$42 b2=$44  type=p (p&F0=40: flag item)
+203 $CB  9403 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$41 b2=$44  type=p (p&F0=40: flag item)
+205 $CD  A851 e6=10 e7=FF R4=4F R5=FF spawns=1 slots=1
+      slot 0D: x= 152 y= 108 h1 p=$1D b2=$01  via 4:$80F0 rec
+206 $CE  A85B e6=10 e7=10 R4=4F R5=4F spawns=2 slots=2
+      slot 0D: x= 120 y= 108 h1 p=$1E b2=$01  via 4:$80F0 rec
+      slot 0E: x= 136 y= 108 h1 p=$1F b2=$01  via 4:$80F0 rec
+207 $CF  9421 e6=10 e7=10 R4=4F R5=4F spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$44 b2=$44  type=p (p&F0=40: flag item)
+208 $D0  942B e6=10 e7=10 R4=4F R5=4F spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$45 b2=$44  type=p (p&F0=40: flag item)
+209 $D1  9435 e6=14 e7=14 R4=49 R5=49 spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$46 b2=$44  type=p (p&F0=40: flag item)
+210 $D2  943F e6=14 e7=14 R4=49 R5=49 spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$47 b2=$44  type=p (p&F0=40: flag item)
+211 $D3  9449 e6=14 e7=14 R4=49 R5=49 spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$48 b2=$44  type=p (p&F0=40: flag item)
+212 $D4  A893 e6=0D e7=0D R4=47 R5=4A spawns=3 slots=3
+      slot 0D: x= 104 y= 124 h1 p=$27 b2=$81  via 4:$80F0 rec
+      slot 0E: x= 184 y= 140 h1 p=$26 b2=$81  via 4:$80F0 rec
+      slot 0F: x= 144 y= 108 h1 p=$23 b2=$41  via 4:$80F0 rec
+213 $D5  A8AF e6=10 e7=0D R4=4A R5=4B spawns=4 slots=4
+      slot 0D: x=  56 y= 140 h1 p=$2A b2=$81  via 4:$80F0 rec
+      slot 0E: x= 120 y=  60 h1 p=$08 b2=$81  via 4:$80F0 rec
+      slot 0F: x= 216 y= 108 h1 p=$28 b2=$01  via 4:$80F0 rec
+      slot 10: x= 136 y= 156 h2 p=$A7 b2=$02  type $0D/$0E (p bit7)
+214 $D6  A947 e6=08 e7=0D R4=FF R5=4B spawns=2 slots=2
+      slot 0D: x= 120 y= 108 h1 p=$64 b2=$81  via 4:$80F0 rec
+      slot 0E: x= 184 y= 140 h1 p=$7B b2=$81  via 4:$80F0 rec
+215 $D7  A963 e6=FF e7=0E R4=4A R5=FF spawns=4 slots=5
+      slot 0D: x= 120 y=  60 h1 p=$34 b2=$01  via 4:$80F0 rec
+      slot 0E: FE (skip)
+      slot 0F: x= 120 y= 124 h2 p=$BB b2=$02  type $0D/$0E (p bit7)
+      slot 10: x= 152 y= 124 h2 p=$BB b2=$02  type $0D/$0E (p bit7)
+      slot 11: x= 136 y= 188 h2 p=$97 b2=$02  type $0D/$0E (p bit7)
+216 $D8  A93D e6=FF e7=06 R4=47 R5=FF spawns=1 slots=1
+      slot 0D: x= 128 y= 108 h1 p=$39 b2=$41  via 4:$80F0 rec
+217 $D9  9417 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$43 b2=$44  type=p (p&F0=40: flag item)
+218 $DA  940D e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$42 b2=$44  type=p (p&F0=40: flag item)
+220 $DC  93F9 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$40 b2=$44  type=p (p&F0=40: flag item)
+221 $DD  9403 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$41 b2=$44  type=p (p&F0=40: flag item)
+222 $DE  A907 e6=06 e7=0E R4=4A R5=4C spawns=4 slots=4
+      slot 0D: x= 136 y=  92 h1 p=$07 b2=$01  via 4:$80F0 rec
+      slot 0E: x= 184 y= 124 h1 p=$32 b2=$01  via 4:$80F0 rec
+      slot 0F: x=  88 y= 140 h1 p=$33 b2=$01  via 4:$80F0 rec
+      slot 10: x= 104 y= 124 h1 p=$35 b2=$81  via 4:$80F0 rec
+223 $DF  A92F e6=06 e7=0E R4=4A R5=47 spawns=2 slots=2
+      slot 0D: x= 128 y=  60 h1 p=$38 b2=$C1  via 4:$80F0 rec
+      slot 0E: x= 184 y=  60 h1 p=$33 b2=$01  via 4:$80F0 rec
+224 $E0  A91D e6=11 e7=14 R4=49 R5=4C spawns=3 slots=3
+      slot 0D: x= 184 y= 124 h1 p=$04 b2=$01  via 4:$80F0 rec
+      slot 0E: x=  88 y= 140 h1 p=$36 b2=$01  via 4:$80F0 rec
+      slot 0F: x= 104 y= 124 h1 p=$37 b2=$81  via 4:$80F0 rec
+225 $E1  A955 e6=06 e7=FF R4=50 R5=47 spawns=2 slots=2
+      slot 0D: x= 128 y=  60 h1 p=$38 b2=$C1  via 4:$80F0 rec
+      slot 0E: x= 128 y=  60 h1 p=$62 b2=$41  via 4:$80F0 rec
+226 $E2  A8A5 e6=FF e7=FF R4=5E R5=FF spawns=1 slots=1
+      slot 0D: x= 152 y= 124 h2 p=$0A b2=$02  type $0D/$0E (p bit7)
+227 $E3  A9A9 e6=06 e7=09 R4=48 R5=49 spawns=3 slots=3
+      slot 0D: x= 152 y= 108 h1 p=$3D b2=$01  via 4:$80F0 rec
+      slot 0E: x=  56 y=  92 h1 p=$3E b2=$81  via 4:$80F0 rec
+      slot 0F: x= 200 y=  92 h1 p=$3F b2=$81  via 4:$80F0 rec
+228 $E4  A9BB e6=FF e7=11 R4=4C R5=FF spawns=2 slots=2
+      slot 0D: x= 120 y= 140 h1 p=$44 b2=$01  via 4:$80F0 rec
+      slot 0E: x= 152 y=  76 h4 p=$2C b2=$04  type=p (p&F0=40: flag item)
+229 $E5  9403 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$41 b2=$44  type=p (p&F0=40: flag item)
+231 $E7  93F9 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$40 b2=$44  type=p (p&F0=40: flag item)
+232 $E8  AA0F e6=14 e7=24 R4=4E R5=FF spawns=1 slots=1
+      slot 0D: x=  72 y= 124 h1 p=$47 b2=$01  via 4:$80F0 rec
+233 $E9  A9D7 e6=FF e7=11 R4=4C R5=FF spawns=1 slots=1
+      slot 0D: x= 168 y= 156 h1 p=$44 b2=$01  via 4:$80F0 rec
+235 $EB  9403 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$41 b2=$44  type=p (p&F0=40: flag item)
+236 $EC  AA37 e6=06 e7=FF R4=4D R5=FF spawns=1 slots=1
+      slot 0D: x= 120 y= 124 h1 p=$60 b2=$01  via 4:$80F0 rec
+237 $ED  93F9 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$40 b2=$44  type=p (p&F0=40: flag item)
+238 $EE  940D e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$42 b2=$44  type=p (p&F0=40: flag item)
+239 $EF  AA5F e6=0C e7=09 R4=4D R5=78 spawns=7 slots=7
+      slot 0D: x=  72 y= 140 h1 p=$6D b2=$01  via 4:$80F0 rec
+      slot 0E: x=  72 y= 140 h1 p=$7E b2=$81  via 4:$80F0 rec
+      slot 0F: x=  72 y=  92 h1 p=$0C b2=$01  via 4:$80F0 rec
+      slot 10: x= 168 y=  60 h1 p=$49 b2=$01  via 4:$80F0 rec
+      slot 11: x= 200 y= 124 h1 p=$4A b2=$01  via 4:$80F0 rec
+      slot 12: x= 152 y= 156 h1 p=$4A b2=$01  via 4:$80F0 rec
+      slot 13: x= 136 y= 172 h2 p=$C1 b2=$82  type $0D/$0E (p bit7)
+240 $F0  9417 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$43 b2=$44  type=p (p&F0=40: flag item)
+241 $F1  AA41 e6=0C e7=11 R4=49 R5=78 spawns=6 slots=6
+      slot 0D: x=  56 y= 140 h1 p=$6C b2=$01  via 4:$80F0 rec
+      slot 0E: x=  56 y= 140 h1 p=$7E b2=$81  via 4:$80F0 rec
+      slot 0F: x=  96 y=  60 h1 p=$4C b2=$41  via 4:$80F0 rec
+      slot 10: x= 120 y= 108 h1 p=$4D b2=$01  via 4:$80F0 rec
+      slot 11: x= 104 y= 124 h1 p=$4B b2=$01  via 4:$80F0 rec
+      slot 12: x= 184 y= 156 h1 p=$4B b2=$01  via 4:$80F0 rec
+242 $F2  AAF5 e6=06 e7=0C R4=53 R5=50 spawns=6 slots=6
+      slot 0D: x= 128 y=  92 h1 p=$6E b2=$41  via 4:$80F0 rec
+      slot 0E: x=  88 y= 124 h1 p=$5E b2=$81  via 4:$80F0 rec
+      slot 0F: x=  88 y= 156 h1 p=$5F b2=$81  via 4:$80F0 rec
+      slot 10: x= 168 y= 124 h1 p=$62 b2=$81  via 4:$80F0 rec
+      slot 11: x= 136 y= 156 h2 p=$82 b2=$02  type $0D/$0E (p bit7)
+      slot 12: x= 136 y= 188 h2 p=$9A b2=$02  type $0D/$0E (p bit7)
+243 $F3  AACD e6=06 e7=06 R4=4E R5=50 spawns=4 slots=4
+      slot 0D: x= 104 y=  60 h1 p=$5F b2=$81  via 4:$80F0 rec
+      slot 0E: x=  72 y= 108 h1 p=$51 b2=$01  via 4:$80F0 rec
+      slot 0F: x= 104 y= 140 h1 p=$51 b2=$01  via 4:$80F0 rec
+      slot 10: x= 136 y= 108 h1 p=$51 b2=$01  via 4:$80F0 rec
+244 $F4  AAE3 e6=06 e7=FF R4=4F R5=50 spawns=3 slots=3
+      slot 0D: x=  88 y= 140 h1 p=$62 b2=$81  via 4:$80F0 rec
+      slot 0E: x= 152 y= 108 h1 p=$53 b2=$01  via 4:$80F0 rec
+      slot 0F: x= 184 y= 108 h1 p=$53 b2=$01  via 4:$80F0 rec
+245 $F5  940D e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$42 b2=$44  type=p (p&F0=40: flag item)
+246 $F6  9403 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$41 b2=$44  type=p (p&F0=40: flag item)
+247 $F7  93F9 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$40 b2=$44  type=p (p&F0=40: flag item)
+248 $F8  93F9 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$40 b2=$44  type=p (p&F0=40: flag item)
+249 $F9  9403 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$41 b2=$44  type=p (p&F0=40: flag item)
+250 $FA  AB95 e6=09 e7=09 R4=4C R5=FF spawns=2 slots=2
+      slot 0D: x= 152 y= 108 h1 p=$5B b2=$01  via 4:$80F0 rec
+      slot 0E: x= 184 y=  76 h1 p=$5C b2=$01  via 4:$80F0 rec
+251 $FB  9417 e6=0B e7=0B R4=4A R5=4A spawns=1 slots=1
+      slot 0D: x= 160 y= 156 h4 p=$43 b2=$44  type=p (p&F0=40: flag item)

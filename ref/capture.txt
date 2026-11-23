@@ -1,0 +1,21 @@
+# frame fceux_framecount files  (keys: 1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80)
+120 120 ram,wram,nt,pal,png,gd
+600 600 ram,wram,nt,pal,png,gd
+1200 1200 ram,wram,nt,pal,png,gd
+1450 1450 ram,wram,nt,pal,png,gd
+1500 1500 ram,wram,nt,pal,png,gd
+2250 2250 ram,wram,nt,pal,png,gd
+2352 2352 ram,wram,nt,pal,png,gd
+2385 2385 ram,wram,nt,pal,png,gd
+2392 2392 ram,wram,nt,pal,png,gd
+2409 2409 ram,wram,nt,pal,png,gd
+2450 2450 ram,wram,nt,pal,png,gd
+2460 2460 ram,wram,nt,pal,png,gd
+screen_status 2503 ram,wram,nt,pal,png,gd
+screen_equip 2503 ram,wram,nt,pal,png,gd
+screen_items 2525 ram,wram,nt,pal,png,gd
+screen_save 2545 ram,wram,nt,pal,png,gd
+screen_save_ask 2587 ram,wram,nt,pal,png,gd
+screen_load_ask 2609 ram,wram,nt,pal,png,gd
+screen_death 2661 ram,wram,nt,pal,png,gd
+screen_gameover 2961 ram,wram,nt,pal,png,gd

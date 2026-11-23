@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+# headless Firefox profiles and large debug traces (regenerable)
+gfx/browser/ffprofile_*/
+gfx/browser/firefox.log
+gfx/emu/bench_trace.txt
+gfx/compare/s107_trace*.txt

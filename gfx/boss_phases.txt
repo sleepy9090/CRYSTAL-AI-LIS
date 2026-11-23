@@ -1,0 +1,60 @@
+handler 15:A477 (AI $E0)  call 15:A486  base $00  phases 8
+    phase  0  [ 0] -> 15:A48B
+    phase  1  [ 1] -> 15:A4C3
+    phase  2  [ 2] -> 15:A4CC
+    phase  3  [ 3] -> 15:A4D8
+    phase  4  [ 4] -> 15:A50B
+    phase  5  [ 5] -> 15:A54A
+    phase  6  [ 6] -> 15:A565
+    phase  7  [ 7] -> 15:A581
+handler 15:A675 (AI $E2)  call 15:A67F  base $08  phases 2
+    phase  0  [ 8] -> 15:A684
+    phase  1  [ 9] -> 15:A87E
+handler 15:A95D (AI $E3)  call 15:A96C  base $0A  phases 5
+    phase  0  [10] -> 15:A971
+    phase  1  [11] -> 15:A9C6
+    phase  2  [12] -> 15:AA46
+    phase  3  [13] -> 15:AAA7
+    phase  4  [14] -> 15:AAE6
+handler 15:ABDA (AI $E5)  call 15:ABDF  base $0F  phases 8
+    phase  0  [15] -> 15:ABE4
+    phase  1  [16] -> 15:ABFC
+    phase  2  [17] -> 15:AC0F
+    phase  3  [18] -> 15:AC1A
+    phase  4  [19] -> 15:AC1E
+    phase  5  [20] -> 15:AC31
+    phase  6  [21] -> 15:AC41
+    phase  7  [22] -> 15:AC5B
+handler 15:AC7B (AI $E6)  call 15:AC8A  base $17  phases 4
+    phase  0  [23] -> 15:AC8F
+    phase  1  [24] -> 15:ACF5
+    phase  2  [25] -> 15:0000  (null)
+    phase  3  [26] -> 15:0000  (null)
+handler 15:ADD4 (AI $E7)  call 15:ADE3  base $1B  phases 6
+    phase  0  [27] -> 15:ADE8
+    phase  1  [28] -> 15:AE35
+    phase  2  [29] -> 15:AE43
+    phase  3  [30] -> 15:AE5A
+    phase  4  [31] -> 15:AEC9
+    phase  5  [32] -> 15:AEEC
+handler 15:AF48 (AI $E8)  call 15:AF57  base $21  phases 3
+    phase  0  [33] -> 15:AF5C
+    phase  1  [34] -> 15:AFAD
+    phase  2  [35] -> 15:B051
+handler 15:B0B6 (AI $E9)  call 15:B0C0  base $24  phases 3
+    phase  0  [36] -> 15:B0C5
+    phase  1  [37] -> 15:B0F4
+    phase  2  [38] -> 15:B105
+handler 15:B130 (AI $EA)  call 15:B14A  base $27  phases 4
+    phase  0  [39] -> 15:B14F
+    phase  1  [40] -> 15:B1A5
+    phase  2  [41] -> 15:B215
+    phase  3  [42] -> 15:B22C
+handler 15:B2DA (AI $EB)  call 15:B2F3  base $2B  phases 7
+    phase  0  [43] -> 15:B301
+    phase  1  [44] -> 15:B3BC
+    phase  2  [45] -> 15:B4DD
+    phase  3  [46] -> 15:B524
+    phase  4  [47] -> 15:B552
+    phase  5  [48] -> 15:B587
+    phase  6  [49] -> 15:B67A

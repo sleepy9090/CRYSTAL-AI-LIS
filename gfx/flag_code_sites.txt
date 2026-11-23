@@ -1,0 +1,70 @@
+08:8447  EOR $655D,X    |                               | next: ADC $5D; ROR $FE; CMP $FE
+11:B84F  EOR $64B8,X    |                               | next: CLV; PLA; CLV
+14:8119  LDA $6480,X    |                               | next: ORA $28; STA $6480,X; JMP $812E
+14:811E  STA $6480,X    |                               | next: JMP $812E; LDA $28; EOR #$FF
+14:8128  EOR #$FF / AND $6480,X    |                               | next: STA $6480,X; LDA $26; AND #$40
+14:812B  *NOP #$64 / STA $6480,X    |                               | next: LDA $26; AND #$40; BEQ $8112
+14:813D  LDA $6480,X    |                               | next: PLP; BEQ $8145; EOR #$FF
+15:A217  AND $64A0      |                               | next: BRK; BRK; RTI
+19:B261  ROR $6520      |                               | next: ROR $6F; JMP $7475; ADC #$6F
+19:B378  JSR $6572      |                               | next: BVS $B3E2; ADC $74; JSR $6874
+19:B5C8  ADC #$6E / JSR $6566      |                               | next: ADC $72; ROL $2020; JSR $2020
+19:B5E8  JSR $6566      |                               | next: ADC $72; ADC $64; JSR $6874
+19:B6F5  ROR $6563      |                               | next: JSR $7665; ADC #$6C; JSR $6D65
+20:84C8  ADC #$76 / LDY $6570      |                               | next: ADC $63; ADC $66; ADC $6C
+20:8D85  JSR $6547      |                               | next: ROR $7265; ADC $6C; BRK
+20:9073  JSR $6552      |                               | next: BVS $90ED; ROR $5700; ADC $72
+20:92C5  JSR $6573      |                               | next: ADC $02; PLA; ADC #$6D
+21:A9D9  JSR $6568      |                               | next: JMP $2E70; BRK; ORA $57
+21:AD11  JSR $6557      |                               | next: JSR $74FD; ADC $6C; JMP $6120
+21:AD15  SBC $6574,X    |                               | next: JMP $206C; ADC $6C; JMP $CF20
+21:B2B0  ROR $6502      |                               | next: ROR $65; ROR $6120; JSR $7266
+21:B2E9  LDA $6568      |                               | next: JMP $2064; BVS $B363; ADC #$73
+21:B52B  JSR $6573      |                               | next: ADC $20; CMP $02; ORA $02
+21:BB42  JSR $6572      |                               | next: ROR $6174; JMP $7320; PLA
+21:BD62  LDX $6574      |                               | next: ADC $63; PLA; JSR $DAF3
+22:80DA  LDA $6502      |                               | next: ADC $7470; ADC $202E,Y; EOR $6E
+22:84C8  ADC #$76 / LDY $6570      |                               | next: ADC $63; ADC $66; ADC $6C
+22:8ACB  SBC $656E,Y    |                               | next: ADC $72; JSR $1E06; ROL $0100
+22:8AE7  JSR $656E      |                               | next: ADC $72; JSR $1E06; ROL $0100
+22:8F13  INC $6502      | count                         | next: SEI; ADC $63; ADC $74
+22:92C5  JSR $6573      |                               | next: ADC $02; PLA; ADC #$6D
+22:9C07  ROR $6567      |                               | next: JSR $1106; AND $22; BRK
+23:A3B3  LDA $6564      |                               | next: ADC $74; PLA; JSR $BDFE
+23:A3CC  LDA $6564      |                               | next: ADC $74; PLA; JSR $02FE
+23:A93B  AND $6557      |                               | next: JSR $6F68; BVS $A9A8; JSR $A498
+23:A96A  SBC $6572,X    |                               | next: ADC $6C; ADC #$7A; ADC $5F
+23:AD15  JSR $654C      |                               | next: ADC $74; PLA; ADC $72
+23:B138  SBC $6574,X    |                               | next: ADC $63; PLA; JSR $F4F3
+23:B442  SBC $656C,X    |                               | next: ADC $76; ADC $02; INC $2306,X
+23:B68A  JSR $6548      |                               | next: JMP $6F6C; ROL $0520; BRK
+23:B6D3  JSR $6548      |                               | next: JMP $6F6C; ROL $0100; JSR $5F5F
+23:B807  LDA $6572      |                               | next: BVS $B878; ADC $6E; ADC #$73
+23:B823  ORA #$05 / LDA $6572      |                               | next: BVS $B894; ADC $6E; ADC #$73
+23:B988  ORA #$06 / LDA $6572      |                               | next: ROR $65; ADC $6C; STX $21
+23:B9B3  JSR $656C      |                               | next: ROR $65; JMP $AD20; ADC #$6E
+23:BCE2  STA $6480,X    |                               | next: LDA $7F00,X; STA $6580,X; INX
+24:9A7C  STX $64E0      |                               | next: PLP; ADC #$40; RTS
+26:903A  LDA $6480,Y    |                               | next: AND $11; ORA $10; STA $6480,Y
+26:9041  STA $6480,Y    |                               | next: RTS; ROL $27; LSR $625F,X
+27:A6FE  CPY #$06 / LDA $6480,Y    |                               | next: STA $10; LDY $06E0,X; AND $C000,Y
+27:A74F  INC $657F      | count                         | next: RTS; LDA $0620,X; BEQ $A774
+27:A7A3  LDA $657F      |                               | next: ASL; CLC; ADC #$06
+27:B5C2  JSR $6518      |                               | next: JSR $0F29; TAY; LDA $0440,X
+30:C063  LDA $6485      | test     F02C F02D F02E F02F  | next: AND #$F0; STA $10; LDA $0710
+30:C07F  STA $6485      |                               | next: LDA $0710; BPL $C08A; JMP $C107
+30:C798  LDA $64C0,Y    |                               | next: ORA $12; STA $64C0,Y; LDA #$0D
+30:C79D  STA $64C0,Y    |                               | next: LDA #$0D; JMP $C40E; PHA
+30:C964  STA $6480,X    |                               | next: STA $6580,X; DEX; BNE $C964
+30:DD64  LDA $64DE,X    |                               | next: AND $C000,Y; RTS; LDA $51
+31:E269  LDA $6480,Y    |                               | next: STA $10; PLA; AND #$07
+31:E717  LDA $64C0,X    |                               | next: STA $12; LDA #$00; STA $13
+31:E7CE  LDA $6488      |                               | next: ASL; ASL; BMI $E81A
+31:E7D5  LDA $648A      | test     F053                 | next: AND #$08; BEQ $E822; LDA $6488
+31:E7DC  LDA $6488      | set      F045                 | next: ORA #$20; STA $6488; LDX #$0E
+31:E7E1  ORA #$20 / STA $6488      |                               | next: LDX #$0E; LDA #$32; STA $04A0,X
+31:E81A  LDA $648A      | clr      F053                 | next: AND #$F7; STA $648A; RTS
+31:E81F  AND #$F7 / STA $648A      |                               | next: RTS; LDA $6C; CMP #$8C
+31:E829  LDA $6484      | test     F027                 | next: AND #$80; BEQ $E844; LDA #$FF
+31:F3A7  STA $6480,X    |                               | next: LDA $7E00,X; STA $6580,X; INX
+# 69 sites in $6480-$657F

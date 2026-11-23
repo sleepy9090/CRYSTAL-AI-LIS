@@ -1,0 +1,180 @@
+tools.emu scenarios vs the 178 labels the tour never ran (docs/emu_tour.txt)
+
+[final_boss] area A6: ObjInit type $9E (final boss) in slot $0D at +10, sword 1, level 16, $03E1 held 0x11, player held under the boss, UP+B swings -> hits per phase
+  end: $40/$41 1/08 area A6 hp 96 lv 16 gold 0 xp 0 mp 96 $04AD=EB $060D=05 $03CD=FF $050D=00
+  state writes ($40/$41 $060D $04AD $03CD $0051), first of each:
+    scenario start: abs f2495
+    abs f2505: 15:B301 $04A0=03 $41=08
+    abs f2606: 15:B6C1 $04A0=03 $41=08
+    abs f2697: 15:B3BC $04A0=03 $41=08
+    abs f2793: 15:B587 $04A0=03 $41=08
+    abs f3800: 15:B4DD $04A0=03 $41=08
+    abs f4010: 15:B552 $04A0=03 $41=08
+    abs f4049: 15:B524 $04A0=03 $41=08
+    f0: $03CD <- FF  pc 15:B140
+    f10: $060D <- 00  pc 30:C2A3
+    f10: $04AD <- 00  pc 30:C29D
+    f10: $03CD <- 00  pc 30:C29A
+    f10: $03CD <- FF  pc 30:C300
+    f10: $04AD <- EB  pc 30:C34A
+    f116: $060D <- 01  pc 15:B39A
+    f202: $0051 <- 07  pc 15:B2F3
+    f202: $0051 <- 07  pc 27:A418
+    f297: $060D <- 05  pc 15:B546
+    f651: $060D <- 01  pc 15:B5AB
+    f1304: $060D <- 02  pc 15:B4A1
+    f1513: $060D <- 04  pc 15:B50B
+    f1553: $060D <- 03  pc 15:B586
+  newly run (4): 15:B2DA:AiBowOfTruth9E 15:B6C1:BossBgStrip 26:92BF:HitPlayerShot 30:C482:PpuQueueBlock
+
+[final_boss_s4] area A6: ObjInit type $9E (final boss) in slot $0D at +10, sword 4, level 16, $03E1 held 0x28, player held under the boss, UP+B swings -> hits per phase
+  end: $40/$41 1/08 area A6 hp 96 lv 16 gold 0 xp 0 mp 34 $04AD=00 $060D=02 $03CD=00 $050D=00
+  state writes ($40/$41 $060D $04AD $03CD $0051), first of each:
+    scenario start: abs f2495
+    abs f2505: 15:B301 $04A0=03 $41=08
+    abs f2606: 15:B6C1 $04A0=03 $41=08
+    abs f2697: 15:B3BC $04A0=03 $41=08
+    abs f2793: 15:B587 $04A0=03 $41=08
+    f0: $03CD <- FF  pc 15:B140
+    f10: $060D <- 00  pc 30:C2A3
+    f10: $04AD <- 00  pc 30:C29D
+    f10: $03CD <- 00  pc 30:C29A
+    f10: $03CD <- FF  pc 30:C300
+    f10: $04AD <- EB  pc 30:C34A
+    f116: $060D <- 01  pc 15:B39A
+    f202: $0051 <- 07  pc 15:B2F3
+    f202: $0051 <- 07  pc 27:A418
+    f297: $060D <- 05  pc 15:B546
+    f302: $03CD <- F5  pc 26:9144
+    f314: $03CD <- EB  pc 26:9144
+    f331: $03CD <- E1  pc 26:9144
+    f344: $03CD <- D7  pc 26:9144
+    f366: $03CD <- CD  pc 26:9144
+    f380: $03CD <- C3  pc 26:9144
+    f393: $03CD <- B9  pc 26:9144
+    f406: $03CD <- AF  pc 26:9144
+    f425: $03CD <- A5  pc 26:9144
+    f441: $03CD <- 9B  pc 26:9144
+    f454: $03CD <- 91  pc 26:9144
+    f471: $03CD <- 87  pc 26:9144
+    f487: $03CD <- 7D  pc 26:9144
+    f501: $03CD <- 73  pc 26:9144
+    f516: $03CD <- 69  pc 26:9144
+    f529: $03CD <- 5F  pc 26:9144
+    f544: $03CD <- 55  pc 26:9144
+    f557: $03CD <- 4B  pc 26:9144
+    f572: $03CD <- 41  pc 26:9144
+    f593: $03CD <- 37  pc 26:9144
+    f615: $03CD <- 2D  pc 26:9144
+    f628: $060D <- 01  pc 15:B5AB
+    f666: $03CD <- 23  pc 26:9144
+    f674: $03CD <- 19  pc 26:9144
+    f687: $03CD <- 0F  pc 26:9144
+  newly run (10): 15:B2DA:AiBowOfTruth9E 15:B6C1:BossBgStrip 15:B807:BossDefeated 26:9152:EnemyKilled 26:924B:AddXp 26:92BF:HitPlayerShot 26:9D81:PlayerMoveLocked 27:B83B:ObjAiExplode 30:C482:PpuQueueBlock 31:FFCF:FarCall_D354
+
+[final_boss_cx] area A6: ObjInit type $9E (final boss) in slot $0D at +10, sword 5, level 16, $03E1 held 0x20, player held under the boss, UP+B swings -> hits per phase
+  end: $40/$41 1/08 area A6 hp 96 lv 16 gold 0 xp 0 mp 34 $04AD=00 $060D=02 $03CD=00 $050D=00
+  state writes ($40/$41 $060D $04AD $03CD $0051), first of each:
+    scenario start: abs f2495
+    abs f2505: 15:B301 $04A0=03 $41=08
+    abs f2606: 15:B6C1 $04A0=03 $41=08
+    abs f2697: 15:B3BC $04A0=03 $41=08
+    abs f2793: 15:B587 $04A0=03 $41=08
+    f0: $03CD <- FF  pc 15:B140
+    f10: $060D <- 00  pc 30:C2A3
+    f10: $04AD <- 00  pc 30:C29D
+    f10: $03CD <- 00  pc 30:C29A
+    f10: $03CD <- FF  pc 30:C300
+    f10: $04AD <- EB  pc 30:C34A
+    f116: $060D <- 01  pc 15:B39A
+    f202: $0051 <- 07  pc 15:B2F3
+    f202: $0051 <- 07  pc 27:A418
+    f230: $03CD <- F5  pc 26:9144
+    f232: $03CD <- EB  pc 26:9144
+    f234: $03CD <- E1  pc 26:9144
+    f242: $03CD <- D7  pc 26:9144
+    f244: $03CD <- CD  pc 26:9144
+    f246: $03CD <- C3  pc 26:9144
+    f254: $03CD <- B9  pc 26:9144
+    f256: $03CD <- AF  pc 26:9144
+    f258: $03CD <- A5  pc 26:9144
+    f266: $03CD <- 9B  pc 26:9144
+    f268: $03CD <- 91  pc 26:9144
+    f270: $03CD <- 87  pc 26:9144
+    f278: $03CD <- 7D  pc 26:9144
+    f280: $03CD <- 73  pc 26:9144
+    f282: $03CD <- 69  pc 26:9144
+    f290: $03CD <- 5F  pc 26:9144
+    f292: $03CD <- 55  pc 26:9144
+    f294: $03CD <- 4B  pc 26:9144
+    f297: $060D <- 05  pc 15:B546
+    f302: $03CD <- 41  pc 26:9144
+    f314: $03CD <- 37  pc 26:9144
+    f331: $03CD <- 2D  pc 26:9144
+    f344: $03CD <- 23  pc 26:9144
+    f365: $03CD <- 19  pc 26:9144
+    f379: $03CD <- 0F  pc 26:9144
+    f390: $03CD <- 05  pc 26:9144
+  newly run (9): 15:B2DA:AiBowOfTruth9E 15:B6C1:BossBgStrip 15:B807:BossDefeated 26:9152:EnemyKilled 26:924B:AddXp 26:9D81:PlayerMoveLocked 27:B83B:ObjAiExplode 30:C482:PpuQueueBlock 31:FFCF:FarCall_D354
+
+[final_boss_cx_max] area A6: ObjInit type $9E (final boss) in slot $0D at +10, sword 5, level 16, $03E1 held 0x30, player held under the boss, UP+B swings -> hits per phase
+  end: $40/$41 1/08 area A6 hp 96 lv 16 gold 0 xp 0 mp 34 $04AD=00 $060D=02 $03CD=00 $050D=00
+  state writes ($40/$41 $060D $04AD $03CD $0051), first of each:
+    scenario start: abs f2495
+    abs f2505: 15:B301 $04A0=03 $41=08
+    abs f2606: 15:B6C1 $04A0=03 $41=08
+    abs f2697: 15:B3BC $04A0=03 $41=08
+    f0: $03CD <- FF  pc 15:B140
+    f10: $060D <- 00  pc 30:C2A3
+    f10: $04AD <- 00  pc 30:C29D
+    f10: $03CD <- 00  pc 30:C29A
+    f10: $03CD <- FF  pc 30:C300
+    f10: $04AD <- EB  pc 30:C34A
+    f116: $060D <- 01  pc 15:B39A
+    f202: $0051 <- 07  pc 15:B2F3
+    f202: $0051 <- 07  pc 27:A418
+    f230: $03CD <- E5  pc 26:9144
+    f232: $03CD <- CB  pc 26:9144
+    f234: $03CD <- B1  pc 26:9144
+    f242: $03CD <- 97  pc 26:9144
+    f244: $03CD <- 7D  pc 26:9144
+    f246: $03CD <- 63  pc 26:9144
+    f254: $03CD <- 49  pc 26:9144
+    f256: $03CD <- 2F  pc 26:9144
+    f258: $03CD <- 15  pc 26:9144
+    f266: $03CD <- FB  pc 26:9144
+    f266: $04AD <- 74  pc 30:C34A
+    f267: $060D <- FF  pc 27:B858
+    f267: $060D <- 05  pc 27:B8CA
+    f268: $060D <- 04  pc 27:B858
+    f269: $060D <- 03  pc 27:B858
+    f270: $060D <- 02  pc 27:B858
+    f271: $060D <- 01  pc 27:B858
+    f272: $060D <- 00  pc 27:B858
+    f279: $060D <- 02  pc 27:B8CA
+    f283: $060D <- 04  pc 27:B8CA
+    f322: $060D <- 03  pc 27:B8CA
+    f463: $04AD <- 6F  pc 30:C34A
+    f465: $04AD <- 6E  pc 30:C34A
+    f465: $060D <- 0B  pc 15:B828
+    f465: $0051 <- 00  pc 15:B901
+    f465: $04AD <- 00  pc 15:B908
+    f471: $04AD <- 14  pc 30:C34A
+  newly run (9): 15:B2DA:AiBowOfTruth9E 15:B6C1:BossBgStrip 15:B807:BossDefeated 26:9152:EnemyKilled 26:924B:AddXp 26:9D81:PlayerMoveLocked 27:B83B:ObjAiExplode 30:C482:PpuQueueBlock 31:FFCF:FarCall_D354
+
+union: 10 / 178 newly run; still never run (168):
+  bank  4: 8000:ScreenBlank80
+  bank 14: 8000:NpcScript 816F:Telepathy 81D1:TelepathyHint 831E:ItemUseHook 8354:InvRemoveItem 8451:UseBowCheck 8469:UseFindSlotObj 8497:UseTouchMatch 84DB:UseFail
+  bank 15: A675:BossAiE2 BA98:BossFleeSpeech BC40:PauseScreen BDDB:PauseWait BE7A:EquipNameRow
+  bank 16: 8232:MenuChrR1 9A37:ShopPriceSel 9AEE:SaveLoadPage 9B3A:SaveLoadLoop 9BE1:MenuSave 9C7A:SaveLoadExit 9CE0:SaveSlotCopy
+  bank 17: A000:EndingInit A0EB:EndingWait A100:EndingTick A14A:EndingScene A751:NtFill_b17 AA74:EndingFadeIn AAAD:EndingFadeOut
+  bank 18: 8000:IntroRectPtr 8002:IntroRect 8028:IntroColdBoot 824B:NtRectBlitQueued 838B:MenuPalSets
+  bank 19: A092:PpuQueueDrainWait A0B5:TitleStatusInit A176:TitleStatusScreen A212:StatusAnimTick A34E:StatusTypeStep A3F6:NameEntryInput A57C:NameEntryDone A585:NameEntryCursor A653:TitleMenuInit A6DF:TitleMenu A6F9:StartNewGame A749:TitleMenuInput A77D:TitleMenuStart A796:TitleMenuRestart A953:OpeningPage2 AA16:OpeningPage2Flip AA30:OpeningPage3 AAC2:OpeningPage3Anim AAF1:OpeningPage4 AB81:OpeningPage4Anim ABAB:TitleOpeningEnd ABB4:TitleStoryInit ABEA:TitleIntroStory B15C:TitleStoryEnd B162:DateCardRectPtr B9B0:OpelRevive BB39:SubstCureMagic BB9D:SubstFormRevert BDF2:SubstFinalSceneReset BFC4:FinalSceneToEnding
+  bank 20: 9400:WakeCutscene 9500:WakeSprDraw 973D:WakeSprFrame
+  bank 23: BC8E:LoadGame BCDA:LoadGameAndInit BD60:LoadPlayerState BE00:NewSaveTemplate
+  bank 24: 8020:SndInit 8395:SndOpSweep 8609:SndFadeStep
+  bank 26: 8C32:PaletteBlackFill 8FC4:HitHandler3 91FA:EnemyDeathFx 943F:RidePlatform 946D:PickupGold 9AE8:SpendMp 9FD2:PlayerConveyor
+  bank 27: A092:MagicButtonSel A112:MagicFlight A143:MagicJump A1BB:MagicFailSound A211:FacingKeep A5C0:AiShopEmpty AC60:AI_TrapChest ACC0:AiBurst AD9C:NpcLookAhead AE31:AiPathWalk B0A8:AiDirShot B436:AiDasher B595:AiFanTurret B5D3:AiFanTurretIdle B6AA:AiOrbiter B79F:ChestHop
+  bank 28: 81A5:BurstRadius
+  bank 30: C7D6:FadeSaveZpToWram C944:MainStateEndingInit C94C:MainStateEnding C957:MainStateNewGame C9DA:MainStateContinue C9FF:GameStartObjs CA5F:SubstNewGameInit CBFC:SubstDebugPause CC17:SubstOutOfMp CC4D:SubstRestoreScreen D0C8:NpcTalk D16D:TalkFullRestore D1FF:SpawnFxAtSlot D22B:GiveItemA D23F:MakeFollower13 D263:TalkGiveGold100 D31C:NpcVanish D3DA:TrapChest D47C:GiveItemFull D497:ItemUseMenu D526:ItemUseFail D5A4:EvActThunderWarp D659:EvActSpawnType38 D718:EvActClearSlot13 D71F:EvActClearSlot14 D746:EvActSpawn9E D75E:EvActTwoFollowers D791:EvActHistory D7B7:EvActPushBack D7CE:EvActMakeFollowers D805:EvActConsume D88B:WaitSfxDone D8C7:SubstEquipMenu D9B6:SubstWakeCutscene D9C1:SubstShopEmpty DB0E:SelectedUseItem DB28:SubstTeleportMenu DD58:TestFlagF2F0 DD6B:SubstTelepathySelect DE04:SubstTelepathyReply DEC1:SubstChangeForm
+  bank 31: E144:AreaLoadA E544:AreaPitFall E573:AreaEdgeLink EF33:ScreenPageAtCamera F0A4:BootSaveCheck F11F:SaveSlot0Reset F140:BootCheckSlot1 F1A3:SaveSlot1Reset F1C7:BootSaveRestoreR7 F1CD:ColdSaveInit F1E2:BootCheckCurrent F219:CurSaveReset F23D:SaveSumSlot F273:SlotCopy F2A4:Reset F374:ColdBootInit F39F:WarmBootContinue F3A2:CopySramBlock F5E1:IrqRowStretch F60E:IrqOffSound F61A:IrqMenuChrSplit F691:IrqHandler6 F751:NmiMode2 F782:NmiMode4 F7C5:NmiMode5 F7DB:NmiMode6 FE01:ShopDoorOpen FE18:ShopDoorClose FFBE:FarCall_B26_8CC0

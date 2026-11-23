@@ -1,0 +1,4348 @@
+{
+ "dict": [
+  "as",
+  "at",
+  "an",
+  "are",
+  "able",
+  "and",
+  "ed",
+  "be",
+  "But",
+  "but",
+  "Queen",
+  "battle",
+  "care",
+  "come",
+  "Do",
+  "do",
+  "down",
+  "Don't",
+  "n't",
+  "end",
+  "even",
+  "feel",
+  "found",
+  "go",
+  "we",
+  "get",
+  "Good",
+  "good",
+  "gone",
+  "girl",
+  "give",
+  "The",
+  "find",
+  "Hey",
+  "how",
+  "has",
+  "have",
+  "home",
+  "hero",
+  "help",
+  "hope",
+  "here",
+  "haven't",
+  "in",
+  "ing",
+  "is",
+  "I'll",
+  "into",
+  "I'm",
+  "it",
+  "keep",
+  "kind",
+  "again",
+  "know",
+  "long",
+  "lead",
+  "last",
+  "look",
+  "left",
+  "lake",
+  "lost",
+  "me",
+  "many",
+  "make",
+  "more",
+  "most",
+  "made",
+  "much",
+  "must",
+  "no",
+  "Now",
+  "now",
+  "not",
+  "need",
+  "ness",
+  "next",
+  "never",
+  "on",
+  "or",
+  "of",
+  "off",
+  "out",
+  "only",
+  "over",
+  "right",
+  "some",
+  "Sure",
+  "speak",
+  "to",
+  "too",
+  "the",
+  "than",
+  "they",
+  "town",
+  "Take",
+  "take",
+  "this",
+  "that",
+  "there",
+  "us",
+  "up",
+  "use",
+  "used",
+  "very",
+  "was",
+  "way",
+  "work",
+  "when",
+  "wait",
+  "well",
+  "were",
+  "went",
+  "with",
+  "what",
+  "won't",
+  "you",
+  "your",
+  "you've",
+  "you're",
+  "You",
+  "can",
+  "cave",
+  "my",
+  "I",
+  "from",
+  "will",
+  "for",
+  "er"
+ ],
+ "t05": [
+  "Please",
+  "Humans",
+  "one",
+  "power",
+  "magic",
+  "Draygon",
+  "island",
+  "people",
+  "Be careful",
+  "wise men"
+ ],
+ "t06": [
+  "Aryllis",
+  "Akahana",
+  "Asina",
+  "Azteca",
+  "Clark",
+  "Deo",
+  "Evans",
+  "Geline",
+  "Guard",
+  "Kelbesque",
+  "Kensu",
+  "Karmine",
+  "Nadare",
+  "Mado",
+  "Rage",
+  "Ralph",
+  "Sabera",
+  "Stom",
+  "Tornel",
+  "Zebu",
+  "Amazones",
+  "Angry Sea",
+  "Brynmaer",
+  "Draygonia",
+  "Goa",
+  "Joel",
+  "Leaf",
+  "Mt.Sabre",
+  "Mt.Hydra",
+  "Oak",
+  "Portoa",
+  "Pyramid",
+  "Swan",
+  "Sahara",
+  "Mesia",
+  "Shyron"
+ ],
+ "t07": [
+  "Sword of Wind",
+  "Sword of Fire",
+  "Sword of Water",
+  "Sword of Thunder",
+  "Crystalis",
+  "Ball of Wind",
+  "Tornado Bracelet",
+  "Ball of Fire",
+  "Flame Bracelet",
+  "Ball of Water",
+  "Blizzard Bracelet",
+  "Ball of Thunder",
+  "Storm Bracelet",
+  "Carapace Shield",
+  "Bronze Shield",
+  "Platinum Shield",
+  "Mirrored Shield",
+  "Ceramic Shield",
+  "Sacred Shield",
+  "Battle Shield",
+  "Psycho Shield",
+  "Tanned Hide",
+  "Leather Armor",
+  "Bronze Armor",
+  "Platinum Armor",
+  "Soldier Suit",
+  "Ceramic Suit",
+  "Battle Armor",
+  "Psycho Armor",
+  "Medical Herb",
+  "Antidote",
+  "Lysis Plant",
+  "Fruit of Lime",
+  "Fruit of Power",
+  "Magic Ring",
+  "Fruit of Repun",
+  "Warp Boots",
+  "Statue of Onyx",
+  "Opel Statue",
+  "Insect Flute",
+  "Flute of Lime",
+  "Gas Mask",
+  "Power Ring",
+  "Warrior Ring",
+  "Iron Necklace",
+  "Deo's Pendant",
+  "Rabbit Boots",
+  "Leather Boots",
+  "Shield Ring",
+  "Alarm Flute",
+  "Windmill Key",
+  "Key to Prison",
+  "Key to Stxy",
+  "Fog Lamp",
+  "Shell Flute",
+  "Eye Glasses",
+  "Broken Statue",
+  "Glowing Lamp",
+  "Statue of Gold",
+  "Love Pendant",
+  "Kirisa Plant",
+  "Ivory Statue",
+  "Bow of Moon",
+  "Bow of Sun",
+  "Bow of Truth",
+  "Refresh",
+  "Paralysis",
+  "Telepathy",
+  "Teleport",
+  "Recover",
+  "Barrier",
+  "Change",
+  "Flight",
+  "                 "
+ ],
+ "messages": [
+  {
+   "group": 0,
+   "msg": 0,
+   "bank": 21,
+   "addr": "A000",
+   "end": "A01C",
+   "text": "<CLR>Did you visit the elder's\nhouse yet?<END>"
+  },
+  {
+   "group": 0,
+   "msg": 1,
+   "bank": 21,
+   "addr": "A01C",
+   "end": "A036",
+   "text": "<CLR>If you go to the west, you\nwill find {Zebu} in a cave.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 2,
+   "bank": 21,
+   "addr": "A036",
+   "end": "A046",
+   "text": "<CLR>Thank you for saving me!<END>"
+  },
+  {
+   "group": 0,
+   "msg": 3,
+   "bank": 21,
+   "addr": "A046",
+   "end": "A077",
+   "text": "<CLR>There is an old windmill to\nthe north, but I've never\nseen it working.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 4,
+   "bank": 21,
+   "addr": "A077",
+   "end": "A0AB",
+   "text": "<CLR>If you ever need to wake\nanyone up, use the Alarm\nFlute, it never fails.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 5,
+   "bank": 21,
+   "addr": "A036",
+   "end": "A046",
+   "text": "<CLR>Thank you for saving me!<END>"
+  },
+  {
+   "group": 0,
+   "msg": 6,
+   "bank": 21,
+   "addr": "A0AB",
+   "end": "A0CB",
+   "text": "<CLR>The wind here is always\ncold but we're used to it.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 7,
+   "bank": 21,
+   "addr": "A0CB",
+   "end": "A0E6",
+   "text": "<CLR>I'm sorry you have to\nleave, take care.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 8,
+   "bank": 21,
+   "addr": "A036",
+   "end": "A046",
+   "text": "<CLR>Thank you for saving me!<END>"
+  },
+  {
+   "group": 0,
+   "msg": 9,
+   "bank": 21,
+   "addr": "A0E6",
+   "end": "A101",
+   "text": "<CLR>Hey!! There's a guy coming\nout of the cave!<END>"
+  },
+  {
+   "group": 0,
+   "msg": 10,
+   "bank": 21,
+   "addr": "A101",
+   "end": "A16A",
+   "text": "<CLR>Oh, it's you. I'm sorry I\nran from you when we first\nmet.\n<KEY>\n<CLR>{Zebu} says he is having a\nhard time with the\nwindmill guard.\nHe is always sleeping.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 11,
+   "bank": 21,
+   "addr": "A12A",
+   "end": "A16A",
+   "text": "<CLR>{Zebu} says he is having a\nhard time with the\nwindmill guard.\nHe is always sleeping.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 12,
+   "bank": 21,
+   "addr": "A16A",
+   "end": "A1A3",
+   "text": "<CLR>You have finally awoken.\nThis money is from the\nwise man {Zebu}. It's yours.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 13,
+   "bank": 21,
+   "addr": "A036",
+   "end": "A046",
+   "text": "<CLR>Thank you for saving me!<END>"
+  },
+  {
+   "group": 0,
+   "msg": 14,
+   "bank": 21,
+   "addr": "A1A3",
+   "end": "A243",
+   "text": "<CLR>I am the village elder. You\nawoke from inside the cave\ndidn't you?<KEY>\n<CLR>We were told you would\narrive.  You are our last\nhope to defeat evil.\n<KEY>\n<CLR>Receive this sword to\nprotect you on your quest.\nThis and others like it\nwill guide you_<END>"
+  },
+  {
+   "group": 0,
+   "msg": 15,
+   "bank": 21,
+   "addr": "A243",
+   "end": "A267",
+   "text": "<CLR>{Please} be careful.  Our\ndestiny is in your hands.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 16,
+   "bank": 21,
+   "addr": "A267",
+   "end": "A284",
+   "text": "<CLR>Welcome to {Leaf} the\nvillage of wind.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 17,
+   "bank": 21,
+   "addr": "A036",
+   "end": "A046",
+   "text": "<CLR>Thank you for saving me!<END>"
+  },
+  {
+   "group": 0,
+   "msg": 18,
+   "bank": 21,
+   "addr": "A267",
+   "end": "A284",
+   "text": "<CLR>Welcome to {Leaf} the\nvillage of wind.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 19,
+   "bank": 21,
+   "addr": "A284",
+   "end": "A293",
+   "text": "<CLR>Get out, slime!<END>"
+  },
+  {
+   "group": 0,
+   "msg": 20,
+   "bank": 21,
+   "addr": "A293",
+   "end": "A29F",
+   "text": "<CLR>Kyu.  Kyu.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 21,
+   "bank": 21,
+   "addr": "A29F",
+   "end": "A2C4",
+   "text": "<CLR>What are you?  It's strange\nyou can understand me.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 22,
+   "bank": 21,
+   "addr": "A2C4",
+   "end": "A2EA",
+   "text": "<CLR>Some evil {people} attacked\nand took every{one} away.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 23,
+   "bank": 21,
+   "addr": "A2EA",
+   "end": "A30C",
+   "text": "<CLR>Are you the {one} who saved\nevery{one}?  Good job!<END>"
+  },
+  {
+   "group": 0,
+   "msg": 24,
+   "bank": 21,
+   "addr": "A30C",
+   "end": "A34A",
+   "text": "<CLR>This is the village of\n{Leaf}. There are great\ndangers outside of town.\n{Please} be careful.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 25,
+   "bank": 21,
+   "addr": "A036",
+   "end": "A046",
+   "text": "<CLR>Thank you for saving me!<END>"
+  },
+  {
+   "group": 0,
+   "msg": 26,
+   "bank": 21,
+   "addr": "A34A",
+   "end": "A39F",
+   "text": "<CLR>I'm called {Zebu}. {NAME},\nyou are the {one} we have\nbeen waiting for.<KEY>\n<CLR>Try to make the windmill\nwork. If you can do this\nI will teach you some\nmagic.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 27,
+   "bank": 21,
+   "addr": "A39F",
+   "end": "A3BC",
+   "text": "<CLR>You have d{one} well. I will\nnow teach you the {magic} of\n{Refresh}.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 28,
+   "bank": 21,
+   "addr": "A3BC",
+   "end": "A3E4",
+   "text": "<CLR>The wind is filled with\nsorrow. Return to {Leaf}\nsoon.<END>"
+  },
+  {
+   "group": 0,
+   "msg": 29,
+   "bank": 21,
+   "addr": "A3E4",
+   "end": "A3F7",
+   "text": "<CLR>Use your {power} to open the\nway.<END>"
+  },
+  {
+   "group": 1,
+   "msg": 0,
+   "bank": 21,
+   "addr": "A3F7",
+   "end": "A3FD",
+   "text": "<CLR>zzz_<END>"
+  },
+  {
+   "group": 1,
+   "msg": 1,
+   "bank": 21,
+   "addr": "A3FD",
+   "end": "A48B",
+   "text": "<CLR>Huh? What was that?\nDon't do that again!<KEY>\n<CLR>It's you. {Please} don't\ntell {Zebu}. Take this to\nstart the windmill.<KEY>\n<CLR>{Zebu} says a strange ball is\nhidden in these caves. He\nsays it can break rock\nwalls.<END>"
+  },
+  {
+   "group": 1,
+   "msg": 2,
+   "bank": 21,
+   "addr": "A412",
+   "end": "A48B",
+   "text": "<CLR>It's you. {Please} don't\ntell {Zebu}. Take this to\nstart the windmill.<KEY>\n<CLR>{Zebu} says a strange ball is\nhidden in these caves. He\nsays it can break rock\nwalls.<END>"
+  },
+  {
+   "group": 1,
+   "msg": 3,
+   "bank": 21,
+   "addr": "A43F",
+   "end": "A48B",
+   "text": "<CLR>{Zebu} says a strange ball is\nhidden in these caves. He\nsays it can break rock\nwalls.<END>"
+  },
+  {
+   "group": 1,
+   "msg": 4,
+   "bank": 21,
+   "addr": "A48B",
+   "end": "A49D",
+   "text": "<CLR>Did you find that ball yet?<END>"
+  },
+  {
+   "group": 1,
+   "msg": 5,
+   "bank": 21,
+   "addr": "A49D",
+   "end": "A4A5",
+   "text": "<CLR>01-05H<END>"
+  },
+  {
+   "group": 2,
+   "msg": 0,
+   "bank": 21,
+   "addr": "A4A5",
+   "end": "A4D2",
+   "text": "<CLR>This town is mostly for\ntravelers. Pretty noisy\nisn't it.<END>"
+  },
+  {
+   "group": 2,
+   "msg": 1,
+   "bank": 21,
+   "addr": "A4D2",
+   "end": "A538",
+   "text": "<CLR>I'm {Akahana}. I used to\nhave an unusual statue\nbut I dropped it near the<KEY>\n<CLR> river. It was a great\nfind and will be difficult\nto replace.\nHave you seen it?<END>"
+  },
+  {
+   "group": 2,
+   "msg": 2,
+   "bank": 21,
+   "addr": "A538",
+   "end": "A59B",
+   "text": "<CLR>\n{Akahana} is handed a statue.<KEY>\n<CLR>Hey, this is my statue.\nThank you for finding it.\nIf you need to go to the<KEY>\n<CLR> forest, use this {Gas Mask}\nto avoid the poison.<END>"
+  },
+  {
+   "group": 2,
+   "msg": 3,
+   "bank": 21,
+   "addr": "A59B",
+   "end": "A5DC",
+   "text": "<CLR>If you go east, you will\nfind the forest.  It's a\ngrand maze where plants\nwill shoot poison.<END>"
+  },
+  {
+   "group": 2,
+   "msg": 4,
+   "bank": 21,
+   "addr": "A5DC",
+   "end": "A60F",
+   "text": "<CLR>I've heard that there's a\nvillage where only women\nlive. I wonder_<END>"
+  },
+  {
+   "group": 2,
+   "msg": 5,
+   "bank": 21,
+   "addr": "A60F",
+   "end": "A657",
+   "text": "<CLR>The village of {Oak} lies\ndeep in the forest.  The\npeople there don't\nunderstand our language.<END>"
+  },
+  {
+   "group": 2,
+   "msg": 6,
+   "bank": 21,
+   "addr": "A657",
+   "end": "A680",
+   "text": "<CLR>The wise man {Tornel} lives\nwith his pupils in the\nnorth.<END>"
+  },
+  {
+   "group": 2,
+   "msg": 7,
+   "bank": 21,
+   "addr": "A680",
+   "end": "A6C3",
+   "text": "<CLR>There are two routes to\n{Mt.Sabre}; one west and\n{one} north.  Both roads are\nvery dangerous.<END>"
+  },
+  {
+   "group": 2,
+   "msg": 8,
+   "bank": 21,
+   "addr": "A6C3",
+   "end": "A6E2",
+   "text": "<CLR>I just found out how to get\nrich quick. Later!<END>"
+  },
+  {
+   "group": 2,
+   "msg": 9,
+   "bank": 21,
+   "addr": "A6E2",
+   "end": "A727",
+   "text": "<CLR>I told him that I made\na lot of money from stones\nI found on {Mt.Sabre}.\nAfter that he got excited_<END>"
+  },
+  {
+   "group": 2,
+   "msg": 10,
+   "bank": 21,
+   "addr": "A727",
+   "end": "A751",
+   "text": "<CLR>I'm the first pupil of\n{Zebu}. You must bow down\nbefore me!<END>"
+  },
+  {
+   "group": 2,
+   "msg": 11,
+   "bank": 21,
+   "addr": "A751",
+   "end": "A790",
+   "text": "<CLR>That man is dead isn't he_\nHe'd still be alive if I\nhadn't told him_<END>"
+  },
+  {
+   "group": 2,
+   "msg": 12,
+   "bank": 21,
+   "addr": "A751",
+   "end": "A790",
+   "text": "<CLR>That man is dead isn't he_\nHe'd still be alive if I\nhadn't told him_<END>"
+  },
+  {
+   "group": 3,
+   "msg": 0,
+   "bank": 21,
+   "addr": "A790",
+   "end": "A802",
+   "text": "<CLR>I am {Tornel}. If you are\ntruly a legendary soldier\nyou should be able to<KEY>\n<CLR> defeat {Stom} easily. Just\nforce your opponent against\nthe back wall.<END>"
+  },
+  {
+   "group": 3,
+   "msg": 1,
+   "bank": 21,
+   "addr": "A802",
+   "end": "A8B2",
+   "text": "<CLR>Excellent! I will\nnow teach you the {magic} of\n{Telepathy}_<KEY>\n<CLR>This allows you to\ncommunicate with animals.\nIt also allows you to<KEY>\n<CLR> speak with us wise men\nwhen you have problems,\neven if you are not near.<KEY>\n<CLR>I will now go to the\ntraining place. If you\nfind the {Tornado Bracelet}\n{NAME}, bring it to me.<END>"
+  },
+  {
+   "group": 3,
+   "msg": 2,
+   "bank": 21,
+   "addr": "A8B2",
+   "end": "A8E3",
+   "text": "<CLR>You still lack the proper\nskill. Come back when you\nthink you are able.<END>"
+  },
+  {
+   "group": 3,
+   "msg": 3,
+   "bank": 21,
+   "addr": "A8E3",
+   "end": "A904",
+   "text": "<CLR>I'm {Stom} training under\n{Tornel}. {NAME}! Let's\nhave at it!<END>"
+  },
+  {
+   "group": 3,
+   "msg": 4,
+   "bank": 21,
+   "addr": "A904",
+   "end": "A93C",
+   "text": "<CLR>A busy town, {Brynmaer}, is\nlocated south of the\nsealed cave.  You should\nvisit there.<END>"
+  },
+  {
+   "group": 3,
+   "msg": 5,
+   "bank": 21,
+   "addr": "A93C",
+   "end": "A964",
+   "text": "<CLR>The {Tornado Bracelet} is\nsomewhere in {Mt.Sabre}.\nIt will maximize the {power}\nof the {Sword of Wind}.<END>"
+  },
+  {
+   "group": 3,
+   "msg": 6,
+   "bank": 21,
+   "addr": "A964",
+   "end": "A972",
+   "text": "<CLR>I'll, be waiting_<END>"
+  },
+  {
+   "group": 4,
+   "msg": 0,
+   "bank": 21,
+   "addr": "A972",
+   "end": "A9A3",
+   "text": "<CLR>I haven't seen my boy since\nhe went into the forest.\nHave you seen him?<END>"
+  },
+  {
+   "group": 4,
+   "msg": 1,
+   "bank": 21,
+   "addr": "A9A3",
+   "end": "A9CA",
+   "text": "<CLR>I am forever indebted to\nyou! {Please} take this\nas a reward.<END>"
+  },
+  {
+   "group": 4,
+   "msg": 2,
+   "bank": 21,
+   "addr": "A9CA",
+   "end": "A9E0",
+   "text": "<CLR>Thank you again for all\nyour help.<END>"
+  },
+  {
+   "group": 4,
+   "msg": 3,
+   "bank": 21,
+   "addr": "A9CA",
+   "end": "A9E0",
+   "text": "<CLR>Thank you again for all\nyour help.<END>"
+  },
+  {
+   "group": 4,
+   "msg": 4,
+   "bank": 21,
+   "addr": "A9E0",
+   "end": "AA13",
+   "text": "<CLR>Waah! Waah! I'm afraid!\nI want to go home! Can you\nplease take me home?<END>"
+  },
+  {
+   "group": 4,
+   "msg": 5,
+   "bank": 21,
+   "addr": "A9E0",
+   "end": "AA13",
+   "text": "<CLR>Waah! Waah! I'm afraid!\nI want to go home! Can you\nplease take me home?<END>"
+  },
+  {
+   "group": 4,
+   "msg": 6,
+   "bank": 21,
+   "addr": "AA13",
+   "end": "AA24",
+   "text": "<CLR>I'll be good from now on.\nI swear!<END>"
+  },
+  {
+   "group": 4,
+   "msg": 7,
+   "bank": 21,
+   "addr": "AA13",
+   "end": "AA24",
+   "text": "<CLR>I'll be good from now on.\nI swear!<END>"
+  },
+  {
+   "group": 4,
+   "msg": 8,
+   "bank": 21,
+   "addr": "AA24",
+   "end": "AA4C",
+   "text": "<CLR>This is the village of {Oak}.\nWe don't like humans here!<END>"
+  },
+  {
+   "group": 4,
+   "msg": 9,
+   "bank": 21,
+   "addr": "AA24",
+   "end": "AA4C",
+   "text": "<CLR>This is the village of {Oak}.\nWe don't like humans here!<END>"
+  },
+  {
+   "group": 4,
+   "msg": 10,
+   "bank": 21,
+   "addr": "AA4C",
+   "end": "AA93",
+   "text": "<CLR>The {Insect Flute} is a\npowerful item, but it's\ndangerous because of the\npoisonous insects it calls.<END>"
+  },
+  {
+   "group": 4,
+   "msg": 11,
+   "bank": 21,
+   "addr": "AA93",
+   "end": "AAD9",
+   "text": "<CLR>I heard there are training\ngrounds for wise men on\nthe west side. Perhaps you\nshould go there.<END>"
+  },
+  {
+   "group": 4,
+   "msg": 12,
+   "bank": 21,
+   "addr": "AAD9",
+   "end": "AAF8",
+   "text": "<CLR>The village elder will not\ntalk to humans.<END>"
+  },
+  {
+   "group": 4,
+   "msg": 13,
+   "bank": 21,
+   "addr": "AAD9",
+   "end": "AAF8",
+   "text": "<CLR>The village elder will not\ntalk to humans.<END>"
+  },
+  {
+   "group": 4,
+   "msg": 14,
+   "bank": 21,
+   "addr": "AAF8",
+   "end": "AB22",
+   "text": "<CLR>We shun most humans but I\nthink you are different\nthan most.<END>"
+  },
+  {
+   "group": 4,
+   "msg": 15,
+   "bank": 21,
+   "addr": "AB22",
+   "end": "AB3B",
+   "text": "<CLR>We have reconsidered\nhumans.<END>"
+  },
+  {
+   "group": 4,
+   "msg": 16,
+   "bank": 21,
+   "addr": "AB3B",
+   "end": "AB3F",
+   "text": "<CLR>__<END>"
+  },
+  {
+   "group": 4,
+   "msg": 17,
+   "bank": 21,
+   "addr": "AB3F",
+   "end": "AB5C",
+   "text": "<CLR>Who are you?\nYou're quite strange.<END>"
+  },
+  {
+   "group": 4,
+   "msg": 18,
+   "bank": 21,
+   "addr": "AB5C",
+   "end": "AB7E",
+   "text": "<CLR>You're great! I think I'll\nbelieve in you.<END>"
+  },
+  {
+   "group": 4,
+   "msg": 19,
+   "bank": 21,
+   "addr": "AB7E",
+   "end": "ABA5",
+   "text": "<CLR>The air in my house smells\nlike humans. Get out!<END>"
+  },
+  {
+   "group": 4,
+   "msg": 20,
+   "bank": 21,
+   "addr": "AB7E",
+   "end": "ABA5",
+   "text": "<CLR>The air in my house smells\nlike humans. Get out!<END>"
+  },
+  {
+   "group": 4,
+   "msg": 21,
+   "bank": 21,
+   "addr": "ABA5",
+   "end": "AC7E",
+   "text": "<CLR>You saved the child? \nI thank you. I now ask a\nfavor of you_<KEY>\n<CLR> There is a monster in the\npoison swamp. Many of our\ndwarves were eaten by this<KEY>\n<CLR> creature_ The monster\ncannot attack the village\nbecause of an object<KEY>\n<CLR> we possess, but we cannot\nuse. I leave this object\nin your care, to save the\nvillage_<END>"
+  },
+  {
+   "group": 4,
+   "msg": 22,
+   "bank": 21,
+   "addr": "AC7E",
+   "end": "AC85",
+   "text": "<CLR>{Please} do it!<END>"
+  },
+  {
+   "group": 4,
+   "msg": 23,
+   "bank": 21,
+   "addr": "AC85",
+   "end": "AD52",
+   "text": "<CLR>Hmm, you destroyed the\nmonster. Good, we now can\nlive without fear_<KEY>\n<CLR>{NAME}! You are the {one} who\nsaved us. Our precious\nobject belongs to you.<KEY>\n<CLR> With this we express\nappreciation. {Please} keep\nit with you.<KEY>\n<CLR> We will tell all of your\nfeat. You will forever be\na hero among the dwarves.\nAgain many thanks.<END>"
+  },
+  {
+   "group": 4,
+   "msg": 24,
+   "bank": 21,
+   "addr": "AD10",
+   "end": "AD52",
+   "text": "<CLR> We will tell all of your\nfeat. You will forever be\na hero among the dwarves.\nAgain many thanks.<END>"
+  },
+  {
+   "group": 4,
+   "msg": 25,
+   "bank": 21,
+   "addr": "AD52",
+   "end": "AD72",
+   "text": "<CLR>Our greatest hero, please\nrest well!<END>"
+  },
+  {
+   "group": 4,
+   "msg": 26,
+   "bank": 21,
+   "addr": "AD72",
+   "end": "AD7E",
+   "text": "<CLR>Go in peace.<END>"
+  },
+  {
+   "group": 5,
+   "msg": 0,
+   "bank": 21,
+   "addr": "AD7E",
+   "end": "ADB1",
+   "text": "<CLR>Welcome my guest. I am\n{Nadare}.  Get rested and\nawake refreshed.<END>"
+  },
+  {
+   "group": 5,
+   "msg": 1,
+   "bank": 21,
+   "addr": "ADB1",
+   "end": "ADBE",
+   "text": "<CLR>I have no food for you.<END>"
+  },
+  {
+   "group": 5,
+   "msg": 2,
+   "bank": 21,
+   "addr": "ADBE",
+   "end": "AE03",
+   "text": "<CLR>Not long ago a guy from\n{Brynmaer} left to climb the\nmountain. I envy the\nyouth with so much energy.<END>"
+  },
+  {
+   "group": 5,
+   "msg": 3,
+   "bank": 21,
+   "addr": "AE03",
+   "end": "AE41",
+   "text": "<CLR>That guy from {Brynmaer}\nhasn't returned yet.<KEY>\n<CLR>What? He's dead?\nI_ I'm sorry_<END>"
+  },
+  {
+   "group": 5,
+   "msg": 4,
+   "bank": 21,
+   "addr": "AE41",
+   "end": "AE4E",
+   "text": "<CLR>Be careful.<END>"
+  },
+  {
+   "group": 5,
+   "msg": 5,
+   "bank": 21,
+   "addr": "AE4E",
+   "end": "AE86",
+   "text": "<CLR>The trail is blocked off\nand strange {people} wander\nthere. It's quite weird.<END>"
+  },
+  {
+   "group": 5,
+   "msg": 6,
+   "bank": 21,
+   "addr": "AE86",
+   "end": "AEB7",
+   "text": "<CLR>The trail is passable now\nand those weird {people}\nhave disappeared.<END>"
+  },
+  {
+   "group": 5,
+   "msg": 7,
+   "bank": 21,
+   "addr": "AEB7",
+   "end": "AEFB",
+   "text": "<CLR>It seems some traveler made\nthose weird {people} on the\ntrail disappear. I wonder\nhow he is.<END>"
+  },
+  {
+   "group": 5,
+   "msg": 8,
+   "bank": 21,
+   "addr": "AEFB",
+   "end": "AF2B",
+   "text": "<CLR>The food here is great! I\nwish I could eat like\nthis always.<END>"
+  },
+  {
+   "group": 5,
+   "msg": 9,
+   "bank": 21,
+   "addr": "AF2B",
+   "end": "AF98",
+   "text": "<CLR>I may be old now, but in my\nyouth, I could climb many\nmountains easily.<KEY>\n<CLR> My son {Nadare} is still a\nwimp compared to me.\nHa ha ha.<END>"
+  },
+  {
+   "group": 5,
+   "msg": 10,
+   "bank": 21,
+   "addr": "AF98",
+   "end": "AFC4",
+   "text": "<CLR>{Tornel}:\"You've found me,\nbut you have to find the\n{Tornado Bracelet} before\nI teach you more {magic}.\"<END>"
+  },
+  {
+   "group": 5,
+   "msg": 11,
+   "bank": 21,
+   "addr": "AFC4",
+   "end": "B02E",
+   "text": "<CLR>{Tornel}:\"{NAME}!\nI'm surprised you made it\nback. I'll now teach you_\"<KEY>\n<CLR>\"{Teleport}. This {magic}\nallows you to move from\ntown to town instantly.\"<KEY>\n<CLR>\"Have a safe journey.\"<END>"
+  },
+  {
+   "group": 5,
+   "msg": 12,
+   "bank": 21,
+   "addr": "B02E",
+   "end": "B043",
+   "text": "<CLR>{NAME}! I pray for your\nsafety!<END>"
+  },
+  {
+   "group": 5,
+   "msg": 13,
+   "bank": 21,
+   "addr": "B043",
+   "end": "B05F",
+   "text": "<CLR>{Tornel}:\n\"Have a safe journey.\"<END>"
+  },
+  {
+   "group": 5,
+   "msg": 14,
+   "bank": 21,
+   "addr": "B05F",
+   "end": "B157",
+   "text": "<CLR>_it's you_ I had a dream I\ncould strike it rich_\nBut alas_ I failed_<KEY>\n<CLR> I was captured_ by some\nstrange {people}_ they put\nme in a cave_<KEY>\n<CLR> I also saw {people} from\n{Leaf}_ They were all being\nforced to work_<KEY>\n<CLR> But I escaped_ And they\nfound me_ I cannot move_\n{NAME}:\"Hold on! Hold on!\"<KEY>\n<CLR>Oh, to have tasted {Nadare}'s\nfood again_ I_ am_ eh_\naaah___<END>"
+  },
+  {
+   "group": 5,
+   "msg": 15,
+   "bank": 21,
+   "addr": "B157",
+   "end": "B236",
+   "text": "<CLR>{Guard}:\"Are those worthless\nvillagers working well?\"<KEY>\n<CLR>{Guard}:\"Well, they're used\nto the cold weather and I\nhaven't heard complaints_<KEY>\n<CLR>{Guard}:\"But of course it's\ndifficult to complain\nwhen you're not allowed_<KEY>\n<CLR>\"He he he he_ We must make\nthem work harder, he he_\"<KEY>\n<CLR>\"Long live the\n{Draygonia} Empire!\"<END>"
+  },
+  {
+   "group": 5,
+   "msg": 16,
+   "bank": 21,
+   "addr": "B236",
+   "end": "B255",
+   "text": "<CLR>Who are you? You cannot\npass here! Attack!<END>"
+  },
+  {
+   "group": 6,
+   "msg": 0,
+   "bank": 21,
+   "addr": "B255",
+   "end": "B29E",
+   "text": "<CLR>I'm the great General\n{Kelbesque}. I'm {one} of\n{Draygonia}'s finest four.<KEY>\n<CLR> Wimp! You will now see the\nwrath of my {power}!<END>"
+  },
+  {
+   "group": 6,
+   "msg": 1,
+   "bank": 21,
+   "addr": "B29E",
+   "end": "B2E3",
+   "text": "<CLR>Don't think you've seen\neven a fraction of my\n{power}. Next time you see\nme, it will be your last!<END>"
+  },
+  {
+   "group": 7,
+   "msg": 0,
+   "bank": 21,
+   "addr": "B2E3",
+   "end": "B322",
+   "text": "<CLR>The elder is held prisoner\nat the top of the mountain\nand they will kill him if\nwe don't work!<END>"
+  },
+  {
+   "group": 7,
+   "msg": 1,
+   "bank": 21,
+   "addr": "B322",
+   "end": "B353",
+   "text": "<CLR>The {people} of {Draygonia} are\nmaking a special metal\nfrom the minerals we dig\nhere.<END>"
+  },
+  {
+   "group": 7,
+   "msg": 2,
+   "bank": 21,
+   "addr": "B353",
+   "end": "B381",
+   "text": "<CLR>I heard that part of the\nprison wall is connected\nto the top_<END>"
+  },
+  {
+   "group": 7,
+   "msg": 3,
+   "bank": 21,
+   "addr": "B381",
+   "end": "B3A0",
+   "text": "<CLR>There are village {people} in\nthe next prison as well!<END>"
+  },
+  {
+   "group": 7,
+   "msg": 4,
+   "bank": 21,
+   "addr": "B3B0",
+   "end": "B3C7",
+   "text": "<CLR>So you saved us, big deal.<END>"
+  },
+  {
+   "group": 7,
+   "msg": 5,
+   "bank": 21,
+   "addr": "B3A0",
+   "end": "B3B0",
+   "text": "<CLR>Thank you for saving me.<END>"
+  },
+  {
+   "group": 7,
+   "msg": 6,
+   "bank": 21,
+   "addr": "B3A0",
+   "end": "B3B0",
+   "text": "<CLR>Thank you for saving me.<END>"
+  },
+  {
+   "group": 7,
+   "msg": 7,
+   "bank": 21,
+   "addr": "B3B0",
+   "end": "B3C7",
+   "text": "<CLR>So you saved us, big deal.<END>"
+  },
+  {
+   "group": 7,
+   "msg": 8,
+   "bank": 21,
+   "addr": "B3B0",
+   "end": "B3C7",
+   "text": "<CLR>So you saved us, big deal.<END>"
+  },
+  {
+   "group": 7,
+   "msg": 9,
+   "bank": 21,
+   "addr": "B3C7",
+   "end": "B45E",
+   "text": "<CLR>Oh {NAME}_ Are the rest of\nthe villagers OK? I really\nappreciate your efforts.<KEY>\n<CLR> {NAME}!\nProceed back into the\ncave_<KEY>\n<CLR> It'll lead you to {Portoa}.\nI heard the Queen there\nhas strange powers.<KEY>\n<CLR> Surely she will aid you.<END>"
+  },
+  {
+   "group": 7,
+   "msg": 10,
+   "bank": 21,
+   "addr": "B45E",
+   "end": "B471",
+   "text": "<CLR>Now please be careful.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 0,
+   "bank": 21,
+   "addr": "B471",
+   "end": "B485",
+   "text": "<CLR>The Queen is in the center\nchamber.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 1,
+   "bank": 21,
+   "addr": "B485",
+   "end": "B499",
+   "text": "<CLR>We'll do anything for the\nQueen.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 2,
+   "bank": 21,
+   "addr": "B499",
+   "end": "B4BB",
+   "text": "<CLR>The Queen is our jewel! She\nis our sun and moon!<END>"
+  },
+  {
+   "group": 8,
+   "msg": 3,
+   "bank": 21,
+   "addr": "B4BB",
+   "end": "B4D9",
+   "text": "<CLR>Hey! Don't wander around\nthe Queen's room!<END>"
+  },
+  {
+   "group": 8,
+   "msg": 4,
+   "bank": 21,
+   "addr": "B4D9",
+   "end": "B4E6",
+   "text": "<CLR>Don't be rude to the Queen.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 5,
+   "bank": 21,
+   "addr": "B4E6",
+   "end": "B520",
+   "text": "<CLR>I was instructed to show\nyou the underground channel\nwhen you arrived.\n{Please} enter.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 6,
+   "bank": 21,
+   "addr": "B520",
+   "end": "B543",
+   "text": "<CLR>The Queen wishes to see no\n{one} today. Be g{one}!<END>"
+  },
+  {
+   "group": 8,
+   "msg": 7,
+   "bank": 21,
+   "addr": "B543",
+   "end": "B55F",
+   "text": "<CLR>The Queen left to travel.\ndon't tell any{one}.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 8,
+   "bank": 21,
+   "addr": "B55F",
+   "end": "B574",
+   "text": "<CLR>The Queen is very kind and\nintelligent.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 9,
+   "bank": 21,
+   "addr": "B574",
+   "end": "B5C0",
+   "text": "<CLR>The Queen sometimes\ndisappears from her room.\nI wonder how she leaves\nwithout any{one} noticing?<END>"
+  },
+  {
+   "group": 8,
+   "msg": 10,
+   "bank": 21,
+   "addr": "B5C0",
+   "end": "B5E5",
+   "text": "<CLR>I haven't seen the Queen\nlately. I wonder how she's\ndoing.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 11,
+   "bank": 21,
+   "addr": "B5E5",
+   "end": "B61C",
+   "text": "<CLR>Hey, don't bother me! I've\ngot to worry about fixing\nthe Queen's meal!<END>"
+  },
+  {
+   "group": 8,
+   "msg": 12,
+   "bank": 21,
+   "addr": "B61C",
+   "end": "B662",
+   "text": "<CLR>I'm sorry about our last\nmeeting. {Evans} has taught\nme better manners since\nthen. Ha ha.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 13,
+   "bank": 21,
+   "addr": "B662",
+   "end": "B67C",
+   "text": "<CLR>I'm {Evans}. I teach\netiquette here.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 14,
+   "bank": 21,
+   "addr": "B662",
+   "end": "B67C",
+   "text": "<CLR>I'm {Evans}. I teach\netiquette here.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 15,
+   "bank": 21,
+   "addr": "B67C",
+   "end": "B6B2",
+   "text": "<CLR>I married {Geline} who was my\npupil. I must thank the\nQueen for arranging our\nmeeting.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 16,
+   "bank": 21,
+   "addr": "B6B2",
+   "end": "B6EB",
+   "text": "<CLR>This is {Portoa}, the capital\nof water. Water from Mt.\nSabre makes this town\nprosper.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 17,
+   "bank": 21,
+   "addr": "B6EB",
+   "end": "B722",
+   "text": "<CLR>I heard {Draygonia} wants to\ninvade this town because\nthey are afraid of the\nQueen's {power}.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 18,
+   "bank": 21,
+   "addr": "B722",
+   "end": "B793",
+   "text": "<CLR>Some {people} went up to the\nwaterfall, but haven't\nreturned yet. I heard a<KEY>\n<CLR> monster lives up there.\nAlso a greedy man called\n{Akahana} went there and\nhasn't returned either.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 19,
+   "bank": 21,
+   "addr": "B793",
+   "end": "B7C3",
+   "text": "<CLR>A girl from the southern\nlake came here. I think\nshe went to rent a boat.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 20,
+   "bank": 21,
+   "addr": "B7C3",
+   "end": "B7F3",
+   "text": "<CLR>A fortune teller in the\ntown is very good, but\nshe's not always there.<END>"
+  },
+  {
+   "group": 8,
+   "msg": 21,
+   "bank": 21,
+   "addr": "B7F3",
+   "end": "B82A",
+   "text": "<CLR>The fortune teller does\nvery well here, it's a\npity she's rarely open.<END>"
+  },
+  {
+   "group": 9,
+   "msg": 0,
+   "bank": 21,
+   "addr": "B82A",
+   "end": "B844",
+   "text": "<CLR>We're not open right now.\nGo away!<END>"
+  },
+  {
+   "group": 9,
+   "msg": 1,
+   "bank": 21,
+   "addr": "B844",
+   "end": "B892",
+   "text": "<CLR>\n        The owner\n   accepts the {Fog Lamp}.<KEY>\n<CLR>You went into the cave to\ngive this to me? You have\ngreat courage. {Please} use\nmy boat as you like.<END>"
+  },
+  {
+   "group": 9,
+   "msg": 2,
+   "bank": 21,
+   "addr": "B892",
+   "end": "B8AC",
+   "text": "<CLR>Don't hesitate. Use it\nfreely.<END>"
+  },
+  {
+   "group": 9,
+   "msg": 3,
+   "bank": 21,
+   "addr": "B8AC",
+   "end": "B8BB",
+   "text": "<CLR>You don't give up easily.<END>"
+  },
+  {
+   "group": 9,
+   "msg": 4,
+   "bank": 21,
+   "addr": "B8BB",
+   "end": "B8ED",
+   "text": "<CLR>My father lost his {Fog Lamp}\nand is rather upset. You\nshould come back later.<END>"
+  },
+  {
+   "group": 9,
+   "msg": 5,
+   "bank": 21,
+   "addr": "B8ED",
+   "end": "B903",
+   "text": "<CLR>That {Fog Lamp} is very\nbeautiful.<END>"
+  },
+  {
+   "group": 9,
+   "msg": 6,
+   "bank": 21,
+   "addr": "B903",
+   "end": "B931",
+   "text": "<CLR>My father went out to look\nfor his lamp. He won't be\nback for a while.<END>"
+  },
+  {
+   "group": 10,
+   "msg": 0,
+   "bank": 21,
+   "addr": "B931",
+   "end": "B977",
+   "text": "<CLR>I'm the Fortune Teller. Let\nme see your fortune.\nHmmmmmm_<KEY>\n<CLR>See the Queen. Your way\nwill be open.<END>"
+  },
+  {
+   "group": 10,
+   "msg": 1,
+   "bank": 21,
+   "addr": "B977",
+   "end": "B9A4",
+   "text": "<CLR>Hmmmmmm_ Go to the palace,\nyour way will definitely\nbe opened.<END>"
+  },
+  {
+   "group": 10,
+   "msg": 2,
+   "bank": 21,
+   "addr": "B9A4",
+   "end": "B9DB",
+   "text": "<CLR>Hmmmmmm_ Something in the\ndarkness is calling you.\nCarry on, but don't get\nlost.<END>"
+  },
+  {
+   "group": 10,
+   "msg": 3,
+   "bank": 21,
+   "addr": "B9DB",
+   "end": "B9FC",
+   "text": "<CLR>Hmmmmmm_ Some {one} will wait\nfor you at the lake in the\nsouth.<END>"
+  },
+  {
+   "group": 10,
+   "msg": 4,
+   "bank": 21,
+   "addr": "B9FC",
+   "end": "BA8F",
+   "text": "<CLR>I'm the Queen of {Portoa}.\nAre you the legendary man\nwho climbed through Sabre?<KEY>\n<CLR> It's too peaceful here.\nI'm bored. May we talk\na while?<KEY>\n<CLR> How does the town look to\nyou? We take pride in it's\nbeauty.<END>"
+  },
+  {
+   "group": 10,
+   "msg": 5,
+   "bank": 21,
+   "addr": "BA8F",
+   "end": "BAC6",
+   "text": "<CLR>{NAME}, I was looking\nforward to seeing you.<KEY>\n<CLR>Have you gotten used to\nlife in the town?<END>"
+  },
+  {
+   "group": 10,
+   "msg": 6,
+   "bank": 21,
+   "addr": "BA8F",
+   "end": "BAC6",
+   "text": "<CLR>{NAME}, I was looking\nforward to seeing you.<KEY>\n<CLR>Have you gotten used to\nlife in the town?<END>"
+  },
+  {
+   "group": 10,
+   "msg": 7,
+   "bank": 21,
+   "addr": "BAC6",
+   "end": "BB15",
+   "text": "<CLR>{NAME}, come closer to me.\n<KEY>\n<CLR>I would like to be an\nadventurer like you, to\nsee what lies beyond here.<END>"
+  },
+  {
+   "group": 10,
+   "msg": 8,
+   "bank": 21,
+   "addr": "BB15",
+   "end": "BB62",
+   "text": "<CLR>{NAME}, what's wrong? Don't\n be so shy.<KEY>\n<CLR>The owner of the\nboat rental shop is kind\nonly to his daughter.<END>"
+  },
+  {
+   "group": 10,
+   "msg": 9,
+   "bank": 21,
+   "addr": "BB62",
+   "end": "BBCA",
+   "text": "<CLR>{NAME}, I enjoy talking\nwith you.<KEY>\n<CLR>The food {Geline} cooks for\nme is very good, but alas\nher manners are not_<KEY>\n<CLR>I will ask {Evans} to teach\nher some manners.<END>"
+  },
+  {
+   "group": 10,
+   "msg": 10,
+   "bank": 21,
+   "addr": "BBCA",
+   "end": "BBF9",
+   "text": "<CLR>It's gotten late. I had a\ngood time though. I must\ngo now.<END>"
+  },
+  {
+   "group": 10,
+   "msg": 11,
+   "bank": 21,
+   "addr": "BBF9",
+   "end": "BC02",
+   "text": "<CLR>Sing some more!<END>"
+  },
+  {
+   "group": 10,
+   "msg": 12,
+   "bank": 21,
+   "addr": "BC02",
+   "end": "BC52",
+   "text": "<CLR>Oh, {NAME}. Did you know\nthere's a cave behind the\nnorthern waterfall?<KEY>\n<CLR>Go there. I'll give you\nthe {Flute of Lime}.\nUse it wisely.<END>"
+  },
+  {
+   "group": 10,
+   "msg": 13,
+   "bank": 21,
+   "addr": "BC52",
+   "end": "BC9D",
+   "text": "<CLR>Ah, you finally found the\n{Sword of Water}. Go to the\nLime Tree in south lake.<KEY>\n<CLR> When you are finished\nthere, come back.<END>"
+  },
+  {
+   "group": 10,
+   "msg": 14,
+   "bank": 21,
+   "addr": "BC9D",
+   "end": "BCAA",
+   "text": "<CLR>Be careful.<END>"
+  },
+  {
+   "group": 10,
+   "msg": 15,
+   "bank": 21,
+   "addr": "BCAA",
+   "end": "BCB1",
+   "text": "<CLR>10-0F<END>"
+  },
+  {
+   "group": 11,
+   "msg": 0,
+   "bank": 21,
+   "addr": "BCB1",
+   "end": "BD61",
+   "text": "<CLR>It's time I told you the\ntruth_\nThe fortune teller is_<KEY>\n<CLR> really me. I entered town\nlike this and heard\n{people}'s problems_<KEY>\n<CLR> But the real me is neither\nthe fortune teller or the\nQueen_<KEY>\n<CLR> I am {Asina}, {one} of three\ngreat wise men who will\naid you.<END>"
+  },
+  {
+   "group": 11,
+   "msg": 1,
+   "bank": 21,
+   "addr": "BD61",
+   "end": "BDCA",
+   "text": "<CLR>I'll teach you the {magic} of\n{Recover}. It can cure you\nof certain ailments.<KEY>\n<CLR> If you can eliminate the\nwhirlpools in the\n{Angry Sea}. I'll teach you\nthe {magic} of {Barrier}.<END>"
+  },
+  {
+   "group": 11,
+   "msg": 2,
+   "bank": 21,
+   "addr": "BDCA",
+   "end": "BDE0",
+   "text": "<CLR>{Asina}:\"I will always look\nout for you.\"<END>"
+  },
+  {
+   "group": 11,
+   "msg": 3,
+   "bank": 21,
+   "addr": "BDE0",
+   "end": "BE14",
+   "text": "<CLR>{Asina}:\"Oh, this is a gift\nI gave to some{one} I'll\nnever forget_ I wonder__\"<END>"
+  },
+  {
+   "group": 12,
+   "msg": 0,
+   "bank": 21,
+   "addr": "BE14",
+   "end": "BE3B",
+   "text": "<CLR>I'm in such pain! Do you\nhave any herbs that would\nhelp me?<END>"
+  },
+  {
+   "group": 12,
+   "msg": 1,
+   "bank": 21,
+   "addr": "BE3B",
+   "end": "BE84",
+   "text": "<CLR>Thank you. Because of your\nkindness I can now return\nto the sea. Take this<KEY>\n<CLR> and use it when you wish\nto travel the sea.<END>"
+  },
+  {
+   "group": 12,
+   "msg": 2,
+   "bank": 21,
+   "addr": "BE84",
+   "end": "BEA5",
+   "text": "<CLR>{Please} hop on my back. I'll\ntake you wherever you like.<END>"
+  },
+  {
+   "group": 12,
+   "msg": 3,
+   "bank": 21,
+   "addr": "BE84",
+   "end": "BEA5",
+   "text": "<CLR>{Please} hop on my back. I'll\ntake you wherever you like.<END>"
+  },
+  {
+   "group": 12,
+   "msg": 4,
+   "bank": 21,
+   "addr": "BEA5",
+   "end": "BEAD",
+   "text": "<CLR>Take care.<END>"
+  },
+  {
+   "group": 12,
+   "msg": 5,
+   "bank": 21,
+   "addr": "BEA5",
+   "end": "BEAD",
+   "text": "<CLR>Take care.<END>"
+  },
+  {
+   "group": 13,
+   "msg": 0,
+   "bank": 21,
+   "addr": "BEAD",
+   "end": "BEE3",
+   "text": "<CLR>I heard that a {Fog Lamp} was\nhere, but I couldn't find\nit. I'll look for it in a\ncave across the river_<END>"
+  },
+  {
+   "group": 13,
+   "msg": 1,
+   "bank": 21,
+   "addr": "BEE3",
+   "end": "BF1C",
+   "text": "<CLR>{Akahana}:\"Hey, you're the\n{one} who found my statue_\nI'll give you this, but\nnow we're even.\"<END>"
+  },
+  {
+   "group": 13,
+   "msg": 2,
+   "bank": 21,
+   "addr": "BF1C",
+   "end": "BF24",
+   "text": "<CLR>------<END>"
+  },
+  {
+   "group": 13,
+   "msg": 3,
+   "bank": 21,
+   "addr": "BF24",
+   "end": "BF2C",
+   "text": "<CLR>I'm saved!<END>"
+  },
+  {
+   "group": 13,
+   "msg": 4,
+   "bank": 21,
+   "addr": "BF2C",
+   "end": "BF31",
+   "text": "<CLR>___<END>"
+  },
+  {
+   "group": 14,
+   "msg": 0,
+   "bank": 22,
+   "addr": "A000",
+   "end": "A031",
+   "text": "<CLR>You're invading our\nterritory, you arrogant\nfool! Be gone!<END>"
+  },
+  {
+   "group": 14,
+   "msg": 1,
+   "bank": 22,
+   "addr": "A031",
+   "end": "A038",
+   "text": "<CLR>14-01<END>"
+  },
+  {
+   "group": 14,
+   "msg": 2,
+   "bank": 22,
+   "addr": "A038",
+   "end": "A03F",
+   "text": "<CLR>14-03<END>"
+  },
+  {
+   "group": 14,
+   "msg": 3,
+   "bank": 22,
+   "addr": "A03F",
+   "end": "A0FB",
+   "text": "<CLR>That is the {Sword of Water}!\nYou're the legendary {one}\nI've waited for!<KEY>\n<CLR> I am {Rage}, protector of\nthe sacred Lime Tree_<KEY>\n<CLR> I've stood guard here for\nover 100yrs. I now give\nyou the {Ball of Water}.<KEY>\n<CLR> I may now sleep in peace\nknowing the chamber is\nempty. Enter the tree and\nprotect {Mesia}!<END>"
+  },
+  {
+   "group": 14,
+   "msg": 4,
+   "bank": 22,
+   "addr": "A0FB",
+   "end": "A15B",
+   "text": "<CLR>I am {Mesia}. This message is\nfor you {NAME}. Our\nmission is only beginning_<KEY>\n<CLR> Our time is so short. I\nwill go to {Draygonia} now,\nplease catch up with me!<END>"
+  },
+  {
+   "group": 14,
+   "msg": 5,
+   "bank": 22,
+   "addr": "A0FB",
+   "end": "A15B",
+   "text": "<CLR>I am {Mesia}. This message is\nfor you {NAME}. Our\nmission is only beginning_<KEY>\n<CLR> Our time is so short. I\nwill go to {Draygonia} now,\nplease catch up with me!<END>"
+  },
+  {
+   "group": 15,
+   "msg": 0,
+   "bank": 22,
+   "addr": "A15B",
+   "end": "A201",
+   "text": "<CLR>__huh_  Oh, sorry, I zoned\nout for a minute_ I'm\n{Ralph} the elder of {Joel}.<KEY>\n<CLR> Some{one} came from the next\n{island} and asked for a\ngirl sacrifice if we wish<KEY>\n<CLR> safety to our {island}. One\nfrom {Portoa} volunteered\nthough_ She's monster prey\nby now.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 1,
+   "bank": 22,
+   "addr": "A201",
+   "end": "A21F",
+   "text": "<CLR>Thank you. Our village is\nsaved.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 2,
+   "bank": 22,
+   "addr": "A21F",
+   "end": "A235",
+   "text": "<CLR>Oh, it's you. Thanks again.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 3,
+   "bank": 22,
+   "addr": "A235",
+   "end": "A24C",
+   "text": "<CLR>Welcome to the glorious\n{island} of {Joel}!<END>"
+  },
+  {
+   "group": 15,
+   "msg": 4,
+   "bank": 22,
+   "addr": "A24C",
+   "end": "A265",
+   "text": "<CLR>This is no place for you!\nLeave here!<END>"
+  },
+  {
+   "group": 15,
+   "msg": 5,
+   "bank": 22,
+   "addr": "A265",
+   "end": "A28F",
+   "text": "<CLR>I don't want to be a\nsacrifice. Where's my\nUncle {Clark}?<END>"
+  },
+  {
+   "group": 15,
+   "msg": 6,
+   "bank": 22,
+   "addr": "A28F",
+   "end": "A2A9",
+   "text": "<CLR>Now I don't have to be\nsacrificed! Yah!<END>"
+  },
+  {
+   "group": 15,
+   "msg": 7,
+   "bank": 22,
+   "addr": "A21F",
+   "end": "A235",
+   "text": "<CLR>Oh, it's you. Thanks again.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 8,
+   "bank": 22,
+   "addr": "A2A9",
+   "end": "A2D8",
+   "text": "<CLR>The girl substitute from\n{Portoa} is called {Mesia}.\nI pray for her safety.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 9,
+   "bank": 22,
+   "addr": "A2D8",
+   "end": "A2E9",
+   "text": "<CLR>I pray we see {Mesia} again.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 10,
+   "bank": 22,
+   "addr": "A2E9",
+   "end": "A315",
+   "text": "<CLR>This is {Joel} Island. The\nnext {one} to the west is\nEvil Spirit Island.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 11,
+   "bank": 22,
+   "addr": "A315",
+   "end": "A31F",
+   "text": "<CLR>Good, good, good.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 12,
+   "bank": 22,
+   "addr": "A31F",
+   "end": "A388",
+   "text": "<CLR>Since a woman sorcerer from\n{Draygonia} went to the next\n{island}, it's been weird_<KEY>\n<CLR> People have disappeared\nand strange monsters now\nlive there.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 13,
+   "bank": 22,
+   "addr": "A388",
+   "end": "A3C1",
+   "text": "<CLR>At last, our life can\nreturn to normal. I can go\nback to fishing now.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 14,
+   "bank": 22,
+   "addr": "A3C1",
+   "end": "A3F7",
+   "text": "<CLR>Lately the fishing has been\ngreat. The fisherman next\ndoor has been loving it.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 15,
+   "bank": 22,
+   "addr": "A3F7",
+   "end": "A428",
+   "text": "<CLR>{Clark}, who is the elder's\nbrother, has not returned\nfrom the next {island} yet.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 16,
+   "bank": 22,
+   "addr": "A428",
+   "end": "A440",
+   "text": "<CLR>{Clark} was safe? That's\ngreat.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 17,
+   "bank": 22,
+   "addr": "A440",
+   "end": "A463",
+   "text": "<CLR>Life was like a nightmare\nbefore_<END>"
+  },
+  {
+   "group": 15,
+   "msg": 18,
+   "bank": 22,
+   "addr": "A463",
+   "end": "A489",
+   "text": "<CLR>Hey! You surprised me! I\nthought you were a\nmonster.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 19,
+   "bank": 22,
+   "addr": "A489",
+   "end": "A49A",
+   "text": "<CLR>Now I can live safely.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 20,
+   "bank": 22,
+   "addr": "A49A",
+   "end": "A4B0",
+   "text": "<CLR>Sometimes I help out at the\nnext {island}.<END>"
+  },
+  {
+   "group": 15,
+   "msg": 21,
+   "bank": 22,
+   "addr": "A4B0",
+   "end": "A4E1",
+   "text": "<CLR>{Clark}:\"Everybody has been\nliving peacefully since\n{Sabera} is gone.\"<END>"
+  },
+  {
+   "group": 15,
+   "msg": 22,
+   "bank": 22,
+   "addr": "A4E1",
+   "end": "A4F4",
+   "text": "<CLR>Who are you? Get away!<END>"
+  },
+  {
+   "group": 15,
+   "msg": 23,
+   "bank": 22,
+   "addr": "A4E1",
+   "end": "A4F4",
+   "text": "<CLR>Who are you? Get away!<END>"
+  },
+  {
+   "group": 15,
+   "msg": 24,
+   "bank": 22,
+   "addr": "A4F4",
+   "end": "A543",
+   "text": "<CLR>{Kensu}:\"Who are you? I was\nhappily sleeping.\"<KEY>\n<CLR>\"A person like you should\nbe eaten by zombies.\"<END>"
+  },
+  {
+   "group": 16,
+   "msg": 0,
+   "bank": 22,
+   "addr": "A543",
+   "end": "A5B2",
+   "text": "<CLR>I'm {Clark}. I came from {Joel}\nto check this place out.\nA woman sorcerer is here_<KEY>\n<CLR> She came from {Draygonia}\nand changed all the {people}\nhere into zombies.<KEY>\n<CLR>{Sabera} is very clever.\nBe careful.<END>"
+  },
+  {
+   "group": 16,
+   "msg": 1,
+   "bank": 22,
+   "addr": "A5B2",
+   "end": "A5DD",
+   "text": "<CLR>{Clark}:\"You did it! Awesome!\n{Please} take this_ I'm\nsure it will help you.\"<END>"
+  },
+  {
+   "group": 16,
+   "msg": 2,
+   "bank": 22,
+   "addr": "A5DD",
+   "end": "A608",
+   "text": "<CLR>{Clark}:\"Now I can go home.\nSurely {Ralph} and others\nare waiting for me.\"<END>"
+  },
+  {
+   "group": 16,
+   "msg": 3,
+   "bank": 22,
+   "addr": "A608",
+   "end": "A660",
+   "text": "<CLR>Thank you. Because of your\nvalliant effort, we are\nreleased from this curse.<KEY>\n<CLR>I don't know how to thank\nyou_  We will rebuild now_<END>"
+  },
+  {
+   "group": 16,
+   "msg": 4,
+   "bank": 22,
+   "addr": "A660",
+   "end": "A684",
+   "text": "<CLR>We'll rebuild this place\nbatter than before.<END>"
+  },
+  {
+   "group": 16,
+   "msg": 5,
+   "bank": 22,
+   "addr": "A684",
+   "end": "A720",
+   "text": "<CLR>Today is the best day of my\nlife. You're great even\nthough you're young!<KEY>\n<CLR>{NAME}:\"I need to cross the\nwhirlpools, can you help?\"<KEY>\n<CLR>A legend says that if the\n{Statue of Gold} is placed\nproperly, we can return\nsafely from any storm.<END>"
+  },
+  {
+   "group": 16,
+   "msg": 6,
+   "bank": 22,
+   "addr": "A6DF",
+   "end": "A720",
+   "text": "<CLR>A legend says that if the\n{Statue of Gold} is placed\nproperly, we can return\nsafely from any storm.<END>"
+  },
+  {
+   "group": 16,
+   "msg": 7,
+   "bank": 22,
+   "addr": "A720",
+   "end": "A73B",
+   "text": "<CLR>During the daytime, men go\nto fish.<END>"
+  },
+  {
+   "group": 16,
+   "msg": 8,
+   "bank": 22,
+   "addr": "A73B",
+   "end": "A766",
+   "text": "<CLR>Thank you for saving me.\nAn altar for the\n{Statue of Gold} is close\nto this {island}.<END>"
+  },
+  {
+   "group": 16,
+   "msg": 9,
+   "bank": 22,
+   "addr": "A766",
+   "end": "A781",
+   "text": "<CLR>I know my house isn't much\nbut it's all mine.<END>"
+  },
+  {
+   "group": 16,
+   "msg": 10,
+   "bank": 22,
+   "addr": "A781",
+   "end": "A7B3",
+   "text": "<CLR>I can hold my children with\nmy own hands now_ Ooh_\nI'm so happy_<END>"
+  },
+  {
+   "group": 16,
+   "msg": 11,
+   "bank": 22,
+   "addr": "A7B3",
+   "end": "A7CE",
+   "text": "<CLR>Sometimes {people} from\n{Joel} {island} come here to\nhelp us.<END>"
+  },
+  {
+   "group": 16,
+   "msg": 12,
+   "bank": 22,
+   "addr": "A7CE",
+   "end": "A807",
+   "text": "<CLR>Ya know, a {Glowing Lamp}\nthat's said to fix broken\nstuff, is in the\nlighthouse.<END>"
+  },
+  {
+   "group": 16,
+   "msg": 13,
+   "bank": 22,
+   "addr": "A807",
+   "end": "A816",
+   "text": "<CLR>I'm helping my mother.<END>"
+  },
+  {
+   "group": 16,
+   "msg": 14,
+   "bank": 22,
+   "addr": "A816",
+   "end": "A838",
+   "text": "<CLR>I'm the real {Mesia}! This\nis a trap! Go away!<END>"
+  },
+  {
+   "group": 16,
+   "msg": 15,
+   "bank": 22,
+   "addr": "A838",
+   "end": "A85E",
+   "text": "<CLR>Help! There is a sorcerer\nin the back of this\nchamber.<END>"
+  },
+  {
+   "group": 16,
+   "msg": 16,
+   "bank": 22,
+   "addr": "A85E",
+   "end": "A871",
+   "text": "<CLR>What are you doing? STOP!<END>"
+  },
+  {
+   "group": 16,
+   "msg": 17,
+   "bank": 22,
+   "addr": "A871",
+   "end": "A88B",
+   "text": "<CLR>You are mistaken. Please\nSTOP!<END>"
+  },
+  {
+   "group": 16,
+   "msg": 18,
+   "bank": 22,
+   "addr": "A88B",
+   "end": "A907",
+   "text": "<CLR> Yaaaaaaaa!<KEY>\n<CLR> __ _  _   _<KEY>\n<CLR>Excellent! You've finally\nrevealed me! I will enjoy\ndestroying you! I'm {Sabera}<KEY>\n<CLR> I'm {one} of the {Draygonia}'s\nfinest four. This will be\nyour doom!<END>"
+  },
+  {
+   "group": 16,
+   "msg": 19,
+   "bank": 22,
+   "addr": "A907",
+   "end": "A95B",
+   "text": "<CLR>You've won this battle but\n{Mesia} is still mine!\n{Mesia}:\"Nooooo!\"<KEY>\n<CLR> I'll see you in {Goa}, our\nmain fortress. Ha! Ha! Ha!<END>"
+  },
+  {
+   "group": 17,
+   "msg": 0,
+   "bank": 22,
+   "addr": "A95B",
+   "end": "A978",
+   "text": "<CLR>I'm on lookout to watch\nfor {Draygonia}'s attack.<END>"
+  },
+  {
+   "group": 17,
+   "msg": 1,
+   "bank": 22,
+   "addr": "A978",
+   "end": "A99F",
+   "text": "<CLR>{Kensu}:\"Be quiet,\nI lost something and I'm\nall mixed up!<END>"
+  },
+  {
+   "group": 18,
+   "msg": 0,
+   "bank": 22,
+   "addr": "A99F",
+   "end": "A9BB",
+   "text": "<CLR>Yow! A filthy man is here!\nLeave!<END>"
+  },
+  {
+   "group": 18,
+   "msg": 1,
+   "bank": 22,
+   "addr": "A9BB",
+   "end": "A9CE",
+   "text": "<CLR>{Please} stay as long as you\nlike.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 2,
+   "bank": 22,
+   "addr": "A9CE",
+   "end": "A9E5",
+   "text": "<CLR>Stay away! I hate men!<END>"
+  },
+  {
+   "group": 18,
+   "msg": 3,
+   "bank": 22,
+   "addr": "A9E5",
+   "end": "AA0C",
+   "text": "<CLR>Our hunting skills are\neven better than a man's.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 4,
+   "bank": 22,
+   "addr": "AA0C",
+   "end": "AA30",
+   "text": "<CLR>Aack! I am insulted by\nyour presence, man!<END>"
+  },
+  {
+   "group": 18,
+   "msg": 5,
+   "bank": 22,
+   "addr": "AA30",
+   "end": "AA58",
+   "text": "<CLR>{Aryllis} is into fashion.\nShe is looking for the\n{Kirisa Plant} to make some\nperfume.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 6,
+   "bank": 22,
+   "addr": "AA58",
+   "end": "AA84",
+   "text": "<CLR>This is the house of\n{Aryllis}, our leader. This\nis not a place for you.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 7,
+   "bank": 22,
+   "addr": "AA84",
+   "end": "AABD",
+   "text": "<CLR>{Aryllis} is waiting for you.\n<CLR>We take care of {Aryllis}.\nShe is good at hunting but\nfashion is more important.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 8,
+   "bank": 22,
+   "addr": "AA91",
+   "end": "AABD",
+   "text": "<CLR>We take care of {Aryllis}.\nShe is good at hunting but\nfashion is more important.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 9,
+   "bank": 22,
+   "addr": "AABD",
+   "end": "AAD5",
+   "text": "<CLR>The {Kirisa Plant} blooms\nin a cave near {Portoa}.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 10,
+   "bank": 22,
+   "addr": "AAD5",
+   "end": "AAF1",
+   "text": "<CLR>The {Kirisa Plant} blooms\nin a cave near {Portoa}.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 11,
+   "bank": 22,
+   "addr": "AAF1",
+   "end": "AB12",
+   "text": "<CLR>This is a sacred place.\nGo away, Now!<END>"
+  },
+  {
+   "group": 18,
+   "msg": 12,
+   "bank": 22,
+   "addr": "AB12",
+   "end": "AB5A",
+   "text": "<CLR>Welcome to {Amazones}. I'm\ntheir gorgeous leader\n{Aryllis}.<KEY>\n<CLR>Make yourself at home and\nrest from your travels.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 13,
+   "bank": 22,
+   "addr": "AB12",
+   "end": "AB5A",
+   "text": "<CLR>Welcome to {Amazones}. I'm\ntheir gorgeous leader\n{Aryllis}.<KEY>\n<CLR>Make yourself at home and\nrest from your travels.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 14,
+   "bank": 22,
+   "addr": "AB12",
+   "end": "AB5A",
+   "text": "<CLR>Welcome to {Amazones}. I'm\ntheir gorgeous leader\n{Aryllis}.<KEY>\n<CLR>Make yourself at home and\nrest from your travels.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 15,
+   "bank": 22,
+   "addr": "AB5A",
+   "end": "AB81",
+   "text": "<CLR>Are the villagers kind to\nyou? {Please} stay a while.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 16,
+   "bank": 22,
+   "addr": "AB81",
+   "end": "AC16",
+   "text": "<CLR>\n{Aryllis} accepts the plant.<KEY>\n<CLR>Oh my! The {Kirisa Plant}!\nIs this for me?<KEY>\n<CLR> I'm so glad_ I must\nreward you. This is my\nappreciation to you_<KEY>\n<CLR> Your kindness and modesty\nare much more beautiful\nthan the finest jewelry.\nGo in peace.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 17,
+   "bank": 22,
+   "addr": "ABD7",
+   "end": "AC16",
+   "text": "<CLR> Your kindness and modesty\nare much more beautiful\nthan the finest jewelry.\nGo in peace.<END>"
+  },
+  {
+   "group": 18,
+   "msg": 18,
+   "bank": 22,
+   "addr": "AC16",
+   "end": "AC34",
+   "text": "<CLR>You filthy beast! Don't\ncome any closer!<END>"
+  },
+  {
+   "group": 19,
+   "msg": 0,
+   "bank": 22,
+   "addr": "AC34",
+   "end": "AC76",
+   "text": "<CLR>{Kensu}:\"I can give you some\nof my {power}, but first can\nyou find my pendant? It's\nin an underground river.\"<END>"
+  },
+  {
+   "group": 19,
+   "msg": 1,
+   "bank": 22,
+   "addr": "AC76",
+   "end": "AC90",
+   "text": "<CLR>{Kensu}:\"I hate {people} who\nare pushy.\"<END>"
+  },
+  {
+   "group": 19,
+   "msg": 2,
+   "bank": 22,
+   "addr": "AC90",
+   "end": "AD15",
+   "text": "<CLR>\n      {Love Pendant}\n   is given to {Kensu}.<KEY>\n<CLR>{Kensu}:\"This was given to\nme by {Asina} as proof of\nher belief in me.\"<KEY>\n<CLR>\"As promised, I'll teach\nyou the magic of {Change}.\nNow I must attend to other\nthings. Go to {Mt.Hydra}.\"<END>"
+  },
+  {
+   "group": 19,
+   "msg": 3,
+   "bank": 22,
+   "addr": "AD15",
+   "end": "AD2E",
+   "text": "<CLR>Many thanks for your\npromise.<END>"
+  },
+  {
+   "group": 19,
+   "msg": 4,
+   "bank": 22,
+   "addr": "AD2E",
+   "end": "AD39",
+   "text": "<CLR>Do your best.<END>"
+  },
+  {
+   "group": 19,
+   "msg": 5,
+   "bank": 22,
+   "addr": "AD39",
+   "end": "AD62",
+   "text": "<CLR>Have you seen that\ngreat one {Kensu}\naround here at all?<END>"
+  },
+  {
+   "group": 19,
+   "msg": 6,
+   "bank": 22,
+   "addr": "AD62",
+   "end": "AD6E",
+   "text": "<CLR>{Kensu}:\"Shoot!<END>"
+  },
+  {
+   "group": 19,
+   "msg": 7,
+   "bank": 22,
+   "addr": "AD6E",
+   "end": "ADBB",
+   "text": "<CLR>This is {Swan}. {Draygonia}\nCastle and {Goa} are to the\nnorth.<KEY>\n<CLR>I hear {Goa} is becoming\nstronger from some\nnew type of metal_<END>"
+  },
+  {
+   "group": 19,
+   "msg": 8,
+   "bank": 22,
+   "addr": "ADBB",
+   "end": "ADE7",
+   "text": "<CLR>After {people} of {Draygonia}\nare gone, the utmost fear\nof the {people} is released.<END>"
+  },
+  {
+   "group": 19,
+   "msg": 9,
+   "bank": 22,
+   "addr": "ADE7",
+   "end": "AE23",
+   "text": "<CLR>I hear the {people} against\n{Draygonia} are killed_ or\nforced to leave_ There are\nmany hiding with {Azteca}__<END>"
+  },
+  {
+   "group": 19,
+   "msg": 10,
+   "bank": 22,
+   "addr": "AE23",
+   "end": "AE38",
+   "text": "<CLR>{Draygonia} will soon be\ndestroyed!<END>"
+  },
+  {
+   "group": 19,
+   "msg": 11,
+   "bank": 22,
+   "addr": "AE38",
+   "end": "AEA2",
+   "text": "<CLR>They say {Draygonia}'s new\nmetal armor can even\nwithstand earth's magma_<KEY>\n<CLR> That means they can easily\nattack {Shyron} fort_ Not\ngood at all.<END>"
+  },
+  {
+   "group": 19,
+   "msg": 12,
+   "bank": 22,
+   "addr": "AEA2",
+   "end": "AED4",
+   "text": "<CLR>When I heard {Shyron} was\ndestroyed, I thought for\nsure it was over_<END>"
+  },
+  {
+   "group": 19,
+   "msg": 13,
+   "bank": 22,
+   "addr": "AED4",
+   "end": "AEF2",
+   "text": "<CLR>The {people} of {Draygonia}\nare wonderful. Ha ha ha.<END>"
+  },
+  {
+   "group": 19,
+   "msg": 14,
+   "bank": 22,
+   "addr": "AEF2",
+   "end": "AF2B",
+   "text": "<CLR>People saying bad things\nagainst {Draygonia} were\nexecuted_ My husband__<END>"
+  },
+  {
+   "group": 19,
+   "msg": 15,
+   "bank": 22,
+   "addr": "AF2B",
+   "end": "AF87",
+   "text": "<CLR>{Stom}:\"I haven't seen you\nfor a while. I came to\ngive you a message_\"<KEY>\n<CLR>\"{Please} find {Kensu} and take\nhim to Shyron. We need his\n{power}. I'm counting on\nyou!\"<END>"
+  },
+  {
+   "group": 19,
+   "msg": 16,
+   "bank": 22,
+   "addr": "AF87",
+   "end": "AFAE",
+   "text": "<CLR>{Draygonia}_ Wise men_ who\ncares. Let's party!<END>"
+  },
+  {
+   "group": 19,
+   "msg": 17,
+   "bank": 22,
+   "addr": "AFAE",
+   "end": "AFBA",
+   "text": "<CLR>Very nice!<END>"
+  },
+  {
+   "group": 19,
+   "msg": 18,
+   "bank": 22,
+   "addr": "AFBA",
+   "end": "AFD2",
+   "text": "<CLR>Yah man, let's boogie!<END>"
+  },
+  {
+   "group": 19,
+   "msg": 19,
+   "bank": 22,
+   "addr": "AFD2",
+   "end": "AFF4",
+   "text": "<CLR>Wherever you go, the\nbrightness of your sword\nwill help you.<END>"
+  },
+  {
+   "group": 19,
+   "msg": 20,
+   "bank": 22,
+   "addr": "AFF4",
+   "end": "B016",
+   "text": "<CLR>How dare you come here!\nLeave immediately!<END>"
+  },
+  {
+   "group": 19,
+   "msg": 21,
+   "bank": 22,
+   "addr": "B016",
+   "end": "B028",
+   "text": "<CLR>Very well_ On your way.<END>"
+  },
+  {
+   "group": 20,
+   "msg": 0,
+   "bank": 22,
+   "addr": "B028",
+   "end": "B04C",
+   "text": "<CLR>This is {Shyron} fort. I\ncan't let strange {people}\nin.<END>"
+  },
+  {
+   "group": 20,
+   "msg": 1,
+   "bank": 22,
+   "addr": "B04C",
+   "end": "B05F",
+   "text": "<CLR>Hello {Stom}. {Please} enter.<END>"
+  },
+  {
+   "group": 20,
+   "msg": 2,
+   "bank": 22,
+   "addr": "AFF4",
+   "end": "B016",
+   "text": "<CLR>How dare you come here!\nLeave immediately!<END>"
+  },
+  {
+   "group": 20,
+   "msg": 3,
+   "bank": 22,
+   "addr": "B05F",
+   "end": "B070",
+   "text": "<CLR>Hey! {Draygonia} is\nattacking!<END>"
+  },
+  {
+   "group": 20,
+   "msg": 4,
+   "bank": 22,
+   "addr": "B070",
+   "end": "B078",
+   "text": "<CLR>Good luck.<END>"
+  },
+  {
+   "group": 20,
+   "msg": 5,
+   "bank": 22,
+   "addr": "B078",
+   "end": "B0C1",
+   "text": "<CLR>This is {Shyron}. People\ncome here to train to be\n{wise men} and hide out from<KEY>\n<CLR> {Draygonia} as well. But\neven this place isn't safe\nanymore.<END>"
+  },
+  {
+   "group": 20,
+   "msg": 6,
+   "bank": 22,
+   "addr": "B0C1",
+   "end": "B0E2",
+   "text": "<CLR>On the way here, I lost my\nwife and children_<END>"
+  },
+  {
+   "group": 20,
+   "msg": 7,
+   "bank": 22,
+   "addr": "B0E2",
+   "end": "B13D",
+   "text": "<CLR>{Akahana}:\"Hi, do you\nremember me? I live here\nbecause the {people} from<KEY>\n<CLR> my home town of {Goa}\nhave changed_ I felt very\nuncomfortable there.\"<END>"
+  },
+  {
+   "group": 20,
+   "msg": 8,
+   "bank": 22,
+   "addr": "B13D",
+   "end": "B172",
+   "text": "<CLR>{Akahana}:\"When I went home\nevery{one} had changed, I\nfelt no longer welcome.\"<END>"
+  },
+  {
+   "group": 20,
+   "msg": 9,
+   "bank": 22,
+   "addr": "B172",
+   "end": "B17C",
+   "text": "<CLR>{Akahana}:\"{Be careful}.\"<END>"
+  },
+  {
+   "group": 20,
+   "msg": 10,
+   "bank": 22,
+   "addr": "B17C",
+   "end": "B20A",
+   "text": "<CLR>{Tornel}:\"Good, you finally\nmade it. We're training\nthese {people} here.\"<KEY>\n<CLR>\"We have a lack of men and\nare having troubles.\nBecause of that armor_<KEY>\n<CLR>\"_we are losing the battle.\nOur medical staff can't\nkeep up with the wounded.\"<END>"
+  },
+  {
+   "group": 20,
+   "msg": 11,
+   "bank": 22,
+   "addr": "B20A",
+   "end": "B224",
+   "text": "<CLR>{Tornel}:\"The enemy is so\nclose. {Be careful}!\"<END>"
+  },
+  {
+   "group": 20,
+   "msg": 12,
+   "bank": 22,
+   "addr": "B224",
+   "end": "B24B",
+   "text": "<CLR>{Stom}:\"The {people} training\nhere are all fools. I'm\nworried.\"<END>"
+  },
+  {
+   "group": 20,
+   "msg": 13,
+   "bank": 22,
+   "addr": "B24B",
+   "end": "B283",
+   "text": "<CLR>{Stom}:\"After {Draygonia} is\ndestroyed, we'll have a\nrematch. This time I won't\nlose.\"<END>"
+  },
+  {
+   "group": 20,
+   "msg": 14,
+   "bank": 22,
+   "addr": "B283",
+   "end": "B297",
+   "text": "<CLR>Eyaah! Heey! Yoww!<END>"
+  },
+  {
+   "group": 20,
+   "msg": 15,
+   "bank": 22,
+   "addr": "B297",
+   "end": "B2A1",
+   "text": "<CLR>Eiyaaah!<END>"
+  },
+  {
+   "group": 20,
+   "msg": 16,
+   "bank": 22,
+   "addr": "B2A1",
+   "end": "B2DC",
+   "text": "<CLR>{Asina}:\"{NAME}! {Zebu} is\nwaiting for you in the\nback of the temple, see\nhim immediately.\"<END>"
+  },
+  {
+   "group": 20,
+   "msg": 17,
+   "bank": 22,
+   "addr": "B2A1",
+   "end": "B2DC",
+   "text": "<CLR>{Asina}:\"{NAME}! {Zebu} is\nwaiting for you in the\nback of the temple, see\nhim immediately.\"<END>"
+  },
+  {
+   "group": 20,
+   "msg": 18,
+   "bank": 22,
+   "addr": "B2DC",
+   "end": "B2EA",
+   "text": "<CLR>{Asina}:\"You are my last\nhope.\"<END>"
+  },
+  {
+   "group": 20,
+   "msg": 19,
+   "bank": 22,
+   "addr": "B2EA",
+   "end": "B30A",
+   "text": "<CLR>{Asina} is helping the\nwounded around the clock.<END>"
+  },
+  {
+   "group": 20,
+   "msg": 20,
+   "bank": 22,
+   "addr": "B30A",
+   "end": "B30F",
+   "text": "<CLR>{Be careful}_<END>"
+  },
+  {
+   "group": 20,
+   "msg": 21,
+   "bank": 22,
+   "addr": "B30F",
+   "end": "B31C",
+   "text": "<CLR>Oooo_ Owww_<END>"
+  },
+  {
+   "group": 20,
+   "msg": 22,
+   "bank": 22,
+   "addr": "B31C",
+   "end": "B335",
+   "text": "<CLR>Oooo_ Give me water_ Oooo_<END>"
+  },
+  {
+   "group": 20,
+   "msg": 23,
+   "bank": 22,
+   "addr": "B335",
+   "end": "B3F5",
+   "text": "<CLR>{Zebu}:\"Great! You made it\nthis far. Besides the\nthree swords you now_\"<KEY>\n<CLR>\"_possess, the most\npowerful, the Sword of\nThunder, is in the cave_\"<KEY>\n<CLR>\"_of Styx. Evil spirits\nkeep us from invading\nthere. Watch yourself.\"<KEY>\n<CLR>\"The gate to Styx is at the\ntop of {Mt.Hydra}. Take\nthis key and go.\"<END>"
+  },
+  {
+   "group": 20,
+   "msg": 24,
+   "bank": 22,
+   "addr": "B6BE",
+   "end": "B6C8",
+   "text": "<CLR>{Zebu}:\"{Be careful}!\"<END>"
+  },
+  {
+   "group": 21,
+   "msg": 0,
+   "bank": 22,
+   "addr": "B3F5",
+   "end": "B40A",
+   "text": "<CLR>{Akahana}:\"That's a mirror.\"<END>"
+  },
+  {
+   "group": 21,
+   "msg": 1,
+   "bank": 22,
+   "addr": "B40A",
+   "end": "B41C",
+   "text": "<CLR>{Akahana}:\"Hello,\nhow are you?\"<END>"
+  },
+  {
+   "group": 21,
+   "msg": 2,
+   "bank": 22,
+   "addr": "B41C",
+   "end": "B436",
+   "text": "<CLR>{Akahana}:\"Aaaah! {Please}\nspare my life!\"<END>"
+  },
+  {
+   "group": 21,
+   "msg": 3,
+   "bank": 22,
+   "addr": "B436",
+   "end": "B45E",
+   "text": "<CLR>{Tornel}:\"You are vain to\nchange yourself in front\nof me.\"<END>"
+  },
+  {
+   "group": 21,
+   "msg": 4,
+   "bank": 22,
+   "addr": "B45E",
+   "end": "B488",
+   "text": "<CLR>{Tornel}:\"Your appearance is\nnow quite whimsical.\"<END>"
+  },
+  {
+   "group": 21,
+   "msg": 5,
+   "bank": 22,
+   "addr": "B488",
+   "end": "B4A8",
+   "text": "<CLR>{Stom}:\"You're {NAME}, aren't\nyou? I know who you are.\"<END>"
+  },
+  {
+   "group": 21,
+   "msg": 6,
+   "bank": 22,
+   "addr": "B4A8",
+   "end": "B4D4",
+   "text": "<CLR>{Stom}:\"You do that very\nwell. It's as if I was\nlooking in a mirror.\"<END>"
+  },
+  {
+   "group": 21,
+   "msg": 7,
+   "bank": 22,
+   "addr": "B4D4",
+   "end": "B4F5",
+   "text": "<CLR>{Asina}:\"We can see through\nyour disguise.\"<END>"
+  },
+  {
+   "group": 21,
+   "msg": 8,
+   "bank": 22,
+   "addr": "B4F5",
+   "end": "B51C",
+   "text": "<CLR>{Asina}:\"You shouldn't\nsurprise {people} without\nreason.\"<END>"
+  },
+  {
+   "group": 21,
+   "msg": 9,
+   "bank": 22,
+   "addr": "B51C",
+   "end": "B524",
+   "text": "<CLR>Hello.<END>"
+  },
+  {
+   "group": 21,
+   "msg": 10,
+   "bank": 22,
+   "addr": "B524",
+   "end": "B531",
+   "text": "<CLR>Aaah! {Stom} help me!<END>"
+  },
+  {
+   "group": 21,
+   "msg": 11,
+   "bank": 22,
+   "addr": "B531",
+   "end": "B541",
+   "text": "<CLR>Oh {Stom}! Don't stare at me.<END>"
+  },
+  {
+   "group": 21,
+   "msg": 12,
+   "bank": 22,
+   "addr": "B541",
+   "end": "B566",
+   "text": "<CLR>{Zebu}:\"{NAME}. We didn't\nteach you that {magic} to\nplay with!\"<END>"
+  },
+  {
+   "group": 22,
+   "msg": 0,
+   "bank": 22,
+   "addr": "B566",
+   "end": "B60B",
+   "text": "<CLR>{Azteca}:\"I was waiting for\nyou. A lot has happened in\nthe past 100yrs.\"<KEY>\n<CLR>\"You and {Mesia} went into\nsleep to watch for the end\nof the world.\"<KEY>\n<CLR>\"You each had specific\npowers that could combat\nany future evil_\"<KEY>\n<CLR>{Azteca}:\"{NAME}! Hurry to\n{Mesia}!\"<END>"
+  },
+  {
+   "group": 22,
+   "msg": 1,
+   "bank": 22,
+   "addr": "B5F6",
+   "end": "B60B",
+   "text": "<CLR>{Azteca}:\"{NAME}! Hurry to\n{Mesia}!\"<END>"
+  },
+  {
+   "group": 22,
+   "msg": 2,
+   "bank": 22,
+   "addr": "B60B",
+   "end": "B6BE",
+   "text": "<CLR>{Zebu}:\"We tried, through our\npowers, to lead the {people}\ntowards a good direction_\"<KEY>\n<CLR>\"But {Draygon} used this\n{power} wrongly and built an\ninvading nation.\"<KEY>\n<CLR>\"{Draygon} hid the fact of\nwho he was, and lured our\nbest four warriors into\nhis realm of darkness.\"<END>"
+  },
+  {
+   "group": 22,
+   "msg": 3,
+   "bank": 22,
+   "addr": "B6BE",
+   "end": "B6C8",
+   "text": "<CLR>{Zebu}:\"{Be careful}!\"<END>"
+  },
+  {
+   "group": 22,
+   "msg": 4,
+   "bank": 22,
+   "addr": "B6C8",
+   "end": "B720",
+   "text": "<CLR>{Tornel}:\"{Azteca} is not sure\nof the extent of {Mesia}'s\n{power}, but Emperor_\"<KEY>\n<CLR>\"{Draygon} is trying to\nharness it to extend his\nrealm of influence.\"<END>"
+  },
+  {
+   "group": 22,
+   "msg": 5,
+   "bank": 22,
+   "addr": "B720",
+   "end": "B737",
+   "text": "<CLR>{Tornel}:\"I wish for your\nsafety.\"<END>"
+  },
+  {
+   "group": 22,
+   "msg": 6,
+   "bank": 22,
+   "addr": "B737",
+   "end": "B794",
+   "text": "<CLR>{Asina}:\"Your lives were\nmentioned to the {people} as\nlegends to give them hope_\"<KEY>\n<CLR>\"If you don't destroy\n{Draygonia}, all will live\nin despair.\"<END>"
+  },
+  {
+   "group": 22,
+   "msg": 7,
+   "bank": 22,
+   "addr": "B794",
+   "end": "B7AF",
+   "text": "<CLR>{Asina}:\"Now, the real battle\nbegins.\"<END>"
+  },
+  {
+   "group": 23,
+   "msg": 0,
+   "bank": 22,
+   "addr": "B7AF",
+   "end": "B7C4",
+   "text": "<CLR>This is the fortress of\n{Goa}.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 1,
+   "bank": 22,
+   "addr": "B7C4",
+   "end": "B7E2",
+   "text": "<CLR>I feel like it was all a\nnightmare.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 2,
+   "bank": 22,
+   "addr": "B7E2",
+   "end": "B811",
+   "text": "<CLR>The Emperor is looking for\na tower which floats high\nin the sky.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 3,
+   "bank": 22,
+   "addr": "B811",
+   "end": "B83E",
+   "text": "<CLR>I feel like a tremendous\nweight has just been\nlifted.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 4,
+   "bank": 22,
+   "addr": "B83E",
+   "end": "B876",
+   "text": "<CLR>I heard that {Draygonia}'s\nbest four warriors left\nfor {Shyron}. The {wise men}\nwill die for sure.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 5,
+   "bank": 22,
+   "addr": "B876",
+   "end": "B8AC",
+   "text": "<CLR>Is that so? The great four\nwere killed? Ah, the\nEmperor is still left!<END>"
+  },
+  {
+   "group": 23,
+   "msg": 6,
+   "bank": 22,
+   "addr": "B8AC",
+   "end": "B8D2",
+   "text": "<CLR>Yo! {Akahana}! You look good.\nI'll return that item you\nloaned me.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 7,
+   "bank": 22,
+   "addr": "B8D2",
+   "end": "B8F5",
+   "text": "<CLR>Let's have some refreshments\nsometime.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 8,
+   "bank": 22,
+   "addr": "B8F5",
+   "end": "B92A",
+   "text": "<CLR>I can't remember what life\nwas like before the castle\nwas built.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 9,
+   "bank": 22,
+   "addr": "B92A",
+   "end": "B96D",
+   "text": "<CLR>When I met the grand puba\n{Karmine}, I felt scared,\nbut one look in his eyes\nmade everything OK.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 10,
+   "bank": 22,
+   "addr": "B96D",
+   "end": "B98E",
+   "text": "<CLR>Our pride is working day\nand night for {Draygonia}.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 11,
+   "bank": 22,
+   "addr": "B98E",
+   "end": "B9B2",
+   "text": "<CLR>I don't care what happens\nto {Draygonia} as long as I\ncan work. I'm busy.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 12,
+   "bank": 22,
+   "addr": "B9B2",
+   "end": "B9DE",
+   "text": "<CLR>The Emperor is the worst!\nI won't forgive those who\nspeak ill of him.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 13,
+   "bank": 22,
+   "addr": "B9DE",
+   "end": "BA0B",
+   "text": "<CLR>The Emperor is the worst!\nI won't forgive those who\ndefend him.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 14,
+   "bank": 22,
+   "addr": "BA0B",
+   "end": "BACA",
+   "text": "<CLR>{Kensu}:\"Sorry about my\nappearance, but I'm trying\nto get some info on the_\"<KEY>\n<CLR>\"_tower in the sky. I'm\nsneaking into {Draygonia}\ncastle to see what I_\"<KEY>\n<CLR>\"_can find. {Draygonia} sees\nthis tower as a weapon\nand has big plans for_\"<KEY>\n<CLR>\"_it. I'll continue to see\nwhat information I can dig\nup. You be careful too.\"<END>"
+  },
+  {
+   "group": 23,
+   "msg": 15,
+   "bank": 22,
+   "addr": "BACA",
+   "end": "BAF7",
+   "text": "<CLR>I hear there's a tower with\nenough {power} to destroy\nthe world.<END>"
+  },
+  {
+   "group": 23,
+   "msg": 16,
+   "bank": 22,
+   "addr": "BAF7",
+   "end": "BB0B",
+   "text": "<CLR>Don't look down on the\nEmperor's {power}.<END>"
+  },
+  {
+   "group": 24,
+   "msg": 0,
+   "bank": 22,
+   "addr": "BB0B",
+   "end": "BB32",
+   "text": "<CLR>{Kelbesque}:\"Well done so\nfar! Now you will join\nthe {people} of {Shyron}!\"<END>"
+  },
+  {
+   "group": 24,
+   "msg": 1,
+   "bank": 22,
+   "addr": "BB32",
+   "end": "BB74",
+   "text": "<CLR>{Zebu}:\"Well done, but the\nother {wise men} are still\ncaptive. I will recover\nyour strength. Take care.\"<END>"
+  },
+  {
+   "group": 24,
+   "msg": 2,
+   "bank": 22,
+   "addr": "BB74",
+   "end": "BBA6",
+   "text": "<CLR>{Sabera}:\"Long time no see!\nHa! I won't let you get by\nme! Be prepared!\"<END>"
+  },
+  {
+   "group": 24,
+   "msg": 3,
+   "bank": 22,
+   "addr": "BBA6",
+   "end": "BC10",
+   "text": "<CLR>{Tornel}:\"I'm saved! By the\nway, how is {Stom}!\"\n{NAME}:\"___\"<KEY>\n<CLR>{Tornel}:\"I see_ But he held\non to the last_ sigh. I\nwill restore your strength.\nAvenge {Stom}!\"<END>"
+  },
+  {
+   "group": 24,
+   "msg": 4,
+   "bank": 22,
+   "addr": "BC10",
+   "end": "BC4F",
+   "text": "<CLR>{Mado}:\"Hoo, hoo, I'm\nglad you could come.\nYou're nothing to fear_\nBe proud of it!\"<END>"
+  },
+  {
+   "group": 24,
+   "msg": 5,
+   "bank": 22,
+   "addr": "BC4F",
+   "end": "BCB1",
+   "text": "<CLR>{Asina}:\"Thank you {NAME}! I\nwill cure your wounds. The\nlast sorcerer is {Karmine}_\"<KEY>\n<CLR>\"He uses {magic} to change\n{people} into monsters, so\nbe careful!\"<END>"
+  },
+  {
+   "group": 24,
+   "msg": 6,
+   "bank": 22,
+   "addr": "BCB1",
+   "end": "BD1C",
+   "text": "<CLR>{Kensu}:\"Hey, it's me! I was\nstupid and was hit by\n{Karmine}_\"<KEY>\n<CLR>\"In order to recover, I\nneed the {Ivory Statue}.\nIt's in a room downstairs.\nUse the hole over there.\"<END>"
+  },
+  {
+   "group": 24,
+   "msg": 7,
+   "bank": 22,
+   "addr": "BD1C",
+   "end": "BDD2",
+   "text": "<CLR>      {Ivory Statue}\n   is given to {Kensu}.<KEY>\n<CLR>{Kensu}:\"What a relief! Here,\nI will cure your wounds.\nThe Emperor and {Mesia}_\"<KEY>\n<CLR>\"_left for the pyramid.\n{Mesia} has the {power} to\ncall the tower, but don't_<KEY>\n<CLR>\"_give it to {Draygon}. I'll\nteach you {Flight} to aid\nyou. Now, take the short\ncut through the back.\"<END>"
+  },
+  {
+   "group": 24,
+   "msg": 8,
+   "bank": 22,
+   "addr": "BDD2",
+   "end": "BE0F",
+   "text": "<CLR>Welcome {NAME}! I'm {Karmine}\n{Draygonia}'s finest! You\nmust be tired_ So rest\nforever in darkness! Ha!<END>"
+  },
+  {
+   "group": 25,
+   "msg": 0,
+   "bank": 22,
+   "addr": "BE0F",
+   "end": "BE54",
+   "text": "<CLR>{Akahana}:\"I_ I should have\ngot_ uh_ an item_ I left\nwith a friend in G_ {Goa}_\nUh, uuuh___\"<END>"
+  },
+  {
+   "group": 25,
+   "msg": 1,
+   "bank": 22,
+   "addr": "BE54",
+   "end": "BE69",
+   "text": "<CLR>{Stom}_  hurry  Escape_<END>"
+  },
+  {
+   "group": 25,
+   "msg": 2,
+   "bank": 22,
+   "addr": "BE69",
+   "end": "BE83",
+   "text": "<CLR>{Stom}_ I'm glad_  You're\nsafe_ _<END>"
+  },
+  {
+   "group": 25,
+   "msg": 3,
+   "bank": 22,
+   "addr": "BE83",
+   "end": "BF1F",
+   "text": "<CLR>{Stom}:\"Ooooh_ {Draygonia}'s\narmy came_ Every{one}\nkilled_ watch out for\n{Mado}_\"<KEY>\n<CLR>\"He is more treacherous\nthan the other three_ Uh_\"\n{NAME}:\"Don't speak. wait.\"<KEY>\n<CLR>{Stom}:\"Take care of_ {Tornel}_\n    Oooo__ __ _\"\n{NAME}:\"{Stom}, hold on!\n    {Stom}!\"<END>"
+  },
+  {
+   "group": 25,
+   "msg": 4,
+   "bank": 22,
+   "addr": "BF1F",
+   "end": "BF66",
+   "text": "<CLR>Ha!Ha! I'm {Mado}! I destroyed\nthose silly {wise men}\nagainst the Emperor.<KEY>\n<CLR>You will now join the\n{people} of {Shyron}!<END>"
+  },
+  {
+   "group": 25,
+   "msg": 5,
+   "bank": 22,
+   "addr": "BF66",
+   "end": "BF90",
+   "text": "<CLR>Don't think that you've\nwon! Don't forget we still\nhave {Mesia} and the other\n{wise men}.<END>"
+  },
+  {
+   "group": 26,
+   "msg": 0,
+   "bank": 23,
+   "addr": "A000",
+   "end": "A03B",
+   "text": "<CLR>This is the desert town of\n{Sahara}. The weather is\npretty nasty, but it keeps\n{Draygonia} away.<END>"
+  },
+  {
+   "group": 26,
+   "msg": 1,
+   "bank": 23,
+   "addr": "A03B",
+   "end": "A082",
+   "text": "<CLR>A strange couple came here\na while back_ One was a man\nwith a cape, the other was\na girl.<END>"
+  },
+  {
+   "group": 26,
+   "msg": 2,
+   "bank": 23,
+   "addr": "A082",
+   "end": "A0AF",
+   "text": "<CLR>Do you know some{one} called\n{Stom}? I assume he's in\ntraining right now.<END>"
+  },
+  {
+   "group": 26,
+   "msg": 3,
+   "bank": 23,
+   "addr": "A0AF",
+   "end": "A0E1",
+   "text": "<CLR>When you go through a cave\nin the east, a great\nPyramid is there.<END>"
+  },
+  {
+   "group": 26,
+   "msg": 4,
+   "bank": 23,
+   "addr": "A0E1",
+   "end": "A106",
+   "text": "<CLR>I heard a rumor that\n{Draygonia} is about to be\ndestroyed_<END>"
+  },
+  {
+   "group": 26,
+   "msg": 5,
+   "bank": 23,
+   "addr": "A106",
+   "end": "A1C8",
+   "text": "<CLR>Oh, you are the\nlegendary soldier_ I shall\ntell you what I know_<KEY>\n<CLR>A tower with tremendous\n{power} is near, {one} that\ncan destroy the world.<KEY>\n<CLR>It is said, {one} true\nwarrior has the {power} to\nstop the tower_ That {one}_<KEY>\n<CLR>_is {NAME}, and the {one}\nwho will lead you is\ncalled {Mesia}.\nThat I know.<END>"
+  },
+  {
+   "group": 26,
+   "msg": 6,
+   "bank": 23,
+   "addr": "A1C8",
+   "end": "A1EE",
+   "text": "<CLR>{Mesia} is waiting. Go to the\n{Pyramid} with utmost haste!<END>"
+  },
+  {
+   "group": 26,
+   "msg": 7,
+   "bank": 23,
+   "addr": "A231",
+   "end": "A253",
+   "text": "<CLR>{Mesia}'s {power} is more than\njust being able to call\nthe tower_<END>"
+  },
+  {
+   "group": 26,
+   "msg": 8,
+   "bank": 23,
+   "addr": "A1EE",
+   "end": "A231",
+   "text": "<CLR>It's sad. The Emperor\n{Draygon} still hasn't given\nup his desire to conquer\nthe world.<END>"
+  },
+  {
+   "group": 26,
+   "msg": 9,
+   "bank": 23,
+   "addr": "A253",
+   "end": "A278",
+   "text": "<CLR>Hi! Have you become a true\nwise man yet?<END>"
+  },
+  {
+   "group": 26,
+   "msg": 10,
+   "bank": 23,
+   "addr": "A278",
+   "end": "A288",
+   "text": "<CLR>{NAME}! I'm looking out\nfor you.<END>"
+  },
+  {
+   "group": 26,
+   "msg": 11,
+   "bank": 23,
+   "addr": "A288",
+   "end": "A297",
+   "text": "<CLR>Long time no see.<END>"
+  },
+  {
+   "group": 26,
+   "msg": 12,
+   "bank": 23,
+   "addr": "A297",
+   "end": "A2B3",
+   "text": "<CLR>How are you? How ya' been\ndoin'?<END>"
+  },
+  {
+   "group": 26,
+   "msg": 13,
+   "bank": 23,
+   "addr": "A2B3",
+   "end": "A2DD",
+   "text": "<CLR>Your rabbit is still on the\nplain. Have you seen it?<END>"
+  },
+  {
+   "group": 26,
+   "msg": 14,
+   "bank": 23,
+   "addr": "A2DD",
+   "end": "A2EA",
+   "text": "<CLR>Let's play.<END>"
+  },
+  {
+   "group": 26,
+   "msg": 15,
+   "bank": 23,
+   "addr": "A2EA",
+   "end": "A32C",
+   "text": "<CLR>{Deo}:\"A long time ago, I was\n{one} of {Stom}'s favorites. I\nwish he would come back\nsoon.\"<END>"
+  },
+  {
+   "group": 26,
+   "msg": 16,
+   "bank": 23,
+   "addr": "A32C",
+   "end": "A3BF",
+   "text": "<CLR>{Deo}:\"Oh {Stom}! Let's play!\"\n{NAME}:\"I'm sorry, I'm not\n{Stom}_ He is g{one}_\"<KEY>\n<CLR>{Deo}:\"That's a lie! He\ncouldn't be dead__ _  _\"<KEY>\n<CLR>\"{Please} take this_ It\nreminds me of him__ __\nAvenge his death for me!\"<END>"
+  },
+  {
+   "group": 26,
+   "msg": 17,
+   "bank": 23,
+   "addr": "A3BF",
+   "end": "A3D9",
+   "text": "<CLR>{Deo}:\"Avenge his death for\nme!\"<END>"
+  },
+  {
+   "group": 26,
+   "msg": 18,
+   "bank": 23,
+   "addr": "A3D9",
+   "end": "A3E5",
+   "text": "<CLR>Kyu.  Kyu.<END>"
+  },
+  {
+   "group": 26,
+   "msg": 19,
+   "bank": 23,
+   "addr": "A3D9",
+   "end": "A3E5",
+   "text": "<CLR>Kyu.  Kyu.<END>"
+  },
+  {
+   "group": 27,
+   "msg": 0,
+   "bank": 23,
+   "addr": "A3E5",
+   "end": "A40C",
+   "text": "<CLR>Oh! You were able to come\nhere!? I'm Emperor {Draygon}!\nShow me your {power}!<END>"
+  },
+  {
+   "group": 27,
+   "msg": 1,
+   "bank": 23,
+   "addr": "A40C",
+   "end": "A4CC",
+   "text": "<CLR>{Azteca}:\"Ooo_ {NAME}_ I'm\nglad you could come_\n{NAME}:\"You're wounded!\"<KEY>\n<CLR>{Azteca}:\"Worry not for me,\nbut for {Mesia}. She waits\nfor you on the highest_\"<KEY>\n<CLR>\"_floor. You must use the\nbasement entrance to get\nthere. Here is the_\"<KEY>\n<CLR>_Bow of Truth_ Use it when\nyou battle the Emperor_\nGo! {Mesia} is waiting!\"<END>"
+  },
+  {
+   "group": 27,
+   "msg": 2,
+   "bank": 23,
+   "addr": "A4CC",
+   "end": "A4EA",
+   "text": "<CLR>{Azteca}:\"Go! Don't worry\nabout me! Now Go!\"<END>"
+  },
+  {
+   "group": 27,
+   "msg": 3,
+   "bank": 23,
+   "addr": "A4EA",
+   "end": "A518",
+   "text": "<CLR>    You who awaken us!\nYou will sleep an endless\n        sleep!!<END>"
+  },
+  {
+   "group": 27,
+   "msg": 4,
+   "bank": 23,
+   "addr": "A518",
+   "end": "A556",
+   "text": "<CLR>{Draygon}:\"You, {NAME}! You\nshall receive the wrath of\nmy fury for taking my\nkingdom from me!\"<END>"
+  },
+  {
+   "group": 27,
+   "msg": 5,
+   "bank": 23,
+   "addr": "A556",
+   "end": "A654",
+   "text": "<CLR>{Azteca}:\"Good job! This is\nthe way it was supposed to\nbe_ I must explain_\"<KEY>\n<CLR>\"I didn't want evil in my\nmind, and I tried to push\nall corrupting thoughts_\"<KEY>\n<CLR>\"_away. But {Draygon} began\nto read my negative ideas\nand became absorbed by_\"<KEY>\n<CLR>\"_them. The fact that you &\n{Mesia} are awake means the\ntower's cycle has begun.\nThere's so little time.\"<END>"
+  },
+  {
+   "group": 27,
+   "msg": 6,
+   "bank": 23,
+   "addr": "A654",
+   "end": "A708",
+   "text": "<CLR> {Kensu}:\"Hold on! Try!\"\n{Azteca}:\"{Kensu}_ I'm sorry_\n I feel {Draygon}'s evil_\"<KEY>\n<CLR>\"_was my fault. He saw the\ntemptation of using his\n{power} for self glory_\"<KEY>\n<CLR>\"_and evil, but I could do\nnothing_ Now we must be\napart_ I'm__sorry___ _\"<KEY>\n<CLR>All:\"{Azteca}! {Azteca}__\"<END>"
+  },
+  {
+   "group": 27,
+   "msg": 7,
+   "bank": 23,
+   "addr": "A708",
+   "end": "A741",
+   "text": "<CLR>{Mesia}:\"{NAME}! I'm now in\nthe tower. Not much time!\nEnter into the next room!\nI'll take you to the tower!<END>"
+  },
+  {
+   "group": 27,
+   "msg": 8,
+   "bank": 23,
+   "addr": "A741",
+   "end": "A83F",
+   "text": "<CLR> -{NAME}! {Mesia}! These\n-messages are for you. You\n-both were part of a team_<KEY>\n<CLR> -_of scientists who created\n-this tower. As the most\n-critical link, you were_<KEY>\n<CLR> -_preserved to witness our\n-future race; to judge if\n-there's hope for humanity_<KEY>\n<CLR> -When the tower began\n-operating, your life\n-systems were engaged and\n-you both were awakened.<END>"
+  },
+  {
+   "group": 27,
+   "msg": 9,
+   "bank": 23,
+   "addr": "A83F",
+   "end": "A906",
+   "text": "<CLR> -Did you find {Azteca}? He\n-was an android created by\n-us, and programmed to_<KEY>\n<CLR> -_lead the people in a\n-positive direction. We can\n-only hope he will succeed_<KEY>\n<CLR> -We used all our resources\n-to create him. If he fails\n-then it will be up to you\n-to decide their fate.<END>"
+  },
+  {
+   "group": 27,
+   "msg": 10,
+   "bank": 23,
+   "addr": "A906",
+   "end": "A9C9",
+   "text": "<CLR> -{NAME}! {Mesia}! By the time\n-this is activated, we will\n-no longer be alive_<KEY>\n<CLR> -We hope we have made the\n-right decisions, and that\n-all people will realize_<KEY>\n<CLR> -their mistakes before it's\n-too late. {NAME}! {Mesia}!\n-As old friends, we wish \n-your safety. Good luck!<END>"
+  },
+  {
+   "group": 27,
+   "msg": 11,
+   "bank": 23,
+   "addr": "A9C9",
+   "end": "AA23",
+   "text": "<CLR>{NAME}:\"{Mesia}!\"\n{Mesia}:\"{NAME}! You finally\ncaught up with me!\"<KEY>\n<CLR>\"Unsheath your swords, or\nthe tower's attack will\nbegin!\"<END>"
+  },
+  {
+   "group": 27,
+   "msg": 12,
+   "bank": 23,
+   "addr": "AA23",
+   "end": "AA72",
+   "text": "<CLR>\"You must destroy DYNA, the\ncentral computer. If you\nsucceed, stick {Crystalis}\ninto it's main reactor!\"<END>"
+  },
+  {
+   "group": 27,
+   "msg": 13,
+   "bank": 23,
+   "addr": "AA72",
+   "end": "AA9F",
+   "text": "<CLR>{Mesia}:\"It's the only way!\nWe have so little time!\nNow hurry!\"<END>"
+  },
+  {
+   "group": 27,
+   "msg": 14,
+   "bank": 23,
+   "addr": "AA9F",
+   "end": "AAAA",
+   "text": "<CLR>code 27-E<END>"
+  },
+  {
+   "group": 27,
+   "msg": 15,
+   "bank": 23,
+   "addr": "AAAA",
+   "end": "AAE5",
+   "text": "<CLR>  CONFIRMED MELTDOWN_\n SELF-DESTRUCT HAS BEEN\n INITIATED_<END>"
+  },
+  {
+   "group": 27,
+   "msg": 16,
+   "bank": 23,
+   "addr": "AAE5",
+   "end": "AB77",
+   "text": "<CLR> {Mesia}:\"{NAME}!\"<KEY>\n<CLR> {NAME}:\"{Mesia}!\"\n{Mesia}:\"Did you get hurt?\"\n{NAME}:\"No, I'm fine.\"<KEY>\n<CLR> {Mesia}:\"The danger is now\n      over {NAME}_\"<KEY>\n<CLR> {NAME}:\"It would be nice to\nrest easy from now on,\nwithout the threat of evil\nat our backs.\"<END>"
+  },
+  {
+   "group": 27,
+   "msg": 17,
+   "bank": 23,
+   "addr": "AB77",
+   "end": "ABD9",
+   "text": "<CLR> -FINAL COUNTDOWN INITIATED_\n-EVACUATE_ EXPLOSIVES\n-ACTIVATED_ EVACUATE_\n-_30_  _29_  _28_  _27_<END>"
+  },
+  {
+   "group": 27,
+   "msg": 18,
+   "bank": 23,
+   "addr": "ABD9",
+   "end": "ABF5",
+   "text": "<CLR> {NAME}:\"Time to leave!\"\n\n{Mesia}:\"I'm with you_\"<END>"
+  },
+  {
+   "group": 28,
+   "msg": 0,
+   "bank": 23,
+   "addr": "ABF5",
+   "end": "AC03",
+   "text": "<CLR>Use {Telepathy} to speak to\nus.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 1,
+   "bank": 23,
+   "addr": "AC03",
+   "end": "AC20",
+   "text": "<CLR>The ice slide at {Mt.Sabre}\nis not only for sliding.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 2,
+   "bank": 23,
+   "addr": "AC20",
+   "end": "AC47",
+   "text": "<CLR>The {Flame Bracelet} will\nmaximize the Sword of\nFire's {power}, find it.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 3,
+   "bank": 23,
+   "addr": "AC47",
+   "end": "AC77",
+   "text": "<CLR>You must talk to {Asina}, but\nI tell you, it's difficult\nto see her.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 4,
+   "bank": 23,
+   "addr": "AC77",
+   "end": "ACAD",
+   "text": "<CLR>When you get the Ball of\nWater, you can build\nbridges of ice on the\nriver.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 5,
+   "bank": 23,
+   "addr": "ACAD",
+   "end": "ACDD",
+   "text": "<CLR>In order to get to the\nlighthouse, you need some\nspecial glasses.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 6,
+   "bank": 23,
+   "addr": "ACDD",
+   "end": "AD0C",
+   "text": "<CLR>{Kensu} is good with his\n{magic}. If you need to see\nhis true form, use\n{Paralysis} on {people}.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 7,
+   "bank": 23,
+   "addr": "AD0C",
+   "end": "AD4B",
+   "text": "<CLR>They say Leather Boots will\nallow you to walk through\npoison unharmed.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 8,
+   "bank": 23,
+   "addr": "AD4B",
+   "end": "AD70",
+   "text": "<CLR>It's good to rely on your\n{magic} {power} but {power} is\nnot everything.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 9,
+   "bank": 23,
+   "addr": "AD70",
+   "end": "AD92",
+   "text": "<CLR>{Draygonia}'s main fortress\nis getting stronger.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 10,
+   "bank": 23,
+   "addr": "AD92",
+   "end": "ADC3",
+   "text": "<CLR>There is a cave hidden in\nan oasis in the poisonous\ndesert. Go there.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 11,
+   "bank": 23,
+   "addr": "ADC3",
+   "end": "ADFE",
+   "text": "<CLR>We don't know what the\ninside of the Pyramid is\nlike, so watch yourself.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 12,
+   "bank": 23,
+   "addr": "ADFE",
+   "end": "AE1E",
+   "text": "<CLR>{NAME}, when you battle the\nemperor, you must use the\n{power} Ring.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 13,
+   "bank": 23,
+   "addr": "AE1E",
+   "end": "AE36",
+   "text": "<CLR>Oh, {NAME}. I will recover\nyour {magic} {power}.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 14,
+   "bank": 23,
+   "addr": "AE36",
+   "end": "AE50",
+   "text": "<CLR>Don't rely on others so\nmuch.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 15,
+   "bank": 23,
+   "addr": "AE50",
+   "end": "AE7E",
+   "text": "<CLR>{NAME}, you cannot climb\nthis yet! You don't have\nenough {power} to make it!<END>"
+  },
+  {
+   "group": 28,
+   "msg": 16,
+   "bank": 23,
+   "addr": "AE7E",
+   "end": "AEE6",
+   "text": "<CLR>Oh {NAME}! Good job! I'll\nnow teach you the {magic} of\n{Paralysis}.<KEY>\n<CLR>It will paralyze most\nmonsters and cause people\nto fall asleep. It will be\nuseful in the next town.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 17,
+   "bank": 23,
+   "addr": "AEE6",
+   "end": "AF4F",
+   "text": "<CLR>{Zebu}:\"{NAME}! You've \nfinally found the\n{Sword of Thunder}!\"<KEY>\n<CLR>{Tornel}:\"You've d{one} a fine\njob {NAME}! The grand\npuba {Azteca} awaits you.\"<KEY>\n<CLR>{Asina}:\"We will lead you to\nthe temple.\"<END>"
+  },
+  {
+   "group": 28,
+   "msg": 18,
+   "bank": 23,
+   "addr": "AF4F",
+   "end": "AF56",
+   "text": "<CLR>28-12<END>"
+  },
+  {
+   "group": 28,
+   "msg": 19,
+   "bank": 23,
+   "addr": "AF56",
+   "end": "AF80",
+   "text": "<CLR>Grant the {Oak} {people}'s\nreguest, and then look for\nme in the west.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 20,
+   "bank": 23,
+   "addr": "AF80",
+   "end": "AFA7",
+   "text": "<CLR>Besides me, the wise men\n{Asina} and {Kensu} will\nassist you.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 21,
+   "bank": 23,
+   "addr": "AFA7",
+   "end": "AFC8",
+   "text": "<CLR>When you great General\n{Kelbesque},use the\n{Sword of Wind}<END>"
+  },
+  {
+   "group": 28,
+   "msg": 22,
+   "bank": 23,
+   "addr": "AFC8",
+   "end": "AFEA",
+   "text": "<CLR>I hear that a traveling\nmerchant has the\n{Shield Ring}.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 23,
+   "bank": 23,
+   "addr": "AFEA",
+   "end": "B006",
+   "text": "<CLR>Visit the palace while the\nQueen is out.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 24,
+   "bank": 23,
+   "addr": "B006",
+   "end": "B03C",
+   "text": "<CLR>{Amazones} village is south\neast of {Brynmaer}. You must\nbuild a bridge to go\nthere.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 25,
+   "bank": 23,
+   "addr": "B03C",
+   "end": "B065",
+   "text": "<CLR>Use maximum {power} against\nthe enemies you can't see.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 26,
+   "bank": 23,
+   "addr": "B065",
+   "end": "B0B3",
+   "text": "<CLR>{Kensu} is very intelligent.\nIt was very inconsiderate\nfor him to leave. What on\nearth happened to him?<END>"
+  },
+  {
+   "group": 28,
+   "msg": 27,
+   "bank": 23,
+   "addr": "B0B3",
+   "end": "B0DD",
+   "text": "<CLR>Did you master the {magic} of\nChange? Go to {Amazones}\nonce more.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 28,
+   "bank": 23,
+   "addr": "B0DD",
+   "end": "B0FF",
+   "text": "<CLR>When you have the\n{Warrior Ring} you can shoot\ncontinuously.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 29,
+   "bank": 23,
+   "addr": "B0FF",
+   "end": "B135",
+   "text": "<CLR>Even though they've\ncaptured me, don't worry.\nI won't be killed easily.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 30,
+   "bank": 23,
+   "addr": "B135",
+   "end": "B152",
+   "text": "<CLR>{Kensu} will teach you your\nlast magical skill.<END>"
+  },
+  {
+   "group": 28,
+   "msg": 31,
+   "bank": 23,
+   "addr": "B152",
+   "end": "B18C",
+   "text": "<CLR>When you search a plain in\nthe poisonous desert, look\nfor a rabbit called {Deo}.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 0,
+   "bank": 23,
+   "addr": "B18C",
+   "end": "B1BB",
+   "text": "<CLR>The Emperor's {power} far\nexceeds that of his\ngreatest four_ <END>"
+  },
+  {
+   "group": 29,
+   "msg": 1,
+   "bank": 23,
+   "addr": "B1BB",
+   "end": "B1EC",
+   "text": "<CLR>{NAME}, you look like\nyou're having a rough\ntime_ I will recover\nyour {magic} {power}.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 2,
+   "bank": 23,
+   "addr": "B1EC",
+   "end": "B220",
+   "text": "<CLR>You can't expect help all\nthe time. The world is not\nso easy. Ho ho ho.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 3,
+   "bank": 23,
+   "addr": "B220",
+   "end": "B23D",
+   "text": "<CLR>I'm {Asina}. I'm looking\nforward to seeing you.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 4,
+   "bank": 23,
+   "addr": "B23D",
+   "end": "B257",
+   "text": "<CLR>{Kirisa Plant} is the base\nfor a fine perfume.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 5,
+   "bank": 23,
+   "addr": "B257",
+   "end": "B274",
+   "text": "<CLR>Locate the {Shell Flute}\nbefore using the boat.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 6,
+   "bank": 23,
+   "addr": "B274",
+   "end": "B2B4",
+   "text": "<CLR>When you wear the\nIron Necklace, your\ndefensive {power} will be\ntwice as strong.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 7,
+   "bank": 23,
+   "addr": "B2B4",
+   "end": "B2E5",
+   "text": "<CLR>I now hear {Kensu}'s changed\nform and is wandering the\ncountryside.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 8,
+   "bank": 23,
+   "addr": "B2E5",
+   "end": "B2F2",
+   "text": "<CLR>Did you find the\n{Bow of Moon}?<END>"
+  },
+  {
+   "group": 29,
+   "msg": 9,
+   "bank": 23,
+   "addr": "B2F2",
+   "end": "B30E",
+   "text": "<CLR>You need the\n{Ball of Thunder} to destroy\nan iron wall.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 10,
+   "bank": 23,
+   "addr": "B30E",
+   "end": "B348",
+   "text": "<CLR>We are wise men. We won't\nlose our pride, no matter\nwhat happens.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 11,
+   "bank": 23,
+   "addr": "B348",
+   "end": "B37C",
+   "text": "<CLR>There must have been a cave\nin {Mt.Hydra} you couldn't\nenter. Why don't you go\nback there again.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 12,
+   "bank": 23,
+   "addr": "B37C",
+   "end": "B394",
+   "text": "<CLR>Have you located both Bows?<END>"
+  },
+  {
+   "group": 29,
+   "msg": 13,
+   "bank": 23,
+   "addr": "B394",
+   "end": "B3B8",
+   "text": "<CLR>We wise men_     {Azteca}_\nwishing your safety_<END>"
+  },
+  {
+   "group": 29,
+   "msg": 14,
+   "bank": 23,
+   "addr": "B3B8",
+   "end": "B3CE",
+   "text": "<CLR>{NAME}. I will recover your\n{magic} {power}.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 15,
+   "bank": 23,
+   "addr": "B3CE",
+   "end": "B3E0",
+   "text": "<CLR>There is nothing to tell\nyou.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 16,
+   "bank": 23,
+   "addr": "B3E0",
+   "end": "B3FA",
+   "text": "<CLR>{Please} go to {Joel} and speak\nto the elder there<END>"
+  },
+  {
+   "group": 29,
+   "msg": 17,
+   "bank": 23,
+   "addr": "B3FA",
+   "end": "B4AE",
+   "text": "<CLR>{NAME}, you've closed the\nwhirlpool. I'll now\nteach you the {magic} of_<KEY>\n<CLR>_{Barrier} as promised.\nWe wise men, will leave\nfor {Shyron} in {Mt.Hydra}.<KEY>\n<CLR>{Azteca}, the grand puba,\nknows your role, and now\n{Mesia} is calling you_<KEY>\n<CLR>It seems something has\nhappened I can't ignore.\nI'll wait for you in\n{Shyron}.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 18,
+   "bank": 23,
+   "addr": "B3FA",
+   "end": "B4AE",
+   "text": "<CLR>{NAME}, you've closed the\nwhirlpool. I'll now\nteach you the {magic} of_<KEY>\n<CLR>_{Barrier} as promised.\nWe wise men, will leave\nfor {Shyron} in {Mt.Hydra}.<KEY>\n<CLR>{Azteca}, the grand puba,\nknows your role, and now\n{Mesia} is calling you_<KEY>\n<CLR>It seems something has\nhappened I can't ignore.\nI'll wait for you in\n{Shyron}.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 19,
+   "bank": 23,
+   "addr": "B4AE",
+   "end": "B4FB",
+   "text": "<CLR>{NAME}! {Shyron} is under\nAttack! {Please} hurry to\nhelp us!<KEY>\n<CLR>Ahhhh! Every{one} is dying_\nHurry_ you must_\nEyaaahhh!<END>"
+  },
+  {
+   "group": 29,
+   "msg": 20,
+   "bank": 23,
+   "addr": "B4FB",
+   "end": "B500",
+   "text": "<CLR>___<END>"
+  },
+  {
+   "group": 29,
+   "msg": 21,
+   "bank": 23,
+   "addr": "B500",
+   "end": "B518",
+   "text": "<CLR>Be quiet! Leave me al{one}!<END>"
+  },
+  {
+   "group": 29,
+   "msg": 22,
+   "bank": 23,
+   "addr": "B518",
+   "end": "B564",
+   "text": "<CLR>I lost it! I can't believe\nit! Maybe it's in the\nchannel behind the palace_\nOh what a mess_<END>"
+  },
+  {
+   "group": 29,
+   "msg": 23,
+   "bank": 23,
+   "addr": "B564",
+   "end": "B592",
+   "text": "<CLR>How is_ {Asina}_ Ok?\n<CLR>I have my own things to do.\nDon't bother me.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 24,
+   "bank": 23,
+   "addr": "B574",
+   "end": "B592",
+   "text": "<CLR>I have my own things to do.\nDon't bother me.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 25,
+   "bank": 23,
+   "addr": "B592",
+   "end": "B5C3",
+   "text": "<CLR>If you receive a curse from\nthe enemy, you will become\na Nuper.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 26,
+   "bank": 23,
+   "addr": "B5C3",
+   "end": "B5EA",
+   "text": "<CLR>In order to find certain\nobjects, you will need\nyour {magic} of {Flight}.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 27,
+   "bank": 23,
+   "addr": "B5EA",
+   "end": "B5F8",
+   "text": "<CLR>I have nothing to say.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 28,
+   "bank": 23,
+   "addr": "B5F8",
+   "end": "B62B",
+   "text": "<CLR>Little by little, you're\nbecoming stronger. I'll\nrecover your {magic} {power}.<END>"
+  },
+  {
+   "group": 29,
+   "msg": 29,
+   "bank": 23,
+   "addr": "B62B",
+   "end": "B661",
+   "text": "<CLR>Don't bother others so\nmuch. Think for yourself\nonce in a while.<END>"
+  },
+  {
+   "group": 30,
+   "msg": 0,
+   "bank": 23,
+   "addr": "B661",
+   "end": "B689",
+   "text": "<CLR> Well, you're a visitor.\n Stay as long as you like.<END>"
+  },
+  {
+   "group": 30,
+   "msg": 1,
+   "bank": 23,
+   "addr": "B689",
+   "end": "B69C",
+   "text": "<CLR> Hello. {Please} rest well.<END>"
+  },
+  {
+   "group": 30,
+   "msg": 2,
+   "bank": 23,
+   "addr": "B69C",
+   "end": "B6B6",
+   "text": "<CLR> Have you rested from your\n journey?<END>"
+  },
+  {
+   "group": 30,
+   "msg": 3,
+   "bank": 23,
+   "addr": "B6B6",
+   "end": "B6D2",
+   "text": "<CLR> Tell me of your travels\n someday.<END>"
+  },
+  {
+   "group": 30,
+   "msg": 4,
+   "bank": 23,
+   "addr": "B6D2",
+   "end": "B6DB",
+   "text": "<CLR> Hello.<END>"
+  },
+  {
+   "group": 30,
+   "msg": 5,
+   "bank": 23,
+   "addr": "B6D2",
+   "end": "B6DB",
+   "text": "<CLR> Hello.<END>"
+  },
+  {
+   "group": 30,
+   "msg": 6,
+   "bank": 23,
+   "addr": "B6D2",
+   "end": "B6DB",
+   "text": "<CLR> Hello.<END>"
+  },
+  {
+   "group": 30,
+   "msg": 7,
+   "bank": 23,
+   "addr": "B6DB",
+   "end": "B6E1",
+   "text": "<CLR> ___<END>"
+  },
+  {
+   "group": 30,
+   "msg": 8,
+   "bank": 23,
+   "addr": "B6DB",
+   "end": "B6E1",
+   "text": "<CLR> ___<END>"
+  },
+  {
+   "group": 30,
+   "msg": 9,
+   "bank": 23,
+   "addr": "B6DB",
+   "end": "B6E1",
+   "text": "<CLR> ___<END>"
+  },
+  {
+   "group": 30,
+   "msg": 10,
+   "bank": 23,
+   "addr": "B6DB",
+   "end": "B6E1",
+   "text": "<CLR> ___<END>"
+  },
+  {
+   "group": 30,
+   "msg": 11,
+   "bank": 23,
+   "addr": "B6DB",
+   "end": "B6E1",
+   "text": "<CLR> ___<END>"
+  },
+  {
+   "group": 30,
+   "msg": 12,
+   "bank": 23,
+   "addr": "B6DB",
+   "end": "B6E1",
+   "text": "<CLR> ___<END>"
+  },
+  {
+   "group": 30,
+   "msg": 13,
+   "bank": 23,
+   "addr": "B6DB",
+   "end": "B6E1",
+   "text": "<CLR> ___<END>"
+  },
+  {
+   "group": 30,
+   "msg": 14,
+   "bank": 23,
+   "addr": "B6DB",
+   "end": "B6E1",
+   "text": "<CLR> ___<END>"
+  },
+  {
+   "group": 30,
+   "msg": 15,
+   "bank": 23,
+   "addr": "B6E1",
+   "end": "B6FB",
+   "text": "<CLR>Welcome. {Please} have\nsome refreshments.<END>"
+  },
+  {
+   "group": 30,
+   "msg": 16,
+   "bank": 23,
+   "addr": "B6FB",
+   "end": "B704",
+   "text": "<CLR>Thanks.<END>"
+  },
+  {
+   "group": 30,
+   "msg": 17,
+   "bank": 23,
+   "addr": "B6FB",
+   "end": "B704",
+   "text": "<CLR>Thanks.<END>"
+  },
+  {
+   "group": 30,
+   "msg": 18,
+   "bank": 23,
+   "addr": "B704",
+   "end": "B734",
+   "text": "<CLR> What are you doing away\n from your post? Go back\n immediately!<END>"
+  },
+  {
+   "group": 30,
+   "msg": 19,
+   "bank": 23,
+   "addr": "B734",
+   "end": "B745",
+   "text": "<CLR>Don't talk to me like that!<END>"
+  },
+  {
+   "group": 30,
+   "msg": 20,
+   "bank": 23,
+   "addr": "B745",
+   "end": "B758",
+   "text": "<CLR> You bug me! Go Away!<END>"
+  },
+  {
+   "group": 30,
+   "msg": 21,
+   "bank": 23,
+   "addr": "B758",
+   "end": "B75F",
+   "text": "<CLR> zzz_<END>"
+  },
+  {
+   "group": 30,
+   "msg": 22,
+   "bank": 23,
+   "addr": "B758",
+   "end": "B75F",
+   "text": "<CLR> zzz_<END>"
+  },
+  {
+   "group": 30,
+   "msg": 23,
+   "bank": 23,
+   "addr": "B75F",
+   "end": "B771",
+   "text": "<CLR> Da_  Gon derin?<END>"
+  },
+  {
+   "group": 30,
+   "msg": 24,
+   "bank": 23,
+   "addr": "B771",
+   "end": "B77E",
+   "text": "<CLR> zzzz zzzz_<END>"
+  },
+  {
+   "group": 30,
+   "msg": 25,
+   "bank": 23,
+   "addr": "B77E",
+   "end": "B7B9",
+   "text": "<CLR>That man from {Brynmaer}\nhasn't returned yet.<KEY>\n<CLR>What? He's dead?\nI_ I'm sorry_<END>"
+  },
+  {
+   "group": 30,
+   "msg": 26,
+   "bank": 23,
+   "addr": "B7B9",
+   "end": "B7F0",
+   "text": "<CLR>{Kensu}:\"{NAME}, I told you\nto go to {Mt.Hydra}! Go\nsouth west from here. And\ndon't stray!<END>"
+  },
+  {
+   "group": 30,
+   "msg": 27,
+   "bank": 23,
+   "addr": "B7F0",
+   "end": "B7F7",
+   "text": "<CLR> zzz_<END>"
+  },
+  {
+   "group": 30,
+   "msg": 28,
+   "bank": 23,
+   "addr": "B7F0",
+   "end": "B7F7",
+   "text": "<CLR> zzz_<END>"
+  },
+  {
+   "group": 30,
+   "msg": 29,
+   "bank": 23,
+   "addr": "B7F0",
+   "end": "B7F7",
+   "text": "<CLR> zzz_<END>"
+  },
+  {
+   "group": 30,
+   "msg": 30,
+   "bank": 23,
+   "addr": "B7F0",
+   "end": "B7F7",
+   "text": "<CLR> zzz_<END>"
+  },
+  {
+   "group": 31,
+   "msg": 0,
+   "bank": 23,
+   "addr": "B7F7",
+   "end": "B7FE",
+   "text": "<CLR> zzz_<END>"
+  },
+  {
+   "group": 32,
+   "msg": 0,
+   "bank": 23,
+   "addr": "B7FE",
+   "end": "B814",
+   "text": "<CLR>\n   Life is replenished.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 1,
+   "bank": 23,
+   "addr": "B814",
+   "end": "B830",
+   "text": "<CLR>\n       Magic {power}\n     is replenished.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 2,
+   "bank": 23,
+   "addr": "B830",
+   "end": "B851",
+   "text": "<CLR>\n        Your body\n    returns to normal.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 3,
+   "bank": 23,
+   "addr": "B851",
+   "end": "B869",
+   "text": "<CLR>\n  The door easily opens.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 4,
+   "bank": 23,
+   "addr": "B869",
+   "end": "B884",
+   "text": "<CLR>\n       The windmill\n      begins to work.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 5,
+   "bank": 23,
+   "addr": "B884",
+   "end": "B8A7",
+   "text": "<CLR>\n     People of st{one}\n    return to normal.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 6,
+   "bank": 23,
+   "addr": "B8A7",
+   "end": "B8D8",
+   "text": "<CLR>\n     The {Broken Statue}\n   is reconstructed and\n  becomes Statue of Gold.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 7,
+   "bank": 23,
+   "addr": "B8D8",
+   "end": "B8EF",
+   "text": "<CLR>\n  You see a secret door.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 8,
+   "bank": 23,
+   "addr": "B8EF",
+   "end": "B914",
+   "text": "<CLR>\n  The {Statue of Gold} is\n placed on the altar and\n the {Angry Sea} is calmed.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 9,
+   "bank": 23,
+   "addr": "B914",
+   "end": "B931",
+   "text": "<CLR>\n      Statue of Sun\n      is destroyed.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 10,
+   "bank": 23,
+   "addr": "B931",
+   "end": "B94F",
+   "text": "<CLR>\n      Statue of Moon\n      is destroyed.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 11,
+   "bank": 23,
+   "addr": "B94F",
+   "end": "B992",
+   "text": "<CLR>   The arrow pierces the\n  heart of the Emperor,\n   and his true image\n      is revealed!<END>"
+  },
+  {
+   "group": 32,
+   "msg": 12,
+   "bank": 23,
+   "addr": "B992",
+   "end": "B99F",
+   "text": "<CLR>\n      You now have\n      {ITEM[$07DC]}.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 13,
+   "bank": 23,
+   "addr": "B99F",
+   "end": "B9C5",
+   "text": "<CLR>\n        Excellent!\n Your level is increased.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 14,
+   "bank": 23,
+   "addr": "B9C5",
+   "end": "B9DC",
+   "text": "<CLR>\n     Your {magic} {power}\n       is too low.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 15,
+   "bank": 23,
+   "addr": "B9DC",
+   "end": "B9EE",
+   "text": "<CLR>\n You have too many items!<END>"
+  },
+  {
+   "group": 32,
+   "msg": 16,
+   "bank": 23,
+   "addr": "B9EE",
+   "end": "BA05",
+   "text": "<CLR>\n    He's already dead.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 17,
+   "bank": 23,
+   "addr": "BA05",
+   "end": "BA15",
+   "text": "<CLR>\n      Nobody's here.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 18,
+   "bank": 23,
+   "addr": "BA15",
+   "end": "BA2B",
+   "text": "<CLR>\n I hear some{one} talking.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 19,
+   "bank": 23,
+   "addr": "BA2B",
+   "end": "BA3D",
+   "text": "<CLR>\n     Nothing happens.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 20,
+   "bank": 23,
+   "addr": "BA3D",
+   "end": "BA62",
+   "text": "<CLR>\n    General {Kelbesque}\n  left a treasure chest!<END>"
+  },
+  {
+   "group": 32,
+   "msg": 21,
+   "bank": 23,
+   "addr": "BA62",
+   "end": "BA82",
+   "text": "<CLR>\n         {Sabera}\n  left a treasure chest!<END>"
+  },
+  {
+   "group": 32,
+   "msg": 22,
+   "bank": 23,
+   "addr": "BA82",
+   "end": "BAA2",
+   "text": "<CLR>\n           {Kensu}\n   left a treasure chest!<END>"
+  },
+  {
+   "group": 32,
+   "msg": 23,
+   "bank": 23,
+   "addr": "BAA2",
+   "end": "BAC2",
+   "text": "<CLR>\n          {Mado}\n  left a treasure chest!<END>"
+  },
+  {
+   "group": 32,
+   "msg": 24,
+   "bank": 23,
+   "addr": "BAC2",
+   "end": "BAF7",
+   "text": "<CLR>\n           {Karmine}\n   left a treasure chest!',E_<CLR>\n     You're poisoned!<END>"
+  },
+  {
+   "group": 32,
+   "msg": 25,
+   "bank": 23,
+   "addr": "BAE5",
+   "end": "BAF7",
+   "text": "<CLR>\n     You're poisoned!<END>"
+  },
+  {
+   "group": 32,
+   "msg": 26,
+   "bank": 23,
+   "addr": "BAF7",
+   "end": "BB0F",
+   "text": "<CLR>\n Your body is paralyzed!<END>"
+  },
+  {
+   "group": 32,
+   "msg": 27,
+   "bank": 23,
+   "addr": "BB0F",
+   "end": "BB2C",
+   "text": "<CLR>\n        Your body\n   is turned to st{one}!<END>"
+  },
+  {
+   "group": 32,
+   "msg": 28,
+   "bank": 23,
+   "addr": "BB2C",
+   "end": "BB46",
+   "text": "<CLR>\n           {Kensu}\n     Returns to normal.<END>"
+  },
+  {
+   "group": 32,
+   "msg": 29,
+   "bank": 23,
+   "addr": "BB46",
+   "end": "BB61",
+   "text": "<CLR>\n   {Crystalis} is thrust\n    into the reactor!<END>"
+  },
+  {
+   "group": 33,
+   "msg": 0,
+   "bank": 23,
+   "addr": "BB61",
+   "end": "BB9D",
+   "text": "<CLR> {Leaf}      {Brynmaer} {Oak}\n{Nadare}'s  {Portoa}   {Amazones}\n{Joel}      {Swan}     {Shyron}\n{Goa}       {Sahara}<END>"
+  },
+  {
+   "group": 33,
+   "msg": 1,
+   "bank": 23,
+   "addr": "BB9D",
+   "end": "BBB2",
+   "text": "<CLR>  What form will you take?<END>"
+  },
+  {
+   "group": 33,
+   "msg": 2,
+   "bank": 23,
+   "addr": "BBB2",
+   "end": "BBD3",
+   "text": "<CLR> With whom will you speak?\n{Tornel} {Zebu}  {Asina} {Kensu}<END>"
+  }
+ ]
+}

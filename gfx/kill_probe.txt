@@ -1,0 +1,38 @@
+tools.emu scenarios vs the 178 labels the tour never ran (docs/emu_tour.txt)
+
+[kill_levelup] area 03: kill (1 HP) at level 1 with XP next = 1 -> level up 26:9188, msg 32.13
+  end: $40/$41 1/08 area 03 hp 96 lv 2 gold 2 xp 0 mp 34 $0421=02 $0704=00 $0706=3C $03C0=40 $03C1=60 $0708=22 $0709=22
+  state writes ($40/$41 $0421 $04AE $0706 $0707 $03C1 $0709), first of each:
+    scenario start: abs f2496
+    abs f2533: 26:90FA $04A0=03 $41=08
+    abs f2533: 26:913B $04A0=03 $41=08
+    abs f2533: 26:9152 $04A0=03 $41=08
+    abs f2727: 26:946D $04A0=03 $41=08
+    f11: $03C1 <- 56  pc 26:9413
+    f37: $04AE <- 7D  pc 26:9213
+    f37: $0421 <- 02  pc 26:918B
+    f37: $0709 <- 22  pc 26:919A
+    f37: $03C1 <- 70  pc 26:91A8
+    f37: $0706 <- 3C  pc 26:91C1
+    f37: $0707 <- 00  pc 26:91C7
+    f40: $0041 <- 10  pc 26:91E2
+    f99: $0041 <- 08  pc 30:D3C1
+    f147: $04AE <- 00  pc 26:98CC
+  newly run (5): 26:9152:EnemyKilled 26:91FA:EnemyDeathFx 26:924B:AddXp 26:946D:PickupGold 27:B79F:ChestHop
+
+union: 5 / 178 newly run; still never run (173):
+  bank  4: 8000:ScreenBlank80
+  bank 14: 8000:NpcScript 816F:Telepathy 81D1:TelepathyHint 831E:ItemUseHook 8354:InvRemoveItem 8451:UseBowCheck 8469:UseFindSlotObj 8497:UseTouchMatch 84DB:UseFail
+  bank 15: A675:BossAiE2 B2DA:AiBowOfTruth9E B6C1:BossBgStrip B807:BossDefeated BA98:BossFleeSpeech BC40:PauseScreen BDDB:PauseWait BE7A:EquipNameRow
+  bank 16: 8232:MenuChrR1 9A37:ShopPriceSel 9AEE:SaveLoadPage 9B3A:SaveLoadLoop 9BE1:MenuSave 9C7A:SaveLoadExit 9CE0:SaveSlotCopy
+  bank 17: A000:EndingInit A0EB:EndingWait A100:EndingTick A14A:EndingScene A751:NtFill_b17 AA74:EndingFadeIn AAAD:EndingFadeOut
+  bank 18: 8000:IntroRectPtr 8002:IntroRect 8028:IntroColdBoot 824B:NtRectBlitQueued 838B:MenuPalSets
+  bank 19: A092:PpuQueueDrainWait A0B5:TitleStatusInit A176:TitleStatusScreen A212:StatusAnimTick A34E:StatusTypeStep A3F6:NameEntryInput A57C:NameEntryDone A585:NameEntryCursor A653:TitleMenuInit A6DF:TitleMenu A6F9:StartNewGame A749:TitleMenuInput A77D:TitleMenuStart A796:TitleMenuRestart A953:OpeningPage2 AA16:OpeningPage2Flip AA30:OpeningPage3 AAC2:OpeningPage3Anim AAF1:OpeningPage4 AB81:OpeningPage4Anim ABAB:TitleOpeningEnd ABB4:TitleStoryInit ABEA:TitleIntroStory B15C:TitleStoryEnd B162:DateCardRectPtr B9B0:OpelRevive BB39:SubstCureMagic BB9D:SubstFormRevert BDF2:SubstFinalSceneReset BFC4:FinalSceneToEnding
+  bank 20: 9400:WakeCutscene 9500:WakeSprDraw 973D:WakeSprFrame
+  bank 23: BC8E:LoadGame BCDA:LoadGameAndInit BD60:LoadPlayerState BE00:NewSaveTemplate
+  bank 24: 8020:SndInit 8395:SndOpSweep 8609:SndFadeStep
+  bank 26: 8C32:PaletteBlackFill 8FC4:HitHandler3 92BF:HitPlayerShot 943F:RidePlatform 9AE8:SpendMp 9D81:PlayerMoveLocked 9FD2:PlayerConveyor
+  bank 27: A092:MagicButtonSel A112:MagicFlight A143:MagicJump A1BB:MagicFailSound A211:FacingKeep A5C0:AiShopEmpty AC60:AI_TrapChest ACC0:AiBurst AD9C:NpcLookAhead AE31:AiPathWalk B0A8:AiDirShot B436:AiDasher B595:AiFanTurret B5D3:AiFanTurretIdle B6AA:AiOrbiter B83B:ObjAiExplode
+  bank 28: 81A5:BurstRadius
+  bank 30: C482:PpuQueueBlock C7D6:FadeSaveZpToWram C944:MainStateEndingInit C94C:MainStateEnding C957:MainStateNewGame C9DA:MainStateContinue C9FF:GameStartObjs CA5F:SubstNewGameInit CBFC:SubstDebugPause CC17:SubstOutOfMp CC4D:SubstRestoreScreen D0C8:NpcTalk D16D:TalkFullRestore D1FF:SpawnFxAtSlot D22B:GiveItemA D23F:MakeFollower13 D263:TalkGiveGold100 D31C:NpcVanish D3DA:TrapChest D47C:GiveItemFull D497:ItemUseMenu D526:ItemUseFail D5A4:EvActThunderWarp D659:EvActSpawnType38 D718:EvActClearSlot13 D71F:EvActClearSlot14 D746:EvActSpawn9E D75E:EvActTwoFollowers D791:EvActHistory D7B7:EvActPushBack D7CE:EvActMakeFollowers D805:EvActConsume D88B:WaitSfxDone D8C7:SubstEquipMenu D9B6:SubstWakeCutscene D9C1:SubstShopEmpty DB0E:SelectedUseItem DB28:SubstTeleportMenu DD58:TestFlagF2F0 DD6B:SubstTelepathySelect DE04:SubstTelepathyReply DEC1:SubstChangeForm
+  bank 31: E144:AreaLoadA E544:AreaPitFall E573:AreaEdgeLink EF33:ScreenPageAtCamera F0A4:BootSaveCheck F11F:SaveSlot0Reset F140:BootCheckSlot1 F1A3:SaveSlot1Reset F1C7:BootSaveRestoreR7 F1CD:ColdSaveInit F1E2:BootCheckCurrent F219:CurSaveReset F23D:SaveSumSlot F273:SlotCopy F2A4:Reset F374:ColdBootInit F39F:WarmBootContinue F3A2:CopySramBlock F5E1:IrqRowStretch F60E:IrqOffSound F61A:IrqMenuChrSplit F691:IrqHandler6 F751:NmiMode2 F782:NmiMode4 F7C5:NmiMode5 F7DB:NmiMode6 FE01:ShopDoorOpen FE18:ShopDoorClose FFBE:FarCall_B26_8CC0 FFCF:FarCall_D354

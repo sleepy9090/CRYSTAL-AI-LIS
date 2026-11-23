@@ -1,0 +1,6 @@
+SubstPlay:
+ 2516 253,327 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:94 P:nvUbdiZc S:FD
+ReadPads:
+ 2516 254,  4 31:FE80  a2 01     LDX #$01                     A:00 X:08 Y:94 P:nvUbdiZc S:FB
+ 2517   0,150 30:CB90  a5 4d     LDA pad_act                  A:30 X:FF Y:00 P:nvUbdizc S:FB
+ 2517   0,174 30:CBB4  a5 4b     LDA pad_new                  A:00 X:FF Y:00 P:nvUbdiZc S:FB

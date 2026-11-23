@@ -1,0 +1,214 @@
+; meta_dump.py sprites: per area, entries after the 8 player ids = type:meta[+tile_add]
+area $00  chr 40,42,6F,6F  pal 00,01,20,20  
+area $01  chr 40,42,4B,4E  pal 00,01,FF,0A  t28:4C t30:39
+area $02  chr 40,42,4E,4B  pal 00,01,11,0A  t30:38+40 t30:2C+40 t30:40 t30:34+40 t0E:4C
+area $03  chr 40,42,64,60  pal 00,01,21,20  t28:4C t51:58+40 t50:64 tB0:AE+40
+area $04  chr 40,42,65,FF  pal 00,01,22,FF  t52:64
+area $05  chr 40,42,65,FF  pal 00,01,22,FF  t52:64
+area $06  chr 40,42,64,FF  pal 00,01,23,FF  t53:64 t0D:AA
+area $07  chr 40,42,60,6C  pal 00,01,21,24  tD0:4C t0D:AA
+area $08  chr 40,42,60,6C  pal 00,01,21,24  t54:65 t0D:AA
+area $09  chr 40,42,64,66  pal 00,01,23,22  t56:58+40 t53:64 tD0:4C
+area $0A  chr 40,42,6C,6C  pal 00,01,21,21  t57:65
+area $0C  chr 40,42,FF,FF  pal 00,01,FF,FF  tD0:4C
+area $0E  chr 40,42,51,4C  pal 00,01,0B,0B  t30:4F+20 t30:2E+40
+area $0F  chr 40,42,60,FF  pal 00,01,20,FF  tB1:AF
+area $10  chr 40,42,FF,50  pal 00,01,FF,0C  tD1:4C t30:32+40 t0E:4C+40
+area $11  chr 40,42,67,66  pal 00,01,27,23  t61:64 t63:58+40
+area $14  chr 40,42,64,65  pal 00,01,21,24  tD2:4C
+area $15  chr 40,42,64,65  pal 00,01,21,24  t0D:4C
+area $18  chr 40,42,4B,4D  pal 00,01,15,10  t30:46+40 t30:34+40 t30:30 t30:38 t30:34 t30:2C t0E:4C
+area $19  chr 40,42,FF,FF  pal 00,01,FF,FF  
+area $1A  chr 40,42,6F,4F  pal 00,01,10,23  t5E:4C t30:4A+40
+area $1B  chr 40,42,4A,49  pal 00,01,14,14  t30:2E t30:2C+40 t30:34+40 t30:34 t0E:4C
+area $1C  chr 40,42,4F,4F  pal 00,01,10,10  t30:3E t30:3C t30:42 t30:40 t0E:4C
+area $1E  chr 40,42,50,4D  pal 00,01,06,FF  t30:2E+40 t30:2E t0E:4C
+area $20  chr 40,42,67,50  pal 00,01,06,21  t0D:AA
+area $21  chr 40,42,67,50  pal 00,01,06,21  t30:2E+40 t0D:AA
+area $22  chr 40,42,67,FF  pal 00,01,27,FF  t61:64 tD1:4C
+area $23  chr 40,42,67,66  pal 00,01,27,23  t62:67 t63:58+40 t61:64 tD1:4C t0D:AA
+area $24  chr 40,42,67,66  pal 00,01,27,23  t63:58+40 t62:67 tD1:4C
+area $25  chr 40,42,67,FF  pal 00,01,27,FF  t61:64
+area $26  chr 40,42,67,66  pal 00,01,27,23  t63:58+40 t61:64 tD1:4C
+area $27  chr 40,42,67,66  pal 00,01,27,23  t61:64 tD1:4C t0D:AA
+area $28  chr 40,42,6B,51  pal 00,01,0C,09  t68:D3 t2C:4C t30:5A t64:58 t30:AD+40
+area $29  chr 40,42,66,FF  pal 00,01,21,21  t65:98
+area $2A  chr 40,42,67,FF  pal 00,01,23,FF  t66:64 tD1:4C t0D:AA
+area $2B  chr 40,42,60,6C  pal 00,01,23,21  t67:65 t55:64+40 tD1:4C
+area $2C  chr 40,42,60,6C  pal 00,01,FF,21  t67:65
+area $2D  chr 40,42,67,66  pal 00,01,23,23  t66:64 tD1:4C t0D:AA
+area $2E  chr 40,42,6B,FF  pal 00,01,FF,20  t64:58 tD1:4C
+area $2F  chr 40,42,6B,FF  pal 00,01,FF,20  t64:58 tD1:4C
+area $30  chr 40,42,4A,4A  pal 00,01,0B,0B  tD1:4C t30:30 t30:38
+area $31  chr 40,42,64,FF  pal 00,01,FF,FF  t0D:AA
+area $32  chr 40,42,4E,4B  pal 00,01,11,0A  tD1:4C t30:38+40 t30:2C+40 t30:34+40 t30:3E t30:40
+area $33  chr 40,42,FF,FF  pal 00,01,FF,FF  
+area $34  chr 40,42,6B,FF  pal 00,01,FF,20  t64:58
+area $35  chr 40,42,48,FF  pal 00,01,09,0B  t30:32 tD1:4C
+area $38  chr 40,42,FF,FF  pal 00,01,FF,FF  t0E:4C
+area $39  chr 40,42,6B,FF  pal 00,01,FF,20  t64:58
+area $3C  chr 40,42,4A,4A  pal 00,01,0D,0D  t40:33
+area $3D  chr 40,42,4A,4A  pal 00,01,0E,0E  t41:2F
+area $3E  chr 40,42,49,4C  pal 00,01,11,0E  t30:38+40 t30:2C
+area $40  chr 40,42,65,66  pal 00,01,23,26  t6A:58 tD2:4C
+area $41  chr 40,42,65,66  pal 00,01,23,26  tD2:4C
+area $42  chr 40,42,68,FF  pal 00,01,25,FF  
+area $43  chr 40,42,53,45  pal 00,01,2A,03  t70:4C
+area $44  chr 40,42,67,66  pal 00,01,23,25  t74:67 tD0:4C
+area $45  chr 40,42,66,65  pal 00,01,2B,25  t72:98 t63:58 t71:66+40 tD0:4C t0D:AA
+area $46  chr 40,42,66,65  pal 00,01,2B,25  t72:98 tD0:4C
+area $47  chr 40,42,6F,FF  pal 00,01,2C,23  t0D:4C
+area $48  chr 40,42,67,66  pal 00,01,23,2C  tD0:4C t0D:AA
+area $49  chr 40,42,67,66  pal 00,01,FF,2C  t72:98+40
+area $4A  chr 40,42,65,6C  pal 00,01,2B,2C  t0D:AA+40 tD0:4C
+area $4B  chr 40,42,67,66  pal 00,01,23,2C  tD0:4C
+area $4C  chr 40,42,65,66  pal 00,01,2B,2C  t71:66 tD0:4C
+area $4D  chr 40,42,65,66  pal 00,01,2B,2C  t71:66 tD0:4C
+area $4E  chr 40,42,67,66  pal 00,01,23,23  t74:67 t63:58+40 tD0:4C
+area $4F  chr 40,42,67,66  pal 00,01,23,23  t63:58+40 t74:67 tD0:4C t0D:AA
+area $50  chr 40,42,48,49  pal 00,01,0F,14  t30:2C t30:34 t30:3A t30:38+40 t30:34+40 t0E:4C
+area $51  chr 40,42,52,52  pal 00,01,08,FF  t39:C1 t0E:4C
+area $52  chr 40,42,47,FF  pal 00,01,06,FF  t30:4C
+area $54  chr 40,42,68,6C  pal 00,01,23,28  t6D:64 t0D:AA+40 tD1:4C
+area $55  chr 40,42,FF,48  pal 00,01,FF,28  t30:3A+40 t30:44+40
+area $56  chr 40,42,6E,FF  pal 00,01,29,28  t6C:60 tD1:4C
+area $57  chr 40,42,6E,4D  pal 00,01,29,28  t30:3A+40 t30:46+40 tD1:4C t0D:AA
+area $58  chr 40,42,FF,FF  pal 00,01,FF,FF  
+area $59  chr 40,42,57,56  pal 00,01,3C,3D  tA1:4C+40 tA0:4C tA2:64
+area $5A  chr 40,42,57,56  pal 00,01,3C,3D  tA1:4C+40 tA0:4C tA2:64
+area $5B  chr 40,42,57,56  pal 00,01,3C,3D  tA1:4C+40 tA0:4C tA2:64
+area $5C  chr 40,42,FF,FF  pal 00,01,FF,FF  tDA:4C+40
+area $5D  chr 40,42,FF,FF  pal 00,01,FF,FF  t0E:4C
+area $5E  chr 40,42,47,FF  pal 00,01,06,1D  t30:2E t0E:4C
+area $5F  chr 40,42,78,7B  pal 00,01,3E,3F  tA4:4C tB4:FD
+area $60  chr 40,42,6A,52  pal 00,01,08,2D  t0E:4C t3A:C1
+area $61  chr 40,42,51,4A  pal 00,01,0C,0C  t30:4D t30:38+40
+area $62  chr 40,42,51,78  pal 00,01,0C,0C  t30:4F t30:4D+70
+area $64  chr 40,42,52,52  pal 00,01,08,08  t30:BF tD2:4C
+area $65  chr 40,42,4B,67  pal 00,01,09,24  t30:30 t30:2C t30:34 t30:38 t0E:4C
+area $68  chr 40,42,6A,52  pal 00,01,08,2D  t76:64
+area $69  chr 40,42,66,65  pal 00,01,23,2F  tD2:4C t0D:AA
+area $6A  chr 40,42,66,62  pal 00,01,2C,2F  t78:58 tD0:4C t7E:B6+40 t0D:AA
+area $6B  chr 40,42,66,6C  pal 00,01,23,2F  t78:58 t0D:AA+40 t0D:AA tD2:4C
+area $6C  chr 40,42,6B,68  pal 00,01,25,20  tA5:65
+area $6D  chr 40,42,69,62  pal 00,01,2E,23  t7B:A7 t7E:B6+40 t0D:AA
+area $6E  chr 40,42,47,75  pal 00,01,06,1D  t30:2E t2A:4C+40 t29:4C
+area $70  chr 40,42,FF,FF  pal 00,01,FF,FF  
+area $71  chr 40,42,4A,4B  pal 00,01,11,07  t30:38 t30:34 t30:38+40 t30:30+40 t0E:4C
+area $72  chr 40,42,4D,4B  pal 00,01,12,0C  t30:34+40 t30:30+40 t30:32 t30:38+40 t30:2C+40 t0E:4C
+area $73  chr 40,42,6B,FF  pal 00,01,FF,09  t0E:4C t30:5A
+area $78  chr 40,42,68,6B  pal 00,01,25,22  
+area $7C  chr 40,42,68,6D  pal 00,01,23,2F  t2C:4C t82:CE+40 t0D:AA
+area $7D  chr 40,42,FF,FF  pal 00,01,FF,FF  
+area $7E  chr 40,42,51,4F  pal 00,01,0B,0B  t30:36+40 t30:AD+10 t0E:4C
+area $7F  chr 40,42,68,71  pal 00,01,23,2F  t84:78+40 t6D:64
+area $80  chr 40,42,68,71  pal 00,01,23,2F  t6D:64 t84:78+40
+area $81  chr 40,42,5E,71  pal 00,01,25,2F  t85:60 t84:78+40
+area $82  chr 40,42,68,FF  pal 00,01,23,FF  t6D:64 t0D:AA
+area $83  chr 40,42,5E,71  pal 00,01,25,2F  t85:60 t84:78+40 tD0:4C
+area $84  chr 40,42,5E,6C  pal 00,01,25,2F  t85:60 t55:64+40 tD0:4C
+area $85  chr 40,42,64,6C  pal 00,01,23,23  t53:64 t0D:AA+40
+area $86  chr 40,42,68,71  pal 00,01,23,2F  t6D:64 t84:78+40 tD0:4C
+area $87  chr 40,42,68,71  pal 00,01,23,2F  t84:78+40 t6D:64 tD0:4C
+area $88  chr 40,42,61,69  pal 00,01,18,23  t87:65+40 t8F:4C
+area $89  chr 40,42,6D,6C  pal 00,01,23,2F  t0D:AA+40 tD2:4C t0D:AA
+area $8A  chr 40,42,5E,62  pal 00,01,25,25  t7E:B6+40 t0D:AA
+area $8C  chr 40,42,4C,4D  pal 00,01,06,10  t30:2E+40 t30:46+40 t30:34 t30:30 t30:2C t0E:4C t30:50+50 t30:AD+70 t30:AD+60 t30:AD+40
+area $8E  chr 40,42,4B,4D  pal 00,01,14,0A  t30:30+40 t30:32+40 t30:34+40 t30:34 t30:30 t30:2C t0E:4C
+area $8F  chr 40,42,61,6C  pal 00,01,18,19  tD3:4C t0D:AA
+area $90  chr 40,42,67,68  pal 00,01,23,24  
+area $91  chr 40,42,6F,6F  pal 00,01,2C,2C  tD2:4C t0D:AA
+area $92  chr 40,42,69,FF  pal 00,01,30,30  
+area $93  chr 40,42,49,48  pal 00,01,09,0E  t30:2C t30:38 t30:2C+40 t30:3A+40 t30:32+40 t0E:4C
+area $94  chr 40,42,FF,FF  pal 00,01,FF,FF  
+area $95  chr 40,42,69,FF  pal 00,01,30,30  
+area $96  chr 40,42,4E,FF  pal 00,01,13,FF  t30:4A
+area $98  chr 40,42,6D,63  pal 00,01,24,24  
+area $9C  chr 40,42,FF,53  pal 00,01,06,0C  t30:DB+40
+area $9D  chr 40,42,69,FF  pal 00,01,2E,23  t96:67 t8C:A7
+area $9E  chr 40,42,5E,5F  pal 00,01,2C,30  t0D:AA
+area $9F  chr 40,42,79,FF  pal 00,01,41,40  t9B:DB
+area $A0  chr 40,42,74,62  pal 00,01,1A,02  t9C:B2+40 t28:4C
+area $A1  chr 40,42,5F,5F  pal 00,01,30,30  
+area $A2  chr 40,42,5F,62  pal 00,01,2F,30  t9F:B6+40
+area $A3  chr 40,42,6D,6C  pal 00,01,24,30  t0D:AA+40 t98:CE
+area $A4  chr 40,42,6D,68  pal 00,01,FF,28  
+area $A5  chr 40,42,5F,62  pal 00,01,2C,30  t9F:B6+40 t0D:AA
+area $A6  chr 40,42,79,7A  pal 00,01,06,0C  t9B:DB t2C:4C
+area $A8  chr 40,42,61,61  pal 00,01,18,19  t8F:4C
+area $A9  chr 40,42,63,5F  pal 00,01,23,30  t8B:D3
+area $AA  chr 40,42,FF,50  pal 00,01,FF,0C  t30:32+40 t29:4C+40
+area $AB  chr 40,42,6F,71  pal 00,01,23,2C  tD3:4C t0D:AA
+area $AC  chr 40,42,75,50  pal 00,01,06,1D  t90:DB t30:2E+40 t29:4C+40
+area $AD  chr 40,42,6E,63  pal 00,01,29,29  t0D:AA
+area $AE  chr 40,42,70,62  pal 00,01,2E,31  t7E:B6+40 tD3:4C t0D:AA
+area $AF  chr 40,42,69,62  pal 00,01,2F,23  t7C:66+40 t7E:B6+40 t0D:AA
+area $B0  chr 40,42,69,72  pal 00,01,2E,30  t8C:A7
+area $B1  chr 40,42,68,6B  pal 00,01,23,22  t80:58+40 t6D:64
+area $B2  chr 40,42,70,68  pal 00,01,2E,28  t92:58+40 t91:67
+area $B3  chr 40,42,69,72  pal 00,01,2E,30  t95:78+40
+area $B4  chr 40,42,5E,62  pal 00,01,2C,2F  t7C:66+40 t7F:B6+40 tD3:4C
+area $B5  chr 40,42,6D,6C  pal 00,01,24,28  t98:CE t86:67 t0D:AA
+area $B6  chr 40,42,61,74  pal 00,01,18,18  t97:DB+40 t8F:4C t0D:AA+40
+area $B8  chr 40,42,5E,5E  pal 00,01,FF,FF  t0D:AA
+area $B9  chr 40,42,76,50  pal 00,01,06,1E  t93:D9 t30:36+40 t29:4C+40
+area $BA  chr 40,42,64,78  pal 00,01,0C,0C  t30:64 t29:4C+40 t30:4D+70
+area $BB  chr 40,42,4B,FF  pal 00,01,FF,0A  t30:38
+area $BC  chr 40,42,4A,4A  pal 00,01,0D,0D  t40:33
+area $BE  chr 40,42,4A,4A  pal 00,01,0F,0F  t41:2F
+area $BF  chr 40,42,4D,4A  pal 00,01,09,0A  t30:30 t30:36+40 t30:32+40
+area $C0  chr 40,42,48,4E  pal 00,01,11,0B  t30:32 t30:3E+40
+area $C1  chr 40,42,48,4E  pal 00,01,09,0B  t30:4A+40
+area $C2  chr 40,42,4A,4A  pal 00,01,0B,0B  t40:33
+area $C3  chr 40,42,4A,4A  pal 00,01,0C,0C  t41:2F
+area $C4  chr 40,42,4A,4A  pal 00,01,0D,0D  t42:3B
+area $C5  chr 40,42,4C,FF  pal 00,01,0B,FF  t30:2E
+area $C6  chr 40,42,48,4C  pal 00,01,12,0C  t30:31+40 t30:2F t30:34 t30:32
+area $C7  chr 40,42,4A,4A  pal 00,01,10,10  t43:37
+area $C8  chr 40,42,4A,4A  pal 00,01,09,09  t40:33
+area $C9  chr 40,42,4A,4A  pal 00,01,0A,0A  t42:3B
+area $CB  chr 40,42,4A,4A  pal 00,01,0C,0C  t41:2F
+area $CD  chr 40,42,4F,FF  pal 00,01,10,FF  t30:51
+area $CE  chr 40,42,4F,4F  pal 00,01,10,10  t30:42 t30:4A
+area $CF  chr 40,42,4F,4F  pal 00,01,10,10  t44:3F
+area $D0  chr 40,42,4F,4F  pal 00,01,09,09  t45:3F
+area $D1  chr 40,42,49,49  pal 00,01,0A,0A  t46:2F
+area $D2  chr 40,42,49,49  pal 00,01,0B,0B  t47:37
+area $D3  chr 40,42,49,49  pal 00,01,0C,0C  t48:3B
+area $D4  chr 40,42,47,4A  pal 00,01,0D,0D  t30:2E+40 t30:4D+10
+area $D5  chr 40,42,4A,4B  pal 00,01,10,0D  t30:38+40 t30:2C+40 t30:30 t0E:4C
+area $D6  chr 40,42,FF,4B  pal 00,01,08,0D  t30:32+40 t30:34+40
+area $D7  chr 40,42,4A,FF  pal 00,01,FF,0E  t30:3A t0E:4C
+area $D8  chr 40,42,47,FF  pal 00,01,FF,06  t30:4E
+area $D9  chr 40,42,4A,4A  pal 00,01,0A,0A  t43:37
+area $DA  chr 40,42,4A,4A  pal 00,01,0B,0B  t42:3B
+area $DC  chr 40,42,4A,4A  pal 00,01,0D,0D  t40:33
+area $DD  chr 40,42,4A,4A  pal 00,01,0E,0E  t41:2F
+area $DE  chr 40,42,4A,4C  pal 00,01,06,0E  t30:38 t30:3A t30:32+40
+area $DF  chr 40,42,4A,47  pal 00,01,06,0E  t30:4D+50 t30:3A
+area $E0  chr 40,42,49,4C  pal 00,01,11,14  t30:2C t30:3A t30:36+40
+area $E1  chr 40,42,50,47  pal 00,01,06,FF  t30:4D+50 t30:36
+area $E2  chr 40,42,5E,FF  pal 00,01,FF,FF  t0D:AA
+area $E3  chr 40,42,48,49  pal 00,01,06,09  t30:31 t30:38+40 t30:2C+40
+area $E4  chr 40,42,4C,FF  pal 00,01,FF,11  t30:32 t2C:4C
+area $E5  chr 40,42,4A,4A  pal 00,01,0E,0E  t41:2F
+area $E7  chr 40,42,4A,4A  pal 00,01,10,10  t40:33
+area $E8  chr 40,42,4E,FF  pal 00,01,14,24  t30:3C
+area $E9  chr 40,42,4C,FF  pal 00,01,FF,11  t30:32
+area $EB  chr 40,42,4A,4A  pal 00,01,0C,0C  t41:2F
+area $EC  chr 40,42,4D,FF  pal 00,01,06,FF  t30:2E
+area $ED  chr 40,42,4A,4A  pal 00,01,0E,0E  t40:33
+area $EE  chr 40,42,4A,4A  pal 00,01,0F,0F  t42:3B
+area $EF  chr 40,42,4D,78  pal 00,01,0C,09  t30:32 t30:4D+70 t30:3A t0E:4C+40
+area $F0  chr 40,42,4A,4A  pal 00,01,09,09  t43:37
+area $F1  chr 40,42,49,78  pal 00,01,0C,11  t30:36 t30:4D+70 t30:32 t30:2E
+area $F2  chr 40,42,53,50  pal 00,01,06,0C  t30:DB t30:32+40 t30:2E+40 t30:36+40 t0E:4C
+area $F3  chr 40,42,4E,50  pal 00,01,06,06  t30:2E+40 t30:56
+area $F4  chr 40,42,4F,50  pal 00,01,06,FF  t30:36+40 t30:36
+area $F5  chr 40,42,4A,4A  pal 00,01,0E,0E  t42:3B
+area $F6  chr 40,42,4A,4A  pal 00,01,0F,0F  t41:2F
+area $F7  chr 40,42,4A,4A  pal 00,01,10,10  t40:33
+area $F8  chr 40,42,4A,4A  pal 00,01,09,09  t40:33
+area $F9  chr 40,42,4A,4A  pal 00,01,0A,0A  t41:2F
+area $FA  chr 40,42,4C,FF  pal 00,01,09,09  t30:3A t30:34
+area $FB  chr 40,42,4A,4A  pal 00,01,0C,0C  t43:37

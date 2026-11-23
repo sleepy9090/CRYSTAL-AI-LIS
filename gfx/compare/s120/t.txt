@@ -1,0 +1,61 @@
+WaitFrame:
+ 2506 254,182 30:C169  a9 00     LDA #$00                     A:00 X:1F Y:00 P:nvUbdiZC S:FB
+NMI:
+ 2507 241, 23 31:F3B6  48        PHA                          A:00 X:1F Y:00 P:nvUbdIZC S:F8
+NMI:
+ 2508 241, 27 31:F3B6  48        PHA                          A:FF X:16 Y:FC P:nvUbdIzc S:F1
+NMI:
+ 2509 241, 31 31:F3B6  48        PHA                          A:2A X:0E Y:3B P:nvUbdIzC S:EF
+NMI:
+ 2510 241, 29 31:F3B6  48        PHA                          A:FC X:16 Y:0B P:NvUbdIzc S:F3
+NMI:
+ 2511 241, 27 31:F3B6  48        PHA                          A:00 X:00 Y:10 P:nvUbdIzc S:F1
+NMI:
+ 2512 241, 25 31:F3B6  48        PHA                          A:FD X:20 Y:AC P:nvUbdIZc S:F1
+ 2513  42,250 30:CC7D  20 65 ba  JSR $BA65                    A:12 X:14 Y:20 P:nvUbdizc S:FD
+NMI:
+ 2513 241, 29 31:F3B6  48        PHA                          A:14 X:14 Y:20 P:NvUbdIzc S:F6
+PpuQueueBlock:
+ 2514  11,211 30:C482  85 10     STA jmp_trampoline           A:00 X:FF Y:20 P:nvUbdiZC S:F9
+PpuQueueBlock:
+ 2514  20, 73 30:C482  85 10     STA jmp_trampoline           A:01 X:FF Y:20 P:nvUbdizC S:F9
+PpuQueueBlock:
+ 2514  28,240 30:C482  85 10     STA jmp_trampoline           A:02 X:FF Y:40 P:nvUbdizC S:F9
+PpuQueueBlock:
+ 2514  37, 66 30:C482  85 10     STA jmp_trampoline           A:03 X:FF Y:80 P:nvUbdizC S:F9
+PpuQueueBlock:
+ 2514  62, 82 30:C482  85 10     STA jmp_trampoline           A:04 X:FF Y:A0 P:nvUbdizC S:F9
+WaitFrame:
+ 2514 152,334 30:C169  a9 00     LDA #$00                     A:14 X:FF Y:7D P:nvUbdiZC S:FB
+NMI:
+ 2514 241, 27 31:F3B6  48        PHA                          A:00 X:FF Y:7D P:nvUbdIZC S:F8
+PpuQueueBlock:
+ 2515   8,308 30:C482  85 10     STA jmp_trampoline           A:03 X:FF Y:FF P:nvUbdizC S:FB
+PpuQueueBlock:
+ 2515  53,110 30:C482  85 10     STA jmp_trampoline           A:3E X:FF Y:00 P:nvUbdizC S:FB
+PpuQueueBlock:
+ 2515  62, 17 30:C482  85 10     STA jmp_trampoline           A:3F X:FF Y:0C P:nvUbdizc S:FB
+PpuQueueBlock:
+ 2515  70,265 30:C482  85 10     STA jmp_trampoline           A:40 X:FF Y:18 P:nvUbdizc S:FB
+PpuQueueBlock:
+ 2515  85,340 30:C482  85 10     STA jmp_trampoline           A:41 X:FF Y:30 P:nvUbdizc S:FB
+PpuQueueBlock:
+ 2515 101, 74 30:C482  85 10     STA jmp_trampoline           A:42 X:FF Y:48 P:nvUbdizc S:FB
+PpuQueueBlock:
+ 2515 131,170 30:C482  85 10     STA jmp_trampoline           A:43 X:FF Y:88 P:nvUbdizc S:FB
+ 2515 142,217 30:CCC2  85 01     STA ppumask_shadow           A:18 X:FF Y:94 P:nvUbdizC S:FD
+WaitFrame:
+ 2515 142,244 30:C169  a9 00     LDA #$00                     A:18 X:FF Y:94 P:nvUbdizC S:FB
+NMI:
+ 2515 241, 28 31:F3B6  48        PHA                          A:00 X:FF Y:94 P:nvUbdIZC S:F8
+ 2515 252,258 30:CCC7  a9 08     LDA #$08                     A:00 X:FF Y:94 P:nvUbdiZC S:FD
+NMI:
+ 2516 241, 24 31:F3B6  48        PHA                          A:00 X:FF Y:94 P:nvUbdIZC S:FC
+SubstPlay:
+ 2516 253,327 30:CB62  20 80 fe  JSR ReadPads                 A:00 X:08 Y:94 P:nvUbdiZc S:FD
+WaitFrame:
+ 2517  25, 94 30:C169  a9 00     LDA #$00                     A:05 X:02 Y:0A P:nvUbdizc S:F3
+NMI:
+ 2517 241, 28 31:F3B6  48        PHA                          A:00 X:02 Y:0A P:nvUbdIZc S:F0
+WaitFrame:
+ 2517 252,288 30:C169  a9 00     LDA #$00                     A:00 X:02 Y:09 P:nvUbdizc S:F3

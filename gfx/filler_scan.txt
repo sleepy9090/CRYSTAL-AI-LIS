@@ -1,0 +1,65 @@
+# filler_scan: same-offset identical runs >= 32 bytes (distinct >= 4)
+# bankA:start-end  bankB:start-end  len  distinct  refsA/refsB  | labels A | labels B
+# refs = abs operands into the run from the bank pair + fixed banks (rough hint)
+20:9E30-9FFF  22:BE30-BFFF    464  110    4/6   text%0/75 | A: 9E30 StaleText20_9E30 | B: BF90 StaleFill22_BF90
+20:923D-93FF  22:B23D-B3FF    451   89   11/4   text%0/100 | A: 923D StaleText20_923D | B: -
+21:BE40-BFFF  27:BE40-BFFF    448   74   18/4   text%53/0 | A: BF32 StaleSaveTbl21 | B: BE40 StaleText27_BE40
+05:BE91-BFEF  13:BE91-BFEF    351   21    7/3   | A: - | B: BE91 StaleFill13_BE91
+09:BEE0-BFFF  11:BEE0-BFFF    288  102    7/17  | A: BF80 StaleFill09_BF80 | B: BEE0 StaleFill11_BEE0
+09:BCFA-BDFF  11:BCFA-BDFF    262    5   16/15  | A: - | B: BCFA StaleFill11_BCFA
+21:BF30-BFFF  23:BF30-BFFF    208    4    4/2   | A: BF32 StaleSaveTbl21 | B: -
+23:BF30-BFFF  27:BF30-BFFF    208    4    2/2   | A: - | B: -
+20:9B4E-9BFF  22:BB4E-BBFF    178   57    4/0   text%0/100 | A: 9B4E StaleText20_9B4E | B: -
+20:8466-84FF  22:A466-A4FF    154   59    1/5   text%0/100 | A: 8466 StaleText20_8466 | B: -
+13:BBAF-BC3F  15:BBAF-BC3F    145   34    9/7   | A: - | B: BBAF StaleFill15_BBAF
+07:BF80-BFFF  09:BF80-BFFF    128   51    2/5   | A: - | B: BF80 StaleFill09_BF80
+07:BF80-BFFF  11:BF80-BFFF    128   51    2/16  | A: - | B: -
+18:9F90-9FFF  20:9F90-9FFF    112   47    5/2   | A: 9FC2 Sub18_9FC2, 9FCC MainState2Init | B: -
+18:9F90-9FFF  22:BF90-BFFF    112   47    5/0   | A: 9FC2 Sub18_9FC2, 9FCC MainState2Init | B: BF90 StaleFill22_BF90
+17:B895-B8FF  19:B895-B8FF    107   29    5/1   | A: - | B: B895 StaleFill19_B895
+13:BF97-BFFF  15:BF97-BFFF    105    9    0/1   | A: - | B: BF97 StaleFill15_BF97
+05:ABA3-ABFF  13:ABA3-ABFF     93    7    2/1   | A: - | B: ABA3 StaleFill13_ABA3
+20:88A5-88FF  22:A8A5-A8FF     91   43    4/1   text%0/100 | A: 88A5 StaleText20_88A5 | B: -
+05:BF97-BFEF  15:BF97-BFEF     89    4    2/1   | A: - | B: BF97 StaleFill15_BF97
+23:BE2E-BE7F  31:FE2E-FE7F     82    6    1/2   | A: - | B: FE2E StalePad31_FE2E
+16:9FB0-9FFF  24:9FB0-9FFF     80   29    2/4   | A: 9FB0 StaleSnd16_9FB0 | B: -
+23:B9BA-B9FF  31:F9BA-F9FF     70   34    4/0   text%100/0 | A: - | B: F9BA StaleText31_F9BA
+13:A3C0-A3FF  15:A3C0-A3FF     64   33    0/0   | A: - | B: A3C0 StaleFill15_A3C0
+20:88C0-88FF  30:C8C0-C8FF     64   39    1/1   | A: - | B: C8C0 StaleText30_C8C0
+22:A8C0-A8FF  30:C8C0-C8FF     64   39    1/1   text%100/0 | A: - | B: C8C0 StaleText30_C8C0
+08:8835-886C  09:A835-A86C     56   27    2/1   | A: - | B: -
+08:8935-896C  09:A935-A96C     56   24    7/5   | A: - | B: -
+08:8A3F-8A6C  09:AA3F-AA6C     46   24    0/1   | A: - | B: -
+08:8B3F-8B6C  09:AB3F-AB6C     46   23    2/0   | A: - | B: -
+19:BBD3-BBFF  23:BBD3-BBFF     45   28    0/0   | A: - | B: BBD3 StaleCode23_BBD3
+23:BDE0-BDFF  31:FDE0-FDFF     32   22    4/1   | A: BDF6 SaveAllowed | B: FDE0 StaleSave31_FDE0
+# 32 content runs, 18 pad runs (952 pad bytes total)
+# verdicts (session 21): dead stale-copy ranges
+dead 09:BF80-BFFF   128  src 07:BF80  subst tables k>=12 never selected ($67 max $AC); = bank 7 last screen page
+dead 11:BCFA-BDFF   262  src 09:BCFA  after last area sub-table record (area $5F ends 11:BCF9)
+dead 11:BEE0-BFFF   288  src 09:BEE0  copy of bank 9 subst tables + bank 7 page
+dead 13:ABA3-ABFF    93  src 05:ABA3  between area records (end ~A9D7) and ObjTypeTable AC00; 0 xrefs
+dead 13:BE91-BFEF   351  src 05:BE91  after last ObjType record ($FE @BE7D); BFF0 = area 0 record
+dead 15:A3C0-A3FF    64  src 13:A3C0  13:A3C0 is live (ptr at 13:B93A); BossPhaseDispatch starts 15:A400
+dead 15:BBAF-BC3F   145  src 13:BBAF  copy of ObjType records ($B8 @BBBE, $3F @BBFD)
+dead 15:BF97-BFFF   105  src 13:BF97  copy of bank 5 page + 13 area 0 record
+dead 16:9FB0-9FFF    80  src 24:9FB0  after FF terminator; = sound-stream bytes
+dead 19:B895-B8FF   107  src 17:B895  bank 17 rect ptr table B8D4 -> B8E6..; in 19 they would point into PlayerDeath
+dead 20:8466-84FF   154  src 22:A466  bank 22 text (msgs 15.18-15.23)
+dead 20:88A5-88FF    91  src 22:A8A5  bank 22 text; frame templates 8899-88A1 stay live
+dead 20:923D-93FF   451  src 22:B23D  bank 22 text
+dead 20:9B4E-9BFF   178  src 22:BB4E  bank 22 text
+dead 20:9E30-9FFF   464  src 22:BE30  bank 22 text + bank 18 tail
+dead 21:BF32-BFFF   206  src 23:BF32  SaveAllowed table copy (21 text ends BF30)
+dead 22:BF90-BFFF   112  src 18:9F90  bank 18 grid tail + stale code; past last bank 22 message
+dead 23:BBD3-BBFF    45  src 19:BBD3  copy of SwordRaisePose-area code (19:BBE4 calls OamClipTop)
+dead 23:BE2E-BE7F    82  src -  $FF pad + 8 stale bytes (= 31:FE2E)
+dead 27:BE40-BFFF   448  src 21:BE40  bank 21 text + 23:BF30 SaveAllowed tail
+dead 30:C8C0-C8FF    64  src 22:A8C0  bank 22 text between RTS C8BF and MainLoop C900
+dead 31:F9BA-F9FF    70  src 23:B9BA  bank 23 text after RTS F9B9
+dead 31:FDE0-FDFF    32  src 23:BDE0  load descriptors + SaveAllowed copy
+dead 31:FE2E-FE7F    82  src -  $FF pad + 8 stale bytes before ReadPads FE80
+# 24 dead ranges, 4102 bytes
+live 08:8835/09:A835 x4  tilesets $88 and $A8 share quadrant-page rows
+live 09:BCFA-BDFF  unreferenced by known readers (attr tables end B2FF); kept as data, unproven
+live 18:9FC2-9FFF  session 22: NOT dead - main state 2 (30:C931 SwitchBank16(9); JMP $9FCC) enters at 18:9FCC and runs on into 19:A000; 9FC2-9FCB has no caller yet

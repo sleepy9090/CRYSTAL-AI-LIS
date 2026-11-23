@@ -1,0 +1,443 @@
+ 2455  36, 92 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2455 137, 67 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2455 152, 37 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2455 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2456 121,326 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2456 136, 47 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2456 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2457 122,262 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:3F P:nvUbdizc S:FD
+ 2457 137,232 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2457 241, 27 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2458 124,212 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2458 138,274 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2458 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2459 129,338 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2459 144,308 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2459 241, 27 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2460  36,133 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2460 148,299 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2460 163, 74 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2460 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2461 133,198 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:3F P:nvUbdizc S:FD
+ 2461 148,222 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2461 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+BgRowRender:
+ 2462  29, 15 31:EB91  a9 00     LDA #$00                     A:1B X:0D Y:1D P:nvUbdizc S:F1
+ 2462 173, 21 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2462 187,137 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2462 241, 23 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2463  41, 67 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+BgRowRender:
+ 2463  47,247 31:EB91  a9 00     LDA #$00                     A:1B X:0D Y:1D P:nvUbdizc S:F1
+ 2463 221,235 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2463 236,313 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2463 241, 27 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+BgRowRender:
+ 2464  33,256 31:EB91  a9 00     LDA #$00                     A:1B X:0D Y:1D P:nvUbdizc S:F1
+ 2464 188,246 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2464 218,198 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2464 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+BgRowRender:
+ 2465  33,251 31:EB91  a9 00     LDA #$00                     A:1B X:0D Y:1D P:nvUbdizc S:F1
+ 2465 214,288 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:3F P:nvUbdizc S:FD
+ 2465 230, 25 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2465 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2466  41,102 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+BgRowRender:
+ 2466  47,279 31:EB91  a9 00     LDA #$00                     A:1B X:0D Y:1D P:nvUbdizc S:F1
+ 2466 231,244 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+NMI:
+ 2466 241, 26 31:F3B6  48        PHA                          A:80 X:01 Y:1A P:NvUbdIzc S:F6
+ 2466 257,189 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2467 241, 24 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+BgRowRender:
+ 2468  29, 21 31:EB91  a9 00     LDA #$00                     A:1B X:0D Y:1D P:nvUbdizc S:F1
+ 2468 214, 47 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2468 229,179 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2468 241, 26 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+BgRowRender:
+ 2469  33,257 31:EB91  a9 00     LDA #$00                     A:1B X:0D Y:1D P:nvUbdizc S:F1
+ 2469 218, 55 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2469 232,279 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2469 241, 24 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2470  41,144 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+BgRowRender:
+ 2470  47,333 31:EB91  a9 00     LDA #$00                     A:1B X:0D Y:1D P:nvUbdizc S:F1
+ 2470 237, 88 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0E P:nvUbdizc S:FD
+NMI:
+ 2470 241, 23 31:F3B6  48        PHA                          A:01 X:00 Y:14 P:nvUbdIzc S:F6
+ 2471   1,336 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2471 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+BgRowRender:
+ 2472  29, 36 31:EB91  a9 00     LDA #$00                     A:1B X:0D Y:1D P:nvUbdizc S:F1
+ 2472 213,295 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2472 228,232 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2472 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+BgRowRender:
+ 2473  33,257 31:EB91  a9 00     LDA #$00                     A:1B X:0D Y:1D P:nvUbdizc S:F1
+ 2473 213,152 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2473 228,284 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2473 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2474  40,200 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2474 172,155 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2474 187, 92 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2474 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2475 161,103 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:12 P:nvUbdizc S:FD
+ 2475 176,289 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2475 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2476 156, 70 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:06 P:nvUbdizc S:FD
+ 2476 171,  7 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2476 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2477  36,305 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2477 175,324 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:06 P:nvUbdizc S:FD
+ 2477 208, 39 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2477 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2478 160, 17 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:06 P:nvUbdizc S:FD
+ 2478 175,  8 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2478 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2479 153,101 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:12 P:nvUbdizc S:FD
+ 2479 168,287 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2479 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2480 154,263 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2480 169,200 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2480 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2481 153,209 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:B0 P:nvUbdizc S:FD
+ 2481 169, 54 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2481 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2482 154, 47 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:B0 P:nvUbdizc S:FD
+ 2482 168,325 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2482 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2483  36,  8 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2483 172,207 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:B8 P:nvUbdizc S:FD
+ 2483 188,106 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2483 241, 27 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2484 157,167 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:B0 P:nvUbdizc S:FD
+ 2484 172,158 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2484 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2485 158,190 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:06 P:nvUbdizc S:FD
+ 2485 174, 35 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2485 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2486 154, 89 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:B0 P:nvUbdizc S:FD
+ 2486 169, 26 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2486 241, 23 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2487 157,330 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2487 173,175 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2487 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2488  36, 55 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2488 168, 55 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2488 182,333 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2488 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2489 155, 94 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2489 170,280 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2489 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2490 156,187 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:06 P:nvUbdizc S:FD
+ 2490 171,124 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2490 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2491 158,  4 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0E P:nvUbdizc S:FD
+ 2491 173,190 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2491 241, 27 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2492  36, 91 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2492 173,192 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:06 P:nvUbdizc S:FD
+ 2492 188,183 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2492 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2493 153,119 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2493 168,305 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2493 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2494 150,244 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2494 165,181 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2494 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2495  36,134 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2495 175, 96 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0E P:nvUbdizc S:FD
+ 2495 207,152 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2495 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2496 154,110 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:B0 P:nvUbdizc S:FD
+ 2496 169, 47 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2496 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2497 153,272 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:B0 P:nvUbdizc S:FD
+ 2497 169,117 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2497 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2498  36,178 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2498 174,  1 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:06 P:nvUbdizc S:FD
+ 2498 188,333 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2498 241, 23 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2499 156,101 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:3F P:nvUbdizc S:FD
+ 2499 171,287 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2499 241, 27 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2500 154, 29 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2500 168,307 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2500 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2501  36,215 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2501 175,222 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:06 P:nvUbdizc S:FD
+ 2501 207,278 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2501 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2502 155,147 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2502 170, 84 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2502 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2503 155,292 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:12 P:nvUbdizc S:FD
+ 2503 171,137 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2503 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2504  36,265 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2504 171,190 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:B0 P:nvUbdizc S:FD
+ 2504 186,181 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2504 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2505 158,169 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:06 P:nvUbdizc S:FD
+ 2505 174, 14 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2505 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2506 156,175 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:06 P:nvUbdizc S:FD
+ 2506 171,112 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2506 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2507  35,307 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2507 174,293 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:22 P:nvUbdizc S:FD
+ 2507 210, 98 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2507 241, 27 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2508 151,167 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2508 166,104 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2508 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2509 152,268 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2509 168,113 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2509 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2510  36,304 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2510 171,169 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2510 186,160 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2510 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2511 161,136 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:22 P:nvUbdizc S:FD
+ 2511 177, 35 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2511 241, 27 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2512 159,244 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2512 174,235 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2512 241, 23 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2513  37,  0 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2513 175, 78 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:B0 P:nvUbdizc S:FD
+ 2513 207,263 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2513 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2514 157,176 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2514 172,167 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2514 241, 23 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2515 158,157 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:22 P:nvUbdizc S:FD
+ 2515 174, 56 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2515 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2516  36,  7 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2516 173,267 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2516 188,312 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2516 241, 23 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2517 162, 17 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2517 177,311 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2517 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2518 160,179 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2518 175,224 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2518 241, 23 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2519  37, 48 27:B8A8  86 11     STX tmp_11                   A:1B X:0D Y:00 P:NvUbdizC S:F7
+ 2519 179, 22 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:12 P:nvUbdizc S:FD
+ 2519 211,120 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2519 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2520 160, 17 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:06 P:nvUbdizc S:FD
+ 2520 175,  8 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2520 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2521 161, 16 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:06 P:nvUbdizc S:FD
+ 2521 176,256 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2521 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2522 160,107 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:06 P:nvUbdizc S:FD
+ 2522 175, 98 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2522 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2523 152,274 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:26 P:nvUbdizc S:FD
+ 2523 168,119 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2523 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2524 151,110 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2524 166, 47 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2524 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2525 152,166 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2525 168, 11 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2525 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2526 145,224 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2526 160,107 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2526 241, 23 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2527 145, 78 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:26 P:nvUbdizc S:FD
+ 2527 160,210 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2527 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2528 143,201 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2528 158, 84 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2528 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2529 138,224 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2529 153,302 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2529 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2530 137,156 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2530 151,326 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2530 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2531 135, 71 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:22 P:nvUbdizc S:FD
+ 2531 150,149 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2531 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2532 125, 60 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2532 139,176 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2532 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2533 125,253 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2533 140,277 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2533 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2534 124,326 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2534 139,101 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2534 241, 23 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2535 134,160 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:3F P:nvUbdizc S:FD
+ 2535 149,130 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2535 241, 27 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2536 132,337 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2536 147, 58 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2536 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2537 134,  4 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2537 148,315 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2537 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2538 127,113 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2538 141,121 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2538 241, 23 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2539 127,195 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:3F P:nvUbdizc S:FD
+ 2539 142,111 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2539 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2540 126,190 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2540 140,198 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2540 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2541 121,219 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2541 136, 81 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2541 241, 30 31:F3B6  48        PHA                          A:00 X:0F Y:0D P:nvUbdIZc S:FC
+ 2542 120,139 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2542 134, 93 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2542 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2543 120,149 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:3F P:nvUbdizc S:FD
+ 2543 135, 11 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2543 241, 27 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2544 113,171 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2544 127, 71 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2544 241, 23 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2545 114, 26 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2545 128,175 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2545 241, 27 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2546 113,108 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2546 127,  8 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2546 241, 23 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2547 105,  2 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:3F P:nvUbdizc S:FD
+ 2547 119, 97 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2547 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2548 103,194 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2548 117, 40 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2548 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2549 104,205 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2549 118,300 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2549 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2550 102,121 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2550 115,254 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2550 241, 29 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2551 102,215 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:3F P:nvUbdizc S:FD
+ 2551 116,256 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2551 241, 30 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+ 2552 101,216 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2552 115,  8 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:09 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2552 241, 26 31:F3B6  48        PHA                          A:00 X:09 Y:00 P:nvUbdIZc S:FC
+ 2553 104, 85 30:CB7E  20 6e 8f  JSR $8F6E                    A:1A X:00 Y:0A P:nvUbdizc S:FD
+ 2553 118,126 30:CB81  4c b8 e0  JMP SubstPlayTail            A:80 X:04 Y:00 P:nvUbdiZc S:FD
+NMI:
+ 2553 241, 24 31:F3B6  48        PHA                          A:00 X:04 Y:00 P:nvUbdIZc S:FC
+NMI:
+ 2554 241, 29 31:F3B6  48        PHA                          A:04 X:03 Y:40 P:nvUbdIzc S:F1
+NMI:
+ 2555 241, 24 31:F3B6  48        PHA                          A:0C X:03 Y:40 P:nvUbdIzc S:F1
+NMI:
+ 2556 241, 29 31:F3B6  48        PHA                          A:08 X:03 Y:40 P:nvUbdIzc S:F1
+NMI:
+ 2557 241, 24 31:F3B6  48        PHA                          A:1C X:06 Y:40 P:nvUbdIzc S:F1
+NMI:
+ 2558 241, 26 31:F3B6  48        PHA                          A:04 X:10 Y:40 P:nvUbdIzc S:F3
+NMI:
+ 2559 241, 30 31:F3B6  48        PHA                          A:0C X:14 Y:40 P:nvUbdIzc S:F5

@@ -1,0 +1,104 @@
+NMI:
+ 1600 241, 25 31:F3B6  48        PHA                          A:00 X:FF Y:02 P:nvUbdIZc S:FC
+MainStateContinue:
+ 1601  16,155 30:C9DA  20 ff c9  JSR GameStartObjs            A:C9 X:10 Y:02 P:NvUbdizc S:FD
+GameStartObjs:
+ 1601  16,173 30:C9FF  a9 00     LDA #$00                     A:C9 X:10 Y:02 P:NvUbdizc S:FB
+WaitFrame:
+ 1601  19,161 30:C169  a9 00     LDA #$00                     A:00 X:FF Y:02 P:nvUbdiZc S:F9
+NMI:
+ 1601 241, 23 31:F3B6  48        PHA                          A:00 X:FF Y:02 P:nvUbdIZc S:F6
+ObjInit:
+ 1602   1,261 30:C25D  a5 11     LDA tmp_11                   A:0A X:FF Y:06 P:nvUbdizc S:F9
+ObjInit:
+ 1602   8,142 30:C25D  a5 11     LDA tmp_11                   A:06 X:FF Y:04 P:nvUbdizc S:F9
+ObjInit:
+ 1602  15,185 30:C25D  a5 11     LDA tmp_11                   A:05 X:FF Y:02 P:nvUbdizc S:F9
+ObjInit:
+ 1602  21,209 30:C25D  a5 11     LDA tmp_11                   A:04 X:FF Y:00 P:nvUbdizc S:F9
+ 1602  28,291 23:BC06  4c da bc  JMP LoadGameAndInit          A:17 X:FF Y:FE P:nvUbdizc S:FB
+LoadGameAndInit:
+ 1602  28,300 23:BCDA  20 8e bc  JSR LoadGame                 A:17 X:FF Y:FE P:nvUbdizc S:FB
+LoadGame:
+ 1602  28,318 23:BC8E  48        PHA                          A:17 X:FF Y:FE P:nvUbdizc S:F9
+NMI:
+ 1602 241, 30 31:F3B6  48        PHA                          A:00 X:94 Y:FE P:nvUbdIZC S:F8
+WaitPpuQueue:
+ 1603  11,290 30:C676  a5 0a     LDA tmp_0A                   A:01 X:00 Y:FE P:nvUbdizC S:FB
+StatRecalc:
+ 1603  12,  9 30:C008  a5 6e     LDA cur_bank16_x2            A:00 X:00 Y:FE P:nvUbdiZC S:FB
+WaitPpuQueue:
+ 1603  33,261 30:C676  a5 0a     LDA tmp_0A                   A:88 X:00 Y:71 P:NvUbdizc S:F7
+HudWindowSetup:
+ 1603  35, 62 19:BA65  20 76 c6  JSR WaitPpuQueue             A:12 X:00 Y:71 P:nvUbdizc S:FB
+WaitPpuQueue:
+ 1603  35, 80 30:C676  a5 0a     LDA tmp_0A                   A:12 X:00 Y:71 P:nvUbdizc S:F9
+WaitPpuQueue:
+ 1603  46,109 30:C676  a5 0a     LDA tmp_0A                   A:00 X:FF Y:71 P:nvUbdiZC S:F7
+WaitPpuQueue:
+ 1603  54, 51 30:C676  a5 0a     LDA tmp_0A                   A:20 X:00 Y:20 P:nvUbdizc S:F6
+WaitPpuQueue:
+ 1603  54,147 30:C676  a5 0a     LDA tmp_0A                   A:0C X:00 Y:20 P:nvUbdiZC S:F6
+WaitPpuQueue:
+ 1603  54,312 30:C676  a5 0a     LDA tmp_0A                   A:01 X:FF Y:20 P:nvUbdizC S:F7
+WaitPpuQueue:
+ 1603  62,254 30:C676  a5 0a     LDA tmp_0A                   A:40 X:00 Y:40 P:nvUbdiZc S:F6
+WaitPpuQueue:
+ 1603  63,  9 30:C676  a5 0a     LDA tmp_0A                   A:10 X:00 Y:40 P:nvUbdiZC S:F6
+WaitPpuQueue:
+ 1603  63,138 30:C676  a5 0a     LDA tmp_0A                   A:02 X:FF Y:40 P:nvUbdizC S:F7
+WaitPpuQueue:
+ 1603  71, 80 30:C676  a5 0a     LDA tmp_0A                   A:80 X:00 Y:80 P:nvUbdiZc S:F6
+WaitPpuQueue:
+ 1603  71,176 30:C676  a5 0a     LDA tmp_0A                   A:14 X:00 Y:80 P:nvUbdiZC S:F6
+WaitPpuQueue:
+ 1603  71,305 30:C676  a5 0a     LDA tmp_0A                   A:03 X:FF Y:80 P:nvUbdizC S:F7
+WaitPpuQueue:
+ 1603  83,263 30:C676  a5 0a     LDA tmp_0A                   A:A0 X:00 Y:A0 P:nvUbdizc S:F6
+WaitPpuQueue:
+ 1603  84, 18 30:C676  a5 0a     LDA tmp_0A                   A:18 X:00 Y:A0 P:nvUbdiZC S:F6
+WaitPpuQueue:
+ 1603  84,114 30:C676  a5 0a     LDA tmp_0A                   A:FF X:FF Y:A0 P:NvUbdizC S:F9
+WaitPpuQueue:
+ 1603  96,321 30:C676  a5 0a     LDA tmp_0A                   A:04 X:FF Y:A0 P:nvUbdizC S:F7
+WaitPpuQueue:
+ 1603 104,263 30:C676  a5 0a     LDA tmp_0A                   A:20 X:00 Y:20 P:nvUbdizc S:F6
+WaitPpuQueue:
+ 1603 111, 99 30:C676  a5 0a     LDA tmp_0A                   A:40 X:00 Y:40 P:nvUbdiZc S:F6
+WaitPpuQueue:
+ 1603 117,276 30:C676  a5 0a     LDA tmp_0A                   A:60 X:00 Y:60 P:nvUbdizc S:F6
+WaitPpuQueue:
+ 1603 118, 31 30:C676  a5 0a     LDA tmp_0A                   A:04 X:00 Y:60 P:nvUbdiZC S:F6
+WaitPpuQueue:
+ 1603 187,145 30:C676  a5 0a     LDA tmp_0A                   A:00 X:FF Y:7D P:NvUbdizc S:FB
+ 1603 187,187 30:C9F3  a9 01     LDA #$01                     A:04 X:FF Y:7D P:nvUbdiZC S:FD
+NMI:
+ 1603 241, 31 31:F3B6  48        PHA                          A:00 X:FF Y:7D P:nvUbdIZC S:FC
+SubstAreaEnter:
+ 1603 253,187 30:CA2E  20 e9 e3  JSR AreaEnter                A:00 X:01 Y:7D P:nvUbdiZc S:FD
+AreaEnter:
+ 1603 253,205 31:E3E9  20 8c ff  JSR FarCall_B14_800E         A:00 X:01 Y:7D P:nvUbdiZc S:FB
+WaitPpuQueue:
+ 1604  20,159 30:C676  a5 0a     LDA tmp_0A                   A:00 X:00 Y:3F P:nvUbdiZc S:F9
+WaitFrame:
+ 1604  90, 94 30:C169  a9 00     LDA #$00                     A:00 X:FF Y:16 P:nvUbdiZC S:F9
+NMI:
+ 1604 241, 29 31:F3B6  48        PHA                          A:00 X:FF Y:16 P:nvUbdIZC S:F6
+WaitPpuQueue:
+ 1604 249,136 30:C676  a5 0a     LDA tmp_0A                   A:00 X:FF Y:16 P:nvUbdiZC S:F9
+WaitPpuQueue:
+ 1604 249,295 30:C676  a5 0a     LDA tmp_0A                   A:1E X:FF Y:16 P:nvUbdizC S:F4
+WaitPpuQueue:
+ 1605  15,104 30:C676  a5 0a     LDA tmp_0A                   A:88 X:00 Y:20 P:nvUbdizc S:F4
+WaitPpuQueue:
+ 1605  61, 93 30:C676  a5 0a     LDA tmp_0A                   A:88 X:00 Y:20 P:nvUbdizc S:F4
+WaitPpuQueue:
+ 1605 104,148 30:C676  a5 0a     LDA tmp_0A                   A:88 X:00 Y:20 P:nvUbdizc S:F4
+WaitPpuQueue:
+ 1605 147,203 30:C676  a5 0a     LDA tmp_0A                   A:88 X:00 Y:20 P:nvUbdizc S:F4
+WaitPpuQueue:
+ 1605 190,258 30:C676  a5 0a     LDA tmp_0A                   A:88 X:00 Y:20 P:nvUbdizc S:F4
+WaitPpuQueue:
+ 1605 233,313 30:C676  a5 0a     LDA tmp_0A                   A:88 X:00 Y:20 P:nvUbdizc S:F4
+NMI:
+ 1605 241, 27 31:F3B6  48        PHA                          A:87 X:06 Y:03 P:nvUbdIzC S:EF

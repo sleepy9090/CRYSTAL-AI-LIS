@@ -1,0 +1,307 @@
+h0 p=$00 type $50                                   2x: 03.15 03.17
+h0 p=$01 type $51                                   5x: 03.0E 03.10 03.12 03.13 03.14
+h0 p=$02 type $52                                   4x: 04.0E 04.0F 05.0D 05.13
+h0 p=$03 type $53                                   8x: 06.0D 06.0E 09.14 85.0D 85.0E 85.0F 85.15 85.16
+h0 p=$04 type $54                                   1x: 08.0D
+h0 p=$05 type $55                                   4x: 2B.14 84.12 84.13 84.15
+h0 p=$06 type $56                                   3x: 09.0D 09.0F 09.11
+h0 p=$11 type $61                                  13x: 11.0D 22.0D 22.0E 22.10 22.12 22.13 23.14 23.15 25.0D 25.0E 26.12 27.15 27.16
+h0 p=$12 type $62                                   3x: 23.0F 24.13 24.17
+h0 p=$13 type $63                                  11x: 11.11 23.10 23.11 24.0D 24.0E 24.12 26.0D 26.10 45.13 4E.13 4F.0F
+h0 p=$14 type $64                                  13x: 28.11 28.12 28.16 2E.0D 2E.0E 2F.0F 2F.10 34.0E 34.0F 34.10 39.0D 39.0E 39.0F
+h0 p=$15 type $65                                   4x: 29.0E 29.14 29.15 29.17
+h0 p=$16 type $66                                   5x: 2A.10 2A.11 2A.15 2D.0E 2D.12
+h0 p=$17 type $67                                   8x: 2B.0D 2B.0F 2B.10 2B.12 2B.13 2C.0D 2C.10 2C.13
+h0 p=$1A type $6A                                   1x: 40.12
+h0 p=$1C type $6C                                   2x: 56.0D 56.15
+h0 p=$1D type $6D                                  14x: 54.10 54.12 7F.10 80.0D 80.0F 80.10 82.0D 82.0E 86.0E 86.0F 86.10 87.0F 87.10 B1.14
+h0 p=$21 type $71                                   5x: 45.15 4C.0D 4C.0F 4C.10 4D.11
+h0 p=$22 type $72                                   5x: 45.10 46.0D 46.10 49.0D 49.0E
+h0 p=$24 type $74                                   5x: 44.0D 44.10 4E.0D 4E.0E 4F.11
+h0 p=$26 type $76                                   6x: 68.0D 68.0E 68.0F 68.10 68.11 68.12
+h0 p=$28 type $78                                   2x: 6A.13 6B.0D
+h0 p=$2B type $7B                                   2x: 6D.0D 6D.15
+h0 p=$2C type $7C                                   3x: AF.0D B4.11 B4.12
+h0 p=$2E type $7E                                  10x: 6A.18 6D.12 8A.1A AE.12 AE.13 AE.14 AF.17 AF.18 AF.19 AF.1A
+h0 p=$2F type $7F                                   4x: 6D.1D B4.13 B4.14 B4.15
+h0 p=$30 type $80                                   3x: B1.0D B1.0F B1.10
+h0 p=$32 type $82                                   1x: 7C.14
+h0 p=$34 type $84                                  14x: 7F.0E 7F.0F 80.14 80.15 81.0F 81.10 83.0F 83.10 86.13 86.14 86.15 86.16 87.0D 87.0E
+h0 p=$35 type $85                                   4x: 81.0D 81.0E 83.0E 84.11
+h0 p=$36 type $86                                   1x: B5.16
+h0 p=$37 type $87                                   1x: 88.0D
+h0 p=$3C type $8C                                   4x: 9D.10 9D.11 B0.10 B0.11
+h0 p=$3D type $8D                                   1x: AB.12
+h0 p=$3F type $8F                                  16x: 88.0F 88.10 88.11 88.12 88.13 88.14 88.15 A8.0D A8.0E A8.0F A8.10 A8.11 B6.0E B6.0F B6.10 B6.11
+h0 p=$41 type $91                                   2x: B2.14 B2.15
+h0 p=$42 type $92                                   1x: B2.0D
+h0 p=$45 type $95                                   3x: B3.0E B3.0F B3.10
+h0 p=$46 type $96                                   3x: 9D.0D 9D.0E 9D.0F
+h0 p=$48 type $98                                   3x: A3.10 B5.10 B5.11
+h0 p=$4F type $9F                                   6x: A2.14 A2.15 A2.16 A2.17 A5.0D A5.0E
+h0 p=$50 type $A0                                   9x: 59.13 59.14 59.15 5A.13 5A.14 5A.15 5B.13 5B.14 5B.15
+h0 p=$51 type $A1                                  18x: 59.0D 59.0E 59.0F 59.10 59.11 59.12 5A.0D 5A.0E 5A.0F 5A.10 5A.11 5A.12 5B.0D 5B.0E 5B.0F 5B.10 5B.11 5B.12
+h0 p=$52 type $A2                                   3x: 59.16 5A.16 5B.16
+h1 p=$00 type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00   2x: 50.0D 93.0F
+h1 p=$01 type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=0E tile+=00 y|=0E   2x: 93.11 C6.10
+h1 p=$02 type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   2x: 50.0E C6.0F
+h1 p=$03 type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=0E tile+=00 y|=0E   2x: 50.0F 93.10
+h1 p=$04 type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00   3x: 1B.0F 93.0D E0.0D
+h1 p=$05 type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   2x: 1B.10 50.11
+h1 p=$06 type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   2x: 50.10 93.0E
+h1 p=$07 type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   2x: 61.0E DE.0D
+h1 p=$08 type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00   2x: 18.12 D5.0E
+h1 p=$09 type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00   1x: 65.13
+h1 p=$0A type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   1x: 65.14
+h1 p=$0B type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00   2x: 8E.0D BF.0D
+h1 p=$0C type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=02 tile+=00   2x: 72.0F EF.0F
+h1 p=$0D type=$30 $0680=00 $06A0=42 meta/$06C0=32 $06E0=06 tile+=00   2x: 35.0D C0.0D
+h1 p=$0E type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   2x: 02.0D 32.0E
+h1 p=$0F type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00   2x: 02.0E 32.0F
+h1 p=$10 type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   2x: 02.10 32.10
+h1 p=$11 type=$30 $0680=00 $06A0=00 meta/$06C0=3E $06E0=02 tile+=00   2x: 32.11 C0.0E
+h1 p=$12 type=$30 $0680=00 $06A0=00 meta/$06C0=40 $06E0=02 tile+=00   2x: 02.0F 32.12
+h1 p=$13 type=$30 $0680=00 $06A0=00 meta/$06C0=4A $06E0=02 tile+=00   1x: C1.0D
+h1 p=$14 type=$30 $0680=32 $06A0=00 meta/$06C0=2E $06E0=06 tile+=00   2x: 0E.0E C5.0D
+h1 p=$15 type=$30 $0680=00 $06A0=00 meta/$06C0=4F $06E0=25 tile+=20   1x: 0E.0D
+h1 p=$16 type=$30 $0680=01 $06A0=00 meta/$06C0=46 $06E0=06 tile+=00   3x: 18.0D 57.0E 8C.0E
+h1 p=$17 type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   1x: 18.10
+h1 p=$18 type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   1x: 18.0E
+h1 p=$19 type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00   1x: 18.0F
+h1 p=$1A type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   1x: 18.11
+h1 p=$1B type=$30 $0680=00 $06A0=00 meta/$06C0=31 $06E0=06 tile+=00   1x: C6.0D
+h1 p=$1C type=$30 $0680=00 $06A0=00 meta/$06C0=2F $06E0=06 tile+=00   1x: C6.0E
+h1 p=$1D type=$30 $0680=01 $06A0=00 meta/$06C0=51 $06E0=04 tile+=00   1x: CD.0D
+h1 p=$1E type=$30 $0680=27 $06A0=00 meta/$06C0=42 $06E0=06 tile+=00   1x: CE.0D
+h1 p=$1F type=$30 $0680=00 $06A0=00 meta/$06C0=4A $06E0=06 tile+=00   2x: 1A.0E CE.0E
+h1 p=$20 type=$30 $0680=00 $06A0=00 meta/$06C0=3C $06E0=02 tile+=00   1x: 1C.0E
+h1 p=$21 type=$30 $0680=00 $06A0=00 meta/$06C0=40 $06E0=02 tile+=00   1x: 1C.10
+h1 p=$22 type=$30 $0680=00 $06A0=00 meta/$06C0=3C $06E0=02 tile+=00   1x: 1C.11
+h1 p=$23 type=$30 $0680=3E $06A0=00 meta/$06C0=4D $06E0=14 tile+=10   1x: D4.0F
+h1 p=$24 type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   1x: 1B.11
+h1 p=$25 type=$30 $0680=02 $06A0=00 meta/$06C0=2E $06E0=06 tile+=00   1x: 1B.0D
+h1 p=$26 type=$30 $0680=00 $06A0=00 meta/$06C0=2E $06E0=06 tile+=00   1x: D4.0E
+h1 p=$27 type=$30 $0680=00 $06A0=00 meta/$06C0=2E $06E0=06 tile+=00   1x: D4.0D
+h1 p=$28 type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00   1x: D5.0F
+h1 p=$29 type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00   1x: 3E.0E
+h1 p=$2A type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   1x: D5.0D
+h1 p=$2B type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   1x: 3E.0D
+h1 p=$2C type=$30 $0680=00 $06A0=00 meta/$06C0=AD $06E0=04 tile+=00   1x: 28.17
+h1 p=$2D type=$30 $0680=00 $06A0=00 meta/$06C0=5A $06E0=06 tile+=00   4x: 28.0F 28.10 73.0F 73.10
+h1 p=$2E type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00   1x: 30.10
+h1 p=$2F type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   1x: 30.0F
+h1 p=$30 type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00   1x: 30.0E
+h1 p=$32 type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   1x: DE.0E
+h1 p=$33 type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=06 tile+=00   2x: DE.0F DF.0E
+h1 p=$34 type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=06 tile+=00   1x: D7.0D
+h1 p=$35 type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=06 tile+=00   1x: DE.10
+h1 p=$36 type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=06 tile+=00   1x: E0.0E
+h1 p=$37 type=$30 $0680=00 $06A0=00 meta/$06C0=36 $06E0=06 tile+=00   1x: E0.0F
+h1 p=$38 type=$30 $0680=28 $06A0=45 meta/$06C0=4D $06E0=1C tile+=10 y|=0E   2x: DF.0D E1.0D
+h1 p=$39 type=$30 $0680=00 $06A0=00 meta/$06C0=4E $06E0=0C tile+=00 y|=0E   1x: D8.0D
+h1 p=$3A type=$30 $0680=00 $06A0=00 meta/$06C0=44 $06E0=02 tile+=00   2x: 55.0F 55.10
+h1 p=$3D type=$30 $0680=00 $06A0=00 meta/$06C0=31 $06E0=06 tile+=00   1x: E3.0D
+h1 p=$3E type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   1x: E3.0E
+h1 p=$3F type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00   1x: E3.0F
+h1 p=$40 type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00   1x: 71.10
+h1 p=$41 type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   1x: 71.0F
+h1 p=$42 type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   1x: 71.0D
+h1 p=$43 type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   1x: 71.0E
+h1 p=$44 type=$30 $0680=37 $06A0=00 meta/$06C0=32 $06E0=06 tile+=00   2x: E4.0D E9.0D
+h1 p=$45 type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00   1x: 65.12
+h1 p=$46 type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   1x: 65.15
+h1 p=$47 type=$30 $0680=00 $06A0=00 meta/$06C0=3C $06E0=02 tile+=00   1x: E8.0D
+h1 p=$48 type=$30 $0680=00 $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   1x: 72.10
+h1 p=$49 type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=0E tile+=00 y|=0E   1x: EF.10
+h1 p=$4A type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=02 tile+=00   2x: EF.11 EF.12
+h1 p=$4B type=$30 $0680=00 $06A0=00 meta/$06C0=2E $06E0=02 tile+=00   2x: F1.11 F1.12
+h1 p=$4C type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=0F tile+=00 y|=0E   1x: F1.0F
+h1 p=$4D type=$30 $0680=00 $06A0=00 meta/$06C0=36 $06E0=07 tile+=00   1x: F1.10
+h1 p=$4E type=$30 $0680=00 $06A0=00 meta/$06C0=36 $06E0=06 tile+=00   2x: 7E.0D 7E.0E
+h1 p=$4F type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00   1x: 8C.11
+h1 p=$50 type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00   1x: 8C.10
+h1 p=$51 type=$30 $0680=00 $06A0=00 meta/$06C0=56 $06E0=05 tile+=00   3x: F3.0E F3.0F F3.10
+h1 p=$52 type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   1x: 8C.0F
+h1 p=$53 type=$30 $0680=00 $06A0=00 meta/$06C0=36 $06E0=04 tile+=00   2x: F4.0E F4.0F
+h1 p=$54 type=$30 $0680=2B $06A0=00 meta/$06C0=38 $06E0=02 tile+=00   1x: BB.0D
+h1 p=$55 type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00   1x: 8E.11
+h1 p=$56 type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   1x: 8E.0F
+h1 p=$57 type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=0E tile+=00 y|=0E   1x: BF.0F
+h1 p=$58 type=$30 $0680=00 $06A0=00 meta/$06C0=36 $06E0=06 tile+=00   1x: BF.0E
+h1 p=$59 type=$30 $0680=00 $06A0=00 meta/$06C0=4A $06E0=02 tile+=00   4x: 96.0D 96.0E 96.0F 96.10
+h1 p=$5A type=$30 $0680=2D $06A0=00 meta/$06C0=4A $06E0=02 tile+=00   1x: 96.11
+h1 p=$5B type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=06 tile+=00   1x: FA.0D
+h1 p=$5C type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   1x: FA.0E
+h1 p=$5D type=$30 $0680=00 $06A0=00 meta/$06C0=AD $06E0=04 tile+=00   2x: 8C.16 8C.17
+h1 p=$5E type=$30 $0680=41 $06A0=34 meta/$06C0=32 $06E0=06 tile+=00   3x: 10.0E AA.0D F2.0E
+h1 p=$5F type=$30 $0680=44 $06A0=44 meta/$06C0=2E $06E0=06 tile+=00   5x: 1E.0E 21.16 AC.0E F2.0F F3.0D
+h1 p=$60 type=$30 $0680=00 $06A0=00 meta/$06C0=2E $06E0=06 tile+=00   3x: 1E.0D 8C.0D EC.0D
+h1 p=$61 type=$30 $0680=00 $06A0=00 meta/$06C0=4C $06E0=04 tile+=00   1x: 52.0D
+h1 p=$62 type=$30 $0680=46 $06A0=00 meta/$06C0=36 $06E0=0E tile+=00 y|=0E   4x: B9.0E E1.0E F2.10 F4.0D
+h1 p=$63 type=$30 $0680=04 $06A0=36 meta/$06C0=BF $06E0=04 tile+=00   1x: 64.0D
+h1 p=$64 type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=06 tile+=00   1x: D6.0D
+h1 p=$65 type=$30 $0680=00 $06A0=00 meta/$06C0=39 $04A0/$06E0=50   1x: 01.0E
+h1 p=$68 type=$30 $0680=00 $06A0=00 meta/$06C0=4D $06E0=04 tile+=00   1x: 61.0D
+h1 p=$6B type=$30 $0680=00 $06A0=00 meta/$06C0=4F $06E0=05 tile+=00   1x: 62.0D
+h1 p=$6C type=$30 $0680=00 $06A0=00 meta/$06C0=36 $06E0=07 tile+=00   1x: F1.0D
+h1 p=$6D type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=06 tile+=00   2x: 8E.0E EF.0D
+h1 p=$6E type=$30 $0680=40 $06A0=00 meta/$06C0=DB $06E0=04 tile+=00   1x: F2.0D
+h1 p=$6F type=$30 $0680=00 $06A0=00 meta/$06C0=30 $06E0=02 tile+=00   1x: 72.0E
+h1 p=$70 type=$30 $0680=00 $06A0=00 meta/$06C0=AD $06E0=34 tile+=30   1x: 8C.14
+h1 p=$71 type=$30 $0680=00 $06A0=00 meta/$06C0=AD $06E0=24 tile+=20   1x: 8C.15
+h1 p=$72 type=$30 $0680=00 $06A0=00 meta/$06C0=50 $06E0=14 tile+=10   1x: 8C.13
+h1 p=$75 type=$30 $0680=00 $06A0=00 meta/$06C0=64 $06E0=04 tile+=00   1x: BA.0D
+h1 p=$76 type=$30 $0680=00 $06A0=00 meta/$06C0=AD $06E0=14 tile+=10   2x: 7E.0F 7E.10
+h1 p=$77 type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00   1x: 72.11
+h1 p=$78 type=$30 $0680=00 $06A0=00 meta/$06C0=2C $06E0=02 tile+=00   1x: 8E.12
+h1 p=$79 type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   1x: 72.0D
+h1 p=$7A type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   1x: 8E.10
+h1 p=$7B type=$30 $0680=00 $06A0=00 meta/$06C0=34 $06E0=02 tile+=00   1x: D6.0E
+h1 p=$7C type=$30 $0680=00 $06A0=00 meta/$06C0=3E $06E0=06 tile+=00   1x: 1C.0D
+h1 p=$7D type=$30 $0680=00 $06A0=00 meta/$06C0=42 $06E0=06 tile+=00   1x: 1C.0F
+h1 p=$7E type=$30 $0680=47 $06A0=48 meta/$06C0=4D $06E0=34 tile+=30   4x: 62.0E BA.0F EF.0E F1.0E
+h1 p=$80 type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=06 tile+=00   2x: 8E.13 8E.15
+h1 p=$81 type=$30 $0680=00 $06A0=00 meta/$06C0=32 $06E0=02 tile+=00   2x: 8E.14 8E.16
+h1 p=$83 type=$30 $0680=40 $06A0=00 meta/$06C0=DB $06E0=04 tile+=00   1x: 9C.0D
+h1 p=$84 type=$30 $0680=00 $06A0=00 meta/$06C0=2E $06E0=04 tile+=00   1x: 6E.0D
+h1 p=$85 type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=04 tile+=00   2x: 55.0D 55.0E
+h1 p=$88 type=$30 $0680=00 $06A0=00 meta/$06C0=3A $06E0=04 tile+=00   1x: 57.0D
+h1 p=$8E type=$30 $0680=00 $06A0=00 meta/$06C0=2E $06E0=04 tile+=00   2x: 5E.0D 6E.0F
+h1 p=$C0 type=$57                                   1x: 0A.0D
+h1 p=$C1 type=$5E                                   1x: 1A.0D
+h1 p=$C2 type=$68                                   1x: 28.0D
+h1 p=$C3 type=$70                                   1x: 43.0D
+h1 p=$C5 type=$8B                                   1x: A9.0D
+h1 p=$C6 type=$90                                   1x: AC.0D
+h1 p=$C7 type=$93                                   1x: B9.0D
+h1 p=$C8 type=$97                                   1x: B6.0D
+h1 p=$C9 type=$9C                                   1x: A0.0D
+h1 p=$CA type=$9D                                   1x: A0.0E
+h1 p=$CB type=$9B                                   2x: 9F.0D A6.0D
+h1 p=$CC type=$A5                                   1x: 6C.0D
+h2 p=$02 trigger/NPC $0D/$0E                        1x: 57.18
+h2 p=$03 trigger/NPC $0D/$0E                        1x: 8A.1B
+h2 p=$05 trigger/NPC $0D/$0E                        1x: 07.15
+h2 p=$06 trigger/NPC $0D/$0E                        1x: 27.19
+h2 p=$0A trigger/NPC $0D/$0E                        1x: E2.0D
+h2 p=$0C trigger/NPC $0D/$0E                        1x: B6.12
+h2 p=$14 trigger/NPC $0D/$0E                        1x: 89.1C
+h2 p=$1B trigger/NPC $0D/$0E                        1x: 91.1C
+h2 p=$1D trigger/NPC $0D/$0E                        1x: 06.0F
+h2 p=$1E trigger/NPC $0D/$0E                        1x: 07.13
+h2 p=$1F trigger/NPC $0D/$0E                        1x: 48.18
+h2 p=$20 trigger/NPC $0D/$0E                        1x: 7C.1A
+h2 p=$21 trigger/NPC $0D/$0E                        1x: 6D.13
+h2 p=$22 trigger/NPC $0D/$0E                        1x: 69.1D
+h2 p=$24 trigger/NPC $0D/$0E                        1x: 08.0E
+h2 p=$25 trigger/NPC $0D/$0E                        1x: 15.18
+h2 p=$2A trigger/NPC $0D/$0E                        1x: 8F.0F
+h2 p=$2C trigger/NPC $0D/$0E                        1x: 6B.0F
+h2 p=$2F trigger/NPC $0D/$0E                        1x: 91.1A
+h2 p=$33 trigger/NPC $0D/$0E                        1x: 31.0D
+h2 p=$35 trigger/NPC $0D/$0E                        1x: 4F.13
+h2 p=$3B trigger/NPC $0D/$0E                        1x: 64.11
+h2 p=$3C trigger/NPC $0D/$0E                        1x: 47.0E
+h2 p=$3F trigger/NPC $0D/$0E                        1x: 7C.18
+h2 p=$50 trigger/NPC $0D/$0E                        1x: 07.14
+h2 p=$52 trigger/NPC $0D/$0E                        1x: 23.17
+h2 p=$53 trigger/NPC $0D/$0E                        1x: 2D.16
+h2 p=$54 trigger/NPC $0D/$0E                        1x: AF.1B
+h2 p=$55 trigger/NPC $0D/$0E                        1x: 6D.1E
+h2 p=$56 trigger/NPC $0D/$0E                        1x: 82.0F
+h2 p=$57 trigger/NPC $0D/$0E                        1x: 89.1D
+h2 p=$58 trigger/NPC $0D/$0E                        1x: B5.17
+h2 p=$5A trigger/NPC $0D/$0E                        1x: B8.0D
+h2 p=$5B trigger/NPC $0D/$0E                        1x: 57.19
+h2 p=$5C trigger/NPC $0D/$0E                        1x: 6A.19
+h2 p=$5D trigger/NPC $0D/$0E                        1x: AB.1D
+h2 p=$5E trigger/NPC $0D/$0E                        1x: 2A.17
+h2 p=$5F trigger/NPC $0D/$0E                        1x: 45.19
+h2 p=$60 trigger/NPC $0D/$0E                        1x: AE.16
+h2 p=$62 trigger/NPC $0D/$0E                        1x: AB.1C
+h2 p=$63 trigger/NPC $0D/$0E                        1x: AD.1A
+h2 p=$64 trigger/NPC $0D/$0E                        1x: 91.1B
+h2 p=$65 trigger/NPC $0D/$0E                        1x: 7C.19
+h2 p=$66 trigger/NPC $0D/$0E                        1x: AB.1E
+h2 p=$69 trigger/NPC $0D/$0E                        1x: 21.17
+h2 p=$6A trigger/NPC $0D/$0E                        1x: 20.18
+h2 p=$6B trigger/NPC $0D/$0E                        1x: AE.17
+h2 p=$6C trigger/NPC $0D/$0E                        1x: 9E.1B
+h2 p=$6D trigger/NPC $0D/$0E                        1x: A5.1A
+h2 p=$6E trigger/NPC $0D/$0E                        1x: B5.18
+h2 p=$6F trigger/NPC $0D/$0E                        1x: AD.1B
+h2 p=$70 trigger/NPC $0D/$0E                        9x: 4A.15 4A.16 54.13 6B.0E 85.17 89.13 89.14 89.15 A3.0D
+h2 p=$80 trigger/NPC $0D/$0E                        2x: A8.14 A8.15
+h2 p=$81 trigger/NPC $0D/$0E                        2x: 8C.12 8C.18
+h2 p=$82 trigger/NPC $0D/$0E                        1x: F2.11
+h2 p=$83 trigger/NPC $0D/$0E                        1x: A8.16
+h2 p=$84 trigger/NPC $0D/$0E                        2x: 60.18 60.19
+h2 p=$85 trigger/NPC $0D/$0E                        1x: 1E.0F
+h2 p=$86 trigger/NPC $0D/$0E                        2x: 28.1A 28.1B
+h2 p=$8A trigger/NPC $0D/$0E                        2x: 60.17 65.16
+h2 p=$8B trigger/NPC $0D/$0E                        2x: 71.11 71.12
+h2 p=$8C trigger/NPC $0D/$0E                        1x: 10.0F
+h2 p=$8D trigger/NPC $0D/$0E                        3x: 35.11 35.12 40.19
+h2 p=$8E trigger/NPC $0D/$0E                        1x: 1C.12
+h2 p=$90 trigger/NPC $0D/$0E                        1x: 1B.12
+h2 p=$91 trigger/NPC $0D/$0E                        1x: 28.19
+h2 p=$92 trigger/NPC $0D/$0E                        1x: 64.12
+h2 p=$94 trigger/NPC $0D/$0E                        1x: 38.0D
+h2 p=$95 trigger/NPC $0D/$0E                        1x: 52.0E
+h2 p=$97 trigger/NPC $0D/$0E                        1x: D7.11
+h2 p=$99 trigger/NPC $0D/$0E                        2x: 02.11 02.12
+h2 p=$9A trigger/NPC $0D/$0E                        1x: F2.12
+h2 p=$A1 trigger/NPC $0D/$0E                        1x: 5A.19
+h2 p=$A2 trigger/NPC $0D/$0E                        1x: 5B.19
+h2 p=$A3 trigger/NPC $0D/$0E                        1x: 5D.0D
+h2 p=$A4 trigger/NPC $0D/$0E                        1x: 5E.0E
+h2 p=$A5 trigger/NPC $0D/$0E                        1x: 28.18
+h2 p=$A6 trigger/NPC $0D/$0E                        1x: 18.13
+h2 p=$A7 trigger/NPC $0D/$0E                        1x: D5.10
+h2 p=$A8 trigger/NPC $0D/$0E                        1x: 50.12
+h2 p=$A9 trigger/NPC $0D/$0E                        1x: 72.12
+h2 p=$AA trigger/NPC $0D/$0E                        1x: 1C.13
+h2 p=$AB trigger/NPC $0D/$0E                        2x: 8E.17 8E.18
+h2 p=$AC trigger/NPC $0D/$0E                        1x: 93.12
+h2 p=$AD trigger/NPC $0D/$0E                        1x: 28.1C
+h2 p=$AE trigger/NPC $0D/$0E                        1x: 7C.1B
+h2 p=$AF trigger/NPC $0D/$0E                        1x: 60.1A
+h2 p=$B0 trigger/NPC $0D/$0E                        1x: 51.0E
+h2 p=$B1 trigger/NPC $0D/$0E                        2x: A0.10 A0.11
+h2 p=$B2 trigger/NPC $0D/$0E                        2x: 35.0F 35.10
+h2 p=$B3 trigger/NPC $0D/$0E                        1x: 73.0D
+h2 p=$B4 trigger/NPC $0D/$0E                        1x: 03.1C
+h2 p=$B6 trigger/NPC $0D/$0E                        1x: 6E.11
+h2 p=$B7 trigger/NPC $0D/$0E                        1x: 50.13
+h2 p=$B8 trigger/NPC $0D/$0E                        1x: 50.14
+h2 p=$BA trigger/NPC $0D/$0E                        1x: 15.19
+h2 p=$BB trigger/NPC $0D/$0E                        2x: D7.0F D7.10
+h2 p=$BC trigger/NPC $0D/$0E                        3x: 1B.13 1B.14 1B.15
+h2 p=$BD trigger/NPC $0D/$0E                        2x: 7E.11 7E.12
+h2 p=$BF trigger/NPC $0D/$0E                        2x: 54.17 56.1A
+h2 p=$C1 trigger/NPC $0D/$0E                        1x: EF.13
+h2 p=$C2 trigger/NPC $0D/$0E                        1x: 6E.12
+h3 p=$00 type $D0                                  27x: 07.12 09.16 0C.0D 44.14 45.17 45.18 46.14 48.16 48.17 4A.17 4A.18 4A.19 4B.12 4C.14 4D.14 4D.15 4D.16 4E.14 4F.12 69.1B 69.1C 6A.16 6A.17 83.11 84.16 86.17 87.12
+h3 p=$01 type $D1                                  25x: 10.0D 22.19 22.1A 23.16 24.18 26.14 27.17 27.18 2A.16 2B.15 2B.16 2D.15 2E.13 2E.14 2F.11 2F.12 30.0D 32.0D 35.0E 54.14 54.15 54.16 56.18 56.19 57.17
+h3 p=$02 type $D2                                  34x: 14.18 40.18 41.17 43.0E 43.0F 64.0E 64.0F 64.10 69.18 69.19 69.1A 6B.10 7C.16 7C.17 89.1A 89.1B 91.0D 91.0E 91.0F 91.10 91.11 91.12 91.13 91.14 91.15 91.16 91.17 AB.15 AB.16 AB.17 AB.18 AB.19 AB.1A AB.1B
+h3 p=$03 type $D3                                   6x: 8F.0D A8.12 AB.13 AB.14 AE.15 B4.16
+h3 p=$E0 type $B0                                   1x: 03.1B
+h3 p=$E1 type $B1                                   2x: 0F.0D 0F.0E
+h4 p=$28 type $28                                   3x: 01.0D 03.0D A0.0F
+h4 p=$29 type $29                                   6x: 6E.10 AA.0E AC.0F B9.0F BA.0E BA.10
+h4 p=$2A type $2A                                   1x: 6E.0E
+h4 p=$2C type $2C                                   5x: 28.0E 73.0E 7C.0E A6.14 E4.0E
+h4 p=$39 type $39                                   1x: 51.0D
+h4 p=$3A type $3A                                   1x: 60.1B
+h4 p=$40 type $40 (flag item)                       9x: 3C.0D BC.0D C2.0D C8.0D DC.0D E7.0D ED.0D F7.0D F8.0D
+h4 p=$41 type $41 (flag item)                       9x: 3D.0D BE.0D C3.0D CB.0D DD.0D E5.0D EB.0D F6.0D F9.0D
+h4 p=$42 type $42 (flag item)                       5x: C4.0D C9.0D DA.0D EE.0D F5.0D
+h4 p=$43 type $43 (flag item)                       4x: C7.0D D9.0D F0.0D FB.0D
+h4 p=$44 type $44 (flag item)                       1x: CF.0D
+h4 p=$45 type $45 (flag item)                       1x: D0.0D
+h4 p=$46 type $46 (flag item)                       1x: D1.0D
+h4 p=$47 type $47 (flag item)                       1x: D2.0D
+h4 p=$48 type $48 (flag item)                       1x: D3.0D
+h4 p=$A4 type $A4                                   1x: 5F.0D
+h4 p=$B4 type $B4                                   2x: 5F.0E 5F.0F
+h4 p=$DA type $DA                                   4x: 59.18 5A.18 5B.18 5C.0D

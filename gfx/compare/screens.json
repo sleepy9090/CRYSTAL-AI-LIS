@@ -1,0 +1,74 @@
+[
+{
+"name": "status",
+"desc": "START: status screen",
+"steps": "w:10 p:START w:40",
+"main": 1,
+"sub": 9,
+"irq": 2,
+"img": "gfx/compare/screens/status.png"
+},
+{
+"name": "equip",
+"desc": "SELECT: equipment grid (Sword/Armor/Shield/Power)",
+"steps": "w:10 p:SELECT w:40",
+"main": 1,
+"sub": 18,
+"irq": 6,
+"img": "gfx/compare/screens/equip.png"
+},
+{
+"name": "items",
+"desc": "SELECT, UP: item/magic grid",
+"steps": "w:10 p:SELECT w:40 p:UP w:20",
+"main": 1,
+"sub": 18,
+"irq": 6,
+"img": "gfx/compare/screens/items.png"
+},
+{
+"name": "save",
+"desc": "SELECT, START: save/load page (16:9AEE)",
+"steps": "w:10 p:SELECT w:40 p:START w:40",
+"main": 1,
+"sub": 18,
+"irq": 6,
+"img": "gfx/compare/screens/save.png"
+},
+{
+"name": "save_ask",
+"desc": "save page, A",
+"steps": "w:10 p:SELECT w:40 p:START w:40 p:A w:40",
+"main": 1,
+"sub": 18,
+"irq": 6,
+"img": "gfx/compare/screens/save_ask.png"
+},
+{
+"name": "load_ask",
+"desc": "save page, RIGHT, A: \"Load this game?\"",
+"steps": "w:10 p:SELECT w:40 p:START w:40 p:RIGHT w:20 p:A w:40",
+"main": 1,
+"sub": 18,
+"irq": 6,
+"img": "gfx/compare/screens/load_ask.png"
+},
+{
+"name": "death",
+"desc": "HP $03C1 := 0: PlayerDeath (sub_state 3) +200 frames",
+"steps": "w:10 s:3C1=0 w:200",
+"main": 1,
+"sub": 3,
+"irq": 0,
+"img": "gfx/compare/screens/death.png"
+},
+{
+"name": "gameover",
+"desc": "HP $03C1 := 0, +500 frames: back to the intro (main_state 3)",
+"steps": "w:10 s:3C1=0 w:500",
+"main": 3,
+"sub": 3,
+"irq": 3,
+"img": "gfx/compare/screens/gameover.png"
+}
+]

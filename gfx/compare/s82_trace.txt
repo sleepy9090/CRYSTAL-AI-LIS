@@ -1,0 +1,72 @@
+NMI:
+ 1238 241, 30 31:F3B6  48        PHA                          A:00 X:FF Y:1E P:nvUbdIZc S:FC
+ 1238 241, 39 31:F3B7  ad 02 20  LDA PPUSTATUS                A:00 X:FF Y:1E P:nvUbdIZc S:FB
+OpeningPage3:
+ 1239  17,125 19:AA30  20 b3 82  JSR $82B3                    A:AA X:FF Y:20 P:NvUbdizc S:FD
+ 1239  20,107 19:AA33  a9 11     LDA #$11                     A:0F X:FF Y:20 P:NvUbdizc S:FD
+ 1239  20,113 19:AA35  8d f3 07  STA chr_r3_play              A:11 X:FF Y:20 P:nvUbdizc S:FD
+ 1239  20,125 19:AA38  a9 01     LDA #$01                     A:11 X:FF Y:20 P:nvUbdizc S:FD
+ 1239  20,131 19:AA3A  85 72     STA zp_72                    A:01 X:FF Y:20 P:nvUbdizc S:FD
+ 1239  20,140 19:AA3C  a9 00     LDA #$00                     A:01 X:FF Y:20 P:nvUbdizc S:FD
+ 1239  20,146 19:AA3E  85 73     STA zp_73                    A:00 X:FF Y:20 P:nvUbdiZc S:FD
+ 1239  20,155 19:AA40  a9 28     LDA #$28                     A:00 X:FF Y:20 P:nvUbdiZc S:FD
+ 1239  20,161 19:AA42  8d 10 06  STA $0610                    A:28 X:FF Y:20 P:nvUbdizc S:FD
+ 1239  20,173 19:AA45  85 88     STA zp_88                    A:28 X:FF Y:20 P:nvUbdizc S:FD
+ 1239  20,182 19:AA47  a9 20     LDA #$20                     A:28 X:FF Y:20 P:nvUbdizc S:FD
+ 1239  20,188 19:AA49  8d 08 06  STA $0608                    A:20 X:FF Y:20 P:nvUbdizc S:FD
+ 1239  20,200 19:AA4C  85 89     STA $89                      A:20 X:FF Y:20 P:nvUbdizc S:FD
+ 1239  20,209 19:AA4E  20 e7 80  JSR $80E7                    A:20 X:FF Y:20 P:nvUbdizc S:FD
+ 1239  65,191 19:AA51  a9 20     LDA #$20                     A:FF X:EC Y:E8 P:nvUbdiZC S:FD
+ 1239  65,197 19:AA53  a2 10     LDX #$10                     A:20 X:EC Y:E8 P:nvUbdizC S:FD
+ 1239  65,203 19:AA55  a0 ff     LDY #$FF                     A:20 X:10 Y:E8 P:nvUbdizC S:FD
+ 1239  65,209 19:AA57  20 a1 81  JSR $81A1                    A:20 X:10 Y:FF P:NvUbdizC S:FD
+ 1239 148,232 19:AA5A  a9 00     LDA #$00                     A:8A X:00 Y:FF P:NvUbdizC S:FD
+ 1239 148,238 19:AA5C  85 05     STA cam_y_hi                 A:00 X:00 Y:FF P:nvUbdiZC S:FD
+ 1239 148,247 19:AA5E  a9 80     LDA #$80                     A:00 X:00 Y:FF P:nvUbdiZC S:FD
+ 1239 148,253 19:AA60  8d fe 06  STA ram_06FE                 A:80 X:00 Y:FF P:NvUbdizC S:FD
+ 1239 148,265 19:AA63  ad 1f 89  LDA $891F                    A:80 X:00 Y:FF P:NvUbdizC S:FD
+ 1239 148,277 19:AA66  85 8e     STA zp_8E                    A:21 X:00 Y:FF P:nvUbdizC S:FD
+ 1239 148,286 19:AA68  ad 20 89  LDA $8920                    A:21 X:00 Y:FF P:nvUbdizC S:FD
+ 1239 148,298 19:AA6B  85 8f     STA zp_8F                    A:89 X:00 Y:FF P:NvUbdizC S:FD
+ 1239 148,307 19:AA6D  a9 42     LDA #$42                     A:89 X:00 Y:FF P:NvUbdizC S:FD
+ 1239 148,313 19:AA6F  85 8c     STA zp_8C                    A:42 X:00 Y:FF P:nvUbdizC S:FD
+ 1239 148,322 19:AA71  a9 20     LDA #$20                     A:42 X:00 Y:FF P:nvUbdizC S:FD
+ 1239 148,328 19:AA73  85 8d     STA zp_8D                    A:20 X:00 Y:FF P:nvUbdizC S:FD
+ 1239 148,337 19:AA75  20 f0 81  JSR $81F0                    A:20 X:00 Y:FF P:nvUbdizC S:FD
+ 1239 233,128 19:AA78  a9 00     LDA #$00                     A:8A X:00 Y:1C P:NvUbdizc S:FD
+ 1239 233,134 19:AA7A  8d fe 06  STA ram_06FE                 A:00 X:00 Y:1C P:nvUbdiZc S:FD
+ 1239 233,146 19:AA7D  ad 37 8c  LDA $8C37                    A:00 X:00 Y:1C P:nvUbdiZc S:FD
+ 1239 233,158 19:AA80  85 8e     STA zp_8E                    A:39 X:00 Y:1C P:nvUbdizc S:FD
+ 1239 233,167 19:AA82  ad 38 8c  LDA $8C38                    A:39 X:00 Y:1C P:nvUbdizc S:FD
+ 1239 233,179 19:AA85  85 8f     STA zp_8F                    A:8C X:00 Y:1C P:NvUbdizc S:FD
+ 1239 233,188 19:AA87  a9 c0     LDA #$C0                     A:8C X:00 Y:1C P:NvUbdizc S:FD
+ 1239 233,194 19:AA89  85 8c     STA zp_8C                    A:C0 X:00 Y:1C P:NvUbdizc S:FD
+ 1239 233,203 19:AA8B  a9 23     LDA #$23                     A:C0 X:00 Y:1C P:NvUbdizc S:FD
+ 1239 233,209 19:AA8D  85 8d     STA zp_8D                    A:23 X:00 Y:1C P:nvUbdizc S:FD
+ 1239 233,218 19:AA8F  20 f0 81  JSR $81F0                    A:23 X:00 Y:1C P:nvUbdizc S:FD
+NMI:
+ 1239 241,181 31:F3B6  48        PHA                          A:8A X:00 Y:20 P:NvUbdIzc S:F6
+ 1239 241,190 31:F3B7  ad 02 20  LDA PPUSTATUS                A:8A X:00 Y:20 P:NvUbdIzc S:F5
+ 1239 261, 78 19:AA92  ad 37 b3  LDA $B337                    A:8A X:00 Y:20 P:NvUbdizc S:FD
+ 1239 261, 90 19:AA95  85 8e     STA zp_8E                    A:39 X:00 Y:20 P:nvUbdizc S:FD
+ 1239 261, 99 19:AA97  ad 38 b3  LDA $B338                    A:39 X:00 Y:20 P:nvUbdizc S:FD
+ 1239 261,111 19:AA9A  85 8f     STA zp_8F                    A:B3 X:00 Y:20 P:NvUbdizc S:FD
+ 1239 261,120 19:AA9C  a9 40     LDA #$40                     A:B3 X:00 Y:20 P:NvUbdizc S:FD
+ 1239 261,126 19:AA9E  85 8c     STA zp_8C                    A:40 X:00 Y:20 P:nvUbdizc S:FD
+ 1239 261,135 19:AAA0  a9 22     LDA #$22                     A:40 X:00 Y:20 P:nvUbdizc S:FD
+ 1239 261,141 19:AAA2  85 8d     STA zp_8D                    A:22 X:00 Y:20 P:nvUbdizc S:FD
+ 1239 261,150 19:AAA4  20 f0 81  JSR $81F0                    A:22 X:00 Y:20 P:nvUbdizc S:FD
+ 1240  45, 19 19:AAA7  a9 03     LDA #$03                     A:88 X:00 Y:1E P:NvUbdizc S:FD
+ 1240  45, 25 19:AAA9  20 be 82  JSR $82BE                    A:03 X:00 Y:1E P:nvUbdizc S:FD
+ 1240  49, 23 19:AAAC  a9 88     LDA #$88                     A:01 X:20 Y:00 P:nvUbdiZc S:FD
+ 1240  49, 29 19:AAAE  20 be 82  JSR $82BE                    A:88 X:20 Y:00 P:NvUbdizc S:FD
+ 1240  53, 78 19:AAB1  20 fd 82  JSR $82FD                    A:01 X:20 Y:00 P:nvUbdiZc S:FD
+ 1240  58, 59 19:AAB4  a9 02     LDA #$02                     A:01 X:FF Y:00 P:nvUbdizc S:FD
+ 1240  58, 65 19:AAB6  8d 28 06  STA title_blink_timer        A:02 X:FF Y:00 P:nvUbdizc S:FD
+ 1240  58, 77 19:AAB9  a9 f0     LDA #$F0                     A:02 X:FF Y:00 P:nvUbdizc S:FD
+ 1240  58, 83 19:AABB  8d fe 06  STA ram_06FE                 A:F0 X:FF Y:00 P:NvUbdizc S:FD
+ 1240  58, 95 19:AABE  ee f1 06  INC title_step               A:F0 X:FF Y:00 P:NvUbdizc S:FD
+ 1240  58,113 19:AAC1  60        RTS                          A:F0 X:FF Y:00 P:nvUbdizc S:FD
+NMI:
+ 1240 241, 26 31:F3B6  48        PHA                          A:00 X:FF Y:00 P:nvUbdIZc S:FC
+ 1240 241, 35 31:F3B7  ad 02 20  LDA PPUSTATUS                A:00 X:FF Y:00 P:nvUbdIZc S:FB

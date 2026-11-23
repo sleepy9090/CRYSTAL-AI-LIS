@@ -1,0 +1,659 @@
+; param_report.py (session 70): spawn params joined with scripts / presence / triggers
+; place = area.slot (area_dump.py params); pres = NpcHidden conds per area (absent if any false)
+
+== h1: indirect records (bank 4/5), NPCs (type $30) and bosses/objects
+p=$00 type $30 NPC  place 50.0D 93.0F
+    script 14:9186-91A3 A=1 B=4 state-areas 50:00 93:0A
+    first B reply msg 8.21: "<CLR>The fortune teller does very well here, it's a pity"
+p=$01 type $30 NPC  place 93.11 C6.10
+    script 14:8D61-8D9C A=1 B=10 state-areas C6:00 93:19
+    first B reply msg 30.15: "<CLR>Welcome. {Please} have some refreshments."
+p=$02 type $30 NPC  place 50.0E C6.0F
+    script 14:8D9C-8DAF A=1 B=2 state-areas C6:00 50:05
+    first B reply msg 2.6: "<CLR>The wise man {Tornel} lives with his pupils in the "
+p=$03 type $30 NPC  place 50.0F 93.10
+    script 14:9167-9186 A=1 B=4 state-areas 50:00 EF:05 93:0A
+    first B reply msg 8.19: "<CLR>A girl from the southern lake came here. I think sh"
+p=$04 type $30 NPC  place 1B.0F 93.0D E0.0D
+    script 14:90C1-90FE A=1 B=10 state-areas E0:00 93:19 1B:28
+    first B reply msg 8.8: "<CLR>The Queen is very kind and intelligent."
+p=$05 type $30 NPC  place 1B.10 50.11
+    script 14:8EC2-8EDF A=1 B=4 state-areas 1B:00 50:0A
+    first B reply msg 18.2: "<CLR>Stay away! I hate men!"
+p=$06 type $30 NPC  place 50.10 93.0E
+    script 14:914F-9167 A=1 B=3 state-areas 50:00 93:05
+    first B reply msg 8.18: "<CLR>Some {people} went up to the waterfall, but haven't"
+p=$07 type $30 NPC  place 61.0E DE.0D
+    script 14:9070-90AB A=1 B=10 state-areas DE:00 61:19
+    first B reply msg 8.0: "<CLR>The Queen is in the center chamber."
+p=$08 type $30 NPC  place 18.12 D5.0E
+    script 14:8F1D-8F30 A=1 B=2 state-areas D5:00 18:05
+    first B reply msg 5.8: "<CLR>The food here is great! I wish I could eat like thi"
+p=$09 type $30 NPC  place 65.13
+    pres 65: F013
+    script 14:933F-935A A=4 B=2
+    first B reply msg 16.9: "<CLR>I know my house isn't much but it's all mine."
+p=$0A type $30 NPC  place 65.14
+    pres 65: F013
+    script 14:935A-9375 A=4 B=2
+    first B reply msg 16.11: "<CLR>Sometimes {people} from {Joel} {island} come here t"
+p=$0B type $30 NPC  place 8E.0D BF.0D
+    pres BF: !F024 | 8E: !F024
+    script 14:9633-964B A=1 B=3 state-areas 8E:00 BF:0A
+    first B reply msg 30.18: "<CLR> What are you doing away  from your post? Go back  "
+p=$0C type $30 NPC  place 72.0F EF.0F
+    pres EF: !F024 | 72: !F024
+    script 14:9429-944D A=1 B=5 state-areas EF:00 72:0A F1:14
+    first B reply msg 30.18: "<CLR> What are you doing away  from your post? Go back  "
+p=$0D type $30 NPC  place 35.0D C0.0D
+    pres C0: !F085 | 35: F085
+    script 14:8B43-8B7A A=4 B=6 state-areas C0:00 35:16
+    first B reply msg 0.17: "<CLR>Thank you for saving me!"
+p=$0E type $30 NPC  place 02.0D 32.0E
+    pres 02: !F084 | 32: F084
+    script 14:8B86-8BBB A=4 B=6 state-areas 02:00 32:16
+    first B reply msg 0.13: "<CLR>Thank you for saving me!"
+p=$0F type $30 NPC  place 02.0E 32.0F
+    pres 02: !F084 | 32: F084
+    script 14:8BBB-8BED A=4 B=5 state-areas 02:00 32:13
+    first B reply msg 0.2: "<CLR>Thank you for saving me!"
+p=$10 type $30 NPC  place 02.10 32.10
+    pres 02: !F084 | 32: F084
+    script 14:8BED-8C1B A=4 B=5 state-areas 02:00 32:0F
+    first B reply msg 0.8: "<CLR>Thank you for saving me!"
+p=$11 type $30 NPC  place 32.11 C0.0E
+    pres C0: !F084 | 32: F084
+    script 14:8C1B-8C4D A=4 B=5 state-areas 02:00 32:13
+    first B reply msg 0.5: "<CLR>Thank you for saving me!"
+p=$12 type $30 NPC  place 02.0F 32.12
+    pres 02: !F084 | 32: F084
+    script 14:8C4D-8C76 A=4 B=4 state-areas 02:00 32:0A
+    first B reply msg 0.25: "<CLR>Thank you for saving me!"
+p=$13 type $30 NPC  place C1.0D
+    script 14:8C76-8C9D A=4 B=4
+    first B reply msg 0.20: "<CLR>Kyu.  Kyu."
+p=$14 type $30 NPC  place 0E.0E C5.0D
+    pres C5: !F03A | 0E: F00F & !F038
+    script 14:8CC5-8CF2 A=4 B=4 state-areas C5:0C 0E:00
+    first B reply msg 1.1: "<CLR>Huh? What was that? Don't do that again!<KEY> <CLR>"
+p=$15 type $30 NPC  place 0E.0D
+    pres 0E: F03A & !F00F
+    script 14:8CF2-8CFC A=1 B=1
+    first B reply msg 1.0: "<CLR>zzz_"
+p=$16 type $30 NPC  place 18.0D 57.0E 8C.0E
+    pres 18: !F050 | 57: !F051 & F035 & !F034 | 8C: !F027
+    script 14:96CD-9708 A=4 B=6 state-areas 18:00 57:05 8C:11
+    first B reply msg 2.1: "<CLR>I'm {Akahana}. I used to have an unusual statue but"
+p=$17 type $30 NPC  place 18.10
+    script 14:8D39-8D43 A=1 B=1
+    first B reply msg 2.3: "<CLR>If you go east, you will find the forest.  It's a g"
+p=$18 type $30 NPC  place 18.0E
+    script 14:8D43-8D4D A=1 B=1
+    first B reply msg 2.4: "<CLR>I've heard that there's a village where only women "
+p=$19 type $30 NPC  place 18.0F
+    script 14:8D4D-8D57 A=1 B=1
+    first B reply msg 2.5: "<CLR>The village of {Oak} lies deep in the forest.  The "
+p=$1A type $30 NPC  place 18.11
+    script 14:8D57-8D61 A=1 B=1
+    first B reply msg 2.7: "<CLR>There are two routes to {Mt.Sabre}; one west and {o"
+p=$1B type $30 NPC  place C6.0D
+    pres C6: !F048
+    script 14:8CFC-8D08 A=1 B=1
+    first B reply msg 2.8: "<CLR>I just found out how to get rich quick. Later!"
+p=$1C type $30 NPC  place C6.0E
+    script 14:8D08-8D28 A=4 B=3
+    first B reply msg 2.9: "<CLR>I told him that I made a lot of money from stones I"
+p=$1D type $30 NPC  place CD.0D
+    script 14:8DAF-8DE8 A=5 B=6
+    first B reply msg 4.25: "<CLR>Our greatest hero, please rest well!"
+p=$1E type $30 NPC  place CE.0D
+    script 14:8DE8-8E15 A=5 B=4
+    first B reply msg 4.3: "<CLR>Thank you again for all your help."
+p=$1F type $30 NPC  place 1A.0E CE.0E
+    pres CE: F045 | 1A: F052 & !F053 & !F045
+    script 14:8E15-8E3B A=5 B=3
+    first B reply msg 4.7: "<CLR>I'll be good from now on. I swear!"
+p=$20 type $30 NPC  place 1C.0E
+    pres 1C: F045
+    script 14:8E3B-8E5F A=5 B=3
+    first B reply msg 4.11: "<CLR>I heard there are training grounds for wise men on "
+p=$21 type $30 NPC  place 1C.10
+    pres 1C: F045
+    script 14:8E5F-8E83 A=5 B=3
+    first B reply msg 4.15: "<CLR>We have reconsidered humans."
+p=$22 type $30 NPC  place 1C.11
+    script 14:8E83-8EA7 A=5 B=3
+    first B reply msg 4.18: "<CLR>You're great! I think I'll believe in you."
+p=$23 type $30 NPC  place D4.0F
+    script 14:8EA7-8EC2 A=1 B=4
+    first B reply msg 18.18: "<CLR>You filthy beast! Don't come any closer!"
+p=$24 type $30 NPC  place 1B.11
+    script 14:8EDF-8EE9 A=1 B=1
+    first B reply msg 18.5: "<CLR>{Aryllis} is into fashion. She is looking for the {"
+p=$25 type $30 NPC {HitFlag->F099}  place 1B.0D
+    script 14:8EFD-8F09 A=1 B=1
+    first B reply msg 18.7: "<CLR>{Aryllis} is waiting for you. <CLR>We take care of "
+p=$26 type $30 NPC {HitFlag->F058, hit-immune}  place D4.0E
+    script 14:8EE9-8EF3 A=1 B=1
+    first B reply msg 18.9: "<CLR>The {Kirisa Plant} blooms in a cave near {Portoa}."
+p=$27 type $30 NPC {HitFlag->F059, hit-immune}  place D4.0D
+    script 14:8EF3-8EFD A=1 B=1
+    first B reply msg 18.10: "<CLR>The {Kirisa Plant} blooms in a cave near {Portoa}."
+p=$28 type $30 NPC  place D5.0F
+    script 14:8F13-8F1D A=1 B=1
+    first B reply msg 5.0: "<CLR>Welcome my guest. I am {Nadare}.  Get rested and aw"
+p=$29 type $30 NPC  place 3E.0E
+    script 14:8F55-8F79 A=4 B=3
+    first B reply msg 5.4: "<CLR>Be careful."
+p=$2A type $30 NPC  place D5.0D
+    script 14:8F3A-8F55 A=4 B=2
+    first B reply msg 5.6: "<CLR>The trail is passable now and those weird {people} "
+p=$2B type $30 NPC  place 3E.0D
+    script 14:8F30-8F3A A=1 B=1
+    first B reply msg 5.9: "<CLR>I may be old now, but in my youth, I could climb ma"
+p=$2C type $30 NPC  place 28.17
+    pres 28: !F066 & F048 & !F012
+    script 14:8D28-8D39 A=1 B=2
+    first B reply msg 5.14: "<CLR>_it's you_ I had a dream I could strike it rich_ Bu"
+p=$2D type $30 NPC  place 28.0F 28.10 73.0F 73.10
+    pres 28: !F05B | 73: !F08C
+    script 14:8F79-8F91 A=1 B=3 state-areas 28:00 73:05
+    first B reply msg 5.16: "<CLR>Who are you? You cannot pass here! Attack!"
+p=$2E type $30 NPC  place 30.10
+    pres 30: F084
+    script 14:8CB1-8CBB A=1 B=1
+    first B reply msg 7.7: "<CLR>So you saved us, big deal."
+p=$2F type $30 NPC  place 30.0F
+    pres 30: F084
+    script 14:8CBB-8CC5 A=1 B=1
+    first B reply msg 7.5: "<CLR>Thank you for saving me."
+p=$30 type $30 NPC  place 30.0E
+    pres 30: F084
+    script 14:8C9D-8CA7 A=1 B=1
+    first B reply msg 7.7: "<CLR>So you saved us, big deal."
+p=$32 type $30 NPC  place DE.0E
+    script 14:90AB-90C1 A=4 B=1
+    first B reply msg 8.1: "<CLR>We'll do anything for the Queen."
+p=$33 type $30 NPC  place DE.0F DF.0E
+    pres DF: !F020 | DE: F020
+    script 14:9055-9070 A=4 B=2
+    first B reply msg 8.3: "<CLR>Hey! Don't wander around the Queen's room!"
+p=$34 type $30 NPC {HitFlag->F0A1}  place D7.0D
+    script 14:9030-9055 A=4 B=4
+    first B reply msg 8.7: "<CLR>The Queen left to travel. don't tell any{one}."
+p=$35 type $30 NPC  place DE.10
+    script 14:90FE-9119 A=4 B=2
+    first B reply msg 8.14: "<CLR>I'm {Evans}. I teach etiquette here."
+p=$36 type $30 NPC  place E0.0E
+    script 14:9119-9134 A=4 B=2
+    first B reply msg 8.10: "<CLR>I haven't seen the Queen lately. I wonder how she's"
+p=$37 type $30 NPC  place E0.0F
+    script 14:9134-914F A=4 B=2
+    first B reply msg 8.12: "<CLR>I'm sorry about our last meeting. {Evans} has taugh"
+p=$38 type $30 NPC {hit-immune}  place DF.0D E1.0D
+    pres DF: !F020 & !F01F | E1: F01F & !F01E
+    script 14:8F91-9004 A=1 B=12
+    first B reply msg 11.2: "<CLR>{Asina}:"I will always look out for you.""
+p=$39 type $30 NPC {hit-immune}  place D8.0D
+    pres D8: F020 & !F01F
+    script 14:9004-9030 A=1 B=5
+    first B reply msg 10.1: "<CLR>Hmmmmmm_ Go to the palace, your way will definitely"
+p=$3A type $30 NPC  place 55.0F 55.10
+    pres 55: F06A & !F090
+    script 14:91E5-91FD A=1 B=3
+    first B reply msg 30.7: "<CLR> ___"
+p=$3D type $30 NPC  place E3.0D
+    script 14:921B-923B A=4 B=3
+    first B reply msg 15.0: "<CLR>__huh_  Oh, sorry, I zoned out for a minute_ I'm {R"
+p=$3E type $30 NPC  place E3.0E
+    script 14:927B-929B A=4 B=3
+    first B reply msg 15.5: "<CLR>I don't want to be a sacrifice. Where's my Uncle {C"
+p=$3F type $30 NPC  place E3.0F
+    script 14:929B-92BB A=4 B=3
+    first B reply msg 15.8: "<CLR>The girl substitute from {Portoa} is called {Mesia}"
+p=$40 type $30 NPC  place 71.10
+    script 14:92BB-92DB A=4 B=3
+    first B reply msg 15.10: "<CLR>This is {Joel} Island. The next {one} to the west i"
+p=$41 type $30 NPC  place 71.0F
+    script 14:925B-927B A=4 B=3
+    first B reply msg 15.12: "<CLR>Since a woman sorcerer from {Draygonia} went to the"
+p=$42 type $30 NPC  place 71.0D
+    script 14:923B-925B A=4 B=3
+    first B reply msg 15.15: "<CLR>{Clark}, who is the elder's brother, has not return"
+p=$43 type $30 NPC  place 71.0E
+    script 14:92DB-92FB A=4 B=3
+    first B reply msg 15.18: "<CLR>Hey! You surprised me! I thought you were a monster"
+p=$44 type $30 NPC  place E4.0D E9.0D
+    pres E9: !F08F | E4: F08F
+    script 14:9390-93BD A=4 B=4 state-areas E4:00 E9:05
+    first B reply msg 15.21: "<CLR>{Clark}:"Everybody has been living peacefully since"
+p=$45 type $30 NPC  place 65.12
+    pres 65: F013
+    script 14:92FB-931D A=4 B=3
+    first B reply msg 30.3: "<CLR> Tell me of your travels  someday."
+p=$46 type $30 NPC  place 65.15
+    pres 65: F013
+    script 14:931D-933F A=4 B=3
+    first B reply msg 16.7: "<CLR>During the daytime, men go to fish."
+p=$47 type $30 NPC  place E8.0D
+    pres E8: F013
+    script 14:9375-9390 A=4 B=2
+    first B reply msg 16.13: "<CLR>I'm helping my mother."
+p=$48 type $30 NPC  place 72.10
+    script 14:93D8-93F3 A=4 B=2
+    first B reply msg 19.10: "<CLR>{Draygonia} will soon be destroyed!"
+p=$49 type $30 NPC  place EF.10
+    script 14:8B08-8B12 A=1 B=1
+    first B reply msg 30.15: "<CLR>Welcome. {Please} have some refreshments."
+p=$4A type $30 NPC  place EF.11 EF.12
+    pres EF: !F024
+    script 14:944D-9463 A=4 B=1
+    first B reply msg 30.19: "<CLR>Don't talk to me like that!"
+p=$4B type $30 NPC  place F1.11 F1.12
+    script 14:8B12-8B25 A=1 B=2
+    first B reply msg 19.17: "<CLR>Very nice!"
+p=$4C type $30 NPC  place F1.0F
+    script 14:8B25-8B2F A=1 B=1
+    first B reply msg 19.18: "<CLR>Yah man, let's boogie!"
+p=$4D type $30 NPC  place F1.10
+    script 14:8B2F-8B39 A=1 B=1
+    first B reply msg 19.16: "<CLR>{Draygonia}_ Wise men_ who cares. Let's party!"
+p=$4E type $30 NPC {hit-immune}  place 7E.0D 7E.0E
+    pres 8C: !F027 | 7E: !F027 | F3: !F027 | F4: !F027
+    script 14:9477-9492 A=4 B=2
+    first B reply msg 20.4: "<CLR>Good luck."
+p=$4F type $30 NPC  place 8C.11
+    pres 8C: !F027 | 7E: !F027 | F3: !F027 | F4: !F027
+    script 14:94E8-9503 A=4 B=2
+    first B reply msg 20.4: "<CLR>Good luck."
+p=$50 type $30 NPC  place 8C.10
+    pres 8C: !F027 | 7E: !F027 | F3: !F027 | F4: !F027
+    script 14:9503-951E A=4 B=2
+    first B reply msg 20.4: "<CLR>Good luck."
+p=$51 type $30 NPC  place F3.0E F3.0F F3.10
+    pres 8C: !F027 | 7E: !F027 | F3: !F027 | F4: !F027
+    script 14:94B9-94D5 A=1 B=3
+    first B reply msg 20.15: "<CLR>Eiyaaah!"
+p=$52 type $30 NPC  place 8C.0F
+    pres 8C: !F027 | 7E: !F027 | F3: !F027 | F4: !F027
+    script 14:952A-9545 A=4 B=2
+    first B reply msg 20.20: "<CLR>{Be careful}_"
+p=$53 type $30 NPC  place F4.0E F4.0F
+    pres 8C: !F027 | 7E: !F027 | F3: !F027 | F4: !F027
+    script 14:94D5-94E8 A=1 B=2
+    first B reply msg 20.21: "<CLR>Oooo_ Owww_"
+p=$54 type $30 NPC  place BB.0D
+    script 14:95BF-95E2 A=3 B=4
+    first B reply msg 23.4: "<CLR>I heard that {Draygonia}'s best four warriors left "
+p=$55 type $30 NPC  place 8E.11
+    script 14:95FD-9618 A=4 B=2
+    first B reply msg 23.16: "<CLR>Don't look down on the Emperor's {power}."
+p=$56 type $30 NPC  place 8E.0F
+    script 14:956E-9589 A=4 B=2
+    first B reply msg 23.13: "<CLR>The Emperor is the worst! I won't forgive those who"
+p=$57 type $30 NPC  place BF.0F
+    script 14:9589-95A4 A=4 B=2
+    first B reply msg 23.11: "<CLR>I don't care what happens to {Draygonia} as long as"
+p=$58 type $30 NPC  place BF.0E
+    script 14:95A4-95BF A=4 B=2
+    first B reply msg 23.9: "<CLR>When I met the grand puba {Karmine}, I felt scared,"
+p=$59 type $30 NPC  place 96.0D 96.0E 96.0F 96.10
+    script 14:9669-967F A=4 B=1
+    first B reply msg 26.14: "<CLR>Let's play."
+p=$5A type $30 NPC  place 96.11
+    script 14:964B-9669 A=3 B=3
+    first B reply msg 26.17: "<CLR>{Deo}:"Avenge his death for me!""
+p=$5B type $30 NPC  place FA.0D
+    script 14:967F-969C A=4 B=2
+    first B reply msg 26.5: "<CLR>Oh, you are the legendary soldier_ I shall tell you"
+p=$5C type $30 NPC  place FA.0E
+    script 14:969C-96B9 A=4 B=2
+    first B reply msg 26.8: "<CLR>It's sad. The Emperor {Draygon} still hasn't given "
+p=$5D type $30 NPC  place 8C.16 8C.17
+    pres 8C: F027 & !F0E8
+    script 14:951E-952A A=1 B=1
+    first B reply msg 32.16: "<CLR>     He's already dead."
+p=$5E type $30 NPC {HitFlag->F06D, special talker}  place 10.0E AA.0D F2.0E
+    pres 10: F0A5 & F00B & !F051 | F2: !F027 | AA: !F055 | A6: F05E
+    script 14:9755-97A6 A=4 B=10 state-areas 10:00 F2:22 AA:33
+    first B reply msg 0.29: "<CLR>Use your {power} to open the way."
+p=$5F type $30 NPC {HitFlag->F06E, special talker}  place 1E.0E 21.16 AC.0E F2.0F F3.0D
+    pres 1E: F2F7 & !F00E | 21: !F051 | F3: !F05F & !F027 | F2: F05F & !F027 | AC: !F056 | A6: F05E
+    script 14:97A6-97EF A=4 B=8 state-areas 1E:00 21:05 F3:16 F2:16 AC:27
+    first B reply msg 3.2: "<CLR>You still lack the proper skill. Come back when you"
+p=$60 type $30 NPC  place 1E.0D 8C.0D EC.0D
+    pres 1E: !F051 | EC: !F061 | 8C: !F027
+    script 14:9719-9755 A=4 B=7 state-areas 1E:00 EC:0F 8C:16
+    first B reply msg 3.5: "<CLR>The {Tornado Bracelet} is somewhere in {Mt.Sabre}. "
+p=$61 type $30 NPC  place 52.0D
+    script 14:8B39-8B43 A=1 B=1
+    first B reply msg 30.3: "<CLR> Tell me of your travels  someday."
+p=$62 type $30 NPC {HitFlag->F06F, special talker}  place B9.0E E1.0E F2.10 F4.0D
+    pres E1: F01E & !F08F | F4: !F05F & !F027 | F2: F05F & !F027 | B9: !F057 | A6: F05E
+    script 14:97EF-9836 A=4 B=8 state-areas E1:00 F4:11 F2:11 B9:27
+    first B reply msg 11.3: "<CLR>{Asina}:"Oh, this is a gift I gave to some{one} I'l"
+p=$63 type $30 NPC {hit-immune}  place 64.0D
+    pres 64: !F025 & F01E
+    script 14:96B9-96C3 A=1 B=1
+    first B reply msg 12.0: "<CLR>I'm in such pain! Do you have any herbs that would "
+p=$64 type $30 NPC  place D6.0D
+    pres D6: F08B
+    script 14:91A3-91C5 A=4 B=3
+    first B reply msg 9.2: "<CLR>Don't hesitate. Use it freely."
+p=$65 type $30 NPC  place 01.0E
+    pres 01: !F073
+    script 14:8B7A-8B86 A=1 B=1
+    first B reply msg 0.9: "<CLR>Hey!! There's a guy coming out of the cave!"
+p=$68 type $30 NPC {hit-immune}  place 61.0D
+    pres 61: !F2FB
+    script 14:9860-986C A=1 B=1
+    first B reply msg 17.1: "<CLR>{Kensu}:"Be quiet, I lost something and I'm all mix"
+p=$6B type $30 NPC {hit-immune}  place 62.0D
+    pres 62: !F0A4
+    script 14:986C-9876 A=1 B=1
+    first B reply msg 31.0: "<CLR> zzz_"
+p=$6C type $30 NPC {HitFlag->F071, special talker}  place F1.0D
+    pres F1: F072 & !F03E
+    script 14:9897-98AD A=1 B=3
+    first B reply msg 19.1: "<CLR>{Kensu}:"I hate {people} who are pushy.""
+p=$6D type $30 NPC {HitFlag->F070, special talker}  place 8E.0E EF.0D
+    pres EF: F061 & !F072 | 8E: !F027
+    script 14:9876-9897 A=1 B=4 state-areas EF:00 8E:0C
+    first B reply msg 19.6: "<CLR>{Kensu}:"Shoot!"
+p=$6E type $30 NPC {hit-immune}  place F2.0D
+    pres F2: F05F & !F02D
+    script 14:8AF4-8AFE A=1 B=1
+    first B reply msg 22.1: "<CLR>{Azteca}:"{NAME}! Hurry to {Mesia}!""
+p=$6F type $30 NPC  place 72.0E
+    script 14:93F3-940E A=4 B=2
+    first B reply msg 19.12: "<CLR>When I heard {Shyron} was destroyed, I thought for "
+p=$70 type $30 NPC {hit-immune}  place 8C.14
+    pres 8C: F027 & !F0E0
+    script 14:9708-9719 A=1 B=2
+    first B reply msg 25.0: "<CLR>{Akahana}:"I_ I should have got_ uh_ an item_ I lef"
+p=$71 type $30 NPC {hit-immune}  place 8C.15
+    pres 8C: F027 & !F089
+    script 14:9545-955D A=1 B=3
+    first B reply msg 32.16: "<CLR>     He's already dead."
+p=$72 type $30 NPC {hit-immune}  place 8C.13
+    pres 8C: F027 & !F08A
+    script 14:955D-956E A=1 B=2
+    first B reply msg 25.3: "<CLR>{Stom}:"Ooooh_ {Draygonia}'s army came_ Every{one} "
+p=$75 type $30 NPC {hit-immune}  place BA.0D
+    pres BA: !F065
+    script 14:98AD-98B7 A=1 B=1
+    first B reply msg 24.6: "<CLR>{Kensu}:"Hey, it's me! I was stupid and was hit by "
+p=$76 type $30 NPC {hit-immune}  place 7E.0F 7E.10
+    pres 8C: F027 | 7E: F027 & !F0E9
+    script 14:94AD-94B9 A=1 B=1
+    first B reply msg 32.16: "<CLR>     He's already dead."
+p=$77 type $30 NPC  place 72.11
+    script 14:93BD-93D8 A=4 B=2
+    first B reply msg 19.8: "<CLR>After {people} of {Draygonia} are gone, the utmost "
+p=$78 type $30 NPC  place 8E.12
+    script 14:95E2-95FD A=4 B=2
+    first B reply msg 23.1: "<CLR>I feel like it was all a nightmare."
+p=$79 type $30 NPC  place 72.0D
+    script 14:940E-9429 A=4 B=2
+    first B reply msg 19.14: "<CLR>People saying bad things against {Draygonia} were e"
+p=$7A type $30 NPC  place 8E.10
+    script 14:9618-9633 A=4 B=2
+    first B reply msg 23.3: "<CLR>I feel like a tremendous weight has just been lifte"
+p=$7B type $30 NPC  place D6.0E
+    script 14:91C5-91E5 A=4 B=3
+    first B reply msg 9.6: "<CLR>My father went out to look for his lamp. He won't b"
+p=$7C type $30 NPC  place 1C.0D
+    pres 1C: !F045
+    script 14:8E3B-8E5F A=5 B=3
+    first B reply msg 4.11: "<CLR>I heard there are training grounds for wise men on "
+p=$7D type $30 NPC  place 1C.0F
+    pres 1C: !F045
+    script 14:8E5F-8E83 A=5 B=3
+    first B reply msg 4.15: "<CLR>We have reconsidered humans."
+p=$7E type $30 NPC {hit-immune}  place 62.0E BA.0F EF.0E F1.0E
+    pres 62: F0A4 & !F075 | EF: F072 & !F0DA | F1: F03E & !F063 | BA: F065 & !F0D8
+    script 14:9836-9860 A=1 B=5 [junk/misaligned decode] state-areas EF:00 F1:05 62:0A BA:16
+p=$80 type $30 NPC  place 8E.13 8E.15
+    pres 8E: !F026
+    script 14:8AE5-8AF4 A=1 B=2
+    first B reply msg 30.20: "<CLR> You bug me! Go Away!"
+p=$81 type $30 NPC  place 8E.14 8E.16
+    pres 8E: F026 & !F024
+    script 14:8AE5-8AF4 A=1 B=2
+    first B reply msg 30.20: "<CLR> You bug me! Go Away!"
+p=$83 type $30 NPC {hit-immune}  place 9C.0D
+    pres 9C: F06C & !F079
+    script 14:98D2-98E5 A=1 B=2
+    first B reply msg 27.1: "<CLR>{Azteca}:"Ooo_ {NAME}_ I'm glad you could come_ {NA"
+p=$84 type $30 NPC  place 6E.0D
+    pres 6E: !F013
+    script 14:98C8-98D2 A=1 B=1
+    first B reply msg 16.15: "<CLR>Help! There is a sorcerer in the back of this chamb"
+p=$85 type $30 NPC  place 55.0D 55.0E
+    pres 55: !F06A
+    script 14:91E5-91FD A=1 B=3
+    first B reply msg 30.7: "<CLR> ___"
+p=$88 type $30 NPC  place 57.0D
+    pres 57: !F035 & !F051
+    script 14:96CD-9708 A=4 B=6 state-areas 18:00 57:05 8C:11
+    first B reply msg 2.1: "<CLR>I'm {Akahana}. I used to have an unusual statue but"
+p=$8E type $30 NPC {hit-immune}  place 5E.0D 6E.0F
+    pres 6E: !F013
+    script 14:98B7-98C8 A=1 B=2
+    first B reply msg 27.12: "<CLR>"You must destroy DYNA, the central computer. If yo"
+p=$C0 type $57  place 0A.0D
+    pres 0A: !F100
+    script 14:8B39-8B43 A=1 B=1
+    first B reply msg 30.3: "<CLR> Tell me of your travels  someday."
+p=$C1 type $5E  place 1A.0D
+    pres 1A: !F101
+    script 14:8B39-8B43 A=1 B=1
+    first B reply msg 30.3: "<CLR> Tell me of your travels  someday."
+p=$C2 type $68  place 28.0D
+    pres 28: !F102
+    script 14:8B39-8B43 A=1 B=1
+    first B reply msg 30.3: "<CLR> Tell me of your travels  someday."
+p=$C3 type $70  place 43.0D
+    pres 43: !F103
+    script 14:98E5-98F4 A=1 B=2
+    first B reply msg 14.3: "<CLR>That is the {Sword of Water}! You're the legendary "
+p=$C5 type $8B  place A9.0D
+    pres A9: !F105
+    script: none (no valid pointer)
+p=$C6 type $90  place AC.0D
+    pres AC: !F106
+    script: none (no valid pointer)
+p=$C7 type $93  place B9.0D
+    pres B9: !F107
+    script: none (no valid pointer)
+p=$C8 type $97  place B6.0D
+    pres B6: !F108
+    script: none (no valid pointer)
+p=$C9 type $9C  place A0.0D
+    pres A0: !F109
+    script: none (no valid pointer)
+p=$CA type $9D  place A0.0E
+    pres A0: !F10A
+    script: none (no valid pointer)
+p=$CB type $9B  place 9F.0D A6.0D
+    pres 9F: !F10B
+    script 14:8000-8150 A=1 B=86 [junk/misaligned decode] state-areas B0:0B BD:5D 89:85 24:BD 5E:89 4C:19 80:BD 5D:8A 85:24 BD:5E 8A:85 25:A0 00:20 35:81 F0:03 4C:78 80:20 8F:80 A5:26 10:F1 B1:24 C8:C9
+p=$CC type $A5  place 6C.0D
+    pres 6C: !F10C
+    script: none (no valid pointer)
+
+== h2 p<$80: chests (GiveItem)
+p=$02 item $02 Sword of Water get-sets [set F017]  place 57.18
+p=$03 item $03 Sword of Thunder get-sets [set F05F]  place 8A.1B
+p=$05 item $05 Ball of Wind get-sets [set F087]  place 07.15
+p=$06 item $06 Tornado Bracelet get-sets [set F04E]  place 27.19
+p=$0A item $0A Blizzard Bracelet get-sets [set F07A]  place E2.0D
+p=$0C item $0C Storm Bracelet get-sets [set F078]  place B6.12
+p=$14 item $14 Psycho Shield get-sets [set F0CD]  place 89.1C
+p=$1B item $1B Battle Armor get-sets [set F0DF]  place 91.1C
+p=$1D item $1D Medical Herb get-sets [set F0AA]  place 06.0F
+p=$1E item $1E Antidote get-sets [set F0B9]  place 07.13
+p=$1F item $1F Lysis Plant get-sets [set F0B6]  place 48.18
+p=$20 item $20 Fruit of Lime get-sets [set F0BD]  place 7C.1A
+p=$21 item $21 Fruit of Power get-sets [set F0BE]  place 6D.13
+p=$22 item $22 Magic Ring get-sets [set F0C2]  place 69.1D
+p=$24 item $24 Warp Boots get-sets [set F0C8]  place 08.0E
+p=$25 item $25 Statue of Onyx get-sets [set F0CE] {HitFlag->F099}  place 15.18
+p=$2A item $2A Power Ring get-sets [set F0CB]  place 8F.0F
+p=$2C item $2C Iron Necklace get-sets [set F0DE]  place 6B.0F
+p=$2F item $2F Leather Boots get-sets [set F0E7]  place 91.1A
+p=$33 item $33 Key to Prison get-sets [set F0CF]  place 31.0D
+p=$35 item $35 Fog Lamp get-sets [set F0D1]  place 4F.13
+p=$3B item $3B Love Pendant get-sets [set F03C]  place 64.11
+p=$3C item $3C Kirisa Plant get-sets [set F0E4]  place 47.0E
+p=$3F item $3F Bow of Sun get-sets [set F07D]  place 7C.18
+p=$50 item $1D Medical Herb (remap of $50) get-sets [set F0AA]  place 07.14
+p=$52 item $1D Medical Herb (remap of $52) get-sets [set F0AA]  place 23.17
+p=$53 item $1D Medical Herb (remap of $53) get-sets [set F0AA]  place 2D.16
+p=$54 item $22 Magic Ring (remap of $54) get-sets [set F0C2]  place AF.1B
+p=$55 item $1D Medical Herb (remap of $55) get-sets [set F0AA]  place 6D.1E
+p=$56 item $1D Medical Herb (remap of $56) get-sets [set F0AA]  place 82.0F
+p=$57 item $1D Medical Herb (remap of $57) get-sets [set F0AA]  place 89.1D
+p=$58 item $22 Magic Ring (remap of $58) get-sets [set F0C2]  place B5.17
+p=$5A item $21 Fruit of Power (remap of $5A) get-sets [set F0BE]  place B8.0D
+p=$5B item $28 Flute of Lime (remap of $5B) get-sets [set F0D0]  place 57.19
+p=$5C item $1F Lysis Plant (remap of $5C) get-sets [set F0B6]  place 6A.19
+p=$5D item $1F Lysis Plant (remap of $5D) get-sets [set F0B6]  place AB.1D
+p=$5E item $1E Antidote (remap of $5E) get-sets [set F0B9] {HitFlag->F06D}  place 2A.17
+p=$5F item $1E Antidote (remap of $5F) get-sets [set F0B9] {HitFlag->F06E}  place 45.19
+p=$60 item $1E Antidote (remap of $60) get-sets [set F0B9]  place AE.16
+p=$62 item $21 Fruit of Power (remap of $62) get-sets [set F0BE] {HitFlag->F06F}  place AB.1C
+p=$63 item $26 Opel Statue (remap of $63) get-sets [set F105, set F0D3]  place AD.1A
+p=$64 item $21 Fruit of Power (remap of $64) get-sets [set F0BE]  place 91.1B
+p=$65 item $22 Magic Ring (remap of $65) get-sets [set F0C2]  place 7C.19
+p=$66 item $23 Fruit of Repun (remap of $66) get-sets [set F106, set F0C7]  place AB.1E
+p=$69 item $22 Magic Ring (remap of $69) get-sets [set F0C2]  place 21.17
+p=$6A item $24 Warp Boots (remap of $6A) get-sets [set F0C8]  place 20.18
+p=$6B item $22 Magic Ring (remap of $6B) get-sets [set F0C2]  place AE.17
+p=$6C item $22 Magic Ring (remap of $6C) get-sets [set F0C2] {HitFlag->F071}  place 9E.1B
+p=$6D item $26 Opel Statue (remap of $6D) get-sets [set F105, set F0D3] {HitFlag->F070}  place A5.1A
+p=$6E item $24 Warp Boots (remap of $6E) get-sets [set F0C8]  place B5.18
+p=$6F item $22 Magic Ring (remap of $6F) get-sets [set F0C2]  place AD.1B
+p=$70 TrapChest 30:D3DA (no item)  place 4A.15 4A.16 54.13 6B.0E 85.17 89.13 89.14 89.15 A3.0D
+
+== h2 p>=$80: event triggers (EventTriggerTable 15:A17A, ItemHook2 14:80E3)
+p=$80 place A8.14 A8.15
+    if !F027 & F05F -> act 0 msg 29.19 [set F027] "<CLR>{NAME}! {Shyron} is under Attack! {Please} hu"
+p=$81 place 8C.12 8C.18
+    if !F03B -> act 0 msg 0.0 [set F026, set F2FD] ""
+p=$82 place F2.11
+    if F05F & !F02D -> act 23 msg 0.0 [set F02D] ""
+p=$83 place A8.16
+    if !F064 -> act 0 msg 0.0 [set F064] ""
+p=$84 place 60.18 60.19
+    if !F051 -> act 11 msg 29.18 [set F051] "<CLR>{NAME}, you've closed the whirlpool. I'll now"
+p=$85 place 1E.0F
+    if F2F7 & !F00E -> act 24 msg 3.0 [clr F000] "<CLR>I am {Tornel}. If you are truly a legendary s"
+p=$86 place 28.1A 28.1B
+    if !F0A9 -> act 25 msg 28.15 [clr F000] "<CLR>{NAME}, you cannot climb this yet! You don't "
+p=$8A place 60.17 65.16
+    if !F2FB -> act 25 msg 29.16 [clr F000] "<CLR>{Please} go to {Joel} and speak to the elder "
+p=$8B place 71.11 71.12
+    if !F000 -> act 0 msg 0.0 [set F2FB] ""
+p=$8C place 10.0F
+    if !F038 -> act 0 msg 0.0 [set F085, set F038, set F084] ""
+p=$8D place 35.11 35.12 40.19
+    if F037 & !F047 -> act 0 msg 0.0 [set F047, clr F085] ""
+p=$8E place 1C.12
+    if !F000 -> act 0 msg 0.0 [set F2F7] ""
+p=$90 place 1B.12
+    if !F000 -> act 0 msg 0.0 [clr F0A1, set F2FA] ""
+p=$91 place 28.19
+    if !F07F -> act 0 msg 32.18 [set F07F] "<CLR>  I hear some{one} talking."
+p=$92 place 64.12
+    if !F000 -> act 0 msg 0.0 [set F018] ""
+p=$94 place 38.0D
+    if !F000 -> act 0 msg 0.0 [set F05B] ""
+p=$95 place 52.0E
+    if !F000 -> act 7 msg 0.0 [set F01B] ""
+p=$97 place D7.11
+    if !F000 -> act 0 msg 0.0 [clr F019] ""
+p=$99 place 02.11 02.12
+    if !F000 -> act 0 msg 0.0 [set F2F5] ""
+p=$9A place F2.12
+    if F027 & !F067 -> act 29 msg 25.4 [clr F000] "<CLR>Ha!Ha! I'm {Mado}! I destroyed those silly {w"
+p=$A1 place 5A.19
+    if !F0EA -> act 0 msg 27.8 [set F0EA] "<CLR> -{NAME}! {Mesia}! These -messages are for yo"
+p=$A2 place 5B.19
+    if !F0EB -> act 0 msg 27.9 [set F0EB] "<CLR> -Did you find {Azteca}? He -was an android c"
+p=$A3 place 5D.0D
+    if !F0EC -> act 0 msg 27.10 [set F0EC] "<CLR> -{NAME}! {Mesia}! By the time -this is activ"
+p=$A4 place 5E.0E
+    if !F068 -> act 30 msg 27.11 [set F068] "<CLR>{NAME}:"{Mesia}!" {Mesia}:"{NAME}! You finall"
+p=$A5 place 28.18
+    if !F07E -> act 0 msg 5.15 [set F07E] "<CLR>{Guard}:"Are those worthless villagers workin"
+p=$A6 place 18.13
+    if !F000 -> act 0 msg 0.0 [set F2F6] ""
+p=$A7 place D5.10
+    if !F000 -> act 0 msg 0.0 [set F2F8] ""
+p=$A8 place 50.12
+    if !F000 -> act 0 msg 0.0 [set F2F9] ""
+p=$A9 place 72.12
+    if !F000 -> act 0 msg 0.0 [set F2FC] ""
+p=$AA place 1C.13
+    if F0A8 -> act 0 msg 0.0 [set F043] ""
+p=$AB place 8E.17 8E.18
+    if !F000 -> act 0 msg 0.0 [set F2FE] ""
+p=$AC place 93.12
+    if !F000 -> act 0 msg 0.0 [set F2FF] ""
+p=$AD place 28.1C
+    if !F000 -> act 0 msg 0.0 [set F093] ""
+p=$AE place 7C.1B
+    if !F000 -> act 0 msg 0.0 [set F094] ""
+p=$AF place 60.1A
+    if !F000 -> act 0 msg 0.0 [set F095] ""
+p=$B0 place 51.0E
+    if F021 -> act 31 msg 0.0 [clr F000] ""
+p=$B1 place A0.10 A0.11
+    if !F000 -> act 29 msg 0.0 [clr F000] ""
+p=$B2 place 35.0F 35.10
+    if !F037 -> act 8 msg 28.16 [set F037, set F083] "<CLR>Oh {NAME}! Good job! I'll now teach you the {"
+p=$B3 place 73.0D
+    if !F000 -> act 0 msg 0.0 [set F08C] ""
+p=$B4 place 03.1C
+    if F00A & !F039 -> act 15 msg 0.27 [set F039] "<CLR>You have d{one} well. I will now teach you th"
+p=$B6 place 6E.11
+    if !F013 & !F0DB -> act 0 msg 16.14 [set F0DB, set F08E] "<CLR>I'm the real {Mesia}! This is a trap! Go away"
+p=$B7 place 50.13
+    if F09C -> act 0 msg 0.0 [clr F09C, clr F0A2, set F020] ""
+p=$B8 place 50.14
+    if F000 -> act 0 msg 0.0 [clr F000] ""
+p=$BA place 15.19
+    if !F03F -> act 25 msg 28.15 [clr F000] "<CLR>{NAME}, you cannot climb this yet! You don't "
+p=$BB place D7.0F D7.10
+    if !F09E & !F01F & F020 -> act 27 msg 0.0 [clr F000] ""
+p=$BC place 1B.13 1B.14 1B.15
+    if !F099 & !F028 -> act 27 msg 0.0 [clr F000] ""
+p=$BD place 7E.11 7E.12
+    if !F02B & !F026 & !F027 -> act 27 msg 0.0 [clr F000] ""
+p=$BF place 54.17 56.1A
+    if F06A -> act 0 msg 0.0 [set F090] ""
+p=$C1 place EF.13
+    if F072 -> act 0 msg 0.0 [set F0DA] ""
+p=$C2 place 6E.12
+    if !F000 -> act 0 msg 0.0 [clr F0DB] ""
+unplaced triggers (17): 87 88 89 8F 93 96 98 9B 9C 9D 9E 9F A0 B5 B9 BE C0
+
+== HitSetFlag 26:9011: HitFlagParams 26:9045 -> flag 26:904F (set when the object is hit/killed)
+; HitHandler3 26:8FC4 returns before both lists unless obj_spawn_b2 = 1 (handler 1) and
+; obj_hitflags b5 clear; an immune-list match (checked first) returns without setting the flag
+p=$26 -> F058 DEAD (immune)  placed: h0 68.0D 68.0E 68.0F 68.10 68.11 68.12 (b2!=1: no flag); h1 D4.0E
+p=$27 -> F059 DEAD (immune)  placed: h1 D4.0D
+p=$5E -> F06D LIVE  placed: h1 10.0E AA.0D F2.0E; h2 2A.17 (b2!=1: no flag)
+p=$5F -> F06E LIVE  placed: h1 1E.0E 21.16 AC.0E F2.0F F3.0D; h2 45.19 (b2!=1: no flag)
+p=$62 -> F06F LIVE  placed: h1 B9.0E E1.0E F2.10 F4.0D; h2 AB.1C (b2!=1: no flag)
+p=$6D -> F070 LIVE  placed: h1 8E.0E EF.0D; h2 A5.1A (b2!=1: no flag)
+p=$6C -> F071 LIVE  placed: h1 F1.0D; h2 9E.1B (b2!=1: no flag)
+p=$34 -> F0A1 LIVE  placed: h0 7F.0E 7F.0F 80.14 80.15 81.0F 81.10 83.0F 83.10 86.13 86.14 86.15 86.16 87.0D 87.0E (b2!=1: no flag); h1 D7.0D
+p=$25 -> F099 LIVE  placed: h1 1B.0D; h2 15.18 (b2!=1: no flag)
+immune list 26:9058 (only with obj_spawn_b2 = 1, i.e. handler 1): 7E 74(unplaced h1) 38 39 73(unplaced h1) 83 6E 76 4E 63 69(unplaced h1) 70 71 72 68 6B 75 8E 27 26
+
+== other handlers (h0 type p+$50, h3 type p+$D0, h4 type p): counts only
+h0: 44 params
+h3: 6 params
+h4: 18 params
