@@ -80,5 +80,66 @@ internal static partial class Program
             }
             finally { try { Directory.Delete(dir, true); } catch (IOException) { } }
         }),
+        ("win_video_layout", () =>
+        {
+            var v = new VideoSettings();
+            Eq((144, 60, 512, 480), v.Layout(800, 600), "default = square integer (= Window.Fit)");
+            v.Aspect = Aspect.SixteenNine;
+            Eq((106, 60, 1707, 960), v.Layout(1920, 1080), "16:9 integer 4x at 1080p");
+            Eq((213, 60, 853, 480), v.Layout(1280, 600), "16:9 integer 2x");
+            v.Integer = false;
+            Eq((0, 0, 1280, 720), v.Layout(1280, 720), "16:9 free scale fills 720p");
+            Eq((0, 75, 800, 450), v.Layout(800, 600), "16:9 free scale letterboxed");
+            v.Aspect = Aspect.FourThree;
+            Eq((240, 0, 1440, 1080), v.Layout(1920, 1080), "4:3 pillarboxed at 1080p");
+            v.Aspect = Aspect.Fill;
+            Eq((0, 0, 1000, 300), v.Layout(1000, 300), "fill = whole client");
+            v = new VideoSettings { Aspect = Aspect.Tv };
+            Eq((126, 20, 1170, 960), v.Layout(1422, 1000), "TV 8:7 integer 4x: 256*8/7*4 = 1170");
+            v.CropOverscan = true;
+            Eq(224, v.VisibleH, "crop -> 224 lines"); Eq(8, v.FirstLine, "first line 8");
+            Eq((0, 2, 1024, 896), new VideoSettings { CropOverscan = true }.Layout(1024, 900), "square crop 4x = 1024x896, centred");
+            Eq((768, 720), new VideoSettings().ClientSizeAt(3), "3x window = 768x720");
+            Eq((1280, 720), new VideoSettings { Aspect = Aspect.SixteenNine }.ClientSizeAt(3), "3x 16:9 window");
+            var p = new VideoSettings { WindowW = 1600, WindowH = 900 };
+            Eq((1600, 900), p.ClientSize(), "preset size");
+            p.SetScale(9); Eq((6, 0), (p.Scale, p.WindowW), "scale clamps to 6x and drops the preset");
+        }),
+        ("win_video_ini", () =>
+        {
+            var v = new VideoSettings
+            {
+                Aspect = Aspect.SixteenTen, Integer = false, CropOverscan = true, Smooth = true, WindowW = 1280, WindowH = 720,
+                Fullscreen = true, FsW = 1920, FsH = 1080, MenuBar = false,
+            };
+            var r = VideoSettings.Parse(v.Serialize());
+            Eq(v.Serialize(), r.Serialize(), "round trip");
+            Eq(Aspect.SixteenTen, r.Aspect, "aspect"); Eq((1280, 720), (r.WindowW, r.WindowH), "window preset");
+            Eq((1920, 1080), (r.FsW, r.FsH), "fullscreen mode");
+            var d = VideoSettings.Parse("aspect=bogus\nwindow=99x\nfullscreen_mode=12x5\nscaling=?\nnot a line\nwindow=4x\n");
+            Eq(new VideoSettings { Scale = 4 }.Serialize(), d.Serialize(), "bad values keep the defaults");
+            True(VideoSettings.DefaultPath().EndsWith(Path.Combine("re-c", "video.ini")), "default path re-c/video.ini");
+            var modes = VideoSettings.ModeList(new[] { (1920, 1080, 32), (800, 600, 32), (1920, 1080, 32), (640, 400, 32), (1024, 768, 16) });
+            Eq("800x600,1920x1080", string.Join(',', modes.Select(m => $"{m.W}x{m.H}")), "mode list: 32 bpp, >= 640x480, distinct, sorted");
+        }),
+        ("win_video_menu", () =>
+        {
+            Eq(213, Window.CommandId("size:3x"), "size:3x");
+            Eq(223, Window.CommandId("size:1280x720"), "size preset index 3");
+            Eq(240 + (int)Aspect.SixteenNine, Window.CommandId("aspect:16:9"), "aspect:16:9");
+            Eq(200, Window.CommandId("Fullscreen"), "case-insensitive");
+            True(Window.CommandId("fsmode:1280x720") < 0, "unlisted fullscreen mode -> direct request");
+            Throws(() => Window.CommandId("size:7x"), "bad size");
+            Throws(() => Window.CommandId("nope"), "unknown");
+            unsafe
+            {
+                Eq(220, sizeof(Win32.DEVMODEW), "DEVMODEW size");
+                Eq(104, sizeof(Win32.MONITORINFOEXW), "MONITORINFOEXW size");
+                Eq(80, sizeof(Win32.MENUITEMINFOW), "MENUITEMINFOW size (x64)");
+            }
+            var o = WindowOptions.Parse(new[] { "--fullscreen", "--video-config", "v.ini", "--menu", "aspect:tv,crop", "--dump-window", "w.png", "--scale", "2" })!;
+            True(o.Fullscreen && o.ScaleGiven, "flags"); Eq("v.ini", o.VideoConfig, "config");
+            Eq("aspect:tv|crop", string.Join('|', o.MenuCmds), "menu cmds"); Eq("w.png", o.DumpWindow, "dump-window");
+        }),
     };
 }

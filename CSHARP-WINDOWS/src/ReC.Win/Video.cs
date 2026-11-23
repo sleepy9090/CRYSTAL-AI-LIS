@@ -1,0 +1,183 @@
+// re-c Windows host — video settings (Video menu, VideoMenu.cs): aspect ratio / widescreen, integer or free scaling,
+// overscan crop, smoothing, window size, fullscreen mode + resolution, menu bar. Pure logic (no Win32 call), so the
+// layout maths and the settings file are unit-tested on Linux (tests/ReC.Tests/WinHostTests.cs).
+//
+// Settings file: %APPDATA%\re-c\video.ini (`--video-config FILE` overrides), plain `key=value` lines, written whenever a
+// menu choice changes something. Unknown keys / bad values are ignored (defaults kept), so an old or hand-edited file
+// never stops the game from starting.
+namespace ReC.Win;
+
+internal enum Aspect { Square, Tv, FourThree, SixteenTen, SixteenNine, Fill }
+
+internal sealed class VideoSettings
+{
+    public const int SrcW = 256, SrcH = 240, Overscan = 8;
+
+    public Aspect Aspect = Aspect.Square;
+    /// <summary>true = whole-number vertical scale (sharp, black bars); false = as large as the window allows.</summary>
+    public bool Integer = true;
+    /// <summary>hide the top and bottom 8 lines (a TV's overscan): 256x224 shown.</summary>
+    public bool CropOverscan;
+    /// <summary>GDI HALFTONE stretch (soft) instead of nearest pixel.</summary>
+    public bool Smooth;
+    /// <summary>window size: Scale (1-6) x the picture, or a fixed client size when WindowW > 0.</summary>
+    public int Scale = 3, WindowW, WindowH;
+    public bool Fullscreen;
+    /// <summary>fullscreen resolution: 0 x 0 = borderless at the desktop resolution, else an exclusive display mode.</summary>
+    public int FsW, FsH;
+    public bool MenuBar = true;
+
+    public static readonly (Aspect A, string Key, string Label)[] Aspects =
+    {
+        (Aspect.Square, "square", "&Square pixels (256:240)"),
+        (Aspect.Tv, "tv", "NES &TV (8:7 pixels)"),
+        (Aspect.FourThree, "4:3", "&4:3"),
+        (Aspect.SixteenTen, "16:10", "16:1&0 widescreen"),
+        (Aspect.SixteenNine, "16:9", "16:&9 widescreen"),
+        (Aspect.Fill, "fill", "Stretch to &fill"),
+    };
+
+    /// <summary>window-size presets (client area) besides the 1x-6x scales</summary>
+    public static readonly (int W, int H)[] Presets =
+    {
+        (640, 480), (800, 600), (1024, 768), (1280, 720), (1280, 960), (1366, 768), (1600, 900), (1920, 1080),
+    };
+
+    public const int MaxScale = 6;
+
+    public int VisibleH => CropOverscan ? SrcH - 2 * Overscan : SrcH;
+    public int FirstLine => CropOverscan ? Overscan : 0;
+
+    /// <summary>shown width / height of the picture (Fill: the window decides; square pixels used for sizing)</summary>
+    public double Ratio => Aspect switch
+    {
+        Aspect.Tv => SrcW * 8.0 / 7.0 / VisibleH,
+        Aspect.FourThree => 4.0 / 3.0,
+        Aspect.SixteenTen => 16.0 / 10.0,
+        Aspect.SixteenNine => 16.0 / 9.0,
+        _ => (double)SrcW / VisibleH,
+    };
+
+    /// <summary>
+    /// Where the picture goes in a cw x ch client area (centred; the rest is painted black). Integer: the largest
+    /// whole-number vertical scale whose width also fits (at least 1x, which may overflow a tiny window); otherwise the
+    /// largest rectangle of the aspect ratio. Fill: the whole client area.
+    /// </summary>
+    public (int X, int Y, int W, int H) Layout(int cw, int ch)
+    {
+        if (Aspect == Aspect.Fill) return (0, 0, cw, ch);
+        double r = Ratio;
+        int w, h;
+        if (Integer)
+        {
+            int s = Math.Max(1, ch / VisibleH);
+            while (s > 1 && (int)Math.Round(s * VisibleH * r) > cw) s--;
+            h = s * VisibleH;
+            w = (int)Math.Round(h * r);
+        }
+        else
+        {
+            h = ch;
+            w = (int)Math.Round(ch * r);
+            if (w > cw) { w = cw; h = (int)Math.Round(cw / r); }
+        }
+        return ((cw - w) / 2, (ch - h) / 2, w, h);
+    }
+
+    /// <summary>client size of the window: the preset, or Scale x the picture at the aspect ratio</summary>
+    public (int W, int H) ClientSize() => WindowW > 0 ? (WindowW, WindowH) : ClientSizeAt(Scale);
+
+    public (int W, int H) ClientSizeAt(int scale)
+    {
+        int h = scale * VisibleH;
+        double r = Aspect == Aspect.Fill ? (double)SrcW / VisibleH : Ratio;
+        return ((int)Math.Round(h * r), h);
+    }
+
+    public void SetScale(int s) { Scale = Math.Clamp(s, 1, MaxScale); WindowW = WindowH = 0; }
+
+    public VideoSettings Clone() => (VideoSettings)MemberwiseClone();
+
+    // ---- settings file
+    public static string DefaultPath() => Path.Combine(Path.GetDirectoryName(Save.DefaultPath())!, "video.ini");
+
+    public string Serialize() => string.Join("\n", new[]
+    {
+        "# re-c video settings (Video menu); delete this file to get the defaults back",
+        $"aspect={Aspects.First(a => a.A == Aspect).Key}",
+        $"scaling={(Integer ? "integer" : "fit")}",
+        $"crop_overscan={(CropOverscan ? 1 : 0)}",
+        $"smooth={(Smooth ? 1 : 0)}",
+        $"window={(WindowW > 0 ? $"{WindowW}x{WindowH}" : $"{Scale}x")}",
+        $"fullscreen={(Fullscreen ? 1 : 0)}",
+        $"fullscreen_mode={(FsW > 0 ? $"{FsW}x{FsH}" : "desktop")}",
+        $"menu_bar={(MenuBar ? 1 : 0)}",
+    }) + "\n";
+
+    public static VideoSettings Parse(string text)
+    {
+        var v = new VideoSettings();
+        foreach (string raw in text.Split('\n'))
+        {
+            string line = raw.Trim();
+            int eq = line.IndexOf('=');
+            if (line.StartsWith('#') || eq < 0) continue;
+            string k = line[..eq].Trim().ToLowerInvariant(), val = line[(eq + 1)..].Trim().ToLowerInvariant();
+            switch (k)
+            {
+                case "aspect":
+                    foreach (var a in Aspects) if (a.Key == val) v.Aspect = a.A;
+                    break;
+                case "scaling": if (val is "integer" or "fit") v.Integer = val == "integer"; break;
+                case "crop_overscan": v.CropOverscan = val == "1"; break;
+                case "smooth": v.Smooth = val == "1"; break;
+                case "window":
+                    if (val.EndsWith('x') && int.TryParse(val[..^1], out int s) && s is >= 1 and <= MaxScale) v.SetScale(s);
+                    else if (TryWxH(val, out int w, out int h) && w >= 128 && h >= 112) { v.WindowW = w; v.WindowH = h; }
+                    break;
+                case "fullscreen": v.Fullscreen = val == "1"; break;
+                case "fullscreen_mode":
+                    if (val == "desktop") v.FsW = v.FsH = 0;
+                    else if (TryWxH(val, out int fw, out int fh) && fw >= 320 && fh >= 200) { v.FsW = fw; v.FsH = fh; }
+                    break;
+                case "menu_bar": v.MenuBar = val != "0"; break;
+            }
+        }
+        return v;
+    }
+
+    public static bool TryWxH(string s, out int w, out int h)
+    {
+        w = h = 0;
+        int x = s.IndexOf('x');
+        return x > 0 && int.TryParse(s[..x], out w) && int.TryParse(s[(x + 1)..], out h) && w > 0 && h > 0;
+    }
+
+    public static VideoSettings Load(string path)
+    {
+        try { return File.Exists(path) ? Parse(File.ReadAllText(path)) : new VideoSettings(); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return new VideoSettings(); }
+    }
+
+    public bool TrySave(string path)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
+            File.WriteAllText(path, Serialize());
+            return true;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return false; }
+    }
+
+    /// <summary>
+    /// Display modes for the Fullscreen resolution menu: distinct W x H at 32 bpp, at least 640 x 480, sorted; at most
+    /// `max` (the largest ones kept).
+    /// </summary>
+    public static List<(int W, int H)> ModeList(IEnumerable<(int W, int H, int Bpp)> modes, int max = 24)
+    {
+        var l = modes.Where(m => m.Bpp == 32 && m.W >= 640 && m.H >= 480).Select(m => (m.W, m.H)).Distinct()
+            .OrderBy(m => m.W).ThenBy(m => m.H).ToList();
+        return l.Count > max ? l.GetRange(l.Count - max, max) : l;
+    }
+}

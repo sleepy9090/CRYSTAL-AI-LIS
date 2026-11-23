@@ -36,10 +36,11 @@ internal static class Program
     }
 
     private static string Usage =>
-        "usage: ReC.exe [--scale S] [--save F.sav] [--data DIR] [--load-state F.json] [--mute] [--no-audio]\n" +
-        "               [--frames N] [--frame0 N] [--turbo] [--keys SPEC..] [--compare F.csv] [--dump-screen F.png]\n" +
-        "               [--quiet] [--window]\n" +
-        "  plays in a window; save file %APPDATA%\\re-c\\re-c.sav unless --save\n" +
+        "usage: ReC.exe [--scale S] [--fullscreen] [--video-config F.ini] [--save F.sav] [--data DIR] [--load-state F.json]\n" +
+        "               [--mute] [--no-audio] [--frames N] [--frame0 N] [--turbo] [--keys SPEC..] [--compare F.csv]\n" +
+        "               [--dump-screen F.png] [--menu CMD,..] [--dump-window F.png] [--quiet] [--window]\n" +
+        "  plays in a window; save file %APPDATA%\\re-c\\re-c.sav unless --save, video settings (Video menu)\n" +
+        "  %APPDATA%\\re-c\\video.ini unless --video-config\n" +
         Run.Headless.Help("ReC.exe --headless") + "\n" +
         "  no window (also when --compare / --dump-ram / --dump-wram / --dump-ciram / --pass-count / --shots\n" +
         "  is given without --window)\n" +

@@ -39,7 +39,7 @@ Relation to the other ports (read-only references, never edited from here):
    testable under Wine.
 7. **No NuGet library packages** (the SDK's own win-x64 runtime packs are fine). 0 build warnings.
 8. Keys as `../web/index.html`: arrows/WASD, X/K = A, Z/J = B, Enter = Start, Right Shift/Tab = Select, P pause,
-   M mute, Esc quit, F11 / Alt+Enter fullscreen toggle, 1-4 window scale.
+   M mute, Esc quit, F11 / Alt+Enter fullscreen toggle, 1-6 window scale (T8: + Video menu, see §5.8).
 
 ## 2. Layout
 
@@ -50,10 +50,11 @@ CSHARP-WINDOWS/
 ├─ docs/   architecture_win.md, obligations.csv (REA inventory of ../web/src), waivers.csv, rea/ (PE reports)
 ├─ tools/  cs_coverage.py, win_vs_web.py (exe under Wine vs web port), core_vs_web.py (Linux dotnet core vs web port),
 │          win_smoke.py (window mode under Wine + Xvfb), apu_wav_compare.py (--exe), make_icon.py (app.ico),
-│          rea_pe_report.py (REA inspections of dist/ReC.exe → docs/rea/), cs_rea_members.py
+│          win_video_check.py (T8 Video menu under Wine + Xvfb), rea_pe_report.py (REA inspections of dist/ReC.exe → docs/rea/), cs_rea_members.py
 ├─ src/ReC.Core/            copied core (net10.0) + embedded ../web/data
 ├─ src/ReC.Run/             Linux/dotnet headless runner; Headless.cs is also compiled into ReC.Win
-├─ src/ReC.Win/             Program.cs (args, headless vs window), Win32.cs (P/Invoke), Window.cs, Audio.cs (waveOut),
+├─ src/ReC.Win/             Program.cs (args, headless vs window), Win32.cs (P/Invoke), Window.cs, Video.cs +
+│                           VideoMenu.cs (T8 video settings / menus), Audio.cs (waveOut),
 │                           Pad.cs (keyboard Input + XInput Pad), Save.cs, WavOut.cs (--wav), app.ico,
 │                           app.manifest (PerMonitorV2, Win10+)
 ├─ tests/ReC.Tests/         copied unit tests (+ Windows-host pure-logic tests that run on Linux)
@@ -116,3 +117,10 @@ CSHARP-WINDOWS/
 6. **Controller (T5):** XInput instead of SDL GameController; `Input.Read` is keyboard only and Window ORs in
    `Pad.Read` (input.js read() ORs both in one function). Scripted runs ignore the controller.
 7. **`ReC.exe --wav ID OUT.wav [S]` (T5):** the tests' `--wav` (= apu_check.mjs) in the exe, for the Wine APU check.
+8. **Video menu (T8, not in the web port):** menu bar Game / Video + right-click copy. `Video.cs` `VideoSettings` holds
+   aspect (square / NES TV 8:7 / 4:3 / 16:10 / 16:9 / fill), integer vs free scaling, overscan crop (224 lines, drawn by
+   offsetting the top-down DIB), smooth (HALFTONE), window size (1x-6x of the picture at the aspect, or a client preset),
+   fullscreen + resolution (borderless desktop, or an exclusive `ChangeDisplaySettingsExW` mode restored on leave /
+   deactivate / exit), menu bar; saved to `%APPDATA%\re-c\video.ini` on each change. `Window.Fit` (`// js: main.js fit`)
+   = `VideoSettings.Layout`; the defaults reproduce the old integer letterbox exactly. Checked by
+   `tools/win_video_check.py` (`--menu` / `--dump-window` test hooks).

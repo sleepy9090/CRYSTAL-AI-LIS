@@ -3,10 +3,11 @@
 // timeBeginPeriod(1) sleeps), keyboard (Pad.cs), battery WRAM file (Save.cs). architecture_win.md §1 rules 2 / 5 / 8.
 //
 // Keys: arrows / WASD, X / K = A, Z / J = B, Enter = Start, Right Shift / Tab = Select, P pause, M mute, Esc quit,
-// F11 / Alt+Enter fullscreen, 1-4 window scale.
+// F11 / Alt+Enter fullscreen, 1-6 window scale. Menu bar (Game / Video) + right-click menu: VideoMenu.cs; video
+// settings (aspect / widescreen, scaling, overscan, filter, window size, fullscreen resolution): Video.cs.
 // Test hooks: --frames N quits after N frames (exit 0); --turbo runs one frame per loop pass without waiting;
 // --keys SPEC.. posts WM_KEYDOWN / WM_KEYUP to the window before each frame (same message path as the keyboard);
-// --compare F.csv / --dump-screen F.png as in the headless mode.
+// --compare F.csv / --dump-screen F.png as in the headless mode; --menu CMD,.. / --dump-window F.png (VideoMenu.cs).
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using ReC.Game;
@@ -17,9 +18,9 @@ namespace ReC.Win;
 internal sealed class WindowOptions
 {
     public int Scale = 3, Frames = -1, Frame0 = 214;
-    public bool Frame0Given, Mute, NoAudio, Turbo, Quiet;
-    public string? SavePath, DataDir, StatePath, Screen, Compare;
-    public readonly List<string> KeySpecs = new();
+    public bool Frame0Given, ScaleGiven, Mute, NoAudio, Turbo, Quiet, Fullscreen;
+    public string? SavePath, DataDir, StatePath, Screen, Compare, VideoConfig, DumpWindow;
+    public readonly List<string> KeySpecs = new(), MenuCmds = new();
 
     /// <summary>Window-mode options (ArgumentException / FormatException on bad input; `--help` -> null).</summary>
     public static WindowOptions? Parse(IReadOnlyList<string> args)
@@ -32,7 +33,11 @@ internal sealed class WindowOptions
             switch (k)
             {
                 case "--window": break;
-                case "--scale": o.Scale = int.Parse(V()); break;
+                case "--scale": o.Scale = int.Parse(V()); o.ScaleGiven = true; break;
+                case "--fullscreen": o.Fullscreen = true; break;
+                case "--video-config": o.VideoConfig = V(); break;
+                case "--menu": o.MenuCmds.AddRange(V().Split(',', StringSplitOptions.RemoveEmptyEntries)); break;
+                case "--dump-window": o.DumpWindow = V(); break;
                 case "--save": o.SavePath = V(); break;
                 case "--data": o.DataDir = V(); break;
                 case "--load-state": o.StatePath = V(); break;
@@ -53,7 +58,7 @@ internal sealed class WindowOptions
     }
 }
 
-internal static unsafe class Window
+internal static unsafe partial class Window
 {
     private const string Title = "re-c";
     private const string ClassName = "ReCWindow";
@@ -101,6 +106,9 @@ internal static unsafe class Window
         _scripted = o.KeySpecs.Count > 0;
         var rows = o.Compare != null ? new List<string> { string.Join(',', Csv.CompareColumns()) } : null;
         _muted = o.Mute;
+        _videoPath = o.VideoConfig ?? VideoSettings.DefaultPath();
+        _v = VideoSettings.Load(_videoPath);
+        if (o.ScaleGiven) _v.SetScale(o.Scale);
         _audio = new AudioOut(m);
         _pad = new Pad();
 
@@ -115,7 +123,9 @@ internal static unsafe class Window
         int ranTotal = 0;
         try
         {
-            if (!CreateMainWindow(o.Scale)) { Console.Error.WriteLine("ReC.exe: could not create the window"); return 1; }
+            if (!CreateMainWindow()) { Console.Error.WriteLine("ReC.exe: could not create the window"); return 1; }
+            if (_v.Fullscreen || o.Fullscreen) { _v.Fullscreen = false; ToggleFullscreen(); }
+            foreach (string c in o.MenuCmds) { Command(CommandId(c)); Pump(); }   // = clicking the menu items in order
             // no autoplay policy on the desktop: audio starts right away (JS: on the first key / click); M = mute
             bool audioOn = !o.NoAudio && _audio.Resume();
             _audio.SetMuted(_muted);
@@ -184,15 +194,20 @@ internal static unsafe class Window
 
             if (rows != null) File.WriteAllText(o.Compare!, string.Join('\n', rows) + "\n");
             if (o.Screen != null) Png.WriteFb(o.Screen, m.Ppu.Fb, data.NesRgb, 1);
+            if (o.DumpWindow != null && _hwnd != IntPtr.Zero) DumpWindow(o.DumpWindow);
             if (!o.Quiet) Console.Error.WriteLine($"[re-c] frames={ranTotal} main_state={m.Rd(0x40)} sub_state={m.Rd(0x41)} " +
                                                   $"audio_underruns={_audio.Underruns} audio_dropped={_audio.Dropped}");
             return 0;
         }
         finally
         {
+            RestoreDisplayMode();
             _audio.Close();
             if (saving) Save.SaveWram(savePath, m.Mem.Wram);   // always, on leaving (= 'pagehide')
             if (_hwnd != IntPtr.Zero) { Win32.DestroyWindow(_hwnd); _hwnd = IntPtr.Zero; }
+            if (_menuBar != IntPtr.Zero && !MenuShown) Win32.DestroyMenu(_menuBar);   // an attached one goes with the window
+            if (_popup != IntPtr.Zero) Win32.DestroyMenu(_popup);
+            _menus.Clear(); _menuBar = _popup = IntPtr.Zero;
             Win32.timeEndPeriod(1);
         }
     }
@@ -218,7 +233,7 @@ internal static unsafe class Window
         }
     }
 
-    private static bool CreateMainWindow(int scale)
+    private static bool CreateMainWindow()
     {
         IntPtr inst = Win32.GetModuleHandleW(null);
         fixed (char* cls = ClassName)
@@ -238,77 +253,48 @@ internal static unsafe class Window
             };
             if (Win32.RegisterClassExW(wc) == 0) return false;
         }
-        scale = Math.Clamp(scale, 1, 8);
-        var (w, h) = OuterSize(scale);
+        var (cw, ch) = _v.ClientSize();
+        var (w, h) = OuterSize(cw, ch);
         _hwnd = Win32.CreateWindowExW(0, ClassName, Title, Style, Win32.CW_USEDEFAULT, Win32.CW_USEDEFAULT, w, h,
             IntPtr.Zero, IntPtr.Zero, inst, IntPtr.Zero);
         if (_hwnd == IntPtr.Zero) return false;
-        // shrink the default scale until the window fits the monitor's work area
+        BuildMenus();
+        if (_v.MenuBar) Win32.SetMenu(_hwnd, _menuBar);
+        // a 1x-6x window that does not fit the monitor's work area shrinks until it does (not saved)
         var mi = new Win32.MONITORINFO { CbSize = (uint)sizeof(Win32.MONITORINFO) };
-        if (Win32.GetMonitorInfoW(Win32.MonitorFromWindow(_hwnd, Win32.MONITOR_DEFAULTTONEAREST), ref mi))
+        if (_v.WindowW == 0 && Win32.GetMonitorInfoW(Win32.MonitorFromWindow(_hwnd, Win32.MONITOR_DEFAULTTONEAREST), ref mi))
         {
-            while (scale > 1 && (OuterSize(scale).W > mi.Work.Right - mi.Work.Left || OuterSize(scale).H > mi.Work.Bottom - mi.Work.Top))
-                scale--;
-            SetScale(scale);
+            int want = _v.Scale;
+            bool Fits(int s)
+            {
+                var (ow, oh) = OuterSize(_v.ClientSizeAt(s).W, _v.ClientSizeAt(s).H);
+                return ow <= mi.Work.Right - mi.Work.Left && oh <= mi.Work.Bottom - mi.Work.Top;
+            }
+            while (_v.Scale > 1 && !Fits(_v.Scale)) _v.Scale--;
+            ApplyWindowSize();
+            _v.Scale = want;
         }
+        else ApplyWindowSize();
+        UpdateMenus();
         _hdc = Win32.GetDC(_hwnd);
-        Win32.SetStretchBltMode(_hdc, Win32.COLORONCOLOR);
         Win32.ShowWindow(_hwnd, Win32.SW_SHOW);
         return true;
     }
 
-    private static (int W, int H) OuterSize(int scale)
-    {
-        var r = new Win32.RECT { Right = 256 * scale, Bottom = 240 * scale };
-        Win32.AdjustWindowRectEx(ref r, Style, false, 0);
-        return (r.Right - r.Left, r.Bottom - r.Top);
-    }
-
-    private static void SetScale(int scale)
-    {
-        if (_fullscreen) return;
-        var (w, h) = OuterSize(scale);
-        Win32.SetWindowPos(_hwnd, IntPtr.Zero, 0, 0, w, h, Win32.SWP_NOMOVE | Win32.SWP_NOZORDER | Win32.SWP_NOOWNERZORDER);
-    }
-
-    /// <summary>F11 / Alt+Enter: borderless window over the whole monitor, and back to the saved placement.</summary>
-    private static void ToggleFullscreen()
-    {
-        if (!_fullscreen)
-        {
-            var mi = new Win32.MONITORINFO { CbSize = (uint)sizeof(Win32.MONITORINFO) };
-            _placement = new Win32.WINDOWPLACEMENT { Length = (uint)sizeof(Win32.WINDOWPLACEMENT) };
-            if (!Win32.GetWindowPlacement(_hwnd, ref _placement) ||
-                !Win32.GetMonitorInfoW(Win32.MonitorFromWindow(_hwnd, Win32.MONITOR_DEFAULTTONEAREST), ref mi)) return;
-            Win32.SetWindowLongPtrW(_hwnd, Win32.GWL_STYLE, unchecked((IntPtr)(long)(Win32.WS_POPUP | Win32.WS_VISIBLE)));
-            Win32.SetWindowPos(_hwnd, IntPtr.Zero, mi.Monitor.Left, mi.Monitor.Top, mi.Monitor.Right - mi.Monitor.Left,
-                mi.Monitor.Bottom - mi.Monitor.Top, Win32.SWP_NOOWNERZORDER | Win32.SWP_FRAMECHANGED);
-            _fullscreen = true;
-        }
-        else
-        {
-            Win32.SetWindowLongPtrW(_hwnd, Win32.GWL_STYLE, (IntPtr)(Style | Win32.WS_VISIBLE));
-            Win32.SetWindowPlacement(_hwnd, _placement);
-            Win32.SetWindowPos(_hwnd, IntPtr.Zero, 0, 0, 0, 0,
-                Win32.SWP_NOMOVE | 0x1 /* NOSIZE */ | Win32.SWP_NOZORDER | Win32.SWP_NOOWNERZORDER | Win32.SWP_FRAMECHANGED);
-            _fullscreen = false;
-        }
-    }
-
     // js: main.js fit
-    /// <summary>largest integer scale that fits the client area, centred; the rest is painted black</summary>
-    public static (int X, int Y, int W, int H) Fit(int cw, int ch)
-    {
-        int s = Math.Max(1, Math.Min(cw / 256, ch / 240));
-        return ((cw - 256 * s) / 2, (ch - 240 * s) / 2, 256 * s, 240 * s);
-    }
+    /// <summary>where the picture goes in the client area with the current video settings (Video.cs Layout)</summary>
+    public static (int X, int Y, int W, int H) Fit(int cw, int ch) => _v.Layout(cw, ch);
 
     private static void Present() => Paint(_hdc);
 
     private static void Paint(IntPtr hdc)
     {
         if (hdc == IntPtr.Zero || !Win32.GetClientRect(_hwnd, out var rc)) return;
-        int cw = rc.Right, ch = rc.Bottom;
+        Paint(hdc, rc.Right, rc.Bottom);
+    }
+
+    private static void Paint(IntPtr hdc, int cw, int ch)
+    {
         if (cw <= 0 || ch <= 0) return;
         var (x, y, w, h) = Fit(cw, ch);
         IntPtr black = Win32.GetStockObject(Win32.BLACK_BRUSH);
@@ -316,8 +302,14 @@ internal static unsafe class Window
         if (y + h < ch) Win32.FillRect(hdc, new Win32.RECT { Top = y + h, Right = cw, Bottom = ch }, black);
         if (x > 0) Win32.FillRect(hdc, new Win32.RECT { Top = y, Right = x, Bottom = y + h }, black);
         if (x + w < cw) Win32.FillRect(hdc, new Win32.RECT { Left = x + w, Top = y, Right = cw, Bottom = y + h }, black);
+        Win32.SetStretchBltMode(hdc, _v.Smooth ? Win32.HALFTONE : Win32.COLORONCOLOR);
+        if (_v.Smooth) Win32.SetBrushOrgEx(hdc, 0, 0, IntPtr.Zero);
+        // overscan crop: start the top-down DIB 8 lines in (no source-rectangle origin quirks)
+        var bmi = _bmi;
+        bmi.Height = -_v.VisibleH;
         fixed (uint* p = Px)
-            Win32.StretchDIBits(hdc, x, y, w, h, 0, 0, 256, 240, p, _bmi, Win32.DIB_RGB_COLORS, Win32.SRCCOPY);
+            Win32.StretchDIBits(hdc, x, y, w, h, 0, 0, 256, _v.VisibleH, p + _v.FirstLine * 256, bmi,
+                Win32.DIB_RGB_COLORS, Win32.SRCCOPY);
     }
 
     private static void KeyCommand(int vk)
@@ -336,8 +328,9 @@ internal static unsafe class Window
                 break;
             case Win32.VK_ESCAPE: Win32.DestroyWindow(_hwnd); break;
             case Win32.VK_F11: ToggleFullscreen(); break;
-            case >= '1' and <= '4': SetScale(vk - '0'); break;
+            case >= '1' and <= '6': _v.SetScale(vk - '0'); SettingsChanged(true); break;
         }
+        UpdateMenus();
     }
 
     public static bool Muted => _muted;
@@ -364,8 +357,26 @@ internal static unsafe class Window
                     if ((int)wParam == Win32.VK_RETURN)
                     {
                         if (((long)lParam & 0x40000000) == 0) ToggleFullscreen();
+                        _altUsed = true;
                         return IntPtr.Zero;
                     }
+                    break;
+                case Win32.WM_SYSKEYUP:
+                    // Alt released after Alt+Enter: no menu-bar activation
+                    if ((int)wParam == 0x12 /* VK_MENU */ && _altUsed) { _altUsed = false; return IntPtr.Zero; }
+                    break;
+                case Win32.WM_COMMAND:
+                    Command(Win32.LoWord(wParam));
+                    return IntPtr.Zero;
+                case Win32.WM_RBUTTONUP:
+                    ContextMenu();
+                    return IntPtr.Zero;
+                case Win32.WM_EXITMENULOOP:
+                case Win32.WM_EXITSIZEMOVE:
+                    _last = Clock.Elapsed.TotalMilliseconds; _acc = 0;    // the game stood still in the modal loop
+                    break;
+                case Win32.WM_ACTIVATEAPP:
+                    ActivateApp(wParam != IntPtr.Zero);
                     break;
                 case Win32.WM_SYSCHAR:
                     if ((int)wParam == '\r') return IntPtr.Zero;     // no beep for Alt+Enter
@@ -380,7 +391,7 @@ internal static unsafe class Window
                     break;
                 case Win32.WM_GETMINMAXINFO:
                 {
-                    var (w, h) = OuterSize(1);
+                    var (w, h) = OuterSize(_v.ClientSizeAt(1).W, _v.ClientSizeAt(1).H);
                     var mmi = (Win32.MINMAXINFO*)lParam;
                     mmi->MinTrackSize = new Win32.POINT { X = w, Y = h };
                     return IntPtr.Zero;

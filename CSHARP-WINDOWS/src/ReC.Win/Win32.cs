@@ -236,7 +236,141 @@ internal static unsafe partial class Win32
     [LibraryImport("gdi32.dll")]
     public static partial int SetStretchBltMode(IntPtr hdc, int mode);
 
-    public const int COLORONCOLOR = 3;
+    public const int COLORONCOLOR = 3, HALFTONE = 4;
+
+    [LibraryImport("gdi32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetBrushOrgEx(IntPtr hdc, int x, int y, IntPtr old);
+
+    // ---- gdi32: --dump-window (read the client area back)
+    [LibraryImport("gdi32.dll")]
+    public static partial IntPtr CreateCompatibleDC(IntPtr hdc);
+
+    [LibraryImport("gdi32.dll")]
+    public static partial IntPtr CreateCompatibleBitmap(IntPtr hdc, int w, int h);
+
+    [LibraryImport("gdi32.dll")]
+    public static partial IntPtr SelectObject(IntPtr hdc, IntPtr obj);
+
+    [LibraryImport("gdi32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DeleteObject(IntPtr obj);
+
+    [LibraryImport("gdi32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DeleteDC(IntPtr hdc);
+
+    [LibraryImport("gdi32.dll")]
+    public static partial int GetDIBits(IntPtr hdc, IntPtr bmp, uint start, uint lines, void* bits, ref BITMAPINFOHEADER bmi, uint usage);
+
+    // ---- user32: menus (Video menu, VideoMenu.cs)
+    public const uint MF_STRING = 0x0, MF_GRAYED = 0x1, MF_CHECKED = 0x8, MF_POPUP = 0x10, MF_SEPARATOR = 0x800,
+        MF_BYCOMMAND = 0x0, MFT_RADIOCHECK = 0x200;
+    public const uint TPM_RIGHTBUTTON = 0x2, TPM_RETURNCMD = 0x100;
+    public const uint WM_COMMAND = 0x0111, WM_ENTERMENULOOP = 0x0211, WM_EXITMENULOOP = 0x0212, WM_RBUTTONUP = 0x0205,
+        WM_ACTIVATEAPP = 0x001C, WM_ENTERSIZEMOVE = 0x0231, WM_EXITSIZEMOVE = 0x0232, WM_CONTEXTMENU = 0x007B;
+    public const int SW_MINIMIZE = 6, SW_RESTORE = 9;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MENUITEMINFOW
+    {
+        public uint CbSize, Mask, Type, State, Id;
+        public IntPtr SubMenu, BmpChecked, BmpUnchecked, ItemData;
+        public char* TypeData;
+        public uint Cch;
+        public IntPtr BmpItem;
+    }
+
+    public const uint MIIM_STATE = 0x1, MIIM_FTYPE = 0x100, MFS_CHECKED = 0x8, MFS_GRAYED = 0x3, MFT_STRING = 0x0;
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool InvalidateRect(IntPtr hwnd, IntPtr rect, [MarshalAs(UnmanagedType.Bool)] bool erase);
+
+    [LibraryImport("user32.dll")]
+    public static partial IntPtr CreateMenu();
+
+    [LibraryImport("user32.dll")]
+    public static partial IntPtr CreatePopupMenu();
+
+    [LibraryImport("user32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool AppendMenuW(IntPtr menu, uint flags, nuint id, string? text);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetMenuItemInfoW(IntPtr menu, uint item, [MarshalAs(UnmanagedType.Bool)] bool byPosition, in MENUITEMINFOW mii);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetMenu(IntPtr hwnd, IntPtr menu);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DrawMenuBar(IntPtr hwnd);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DestroyMenu(IntPtr menu);
+
+    [LibraryImport("user32.dll")]
+    public static partial int TrackPopupMenu(IntPtr menu, uint flags, int x, int y, int reserved, IntPtr hwnd, IntPtr rect);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetCursorPos(out POINT p);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetForegroundWindow(IntPtr hwnd);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool IsZoomed(IntPtr hwnd);
+
+    // ---- user32: display modes (exclusive fullscreen resolution)
+    public const int ENUM_CURRENT_SETTINGS = -1;
+    public const uint DM_BITSPERPEL = 0x40000, DM_PELSWIDTH = 0x80000, DM_PELSHEIGHT = 0x100000;
+    public const uint CDS_FULLSCREEN = 0x4;
+    public const int DISP_CHANGE_SUCCESSFUL = 0;
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct MONITORINFOEXW
+    {
+        public uint CbSize;
+        public RECT Monitor, Work;
+        public uint Flags;
+        public fixed char Device[32];
+    }
+
+    /// <summary>DEVMODEW, 220 bytes (display fields only are used).</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DEVMODEW
+    {
+        public fixed char DeviceName[32];
+        public ushort SpecVersion, DriverVersion, Size, DriverExtra;
+        public uint Fields;
+        public int PositionX, PositionY;
+        public uint DisplayOrientation, DisplayFixedOutput;
+        public short Color, Duplex, YResolution, TTOption, Collate;
+        public fixed char FormName[32];
+        public ushort LogPixels;
+        public uint BitsPerPel, PelsWidth, PelsHeight, DisplayFlags, DisplayFrequency;
+        public uint IcmMethod, IcmIntent, MediaType, DitherType, Reserved1, Reserved2, PanningWidth, PanningHeight;
+    }
+
+    [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetMonitorInfoExW(IntPtr monitor, ref MONITORINFOEXW mi);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool EnumDisplaySettingsW(char* device, int mode, ref DEVMODEW dm);
+
+    [LibraryImport("user32.dll")]
+    public static partial int ChangeDisplaySettingsExW(char* device, DEVMODEW* dm, IntPtr hwnd, uint flags, IntPtr param);
+
+    public const int VK_F10 = 0x79;
 
     public static int LoWord(IntPtr p) => (int)((long)p & 0xFFFF);
     public static int HiWord(IntPtr p) => (int)(((long)p >> 16) & 0xFFFF);

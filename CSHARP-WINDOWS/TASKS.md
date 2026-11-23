@@ -108,3 +108,17 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   members tagged in ReC.Win or waived with reasons), tests pass, all checks identical; architecture §5 deviations filled in;
   README.md = how to build the exe on Linux, how to copy/run it on Windows (SmartScreen "unknown publisher" note: the exe
   is unsigned), keys, save location, command-line options, checks.
+- [x] T8 (interactive, 2026-11-23) done: **Video menu.** Menu bar `Game` (Pause / Mute / Exit) + `Video`, and the same
+  menus on right-click (the only way in fullscreen or with the bar hidden). Video: Fullscreen (F11 / Alt+Enter);
+  Fullscreen resolution = desktop (borderless) or an exclusive display mode from `EnumDisplaySettingsW` (32 bpp,
+  >= 640x480; `ChangeDisplaySettingsExW` CDS_FULLSCREEN on the window's monitor, undone on leaving / alt-tab / exit;
+  falls back to borderless if refused); Window size 1x-6x (keys 1-6) or client presets 640x480 … 1920x1080; Aspect ratio
+  square pixels / NES TV 8:7 / 4:3 / 16:10 / 16:9 widescreen / stretch to fill; Integer scaling on/off; Crop overscan
+  (256x224); Smooth filter (GDI HALFTONE); Show menu bar; Reset. `Video.cs` (VideoSettings: layout maths + `video.ini`
+  in %APPDATA%\re-c, `--video-config F` overrides), `VideoMenu.cs` (menus, commands, fullscreen modes). New options
+  `--fullscreen`, `--video-config F`, `--menu CMD,..` (test hook = the menu's Command path), `--dump-window F.png`
+  (client area as drawn). Tests 193/193 (win_video_layout / _ini / _menu). `tools/win_video_check.py`: 9 cases under
+  Wine + Xvfb 1920x1080 (client size, picture rectangle, black bars, picture vs the headless frame, settings file) all ok;
+  Xvfb offers no other display mode, so the exclusive case exercises the fallback; a real mode change is left to the
+  play-test on Windows. Final `dist/ReC.exe` 11,591,197 bytes, sha256 `7e02cfc2…`; on it: `win_vs_web.py --canon --states --checks wake`
+  156/156, `win_smoke.py --canon` ok, `cs_coverage.py` 100 %, `rea_pe_report.py` all expectations hold, `cs_rea_members.py` 1029/1029.
