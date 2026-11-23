@@ -59,19 +59,41 @@ If parts remain, write them into the same task and leave it unchecked (no new fo
   T4); states first frame 87/87; ReC.Tests 88/88; build 0 warnings; coverage 315/1046. Left for T4 (already listed
   there): the other 8 death.js members (statRecalc, stat, oamClip, poseHold, gameOver, hpBarBank, opelRevive,
   playerDeath) and the `Play.EntryPoints` table.
-- [ ] T4 world + gameplay entry: `Game/World/*` (Area, Bg, BgStream, Camera, PpuQueue, Spawn), `States/AreaEnter.cs`,
+- [x] T4 world + gameplay entry: `Game/World/*` (Area, Bg, BgStream, Camera, PpuQueue, Spawn), `States/AreaEnter.cs`,
   `States/Play.cs` (Substates, EntryPoints, SubstPlay), rest of `Death.cs`. Done when `--canon` passes through f2460
   and the `death` state passes.
+  **C# s3 done:** `World/{Area,Bg,BgStream,Camera,Spawn}.cs` (all of area/bg/bgstream/camera/spawn.js),
+  `States/AreaEnter.cs` (20/20), `States/Play.cs` (15/15: Substates table, EntryPoints table complete, SubstPlay,
+  PlayerStatusTick, SubstPlayTail with the s213 cycle counts), `States/Death.cs` (22/22: StatRecalc, OamClip,
+  PlayerDeath / OpelRevive / GameOver), `States/Pause.cs` (10/10), `States/SaveLoad.cs` (18/24: all but the menu page
+  that needs equip.js, see T8). The canon run needs ObjUpdateAll / ObjCollideAll and AIs $01/$03/$05/$14/$50/$7F, so
+  T5's modules (below) and three T6 modules (`Obj/AiStatic.cs` 8/8, `Obj/AiShot.cs` 28/28, `Obj/AiEffect.cs` 14/14)
+  were ported too. Stub classes for the other substates (`Equip`, `Shop`, `Talk`, `GiveItem`, `Substates9.cs`) and
+  `Obj/AiThunder.cs`. Checks: `cs_vs_web.py canon` = Reset -> f2460, **2247 frames identical** (csv, png, ram, wram,
+  ciram); `death:700` identical (through game over); states first frame 87/87 PNGs; `--states` (120 frames) 8/87
+  identical (the rest diverge in unported AIs / substates); ReC.Tests 88/88; build 0 warnings; coverage 572 + 12 waived
+  of 1046 (55.8 %). New: `docs/waivers.csv` (sprites.js `rd` / `wr` aliases), `tools/json_peek.py`.
 - [ ] T5 objects: `Game/Obj/{Objects,ObjInit,Move,Collide,Util,Sprites,Player}.cs`. Done when 100 % coverage for those
   modules and cs_vs_web passes for area1_enter / town02_enter.
+  (C# s3: all seven files ported, coverage 100 % for objects / objinit / move / collide / util / sprites (2 waivers) /
+  player. Remaining: `town02_enter:600` diverges at f2495 because AI $30 (NPC, ai_field.js) and $78 plus sub_state 7
+  GiveItem (T8) are stubs, so this criterion closes with T6 / T8; there is no `area1_enter` state in
+  ../web/test/states (area 1 is entered in the canon run, which passes through f2460).)
 - [ ] T6 field AIs: `Obj/{AiWalk,AiField,AiStatic,AiShot,AiEffect,AiThunder}.cs`. Done when 100 % coverage for them and
   the group / fan / kill / thunder states pass.
+  (C# s3: AiStatic, AiShot, AiEffect done (100 %); remaining ai_walk.js, ai_field.js, ai_thunder.js (stub ThunderStep).
+  Add each module's `Ai` table to `Objects.AiTable` in the JS spread order: static, walk, field, shot, effect, final,
+  boss, player.)
 - [ ] T7 boss AIs: `Obj/AiBoss.cs` (1,436 JS lines, may span sessions), `Obj/AiFinal.cs`. Done when 100 % coverage and
   the boss states pass (bosse2, bossflee, bossa6, finalboss, ai70*).
 - [ ] T8 menu / town substates: `States/{Pause,Equip,SaveLoad,Shop,Talk,GiveItem}.cs`. Done when 100 % coverage and
   their states pass (equip, armorshop, …, giveitem, event*, itemuse*).
+  (C# s3: Pause.cs 10/10 done; SaveLoad.cs 18/24, left: saveLoadPage, menuSave, slotPicture, pageSetup, modeCursor,
+  slotCursor (need equip.js). Equip / Shop / Talk / GiveItem are stub classes; GiveItem.EventAction / Talk.TalkAction
+  stand for the JS EVENT_ACTIONS / TALK_ACTIONS tables used by Play.EntryPoints.)
 - [ ] T9 remaining substates + ending: `States/{Wake,Teleport,Telepathy,ChangeForm,Cure,FormRevert,SwordRaise,Mesia,
   FinalScene,Ending}.cs`. Done when 100 % game-layer coverage and their states pass.
+  (C# s3: their stub classes sit together in `States/Substates9.cs`; move each into its own file when porting it.)
 - [ ] T10 full parity: `cs_vs_web.py --canon --states` passes for every `../web/test/states/*.json`. Fix differences in
   C#; the web port is the reference (if the web port is known-wrong vs tools.emu, keep parity and comment it).
 - [ ] T11 playable frontend `src/ReC.Sdl`: P/Invoke `libSDL2-2.0.so.0` (`Sdl.cs`, no NuGet), window with integer scale,

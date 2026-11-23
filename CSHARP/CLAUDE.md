@@ -16,7 +16,8 @@ C# (.NET 10, no NuGet packages) translation of the finished web port `../web/src
 - Headless run (same CLI as `node ../web/test/run.mjs`): `dotnet run --project src/ReC.Run -c Release -- --frames N --keys 250:START --compare cs.csv --dump-screen cs.png`
 - Oracle diff: `python3 tools/cs_vs_web.py [--canon] [--states] [--only csv,png,ram,wram,ciram] [--frames N] [NAME[:FRAMES]..]`
   (outputs in `out/<case>/`, gitignored; shell `mkdir`/`rm` need approval in the sandbox, so let tools create files);
-  `python3 tools/state_peek.py STATE.json [ADDR,..]` (state fields / RAM bytes); `python3 tools/gen_cs_data.py [--check]` (Gen/R.cs) (uses `node ../web/test/run.mjs` + `../tools/compare_frames.py`)
+  `python3 tools/state_peek.py STATE.json [ADDR,..]` (state fields / RAM bytes); `python3 tools/json_peek.py F.json [a.b.0]`
+  (JSON structure / one path, e.g. `../web/data/areas.json areas.00`); `python3 ../tools/ram_byte.py out/<case>/web.ram ADDR,..`; `python3 tools/gen_cs_data.py [--check]` (Gen/R.cs) (uses `node ../web/test/run.mjs` + `../tools/compare_frames.py`)
 - Sound: ReC.Tests `sound_frames` / `apu_*` cases; `python3 tools/apu_wav_compare.py [--no-build] [--seconds S] [ID..]`
   (C# `ReC.Tests --wav ID OUT.wav S` vs `node ../web/test/apu_check.mjs --wav`, byte-identical WAVs)
 - Coverage vs REA inventory: `python3 tools/cs_coverage.py [--module SUBSTR] [--missing]`

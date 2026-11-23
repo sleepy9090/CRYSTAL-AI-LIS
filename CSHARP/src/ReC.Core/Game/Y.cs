@@ -12,6 +12,13 @@ public enum Y : byte
     NoNmi,
 }
 
+/// <summary>A JS generator's return value (`r = yield* g(m)`): the iterator sets `V` before it ends (C# s3; Death.YOut
+/// is the older int-only form).</summary>
+public sealed class Ret<T>
+{
+    public T V = default!;
+}
+
 /// <summary>Logging stubs for callees whose JS module is not translated yet (TASKS.md: the solution always
 /// builds; a stub logs `not ported: &lt;module&gt; &lt;name&gt;` once per name, like the JS stubs did).</summary>
 public static class Stub

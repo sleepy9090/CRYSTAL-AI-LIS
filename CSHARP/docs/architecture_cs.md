@@ -94,8 +94,8 @@ Oracle = the web port: **same start (Reset or `--load-state`) + same `--keys` �
 - Handler convention (§3): `Func<Machine, IEnumerable<Y>?>` — an iterator method = JS generator; a plain method does
   its work and returns `null` (or another routine's iterator). `m.Pending` is an `IEnumerator<Y>`.
 - Stubs: unported callees live in their future file, without a `js:` tag, and call `Stub.NotPorted(m, module, name)`
-  (logs once per name into `m.Unported`, counts `m.StubHits`). A state whose `until` has no `Play.EntryPoints`
-  entry logs `ENTRY_POINTS BB:AAAA`.
+  (logs once per name into `m.Unported`, counts `m.StubHits`). C# s3: a state whose `until` has no `Play.EntryPoints`
+  entry starts nothing pending, exactly as machine.js (the s1 `ENTRY_POINTS` log is gone; the table is complete).
 - Name changes: obj/util.js → `Game/Obj/ObjUtil.cs` (`Util` clashes with `ReC.Util`); soundupdate.js `soundUpdate`
   → `SoundUpdate.Run`, playsound.js `playSound` → `PlaySound.Play` (member ≠ class name); machine.js `lagModel`
   flag → `LagModelOn`; `ram.ram` → `Ram.RamBytes`. JS `MAIN_STATES` / `NMI_MODES` / `ENTRY_POINTS` are tables, not
@@ -112,6 +112,20 @@ Oracle = the web port: **same start (Reset or `--load-state`) + same `--keys` �
   result object argument (`Death.YOut`), set when the iterator ends; JS `undefined` results are `int?` null
   (`PpuQueue.PpuQueueFlush`, `Death.QueueFlushNow`). Title dispatch tables (JS `MODES` / `STEPS` maps) are
   `Dictionary<int, Func<Machine, IEnumerable<Y>?>>`; the two inline JS lambdas stay lambdas (no tag).
+- C# s3 (T4 + parts of T5/T6):
+  - Generator return values: `Ret<T>` (Game/Y.cs), an argument the iterator sets before it ends (`Camera.CameraTick(m,
+    res)` = JS `if (yield* cameraTick(m)) return`, `Pause.PauseScreen(m, res)` = ReadPads' Y, `Player.SpendMp`).
+    JS `true`-as-PLA-PLA in PlayDeathMenuCheck = `Ret<int?>` null.
+  - AI handlers: `delegate IEnumerable<Y>? AiFn(Machine m, int x, AiRet r)` (Obj/Objects.cs). null = plain JS function,
+    else its iterator; JS return `true` (popped ObjUpdateAll) = `r.Pop`, a number (new X) = `r.X`. Each AI module has
+    `static Dictionary<int, AiFn> Ai` (= JS `AI_xxx`, untagged table); `Objects.AiTable` merges them in the JS spread
+    order. Plain-function AI modules (ai_shot.js) keep `void F(Machine, int)` members wrapped by `P(F)`.
+  - Name changes: objinit.js `objInit` -> `ObjInit.Init`; areaenter.js `areaEnter` -> `AreaEnter.AreaEnterRun`;
+    giveitem.js `giveItem` -> `GiveItem.Give` (stub); sprites.js module variable `regY` -> `m.SpriteRegY`;
+    ObjMoveStep's `'moved' | bool` -> `Move.Step { Clear, Blocked, Moved }`; bg.js renderArea's `visited`
+    (false / true / 'ram') -> `Bg.Visit { None, All, Ram }`; `Machine.SpawnEntry` returns the next Y (= JS hook).
+  - Exported JS lag predicates (`FSD_LAG`, `FSD_LAG_WF`, saveload `RESTORE_LAG`) are `Func<int, bool>` fields (tagged).
+  - `docs/waivers.csv` (first rows): sprites.js `rd` / `wr` per-function aliases (C# calls m.Rd / m.Wr).
 
 ## 6. REA reconstruction tracking
 

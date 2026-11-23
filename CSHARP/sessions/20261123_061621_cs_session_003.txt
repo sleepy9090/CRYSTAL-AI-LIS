@@ -1,0 +1,201 @@
+  ▶ ls && ls sessions/ && wc -l docs/architecture_cs.md TASKS.md
+  ▶ Read architecture_cs.md
+  ▶ Read TASKS.md
+  ▶ wc -c sessions/*; tail -c 5000 sessions/20261123_061621_cs_session_002.txt
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM && wc -l web/src/game/world/*.js web/src/game/states/areaenter.js we
+  ▶ wc -l ../web/src/game/world/*.js ../web/src/game/states/*.js ../web/src/game/obj/*.js
+I'm starting T4 (world + gameplay entry). Next I'll check coverage to see what's left in those modules.
+  ▶ python3 tools/cs_coverage.py 2>&1 | head -80
+  ▶ Read area.js
+  ▶ Read bg.js
+  ▶ Read bgstream.js
+  ▶ ls -R src/ReC.Core | head -60; grep -n "public" src/ReC.Core/Game/Prg.cs src/ReC.Core/Game/World/PpuQueue.cs src/ReC.Cor
+  ▶ cat src/ReC.Core/Game/States/AreaEnter.cs src/ReC.Core/Game/States/Play.cs src/ReC.Core/Game/World/Spawn.cs src/ReC.Core
+  ▶ Read areaenter.js
+  ▶ Read play.js
+  ▶ grep -n "canon\|CANON" tools/cs_vs_web.py | head -20; grep -n "death" tools/cs_vs_web.py | head
+I've read area/bg/bgstream/areaenter/play. Next I'll read camera, spawn and the rest of death.js, then write the C# files.
+  ▶ Read camera.js
+  ▶ Read spawn.js
+  ▶ Read death.js
+  ▶ Read Death.cs
+  ▶ grep -n "MainState\|Pending\|EntryPoints\|SpawnEntry\|EntryFF\|PlaySoundHook\|Lag\|Cyc\b\|PassStage\|Unported" src/ReC.C
+  ▶ Read Machine.cs
+  ▶ grep -rn "playSound\|spawnEntry\|entryFF" ../web/src/game/machine.js
+  ▶ Grep
+Now writing the world modules. First I'm reading obj/util.js and objinit.js, which they depend on; I'll likely pull those forward from T5.
+  ▶ Read util.js
+  ▶ Read objinit.js
+  ▶ grep -n "public.*Wr\|public.*Rd" src/ReC.Core/Game/Ram.cs; sed -n 1,60p src/ReC.Core/Game/Prg.cs; cat src/ReC.Core/Game/
+  ▶ Read Ram.cs
+  ▶ grep -n "public" src/ReC.Core/Data.cs | head -40
+  ▶ sed -n 36,90p src/ReC.Core/Data.cs; ls -la ../web/data/ 2>&1 | head -30
+  ▶ Read Data.cs
+  ▶ Glob
+I'm checking the areas.json layout before writing Area.cs.
+  ▶ python3 tools/state_peek.py --help 2>&1 | head -5; ls tools
+I'll write a small helper to print the JSON structure (keys and one sample record).
+  ▶ Write json_peek.py
+  ▶ python3 tools/json_peek.py ../web/data/areas.json | head -c 600; echo; python3 tools/json_peek.py ../web/data/areas.json
+Writing `World/Area.cs`:
+  ▶ Write Area.cs
+Now `World/Bg.cs` and `World/BgStream.cs`:
+  ▶ Write Bg.cs
+  ▶ grep -E "world/bgstream|world/camera|world/spawn|world/bg.js|world/area|states/play.js|states/areaenter|states/death" do
+  ▶ Edit Bg.cs
+  ▶ Write BgStream.cs
+Now `World/Camera.cs`, plus a small `Ret<T>` result box in Y.cs for JS generators that return values:
+  ▶ Edit Y.cs
+  ▶ Write Camera.cs
+  ▶ grep -oE "const int (ScrollShadow0|PadPrev|PadAct|PadNew|PadDir|AreaId|SubState|MainState|PpumaskShadow|IrqMode|FrameRea
+Now `World/Spawn.cs` and the obj util/objinit (pulled forward from T5):
+  ▶ Write Spawn.cs
+  ▶ Write ObjInit.cs
+  ▶ Write ObjUtil.cs
+  ▶ Edit Machine.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn|Error\(s\)" | sort -u | head -20
+World modules build clean. Next: the states. AreaEnter needs saveload.js (hudWindowSetup / saveGame / loadGameAndInit), pause.js waitPpuQueue and sprites.js, so I'm reading those.
+  ▶ Read saveload.js
+  ▶ Read pause.js
+  ▶ Read sprites.js
+I'll port sprites.js and pause.js fully (both self-contained), and saveload.js except the menu-page members that need equip.js (T8). Writing Sprites.cs:
+  ▶ Write Sprites.cs
+  ▶ Edit Machine.cs
+  ▶ grep -n "public static" src/ReC.Core/Game/Pads.cs src/ReC.Core/Game/World/PpuQueue.cs src/ReC.Core/Game/Palette.cs
+  ▶ Grep
+Writing Pause.cs (all of pause.js):
+  ▶ Write Pause.cs
+Now the rest of Death.cs (StatRecalc, OamClip, PoseHold, GameOver, HpBarBank, OpelRevive, PlayerDeath):
+  ▶ Edit Death.cs
+  ▶ Edit Death.cs
+Now SaveLoad.cs (everything except the six menu-page members that need equip.js):
+  ▶ Write SaveLoad.cs
+Now stubs for the substate handlers Play.cs dispatches to (each in its future file, untagged, logging via `Stub.NotPorted`, as the convention says):
+  ▶ cd src/ReC.Core/Game && python3 - <<'EOF' 2>/dev/null || echo "inline python not allowed"
+  ▶ Write Equip.cs
+  ▶ Write Shop.cs
+  ▶ Write Talk.cs
+  ▶ Write GiveItem.cs
+  ▶ Write Substates9.cs
+  ▶ Write Objects.cs
+  ▶ Write Collide.cs
+Now AreaEnter.cs:
+  ▶ Write AreaEnter.cs
+Now Play.cs:
+  ▶ Write Play.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn" | sed 's/.*src\///' | sort -u | head -30; dotnet build ReC.
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn|Error\(s\)" | sort -u | head -30
+Paren mistake in the wrap test; fixing:
+  ▶ Edit Sprites.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn|Error\(s\)" | sort -u | cut -c1-260 | head -30
+Clean build. Running the unit tests and the canonical oracle run:
+  ▶ dotnet run --project tests/ReC.Tests -c Release 2>&1 | tail -3; python3 tools/cs_vs_web.py --no-build --keep canon 2>&1 
+Canon now matches through f2353 (was f2321). At f2354 object slot 3 diverges: that's ObjUpdateAll (objects.js, T5) still being a stub. Checking which stubs got hit:
+  ▶ ls out/canon/; grep -h "not ported" out/canon/*.txt out/canon/*.log 2>/dev/null | sort | uniq -c | head
+  ▶ dotnet src/ReC.Run/bin/Release/net10.0/ReC.Run.dll --frames 2247 --keys 1250:START 1400:START 1600:START 1700:START 2300
+  ▶ dotnet run --project src/ReC.Run -c Release --no-build -- --frames 2247 --keys 1250:START 1400:START 1600:START 1700:STA
+Only objects.js and collide.js are missing for the canon run. I'm looking at objects.js to see how much it pulls in:
+  ▶ Read objects.js
+  ▶ python3 ../tools/ram_byte.py out/canon/web.ram 04A0,04A1,04A2,04A3,04A4,04AD,04AE,04AF,04B0
+At f2460 the live AI ids are $01 (player), $03, $05, $08, $14 and $50. I'm finding which modules define them:
+  ▶ Grep
+  ▶ Grep
+  ▶ Grep
+  ▶ Read move.js
+  ▶ Read player.js
+Writing Move.cs and Player.cs (AI handlers use a delegate with an `AiRet` result: `Pop` = JS `true`, `X` = JS number):
+  ▶ Write Move.cs
+  ▶ Write Player.cs
+  ▶ Edit Player.cs
+Now Objects.cs (the full objects.js with the AI delegate types):
+  ▶ Write Objects.cs
+  ▶ Write AiThunder.cs
+Now collide.js:
+  ▶ Read collide.js
+Writing Collide.cs:
+  ▶ Write Collide.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn|Error\(s\)" | sort -u | cut -c1-260 | head -30
+  ▶ python3 tools/cs_vs_web.py --no-build --keep canon 2>&1 | tail -3 | cut -c1-600; dotnet run --project src/ReC.Run -c Rel
+Much closer: only slot 3 differs now. Missing AIs: $05 (ai_effect.js), $50 (ai_static.js) and $7F. Finding $7F:
+  ▶ Grep
+Both are small T6 modules; porting them fully. Reading:
+  ▶ Read ai_effect.js
+  ▶ Read ai_static.js
+  ▶ Grep
+Writing AiStatic.cs and AiEffect.cs:
+  ▶ Write AiStatic.cs
+  ▶ Write AiEffect.cs
+  ▶ Edit Objects.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn|Error\(s\)" | sort -u | cut -c1-260 | head -30 && python3 to
+Canon now matches through f2442; the one missing AI is $14 (aiCountdown in ai_shot.js). Reading ai_shot.js:
+  ▶ Read ai_shot.js
+All plain functions; porting ai_shot.js fully:
+  ▶ Write AiShot.cs
+  ▶ Edit Objects.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn|Error\(s\)" | sort -u | cut -c1-260 | head -30 && python3 to
+**Canon passes from Reset through f2460: 2247 frames identical in CSV, PNG, RAM, WRAM and CIRAM.** Next is the `death` state, the other half of T4's done-criterion:
+  ▶ grep -n "'death\|death" tools/cs_vs_web.py | head; python3 tools/cs_vs_web.py --no-build --keep death 2>&1 | tail -3 | c
+The default `death` case covers only 120 frames, and the death sequence (fade, two 64-frame poses, game over) is longer, so I'm running it over 700:
+  ▶ python3 tools/cs_vs_web.py --no-build --keep death:700 2>&1 | tail -3 | cut -c1-700; sed -n 1,60p tools/cs_vs_web.py | g
+The `death` state is identical over 700 frames, through game over. T4's criterion holds. Now a regression sweep: unit tests, plus all 87 states at their default frame counts:
+  ▶ dotnet run --project tests/ReC.Tests -c Release 2>&1 | tail -1; python3 tools/cs_vs_web.py --no-build --states 2>&1 | ta
+8/87 states identical. The failures I checked each trace to code that is still a stub: walking/field/boss AIs (T6/T7) and the menu/shop/talk substates (T8/T9). Coverage:
+  ▶ python3 tools/cs_coverage.py 2>&1 | grep -E "areaenter|death|play.js|world/|obj/|pause|saveload|coverage"
+sprites.js is missing only the per-function `rd`/`wr` lambda aliases, which the C# inlines as `m.Rd`/`m.Wr`. Checking how the coverage tool keys same-named members:
+  ▶ python3 tools/cs_coverage.py --module sprites --missing 2>&1 | head -20; grep -n "def \|@\|line" tools/cs_coverage.py | 
+  ▶ Read cs_coverage.py
+Coverage is keyed by (module, name), so one tag or waiver covers all six copies. These are local `rd`/`wr` aliases with no C# counterpart, so a waiver with a reason is the honest record:
+  ▶ ls docs; head -5 docs/waivers.csv 2>/dev/null || echo "no waivers.csv"
+  ▶ Write waivers.csv
+  ▶ python3 tools/cs_coverage.py 2>&1 | grep -E "sprites|coverage"
+  ▶ ls ../web/test/states/ | grep -i "area1\|town02"; python3 tools/cs_vs_web.py --no-build area1_enter:600 town02_enter:600
+  ▶ Glob
+There's no `area1_enter` state file. Running `town02_enter` over 600 frames:
+  ▶ python3 tools/cs_vs_web.py --no-build town02_enter:600 2>&1 | tail -3 | cut -c1-500; dotnet run --project src/ReC.Run -c
+Two things to look at: `ENTRY_POINTS 30:CA2E` logs as not ported, but the JS table has no such entry either, and AIs $30/$78 (T6) are missing. Checking how machine.js treats an `until` with no entry:
+  ▶ Grep
+  ▶ Read machine.js
+  ▶ Edit Machine.cs
+Rebuilding and re-running tests plus the T4 oracles after that change:
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "warn|error|Warn|Error\(s\)" | sort -u | head -5; dotnet run --project t
+Also re-checking the first-frame screens of all 87 states (an s1/s2 invariant):
+  ▶ python3 tools/cs_vs_web.py --no-build --states --frames 1 --only png 2>&1 | tail -1
+Now recording progress. TASKS.md first:
+  ▶ Edit TASKS.md
+  ▶ Edit TASKS.md
+  ▶ Edit TASKS.md
+  ▶ Edit TASKS.md
+Now the architecture doc's as-built section (new conventions: `Ret<T>`, `AiFn`/`AiRet`, name changes, the ENTRY_POINTS behaviour):
+  ▶ Edit architecture_cs.md
+  ▶ Edit architecture_cs.md
+Adding the new helper to CSHARP/CLAUDE.md's command list:
+  ▶ Edit CLAUDE.md
+I finished T4 and ticked it in TASKS.md. Its done-criterion holds: the canonical run from Reset through f2460 is identical to the web port (2,247 frames, all of CSV, PNG, RAM, WRAM and CIRAM), and the `death` state is identical over 700 frames, which runs past game over. The build has 0 warnings and ReC.Tests passes 88/88.
+
+**What was ported**
+- **T4 itself:** all of `World/Area`, `Bg`, `BgStream`, `Camera` and `Spawn`, plus `States/AreaEnter`, `Play` (including the complete `EntryPoints` table) and the rest of `Death`.
+- **Callees that T4 needed:**
+  - `Pause.cs`, complete.
+  - `SaveLoad.cs`, except the six save/load menu-page members, which need `equip.js` and are noted under T8.
+- **T5 and three T6 modules, pulled forward:** the canon run walks around and changes areas, so it needs the object loop, collision and the AIs that are live there. Ported:
+  - All seven T5 files (objects, objinit, move, collide, util, sprites, player), now at 100% coverage.
+  - Three T6 modules: `AiStatic`, `AiShot`, `AiEffect`.
+- **Stubs:** the substates and AIs not ported yet are logging stubs in their future files.
+
+**Changes worth knowing about**
+- **Loading a state at a routine not in `EntryPoints`:** this no longer logs "not ported". The web port silently does nothing in that case, and the C# now matches. The log was early debugging scaffolding.
+- **Two new conventions** for JS functions that return values, recorded in `docs/architecture_cs.md` §5.1. Multi-frame routines pass their result back through a small result object (`Ret<T>`). AI handlers use one delegate type that can report "stop the object loop" or "continue at slot X".
+- **New files:**
+  - `docs/waivers.csv`, with one entry: sprites.js's local `rd`/`wr` shorthands, which the C# replaces with direct calls.
+  - `tools/json_peek.py`, a small JSON structure viewer.
+
+**Other check results**
+- The first-frame screens of all 87 web test states are still identical.
+- Over 120 frames, only 8 of the 87 states match fully. Every mismatch I looked at traced to code that is still a stub: walking/field/boss AIs, or the menu, shop and talk substates.
+- Coverage went from 315 to 572 ported members, plus 12 waived (55.8% of 1,046).
+
+**T5 is still open.** Its coverage part is met, but `town02_enter` diverges at f2495. It needs AI $30 (in `ai_field.js`, T6), AI $78 and GiveItem (T8). Also, the `area1_enter` state that T5's criterion names doesn't exist in `../web/test/states`; area 1 is only reached during the canon run, which passes. I wrote this into T5's line and added remaining-work notes to T6, T8 and T9.
+
+I made no commits.
+
+SESSION_SUMMARY: C# s3: T4 done (World area/bg/bgstream/camera/spawn, AreaEnter, Play, Death, Pause, most of SaveLoad; plus T5 obj core and AiStatic/AiShot/AiEffect): canon Reset→f2460 identical (2247 frames, all kinds), death:700 identical, 87/87 first frames, 88/88 tests, 0 warnings, coverage 584/1046 (572 ported + 12 waived); T5 open (town02 needs T6 AI $30 / T8 GiveItem).

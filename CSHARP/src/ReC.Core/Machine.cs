@@ -34,6 +34,8 @@ public sealed class Machine
     public readonly Dictionary<string, int> StubHits = new();
     public List<IrqSplit> IrqSplits = new();
     public IEnumerator<Y>? Pending;
+    /// <summary>obj/sprites.js module variable `regY`: the 6502 Y at ObjSpriteDraw's RTS (s198)</summary>
+    public int SpriteRegY;
     public int Frame;
     public long RomRd;                         // s211: prg.js cpuRd calls (web/test/pass_count.mjs)
     public long Cyc;                           // s213: exact ROM cycles of modelled code (obj/collide.js)
@@ -111,7 +113,7 @@ public sealed class Machine
     /// <summary>AreaLoadMap 31:E634 PlaySound (Y = 0)</summary>
     public void PlaySoundHook(int id) => Game.PlaySound.Play(this, id, 0);
     /// <summary>AreaSpawnEntry 31:E1B6 (world/spawn.js, entry at ($10),Y)</summary>
-    public void SpawnEntry(int x, int y) => World.Spawn.AreaSpawnEntry(this, x, y);
+    public int SpawnEntry(int x, int y) => World.Spawn.AreaSpawnEntry(this, x, y);
     /// <summary>26:98A8 ObjPosToTemp (the $6D = $FF entry)</summary>
     public void EntryFF(int x) => Obj.ObjUtil.ObjPosToTemp(this, x);
 
@@ -219,8 +221,8 @@ public sealed class Machine
         Pending = null;
         IrqSplits = LoadSplits(this, s);
         // s94: a routine reached by JSR from unported code
+        // (no entry = a state taken at a routine the dispatch reaches by itself: nothing pending, as in the JS)
         if (s.Until != null && Play.EntryPoints.TryGetValue(s.Until, out var entry)) Pending = entry(this).GetEnumerator();
-        else if (s.Until != null) Stub.NotPorted(this, "game/states/play.js", "ENTRY_POINTS " + s.Until);
     }
 
     // js: game/machine.js _installSplits
