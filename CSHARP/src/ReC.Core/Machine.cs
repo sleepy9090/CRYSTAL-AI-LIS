@@ -28,6 +28,8 @@ public sealed class Machine
     public readonly Ppu Ppu;
     /// <summary>pad 1 / pad 2 button bytes (A B Sel St U D L R)</summary>
     public readonly int[] Buttons = new int[2];
+    /// <summary>pads.js `m.padDirTable` cache (data table PadDirTable)</summary>
+    public int[]? PadDirTable;
     public readonly HashSet<string> Unported = new();
     public readonly Dictionary<string, int> StubHits = new();
     public List<IrqSplit> IrqSplits = new();
@@ -67,6 +69,8 @@ public sealed class Machine
         Ppu = new Ppu(data.Chr);
         LagCnt["top"] = _lb;
         Apu = new Apu(a => Prg.CpuRd(this, a));
+        ApuWrite = (a, v) => Apu.Write(a, v);
+        ApuRead = a => Apu.Read(a);
         IrqHandlers = new Action<Machine, int>[]
         {
             MainLoop.IrqWrapSplit,                     // 31:F455
@@ -98,10 +102,12 @@ public sealed class Machine
         PassStage = s;
     }
 
-    public void ApuWrite(int a, int v) => Apu.Write(a, v);
-    public int ApuRead(int a) => Apu.Read(a);
+    /// <summary>APU access of the sound driver (machine.js constructor `this.apuWrite` / `this.apuRead`); replaceable
+    /// like the JS closures (sound tests log the writes and read $4015 as 0)</summary>
+    public Action<int, int> ApuWrite;
+    public Func<int, int> ApuRead;
     /// <summary>PpuQueueFlush 30:C67D (world/ppuqueue.js), called by the NMI at F40A</summary>
-    public void PpuQueueFlush(Machine m) => World.PpuQueue.PpuQueueFlush(m);
+    public void PpuQueueFlush(Machine m) => _ = World.PpuQueue.PpuQueueFlush(m);
     /// <summary>AreaLoadMap 31:E634 PlaySound (Y = 0)</summary>
     public void PlaySoundHook(int id) => Game.PlaySound.Play(this, id, 0);
     /// <summary>AreaSpawnEntry 31:E1B6 (world/spawn.js, entry at ($10),Y)</summary>

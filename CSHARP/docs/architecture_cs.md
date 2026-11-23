@@ -101,6 +101,17 @@ Oracle = the web port: **same start (Reset or `--load-state`) + same `--keys` �
   flag → `LagModelOn`; `ram.ram` → `Ram.RamBytes`. JS `MAIN_STATES` / `NMI_MODES` / `ENTRY_POINTS` are tables, not
   inventory callables (no tag).
 - `cs_vs_web.py` writes into `out/<case>/` (gitignored); `--only png` etc. limits the kinds compared.
+- C# s2 (sound): `Machine.ApuWrite` / `ApuRead` are delegate fields like the JS closures (tests swap them to log
+  writes). `Apu` sample sink = `Action<double>`; mixer tables are `float[]` (JS Float32Array), all sums / filters
+  `double`, so samples are bit-identical. apu.js classes → `Envelope`, `Pulse`, `Triangle`, `Noise`, `Dmc` in
+  `Nes/Apu.cs`; `Apu.TriCh` / `NoiseCh` / `DmcCh` (JS `tri` / `noise` / `dmc`, renamed to avoid the type names).
+  Same-named JS methods share one inventory key, so their tags carry the class: `// js: nes/apu.js write (Pulse)`.
+  Sound oracles: ReC.Tests `sound_frames` (= sound_check.mjs on `../web/test/sound_frames`) and
+  `tools/apu_wav_compare.py` (`ReC.Tests --wav` vs `apu_check.mjs --wav`, byte-identical).
+- C# s2 (T3): a JS generator's *return value* (e.g. death.js `hudRedraw`'s Y register) is passed out through a small
+  result object argument (`Death.YOut`), set when the iterator ends; JS `undefined` results are `int?` null
+  (`PpuQueue.PpuQueueFlush`, `Death.QueueFlushNow`). Title dispatch tables (JS `MODES` / `STEPS` maps) are
+  `Dictionary<int, Func<Machine, IEnumerable<Y>?>>`; the two inline JS lambdas stay lambdas (no tag).
 
 ## 6. REA reconstruction tracking
 

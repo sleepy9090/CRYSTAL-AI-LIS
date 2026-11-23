@@ -1,5 +1,6 @@
 // re-c C# port — unit tests (docs/architecture_cs.md §5): console project with its own tiny assert helper.
-// `dotnet run --project tests/ReC.Tests -c Release [FILTER]` — exit 1 on any failure.
+// `dotnet run --project tests/ReC.Tests -c Release [FILTER]` — exit 1 on any failure. Sound tests: SoundTests.cs
+// (`-- --wav ID OUT.wav [SECONDS]` = apu_check.mjs --wav).
 using System.IO.Compression;
 using ReC;
 using ReC.Game;
@@ -9,7 +10,7 @@ using ReC.Util;
 
 namespace ReC.Tests;
 
-internal static class Program
+internal static partial class Program
 {
     private static int _fail, _pass;
     private static readonly Lazy<Data> TheData = new(() => Data.LoadDir(Data.FindDir()));
@@ -145,7 +146,8 @@ internal static class Program
 
     private static int Main(string[] args)
     {
-        foreach (var (name, fn) in Tests)
+        if (args.Length >= 3 && args[0] == "--wav") return WriteWav(args);
+        foreach (var (name, fn) in Tests.Concat(SoundTests))
         {
             if (args.Length > 0 && !args.Any(name.Contains)) continue;
             int f0 = _fail;

@@ -31,14 +31,34 @@ If parts remain, write them into the same task and leave it unchecked (no new fo
   town02_enter --frames 1` PNG pixel-identical; `cs_vs_web.py --states --frames 1 --only png` = 87/87 first-frame
   screens identical (HUD / message-window / menu / intro splits); ReC.Tests 74/74; coverage 100 % for ppu, ram,
   prg, data, machine, mainloop, lagmodel, palette (95/1046 overall). CSV / RAM still differ (game code = stubs).
-- [ ] T2 sound: `Nes/Apu.cs`, `Game/Sound/Driver.cs`, `Game/Sound/SoundUpdate.cs`, `Game/PlaySound.cs`. Done when the
+- [x] T2 sound: `Nes/Apu.cs`, `Game/Sound/Driver.cs`, `Game/Sound/SoundUpdate.cs`, `Game/PlaySound.cs`. Done when the
   snd CSV columns match the web port on the sound_check scenarios (via cs_vs_web or a ReC.Tests case fed by
   `node ../web/test/sound_check.mjs`'s inputs) and APU samples equal `apu_check.mjs --wav` output.
-- [ ] T3 frame loop + title: `Machine.cs` (RunFrame, Reset, LoadState incl. Pending/ENTRY_POINTS), `Game/MainLoop.cs`,
+  **C# s2 done:** all of nes/apu.js (Envelope/Pulse/Triangle/Noise/Dmc/Apu; float32 mixer tables + double sums as in
+  the JS; sink = `Action<double>`), driver.js (44 members, opcode dispatch as a switch on the table address),
+  soundupdate.js, playsound.js; `Machine.ApuWrite` / `ApuRead` are now replaceable delegates (= the JS closures).
+  Tests `tests/ReC.Tests/SoundTests.cs`: `sound_frames` replays `../web/test/sound_frames/*.json` like sound_check.mjs
+  → 130/130 scenarios, 35 940 SoundUpdate calls, 210 892 APU writes + RAM identical; `apu_pitch/status/sweep/driver`
+  = apu_check.mjs 1-4 all ok; `ReC.Tests --wav ID OUT.wav [S]` = apu_check.mjs --wav. `tools/apu_wav_compare.py`
+  → 32/32 music ids $00-$1F byte-identical WAVs (8 s each). ReC.Tests 88/88, build 0 warnings, coverage 100 % for
+  apu/driver/soundupdate/playsound (187/1046 overall), first-frame PNGs still 87/87. cs_vs_web `snd` columns
+  (120 frames): identical on town02_enter / pause / mesia / nmimode4_08; death / ending / bosse2 / finalboss differ
+  only because their game code is still stubs (e.g. ending.js mainState4 doesn't stop the music) → closes with T3+.
+- [x] T3 frame loop + title: `Machine.cs` (RunFrame, Reset, LoadState incl. Pending/ENTRY_POINTS), `Game/MainLoop.cs`,
   `Game/LagModel.cs`, `Game/Pads.cs`, `Game/Palette.cs`, `Game/Boot.cs`, `Game/States/Title.cs`, `Game/States/Death.cs`
   helpers (Spin/NoNmi, WaitFrames, fades). Done when `cs_vs_web.py --canon` passes from Reset through f2250.
   (C# s1: MainLoop.cs, LagModel.cs, Palette.cs, Machine.cs already complete + tagged; remaining: Pads, Boot (stub),
   Title, Death helpers, Play.EntryPoints wiring; Y.Spin / Y.NoNmi exist in `Game/Y.cs`.)
+  **C# s2 done:** `Game/Pads.cs` (3/3, PadDirTable cached in `m.PadDirTable`), `Game/Boot.cs` (11/11),
+  `States/Title.cs` (93/93: all title modes / opening / menu / story / status / name entry; MODES / STEPS as
+  dictionaries; plain steps return null, iterator steps their iterator), `World/PpuQueue.cs` (7/7, pulled forward from
+  T4: the NMI's PpuQueueFlush is needed by the status screen; returns `int?` = JS `ry`), `States/Death.cs` helpers
+  (14/22: dec, waitFrame(s), paletteBuildRom, fade/fadeOut/fadeIn, queueFlushNow, hudQueue, toDecimal, hudRedraw
+  (Y result via `Death.YOut`), hudRedrawCycles, hudHpBar, less1). Checks: `cs_vs_web.py canon:2037` (Reset -> f2250)
+  = 2037 frames identical in csv, png, ram, wram, ciram; full `canon` identical through f2321 (f2322 = MainStateNewGame,
+  T4); states first frame 87/87; ReC.Tests 88/88; build 0 warnings; coverage 315/1046. Left for T4 (already listed
+  there): the other 8 death.js members (statRecalc, stat, oamClip, poseHold, gameOver, hpBarBank, opelRevive,
+  playerDeath) and the `Play.EntryPoints` table.
 - [ ] T4 world + gameplay entry: `Game/World/*` (Area, Bg, BgStream, Camera, PpuQueue, Spawn), `States/AreaEnter.cs`,
   `States/Play.cs` (Substates, EntryPoints, SubstPlay), rest of `Death.cs`. Done when `--canon` passes through f2460
   and the `death` state passes.

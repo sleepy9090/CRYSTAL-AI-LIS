@@ -1,0 +1,130 @@
+  ▶ ls; ls sessions; git log --oneline -3; wc -l TASKS.md docs/architecture_cs.md
+  ▶ Read architecture_cs.md
+  ▶ Read TASKS.md
+  ▶ tail -c 4000 sessions/20261123_061621_cs_session_001.txt; echo ----; tail -c 2000 sessions/20261123_061621_cs_session_00
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM && wc -l web/src/nes/apu.js web/src/game/sound/*.js web/src/game/pla
+  ▶ wc -l ../web/src/nes/apu.js ../web/src/game/sound/*.js ../web/src/game/playsound.js ../web/test/sound_check.mjs ../web/t
+Reading the sound JS modules for T2. Bash can only reach `CSHARP/`, so I'm using the file tools for `../web`.
+  ▶ Glob
+  ▶ ls src/ReC.Core src/ReC.Core/*/ src/ReC.Core/Game/*/; python3 tools/cs_coverage.py --module sound; python3 tools/cs_cove
+  ▶ Read apu.js
+  ▶ Read Apu.cs
+  ▶ Read Driver.cs
+  ▶ Read SoundUpdate.cs
+  ▶ Read PlaySound.cs
+  ▶ Read driver.js
+  ▶ Read soundupdate.js
+  ▶ Read playsound.js
+  ▶ Grep
+  ▶ Grep
+  ▶ Grep
+  ▶ Grep
+  ▶ Read sound_check.mjs
+  ▶ Read apu_check.mjs
+Porting T2 (APU + sound driver). Checking Machine.cs's APU glue and the sound_frames test data.
+  ▶ Read Machine.cs
+  ▶ Glob
+  ▶ grep -E "apu.js|driver.js|soundupdate|playsound" docs/obligations.csv | cut -d, -f1-6 | head -100; head -1 docs/obligati
+  ▶ grep -n "js:" src/ReC.Core/Nes/Ppu.cs | head -8; grep -n "def \|tag\|re.compile" tools/cs_coverage.py | head -40
+  ▶ Write Apu.cs
+Now Machine's APU glue: delegates (as in JS) so a test can log writes.
+  ▶ Edit Machine.cs
+  ▶ Edit Machine.cs
+Now the driver.
+  ▶ Write Driver.cs
+  ▶ Write SoundUpdate.cs
+  ▶ Write PlaySound.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn|Warn|Error\(s\)" | sort -u | head -30
+  ▶ ls tests/ReC.Tests; wc -l tests/ReC.Tests/*.cs; grep -n "static void\|static int Main\|Section\|void Check\|FindData\|Da
+  ▶ Read Program.cs
+Build is clean. Next: the test cases (sound_frames replay = sound_check.mjs, APU checks = apu_check.mjs) plus a `--wav` mode so the WAV output can be compared byte for byte against the node version.
+  ▶ grep -n "class Ram\|public byte\[\]\|RamBytes" src/ReC.Core/Game/Ram.cs | head; grep -n "LoadDir\|FindDir" src/ReC.Core/
+Now the sound test file.
+  ▶ Write SoundTests.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn|Error\(s\)" | sort -u | head -20 && time dotnet run --projec
+All 130 sound_frames scenarios match (35,940 calls, 210,892 APU writes) and the APU checks pass. Now a WAV byte-compare tool against `apu_check.mjs --wav`.
+  ▶ sed -n 1,60p tools/cs_vs_web.py
+  ▶ Write apu_wav_compare.py
+  ▶ time python3 tools/apu_wav_compare.py --no-build
+All 32 music ids give byte-identical WAVs. Checking coverage and the existing oracle (to make sure nothing regressed).
+  ▶ python3 tools/cs_coverage.py --module sound; python3 tools/cs_coverage.py --module nes/apu; python3 tools/cs_coverage.py
+  ▶ Edit Apu.cs
+Quick look at whether the `snd` CSV columns already line up on a state run (the rest of the game logic is still stubs):
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "Warn|Error\(s\)"; python3 tools/cs_vs_web.py --no-build --only csv --ke
+`snd` columns are identical over 120 frames of `town02_enter`. I'll try a few more states for the `snd` columns.
+  ▶ ls ../web/test/states/ 2>/dev/null | head -0; python3 tools/state_peek.py 2>&1 | head -3
+  ▶ Glob
+  ▶ for s in death pause ending bosse2 finalboss mesia nmimode4_08; do python3 tools/cs_vs_web.py --no-build --only csv --ke
+  ▶ python3 tools/cs_vs_web.py --no-build --only csv --keep death:120 pause:120 ending:120 bosse2:120 finalboss:120 mesia:12
+Four states differ in `snd`. I need to tell whether that comes from the driver or from game code that hasn't been ported yet and would queue the sounds.
+  ▶ python3 ../tools/compare_frames.py out/ending_f120/web.csv out/ending_f120/cs.csv --cols snd | head -12; python3 ../tool
+  ▶ src/ReC.Run/bin/Release/net10.0/ReC.Run --load-state ../web/test/states/ending.json --frames 3 2>&1 | head; src/ReC.Run/
+  ▶ Edit TASKS.md
+  ▶ Edit architecture_cs.md
+  ▶ Edit CLAUDE.md
+T2 is done. Final build/test/coverage pass before moving on:
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "Warn|Error\(s\)"; dotnet run --project tests/ReC.Tests -c Release --no-
+T3 is next. I'll check how big it is before starting:
+  ▶ python3 tools/cs_coverage.py --module boot | tail -3; python3 tools/cs_coverage.py --module pads | tail -2; python3 tool
+T3 is about 130 members, with title.js at 93. I'll start with the small modules (pads.js, boot.js) and keep progress notes in TASKS.md.
+  ▶ Read pads.js
+  ▶ Read boot.js
+  ▶ Read Boot.cs
+  ▶ grep -n "public static .*Table\|JsonElement Table\|int\[\] Table" src/ReC.Core/Data.cs; grep -n "Buttons\|PadDirTable" s
+  ▶ Write Pads.cs
+  ▶ grep -nE "Pad(Dir|Raw|Prev|New|HoldA|HoldB|Act) " src/ReC.Core/Gen/R.cs; grep -rn "ReadPads\|Pads\." src/ReC.Core --incl
+Now Boot.cs and the `PadDirTable` cache field on Machine.
+  ▶ Edit Machine.cs
+  ▶ Write Boot.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|Warn|Error\(s\)" | sort -u; python3 tools/cs_vs_web.py --no-build
+pads.js and boot.js are ported; WRAM, CIRAM and the screen after Reset match. Now title.js, the large one.
+  ▶ grep "states/title.js\|states/death.js" docs/obligations.csv | cut -d, -f2,4,5 | tr '\n' ' '; echo; cat src/ReC.Core/Gam
+  ▶ Read title.js
+  ▶ Read title.js
+  ▶ Read title.js
+  ▶ Read MainLoop.cs
+  ▶ grep -nE "const int (PpuctrlShadow|PpumaskShadow|FrameReady|IrqMode|PalBuf|ChrR0Play|CamYLo|CamYHi|CamXHi|ScrollShadow0|
+Writing Title.cs, the whole of title.js in one file: about 93 members, translated line by line.
+  ▶ Write Title.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|Warn|Error\(s\)" | sort -u | head -20
+Build is clean. Running the canonical key run from Reset through f2250 (T3's done-criterion):
+  ▶ python3 tools/cs_vs_web.py --no-build --keep canon:2037 2>&1 | tail -3
+Frames f214-1809 now match. At f1810 the status screen hangs in PpuQueueDrainWait, because the NMI's `PpuQueueFlush` (world/ppuqueue.js) is still a stub. I'll port that next.
+  ▶ python3 tools/cs_coverage.py --module ppuqueue | head -3; cat src/ReC.Core/Game/World/PpuQueue.cs
+  ▶ Read ppuqueue.js
+  ▶ Write PpuQueue.cs
+  ▶ Edit Machine.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|Warn|Error\(s\)" | sort -u | head; python3 tools/cs_vs_web.py --n
+Canon from Reset through f2250 is identical: 2,037 frames across CSV, PNG, RAM, WRAM and CIRAM. T3 also lists the death.js helpers, so I'll look at those:
+  ▶ Read death.js
+The death.js helpers (WaitFrame/WaitFrames, PaletteBuildRom, fades, HUD queue writers) only depend on modules that are ported now, so I'll port them as part of T3. PlayerDeath itself stays with T4.
+  ▶ grep -n "public static" src/ReC.Core/Game/Palette.cs | head; grep -rn "Death\.\|\"game/states/death.js\"" src/ReC.Core |
+  ▶ Write Death.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|Warn|Error\(s\)" | sort -u | head; dotnet run --project tests/ReC
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|Warn|Error\(s\)" | sort -u | head; dotnet run --project tests/ReC
+Coverage is up to 315/1046. Re-running the oracle (canon through f2250, plus the first-frame screens of all 87 states):
+  ▶ python3 tools/cs_vs_web.py --no-build canon:2037 2>&1 | tail -1; python3 tools/cs_vs_web.py --no-build --only png --stat
+Full canon now matches through f2321 and diverges at f2322, where `MainStateNewGame` (areaenter.js, T4) is still a stub. Updating TASKS.md:
+  ▶ Edit TASKS.md
+  ▶ Edit architecture_cs.md
+I finished two tasks this session, T2 (sound) and T3 (frame loop + title). Both are ticked in TASKS.md, the build has 0 warnings and ReC.Tests passes 88/88.
+
+**T2: sound**
+- **Ported:** all of `nes/apu.js` into `Nes/Apu.cs`, plus the sound driver, `SoundUpdate` and `PlaySound`. Coverage is 100% for those four modules.
+- **Driver vs tools.emu:** a new test case, `sound_frames` in `tests/ReC.Tests/SoundTests.cs`, replays `../web/test/sound_frames` the same way `sound_check.mjs` does. All 130 scenarios match: 35,940 `SoundUpdate` calls, with every APU write and all of RAM identical.
+- **APU output:** the four `apu_check.mjs` checks (pitch, `$4015` status, sweep, music through the driver) pass. A new tool, `tools/apu_wav_compare.py`, renders 8 s of each music id with both ports: the WAVs for all 32 ids ($00-$1F) are byte-identical.
+- **`snd` CSV columns:** they match over 120 frames on `town02_enter`, `pause`, `mesia` and `nmimode4_08`. On `death`, `ending`, `bosse2` and `finalboss` the C# side keeps playing music where the web port has stopped it. The game code that would stop it (e.g. `ending.js mainState4`) is still a stub, so this should clear as those modules get ported.
+- **One change to `Machine`:** `ApuWrite` / `ApuRead` are now replaceable delegates, as they are in the JS, so tests can log the writes.
+
+**T3: frame loop + title**
+- **Ported:** `Pads.cs`, `Boot.cs` and all 93 members of `Title.cs`.
+- **Pulled forward from T4:** `World/PpuQueue.cs`. The name-entry status screen hung at f1810 without the NMI's queue flush.
+- **Death helpers:** 14 of the 22 `death.js` members are done, covering waits, fades and the HUD writers. The other 8, including `playerDeath`, are already listed under T4.
+- **Results:** `cs_vs_web.py canon:2037` (Reset → f2250) is identical in CSV, PNG, RAM, WRAM and CIRAM. The full canonical run matches through f2321 and diverges at f2322, where `MainStateNewGame` (T4) is still a stub. The first-frame screens of all 87 states are still identical.
+
+Overall coverage went from 95 to 315 of 1,046 members (30.1%). I recorded the new conventions in `docs/architecture_cs.md` §5.1 and added the sound commands to `CSHARP/CLAUDE.md`. I made no commits; `re_loop.sh` does that.
+
+SESSION_SUMMARY: C# s2: T2 (APU/driver/SoundUpdate/PlaySound: 130/130 sound_frames scenarios, 32/32 WAVs byte-identical) and T3 (Pads, Boot, all of Title, PpuQueue, death helpers: canon Reset→f2250 identical, full canon through f2321) done; 88/88 tests, 0 warnings, coverage 315/1046.

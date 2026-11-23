@@ -17,6 +17,8 @@ C# (.NET 10, no NuGet packages) translation of the finished web port `../web/src
 - Oracle diff: `python3 tools/cs_vs_web.py [--canon] [--states] [--only csv,png,ram,wram,ciram] [--frames N] [NAME[:FRAMES]..]`
   (outputs in `out/<case>/`, gitignored; shell `mkdir`/`rm` need approval in the sandbox, so let tools create files);
   `python3 tools/state_peek.py STATE.json [ADDR,..]` (state fields / RAM bytes); `python3 tools/gen_cs_data.py [--check]` (Gen/R.cs) (uses `node ../web/test/run.mjs` + `../tools/compare_frames.py`)
+- Sound: ReC.Tests `sound_frames` / `apu_*` cases; `python3 tools/apu_wav_compare.py [--no-build] [--seconds S] [ID..]`
+  (C# `ReC.Tests --wav ID OUT.wav S` vs `node ../web/test/apu_check.mjs --wav`, byte-identical WAVs)
 - Coverage vs REA inventory: `python3 tools/cs_coverage.py [--module SUBSTR] [--missing]`
 - REA: `rea analyze-javascript-application ../web/src ...` (inventory source), `rea inspect-managed-artifact <dll>` (built assembly);
   `mcp__rea__*` tools when the MCP server is connected.
