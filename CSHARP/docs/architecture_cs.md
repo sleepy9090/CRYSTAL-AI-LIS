@@ -40,14 +40,17 @@ CSHARP/
 ├─ TASKS.md                      ordered task list (drives re_loop.sh; `- [ ]` = open)
 ├─ re_loop.sh                    autonomous sessions over TASKS.md (run from CSHARP/)
 ├─ CLAUDE.md                     instructions for sessions working in this folder
-├─ docs/  architecture_cs.md, obligations.csv (REA inventory), waivers.csv, sessions notes
-├─ tools/ cs_coverage.py, gen_cs_data.py, cs_vs_web.py
+├─ docs/  architecture_cs.md, obligations.csv (REA inventory), waivers.csv
+├─ sessions/  logs of the autonomous sessions (re_loop.sh)
+├─ tools/ cs_coverage.py, cs_rea_members.py, cs_vs_web.py, pass_count_diff.py, apu_wav_compare.py, gen_cs_data.py,
+│         state_peek.py, json_peek.py
 ├─ src/
-│  ├─ ReC.Core/  Data.cs Machine.cs …  Nes/Ppu.cs Nes/Apu.cs  Game/{Ram,Prg,Boot,MainLoop,LagModel,Pads,Palette,
-│  │             PlaySound}.cs  Game/Sound/*  Game/World/*  Game/Obj/*  Game/States/*  Util/{Png,Csv,StateFile}.cs
-│  ├─ ReC.Run/   Program.cs = ../web/test/run.mjs (same CLI, same CSV columns / PNG / raw dumps)
+│  ├─ ReC.Core/  Data.cs Machine.cs  Nes/{Ppu,Apu}.cs  Game/{Ram,Prg,Boot,MainLoop,LagModel,Pads,Palette,
+│  │             PlaySound,Y}.cs  Game/Sound/*  Game/World/*  Game/Obj/*  Game/States/*  Util/{Png,Csv,StateFile}.cs
+│  │             Gen/R.cs (generated RAM labels)
+│  ├─ ReC.Run/   Program.cs = ../web/test/run.mjs (same CLI, same CSV columns / PNG / raw dumps, + --pass-count)
 │  └─ ReC.Sdl/   Program.cs Sdl.cs Input.cs Audio.cs Save.cs = web/src/main.js input.js audio.js save.js
-└─ tests/ReC.Tests/  Program.cs (unit tests: iterator scheduler, PNG/CSV/state readers, per-module cases)
+└─ tests/ReC.Tests/  Program.cs SoundTests.cs (unit tests, sound_frames replay, APU cases, --wav)
 ```
 
 ## 3. Multi-frame routines: C# iterators
@@ -164,6 +167,62 @@ Oracle = the web port: **same start (Reset or `--load-state`) + same `--keys` �
   The host only calls `Machine.Reset` / `LoadState` / `RunFrame` / `Ppu.Fb` / `Apu.SetOutput`, so its frames are the
   ReC.Run frames (checked: same f600 PNG + WRAM from Reset).
 
+### 5.2 As built (C# s7, T12 close-out)
+
+**JS → C# modules** (`python3 tools/cs_rea_members.py --modules` prints this with tag counts; 1,029 tags, 1,031 + 15
+waived of 1,046 inventory callables). Class name = file name unless noted.
+
+| web/src module | C# file (namespace) | | web/src module | C# file |
+|---|---|---|---|---|
+| data.js | `ReC.Core/Data.cs` (`ReC`) | | game/states/areaenter.js | `Game/States/AreaEnter.cs` |
+| nes/ppu.js | `Nes/Ppu.cs` (`ReC.Nes`) | | game/states/play.js | `Game/States/Play.cs` |
+| nes/apu.js | `Nes/Apu.cs` (`Apu`, `Envelope`, `Pulse`, `Triangle`, `Noise`, `Dmc`) | | game/states/death.js | `Game/States/Death.cs` |
+| game/machine.js | `ReC.Core/Machine.cs` (`ReC.Game`) | | game/states/pause.js | `Game/States/Pause.cs` |
+| game/ram.js, prg.js | `Game/Ram.cs`, `Game/Prg.cs` | | game/states/title.js | `Game/States/Title.cs` |
+| game/boot.js, mainloop.js | `Game/Boot.cs`, `Game/MainLoop.cs` | | game/states/talk.js | `Game/States/Talk.cs` |
+| game/lagmodel.js | `Game/LagModel.cs` | | game/states/giveitem.js | `Game/States/GiveItem.cs` |
+| game/pads.js, palette.js | `Game/Pads.cs`, `Game/Palette.cs` | | game/states/equip.js | `Game/States/Equip.cs` |
+| game/playsound.js | `Game/PlaySound.cs` (`PlaySound.Play`) | | game/states/shop.js | `Game/States/Shop.cs` |
+| game/sound/driver.js | `Game/Sound/Driver.cs` | | game/states/saveload.js | `Game/States/SaveLoad.cs` |
+| game/sound/soundupdate.js | `Game/Sound/SoundUpdate.cs` (`SoundUpdate.Run`) | | game/states/wake.js | `Game/States/Wake.cs` |
+| game/world/area.js, bg.js | `Game/World/Area.cs`, `Bg.cs` | | game/states/teleport.js | `Game/States/Teleport.cs` |
+| game/world/bgstream.js | `Game/World/BgStream.cs` | | game/states/telepathy.js | `Game/States/Telepathy.cs` |
+| game/world/camera.js | `Game/World/Camera.cs` | | game/states/changeform.js | `Game/States/ChangeForm.cs` |
+| game/world/ppuqueue.js | `Game/World/PpuQueue.cs` | | game/states/cure.js | `Game/States/Cure.cs` |
+| game/world/spawn.js | `Game/World/Spawn.cs` | | game/states/formrevert.js | `Game/States/FormRevert.cs` |
+| game/obj/objects.js, objinit.js | `Game/Obj/Objects.cs`, `ObjInit.cs` (`ObjInit.Init`) | | game/states/swordraise.js | `Game/States/SwordRaise.cs` |
+| game/obj/move.js, collide.js | `Game/Obj/Move.cs`, `Collide.cs` | | game/states/mesia.js | `Game/States/Mesia.cs` |
+| game/obj/util.js | `Game/Obj/ObjUtil.cs` | | game/states/finalscene.js | `Game/States/FinalScene.cs` |
+| game/obj/sprites.js, player.js | `Game/Obj/Sprites.cs`, `Player.cs` | | game/states/ending.js | `Game/States/Ending.cs` |
+| game/obj/ai_static/walk/field.js | `Game/Obj/AiStatic.cs`, `AiWalk.cs`, `AiField.cs` | | main.js | `ReC.Sdl/Program.cs` |
+| game/obj/ai_shot/effect/thunder.js | `Game/Obj/AiShot.cs`, `AiEffect.cs`, `AiThunder.cs` | | input.js, audio.js | `ReC.Sdl/Input.cs`, `Audio.cs` |
+| game/obj/ai_boss.js, ai_final.js | `Game/Obj/AiBoss.cs`, `AiFinal.cs` | | save.js | `ReC.Sdl/Save.cs` |
+
+Extra C# files with no JS module: `Game/Y.cs` (`Y` enum, `Ret<T>`, `Stub`), `Gen/R.cs` (generated labels),
+`Util/{Png,Csv,StateFile}.cs` (what node's zlib / fs / JSON gave the JS test runner), `ReC.Sdl/Sdl.cs` (SDL2 P/Invoke).
+`Game/States/Substates9.cs` is a comment-only leftover of the s3 stubs (delete it; the build does not need it).
+
+**Deviations from the JS (all behaviour-neutral; the oracle runs are byte-identical):**
+- Generators → C# iterators (§3); generator return values → `Ret<T>` / `Death.YOut` arguments set before the iterator
+  ends; JS `undefined` → `int?` null; JS `true` from an AI (popped ObjUpdateAll) → `AiRet.Pop`, a new X → `AiRet.X`.
+- JS default parameters read from RAM → overloads that read at the call; `y = 0` defaults → one-argument overloads.
+- Dispatch tables (MODES / STEPS / AI_xxx / BossPhaseTable / EVENT_ACTIONS / TALK_ACTIONS / ENTRY_POINTS) →
+  `Dictionary` / arrays of delegates; their anonymous JS lambdas are untagged lambdas or private methods.
+  giveitem.js's mutation of TALK_ACTIONS is folded into `Talk.TalkActions` directly.
+- Renames where a member would share its class name or clash with a namespace: `PlaySound.Play`, `SoundUpdate.Run`,
+  `ObjInit.Init`, `AreaEnter.AreaEnterRun`, `GiveItem.Give`, `Telepathy.TelepathyMsg`, `ObjUtil`; machine.js's `lagModel`
+  flag → `LagModelOn`; sprites.js module variable `regY` → `m.SpriteRegY`; apu.js `tri/noise/dmc` → `TriCh/NoiseCh/DmcCh`.
+- JS tri-state values → enums (`Move.Step`, `Bg.Visit`); equip.js `'exit'` and boolean generator results → `Ret<bool>`.
+- Inner JS closures listed by the inventory → C# local functions with their own tag (equip `put/lookup/clamp`, ending
+  `rel/next`, wake `rd/oam`, telepathy `row`, shop `leave`, main.js `blit/fit/tick`); shop.js's two `pr` → one `Pr`.
+- JS `throw` → `InvalidOperationException`. Counted reads/writes are kept exactly (lag model input, §5.1 s4).
+- Platform layer: browser events → one SDL event loop; WebAudio → `SDL_QueueAudio` (+ a 0.25 s queue cap the JS lacks);
+  localStorage base64 → raw `re-c.sav` (written via .tmp + move); DOM status → window title. Waivers: `docs/waivers.csv`.
+- Known web-port quirks are kept for parity (e.g. ai_boss.js e9Fire: a statue shot that spawns pops ObjUpdateAll).
+
+**Final checks (C# s7):** build 0 warnings; ReC.Tests 88/88; `cs_coverage.py` exit 0 (100 %, 0 stale, 0 bad waivers);
+`cs_vs_web.py --canon --states` 88/88 identical; `cs_rea_members.py` 1,029/1,029 tags found in the assemblies.
+
 ## 6. REA reconstruction tracking
 
 REA (`rea analyze-javascript-application <repo>/web/src --artifact-format directory --detail summary --evidence_output EV.json`)
@@ -179,3 +238,19 @@ complete when coverage is 100 % **and** `tools/cs_vs_web.py --canon --states` pa
 built assembly (`rea inspect-managed-artifact src/ReC.Core/bin/Release/net10.0/ReC.Core.dll`, managed PE/CLI member
 inventory) — the close-out task uses it to confirm every tagged member exists in the compiled assembly, and
 `verify_reconstruction` / `build_reconstruction_obligation_ledger` (MCP) for a closing record when connected.
+
+**Assembly cross-check (C# s7, T12).** On the Release build:
+- `rea inspect-managed-artifact src/ReC.Core/bin/Release/net10.0/ReC.Core.dll --detail summary --evidence_output
+  out/rea_artifact.json` → evidence `ev_371f6022e862cce26dd80b9d27403aba6f99c28a00e38be804a3fda2bfb0e278` (summary view
+  `ev_01c2b20d…`): managed PE32 IL-only, `.NETCoreApp,Version=v10.0`, metadata complete, 414 TypeDef / 4,064 MethodDef /
+  3,185 Field rows, DLL sha256 `4a3be9535c847d314181f168731062afa308cff251b821bfe4408306a4936ad7`, MVID
+  `2d754f3b-a755-4b96-86ef-24e76fc5bdd2`.
+- `rea inspect-managed-members` (same flags) → `out/rea_members.json`, evidence
+  `ev_703262e1d23f0c6804859e7001951a10a1adb3202b255c7619987fbb956daeef` (ReC.Core.dll, same sha256), and
+  `out/rea_members_sdl.json`, evidence `ev_572f1c6a41bb8ef3bf709dd55c32f1ad3ad18ae8c33806f47707266f91865ded`
+  (ReC.Sdl.dll, sha256 `e1395099a4f9883e…`; the platform tags live there).
+- `python3 tools/cs_rea_members.py` parses every `// js:` tag's C# member + enclosing type from the source and finds it in
+  those bundles (method / ctor / property accessor / field / local function `<Outer>g__Name|`, also inside closure
+  classes): **1,029 / 1,029 tags found** (1,012 inventory keys, 1,026 C# members); it also checks the bundles' sha256
+  against the DLLs on disk (stale after any rebuild that changes them: rerun the two REA commands). `out/` is
+  gitignored, so the bundles are regenerated, not committed; the ids above are this build's.

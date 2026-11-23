@@ -30,6 +30,10 @@ C# (.NET 10, no NuGet packages) translation of the finished web port `../web/src
   extra counted `m.Rd` calls the JS doesn't make show up here first)
 - Sound: ReC.Tests `sound_frames` / `apu_*` cases; `python3 tools/apu_wav_compare.py [--no-build] [--seconds S] [ID..]`
   (C# `ReC.Tests --wav ID OUT.wav S` vs `node ../web/test/apu_check.mjs --wav`, byte-identical WAVs)
-- Coverage vs REA inventory: `python3 tools/cs_coverage.py [--module SUBSTR] [--missing]`
+- Coverage vs REA inventory: `python3 tools/cs_coverage.py [--module SUBSTR] [--missing]` (also fails on waivers
+  without a reason / not in the inventory / also tagged)
+- Tags vs built assemblies: `python3 tools/cs_rea_members.py [--list] [--modules]` (reads `out/rea_members.json` +
+  `out/rea_members_sdl.json` from `rea inspect-managed-members <dll> --detail summary --evidence_output ...`; exit 1 if a
+  tagged member is missing or a bundle's sha256 no longer matches the DLL)
 - REA: `rea analyze-javascript-application ../web/src ...` (inventory source), `rea inspect-managed-artifact <dll>` (built assembly);
   `mcp__rea__*` tools when the MCP server is connected.

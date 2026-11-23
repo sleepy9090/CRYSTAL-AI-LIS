@@ -172,7 +172,17 @@ If parts remain, write them into the same task and leave it unchecked (no new fo
   ReC.Run; restart restores the save file. Build 0 warnings, ReC.Tests 88/88, canon 2247 f identical, coverage
   **1031 + 15 waived of 1046 (100 %)**. Not done here: the interactive play-test with a real window / speakers /
   controller (left to the user).
-- [ ] T12 close-out: `cs_coverage.py` exits 0 (every waiver has a reason); tests + `cs_vs_web.py --canon --states` pass;
+- [x] T12 close-out: `cs_coverage.py` exits 0 (every waiver has a reason); tests + `cs_vs_web.py --canon --states` pass;
   `rea inspect-managed-artifact` on the Release `ReC.Core.dll` → confirm every tagged member exists in the assembly
   (write `tools/cs_rea_members.py` to cross-check, record the evidence id in docs/); refresh docs/architecture_cs.md
   (as built: JS → C# module table, deviations) and README.md (build / run / play / check commands).
+  **C# s7:** `tools/cs_coverage.py` now also fails on bad waivers (empty reason, not in the inventory, or also tagged):
+  exit 0, 1031 + 15 waived of 1046, 0 stale, 0 bad. ReC.Tests 88/88; build 0 warnings; `cs_vs_web.py --canon --states`
+  **88/88 identical** (exit 0); regression `--checks wake` 68/68 identical at full length. REA on the Release build: `inspect-managed-artifact ReC.Core.dll` = evidence
+  `ev_371f6022…` (PE32 IL-only, net10.0, metadata complete, sha256 `4a3be953…`), `inspect-managed-members` ReC.Core.dll
+  `ev_703262e1…` + ReC.Sdl.dll `ev_572f1c6a…` (bundles in `out/`). New `tools/cs_rea_members.py` (each tag's C# member +
+  enclosing type parsed from source, looked up as method / ctor / accessor / field / local function incl. closure
+  classes; checks bundle sha256 vs the DLLs; `--list`, `--modules`) → **1029/1029 tags found** in the assemblies.
+  Evidence ids recorded in docs/architecture_cs.md §6; new §5.2 = JS → C# module table, consolidated deviations, final
+  checks; README.md rewritten (build / play / headless / check commands, REA regeneration); CLAUDE.md lists the new
+  tool. `Game/States/Substates9.cs` (comment-only) still exists: `git rm` needs approval in the sandbox — delete it by hand.

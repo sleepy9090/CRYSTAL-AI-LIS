@@ -1,0 +1,120 @@
+  ▶ ls sessions/ | tail -4 && grep -n "^- \[ \]" TASKS.md | head; wc -l docs/architecture_cs.md TASKS.md
+  ▶ Read TASKS.md
+  ▶ Read architecture_cs.md
+  ▶ tail -c 3000 sessions/20261123_061621_cs_session_006.txt; echo ----; wc -c sessions/20261123_061621_cs_session_007.txt; 
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | tail -3 && python3 tools/cs_coverage.py | tail -5; echo exit=$?; cat docs/waiver
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | tail -3
+  ▶ Read waivers.csv
+  ▶ Read cs_coverage.py
+Running the T12 close-out checks: build is clean; now coverage, tests and the oracle runs.
+  ▶ python3 tools/cs_coverage.py --quiet; echo "exit $?"; dotnet run --project tests/ReC.Tests -c Release 2>&1 | tail -3
+  ▶ python3 tools/cs_coverage.py --quiet
+  ▶ dotnet run --project tests/ReC.Tests -c Release 2>&1 | tail -3
+Coverage and tests pass. I'll make `cs_coverage.py` enforce "every waiver has a reason" (and flag waivers that aren't in the inventory), then start the long oracle run in the background.
+  ▶ Edit cs_coverage.py
+  ▶ Edit cs_coverage.py
+  ▶ Edit cs_coverage.py
+  ▶ python3 tools/cs_coverage.py --quiet
+  ▶ python3 tools/cs_vs_web.py --canon --states > out/t12_oracle.txt 2>&1
+  ▶ python3 tools/cs_vs_web.py --canon --states 2>&1 | tail -40
+Meanwhile, the REA assembly inventory. Checking whether the `rea` CLI is available.
+  ▶ which rea && rea inspect-managed-artifact --help 2>&1 | head -40
+  ▶ rea inspect-managed-members --help 2>&1 | head -40
+  ▶ rea inspect-managed-artifact src/ReC.Core/bin/Release/net10.0/ReC.Core.dll --detail summary --evidence_output out/rea_ar
+  ▶ python3 tools/json_peek.py out/rea_artifact.json | head -60
+  ▶ python3 tools/json_peek.py out/rea_artifact.json records.0.normalized_result | head -c 1500; echo; python3 tools/json_pe
+The artifact view carries identity/metadata counts only; member names come from `inspect-managed-members`.
+  ▶ rea inspect-managed-members src/ReC.Core/bin/Release/net10.0/ReC.Core.dll --detail summary --evidence_output out/rea_mem
+  ▶ python3 tools/json_peek.py out/rea_members.json records.0.normalized_result | head -c 300; echo; for k in types methods 
+  ▶ python3 tools/json_peek.py out/rea_members.json records.0.normalized_result | head -c 400
+  ▶ python3 tools/json_peek.py out/rea_members.json records.0.normalized_result.methods.0 | head -c 1200; echo; python3 tool
+Now I'll write `tools/cs_rea_members.py`. First a look at the variety of declarations that follow tags.
+  ▶ rea inspect-managed-members src/ReC.Sdl/bin/Release/net10.0/ReC.Sdl.dll --detail summary --evidence_output out/rea_membe
+  ▶ rea inspect-managed-members src/ReC.Sdl/bin/Release/net10.0/ReC.Sdl.dll --detail summary --evidence_output out/rea_membe
+  ▶ Grep
+I'll write the tool directly and iterate on whatever it can't resolve.
+  ▶ Write cs_rea_members.py
+  ▶ Edit cs_rea_members.py
+  ▶ python3 tools/cs_rea_members.py | tail -40
+  ▶ sed -n '99,101p;129,131p' src/ReC.Core/Game/LagModel.cs; sed -n '44,46p' src/ReC.Core/Game/Obj/AiThunder.cs; sed -n '157
+Two parser gaps: tuple return types (`(int X, int Y) Name(`) and local functions compiled into closure display classes. Fixing both.
+  ▶ Edit cs_rea_members.py
+  ▶ Edit cs_rea_members.py
+  ▶ Edit cs_rea_members.py
+  ▶ python3 tools/cs_rea_members.py | tail -20
+The regex grabbed `static (` from the tuple return; skip keywords.
+  ▶ Edit cs_rea_members.py
+  ▶ python3 tools/cs_rea_members.py | tail -8; python3 tools/cs_rea_members.py --list | grep -c "\.None\|\.static"
+All 1029 tags resolve. Spot-checking the mapping for nested classes, local functions and fields so the pass isn't trivial:
+  ▶ python3 tools/cs_rea_members.py --list | grep -E "apu.js (write|clock)|equip.js (put|lookup|clamp)|FSD_LAG|shop.js (leav
+Mapping looks right (nested `Pulse`/`Triangle`, local functions, renamed fields). Checking the oracle run:
+  ▶ Read b1orjfc38.output
+Still running (output is buffered through `tail`). Meanwhile I'll gather the JS → C# module mapping for the docs.
+  ▶ python3 tools/cs_rea_members.py --list | sed -E 's/^(\S+) .*\((src\/[^:]+):.*/\1 \2/' | sort -u
+I'll add a `--modules` view to the tool instead (module → C# files, tag counts), useful for the docs table.
+  ▶ Edit cs_rea_members.py
+  ▶ Edit cs_rea_members.py
+  ▶ python3 tools/cs_rea_members.py --modules
+  ▶ Read b1orjfc38.output
+`--canon --states`: 88/88 identical, exit 0. I'll also run the full-length `--checks` set in the background as a final regression while I write the docs.
+  ▶ python3 tools/cs_vs_web.py --checks wake 2>&1 | tail -6
+  ▶ ls src/ReC.Core/Game/States/ src/ReC.Core src/ReC.Core/Game src/ReC.Core/Util src/ReC.Run src/ReC.Sdl tests/ReC.Tests; c
+`Substates9.cs` (comment-only leftover from s5) is still present; trying to remove it as part of the close-out.
+  ▶ cat src/ReC.Core/Game/States/Substates9.cs && git rm -q src/ReC.Core/Game/States/Substates9.cs
+Removal needs approval, so I'll leave it and flag it. Now the docs refresh — architecture first.
+  ▶ Edit architecture_cs.md
+  ▶ Edit architecture_cs.md
+Now the as-built module table and consolidated deviations list, inserted before §6:
+  ▶ Edit architecture_cs.md
+  ▶ Edit architecture_cs.md
+Verifying a couple of claims I put in the doc (what `Y.cs` holds, ReC.Run options) before writing the README:
+  ▶ Grep
+  ▶ Grep
+Good. Now the README:
+  ▶ Read README.md
+  ▶ Write README.md
+Adding the new tool to CSHARP/CLAUDE.md's commands:
+  ▶ Edit CLAUDE.md
+  ▶ python3 tools/cs_rea_members.py | tail -1; python3 tools/cs_coverage.py --quiet
+Waiting on the `--checks` regression before ticking T12.
+  ▶ ToolSearch
+The background run notifies me when it finishes, so I'll write the T12 entry now and fill in the `--checks` result after.
+  ▶ Edit TASKS.md
+  ▶ until grep -q "cases identical\|Traceback\|FAIL" /tmp/claude-1000/-home-sleepy9090-Downloads-nes-port-RE-C-NES-ROM-CSHAR
+All 68 full-length cases are identical. Ticking T12 and recording that result.
+  ▶ Edit TASKS.md
+  ▶ Edit TASKS.md
+I finished T12, the last task, so every task in TASKS.md is now ticked and the C# port of re-c is complete. I didn't commit anything.
+
+**Check results:**
+
+| Check | Result |
+|---|---|
+| Build | 0 warnings |
+| ReC.Tests | 88/88 passed |
+| `cs_coverage.py` | exits 0: 1031 ported + 15 waived of 1046, nothing missing or stale |
+| `cs_vs_web.py --canon --states` | 88/88 runs identical to the web port |
+| `--checks` plus `wake`, all at full length (extra regression) | 68/68 identical |
+| Tagged members found in the built assemblies | 1029/1029 |
+
+**What changed:**
+- **`tools/cs_coverage.py`** now also fails on a bad waiver: one with no reason, one that names nothing in the inventory, or one for a function that is also tagged as ported. All 5 current waivers pass.
+- **New `tools/cs_rea_members.py`:**
+  - For each `// js:` tag it finds the C# member and its class in the source, then looks it up in REA's member listing of the Release `ReC.Core.dll` and `ReC.Sdl.dll`.
+  - It also fails if a DLL has been rebuilt since REA read it.
+  - `--list` and `--modules` print the tag-to-member and module-to-file mappings.
+- **REA evidence ids**, recorded in `docs/architecture_cs.md` §6:
+  - `inspect-managed-artifact` on ReC.Core.dll: `ev_371f6022…`
+  - `inspect-managed-members`: `ev_703262e1…` (ReC.Core.dll) and `ev_572f1c6a…` (ReC.Sdl.dll)
+
+  The REA files themselves are in `out/`, which git ignores. Rerun the two REA commands in README.md after any rebuild.
+- **Docs:**
+  - `docs/architecture_cs.md` has a new §5.2 with the JS-to-C# module table, all the ways the C# differs from the JS (none change behaviour), and the final check results.
+  - `README.md` is rewritten with the build, play, headless-run and check commands.
+  - `CLAUDE.md` lists the new tool.
+
+**Left for you:**
+- `src/ReC.Core/Game/States/Substates9.cs` contains only comments. Deleting it needed approval, so it's still there. You can delete it; the build doesn't use it.
+- The hands-on play-test with a real window, speakers and controller.
+
+SESSION_SUMMARY: C# s7: T12 done (all tasks ticked); coverage exit 0 with waiver checks, 88/88 tests, canon+states 88/88 and checks+wake 68/68 identical, new cs_rea_members.py finds 1029/1029 tags in the REA-inspected Release assemblies (ev_371f6022/ev_703262e1/ev_572f1c6a), architecture_cs.md §5.2/§6 + README refreshed; Substates9.cs deletion left to the user.
