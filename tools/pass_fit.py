@@ -21,7 +21,9 @@ rd/wr/rom (hit handlers, AreaSpawnEntry) + d; a fits to 0.999, d = 77.
 All steps: sh tools/passfit_runs.sh.
 
 usage: python3 tools/pass_fit.py COST.txt COUNTS.txt [--worst N]
-       [--stages [--ai] [--save F | --coef F] [--skip-lag] [--show S [--sort]]]"""
+       [--stages [--ai] [--save F | --coef F [--fit-new]] [--skip-lag] [--show S [--sort]] [--from F] [--to F]]
+s218: --fit-new (with --coef) fits the AI ids the saved coefficients lack (>= 6 dispatches) instead of using ai*;
+--from / --to keep only the passes of those tools.emu frames (e.g. up to the first lag the port does not model)."""
 import json
 import re
 import sys
@@ -74,7 +76,8 @@ def ai_mode(pts, coef, pred, argv):
         coef['ai*'] = lstsq([s[1] for s in allx], [s[2] for s in allx])
     for ai, v in sorted(by_ai.items()):
         key = 'ai' + ai
-        if key not in coef and len(v) >= 6 and '--coef' not in argv:   # out of sample: unseen ids use ai*
+        # out of sample: unseen ids use ai* (s218: --fit-new fits them on top of the --coef ones)
+        if key not in coef and len(v) >= 6 and ('--coef' not in argv or '--fit-new' in argv):
             coef[key] = lstsq([s[1] for s in v], [s[2] for s in v])
         c = coef.get(key, coef['ai*'])
         res = [s[2] - sum(a * b for a, b in zip(c, s[1])) for s in v]
@@ -126,6 +129,8 @@ def hud_fit(pts, coef, argv):
 
 def stages_mode(argv, cost, worst):
     pts = []
+    lo = int(argv[argv.index('--from') + 1]) if '--from' in argv else 0
+    hi = int(argv[argv.index('--to') + 1]) if '--to' in argv else 1 << 30
     # comma lists COST1,COST2 COUNTS1,COUNTS2: several runs fitted together (each joined on its own)
     for cpath, npath in zip(argv[0].split(','), argv[1].split(',')):
         cost = {r['f']: r for r in parse(cpath) if r['tot'] >= 0 and len(r['st']) == len(STAGES)}
@@ -134,6 +139,8 @@ def stages_mode(argv, cost, worst):
             if not w or not w[0].isdigit() or int(w[0]) - 1 not in cost:
                 continue
             if '--skip-lag' in argv and cost[int(w[0]) - 1]['lag']:
+                continue
+            if not lo <= int(w[0]) - 1 <= hi:   # s218: --from / --to (tools.emu pass frames)
                 continue
             b = {k: tuple(map(int, v.split('/'))) for k, v in (x.split('=') for x in w[1:])}
             pts.append((int(w[0]) - 1, b, cost[int(w[0]) - 1]))

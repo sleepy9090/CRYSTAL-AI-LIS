@@ -49,7 +49,8 @@ while (f0 + m.frame <= Number(last)) {
     for (let i = 0; i < 3; i++) u[i] += b[i];
     return [x, `${x.toString(16).toUpperCase().padStart(2, '0')}:${id.toString(16).toUpperCase().padStart(2, '0')}=${b.join('/')}`];
   }).sort((a, b) => a[0] - b[0]).map((t) => t[1]);
-  if (stages) out.push(`${f} ` + ST.map((s) => `${s}=${(cnt[s] || [0, 0, 0]).join('/')}`).join(' ') + ` colc=${cyc.col || 0}` + (sl.length ? '  ' + sl.join(' ') : ''));
+  // s218: im = irq_mode $51 at the frame end (int_fit.py --im selects frames by it)
+  if (stages) out.push(`${f} ` + ST.map((s) => `${s}=${(cnt[s] || [0, 0, 0]).join('/')}`).join(' ') + ` colc=${cyc.col || 0} im=${m.mem.rd(0x51).toString(16).padStart(2, '0')}` + (sl.length ? '  ' + sl.join(' ') : ''));
   else out.push(`${f} ${tot[0]} ${tot[1]}`);
   if ((m.lagFrames || 0) !== lag0) out.push(`# LAG ${f} (lag model, next frame has no pass)`);
 }

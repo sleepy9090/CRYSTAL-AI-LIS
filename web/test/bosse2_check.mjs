@@ -10,8 +10,9 @@
 // PaletteBuild (fade steps) or of BossBuildParts($13), so its row shows a half-done value; the port's cell must
 // then equal the ref's previous frame (the routine has not run yet) and the next row matches as usual.
 // The intro's first frame overruns in the ROM (NMI at f2535 L241 inside the sprite pass, frame_ready 1): the
-// port yields SPIN there (tools/emu/e2_intro_probe.py). Not covered: from f2909 the fight's shots give tools.emu
-// lag frames the port does not model (gap (c)). Exit code 1 on any mismatch.
+// port yields SPIN there (tools/emu/e2_intro_probe.py). s218: the ref now runs to f3002 (was f2907, --frames 480):
+// the fight's 7 tools.emu lag frames from f2915 (pass + HUD IRQ over budget at L255) come from the lag model in
+// irq_mode 7 (lagmodel.js: AI $62 fit, NMI +27 for the slot-$13 scroll copy). Exit code 1 on any mismatch.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -29,6 +30,9 @@ const PARTIAL = {
   2552: ['pal_crc'], 2786: ['pal_crc'], 2819: ['pal_crc'], 2852: ['pal_crc'], 2885: ['pal_crc'],
   2707: ['o0E_y', 'o0F_x', 'o0F_y'],
 };
+// s218: the player's 3-frame wait passes (00:03 ~24000 cycles, f2908 / f2919 / ..): tools.emu's middle row has
+// the $34-$37 scratch cursor mid-update
+for (const f of [2910, 2921, 2932, 2943, 2953, 2964, 2975, 2986, 2997]) PARTIAL[f] = ['pos_x', 'pos_y'];
 
 const [head, ...lines] = readFileSync(path.join(WEB, 'test/bosse2_ref.csv'), 'utf8').trim().split('\n');
 const refCols = head.split(',');
@@ -70,5 +74,6 @@ want('obj_phase_s0D', m.rd(0x060D), 1);
 want('obj_coll_s0D', m.rd(0x03AD), 0x13);
 want('irq_mode', m.rd(0x51), 7);
 for (let s = 0x0E; s < 0x14; s++) want(`obj_active slot ${hex(s)}`, m.rd(0x04A0 + s) & 0x7F, 0x3F);
-console.log(`${fails > before ? 'FAIL' : 'ok  '} bosse2: phase 1 from f${phase1}, coll $13, irq_mode 7, parts AI $3F`);
+want('lag-model overruns (tools.emu: 7 from f2915)', m.lagFrames || 0, 7);       // s218
+console.log(`${fails > before ? 'FAIL' : 'ok  '} bosse2: phase 1 from f${phase1}, coll $13, irq_mode 7, parts AI $3F, 7 overruns`);
 process.exit(fails ? 1 : 0);

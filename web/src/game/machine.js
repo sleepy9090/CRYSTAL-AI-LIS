@@ -19,7 +19,7 @@ import { ppuQueueFlush } from './world/ppuqueue.js';
 import { playSound } from './playsound.js';
 import { objPosToTemp } from './obj/util.js';
 import { areaSpawnEntry } from './world/spawn.js';
-import { passLags, startLine, lagDomain } from './lagmodel.js';
+import { passLags, startLine, lagDomain, NMI_MODE_EXTRA } from './lagmodel.js';
 import { introLeftovers, coldSaveInit, bootSaveCheck, copySramBlock } from './boot.js';
 
 export const FRAME_HZ = 60.0988;       // NTSC: 39375000/11/341/262*3 ≈ 60.0988 (odd-frame skip ignored)
@@ -70,6 +70,7 @@ export class Machine {
     this._rom0 = 0; this._cyc0 = 0;
     this.lagPass = false;                            // s215: a whole SubstPlay pass ran this frame (states/play.js)
     this.lagLine = 252;                              // s215: start line of the next pass (last NMI's length)
+    this.lagMode7 = true;                            // s218: also judge irq_mode 7 (boss) passes (lagmodel.js lagDomain)
     // PpuQueueFlush 30:C67D (world/ppuqueue.js, s79), called by the NMI at F40A
     this.ppuQueueFlush = ppuQueueFlush;
     // sound (7/8, s56-57): SoundUpdate 31:F7FE + the APU. Register writes take effect at once; the APU is
@@ -223,14 +224,18 @@ export class Machine {
       this.overrunNmi = true;
       this.lagFrames = (this.lagFrames || 0) + 1;
     }
+    let nmiExtra = 0;                                // s218: irq_mode 7 / 9 slot-$13 scroll copy (lagmodel.js)
     if (this.skipNmi) this.skipNmi = false;          // s107: NO_NMI (lost NMI, see states/death.js)
     else if (this.hudNmiLost) { this.hudNmiLost = false; nmiLostToHud(this); }   // s174: see irqHud
-    else nmiWork(this);
+    else {
+      if (this.rd(0x09) === 0) nmiExtra = NMI_MODE_EXTRA[this.mem.rd(0x51)] || 0;
+      nmiWork(this);
+    }
     // s114: CPU overrun. The ROM's frame ran past line 241, so its NMI found frame_ready != 0 (no OAM DMA, no
     // scroll copy, frame_ready 2). Then MainLoop's 30:C919 clears it and waits a whole frame for the next NMI.
     if (this.overrunNmi) { this.overrunNmi = false; this.wr(0x09, 0); }
     this.passStage = 'nmi';                          // flush the last cpuRd / m.cyc deltas
-    this.lagLine = startLine(this.lagCnt.nmi);       // s215: the next pass starts after this NMI
+    this.lagLine = startLine(this.lagCnt.nmi, nmiExtra);   // s215: the next pass starts after this NMI
     this.ppu.latchVert();                            // s125: pre-render vertical copy (see Ppu.latchVert)
     this._cyc3 += FRAME_CYCLES3;
     const n = Math.floor(this._cyc3 / 3);

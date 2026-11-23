@@ -9,7 +9,9 @@ F+1's render, HUD IRQ and NMI). Fits
 and shows how the NMI length sets the next pass's start line (L252 / L255 / ..).
 Several runs: comma lists. --coef F applies a saved fit (--save F writes one).
 
-usage: python3 tools/int_fit.py COST.txt[,..] COUNTS.txt[,..] [--save F | --coef F] [--worst N]"""
+s218: --im LIST (hex irq_mode values) keeps only the frames whose port row has `im=` in LIST.
+
+usage: python3 tools/int_fit.py COST.txt[,..] COUNTS.txt[,..] [--save F | --coef F] [--worst N] [--im 0,7]"""
 import json
 import re
 import sys
@@ -33,6 +35,9 @@ def load(cpath, npath):
         if w and w[0].isdigit():
             port[int(w[0])] = {k: tuple(map(int, v.split('/'))) for k, v in (x.split('=') for x in w[1:])
                                if '/' in v and not re.match(r'[0-9A-F]{2}:', k)}
+            im = [x[3:] for x in w[1:] if x.startswith('im=')]
+            if im:
+                port[int(w[0])]['im'] = int(im[0], 16)
     return cost, port
 
 
@@ -41,6 +46,8 @@ def main(argv):
         raise SystemExit(__doc__)
     worst = int(argv[argv.index('--worst') + 1]) if '--worst' in argv else 5
     coef = json.load(open(argv[argv.index('--coef') + 1])) if '--coef' in argv else {}
+    # s218: --im 0,7 = only frames whose port row ends with irq_mode $51 in the list (pass_count.mjs `im=`)
+    ims = {int(x, 16) for x in argv[argv.index('--im') + 1].split(',')} if '--im' in argv else None
     hud, nmi, starts = [], [], {}
     for cpath, npath in zip(argv[0].split(','), argv[1].split(',')):
         cost, port = load(cpath, npath)
@@ -48,6 +55,8 @@ def main(argv):
             if c['lag'] or f + 1 not in port or f + 1 not in cost:
                 continue
             b = port[f + 1]
+            if ims is not None and b.get('im') not in ims:
+                continue
             for k, line, cyc in c['ints']:
                 if k == 'I' and 180 <= line <= 200 and 'snd' in b:
                     hud.append((f, (*b['snd'], 1), cyc))

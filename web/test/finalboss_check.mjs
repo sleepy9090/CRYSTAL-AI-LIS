@@ -11,8 +11,10 @@
 // PaletteBuild: the port's cell = the ref's previous frame) and the LATE music cell at f2590 (the SFX $0C after
 // FadeOut shows one frame later in the port; also = the previous frame).
 // The setup RTSes with X = 0 (left by the sprite pass), so ObjUpdateAll's INX re-runs slots 1-$1E in the same
-// pass and the first sway step lands at f2697 (tools/emu/eb_setup_probe.py). Not covered: from f3148 the dive's
-// BG strips + the player hit overrun the frame in tools.emu (lag frames, gap (c)). Exit code 1 on any mismatch.
+// pass and the first sway step lands at f2697 (tools/emu/eb_setup_probe.py). s218: the ref now runs to f3220 (was
+// f3147): from f3146 every dive pass overruns in tools.emu (31-34k cycles, AI $6B ~9880), reproduced by the lag
+// model in irq_mode 7 (lagmodel.js, own $6B fit); the boss hits the player at f3216 (death from f3218, not
+// covered: PlayerDeath's LATE / PARTIAL cells). Exit code 1 on any mismatch.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,6 +33,10 @@ const PARTIAL = {
   2644: ['pal_crc'], 2661: ['pal_crc'], 2678: ['pal_crc'], 2695: ['pal_crc'],
   2590: ['music'],                                     // LATE
 };
+// s218: lagging passes whose work crosses tools.emu's row capture: the f3166 pass (ends f3168 L40) is inside
+// ObjSpriteDraw at frame 3167's NMI (row 3167 = half-written OAM), the f3216 pass (ends f3218 L17) clears slot
+// $1B in ObjCollideAll after frame 3217's NMI; the port runs each whole pass in one frame = the ref's next frame
+const EARLY = { 3167: ['oam_crc'], 3217: ['o1B_ai', 'o1B_x', 'o1B_y'] };
 
 const [head, ...lines] = readFileSync(path.join(WEB, 'test/finalboss_ref.csv'), 'utf8').trim().split('\n');
 const refCols = head.split(',');
@@ -57,14 +63,15 @@ for (const [f, w] of ref) {
   const row = rows.get(f);
   if (!row) { fail(`f${f}: no port row`); continue; }
   n++;
-  const part = PARTIAL[f] || [];
+  const part = PARTIAL[f] || [], early = EARLY[f] || [];
   for (let i = 1; i < refCols.length; i++) {
-    const want = part.includes(refCols[i]) ? ref.get(f - 1)[i] : w[i];
-    if (part.includes(refCols[i])) np++;
+    const want = part.includes(refCols[i]) ? ref.get(f - 1)[i] : early.includes(refCols[i]) ? ref.get(f + 1)[i] : w[i];
+    if (part.includes(refCols[i]) || early.includes(refCols[i])) np++;
     if (row[idx[i]] !== want) fail(`f${f}: ${refCols[i]} want ${want} got ${row[idx[i]]}`);
   }
 }
-console.log(`${fails ? 'FAIL' : 'ok  '} finalboss: ${n} rows vs tools.emu at shift 0 (${np} PARTIAL / LATE cells = previous frame)`);
+console.log(`${fails ? 'FAIL' : 'ok  '} finalboss: ${n} rows vs tools.emu at shift 0 (${np} PARTIAL / LATE / EARLY cells), ` +
+  `${m.lagFrames || 0} lag-model overruns`);
 
 const before = fails;
 const want = (what, got, exp) => { if (got !== exp) fail(`${what} = ${hex(got)}, want ${hex(exp)}`); };
@@ -76,6 +83,8 @@ want('obj_phase_s0D', m.rd(0x060D), 2);
 want('irq_mode', m.rd(0x51), 7);
 want('cam lock $07D7 ($10, one countdown step)', m.rd(0x07D7), 0x0F);
 for (let s = 0x0E; s < 0x14; s++) want(`obj_active slot ${hex(s)}`, m.rd(0x04A0 + s) & 0x7F, 0x3F);
+// s218: tools.emu has 36 lag frames f3146-3218 = 27 whole passes (lag model) + 9 two-frame $6B passes (ported waits)
+want('lag-model overruns', m.lagFrames || 0, 27);
 console.log(`${fails > before ? 'FAIL' : 'ok  '} finalboss: phases ${[...phases].map(([p, f]) => `${p}@f${f}`).join(' ')}, ` +
   'irq_mode 7, cam lock $0F, parts AI $3F');
 process.exit(fails ? 1 : 0);

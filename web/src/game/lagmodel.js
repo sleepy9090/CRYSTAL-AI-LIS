@@ -51,6 +51,13 @@ export const LAG_COEF = {
     '5E': [7.3571, 15.5179, 0, 0],
     '5F': [16.25, 0, 0, 0],
     '70': [4.7683, 13.3423, -14.8028, 0],
+    // s218 (irq_mode 7): pass_fit.py --coef (the fits above) --fit-new on the aligned boss runs: finalboss.state
+    // to f3145 (445 passes, $6B rms 11 / max 62) and bosse2.state to f2914 ($62 30 dispatches, rms 1)
+    '1B': [-11.5462, 29.6485, 1.6757, 0],
+    '3F': [23.8571, 0, 0, 0],
+    '62': [4.8190, 8.3093, -5.1978, 1829.689],
+    '6B': [-3.7938, 17.6505, -9.1679, 1615.807],
+    '7F': [23.4286, 0, 0, 0],
   },
   hud: [12.2281, -5.4246, 14.1850, 436.274],
   nmi: [17.4678, -28.7772, 10.9464, 611.152],
@@ -77,9 +84,15 @@ export function passCycles(cnt, cyc, parts = null) {
   return p.top + p.cam + p.spr + p.upd + p.col;
 }
 
-/** start line of the next pass from this frame's `nmi` bucket (NMI 31:F3B6 length) */
-export function startLine(nmiCnt) {
-  const n = dot(LAG_COEF.nmi, nmiCnt || Z);
+/** s218: NMI 31:F3EC with irq_mode 7 / 9 (bosses / their message windows): when the DMA branch ran
+ *  (frame_ready was 0), the scroll copy is redone from slot $13 (LDA $83/$A3/$C3/$E3, STA $07D8-$07DB) = 4 x 7
+ *  + the CMP / branch path: mode 7 +27, mode 9 +24 cycles over mode 0's BNE F40A. tools.emu: the E2 boss's NMIs
+ *  are 1340 / 1643 cycles where mode 0's are 1315 / 1618 (the port's nmi bucket does not count these reads). */
+export const NMI_MODE_EXTRA = { 7: 27, 9: 24 };
+
+/** start line of the next pass from this frame's `nmi` bucket (NMI 31:F3B6 length; extra = NMI_MODE_EXTRA) */
+export function startLine(nmiCnt, extra = 0) {
+  const n = dot(LAG_COEF.nmi, nmiCnt || Z) + extra;
   if (n < 1450) return 252;
   if (n < 1720) return 255;
   if (n < 1910) return 257;
@@ -100,10 +113,14 @@ function withInts(t, splits, s, hud) {
   return { t, hud: hasHud && t > (262 - s + HUD_LINE) * CPL };
 }
 
-/** s215: the fits cover NmiMode 0 (irq_mode $51 = 0: HUD split, the normal field mode of $81 / $59 / $5A) only.
- *  Other modes have other NMI lengths (finalboss irq_mode 7: the nmi fit gave start lines L259 / L260 and false
- *  lags) and their known overruns are ported as heuristics (AI $70 / boss `yield SPIN`). */
-export const lagDomain = (m) => m.mem.rd(0x51) === 0;
+/** s215: the fits cover NmiMode 0 (irq_mode $51 = 0: HUD split, the normal field mode of $81 / $59 / $5A).
+ *  s218: also irq_mode 7 (bosses: the same NmiMode0 F6D6, scroll from slot $13): NMI +27 (NMI_MODE_EXTRA), own
+ *  fits for AIs $62 / $6B / $3F / $7F / $1B; checked on the whole bosse2 run (7/7 lags) and the final boss dive
+ *  (27 whole-pass lags f3146-3218). The L259 / L260 start lines the s215 note blamed on mode 7 are real: the rain
+ *  phase's 2198-cycle NMIs. m.lagMode7 = false limits it to mode 0. Not judged: mode 2 (NmiMode2 F751, set in
+ *  play by AI $70's Ai70FlashIrq 27:BCE8; its overruns are the ported AI $70 heuristics) and 1 / 3-6 / 9 (messages,
+ *  menus, title, ending, dead 4: no SubstPlay pass). */
+export const lagDomain = (m) => m.mem.rd(0x51) === 0 || (m.lagMode7 && m.mem.rd(0x51) === 7);
 
 /** true if the pass (started at line s) overruns the NMI at L241 of the next frame */
 export function passLags(cnt, cyc, s, splits) {

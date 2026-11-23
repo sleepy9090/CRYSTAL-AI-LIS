@@ -1,6 +1,7 @@
 bank,addr,name,comment
 31,F2A4,Reset,RESET vector entry
 31,F3B6,NMI,NMI vector (vblank); skips work if $60!=0 or $06!=0
+31,F3F6,NmiScrollFromSlot13,irq_mode 7/9: $07D8-$07DB = slot $13 x/y (+27 cycles in mode 7 / +24 in mode 9; s218 lag model)
 31,F443,IRQ,IRQ vector (MMC3 scanline IRQ); ack then JMP ($0054)
 31,FFFA,Vectors,NMI/RESET/IRQ
 31,F374,ColdBootInit,taken when $0182-0184 != 'USO' signature
