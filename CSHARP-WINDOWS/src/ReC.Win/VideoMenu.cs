@@ -21,6 +21,7 @@ internal static unsafe partial class Window
     private const int IdAspect0 = 240;           // + (int)Aspect
     private const int IdFsDesktop = 300, IdFsMode0 = 301;   // + index in _modes
     private const int IdUpscale0 = 260;          // + factor 1..4
+    private const int IdOriginal = 270, IdEnhanced = 271, IdReloadPack = 272;
 
     private static VideoSettings _v = new();
     private static string? _videoPath;
@@ -49,6 +50,9 @@ internal static unsafe partial class Window
             case "smooth": return IdSmooth;
             case "reset": return IdReset;
             case "fsmode:desktop": return IdFsDesktop;
+            case "graphics:original": return IdOriginal;
+            case "graphics:enhanced": return IdEnhanced;
+            case "reloadpack": return IdReloadPack;
         }
         if (n.StartsWith("size:"))
         {
@@ -101,6 +105,13 @@ internal static unsafe partial class Window
     private static IntPtr BuildVideoMenu()
     {
         var m = NewMenu();
+        var gfx = NewMenu();
+        Win32.AppendMenuW(gfx, 0, IdOriginal, "&Original (NES)");
+        Win32.AppendMenuW(gfx, 0, IdEnhanced, "&Enhanced (16-bit)");
+        Win32.AppendMenuW(gfx, Win32.MF_SEPARATOR, 0, null);
+        Win32.AppendMenuW(gfx, 0, IdReloadPack, "&Reload graphics pack\tF5");
+        Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)gfx, "&Graphics\tF9");
+        Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(m, 0, IdFullscreen, "&Fullscreen\tF11");
         var fs = NewMenu();
         Win32.AppendMenuW(fs, 0, IdFsDesktop, "&Desktop resolution (borderless)");
@@ -156,6 +167,7 @@ internal static unsafe partial class Window
             Check(IdPreset0 + i, (_v.WindowW, _v.WindowH) == VideoSettings.Presets[i], true);
         foreach (var a in VideoSettings.Aspects) Check(IdAspect0 + (int)a.A, _v.Aspect == a.A, true);
         foreach (var f in Upscale.Filters) Check(IdUpscale0 + f.K, _v.Upscale == f.K, true);
+        Check(IdOriginal, !_v.Enhanced, true); Check(IdEnhanced, _v.Enhanced, true);
         Check(IdFsDesktop, _v.FsW == 0, true);
         for (int i = 0; i < _modes.Count; i++) Check(IdFsMode0 + i, (_v.FsW, _v.FsH) == _modes[i], true);
     }
@@ -196,6 +208,9 @@ internal static unsafe partial class Window
                 return;
             }
             case IdFsDesktop: SetFsMode(0, 0); return;
+            case IdOriginal: SetEnhanced(false); return;
+            case IdEnhanced: SetEnhanced(true); return;
+            case IdReloadPack: ReloadPack(); return;
         }
         if (id > IdScale0 && id <= IdScale0 + VideoSettings.MaxScale) { _v.SetScale(id - IdScale0); SettingsChanged(true); }
         else if (id >= IdPreset0 && id < IdPreset0 + VideoSettings.Presets.Length)
@@ -211,6 +226,27 @@ internal static unsafe partial class Window
         else if (id > IdUpscale0 && id <= IdUpscale0 + 4) { _v.Upscale = id - IdUpscale0; SettingsChanged(false); }
         else if (id >= IdFsMode0 && id < IdFsMode0 + _modes.Count) SetFsMode(_modes[id - IdFsMode0].W, _modes[id - IdFsMode0].H);
         else if (id < 0) SetFsMode(-id >> 16, -id & 0xFFFF);
+    }
+
+    private static void SetEnhanced(bool on)
+    {
+        _v.Enhanced = on;
+        EnsureTags();
+        SettingsChanged(false);
+        Status(on ? $"enhanced graphics{(_enh?.ArtCount > 0 ? $" + {_enh.ArtCount} pack tiles" : "")} (F9)" : "");
+    }
+
+    private static void ReloadPack()
+    {
+        if (_enh == null) return;
+        _enh.LoadPack(_enh.PackDir);
+        foreach (string e in _enh.PackErrors) Console.Error.WriteLine($"[re-c] graphics pack: {e}");
+        _hdFrame = -1;
+        if (_enh.PackDir != null && !_quiet)
+            Console.Error.WriteLine($"[re-c] graphics pack {_enh.PackDir}: {_enh.ArtCount} tiles, {_enh.PackErrors.Count} skipped");
+        Status($"graphics pack: {_enh.ArtCount} tiles{(_enh.PackErrors.Count > 0 ? $", {_enh.PackErrors.Count} skipped" : "")}");
+        if (_m != null && _m.Ppu.Tags != null) RenderHd();
+        Present();
     }
 
     private static void SetFsMode(int w, int h)

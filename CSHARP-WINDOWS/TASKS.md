@@ -130,3 +130,15 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   4x at 16:9) compared exactly against a Python Scale2x/3x of the headless frame: 12/12 ok. On the final
   `dist/ReC.exe` (11,592,312 bytes, sha256 `bbd870c8…`): `win_vs_web.py --canon --states --checks wake` 156/156,
   `win_smoke.py --canon` ok, `cs_coverage.py` 100 %, `rea_pe_report.py` all expectations hold, `cs_rea_members.py` 1029/1029.
+- [x] T10 (interactive, 2026-11-23) done: **Graphics: Original / Enhanced (16-bit)** (Video > Graphics, F9; F5 reloads
+  the pack). Core: output-only `Ppu.Tags` (tile / row / col / flips / palette group per Fb pixel, off by default;
+  architecture §5.10). `Enhance.cs`: dither blend → Scale2x x2 → bevel shading from the visible colours (screen level;
+  first try was per tile: blocky dither mosaics and it leaked black-on-black shapes in dark rooms — replaced) →
+  hand-drawn pack tiles `TTTT_AABBCC.png` (32x32 RGBA; `%APPDATA%\re-c\pack`, `--pack DIR`); ~4 ms / frame (parallel rows).
+  `--export-tiles DIR` (built-in look + original 4x, blank / one-colour combos skipped). `PngRead.cs` decoder.
+  Tests 231/231 (`ppu_tags`: Fb identical with tags, 13.6 M tagged pixels 0 conflicts; `win_enhance`: colours 5 -> 76,
+  one-colour frame stays one colour, pack tile drawn, export; `win_png_read`). `win_video_check.py` 15/15 incl.
+  enhanced / packtile / original; real-time 600-frame smoke with Enhanced: 0 audio underruns. Final `dist/ReC.exe`
+  11,621,459 bytes, sha256 `2fd7bbf2…`; `core_vs_web` + `win_vs_web` `--canon --states --checks wake` 156/156 each,
+  `win_smoke.py --canon` ok, coverage 100 %, REA all expectations hold, `cs_rea_members` 1029/1029.
+  Not automated: hand-drawn art itself (the pack is empty; the built-in look is generated), play-test on Windows.

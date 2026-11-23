@@ -7,6 +7,9 @@ commands with `--menu` (the same Command() path as clicking the items), and read
 Video.cs, recomputed here), black bars outside it, the picture itself against the headless frame (upscaled by the same
 Scale2x / 3x / 4x rules when the case uses a filter, then nearest-neighbour resample; exact for integer square pixels, <= 2 % differing pixels for stretched shapes, skipped for the smooth filter),
 and the settings file written by the menu. Xvfb screen: 1920x1080x24.
+`enhanced` (T10, Video > Graphics): Enhanced at 4x (client 1024x960, > 3x the colours, block centres of flat areas
+keep their colour, settings file, --export-tiles), then the exported tiles painted magenta as a pack must be drawn,
+and Graphics > Original must not draw it.
 Exit 1 on any failure.
 """
 import os
@@ -221,7 +224,82 @@ def main(argv):
             print('     ' + '\n     '.join(out.strip().splitlines()[-8:]))
         else:
             print(f'ok   {name:10s} {msg_ok}', flush=True)
+    if not names or 'enhanced' in names:
+        fails += enhanced_checks(exe, timeout, hpng, frame)
     return 1 if fails else 0
+
+
+def enhanced_checks(exe, timeout, hpng, frame):
+    """T10 Video > Graphics > Enhanced: picture, --export-tiles, a pack tile, reload"""
+    import shutil
+    fails = 0
+    ini, exp, pack = (os.path.join(OUT, n) for n in ('enhanced.ini', 'export', 'pack'))
+    for d in (exp, pack):
+        shutil.rmtree(d, ignore_errors=True)
+    common = ['--frames', str(FRAMES), '--turbo', '--no-audio', '--video-config', winpath(ini),
+              '--save', winpath(os.path.join(OUT, 'video.sav')), '--pack', winpath(pack)]
+
+    def one(name, extra, check):
+        nonlocal fails
+        wpng, spng = os.path.join(OUT, f'{name}_window.png'), os.path.join(OUT, f'{name}_screen.png')
+        rc, out = run(exe, common + ['--dump-window', winpath(wpng), '--dump-screen', winpath(spng)] + extra, timeout)
+        msg = None
+        if rc or not os.path.exists(wpng):
+            msg = f'rc={rc}'
+        elif open(spng, 'rb').read() != open(hpng, 'rb').read():
+            msg = 'game frame differs from the headless run (Ppu.Tags must not change Fb)'
+        else:
+            cw, ch, rows = png_decode(open(wpng, 'rb').read())
+            msg = check(cw, ch, rows)
+        if msg and not msg.startswith('ok:'):
+            fails += 1
+            print(f'FAIL {name:10s} {msg}')
+            print('     ' + '\n     '.join(out.strip().splitlines()[-8:]))
+        else:
+            print(f'ok   {name:10s} {msg[3:] if msg else ""}', flush=True)
+
+    orig_colours = {c for row in frame for c in row}
+
+    def enhanced(cw, ch, rows):
+        if (cw, ch) != (1024, 960):
+            return f'client {cw}x{ch}, want 1024x960'
+        cols = {c for row in rows for c in row}
+        if len(cols) < 3 * len(orig_colours):
+            return f'{len(cols)} colours, want > 3 x {len(orig_colours)}'
+        # blocks of flat areas keep the frame's colour: >= 60 % of the block centres equal the NES pixel
+        same = sum(rows[y * 4 + 2][x * 4 + 2] == frame[y][x] for y in range(240) for x in range(256))
+        if same < 0.6 * 256 * 240:
+            return f'only {same} block centres keep their colour'
+        diff = sum(rows[y * 4 + 2][x * 4 + 2] != frame[y][x] for y in range(240) for x in range(256))
+        if not os.path.exists(ini) or 'graphics=enhanced' not in open(ini).read().splitlines():
+            return 'settings file lacks graphics=enhanced'
+        names = [f for f in os.listdir(exp) if f.endswith('.png')] if os.path.isdir(exp) else []
+        if not names or len(os.listdir(os.path.join(exp, 'original'))) != len(names):
+            return f'--export-tiles wrote {len(names)} tiles (+ originals)'
+        return f'ok: {len(orig_colours)} -> {len(cols)} colours, {diff} reshaded block centres, {len(names)} tiles exported'
+
+    one('enhanced', ['--menu', 'graphics:enhanced,size:4x', '--export-tiles', winpath(exp)], enhanced)
+
+    # a hand-drawn pack tile: the first exported tile, painted magenta, must appear; Original hides it again
+    names = sorted(f for f in os.listdir(exp) if f.endswith('.png')) if os.path.isdir(exp) else []
+    if names:
+        os.makedirs(pack, exist_ok=True)
+        from make_icon import png_encode
+        magenta_png = png_encode(32, [[(255, 0, 255)] * 32 for _ in range(32)])
+        for n in names:                    # the export covers the whole run: some of these tiles are on screen
+            open(os.path.join(pack, n), 'wb').write(magenta_png)
+
+        def magenta(cw, ch, rows):
+            n = sum(c == (255, 0, 255) for row in rows for c in row)
+            return f'ok: {n} pack-tile pixels ({len(names)} pack tiles)' if n >= 16 else f'pack tiles not drawn ({n} px)'
+
+        def no_magenta(cw, ch, rows):
+            n = sum(c == (255, 0, 255) for row in rows for c in row)
+            return 'ok: Original shows no pack tiles' if n == 0 else f'{n} pack pixels in Original'
+
+        one('packtile', [], magenta)              # settings reloaded from enhanced.ini: graphics=enhanced
+        one('original', ['--menu', 'graphics:original'], no_magenta)
+    return fails
 
 
 if __name__ == '__main__':

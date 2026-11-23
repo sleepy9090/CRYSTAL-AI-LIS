@@ -1,6 +1,9 @@
 // re-c Windows host — pure-logic tests of src/ReC.Win that run on Linux (architecture_win.md §2; linked sources, no
 // Win32 call is made): keyboard map (Pad.cs Input), XInput mapping (Pad.Buttons), letterbox fit (Window.Fit),
 // save file round trip (Save.cs), the --keys script key table.
+using ReC.Game;
+using ReC.Nes;
+using ReC.Util;
 using ReC.Win;
 
 namespace ReC.Tests;
@@ -121,6 +124,123 @@ internal static partial class Program
             True(VideoSettings.DefaultPath().EndsWith(Path.Combine("re-c", "video.ini")), "default path re-c/video.ini");
             var modes = VideoSettings.ModeList(new[] { (1920, 1080, 32), (800, 600, 32), (1920, 1080, 32), (640, 400, 32), (1024, 768, 16) });
             Eq("800x600,1920x1080", string.Join(',', modes.Select(m => $"{m.W}x{m.H}")), "mode list: 32 bpp, >= 640x480, distinct, sorted");
+        }),
+        ("ppu_tags", () =>
+        {
+            // T10: Ppu.Tags never changes Fb, and every tag names the tile pixel the PPU drew. Checked without
+            // assuming a palette (the game changes palettes mid-frame): on one line, all pixels tagged with the same
+            // palette group + CHR slot have one colour, and the slots of a group give >= 2 colours where >= 2 are seen.
+            var keys = Keys.Parse("1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80".Split(' '));
+            var a = new Machine(TheData.Value, _ => { });
+            var b = new Machine(TheData.Value, _ => { });
+            a.Reset(); b.Reset();
+            b.Ppu.Tags = new int[256 * 240];
+            var enh = new Enhancer(b.Ppu.Chr, TheData.Value.NesRgb);
+            long tagged = 0, conflicts = 0, sprites = 0, splitFrames = 0;
+            bool same = true;
+            var seen = new int[8 * 4];
+            for (int f = 214; f <= 2460; f++)
+            {
+                int k = keys.TryGetValue(f, out int v) ? v : 0;
+                a.RunFrame(k); b.RunFrame(k);
+                if (!a.Ppu.Fb.AsSpan().SequenceEqual(b.Ppu.Fb)) { same = false; break; }
+                if (f % 10 != 0) continue;
+                if (b.IrqSplits.Count > 0) splitFrames++;
+                for (int y = 0; y < 240; y++)
+                {
+                    Array.Fill(seen, -1);
+                    for (int x = 0; x < 256; x++)
+                    {
+                        int i = y * 256 + x, t = b.Ppu.Tags[i];
+                        if ((t & Ppu.TagValid) == 0) continue;
+                        tagged++;
+                        int g = t >> 19 & 7, slot = enh.Slot(t & 0x1FFF, t >> 13 & 7, t >> 16 & 7);
+                        if (g >= 4) { sprites++; if (slot == 0) conflicts++; }   // a sprite tag is never transparent
+                        int c = b.Ppu.Fb[i];
+                        if (seen[g * 4 + slot] < 0) seen[g * 4 + slot] = c;
+                        else if (seen[g * 4 + slot] != c) conflicts++;
+                    }
+                }
+            }
+            True(same, "Fb identical with tags on");
+            True(tagged > 1_000_000 && sprites > 1000, $"tagged {tagged}, sprite {sprites}");
+            True(splitFrames > 0, "some sampled frames have IRQ splits");
+            Eq(0L, conflicts, "one colour per line + group + slot");
+            Console.WriteLine($"  ppu_tags: {tagged} tagged pixels, {sprites} sprite, {splitFrames} split frames, {conflicts} conflicts");
+        }),
+        ("win_enhance", () =>
+        {
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { });
+            m.Reset();
+            m.Ppu.Tags = new int[256 * 240];
+            for (int f = 0; f < 787; f++) m.RunFrame(0);           // frame_no 1000, the intro picture
+            var enh = new Enhancer(m.Ppu.Chr, d.NesRgb, record: true);
+            var hd = new uint[Enhancer.W * Enhancer.H];
+            enh.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, hd);
+            var orig = new HashSet<uint>(); var more = new HashSet<uint>();
+            for (int i = 0; i < 256 * 240; i++) orig.Add((uint)d.NesRgb[m.Ppu.Fb[i] & 0x3F] & 0xFFFFFF);
+            foreach (uint c in hd) more.Add(c);
+            True(more.Count > orig.Count * 3, $"more colours: {orig.Count} -> {more.Count}");
+            // timing (one frame at 60 Hz = 16.7 ms)
+            // (after a warm-up: .NET compiles a method fully optimised only after ~30 calls, as in a real session)
+            for (int r = 0; r < 100; r++) enh.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, hd);
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            for (int r = 0; r < 100; r++) enh.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, hd);
+            double ms = sw.Elapsed.TotalMilliseconds / 100;
+            Console.WriteLine($"  win_enhance: Render {ms:F1} ms / frame, colours {orig.Count} -> {more.Count}");
+            True(ms < 10, $"Render fast enough: {ms:F1} ms");
+            // nothing hidden leaks: a one-colour screen (tags from real tiles) stays that colour
+            var flatFb = Enumerable.Repeat((byte)0x0F, 256 * 240).ToArray();
+            enh.Render(flatFb, m.Ppu.Tags, m.Ppu.Pal, hd);
+            uint black = (uint)d.NesRgb[0x0F] & 0xFFFFFF;
+            True(hd.All(c => c == black), "one-colour frame renders as that colour only");
+            enh.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, hd);
+            // the block of an untagged (backdrop) pixel = its colour; block centres of flat areas keep the colour
+            True(enh.Seen!.Count > 10, $"seen {enh.Seen.Count} tile + palette combinations");
+            // a hand-drawn pack tile replaces its blocks
+            string dir = Path.Combine(Path.GetTempPath(), $"rec_pack_{Environment.ProcessId}");
+            try
+            {
+                long key = enh.Seen.First(k => enh.Exportable((int)(k >> 24), (int)(k >> 16 & 63), (int)(k >> 8 & 63), (int)(k & 63)));
+                int tile = (int)(key >> 24), c1 = (int)(key >> 16 & 63), c2 = (int)(key >> 8 & 63), c3 = (int)(key & 63);
+                Directory.CreateDirectory(dir);
+                var rgba = new byte[Enhancer.T * Enhancer.T * 4];
+                for (int i = 0; i < rgba.Length; i += 4) { rgba[i] = 255; rgba[i + 1] = 0; rgba[i + 2] = 255; rgba[i + 3] = 255; }
+                File.WriteAllBytes(Path.Combine(dir, Enhancer.ArtName(tile, c1, c2, c3)), PngRead.EncodeRgba(Enhancer.T, Enhancer.T, rgba));
+                File.WriteAllText(Path.Combine(dir, "bogus.png"), "x");
+                File.WriteAllBytes(Path.Combine(dir, "0001_0F0F0F.png"), PngRead.EncodeRgba(8, 8, new byte[256]));
+                enh.LoadPack(dir);
+                Eq(1, enh.ArtCount, "1 pack tile"); Eq(2, enh.PackErrors.Count, "2 bad files reported");
+                enh.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, hd);
+                True(hd.Contains(0xFF00FFu), "pack tile drawn");
+                int n = enh.Export(Path.Combine(dir, "export"));
+                Eq(enh.Seen.Count(k => enh.Exportable((int)(k >> 24), (int)(k >> 16 & 63), (int)(k >> 8 & 63), (int)(k & 63))), n, "export count");
+                False(enh.Exportable(0, 0x0F, 0x16, 0x30) && enh.Slot(0, 0, 0) == 0 && Enumerable.Range(0, 64).All(i => enh.Slot(0, i % 8, i / 8) == 0), "blank tile not exported");
+                False(enh.Exportable(tile, 0x0F, 0x0F, 0x0F), "one-colour combination not exported");
+                var (w, h, px) = PngRead.Decode(File.ReadAllBytes(Path.Combine(dir, "export", Enhancer.ArtName(tile, c1, c2, c3))));
+                Eq((32, 32), (w, h), "export tile 32x32");
+                True(File.Exists(Path.Combine(dir, "export", "original", Enhancer.ArtName(tile, c1, c2, c3))), "original written");
+            }
+            finally { try { Directory.Delete(dir, true); } catch (IOException) { } }
+            True(Enhancer.TryParseArtName("1A3F_0F1630.png", out long kk) && kk == Enhancer.ArtKey(0x1A3F, 0x0F, 0x16, 0x30), "name parse");
+            False(Enhancer.TryParseArtName("1A3F_0F1640.png", out _), "colour > 3F rejected");
+            Eq(0x000000u, Enhancer.Shade(0x000000, 0), "black stays black in shadow"); Eq(0x123456u, Enhancer.Shade(0x123456, 16), "level 16 = unchanged");
+            True(Enhancer.Shade(0x808080, 32) > 0x808080 && Enhancer.Shade(0x808080, 0) < 0x808080, "shade lightens / darkens");
+            Eq("graphics=enhanced", VideoSettings.Parse("graphics=enhanced\n").Serialize().Split('\n').First(l => l.StartsWith("graphics")), "ini graphics");
+            Eq(271, Window.CommandId("graphics:enhanced"), "--menu graphics:enhanced");
+        }),
+        ("win_png_read", () =>
+        {
+            var rgba = new byte[3 * 2 * 4];
+            for (int i = 0; i < rgba.Length; i++) rgba[i] = (byte)(i * 11);
+            var (w, h, px) = PngRead.Decode(PngRead.EncodeRgba(3, 2, rgba));
+            Eq((3, 2), (w, h), "size");
+            Eq(((uint)rgba[7] << 24 | (uint)rgba[4] << 16 | (uint)rgba[5] << 8 | rgba[6]), px[1], "pixel 1 ARGB");
+            var rgb = Png.Encode(2, 2, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 });
+            var (_, _, p2) = PngRead.Decode(rgb);
+            Eq(0xFF0A0B0Cu, p2[3], "RGB decode, opaque");
+            Throws(() => PngRead.Decode(new byte[] { 1, 2, 3 }), "not a PNG");
         }),
         ("win_upscale", () =>
         {

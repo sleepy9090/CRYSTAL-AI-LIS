@@ -1,6 +1,6 @@
 {
  "evidence_bundle": {
-  "bytes": 30668166,
+  "bytes": 30737838,
   "path": "./out/rea_members.json"
  },
  "summary": {
@@ -10,9 +10,9 @@
   "confidence": "derived",
   "environment": null,
   "evidence_format": 2,
-  "evidence_id": "ev_029b2c90ac88fcb4c1ca29016445f766853fdab910d96e0bb111572dee1dfdeb",
+  "evidence_id": "ev_94a5b1ecdbbaf9e42a41999ed825a53de6744eb88c4375901d69d818cd825428",
   "evidence_links": [
-   "ev_f5e0679ea793588ddd4d6fb6af666007cbed17f9865451e93f95b37e3ce36188"
+   "ev_dfc7cb43d3a08cc93a87512713191a1282ca4bf23e9c20ad879ee070941900c7"
   ],
   "limitations": [
    "CIL instruction anchors are decoded from file-backed method bodies only; no target assembly is loaded or executed.",
@@ -31,14 +31,14 @@
   "normalized_result": {
    "artifact": {
     "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll",
-    "sha256": "45901d20e7c4617e8573771d0464e642ccea9f15b5c6188675d3c53b8a5e2eba"
+    "sha256": "a33751c00ebdd1cd8540a600f77ed031d6aec3e27953631b23ce540923bed1b3"
    },
    "coverage": {
-    "examined": 46812,
+    "examined": 46908,
     "exhausted": true,
     "next_offset": null,
     "status": "complete-within-view",
-    "total": 46812
+    "total": 46908
    },
    "kind": "summary",
    "limitations": [
@@ -49,15 +49,15 @@
     "Metadata tokens are build-local coordinates and are only meaningful with the reported artifact SHA-256 and MVID.",
     "User strings are the #US literals loaded by ldstr in the inspected method bodies, with their own coverage; instruction anchors and normalized CIL digests keep their build-local tokens."
    ],
-   "parent_digest": "f5e0679ea793588ddd4d6fb6af666007cbed17f9865451e93f95b37e3ce36188",
-   "parent_evidence_id": "ev_f5e0679ea793588ddd4d6fb6af666007cbed17f9865451e93f95b37e3ce36188",
+   "parent_digest": "dfc7cb43d3a08cc93a87512713191a1282ca4bf23e9c20ad879ee070941900c7",
+   "parent_evidence_id": "ev_dfc7cb43d3a08cc93a87512713191a1282ca4bf23e9c20ad879ee070941900c7",
    "parent_operation": "inspect_managed_members",
    "summary": {
     "artifact": {
-     "byte_length": 4295168,
+     "byte_length": 4296704,
      "format": "pe",
      "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll",
-     "sha256": "45901d20e7c4617e8573771d0464e642ccea9f15b5c6188675d3c53b8a5e2eba"
+     "sha256": "a33751c00ebdd1cd8540a600f77ed031d6aec3e27953631b23ce540923bed1b3"
     },
     "assembly": {
      "culture": null,
@@ -70,7 +70,7 @@
       "sha256": null,
       "token": null
      },
-     "row_offset": 4224144,
+     "row_offset": 4225316,
      "token": "0x20000001",
      "version": "1.0.0.0"
     },
@@ -79,8 +79,8 @@
      "state": "complete"
     },
     "identity_scope": {
-     "requires_artifact_sha256": "45901d20e7c4617e8573771d0464e642ccea9f15b5c6188675d3c53b8a5e2eba",
-     "requires_mvid": "e4ba3bfe-e6de-4321-9a60-00bafce57cd1",
+     "requires_artifact_sha256": "a33751c00ebdd1cd8540a600f77ed031d6aec3e27953631b23ce540923bed1b3",
+     "requires_mvid": "c319468c-5d2d-4456-a0cb-b7b42fb2ca31",
      "token_identity": "build-local"
     },
     "limitations": [
@@ -97,53 +97,53 @@
       "Assembly": 1,
       "AssemblyRef": 4,
       "ClassLayout": 12,
-      "Constant": 901,
-      "CustomAttribute": 3462,
-      "Field": 3189,
+      "Constant": 904,
+      "CustomAttribute": 3464,
+      "Field": 3196,
       "FieldRVA": 74,
       "GenericParam": 1,
       "InterfaceImpl": 1262,
       "ManifestResource": 20,
-      "MemberRef": 330,
-      "MethodDef": 4070,
+      "MemberRef": 331,
+      "MethodDef": 4078,
       "MethodImpl": 1764,
       "MethodSemantics": 534,
       "MethodSpec": 21,
       "Module": 1,
-      "NestedClass": 340,
-      "Param": 2815,
+      "NestedClass": 341,
+      "Param": 2833,
       "Property": 527,
       "PropertyMap": 261,
       "StandAloneSig": 498,
-      "TypeDef": 415,
+      "TypeDef": 416,
       "TypeRef": 105,
       "TypeSpec": 81
      },
      "version": "v4.0.30319"
     },
     "method_rows": {
-     "count": 4070,
+     "count": 4078,
      "offset": 0,
-     "total": 4070
+     "total": 4078
     },
     "module": {
      "enc_base_id": null,
      "enc_id": null,
      "generation": 0,
-     "mvid": "e4ba3bfe-e6de-4321-9a60-00bafce57cd1",
+     "mvid": "c319468c-5d2d-4456-a0cb-b7b42fb2ca31",
      "name": "ReC.Core.dll",
-     "row_offset": 4064868,
+     "row_offset": 4065724,
      "token": "0x00000001"
     },
     "nesting_read": true,
     "reported_counts": {
-     "call_edges": 19447,
+     "call_edges": 19468,
      "exported_types": 0,
-     "field_accesses": 19086,
-     "fields": 3189,
-     "member_refs": 330,
-     "methods": 4070,
-     "types": 415,
+     "field_accesses": 19144,
+     "fields": 3196,
+     "member_refs": 331,
+     "methods": 4078,
+     "types": 416,
      "unresolved_definitions": 0,
      "user_strings": 275
     },
@@ -155,49 +155,49 @@
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4262930,
+       "offset": 4264286,
        "scope": "metadata.#US:0x7000012d"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4263221,
+       "offset": 4264577,
        "scope": "metadata.#US:0x700001d7"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4264391,
+       "offset": 4265747,
        "scope": "metadata.#US:0x700006cc"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4265795,
+       "offset": 4267151,
        "scope": "metadata.#US:0x70000bf8"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4265855,
+       "offset": 4267211,
        "scope": "metadata.#US:0x70000ca4"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4266067,
+       "offset": 4267423,
        "scope": "metadata.#US:0x70000d5e"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4266077,
+       "offset": 4267433,
        "scope": "metadata.#US:0x70000d84"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4267420,
+       "offset": 4268776,
        "scope": "metadata.#US:0x7000126f"
       }
      ],
@@ -213,11 +213,11 @@
    "view": {
     "kind": "summary"
    },
-   "view_digest": "00890565166a79087d9fa476957a7a0db87556445ba26e1f7227d46698ee84b2"
+   "view_digest": "3222ec4cee867d55a3e7a20a253cb668ccf232d1addb668c3c708e8114ac6f9a"
   },
   "operation": "inspect_analysis_view",
   "parameters": {
-   "parent_evidence_id": "ev_f5e0679ea793588ddd4d6fb6af666007cbed17f9865451e93f95b37e3ce36188",
+   "parent_evidence_id": "ev_dfc7cb43d3a08cc93a87512713191a1282ca4bf23e9c20ad879ee070941900c7",
    "view": {
     "kind": "summary"
    }
@@ -236,7 +236,7 @@
     "format": "pe",
     "kind": "file",
     "selection": null,
-    "sha256": "45901d20e7c4617e8573771d0464e642ccea9f15b5c6188675d3c53b8a5e2eba"
+    "sha256": "a33751c00ebdd1cd8540a600f77ed031d6aec3e27953631b23ce540923bed1b3"
    },
    "local_path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll",
    "name": "ReC.Core.dll"

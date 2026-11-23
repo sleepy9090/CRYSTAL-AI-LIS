@@ -54,7 +54,8 @@ CSHARP-WINDOWS/
 ├─ src/ReC.Core/            copied core (net10.0) + embedded ../web/data
 ├─ src/ReC.Run/             Linux/dotnet headless runner; Headless.cs is also compiled into ReC.Win
 ├─ src/ReC.Win/             Program.cs (args, headless vs window), Win32.cs (P/Invoke), Window.cs, Video.cs +
-│                           VideoMenu.cs (T8 video settings / menus), Upscale.cs (T9), Audio.cs (waveOut),
+│                           VideoMenu.cs (T8 video settings / menus), Upscale.cs (T9),
+│                           Enhance.cs + PngRead.cs (T10 Enhanced graphics + pack), Audio.cs (waveOut),
 │                           Pad.cs (keyboard Input + XInput Pad), Save.cs, WavOut.cs (--wav), app.ico,
 │                           app.manifest (PerMonitorV2, Win10+)
 ├─ tests/ReC.Tests/         copied unit tests (+ Windows-host pure-logic tests that run on Linux)
@@ -128,3 +129,13 @@ CSHARP-WINDOWS/
    rules, edges clamped; 4x = 2x twice). The 256x240 frame is upscaled into a k-times DIB (only when a new frame was
    blitted) and that DIB goes through the same layout / crop (offset by 8k lines) / StretchDIBits path. `video.ini`
    key `upscale`.
+10. **Enhanced (16-bit) graphics (T10) — the one core change outside data loading:** `Ppu.Tags` (null = off, the default
+    and every parity run) records per Fb pixel the CHR tile (byte address / 16), in-tile row / col (tile space), flips
+    and palette group of the layer that won, in `RenderLine`, `EvalSprites` and the mid-line `RenderLineTimed` path; Fb
+    is never touched by it (`tests` `ppu_tags`: Fb identical with tags on over the canon run; 13.6 M tagged pixels, one
+    colour per line + group + slot, 0 conflicts). Host `Enhance.cs`: per frame, dither blend (screen) → Scale2x twice
+    (screen) → bevel shading from a separable distance-to-edge transform of the visible colours (screen, so hidden
+    same-colour shapes never show) → hand-drawn pack tiles `TTTT_AABBCC.png` (32x32 RGBA, keyed by tile + the line's
+    own slot colours, learned from the frame because the game changes palettes mid-frame). Rows in parallel; ~4 ms per
+    frame after JIT warm-up (`win_enhance`). `--export-tiles DIR` writes the built-in look + the 4x original of every
+    non-blank, non-one-colour tile + colours seen. `video.ini` key `graphics`; F9 toggle, F5 reload pack.

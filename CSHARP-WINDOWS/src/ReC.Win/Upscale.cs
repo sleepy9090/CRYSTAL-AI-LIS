@@ -32,15 +32,21 @@ internal static class Upscale
 
     public static void Scale2x(uint[] s, int w, int h, uint[] d)
     {
+        for (int y = 0; y < h; y++) Scale2xRow(s, w, h, d, y);
+    }
+
+    /// <summary>one source row of Scale2x (rows are independent: callers may run them in parallel)</summary>
+    public static unsafe void Scale2xRow(uint[] s, int w, int h, uint[] d, int y)
+    {
         int dw = w * 2;
-        for (int y = 0; y < h; y++)
+        fixed (uint* ps = s, pd = d)
         {
-            int up = Math.Max(y - 1, 0) * w, row = y * w, dn = Math.Min(y + 1, h - 1) * w;
-            int o = y * 2 * dw;
+            uint* up = ps + Math.Max(y - 1, 0) * w, row = ps + y * w, dn = ps + Math.Min(y + 1, h - 1) * w;
+            uint* o0 = pd + y * 2 * dw, o1 = o0 + dw;
             for (int x = 0; x < w; x++)
             {
-                int xl = Math.Max(x - 1, 0), xr = Math.Min(x + 1, w - 1);
-                uint b = s[up + x], d0 = s[row + xl], e = s[row + x], f = s[row + xr], hh = s[dn + x];
+                uint e = row[x], b = up[x], hh = dn[x];
+                uint d0 = x > 0 ? row[x - 1] : e, f = x < w - 1 ? row[x + 1] : e;
                 uint e0 = e, e1 = e, e2 = e, e3 = e;
                 if (b != hh && d0 != f)
                 {
@@ -49,8 +55,7 @@ internal static class Upscale
                     if (d0 == hh) e2 = d0;
                     if (hh == f) e3 = f;
                 }
-                int p = o + x * 2;
-                d[p] = e0; d[p + 1] = e1; d[p + dw] = e2; d[p + dw + 1] = e3;
+                o0[2 * x] = e0; o0[2 * x + 1] = e1; o1[2 * x] = e2; o1[2 * x + 1] = e3;
             }
         }
     }

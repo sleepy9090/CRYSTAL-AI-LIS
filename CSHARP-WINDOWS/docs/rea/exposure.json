@@ -5,7 +5,7 @@
  "confidence": "observed",
  "environment": null,
  "evidence_format": 2,
- "evidence_id": "ev_50d8ab752e2a432d0396ce7f0921b287432bcbf776c9165d657f5a688cac582e",
+ "evidence_id": "ev_23e45abb613d2456831ad17215202743f2f350d56078f3fc329364845e404103",
  "evidence_links": [],
  "limitations": [
   "This report states what static analysis of the selected artifact recovered. It does not establish that the application is secure.",
@@ -191,7 +191,7 @@
     "observation": {
      "counts": {
       "formats": 1,
-      "readable_members": 18,
+      "readable_members": 19,
       "unreadable_members": 0
      },
      "samples": [
@@ -242,7 +242,7 @@
     "next_probe": null,
     "observation": {
      "counts": {
-      "examined": 15,
+      "examined": 16,
       "failed": 2,
       "paths": 1
      },
@@ -392,7 +392,7 @@
    ],
    "omitted": [
     {
-     "count": 16,
+     "count": 17,
      "reason": "Go, Rust, and Electron fuse readers run on files on disk, not on images stored inside a package.",
      "subject": "packaged native images"
     }
@@ -424,7 +424,7 @@
    "format": "dotnet-bundle",
    "kind": "executable",
    "selected_path": "./dist/ReC.exe",
-   "sha256": "bbd870c837602d77aca9f7c814e5c25a3347860d950369dca99197d27c45e1c2"
+   "sha256": "2fd7bbf255b326e80f4a83e272f304634b338ca3c642bcf8c22aa123057e9942"
   }
  },
  "operation": "audit_release_exposure",
@@ -446,7 +446,7 @@
    "format": "dotnet-bundle",
    "kind": "file",
    "selection": null,
-   "sha256": "bbd870c837602d77aca9f7c814e5c25a3347860d950369dca99197d27c45e1c2"
+   "sha256": "2fd7bbf255b326e80f4a83e272f304634b338ca3c642bcf8c22aa123057e9942"
   },
   "local_path": "./dist/ReC.exe",
   "name": "ReC.exe"

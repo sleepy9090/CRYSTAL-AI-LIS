@@ -61,6 +61,21 @@ public sealed class Ppu
     private List<(int Dot, Action<Ppu> Fn)>? _timed;
     private bool _inTimed;
     private readonly byte[] _bgLine = new byte[264];
+
+    // ---- Windows port T10 (not in the web port): per-pixel source tags for the Enhanced graphics renderer.
+    // Null = off (the default, and in every parity run). When set, every Fb pixel also gets
+    //   tag = 1<<24 | flipV<<23 | flipH<<22 | group<<19 | row<<16 | col<<13 | tileNo
+    // group 0-3 = BG palette, 4-7 = sprite palette; row / col = the pixel inside the 8x8 tile in tile space (before
+    // the flip); tileNo = CHR byte address / 16 (0-8191); 0 = backdrop (no tile). Fb itself is never changed by it.
+    public int[]? Tags;
+    private readonly int[] _bgTag = new int[264];
+    private readonly int[] _tileTag = new int[34 * 8];
+    private readonly int[] _sprTag = new int[256];
+
+    public const int TagValid = 1 << 24;
+
+    private static int BgTag(int[] offs, int pa, int p, int col) =>
+        TagValid | (p >> 2) << 19 | (pa & 7) << 16 | col << 13 | ((offs[pa >> 10] + (pa & 0x3FF)) >> 4);
     private readonly short[] _tileBuf = new short[34 * 8];
     private readonly int[] _offs = new int[8];
 
@@ -244,6 +259,7 @@ public sealed class Ppu
             int v = V;
             byte c = (byte)(((v & 0x3F00) == 0x3F00 ? pal[PalMirror(v)] : pal[0]) & grey);
             Array.Fill(fb, c, @base, 256);
+            if (Tags != null) Array.Clear(Tags, @base, 256);
             return;
         }
         // BG: 33 tiles starting at v
@@ -266,6 +282,7 @@ public sealed class Ppu
                 int hi = chr[offs[pb >> 10] + (pb & 0x3FF)];
                 int d = ((lo << 8) | hi) * 8;
                 for (int i = 0; i < 8; i++) { int c = Dec[d + i]; bgLine[t * 8 + i] = (byte)(c != 0 ? (p | c) : 0); }
+                if (Tags != null) for (int i = 0; i < 8; i++) _bgTag[t * 8 + i] = BgTag(offs, pa, p, i);
                 v = (v & 0x1F) == 31 ? (v & ~0x1F) ^ 0x400 : v + 1;
             }
             V = v0;
@@ -283,6 +300,22 @@ public sealed class Ppu
             if (sp != 0) col = (bp != 0 && (sp & 0x40) != 0) ? pal[bp] : pal[0x10 | (sp & 0x0F)];
             else col = pal[bp];
             fb[@base + x] = (byte)(col & grey);
+        }
+        if (Tags != null) TagLine(@base, bgFrom, spr, spFrom, i => bgLine[i], i => _bgTag[i], fx, (mask & 0x08) != 0);
+    }
+
+    /// <summary>T10 tags for pixels [x0, xe) of a line, with the same layer choice as the pixel loops</summary>
+    private void TagLine(int @base, int bgFrom, byte[]? spr, int spFrom, Func<int, int> bgPix, Func<int, int> bgTag,
+        int fx, bool bgOn, int x0 = 0, int xe = 256)
+    {
+        var tags = Tags!;
+        for (int x = x0; x < xe; x++)
+        {
+            int bp = x >= bgFrom ? bgPix(x + fx) : 0;
+            int sp = (spr != null && x >= spFrom) ? spr[x] : 0;
+            if (sp != 0 && !(bp > 0 && (sp & 0x40) != 0)) tags[@base + x] = _sprTag[x];
+            // a transparent BG pixel keeps its tile tag (the enhanced tile may round into it); none left of bgFrom
+            else tags[@base + x] = bgOn && x >= bgFrom ? bgTag(x + fx) : 0;
         }
     }
 
@@ -318,7 +351,16 @@ public sealed class Ppu
                 int xx = sx + k;
                 if (xx > 255) break;
                 int c = Dec[d + ((at & 0x40) != 0 ? 7 - k : k)];
-                if (c != 0 && buf[xx] == 0) buf[xx] = (byte)(tag | c);
+                if (c != 0 && buf[xx] == 0)
+                {
+                    buf[xx] = (byte)(tag | c);
+                    if (Tags != null)
+                    {
+                        int a = offs[pa >> 10] + (pa & 0x3FF);
+                        _sprTag[xx] = TagValid | ((at & 0x80) != 0 ? 1 << 23 : 0) | ((at & 0x40) != 0 ? 1 << 22 : 0) |
+                                      (4 + (at & 3)) << 19 | (pa & 7) << 16 | ((at & 0x40) != 0 ? 7 - k : k) << 13 | (a >> 4);
+                    }
+                }
             }
         }
     }
@@ -391,6 +433,7 @@ public sealed class Ppu
         int @base = line * 256;
         var tiles = _tileBuf;
         Array.Fill(tiles, (short)-1);                    // -1: not fetched (transparent)
+        if (Tags != null) Array.Clear(_tileTag);
 
         // js: nes/ppu.js fetch
         void Fetch(int t)
@@ -405,6 +448,7 @@ public sealed class Ppu
             int lo = chr[offs[pa >> 10] + (pa & 0x3FF)], pb = pa + 8, hi = chr[offs[pb >> 10] + (pb & 0x3FF)];
             int d = ((lo << 8) | hi) * 8;
             for (int i = 0; i < 8; i++) { int c = Dec[d + i]; tiles[t * 8 + i] = (short)(c != 0 ? (p | c) : 0); }
+            if (Tags != null) for (int i = 0; i < 8; i++) _tileTag[t * 8 + i] = BgTag(offs, pa, p, i);
             IncX();
         }
 
@@ -427,6 +471,7 @@ public sealed class Ppu
             {
                 int v = V;
                 byte c = (byte)(((v & 0x3F00) == 0x3F00 ? pal[PalMirror(v)] : pal[0]) & grey);
+                if (Tags != null && x < xe) Array.Clear(Tags, @base + x, xe - x);
                 for (; x < xe; x++) fb[@base + x] = c;
                 return;
             }
@@ -434,6 +479,8 @@ public sealed class Ppu
             int spFrom = (mask & 4) != 0 ? 0 : 8;
             byte[]? spr = (mask & 0x10) != 0 ? SprBuf : null;
             int fx = X;
+            if (Tags != null && x < xe)
+                TagLine(@base, bgFrom, spr, spFrom, i => tiles[i], i => tiles[i] >= 0 ? _tileTag[i] : 0, fx, (mask & 0x08) != 0, x, xe);
             for (; x < xe; x++)
             {
                 int b = x >= bgFrom ? tiles[x + fx] : 0;

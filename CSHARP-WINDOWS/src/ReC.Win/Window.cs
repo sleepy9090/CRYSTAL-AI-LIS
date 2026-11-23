@@ -19,7 +19,7 @@ internal sealed class WindowOptions
 {
     public int Scale = 3, Frames = -1, Frame0 = 214;
     public bool Frame0Given, ScaleGiven, Mute, NoAudio, Turbo, Quiet, Fullscreen;
-    public string? SavePath, DataDir, StatePath, Screen, Compare, VideoConfig, DumpWindow;
+    public string? SavePath, DataDir, StatePath, Screen, Compare, VideoConfig, DumpWindow, PackDir, ExportTiles;
     public readonly List<string> KeySpecs = new(), MenuCmds = new();
 
     /// <summary>Window-mode options (ArgumentException / FormatException on bad input; `--help` -> null).</summary>
@@ -38,6 +38,8 @@ internal sealed class WindowOptions
                 case "--video-config": o.VideoConfig = V(); break;
                 case "--menu": o.MenuCmds.AddRange(V().Split(',', StringSplitOptions.RemoveEmptyEntries)); break;
                 case "--dump-window": o.DumpWindow = V(); break;
+                case "--pack": o.PackDir = V(); break;
+                case "--export-tiles": o.ExportTiles = V(); break;
                 case "--save": o.SavePath = V(); break;
                 case "--data": o.DataDir = V(); break;
                 case "--load-state": o.StatePath = V(); break;
@@ -76,6 +78,28 @@ internal static unsafe partial class Window
     private static uint[] _up = Array.Empty<uint>();
     private static readonly uint[] _upTmp = new uint[256 * 240 * 4];
     private static int _frameNo, _upFrame = -1, _upK;
+    // T10 enhanced graphics (Enhance.cs): the 1024x960 picture, made once per new frame from Fb + Ppu.Tags
+    private static Machine? _m;
+    private static Enhancer? _enh;
+    private static readonly uint[] _hd = new uint[Enhancer.W * Enhancer.H];
+    private static int _hdFrame = -1;
+    private static bool _quiet, _exporting;
+
+    /// <summary>tags are recorded only while they are needed (Enhanced on, or --export-tiles)</summary>
+    private static void EnsureTags()
+    {
+        if (_m == null) return;
+        if (_v.Enhanced || _exporting) _m.Ppu.Tags ??= new int[256 * 240];
+        else _m.Ppu.Tags = null;
+        _hdFrame = -1;
+    }
+
+    private static void RenderHd()
+    {
+        if (_m?.Ppu.Tags is not { } tags || _enh == null) return;
+        _enh.Render(_m.Ppu.Fb, tags, _m.Ppu.Pal, _hd);
+        _hdFrame = _frameNo;
+    }
     private static Win32.BITMAPINFOHEADER _bmi;
     private static readonly uint Style = Win32.WS_OVERLAPPEDWINDOW;
 
@@ -109,9 +133,16 @@ internal static unsafe partial class Window
         _scripted = o.KeySpecs.Count > 0;
         var rows = o.Compare != null ? new List<string> { string.Join(',', Csv.CompareColumns()) } : null;
         _muted = o.Mute;
+        _m = m;
+        _quiet = o.Quiet;
+        _exporting = o.ExportTiles != null;
+        _enh = new Enhancer(m.Ppu.Chr, data.NesRgb, record: _exporting);
+        _enh.LoadPack(o.PackDir ?? Path.Combine(Path.GetDirectoryName(Save.DefaultPath())!, "pack"));
+        foreach (string e in _enh.PackErrors) Console.Error.WriteLine($"[re-c] graphics pack: {e}");
         _videoPath = o.VideoConfig ?? VideoSettings.DefaultPath();
         _v = VideoSettings.Load(_videoPath);
         if (o.ScaleGiven) _v.SetScale(o.Scale);
+        EnsureTags();
         _audio = new AudioOut(m);
         _pad = new Pad();
 
@@ -142,6 +173,8 @@ internal static unsafe partial class Window
             {
                 for (int i = 0; i < fb.Length; i++) Px[i] = lut[fb[i] & 0x3F];
                 _frameNo++;
+                // every line of a frame run with Tags set is tagged -> the enhanced picture (+ --export-tiles record)
+                if (m.Ppu.Tags != null) RenderHd();
                 Present();
             }
 
@@ -199,6 +232,11 @@ internal static unsafe partial class Window
             if (rows != null) File.WriteAllText(o.Compare!, string.Join('\n', rows) + "\n");
             if (o.Screen != null) Png.WriteFb(o.Screen, m.Ppu.Fb, data.NesRgb, 1);
             if (o.DumpWindow != null && _hwnd != IntPtr.Zero) DumpWindow(o.DumpWindow);
+            if (o.ExportTiles != null)
+            {
+                int n = _enh.Export(o.ExportTiles);
+                if (!o.Quiet) Console.Error.WriteLine($"[re-c] exported {n} tile + palette combinations to {o.ExportTiles}");
+            }
             if (!o.Quiet) Console.Error.WriteLine($"[re-c] frames={ranTotal} main_state={m.Rd(0x40)} sub_state={m.Rd(0x41)} " +
                                                   $"audio_underruns={_audio.Underruns} audio_dropped={_audio.Dropped}");
             return 0;
@@ -311,7 +349,8 @@ internal static unsafe partial class Window
         // upscale filter (Upscale.cs) into Up, re-run only when the frame or the factor changed (WM_PAINT repaints)
         int k = Math.Clamp(_v.Upscale, 1, 4);
         uint[] src = Px;
-        if (k > 1)
+        if (_v.Enhanced && _hdFrame == _frameNo) { src = _hd; k = Enhancer.S; }
+        else if (k > 1)
         {
             if (_up.Length != Px.Length * k * k) { _up = new uint[Px.Length * k * k]; _upFrame = -1; }
             if (_upFrame != _frameNo || _upK != k) { Upscale.Apply(Px, 256, 240, k, _up, _upTmp); _upFrame = _frameNo; _upK = k; }
@@ -342,6 +381,8 @@ internal static unsafe partial class Window
                 break;
             case Win32.VK_ESCAPE: Win32.DestroyWindow(_hwnd); break;
             case Win32.VK_F11: ToggleFullscreen(); break;
+            case 0x78 /* F9 */: SetEnhanced(!_v.Enhanced); break;
+            case 0x74 /* F5 */: ReloadPack(); break;
             case >= '1' and <= '6': _v.SetScale(vk - '0'); SettingsChanged(true); break;
         }
         UpdateMenus();
