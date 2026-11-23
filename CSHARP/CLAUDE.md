@@ -14,6 +14,9 @@ C# (.NET 10, no NuGet packages) translation of the finished web port `../web/src
 ## Commands (run from CSHARP/)
 - Build: `dotnet build ReC.slnx -c Release`; tests: `dotnet run --project tests/ReC.Tests -c Release`
 - Headless run (same CLI as `node ../web/test/run.mjs`): `dotnet run --project src/ReC.Run -c Release -- --frames N --keys 250:START --compare cs.csv --dump-screen cs.png`
+- Play (SDL2): `src/ReC.Sdl/bin/Release/net10.0/ReC.Sdl [--scale S] [--save F] [--load-state F.json] [--mute]`;
+  headless check `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ReC.Sdl --frames 600 [--turbo] [--save out/x.sav]
+  [--dump-screen F.png]` (use `--save out/...` in checks so `CSHARP/re-c.sav`, the player's save, stays untouched)
 - Oracle diff: `python3 tools/cs_vs_web.py [--canon] [--states] [--only csv,png,ram,wram,ciram] [--frames N] [NAME[:FRAMES]..]`
   (outputs in `out/<case>/`, gitignored; shell `mkdir`/`rm` need approval in the sandbox, so let tools create files);
   `python3 tools/state_peek.py STATE.json [ADDR,..]` (state fields / RAM bytes); `python3 tools/json_peek.py F.json [a.b.0]`

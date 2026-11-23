@@ -156,6 +156,14 @@ Oracle = the web port: **same start (Reset or `--load-state`) + same `--keys` �
   - `tools/cs_vs_web.py` CASES now hold every web check (boss, event / talk, giveitem / itemuse, T9 substates, wake from
     Reset) plus T8 menu walks with chosen keys (MenuConfirmYesNo starts on NO: a direction press first = YES).
 
+- C# s6 (T11, platform layer): `src/ReC.Sdl` = main.js / input.js / audio.js / save.js. Browser listeners become one
+  SDL event loop in `Program.Start` that hands each event to `Input.HandleEvent` (keydown / keyup / blur + controller
+  hot-plug); KeyboardEvent.code → SDL scancodes (physical keys). WebAudio scheduling → `SDL_QueueAudio`: the JS
+  "start LEAD ahead when the queue ran dry" is LEAD seconds of queued silence; mute scales the queued samples by 0.
+  localStorage base64 → raw `re-c.sav` (waivers for main.js `$`, save.js `toB64` / `fromB64`); `status` = window title.
+  The host only calls `Machine.Reset` / `LoadState` / `RunFrame` / `Ppu.Fb` / `Apu.SetOutput`, so its frames are the
+  ReC.Run frames (checked: same f600 PNG + WRAM from Reset).
+
 ## 6. REA reconstruction tracking
 
 REA (`rea analyze-javascript-application <repo>/web/src --artifact-format directory --detail summary --evidence_output EV.json`)

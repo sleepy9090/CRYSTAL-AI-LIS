@@ -1,3 +1,6 @@
 module,name,reason
 game/obj/sprites.js,rd,"local alias `const rd = (a) => m.rd(a)` in each sprite-pass function (6 copies); the C# calls m.Rd directly (C# s3)"
 game/obj/sprites.js,wr,"local alias `const wr = (a, v) => m.wr(a, v)` in each sprite-pass function (6 copies); the C# calls m.Wr directly (C# s3)"
+main.js,$,"DOM lookup `document.getElementById`; ReC.Sdl has no page elements (status goes to the window title) (C# s6)"
+save.js,toB64,"localStorage only holds strings, so the JS base64-encodes WRAM; ReC.Sdl writes the 8 KB raw to re-c.sav (C# s6)"
+save.js,fromB64,"inverse of toB64; re-c.sav is read back raw (C# s6)"

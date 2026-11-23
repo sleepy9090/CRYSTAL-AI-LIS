@@ -151,11 +151,27 @@ If parts remain, write them into the same task and leave it unchecked (no new fo
   `--checks` **67/67** CASES identical at full length (every *_check.mjs run with its state / keys / LAST, plus the
   T8 menu walks), `wake` (Reset -> f3400) identical; `pass_count_diff.py --checks` 67/67 (lag-model inputs per stage
   per frame); ReC.Tests 88/88; build 0 warnings; coverage 1012 + 12 waived of 1046 (97.9 %, rest = T11 platform).
-- [ ] T11 playable frontend `src/ReC.Sdl`: P/Invoke `libSDL2-2.0.so.0` (`Sdl.cs`, no NuGet), window with integer scale,
+- [x] T11 playable frontend `src/ReC.Sdl`: P/Invoke `libSDL2-2.0.so.0` (`Sdl.cs`, no NuGet), window with integer scale,
   fixed-step 60.0988 Hz, keyboard like ../web/index.html (arrows/WASD, X/K = A, Z/J = B, Enter = Start,
   Right Shift/Tab = Select, P pause, M mute) + game controller, APU audio via `SDL_QueueAudio`, battery WRAM in
   `CSHARP/re-c.sav`. Done when it builds and `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ReC.Sdl --frames 600` exits 0;
   the interactive play-test is left to the user.
+  **C# s6 done:** `src/ReC.Sdl/` `Sdl.cs` (hand-written DllImports: window / renderer / streaming ARGB8888 texture,
+  events, game controller, queued float32 audio), `Input.cs` (= input.js 3/3: scancode KEYMAP + keypad Enter, SDL game
+  controller PAD_BUTTONS + left stick at 0.5, focus lost = blur, hot-plug), `Audio.cs` (= audio.js 6/6: device opened
+  in Resume, mono f32 at the device rate, CHUNK 1024 / LEAD 0.05 s silence when the queue ran dry / GAIN 1.6, mute =
+  gain 0; SDL-only cap: a chunk is dropped when > 0.25 s is queued), `Save.cs` (= save.js loadWram / saveWram /
+  WramSaver; raw 8 KB file, written via .tmp + move), `Program.cs` (= main.js start / status (window title) / blit /
+  fit (largest integer scale, centred, resizable window) / tick (250 ms catch-up cap, Poll every 300 frames, save on
+  exit); vsync renderer, else software + SDL_Delay). Extra options: `--scale --save --data --load-state --mute
+  --no-audio --frames N --turbo --dump-screen --quiet`, Esc quits, P / M ignore key repeat; minimise = the JS
+  visibilitychange pause; `--load-state` writes no save unless `--save` is given. Waivers (docs/waivers.csv): main.js
+  `$` (DOM), save.js `toB64` / `fromB64` (raw file instead of base64 text). Checks: the done-criterion run exits 0
+  (dummy video + audio, 600 f ≈ 10 s at real speed, 300 f ≈ 5.3 s); its f600 screen and saved WRAM are identical to
+  `ReC.Run --frames 600` (PNG + `--dump-wram`); `--turbo --load-state town02_enter --frames 120` screen identical to
+  ReC.Run; restart restores the save file. Build 0 warnings, ReC.Tests 88/88, canon 2247 f identical, coverage
+  **1031 + 15 waived of 1046 (100 %)**. Not done here: the interactive play-test with a real window / speakers /
+  controller (left to the user).
 - [ ] T12 close-out: `cs_coverage.py` exits 0 (every waiver has a reason); tests + `cs_vs_web.py --canon --states` pass;
   `rea inspect-managed-artifact` on the Release `ReC.Core.dll` → confirm every tagged member exists in the assembly
   (write `tools/cs_rea_members.py` to cross-check, record the evidence id in docs/); refresh docs/architecture_cs.md

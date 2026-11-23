@@ -1,0 +1,101 @@
+  ▶ ls sessions/ | tail -5 && wc -l TASKS.md docs/architecture_cs.md
+  ▶ Read TASKS.md
+  ▶ Read architecture_cs.md
+  ▶ tail -c 4000 sessions/20261123_061621_cs_session_005.txt; echo ----; wc -c sessions/20261123_061621_cs_session_006.txt; 
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM && ls web/src web/ && wc -l web/src/*.js web/index.html && ls CSHARP
+  ▶ python3 tools/cs_coverage.py --missing 2>&1 | tail -30
+  ▶ Glob
+  ▶ Glob
+Read the briefing and TASKS.md; T11 (SDL frontend) is the open task. Now reading the JS platform files.
+  ▶ Read main.js
+  ▶ Read input.js
+  ▶ Read save.js
+  ▶ Read audio.js
+  ▶ Read Program.cs
+  ▶ Read ReC.Sdl.csproj
+  ▶ python3 tools/cs_coverage.py --module audio.js --missing; python3 tools/cs_coverage.py --module data.js
+  ▶ Read Program.cs
+  ▶ Grep
+  ▶ Read Machine.cs
+  ▶ Read Apu.cs
+  ▶ Grep
+  ▶ Grep
+Writing the SDL frontend now (Sdl.cs P/Invoke, Input, Audio, Save, Program). Checking the waiver format and SDL library first.
+  ▶ cat docs/waivers.csv; ls /usr/lib/x86_64-linux-gnu/libSDL2*
+  ▶ Read waivers.csv
+  ▶ ldconfig -p | grep -i sdl2
+  ▶ Write Sdl.cs
+  ▶ Write Input.cs
+  ▶ Write Audio.cs
+  ▶ Edit Audio.cs
+  ▶ Edit Audio.cs
+Input and audio done; now Save.cs and Program.cs (main.js).
+  ▶ Write Save.cs
+  ▶ Write Program.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ Edit waivers.csv
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn|Build succeeded" | sort -u | head -30
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | tail -3; mkdir -p out/sdl; SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy timeout 6
+  ▶ SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy timeout 60 src/ReC.Sdl/bin/Release/net10.0/ReC.Sdl --frames 600 --save out/s
+Headless run works (exit 0, ~10 s at real speed). Checking the screen matches the headless runner's frame 600 and timing is right.
+  ▶ src/ReC.Run/bin/Release/net10.0/ReC.Run --frames 600 --quiet --dump-screen out/run600.png --dump-wram out/run600.wram &&
+Pixel-identical, and the saved WRAM matches. Now the turbo mode, the save-restore path and timing:
+  ▶ time (SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy timeout 60 src/ReC.Sdl/bin/Release/net10.0/ReC.Sdl --frames 600 --save
+  ▶ time (SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy timeout 60 src/ReC.Sdl/bin/Release/net10.0/ReC.Sdl --frames 300 --save
+  ▶ SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy timeout 60 src/ReC.Sdl/bin/Release/net10.0/ReC.Sdl --frames 600 --save out/s
+Real speed is right (300 frames ≈ 5.3 s incl. startup). One more: `--load-state` path.
+  ▶ SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy timeout 60 src/ReC.Sdl/bin/Release/net10.0/ReC.Sdl --frames 120 --turbo --lo
+Identical, and `re-c.sav` was left alone. Small fix: the log line should say the save is off in that case; also gitignore `re-c.sav`.
+  ▶ Edit Program.cs
+  ▶ Read .gitignore
+Already ignored. Rebuild, then the full regression (tests, coverage, a quick oracle pass).
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "Warn|Error|warning|error" | head; SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | tail -4
+  ▶ SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy timeout 60 src/ReC.Sdl/bin/Release/net10.0/ReC.Sdl --frames 600 --save out/s
+  ▶ python3 tools/cs_coverage.py --missing | tail -6
+  ▶ dotnet run --project tests/ReC.Tests -c Release 2>&1 | tail -2
+  ▶ python3 tools/cs_vs_web.py --no-build canon 2>&1 | tail -2
+All green. Updating TASKS.md, architecture notes and CLAUDE.md.
+  ▶ Edit TASKS.md
+  ▶ Edit architecture_cs.md
+  ▶ Edit CLAUDE.md
+I finished T11: the C# port now has a playable SDL2 frontend in `src/ReC.Sdl/`. The headless check `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ReC.Sdl --frames 600` exits 0. I haven't played it in a real window with speakers or a controller; that play-test is yours. T12 (close-out) is the next open task. I made no commits.
+
+**What's in it** (one file per web module, with `// js:` tags):
+- **`Program.cs`** (main.js):
+  - The window scales by whole numbers, stays centred and can be resized.
+  - The game runs at a fixed 60.0988 Hz and never runs more than 250 ms of frames to catch up.
+  - P pauses, M mutes, and minimising the window pauses too.
+  - The pause/mute message shows in the window title.
+- **`Input.cs`** (input.js): the same key layout as the web page (arrows/WASD, X/K = A, Z/J = B, Enter = Start, Right Shift/Tab = Select), plus a game controller (buttons, d-pad and left stick). Controllers can be plugged in while it runs, and keys are released when the window loses focus.
+- **`Audio.cs`** (audio.js): APU sound through SDL's audio queue, with the web port's buffer size, start-up delay and volume. One addition the web port doesn't have: if more than 0.25 s of sound is waiting to play, it drops the newest batch so the delay doesn't keep growing.
+- **`Save.cs`** (save.js): the battery save is kept as the raw 8 KB in `CSHARP/re-c.sav`. It's saved every ~5 s when it changed and again on exit. The write goes to a temporary file first, so a crash can't leave half a save.
+- **`Sdl.cs`**: hand-written bindings to `libSDL2-2.0.so.0`, no NuGet packages.
+
+**Things I added that the web port doesn't have:**
+- Options `--scale`, `--save`, `--load-state`, `--mute`, `--no-audio`, `--frames N`, `--turbo` (runs as fast as possible) and `--dump-screen`.
+- Esc quits.
+- Starting from `--load-state` writes no save unless you also give `--save`, so a test state can't overwrite your real save file.
+
+**Checks:**
+
+| Check | Result |
+|---|---|
+| Headless run, 600 frames | exits 0; runs at real speed (300 frames ≈ 5.3 s) |
+| Screen and save memory at frame 600 vs the headless runner | identical |
+| `--load-state town02_enter` screen vs the headless runner | identical |
+| Restarting with the save file | restores it |
+| Build | 0 warnings |
+| ReC.Tests | 88/88 |
+| Canonical run vs the web port | 2247 frames identical |
+| Coverage | 100 % (1031 ported + 15 waived of 1046) |
+
+I added three waivers with reasons to `docs/waivers.csv`: main.js `$` (a web-page element lookup) and save.js `toB64` / `fromB64` (the web port stores the save as text; here it's a raw file).
+
+To play: `src/ReC.Sdl/bin/Release/net10.0/ReC.Sdl --scale 3`. When testing, add `--save out/x.sav` so your real `re-c.sav` isn't written. TASKS.md, `docs/architecture_cs.md` and CLAUDE.md are updated.
+
+SESSION_SUMMARY: C# s6: T11 done — SDL2 frontend ReC.Sdl (Sdl/Input/Audio/Save/Program = main/input/audio/save.js) runs, dummy-driver `--frames 600` exits 0 with f600 PNG + WRAM identical to ReC.Run, coverage 100 % (1031 + 15 waived), 0 warnings, 88/88 tests, canon identical; interactive play-test left to the user.
