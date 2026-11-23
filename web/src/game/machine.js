@@ -71,6 +71,7 @@ export class Machine {
     this.lagPass = false;                            // s215: a whole SubstPlay pass ran this frame (states/play.js)
     this.lagLine = 252;                              // s215: start line of the next pass (last NMI's length)
     this.lagMode7 = true;                            // s218: also judge irq_mode 7 (boss) passes (lagmodel.js lagDomain)
+    this.lagMode2 = true;                            // s220: also irq_mode 2 (AI $70 flash phases; off = s174 heuristic)
     // PpuQueueFlush 30:C67D (world/ppuqueue.js, s79), called by the NMI at F40A
     this.ppuQueueFlush = ppuQueueFlush;
     // sound (7/8, s56-57): SoundUpdate 31:F7FE + the APU. Register writes take effect at once; the APU is

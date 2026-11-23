@@ -67,13 +67,24 @@ function flashIrq(m, x) {
   // (restore5f_s120.state, tools/emu/pass_probe.py + lag08_probe.py): the MainLoop clear 30:C919 of a pass
   // with N active slots lands at L237 (N = 13) / L255 (14) when $08 is even (CollPairTable records 7..0, the
   // heavier half) and at L234 (16) / L248 (17) when odd. Past the L241 NMI the pass is a lag frame.
-  const n = countActive(m);
-  if (n >= 17 || (n >= 14 && !(m.rd(0x08) & 1))) m.overrun = true;
+  // s220: with m.lagMode2 (lagmodel.js) these passes are judged by the cycle model instead
+  if (!(m.lagModel && m.lagMode2)) {
+    const n = countActive(m);
+    if (n >= 17 || (n >= 14 && !(m.rd(0x08) & 1))) m.overrun = true;
+  }
+  // s220: exact ROM cycles for the lag model (tools/emu/span_cost.py, restore5f_s120 f2672-2730, 80 calls):
+  // BCD7..BCF5 = 2169 ($08 b2 set) / 2258 (b2 clear: + the 6-byte CHR copy), of which LDA #7 + JSR HitFlashPal
+  // with obj_flags2 b7 clear (PaletteBuild) = 2154; + 6 for the RTS. Booked as stage `fl70` (its rd / wr counts are
+  // not fitted). The b7-set flash path was not measured: its counts stay in the AI's dispatch bucket.
+  const stage = m.passStage, exact = !(m.rd(FLAGS2 + x) & 0x80);
+  if (exact) { m.passStage = 'fl70'; m.cyc += (m.rd(0x08) & 4) ? 2175 : 2264; }
   hitFlashPal(m, x, 7);
   m.wr(0x51, 0);
-  if (m.rd(0x08) & 4) return;
-  m.wr(0x51, 2);
-  for (let y = 5; y >= 0; y--) m.wr(0x58 + y, m.rd(0x07F0 + y));
+  if (!(m.rd(0x08) & 4)) {
+    m.wr(0x51, 2);
+    for (let y = 5; y >= 0; y--) m.wr(0x58 + y, m.rd(0x07F0 + y));
+  }
+  if (exact) m.passStage = stage;
 }
 
 /** 27:BAB8: the window image in $6000-$60DB (10 rows of $16: $1A ... $6F/$72/$75 ... $1B, corners $7F) */

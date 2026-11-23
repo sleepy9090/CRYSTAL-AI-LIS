@@ -83,7 +83,7 @@ export function passCycles(cnt, cyc, parts = null) {
   const C = LAG_COEF;
   const p = parts || {};
   p.top = dot(C.top, cnt.top || Z); p.cam = dot(C.cam, cnt.cam || Z); p.spr = dot(C.spr, cnt.spr || Z);
-  p.upd = dot(C.updrest, cnt.upd || Z);
+  p.upd = dot(C.updrest, cnt.upd || Z) + (cyc.fl70 || 0);   // s220: Ai70FlashIrq 27:BCD7, exact (ai_final.js)
   const h = cnt.colh || Z;
   p.col = C.col[0] * (cyc.col || 0) + C.col[1] * h[0] + C.col[2] * h[1] + C.col[3] * h[2] + C.col[4];
   for (const k in cnt) {
@@ -98,12 +98,16 @@ export function passCycles(cnt, cyc, parts = null) {
  *  (frame_ready was 0), the scroll copy is redone from slot $13 (LDA $83/$A3/$C3/$E3, STA $07D8-$07DB) = 4 x 7
  *  + the CMP / branch path: mode 7 +27, mode 9 +24 cycles over mode 0's BNE F40A. tools.emu: the E2 boss's NMIs
  *  are 1340 / 1643 cycles where mode 0's are 1315 / 1618 (the port's nmi bucket does not count these reads). */
-export const NMI_MODE_EXTRA = { 7: 27, 9: 24 };
+export const NMI_MODE_EXTRA = { 7: 27, 9: 24, 2: -99 };
+// s220: NmiMode2 31:F751 (AI $70's flash frames): tools.emu restore5f_s120 f2671-2733 NMIs 1215-1216 / 1519 / 1535
+// where mode 0's are 1314-1315 / 1618 (the port's nmi bucket counts both alike) -> -99; the next pass starts at L251 / L254
 
 /** start line of the next pass from this frame's `nmi` bucket (NMI 31:F3B6 length; extra = NMI_MODE_EXTRA) */
 export function startLine(nmiCnt, extra = 0) {
   const n = dot(LAG_COEF.nmi, nmiCnt || Z) + extra;
+  if (n < 1255) return 251;                                     // s220: mode-2 NMIs 1215 (L251) vs 1296 (L252)
   if (n < 1450) return 252;
+  if (n < 1567) return 254;                                     // s220: 1519 / 1535 (L254) vs 1599 (L255)
   if (n < 1720) return 255;
   if (n < 1910) return 257;
   if (n < 2050) return 258;
@@ -127,10 +131,15 @@ function withInts(t, splits, s, hud) {
  *  s218: also irq_mode 7 (bosses: the same NmiMode0 F6D6, scroll from slot $13): NMI +27 (NMI_MODE_EXTRA), own
  *  fits for AIs $62 / $6B / $3F / $7F / $1B; checked on the whole bosse2 run (7/7 lags) and the final boss dive
  *  (27 whole-pass lags f3146-3218). The L259 / L260 start lines the s215 note blamed on mode 7 are real: the rain
- *  phase's 2198-cycle NMIs. m.lagMode7 = false limits it to mode 0. Not judged: mode 2 (NmiMode2 F751, set in
- *  play by AI $70's Ai70FlashIrq 27:BCE8; its overruns are the ported AI $70 heuristics) and 1 / 3-6 / 9 (messages,
- *  menus, title, ending, dead 4: no SubstPlay pass). */
-export const lagDomain = (m) => m.mem.rd(0x51) === 0 || (m.lagMode7 && m.mem.rd(0x51) === 7);
+ *  phase's 2198-cycle NMIs. m.lagMode7 = false limits it to mode 0.
+ *  s220: also irq_mode 2 (NmiMode2 F751, set in play by AI $70's Ai70FlashIrq 27:BCD7 in phases 4-6): NMI -99
+ *  (NMI_MODE_EXTRA), Ai70FlashIrq booked with exact cycles (stage fl70); restore5f_s120 f2671-2733: 41 passes,
+ *  21/21 tools.emu lags, 0 start-line misses, est - emu rms 191. m.lagMode2 = false = the s174 heuristic
+ *  (ai_final.js flashIrq). Not judged: 1 / 3-6 / 9 (messages, menus, title, ending, dead 4: no SubstPlay pass). */
+export const lagDomain = (m) => {
+  const im = m.mem.rd(0x51);
+  return im === 0 || (m.lagMode7 && im === 7) || (m.lagMode2 && im === 2);
+};
 
 /** true if the pass (started at line s) overruns the NMI at L241 of the next frame */
 export function passLags(cnt, cyc, s, splits) {

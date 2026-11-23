@@ -5,7 +5,8 @@
 // Two lag models are checked here (no CPU cycle count in the port):
 //  * f2670: the HUD IRQ's SoundUpdate that starts music $14 runs L191-L241, so the NMI finds nmi_busy_flag set
 //    and the frame is lost (mainloop.js irqHud / nmiLostToHud, MUSIC_START_CYCLES vs HUD_SOUND_BUDGET);
-//  * phases 4-6: a pass with >= 14 active slots on an even $08 or >= 17 overruns (ai_final.js flashIrq).
+//  * phases 4-6: s220 the cycle model (lagmodel.js, irq_mode 2 + exact Ai70FlashIrq cycles; 21/21 tools.emu lags);
+//    with m.lagMode2 = false the s174 heuristic: >= 14 active slots on an even $08 or >= 17 (ai_final.js flashIrq).
 // State: web/test/states/restore5f.json (session 120, tools/emu/states/restore5f_s120.state, f2507).
 // Reference web/test/ai70ph3_ref.csv = tools/web_state_compare.py --state tools/emu/states/restore5f_s120.state
 // --web web/test/states/restore5f.json --frames 400 --out-dir gfx/compare/ai70ph3, cut by tools/csv_trim.py
