@@ -1,0 +1,164 @@
+  ▶ ls -la && ls sessions/ 2>/dev/null | tail -5 && ls docs src tools tests 2>/dev/null
+  ▶ cat TASKS.md docs/architecture_cs.md README.md .gitignore; wc -c sessions/*; head -c 3000 sessions/*; head -5 docs/oblig
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web && find src -name '*.js' | xargs wc -l | sort -n | tail -70; ls 
+  ▶ Glob
+  ▶ Glob
+  ▶ Glob
+  ▶ Glob
+Reading the web port modules T1 ports (data.js, ram.js, prg.js, ppu.js, machine.js, run.mjs), then I'll scaffold the solution.
+  ▶ Read data.js
+  ▶ Read ram.js
+  ▶ Read prg.js
+  ▶ Read ppu.js
+  ▶ Read machine.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test && wc -l run.mjs harness.mjs; ls states | wc -l; ls states 
+  ▶ Read run.mjs
+  ▶ Read harness.mjs
+  ▶ node ../web/test/state_meta.mjs ../web/test/states/town02_enter.json; ls ../web/test/states/ | wc -l
+  ▶ node ../web/test/state_meta.mjs ../web/test/states/town02_enter.json
+Now checking ram_labels.json format, input.js button map, and the state JSON keys.
+  ▶ head -c 600 ../web/data/ram_labels.json; echo; head -c 1500 ../web/data/manifest.json; echo; head -c 300 ../web/data/pal
+  ▶ Read manifest.json
+  ▶ Grep
+  ▶ Read ram_labels.json
+  ▶ Grep
+  ▶ Grep
+  ▶ Read palettes.json
+  ▶ Grep
+  ▶ Grep
+  ▶ Grep
+Writing the solution scaffolding now.
+  ▶ mkdir -p src/ReC.Core/Gen src/ReC.Core/Nes src/ReC.Core/Game/States src/ReC.Core/Game/Sound src/ReC.Core/Util src/ReC.Ru
+  ▶ Write Directory.Build.props
+  ▶ Write ReC.slnx
+  ▶ Write ReC.Core.csproj
+  ▶ Write ReC.Run.csproj
+  ▶ Write ReC.Sdl.csproj
+  ▶ Write Program.cs
+  ▶ Write ReC.Tests.csproj
+Now the generator tool for `Gen/R.cs`.
+  ▶ Write gen_cs_data.py
+  ▶ python3 tools/gen_cs_data.py
+  ▶ Write Data.cs
+  ▶ Write Ram.cs
+  ▶ Write Prg.cs
+  ▶ sed -i 's/if (a >= 0 \&\& a < 0x2000)/if (a < 0x2000)/' src/ReC.Core/Game/Ram.cs && grep -n "0x2000)" src/ReC.Core/Game/
+  ▶ Edit Ram.cs
+  ▶ Edit Ram.cs
+  ▶ Write Ppu.cs
+Now a small helper to peek at state-JSON RAM bytes (to see which IRQ split the first frame uses).
+  ▶ Write state_peek.py
+  ▶ python3 tools/state_peek.py ../web/test/states/town02_enter.json
+The first frame uses IRQ handler 1 (`irqHud`) at line 191, so I need that split. Reading mainloop.js.
+  ▶ Read mainloop.js
+I'll port all of mainloop.js now (it's small and the first frame's split depends on it). Checking what entry point `30:CA2E` does.
+  ▶ Grep
+  ▶ Read areaenter.js
+  ▶ Grep
+  ▶ Grep
+  ▶ Grep
+Writing `Y.cs` (iterator yield values) and the full MainLoop.cs port.
+  ▶ Write Y.cs
+  ▶ Write MainLoop.cs
+  ▶ Grep
+Tags for `MAIN_STATES`/`NMI_MODES` would be stale (consts aren't in the inventory); removing them. palette.js and lagmodel.js are small, so I'll port them too.
+  ▶ Edit MainLoop.cs
+  ▶ Edit MainLoop.cs
+  ▶ Read palette.js
+  ▶ Read lagmodel.js
+  ▶ Grep
+  ▶ Grep
+  ▶ Edit Data.cs
+  ▶ Write Palette.cs
+Now LagModel.cs.
+  ▶ Write LagModel.cs
+Now the stubs for not-yet-ported callees (each in the file that will later hold its port, without a `js:` tag).
+  ▶ Write Apu.cs
+  ▶ Write AreaEnter.cs
+  ▶ Write Play.cs
+  ▶ Write Title.cs
+  ▶ Write Ending.cs
+  ▶ Write SoundUpdate.cs
+  ▶ Write Driver.cs
+  ▶ Write PlaySound.cs
+  ▶ Write PpuQueue.cs
+  ▶ Write Spawn.cs
+  ▶ Write ObjUtil.cs
+  ▶ Write Boot.cs
+Now `Util/StateFile.cs` and `Machine.cs`.
+  ▶ Write StateFile.cs
+  ▶ Write Machine.cs
+Now the Util helpers (CRC32, PNG, CSV/keys).
+  ▶ Write Png.cs
+  ▶ Write Csv.cs
+Now the headless runner (same CLI as run.mjs).
+  ▶ Write Program.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn|Build succeeded|Elapsed" | sort -u | head -40
+Core and runner compile; now the test project.
+  ▶ Write Program.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn|Build succeeded" | sort -u | head -40
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | tail -3; dotnet run --project tests/ReC.Tests -c Release --no-build
+  ▶ dotnet build ReC.slnx -c Release --no-incremental 2>&1 | grep -E "Warn|Error"
+Build is clean. Now the done-criterion run: town02_enter 1 frame, C# vs web.
+  ▶ mkdir -p /tmp/recs && node ../web/test/run.mjs --load-state ../web/test/states/town02_enter.json --frames 1 --dump-scree
+  ▶ mkdir -p out && node ../web/test/run.mjs --load-state ../web/test/states/town02_enter.json --frames 1 --dump-screen out/
+  ▶ node ../web/test/run.mjs --load-state ../web/test/states/town02_enter.json --frames 1 --dump-screen web1.png --compare w
+  ▶ src/ReC.Run/bin/Release/net10.0/ReC.Run --load-state ../web/test/states/town02_enter.json --frames 1 --dump-screen cs1.p
+  ▶ src/ReC.Run/bin/Release/net10.0/ReC.Run --load-state ../web/test/states/town02_enter.json --frames 1 --dump-screen cs1.p
+  ▶ python3 ../tools/compare_frames.py web1.png cs1.png
+Screen is pixel-identical. Now `tools/cs_vs_web.py`, the oracle runner.
+  ▶ Glob
+  ▶ Write cs_vs_web.py
+  ▶ python3 tools/cs_vs_web.py --no-build town02_enter
+Tool works; as expected only the screen matches so far (game code not ported). Adding `--only KINDS` so the T1 criterion can be checked by itself.
+  ▶ Edit cs_vs_web.py
+  ▶ Edit cs_vs_web.py
+  ▶ Edit cs_vs_web.py
+  ▶ Edit cs_vs_web.py
+  ▶ Edit cs_vs_web.py
+  ▶ Edit cs_vs_web.py
+  ▶ python3 tools/cs_vs_web.py --no-build --only png town02_enter; python3 tools/cs_coverage.py --module ppu.js; python3 too
+Adding the missing `Ppu` class tag.
+  ▶ Edit Ppu.cs
+  ▶ python3 tools/cs_coverage.py --quiet | tail -3; python3 tools/gen_cs_data.py --check
+Coverage is 100% for the T1 modules (plus mainloop/lagmodel/palette/machine). For a broader PPU check, I'll compare the first-frame screen of every state.
+  ▶ python3 tools/cs_vs_web.py --no-build --only png --states --frames 1 2>&1 | grep -v "^ok" 
+All 87 states' first-frame screens are pixel-identical (covers HUD, message-window, menu, and intro splits). Cleaning up my scratch files and updating .gitignore.
+  ▶ rm web1.png web1.csv cs1.png cs1.csv
+  ▶ Edit .gitignore
+  ▶ Grep
+The loop script commits everything under CSHARP/, so I'll ignore the two scratch CSVs I couldn't delete.
+  ▶ Edit .gitignore
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "Warn|Error\(s\)"; dotnet run --project tests/ReC.Tests -c Release --no-
+Updating TASKS.md (tick T1, record the T3 head start) and noting the as-built conventions in the design doc.
+  ▶ Edit TASKS.md
+  ▶ Edit TASKS.md
+  ▶ Edit TASKS.md
+  ▶ Edit architecture_cs.md
+  ▶ Edit CLAUDE.md
+T1 is done and ticked in TASKS.md. Running the C# port from `town02_enter.json` for one frame produces a screen pixel-identical to the web port's.
+
+**What was built**
+- **Solution:** `ReC.slnx` with four projects: `ReC.Core`, `ReC.Run`, `ReC.Sdl` (an empty Program for now) and `ReC.Tests`. All target net10.0 with nullable on and warnings treated as errors. The Release build has 0 warnings.
+- **Data and RAM names:** `tools/gen_cs_data.py` writes `Gen/R.cs` from `ram_labels.json` (368 labels). `Data.cs` loads `web/data/` and checks file sizes against the manifest.
+- **Core ports:** `Game/Ram.cs`, `Game/Prg.cs`, and all of `nes/ppu.js` in `Nes/Ppu.cs`, including the mid-line timed writes.
+- **Machine:** `Machine.cs` covers all of machine.js: Reset, LoadState with the first-frame IRQ split, RunFrame, and the lag-model bookkeeping.
+- **Ported ahead of T3:** all of mainloop.js (`Game/MainLoop.cs`, the NMI and all IRQ handlers), plus `Game/LagModel.cs` and `Game/Palette.cs`. The first frame needs the HUD split, which made this the simplest route.
+- **Runner:** `ReC.Run` takes the same options as run.mjs and writes the same CSV, PNG and dumps. It also accepts `--data DIR`.
+- **Helpers:** `Util/{Png, Csv, StateFile}.cs` hold the PNG writer, CRC32, key-script parser, compare-CSV columns and state reader.
+- **Stubs:** every callee not ported yet sits in its future file, without a `js:` tag, and logs `not ported: <module> <name>` once.
+- **Tools:** `tools/cs_vs_web.py` runs both ports and diffs them. Options are `--canon`, `--states`, `--only KINDS`, `--frames N` and `NAME:FRAMES`. I also added `tools/state_peek.py`, which prints a state file's fields and RAM bytes.
+
+**Check results**
+- `cs_vs_web.py --only png town02_enter`: identical.
+- `cs_vs_web.py --states --frames 1 --only png`: 87 of 87 first-frame screens identical. That run covers the HUD, message-window, menu and intro splits.
+- ReC.Tests: 74 passed, 0 failed.
+- Coverage is 100% for ppu.js, ram.js, prg.js, data.js, machine.js, mainloop.js, lagmodel.js and palette.js. Overall it is 95 of 1,046 (9.1%).
+- The CSV and RAM comparisons still differ, because the game code is still stubs. That isn't part of T1's done-criterion.
+
+**Things to know**
+- The sandbox asks for approval before shell `mkdir` or `rm`, so I couldn't delete two scratch files, `web1.csv` and `cs1.csv`, in `CSHARP/`. I added both to `.gitignore` so `re_loop.sh` won't commit them; you can delete them by hand. The oracle writes its output to `out/`, which is also gitignored.
+- A few names changed and are recorded in `docs/architecture_cs.md` §5.1. obj/util.js became `ObjUtil.cs`, because `Util` would clash with the `ReC.Util` namespace. Two functions became `SoundUpdate.Run` and `PlaySound.Play`, because a C# member can't share its class's name.
+- I didn't commit anything. `re_loop.sh` does that.
+
+SESSION_SUMMARY: C# s1: T1 done (solution, Data/Ram/Prg/Ppu/Machine/runner/cs_vs_web) and mainloop/lagmodel/palette ported early; first-frame screens identical on 87/87 states, 74/74 tests, 0 warnings, coverage 95/1046.

@@ -1,0 +1,9 @@
+out/
+# session-1 scratch files (rm needs approval in the sandbox)
+/web1.csv
+/cs1.csv
+bin/
+obj/
+re-c.sav
+*.png
+*.csv.tmp

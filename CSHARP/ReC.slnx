@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ReC.Core/ReC.Core.csproj" />
+    <Project Path="src/ReC.Run/ReC.Run.csproj" />
+    <Project Path="src/ReC.Sdl/ReC.Sdl.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ReC.Tests/ReC.Tests.csproj" />
+  </Folder>
+</Solution>
