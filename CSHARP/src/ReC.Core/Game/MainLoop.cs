@@ -47,7 +47,8 @@ public static class MainLoop
         }
         else
         {
-            var st = m.Rd(R.MainState) < MainStates.Length ? MainStates[m.Rd(R.MainState)] : null;
+            int ms = m.Rd(R.MainState);                   // one counted read, as the JS (lag model `top` bucket)
+            var st = ms < MainStates.Length ? MainStates[ms] : null;
             if (st == null) throw new InvalidOperationException($"main_state {m.Rd(R.MainState)} out of range");
             var g = st.Fn(m);
             if (g != null) { m.Pending = g.GetEnumerator(); more = m.Pending.MoveNext(); ran = true; }

@@ -1,0 +1,203 @@
+  ▶ Read architecture_cs.md
+  ▶ Read TASKS.md
+  ▶ Glob
+  ▶ wc -c sessions/*; tail -c 4000 sessions/20261123_061621_cs_session_003.txt
+  ▶ cd ../web/src/game; wc -l obj/*.js states/*.js; cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP; ls src/ReC.C
+  ▶ wc -l ../web/src/game/obj/*.js ../web/src/game/states/*.js; ls src/ReC.Core/Game/Obj/ src/ReC.Core/Game/States; wc -l sr
+  ▶ Glob
+  ▶ ls src/ReC.Core/Game/Obj/ src/ReC.Core/Game/States; wc -l src/ReC.Core/Game/Obj/*.cs; python3 tools/cs_coverage.py --mod
+Reading the setup is done; next I'm porting `ai_field.js` (AI $30, which blocks T5's town02 check), then `ai_walk.js` and `ai_thunder.js`.
+  ▶ Read ai_field.js
+  ▶ Read AiStatic.cs
+  ▶ Grep
+  ▶ Read Objects.cs
+  ▶ Grep
+  ▶ Grep
+  ▶ grep -n "ai_field\|ai_walk\|ai_thunder" docs/obligations.csv | cut -c1-150
+  ▶ Grep
+  ▶ Write AiField.cs
+`AiField.cs` is written (all 33 ai_field.js members). Now reading `ai_walk.js` to port it next.
+  ▶ Read ai_walk.js
+  ▶ Write AiWalk.cs
+  ▶ Read ai_thunder.js
+  ▶ Read AiThunder.cs
+  ▶ Grep
+  ▶ Write AiThunder.cs
+  ▶ Edit Objects.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn|Warn|Error" | sort -u | head -20
+  ▶ Grep
+All three modules build with 0 warnings. Now running the oracle on the canon run and the group/fan/kill/thunder states.
+  ▶ python3 tools/cs_vs_web.py --help 2>&1 | head -30; grep -n "^    '" tools/cs_vs_web.py | head -100 | cut -c1-140
+  ▶ Read cs_vs_web.py
+  ▶ python3 tools/cs_vs_web.py --no-build canon 2>&1 | tail -3; python3 tools/cs_vs_web.py --no-build --states 2>&1 | tail -
+  ▶ python3 tools/cs_vs_web.py --no-build canon 2>&1 | tail -3; python3 tools/cs_vs_web.py --no-build --states 2>&1 | cut -c
+31/87 states now match (was 8), canon still identical. Two group states fail; checking `group7f` and `group81`.
+  ▶ src/ReC.Run/bin/Release/net10.0/ReC.Run --load-state ../web/test/states/group81.json --frames 120 2>&1 | tail -5; src/Re
+Both need AI $70 (ai_final.js, T7). Now I'll run the group/kill/fan/thunder states over their full check-script frame ranges and keys, not just 120 frames.
+  ▶ sed -n 1,200p ../web/test/group05_check.mjs | grep -n "keys\|frames\|run(\|load\|LAST\|const " | head -40
+  ▶ Read group05_check.mjs
+  ▶ Grep
+  ▶ Grep
+  ▶ Grep
+  ▶ Read kill_check.mjs
+  ▶ Grep
+Writing a small helper that pulls each check script's LAST frame and KEYS so `cs_vs_web.py` can run the same full scenarios. First checking `group5c_check.mjs`'s layout.
+  ▶ Read group5c_check.mjs
+  ▶ Read fanskip_check.mjs
+  ▶ Grep
+  ▶ Write check_keys.mjs
+  ▶ node tools/check_keys.mjs ../web/test/group05_check.mjs ../web/test/group84_check.mjs ../web/test/kill_check.mjs ../web/
+  ▶ node tools/check_keys.mjs ../web/test/group05_check.mjs ../web/test/group84_check.mjs ../web/test/kill_check.mjs ../web/
+Running node on my own helper needs approval, so I'll fill `cs_vs_web.py`'s CASES table by hand from each check's KEYS/LAST, as that file intends. Collecting the full key lists:
+  ▶ Grep
+Now the states' start frames, to turn LAST into a frame count:
+  ▶ for s in group05 group08 group09 group11 group18 group28 group29 group40 group59 group5a group6b group6e group7c group7f
+  ▶ python3 tools/state_peek.py ../web/test/states/group05.json
+  ▶ Grep
+Good: `--frames LAST - frame0 + 1` reproduces each check. Adding `last=` support and the T6 cases to `cs_vs_web.py`.
+  ▶ Read cs_vs_web.py
+  ▶ Edit cs_vs_web.py
+  ▶ Edit cs_vs_web.py
+  ▶ Edit cs_vs_web.py
+  ▶ Read cs_vs_web.py
+  ▶ Edit cs_vs_web.py
+  ▶ Edit cs_vs_web.py
+  ▶ python3 tools/cs_vs_web.py --no-build --checks 2>&1 | cut -c1-300
+16/23 full-length checks identical. Checking what the 7 failing ones hit (unported logs):
+  ▶ for s in group11:478 group18:477 group6e:479 groupb2:479 killlevelup:299 group7f:479; do n=${s%%:*}; f=${s##*:}; echo "=
+  ▶ R=src/ReC.Run/bin/Release/net10.0/ReC.Run; S=../web/test/states; $R --load-state $S/group11.json --frames 478 2>&1 | sor
+  ▶ src/ReC.Run/bin/Release/net10.0/ReC.Run --load-state ../web/test/states/group11.json --frames 478 2>&1 | sort -u
+  ▶ src/ReC.Run/bin/Release/net10.0/ReC.Run --load-state ../web/test/states/group18.json --frames 477 2>&1 | sort -u
+  ▶ src/ReC.Run/bin/Release/net10.0/ReC.Run --load-state ../web/test/states/group6e.json --frames 479 2>&1 | sort -u
+  ▶ src/ReC.Run/bin/Release/net10.0/ReC.Run --load-state ../web/test/states/groupb2.json --frames 479 2>&1 | sort -u
+  ▶ src/ReC.Run/bin/Release/net10.0/ReC.Run --load-state ../web/test/states/killlevelup.json --frames 299 2>&1 | sort -u
+No unported/stub logs, so these are real divergences. Looking at the earliest one, group18 at f2536 (town NPC positions differ from the first diverging frame):
+  ▶ python3 tools/cs_vs_web.py --no-build --keep group18:30 2>&1 | cut -c1-600; python3 ../tools/compare_frames.py out/group
+The C# player stops one frame early at f2536, which looks like a lag-frame difference. The lag model is driven by per-stage read/write counts, so I'm checking what LagModel uses.
+  ▶ Grep
+  ▶ Grep
+  ▶ Read lagmodel.js
+The JS comment names exactly this frame: "a town pass with ~19 more [cpuRd] (group18 f2536) got +5900 and a false lag" with the old `top` coefficient. Checking the C# copy of the coefficients:
+  ▶ Read LagModel.cs
+Same coefficients, so the per-stage counts must differ. Getting the web port's per-pass counts with `pass_count.mjs` around f2536:
+  ▶ node ../web/test/pass_count.mjs ../web/test/states/group18.json 2537 --stages 2527:LEFT:47 2>&1 | tail -4 | cut -c1-900
+Now the same numbers from C#. Checking whether ReC.Run already has a pass-count mode:
+  ▶ Grep
+  ▶ Read pass_count.mjs
+I'll add the same `--stages` output to ReC.Run (`--pass-count FILE`) so the two ports can be diffed per stage.
+  ▶ Read Program.cs
+  ▶ Grep
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ Edit Program.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|Warn|Error" | sort -u | head; src/ReC.Run/bin/Release/net10.0/ReC
+  ▶ Read g18_cs.txt
+C# reads one more byte than the web port in the `top` stage (30 vs 29 rd) on every pass here, and at f2536 it enters GiveItem (sub_state 7), which is still a stub (T8). Diffing the whole range:
+  ▶ node ../web/test/pass_count.mjs ../web/test/states/group18.json 2537 --stages --out out/g18_web.txt 2527:LEFT:47; diff o
+Every frame: `top` rd 29 (web) vs 30 (C#). Comparing play.js's pre-ObjUpdateAll code with Play.cs:
+  ▶ Read play.js
+  ▶ Grep
+  ▶ node ../web/test/pass_count.mjs ../web/test/states/group05.json 2512 --stages --out out/g05_web.txt; src/ReC.Run/bin/Rel
+The extra `top` read happens on every gameplay pass (group05 too), so it isn't AI-related. Looking at how machine.js books the `top` stage:
+  ▶ Read machine.js
+  ▶ Grep
+Top-stage code = main loop top, ReadPads, PlayDeathMenuCheck, PlayerStatusTick. Comparing those JS and C# bodies:
+  ▶ Read play.js
+  ▶ Read Play.cs
+Those match. Checking what else RunFrame books into `top` (code before the NMI stage) in machine.js vs Machine.cs:
+  ▶ Read machine.js
+  ▶ Grep
+  ▶ Grep
+Found it: `MainLoop.MainStep` reads `main_state` twice (bounds check + index) where the JS reads it once. Fixing:
+  ▶ Edit MainLoop.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|Warn|Error" | sort -u | head; src/ReC.Run/bin/Release/net10.0/ReC
+Counts now identical. I'll make that a reusable check: `tools/pass_count_diff.py` runs both pass counters over a cs_vs_web case and reports the first differing frame/bucket.
+  ▶ Write pass_count_diff.py
+  ▶ python3 tools/pass_count_diff.py --no-build --checks 2>&1 | cut -c1-250
+Remaining diffs: AI $63/$70 (boss modules, T7), group18's GiveItem (T8), and a `top=9/10/3` vs `7/9/3` pattern in four cases. Checking which sub_state those frames are in:
+  ▶ python3 tools/cs_vs_web.py --no-build --keep killlevelup:20 group11:222 2>&1 | cut -c1-300; python3 ../tools/csv_cols.py
+sub_state $10 (ShowPendingMessage, giveitem.js = T8). Confirming it's a stub in C#:
+  ▶ Grep
+All the remaining T6 diffs come from other tasks' modules: GiveItem/ShowPendingMessage (giveitem.js, T8) and AIs $63/$70 (T7). Checking coverage and tests, then I'll record progress.
+  ▶ python3 tools/cs_coverage.py --module obj/ 2>&1 | tail -16; python3 tools/cs_coverage.py 2>&1 | tail -1; dotnet run --pr
+ai_walk / ai_field / ai_thunder are at 100%, 88/88 tests pass. Next I'll port `giveitem.js` (T8): it blocks T5's town02 check and five T6 cases. Reading it:
+  ▶ python3 tools/cs_coverage.py --module states/ 2>&1 | tail -30; grep -c "" ../web/src/game/states/giveitem.js
+  ▶ python3 tools/cs_coverage.py --module states/ 2>&1 | tail -30
+  ▶ Read giveitem.js
+giveitem.js needs talk.js (ShowMessage, the flag tests, TALK_ACTIONS) plus a few small callees. Checking talk.js, which has to come first:
+  ▶ Read talk.js
+  ▶ Read Talk.cs
+talk.js (37 members) is self-contained enough to port first, then giveitem.js. Checking which of their callees already exist in C#:
+  ▶ Grep
+  ▶ Grep
+  ▶ Read Play.cs
+Callees all exist. Writing Talk.cs (all of talk.js); the TALK_ACTIONS entries that giveitem.js adds will point at GiveItem methods.
+  ▶ Write Talk.cs
+Now GiveItem.cs. Checking the stub signatures it'll call (Equip, Teleport, SwordRaise, FormRevert):
+  ▶ cat src/ReC.Core/Game/States/Substates9.cs src/ReC.Core/Game/States/Equip.cs src/ReC.Core/Game/States/GiveItem.cs
+Need `swordPowerLevel` (equip.js) and `farSpriteDraw` (formrevert.js); checking their size:
+  ▶ Grep
+I'll port `swordPowerLevel` and formrevert's `farSpriteDraw` now (both tiny) and add `y` overloads to the Teleport / SwordRaise stubs. First the giveitem.js inventory names:
+  ▶ grep -E "giveitem.js|equip.js,swordPowerLevel|formrevert.js,farSpriteDraw" docs/obligations.csv | cut -d, -f1-4
+  ▶ Edit Talk.cs
+  ▶ Write Equip.cs
+  ▶ Edit Substates9.cs
+  ▶ Edit Substates9.cs
+  ▶ Edit Substates9.cs
+Now GiveItem.cs:
+  ▶ Write GiveItem.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|warn" | sort -u | head -20; dotnet build ReC.slnx -c Release 2>&1
+Clean build. Running the T5/T6/T8-related states and the full checks:
+  ▶ python3 tools/cs_vs_web.py --no-build canon town02_enter:600 giveitem group18 group11 group6e groupb2 killlevelup 2>&1 |
+town02_enter now matches over 600 frames, which closes T5. group6e diverges at f2859, right after the reveal into type $7D. Checking for an unported AI:
+  ▶ src/ReC.Run/bin/Release/net10.0/ReC.Run --load-state ../web/test/states/group6e.json --frames 479 --keys 2513:B:3 2536:B
+AI $66 (boss, T7). Running everything (all states, all checks, the pass-count diff, tests) for regressions:
+  ▶ python3 tools/cs_vs_web.py --no-build --states 2>&1 | grep -v "^ok" | cut -c1-160
+57/87 states now identical (was 31 at the start of this session, 8 before it). Checking event21, the one failure here that doesn't obviously belong to an unported module:
+  ▶ src/ReC.Run/bin/Release/net10.0/ReC.Run --load-state ../web/test/states/event21.json --frames 120 2>&1 | sort -u
+AI $6B (T7). Now the full check runs, the lag-input diff, tests and coverage:
+  ▶ python3 tools/cs_vs_web.py --no-build --checks 2>&1 | grep -v "^ok" | cut -c1-160; python3 tools/pass_count_diff.py --no
+Every remaining diff is AI $63 / $66 / $70 (T7 boss modules). Tests and coverage:
+  ▶ dotnet run --project tests/ReC.Tests -c Release 2>&1 | tail -1; python3 tools/cs_coverage.py --module states/ 2>&1 | gre
+All green apart from the T7-owned cases. Recording progress in TASKS.md:
+  ▶ Edit TASKS.md
+  ▶ Edit TASKS.md
+  ▶ Read CLAUDE.md
+  ▶ Edit CLAUDE.md
+  ▶ Edit architecture_cs.md
+I finished T5, and T6 is ported but stays unchecked. All three T6 modules (ai_walk, ai_field, ai_thunder) are done at 100% coverage, but T6's own check list isn't fully passing yet. I also pulled in talk.js and giveitem.js from T8, because GiveItem was what still blocked T5.
+
+**T5 (ticked):** `town02_enter` is now identical to the web port over 600 frames (CSV, PNG, RAM, WRAM, CIRAM). The canonical Reset→f2460 run is still identical.
+
+**T6 (open):**
+- **Ported:** `Obj/AiWalk.cs` (12 walker/chaser AIs), `Obj/AiField.cs` (all 22 AIs, including the town NPC AI $30) and `Obj/AiThunder.cs`. All six T6 modules are at 100% coverage.
+- **Full-length checks:** I added every group / fan / kill / thunder scenario to `tools/cs_vs_web.py` with the state, LAST frame and keys from its `*_check.mjs`; `--checks` runs them. 20 of 23 are identical at full length.
+- **Still failing:** group6e (from f2859, AI $66) and group7f / group81 (AI $70). Both AIs live in the T7 boss modules, so T6 closes when T7 lands.
+
+**One real bug found and fixed:** `MainLoop.MainStep` read `main_state` twice where the JS reads it once. The lag model estimates each pass's CPU time from counted RAM reads/writes, so the extra read added cost on every gameplay pass and could produce a false lag frame. I added `tools/pass_count_diff.py` to catch this: it compares per-frame, per-stage read/write counts between the two ports (`ReC.Run --pass-count` vs the web port's `pass_count.mjs`). 19 of 23 match; the 4 differences are the unported boss AIs. One of them, group28, passes its CSV but still differs in AI $63's counts.
+
+**T8 progress:**
+- `States/Talk.cs` (37/37) and `States/GiveItem.cs` (29/29) are ported, plus `swordPowerLevel` from equip.js and `farSpriteDraw` from formrevert.js.
+- Most item, event, talk and item-use states now match at 120 frames.
+- event01 still needs swordraise.js (T9) and event21 needs AI $6B (T7). The shop, equip and save-menu states still fail on their stubs.
+
+**Overall:**
+
+| Check | Before this session | Now |
+|---|---|---|
+| States identical at 120 frames | 8/87 | 57/87 |
+| First-frame screens | 87/87 | 87/87 |
+| Coverage | 584/1046 | 712/1046 (68.1%, incl. 12 waived) |
+| ReC.Tests | 88/88 | 88/88 |
+| Build warnings | 0 | 0 |
+
+TASKS.md, `docs/architecture_cs.md` (new section on matching the JS's read/write counts) and CLAUDE.md are updated. I made no commits.
+
+**Leftover file:** `tools/check_keys.mjs` was meant to pull keys out of the check scripts automatically. It needed approval to run, so I never ran it and filled the cases in by hand instead. It's unused; delete it, or approve a run if you want it.
+
+SESSION_SUMMARY: C# s4: T5 done (town02_enter:600 identical); T6 ported (AiWalk/AiField/AiThunder, 100 %), 20/23 full-length checks identical (group6e/7f/81 wait on T7 AIs $66/$70); T8 Talk.cs + GiveItem.cs done; fixed an extra counted main_state read in MainStep found by new tools/pass_count_diff.py; states 57/87 at 120 frames, 88/88 tests, 0 warnings, coverage 712/1046 incl. 12 waived (68.1 %).

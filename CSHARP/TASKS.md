@@ -73,17 +73,25 @@ If parts remain, write them into the same task and leave it unchecked (no new fo
   ciram); `death:700` identical (through game over); states first frame 87/87 PNGs; `--states` (120 frames) 8/87
   identical (the rest diverge in unported AIs / substates); ReC.Tests 88/88; build 0 warnings; coverage 572 + 12 waived
   of 1046 (55.8 %). New: `docs/waivers.csv` (sprites.js `rd` / `wr` aliases), `tools/json_peek.py`.
-- [ ] T5 objects: `Game/Obj/{Objects,ObjInit,Move,Collide,Util,Sprites,Player}.cs`. Done when 100 % coverage for those
+- [x] T5 objects: `Game/Obj/{Objects,ObjInit,Move,Collide,Util,Sprites,Player}.cs`. Done when 100 % coverage for those
   modules and cs_vs_web passes for area1_enter / town02_enter.
   (C# s3: all seven files ported, coverage 100 % for objects / objinit / move / collide / util / sprites (2 waivers) /
-  player. Remaining: `town02_enter:600` diverges at f2495 because AI $30 (NPC, ai_field.js) and $78 plus sub_state 7
-  GiveItem (T8) are stubs, so this criterion closes with T6 / T8; there is no `area1_enter` state in
-  ../web/test/states (area 1 is entered in the canon run, which passes through f2460).)
+  player. There is no `area1_enter` state in ../web/test/states (area 1 is entered in the canon run, which passes).)
+  **C# s4 done:** with AI $30/$78 (T6) and GiveItem (T8) ported, `cs_vs_web.py town02_enter:600` = 600 frames identical
+  (csv, png, ram, wram, ciram); canon still 2247 frames identical.
 - [ ] T6 field AIs: `Obj/{AiWalk,AiField,AiStatic,AiShot,AiEffect,AiThunder}.cs`. Done when 100 % coverage for them and
   the group / fan / kill / thunder states pass.
-  (C# s3: AiStatic, AiShot, AiEffect done (100 %); remaining ai_walk.js, ai_field.js, ai_thunder.js (stub ThunderStep).
-  Add each module's `Ai` table to `Objects.AiTable` in the JS spread order: static, walk, field, shot, effect, final,
-  boss, player.)
+  (C# s3: AiStatic, AiShot, AiEffect done (100 %).)
+  **C# s4:** `Obj/AiWalk.cs` (22/22), `Obj/AiField.cs` (33/33), `Obj/AiThunder.cs` (5/5) ported; `Objects.AiTable` merges
+  static, walk, field, shot, effect, player (final / boss go between effect and player when T7 adds them). All six
+  T6 modules 100 % coverage. `cs_vs_web.py` CASES now holds every group / fan / kill / thunder check (state + LAST +
+  KEYS copied from its `*_check.mjs`, `last=` -> frames; `--checks` runs them): **20/23 identical at full length**
+  (group05/08/09/11/18/28/29/40/59/5a/6b/7c/84/84b/88/b2, thunder, fanskip, killgold, killlevelup). New lag-model
+  input oracle `tools/pass_count_diff.py` (`ReC.Run --pass-count` vs `pass_count.mjs --stages`, per stage rd/wr/rom):
+  19/23 identical; it found an extra counted `main_state` read in `MainLoop.MainStep` (fixed: `top` bucket 30 -> 29 rd
+  per pass). Remaining (all T7 AIs, not T6 code): group6e from f2859 (reveal into type $7D = AI $66, ai_boss.js),
+  group7f / group81 (AI $70, ai_final.js; group81 from f2507), group28's CSV passes but its AI $63 dispatch counts
+  differ (stub). This task closes when T7 lands and those three pass.
 - [ ] T7 boss AIs: `Obj/AiBoss.cs` (1,436 JS lines, may span sessions), `Obj/AiFinal.cs`. Done when 100 % coverage and
   the boss states pass (bosse2, bossflee, bossa6, finalboss, ai70*).
 - [ ] T8 menu / town substates: `States/{Pause,Equip,SaveLoad,Shop,Talk,GiveItem}.cs`. Done when 100 % coverage and
@@ -91,6 +99,13 @@ If parts remain, write them into the same task and leave it unchecked (no new fo
   (C# s3: Pause.cs 10/10 done; SaveLoad.cs 18/24, left: saveLoadPage, menuSave, slotPicture, pageSetup, modeCursor,
   slotCursor (need equip.js). Equip / Shop / Talk / GiveItem are stub classes; GiveItem.EventAction / Talk.TalkAction
   stand for the JS EVENT_ACTIONS / TALK_ACTIONS tables used by Play.EntryPoints.)
+  **C# s4:** `States/Talk.cs` (37/37: text printer, ShowMessage, NpcScript, NpcTalk, TalkActions incl. the giveitem.js
+  entries) and `States/GiveItem.cs` (29/29: item hooks 0-2, ItemUseMenu, ShowPendingMessage, all 32 EventActions with
+  act 30's PLA as a `Ret<bool>`) done; also equip.js `swordPowerLevel` (Equip.cs) and formrevert.js `farSpriteDraw`
+  (Substates9.cs FormRevert). States identical at 120 frames: giveitem, event02/07/08/11/12/13/15/19/19b/20/23/28,
+  itemuse_fail/herb/opel, talk16/19/20/22/25/26, talk_act1/act8/probe, outofmp, tmp_iu. Left: equip.js (43), shop.js
+  (30), saveload.js 6 menu-page members; event01 needs swordraise.js (T9), event21 AI $6B (T7); armorshop / inn /
+  pawnshop / toolshop / shopempty / shopmenu / equip / saveload states fail on the Shop / Equip stubs.
 - [ ] T9 remaining substates + ending: `States/{Wake,Teleport,Telepathy,ChangeForm,Cure,FormRevert,SwordRaise,Mesia,
   FinalScene,Ending}.cs`. Done when 100 % game-layer coverage and their states pass.
   (C# s3: their stub classes sit together in `States/Substates9.cs`; move each into its own file when porting it.)

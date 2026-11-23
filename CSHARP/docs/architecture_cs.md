@@ -127,6 +127,19 @@ Oracle = the web port: **same start (Reset or `--load-state`) + same `--keys` â†
   - Exported JS lag predicates (`FSD_LAG`, `FSD_LAG_WF`, saveload `RESTORE_LAG`) are `Func<int, bool>` fields (tagged).
   - `docs/waivers.csv` (first rows): sprites.js `rd` / `wr` per-function aliases (C# calls m.Rd / m.Wr).
 
+- C# s4 (T6 + part of T8):
+  - **Read/write counts are behaviour.** The lag model judges each pass from `m.Rd` / `m.Wr` / `Prg.CpuRd` counts per
+    `m.PassStage`, so a C# member must make exactly the JS's counted accesses: no extra `m.Rd` for a bounds check or
+    a cached value the JS reads twice (s4 fix: `MainLoop.MainStep` read `main_state` twice). Uncounted reads go
+    through `m.Mem.Rd`, as the JS's `m.mem.rd`. `tools/pass_count_diff.py` checks this per frame and stage.
+  - Plain-function AI modules (ai_walk.js, ai_field.js) keep `void F(Machine, int)` members wrapped by `P(F)` in `Ai`.
+  - JS default parameters read from RAM (`yIn = m.rd(0x010F)`) become an overload `F(m) => F(m, m.Rd(0x010F))`
+    (the read happens at the call, as in JS). Talk.NpcTalk, GiveItem.ItemUseMenu, Teleport / SwordRaise stubs.
+  - giveitem.js mutates talk.js's `TALK_ACTIONS` object; in C# `Talk.TalkActions` lists those entries directly
+    (pointing at `GiveItem.TalkGiveParam` / `TalkAct14` ...). The event-act PLA symbol is a `Ret<bool>` argument.
+  - The JS tables' anonymous generators / arrows (TALK_ACTIONS, EVENT_ACTIONS, USE_HANDLERS) are private named
+    methods or lambdas without tags (they are not inventory callables).
+
 ## 6. REA reconstruction tracking
 
 REA (`rea analyze-javascript-application <repo>/web/src --artifact-format directory --detail summary --evidence_output EV.json`)

@@ -18,6 +18,11 @@ C# (.NET 10, no NuGet packages) translation of the finished web port `../web/src
   (outputs in `out/<case>/`, gitignored; shell `mkdir`/`rm` need approval in the sandbox, so let tools create files);
   `python3 tools/state_peek.py STATE.json [ADDR,..]` (state fields / RAM bytes); `python3 tools/json_peek.py F.json [a.b.0]`
   (JSON structure / one path, e.g. `../web/data/areas.json areas.00`); `python3 ../tools/ram_byte.py out/<case>/web.ram ADDR,..`; `python3 tools/gen_cs_data.py [--check]` (Gen/R.cs) (uses `node ../web/test/run.mjs` + `../tools/compare_frames.py`)
+- Full check scenarios: `cs_vs_web.py --checks` = every CASES entry copied from a `../web/test/*_check.mjs` (state + LAST +
+  KEYS as `last=` / `keys=`; add new ones there when a module's checks become reachable)
+- Lag-model inputs: `python3 tools/pass_count_diff.py [--no-build] [--checks] [NAME..]` (`ReC.Run --pass-count F` vs
+  `node ../web/test/pass_count.mjs --stages`: per-frame rd/wr/cpuRd per stage must match, or lag frames drift later;
+  extra counted `m.Rd` calls the JS doesn't make show up here first)
 - Sound: ReC.Tests `sound_frames` / `apu_*` cases; `python3 tools/apu_wav_compare.py [--no-build] [--seconds S] [ID..]`
   (C# `ReC.Tests --wav ID OUT.wav S` vs `node ../web/test/apu_check.mjs --wav`, byte-identical WAVs)
 - Coverage vs REA inventory: `python3 tools/cs_coverage.py [--module SUBSTR] [--missing]`

@@ -29,8 +29,8 @@ public static class Objects
     private const int Freeze = 0x05A0;
 
     /// <summary>(objects.js AI_TABLE) = { ...AI_HANDLERS, ...AI_WALK, ...AI_FIELD, ...AI_SHOT, ...AI_EFFECT, ...AI_FINAL,
-    /// ...AI_BOSS, ...AI_PLAYER }. C# s3: only the ported modules are merged; add each module's Ai here in that order.</summary>
-    public static readonly Dictionary<int, AiFn> AiTable = Merge(AiStatic.Ai, AiShot.Ai, AiEffect.Ai, Player.Ai);
+    /// ...AI_BOSS, ...AI_PLAYER }. Only the ported modules are merged; add each module's Ai here in that order.</summary>
+    public static readonly Dictionary<int, AiFn> AiTable = Merge(AiStatic.Ai, AiWalk.Ai, AiField.Ai, AiShot.Ai, AiEffect.Ai, Player.Ai);
 
     private static Dictionary<int, AiFn> Merge(params Dictionary<int, AiFn>[] parts)
     {
