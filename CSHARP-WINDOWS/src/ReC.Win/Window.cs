@@ -73,6 +73,9 @@ internal static unsafe partial class Window
     private static double _last, _acc;
     private static readonly Stopwatch Clock = new();
     private static readonly uint[] Px = new uint[256 * 240];
+    private static uint[] _up = Array.Empty<uint>();
+    private static readonly uint[] _upTmp = new uint[256 * 240 * 4];
+    private static int _frameNo, _upFrame = -1, _upK;
     private static Win32.BITMAPINFOHEADER _bmi;
     private static readonly uint Style = Win32.WS_OVERLAPPEDWINDOW;
 
@@ -138,6 +141,7 @@ internal static unsafe partial class Window
             void Blit(byte[] fb)
             {
                 for (int i = 0; i < fb.Length; i++) Px[i] = lut[fb[i] & 0x3F];
+                _frameNo++;
                 Present();
             }
 
@@ -304,11 +308,21 @@ internal static unsafe partial class Window
         if (x + w < cw) Win32.FillRect(hdc, new Win32.RECT { Left = x + w, Top = y, Right = cw, Bottom = y + h }, black);
         Win32.SetStretchBltMode(hdc, _v.Smooth ? Win32.HALFTONE : Win32.COLORONCOLOR);
         if (_v.Smooth) Win32.SetBrushOrgEx(hdc, 0, 0, IntPtr.Zero);
+        // upscale filter (Upscale.cs) into Up, re-run only when the frame or the factor changed (WM_PAINT repaints)
+        int k = Math.Clamp(_v.Upscale, 1, 4);
+        uint[] src = Px;
+        if (k > 1)
+        {
+            if (_up.Length != Px.Length * k * k) { _up = new uint[Px.Length * k * k]; _upFrame = -1; }
+            if (_upFrame != _frameNo || _upK != k) { Upscale.Apply(Px, 256, 240, k, _up, _upTmp); _upFrame = _frameNo; _upK = k; }
+            src = _up;
+        }
         // overscan crop: start the top-down DIB 8 lines in (no source-rectangle origin quirks)
         var bmi = _bmi;
-        bmi.Height = -_v.VisibleH;
-        fixed (uint* p = Px)
-            Win32.StretchDIBits(hdc, x, y, w, h, 0, 0, 256, _v.VisibleH, p + _v.FirstLine * 256, bmi,
+        bmi.Width = 256 * k;
+        bmi.Height = -_v.VisibleH * k;
+        fixed (uint* p = src)
+            Win32.StretchDIBits(hdc, x, y, w, h, 0, 0, 256 * k, _v.VisibleH * k, p + _v.FirstLine * k * 256 * k, bmi,
                 Win32.DIB_RGB_COLORS, Win32.SRCCOPY);
     }
 

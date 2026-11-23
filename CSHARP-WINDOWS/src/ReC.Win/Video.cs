@@ -26,6 +26,8 @@ internal sealed class VideoSettings
     /// <summary>fullscreen resolution: 0 x 0 = borderless at the desktop resolution, else an exclusive display mode.</summary>
     public int FsW, FsH;
     public bool MenuBar = true;
+    /// <summary>pixel-art upscale filter factor (Upscale.cs): 1 = none, 2-4 = Scale2x / 3x / 4x</summary>
+    public int Upscale = 1;
 
     public static readonly (Aspect A, string Key, string Label)[] Aspects =
     {
@@ -112,6 +114,7 @@ internal sealed class VideoSettings
         $"fullscreen={(Fullscreen ? 1 : 0)}",
         $"fullscreen_mode={(FsW > 0 ? $"{FsW}x{FsH}" : "desktop")}",
         $"menu_bar={(MenuBar ? 1 : 0)}",
+        $"upscale={ReC.Win.Upscale.Filters.First(f => f.K == Upscale).Key}",
     }) + "\n";
 
     public static VideoSettings Parse(string text)
@@ -141,6 +144,9 @@ internal sealed class VideoSettings
                     else if (TryWxH(val, out int fw, out int fh) && fw >= 320 && fh >= 200) { v.FsW = fw; v.FsH = fh; }
                     break;
                 case "menu_bar": v.MenuBar = val != "0"; break;
+                case "upscale":
+                    foreach (var f in ReC.Win.Upscale.Filters) if (f.Key == val) v.Upscale = f.K;
+                    break;
             }
         }
         return v;

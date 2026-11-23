@@ -122,3 +122,11 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   Xvfb offers no other display mode, so the exclusive case exercises the fallback; a real mode change is left to the
   play-test on Windows. Final `dist/ReC.exe` 11,591,197 bytes, sha256 `7e02cfc2…`; on it: `win_vs_web.py --canon --states --checks wake`
   156/156, `win_smoke.py --canon` ok, `cs_coverage.py` 100 %, `rea_pe_report.py` all expectations hold, `cs_rea_members.py` 1029/1029.
+- [x] T9 (interactive, 2026-11-23) done: **Upscale filter menu.** Video > Upscale filter: None / Scale2x / Scale3x /
+  Scale4x (`src/ReC.Win/Upscale.cs`, AdvanceMAME / EPX edge rules, edges clamped, 4x = 2x twice); the frame is upscaled
+  into a k-times DIB once per new frame and drawn through the usual layout (aspect, integer scaling, overscan crop,
+  smooth filter). `video.ini` `upscale=`, `--menu upscale:scale2x|..`. Tests 204/204 (`win_upscale`: hand-checked 3x3
+  diagonal for 2x / 3x, flat stays flat, 4x = 2x∘2x, ini + menu id). `win_video_check.py` + 3 cases (2x, 3x + crop,
+  4x at 16:9) compared exactly against a Python Scale2x/3x of the headless frame: 12/12 ok. On the final
+  `dist/ReC.exe` (11,592,312 bytes, sha256 `bbd870c8…`): `win_vs_web.py --canon --states --checks wake` 156/156,
+  `win_smoke.py --canon` ok, `cs_coverage.py` 100 %, `rea_pe_report.py` all expectations hold, `cs_rea_members.py` 1029/1029.

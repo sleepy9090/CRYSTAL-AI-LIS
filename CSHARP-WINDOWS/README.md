@@ -55,6 +55,7 @@ which is how you reach them in fullscreen or with the menu bar hidden. While a m
 | Fullscreen (F11) | fullscreen on / off |
 | Fullscreen resolution | *Desktop resolution* (borderless, the default) or one of the monitor's display modes (32-bit, 640×480 and up). A display mode is changed only while the game is fullscreen and in front; alt-tab or leaving fullscreen puts the desktop back. If Windows refuses a mode, the desktop resolution is used. |
 | Window size | 1× – 6× the picture (keys 1 – 6), or a fixed size: 640×480, 800×600, 1024×768, 1280×720, 1280×960, 1366×768, 1600×900, 1920×1080 |
+| Upscale filter | None (sharp pixels, the default) · Scale2x · Scale3x · Scale4x: pixel-art upscalers that round off diagonal stair-steps and curves (text, slopes, sprites) while keeping edges crisp; the result is then sized to the window as usual |
 | Aspect ratio | Square pixels (256:240, the default) · NES TV (8:7 pixels, as on a CRT) · 4:3 · 16:10 widescreen · 16:9 widescreen · Stretch to fill the window |
 | Integer scaling | on (default): whole-number scale, sharp pixels, black bars · off: as large as the window allows |
 | Crop overscan | hides the top and bottom 8 lines (256×224), as most TVs did |
@@ -90,7 +91,7 @@ ReC.exe --wav ID OUT.wav [SECONDS]
 - `--data DIR` loads a `web/data` folder instead of the embedded data.
 - `--video-config F.ini` uses another video settings file; `--fullscreen` starts fullscreen.
 - Test hooks: `--menu CMD,..` runs menu items in order at start (`fullscreen`, `menubar`, `integer`, `crop`, `smooth`,
-  `reset`, `pause`, `mute`, `size:3x`, `size:1280x720`, `aspect:square|tv|4:3|16:10|16:9|fill`, `fsmode:desktop`,
+  `reset`, `pause`, `mute`, `size:3x`, `size:1280x720`, `aspect:square|tv|4:3|16:10|16:9|fill`, `upscale:none|scale2x|scale3x|scale4x`, `fsmode:desktop`,
   `fsmode:1920x1080`); `--dump-window F.png` saves the window's picture area as drawn when the run ends.
 
 ## Checks (Linux, from this folder)
@@ -99,7 +100,7 @@ ReC.exe --wav ID OUT.wav [SECONDS]
 | `python3 tools/core_vs_web.py --canon --states --checks wake` | Linux core vs the web port: CSV, PNG, RAM, WRAM and CIRAM all identical |
 | `python3 tools/win_vs_web.py --canon --states --checks wake` | **dist/ReC.exe under Wine** (headless) vs the web port |
 | `python3 tools/win_smoke.py --canon [--no-xinput] [--verbose]` | the real window under Wine + Xvfb: a 600-frame run exits 0, writes the save file, and its PNG equals the headless one; a scripted windowed CSV equals the headless one |
-| `python3 tools/win_video_check.py` | the Video menu under Wine + Xvfb: window sizes, aspect ratios, crop, fill / smooth, menu bar, fullscreen (+ resolution fallback), settings file saved and reloaded; the drawn picture against the headless frame |
+| `python3 tools/win_video_check.py` | the Video menu under Wine + Xvfb: upscale filters, window sizes, aspect ratios, crop, fill / smooth, menu bar, fullscreen (+ resolution fallback), settings file saved and reloaded; the drawn picture against the headless frame |
 | `python3 tools/apu_wav_compare.py --exe 0x05 0x10` | the exe's APU output matches `apu_check.mjs` byte for byte |
 | `python3 tools/cs_coverage.py` | every web-port function is ported (`// js:` tag) or has a written reason in `docs/waivers.csv` |
 | `python3 tools/rea_pe_report.py` + `python3 tools/cs_rea_members.py` | REA inspection of the exe → `docs/rea/summary.md` (imports, hardening, resources, exposure), and every tagged member is still present after trimming |

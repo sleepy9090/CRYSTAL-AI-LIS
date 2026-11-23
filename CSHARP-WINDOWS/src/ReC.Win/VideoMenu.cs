@@ -1,6 +1,6 @@
 // re-c Windows host — the menu bar (Game, Video) + the same menus on right-click, and what the Video choices do:
 // fullscreen (borderless at the desktop resolution, or an exclusive display mode = "Fullscreen resolution"), window size
-// (1x-6x or a preset client size), aspect ratio / widescreen, integer scaling, overscan crop, smooth filter, menu bar.
+// (1x-6x or a preset client size), aspect ratio / widescreen, upscale filter (Upscale.cs), integer scaling, overscan crop, smooth filter, menu bar.
 // Settings: Video.cs (VideoSettings, saved to %APPDATA%\re-c\video.ini on every change).
 //
 // The menu runs a modal loop: the game stops while a menu is open (the frame clock restarts on WM_EXITMENULOOP).
@@ -20,6 +20,7 @@ internal static unsafe partial class Window
     private const int IdPreset0 = 220;           // + index in VideoSettings.Presets
     private const int IdAspect0 = 240;           // + (int)Aspect
     private const int IdFsDesktop = 300, IdFsMode0 = 301;   // + index in _modes
+    private const int IdUpscale0 = 260;          // + factor 1..4
 
     private static VideoSettings _v = new();
     private static string? _videoPath;
@@ -59,6 +60,9 @@ internal static unsafe partial class Window
                 if (i >= 0) return IdPreset0 + i;
             }
         }
+        if (n.StartsWith("upscale:"))
+            foreach (var f in Upscale.Filters)
+                if (f.Key == n[8..]) return IdUpscale0 + f.K;
         if (n.StartsWith("aspect:"))
             foreach (var a in VideoSettings.Aspects)
                 if (a.Key == n[7..]) return IdAspect0 + (int)a.A;
@@ -117,6 +121,10 @@ internal static unsafe partial class Window
         foreach (var a in VideoSettings.Aspects) Win32.AppendMenuW(asp, 0, (nuint)(IdAspect0 + (int)a.A), a.Label);
         Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)asp, "&Aspect ratio");
 
+        var up = NewMenu();
+        foreach (var f in Upscale.Filters) Win32.AppendMenuW(up, 0, (nuint)(IdUpscale0 + f.K), f.Label);
+        Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)up, "&Upscale filter");
+
         Win32.AppendMenuW(m, 0, IdInteger, "&Integer scaling (sharp)");
         Win32.AppendMenuW(m, 0, IdCrop, "Crop &overscan (8 lines top / bottom)");
         Win32.AppendMenuW(m, 0, IdSmooth, "S&mooth filter");
@@ -147,6 +155,7 @@ internal static unsafe partial class Window
         for (int i = 0; i < VideoSettings.Presets.Length; i++)
             Check(IdPreset0 + i, (_v.WindowW, _v.WindowH) == VideoSettings.Presets[i], true);
         foreach (var a in VideoSettings.Aspects) Check(IdAspect0 + (int)a.A, _v.Aspect == a.A, true);
+        foreach (var f in Upscale.Filters) Check(IdUpscale0 + f.K, _v.Upscale == f.K, true);
         Check(IdFsDesktop, _v.FsW == 0, true);
         for (int i = 0; i < _modes.Count; i++) Check(IdFsMode0 + i, (_v.FsW, _v.FsH) == _modes[i], true);
     }
@@ -199,6 +208,7 @@ internal static unsafe partial class Window
             _v.Aspect = (Aspect)(id - IdAspect0);
             SettingsChanged(_v.WindowW == 0);          // a 1x-6x window follows the new shape; a preset size stays
         }
+        else if (id > IdUpscale0 && id <= IdUpscale0 + 4) { _v.Upscale = id - IdUpscale0; SettingsChanged(false); }
         else if (id >= IdFsMode0 && id < IdFsMode0 + _modes.Count) SetFsMode(_modes[id - IdFsMode0].W, _modes[id - IdFsMode0].H);
         else if (id < 0) SetFsMode(-id >> 16, -id & 0xFFFF);
     }

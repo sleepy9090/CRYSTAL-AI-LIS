@@ -54,7 +54,7 @@ CSHARP-WINDOWS/
 ├─ src/ReC.Core/            copied core (net10.0) + embedded ../web/data
 ├─ src/ReC.Run/             Linux/dotnet headless runner; Headless.cs is also compiled into ReC.Win
 ├─ src/ReC.Win/             Program.cs (args, headless vs window), Win32.cs (P/Invoke), Window.cs, Video.cs +
-│                           VideoMenu.cs (T8 video settings / menus), Audio.cs (waveOut),
+│                           VideoMenu.cs (T8 video settings / menus), Upscale.cs (T9), Audio.cs (waveOut),
 │                           Pad.cs (keyboard Input + XInput Pad), Save.cs, WavOut.cs (--wav), app.ico,
 │                           app.manifest (PerMonitorV2, Win10+)
 ├─ tests/ReC.Tests/         copied unit tests (+ Windows-host pure-logic tests that run on Linux)
@@ -124,3 +124,7 @@ CSHARP-WINDOWS/
    deactivate / exit), menu bar; saved to `%APPDATA%\re-c\video.ini` on each change. `Window.Fit` (`// js: main.js fit`)
    = `VideoSettings.Layout`; the defaults reproduce the old integer letterbox exactly. Checked by
    `tools/win_video_check.py` (`--menu` / `--dump-window` test hooks).
+9. **Upscale filter (T9):** Video > Upscale filter = none / Scale2x / Scale3x / Scale4x (`Upscale.cs`, AdvanceMAME
+   rules, edges clamped; 4x = 2x twice). The 256x240 frame is upscaled into a k-times DIB (only when a new frame was
+   blitted) and that DIB goes through the same layout / crop (offset by 8k lines) / StretchDIBits path. `video.ini`
+   key `upscale`.

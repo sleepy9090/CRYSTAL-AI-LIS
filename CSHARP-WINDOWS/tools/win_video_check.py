@@ -4,8 +4,8 @@ usage: python3 tools/win_video_check.py [--exe PATH] [--timeout S] [--keep] [NAM
 Each case runs the real window for 787 frames (frame_no 1000, the intro picture of app.ico) (--turbo) with its own settings file (out/video/NAME.ini), applies menu
 commands with `--menu` (the same Command() path as clicking the items), and reads the drawn client area back with
 `--dump-window`. Checked per case: exit 0, the client size, the picture rectangle (from the same layout rules as
-Video.cs, recomputed here), black bars outside it, the picture itself against the headless frame (nearest-neighbour
-resample; exact for integer square pixels, <= 2 % differing pixels for stretched shapes, skipped for the smooth filter),
+Video.cs, recomputed here), black bars outside it, the picture itself against the headless frame (upscaled by the same
+Scale2x / 3x / 4x rules when the case uses a filter, then nearest-neighbour resample; exact for integer square pixels, <= 2 % differing pixels for stretched shapes, skipped for the smooth filter),
 and the settings file written by the menu. Xvfb screen: 1920x1080x24.
 Exit 1 on any failure.
 """
@@ -23,8 +23,15 @@ SCREEN = (1920, 1080)
 FRAMES = 787
 RATIO = {'square': None, 'tv': 256 * 8 / 7, '4:3': 4 / 3, '16:10': 16 / 10, '16:9': 16 / 9}
 
-# name, extra args, menu commands, expected client size, expected settings (aspect, integer, crop, smooth), ini lines
+# name, extra args, menu commands, expected client size, expected settings (aspect, integer, crop, smooth[, upscale]),
+# ini lines
 CASES = [
+    ('up2x', [], ['upscale:scale2x', 'size:2x'], (512, 480), ('square', True, False, False, 2),
+     ['upscale=scale2x', 'window=2x']),
+    ('up3xcrop', [], ['upscale:scale3x', 'crop', 'size:3x'], (768, 672), ('square', True, True, False, 3),
+     ['upscale=scale3x', 'crop_overscan=1']),
+    ('up4xwide', [], ['upscale:scale4x', 'aspect:16:9', 'size:3x'], (1280, 720), ('16:9', True, False, False, 4),
+     ['upscale=scale4x', 'aspect=16:9']),
     ('scale2', ['--scale', '2'], [], (512, 480), ('square', True, False, False), []),
     ('wide169', [], ['aspect:16:9', 'size:3x'], (1280, 720), ('16:9', True, False, False),
      ['aspect=16:9', 'window=3x']),
@@ -73,8 +80,54 @@ def run(exe, args, timeout):
     return p.returncode, p.stdout
 
 
+def scale2x(img):
+    """= Upscale.Scale2x (edges clamp)"""
+    h, w = len(img), len(img[0])
+    out = [[None] * (2 * w) for _ in range(2 * h)]
+    for y in range(h):
+        up, row, dn = img[max(y - 1, 0)], img[y], img[min(y + 1, h - 1)]
+        for x in range(w):
+            b, d, e, f, hh = up[x], row[max(x - 1, 0)], row[x], row[min(x + 1, w - 1)], dn[x]
+            e0 = e1 = e2 = e3 = e
+            if b != hh and d != f:
+                e0 = d if d == b else e
+                e1 = f if b == f else e
+                e2 = d if d == hh else e
+                e3 = f if hh == f else e
+            out[2 * y][2 * x], out[2 * y][2 * x + 1], out[2 * y + 1][2 * x], out[2 * y + 1][2 * x + 1] = e0, e1, e2, e3
+    return out
+
+
+def scale3x(img):
+    """= Upscale.Scale3x (edges clamp)"""
+    h, w = len(img), len(img[0])
+    out = [[None] * (3 * w) for _ in range(3 * h)]
+    for y in range(h):
+        up, row, dn = img[max(y - 1, 0)], img[y], img[min(y + 1, h - 1)]
+        for x in range(w):
+            xl, xr = max(x - 1, 0), min(x + 1, w - 1)
+            a, b, c, d, e, f, g, hh, i = up[xl], up[x], up[xr], row[xl], row[x], row[xr], dn[xl], dn[x], dn[xr]
+            px = [e] * 9
+            if b != hh and d != f:
+                px[0] = d if d == b else e
+                px[1] = b if (d == b and e != c) or (b == f and e != a) else e
+                px[2] = f if b == f else e
+                px[3] = d if (d == b and e != g) or (d == hh and e != a) else e
+                px[5] = f if (b == f and e != i) or (hh == f and e != c) else e
+                px[6] = d if d == hh else e
+                px[7] = hh if (d == hh and e != i) or (hh == f and e != g) else e
+                px[8] = f if hh == f else e
+            for j in range(9):
+                out[3 * y + j // 3][3 * x + j % 3] = px[j]
+    return out
+
+
+def upscale(frame, k):
+    return scale2x(frame) if k == 2 else scale3x(frame) if k == 3 else scale2x(scale2x(frame)) if k == 4 else frame
+
+
 def check_picture(rows, rect, frame, crop, exact):
-    """bars black; picture = nearest-neighbour resample of the frame (exact, or <= 2 % differing pixels)"""
+    """bars black; picture = nearest-neighbour resample of the (upscaled) frame (exact, or <= 2 % differing pixels)"""
     x0, y0, w, h = rect
     ch, cw = len(rows), len(rows[0])
     for y in range(ch):
@@ -83,13 +136,15 @@ def check_picture(rows, rect, frame, crop, exact):
         for x in (range(cw) if not inside_y else list(range(0, max(0, x0))) + list(range(x0 + w, cw))):
             if row[x] != (0, 0, 0):
                 return f'bar pixel ({x},{y}) = {row[x]}, rect {rect}'
-    vh, first = (224, 8) if crop else (240, 0)
+    k = len(frame[0]) // 256
+    vh, first = (224 * k, 8 * k) if crop else (240 * k, 0)
+    sw = 256 * k
     bad = total = 0
     for y in range(max(0, y0), min(ch, y0 + h)):
         sy = first + (y - y0) * vh // h
         for x in range(max(0, x0), min(cw, x0 + w)):
             total += 1
-            if rows[y][x] != frame[sy][(x - x0) * 256 // w]:
+            if rows[y][x] != frame[sy][(x - x0) * sw // w]:
                 bad += 1
     if exact and bad:
         return f'{bad} / {total} picture pixels differ'
@@ -125,7 +180,7 @@ def main(argv):
     _, _, frame = png_decode(open(hpng, 'rb').read())
 
     fails = 0
-    for name, extra, menu, size, (aspect, integer, crop, smooth), ini_lines in CASES:
+    for name, extra, menu, size, (aspect, integer, crop, smooth, *up), ini_lines in CASES:
         if names and name not in names:
             continue
         ini = os.path.join(OUT, ('wide169' if name == 'reload' else name) + '.ini')
@@ -151,7 +206,8 @@ def main(argv):
             if msg is None:
                 rect = layout(cw, ch, aspect, integer, crop)
                 if not smooth:
-                    msg = check_picture(rows, rect, frame, crop, exact=aspect == 'square' and integer)
+                    src = upscale(frame, up[0] if up else 1)
+                    msg = check_picture(rows, rect, src, crop, exact=aspect == 'square' and integer)
                 if msg is None:
                     text = open(ini).read() if os.path.exists(ini) else ''
                     missing = [line for line in ini_lines if line not in text.splitlines()]

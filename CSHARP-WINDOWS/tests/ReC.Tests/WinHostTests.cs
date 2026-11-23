@@ -122,6 +122,38 @@ internal static partial class Program
             var modes = VideoSettings.ModeList(new[] { (1920, 1080, 32), (800, 600, 32), (1920, 1080, 32), (640, 400, 32), (1024, 768, 16) });
             Eq("800x600,1920x1080", string.Join(',', modes.Select(m => $"{m.W}x{m.H}")), "mode list: 32 bpp, >= 640x480, distinct, sorted");
         }),
+        ("win_upscale", () =>
+        {
+            // 3x3 diagonal of 1s on 0 (edges clamp: the border blocks follow the same rules; hand-checked); flat stays flat
+            uint[] diag = { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
+            var d2 = new uint[36];
+            Upscale.Scale2x(diag, 3, 3, d2);
+            Eq("110000,101000,011100,001110,000101,000011",
+                string.Join(',', Enumerable.Range(0, 6).Select(y => string.Concat(d2.Skip(y * 6).Take(6)))), "scale2x diagonal");
+            var flat = Enumerable.Repeat(7u, 12).ToArray();
+            foreach (int k in new[] { 1, 2, 3, 4 })
+            {
+                var o = new uint[12 * k * k];
+                Upscale.Apply(flat, 4, 3, k, o);
+                True(o.All(v => v == 7), $"flat stays flat x{k}");
+            }
+            var d3 = new uint[81];
+            Upscale.Scale3x(diag, 3, 3, d3);
+            Eq("111000000,110100000,100100000,011111000,000111000,000111110,000001001,000001011,000000111",
+                string.Join(',', Enumerable.Range(0, 9).Select(y => string.Concat(d3.Skip(y * 9).Take(9)))), "scale3x diagonal");
+            // every output pixel of the centre comes from the source pixel or a 4-neighbour
+            var rnd = new Random(5);
+            var src = Enumerable.Range(0, 64).Select(_ => (uint)rnd.Next(3)).ToArray();
+            var d4 = new uint[64 * 16];
+            Upscale.Apply(src, 8, 8, 4, d4);
+            var d22 = new uint[64 * 4]; var d44 = new uint[64 * 16];
+            Upscale.Scale2x(src, 8, 8, d22); Upscale.Scale2x(d22, 16, 16, d44);
+            True(d4.SequenceEqual(d44), "scale4x = scale2x twice");
+            var v = VideoSettings.Parse("upscale=scale3x\n");
+            Eq(3, v.Upscale, "ini upscale"); True(v.Serialize().Contains("upscale=scale3x"), "ini writes upscale");
+            Eq(1, VideoSettings.Parse("upscale=hq9x\n").Upscale, "bad upscale ignored");
+            Eq(262, Window.CommandId("upscale:scale2x"), "--menu upscale:scale2x");
+        }),
         ("win_video_menu", () =>
         {
             Eq(213, Window.CommandId("size:3x"), "size:3x");
