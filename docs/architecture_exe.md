@@ -1,6 +1,6 @@
 # re-c (NES) — Executable Architecture
 
-Written in session 48. It summarises REVERSE.md, which stays the source of truth: every claim here is
+Written in session 48, refreshed in session 221 (IRQ handlers / NMI modes, lag frames, §7 section index). It summarises REVERSE.md, which stays the source of truth: every claim here is
 covered in detail by the REVERSE.md section named in brackets. Notation is `BB:AAAA` (8KB PRG bank 0-31 : CPU address).
 File offset = `0x10 + bank*0x2000 + (addr & 0x1FFF)`. "VERIFIED" means checked in `tools.emu` (self-emu),
 plus 12 FCEUX reference frames for the screens (Verification Log).
@@ -175,15 +175,18 @@ NMI                       31:F3B6 (0x3F3C6)   [Architecture → NMI] VERIFIED
 ```
 IRQ                       31:F443 (0x3F453)   ack MMC3, JMP ($0054)
 SetIrqHandler             31:F424 (0x3F434)   $54/$55 ← IrqHandlerTable 31:F433[A], $56=A
-  0 F455  mid-frame scroll split from $07D8 (in-area effects)
-  1 F488  GAMEPLAY HUD split at line 190: sprites off, PPUADDR $2B00, scroll X 0, CHR R0=$3C R1=$38,
+  0 F455  IrqWrapSplit: mid-frame scroll split from $07D8 (vertical wrap), chains handler 1
+  1 F488  IrqHandler1Hud: GAMEPLAY HUD split at line 190: sprites off, PPUADDR $2B00, scroll X 0, CHR R0=$3C R1=$38,
           then SoundUpdate 31:F7FE (0x3F80E) with $06=1, then the missed NMI-mode routine if $07≠0
-  2/3     line 10/14 and 85/89 splits (seen in the area tour)
-  5 F611  calls SoundUpdate (not seen in runs)
-  6 F691  title / intro split (line 137)
-  4, 7    never seen
+  2 F4E5  IrqMsgWindowTop / 3 F54B IrqMsgWindowEnd: message-window splits (irq_mode 1/9, ShowMessage, menus)
+  4 F5E1  IrqRowStretch / 5 F60E IrqOffSound (IRQ off + SoundUpdate): only the dead NmiMode4 31:F782 path (s208)
+  6 F691  title / intro split (line 137, irq_mode 5)
+  7 F61A  IrqMenuChrSplit: SELECT menu CHR split (irq_mode 6)
   default $F421 (set by Reset)
 ```
+NMI modes (`JmpTable31_F6C2[irq_mode]`): 0 gameplay, 1 message window, 2 pause / status screen and AI `$70` flash
+(`F751`), 3 title (`SoundUpdate` `F77F`), 4 dead (`NmiMode4` `F782`, never stored), 5 intro, 6 SELECT menu (`F7DB`),
+7 = mode 0 with the slot-`$13` scroll copy (bosses), 8 null, 9 = mode 1 with the slot-`$13` copy. All ported (s208).
 
 ### 2.6 Sound
 
@@ -230,7 +233,10 @@ Push `$6E/$6F`, map, call, `JMP RestoreBanks` `31:FFDB` (0x3FFEB):
  scanline 241 ── NMI: OAM DMA (if the main loop finished), scroll copy, PPU queue flush, PaletteUpload,
                   PPUMASK, NMI-mode routine (CHR apply / IRQ set-up), INC $09
 ```
-If the main loop overruns (`$09`≠0 at NMI), the DMA and scroll copy are skipped (previous OAM shown again).
+If the main loop overruns (`$09`≠0 at NMI), the DMA and scroll copy are skipped (previous OAM shown again) and the
+next frame has no pass. There is no cycle budget in the ROM: busy rooms (many active slots, bosses, AI `$70`'s
+palette flash) lag regularly. Cycle costs per main-loop stage were measured in `tools.emu` (`tools/emu/pass_cost.py`,
+s210-s220) and drive the web port's lag model (REVERSE.md Verification Log rows s210-s220, `docs/architecture_web.md` §4.3).
 If the NMI hits while the IRQ handler holds `$06`, it only sets `$07` and IRQ handler 1 runs the NMI-mode routine itself.
 
 Title/menus (states 2/3) use the same skeleton with `irq_mode` 3/5, IRQ handler 6 and SoundUpdate from NMI mode 3.
@@ -304,3 +310,31 @@ REVERSE.md sections: Binary Identification, Memory Map, Data-Range Map, Verifica
 Sound, Main loop, NMI, IRQ, Sprite pass, Area records, Screen/metatile pipeline, Controller input), Full-ROM disassembly,
 Text / dialogue, Player, World interaction, Enemies, Save / load module, Data Structures (struct index + field tables),
 Pointer tables + bank references. Generated reports live in `docs/*.txt` and `gfx/`.
+
+---
+
+## 7. REVERSE.md section index (s221)
+
+Every `##` / `###` / `####` section of REVERSE.md and where these two docs summarise it
+(`exe` = this file, `web` = `docs/architecture_web.md`). Check: `python3 tools/doc_section_links.py --levels 2,3,4`.
+
+| REVERSE.md section | Summarised in |
+|---|---|
+| Binary Identification, Memory Map, Data-Range Map | exe §1, §5 |
+| Stale-copy filler, Code coverage, Full-ROM disassembly | exe §1.1 |
+| Key Findings → Verification Log | exe §2 (VERIFIED tags), web §6 |
+| Architecture (Boot, Bank switching, Sound, Main loop, NMI, IRQ, Sprite pass, Area records, Screen/metatile pipeline, Controller input) | exe §2-§4, web §2.1, §3.1 |
+| Compression | exe §4 (screen / metatile / text data flow) |
+| Text / dialogue; Who picks the message; Talk actions; Event triggers; Item hooks 0/1; GiveItem / item-use dispatch | exe §2.8, web §3.2 (`states/talk.js`, `states/giveitem.js`) |
+| Object update + boss defeat; Enemies; Hit handlers 0 / 2 / 3 + gold drop; Boss phase bodies | exe §2.3, web §3.4 (`obj/*.js`) |
+| Player; World interaction | exe §2.3, web §3.3-§3.4 |
+| Story flags | exe §5 (`$6480`) |
+| Text window + font; Menu strings | exe §2.8, web §3.2 (`states/talk.js`, `states/equip.js`) |
+| Save / load module | exe §2.8, §4; web §3.2 (`states/saveload.js`), §3.5 |
+| Data Structures: Emulator verification, Reference cross-check, Reference-compare triage | web §6 |
+| Object type record; Area record + header sub-tables; Screen page + metatile tables; Metasprite record; Palette record; Sound headers + channel state | exe §4, web §5 |
+| RAM Map; Object slot struct; Save data + WRAM layout | exe §5 |
+| Pointer tables + bank references | exe §1.1, §2.7 |
+| State Machine; Ending sequence | exe §2.2, web §4 |
+| Intermediate Output Files, Verification Checklist, Reference Resources | exe §6 (`docs/*.txt`, `gfx/`) |
+| Next Tasks (Priority, RE Investigation, Web Port Fixes, Documentation) | work queue, not summarised |

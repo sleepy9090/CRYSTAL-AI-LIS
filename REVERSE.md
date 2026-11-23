@@ -2663,4 +2663,13 @@ Filed by Ph7 web 8/8 (session 58) from `tools/web_compare.py` / `COMPARISON.md` 
 
 ### Documentation
 
-- [ ] Final docs refresh: update `docs/architecture_exe.md` and `docs/architecture_web.md` to match the finished port (module graph, EXE→web mapping table, state machine), and check every REVERSE.md section is linked from one of them.
+- [x] Final docs refresh: update `docs/architecture_exe.md` and `docs/architecture_web.md` to match the finished port (module graph, EXE→web mapping table, state machine), and check every REVERSE.md section is linked from one of them.
+  **s221: done.** `docs/architecture_web.md` rewritten from the s49 design to the port as built: the module graph covers all 58 `web/src` modules
+  (the design's `ui/*.js`, `world/exits.js`, `obj/status.js`, `game/rand.js`, `nes/apu_core.js` never existed: HUD / fades / frame waits live in
+  `states/death.js`, the text printer in `states/talk.js`, exits in `world/camera.js`, `PlayerStatusTick` in `states/play.js`, `Rand64` in `obj/util.js`);
+  EXE→web tables per routine family incl. every `SUBSTATES` entry (0 1 3 6 7 8 12 13 16-21 23-36; 4 and 22 not in the map: 22 runs inside
+  `telepathy.js`), the 8 IRQ handlers and 10 NMI modes; §4 state machine + generator yields (`SPIN` / `NO_NMI`) + the s215-s220 lag model; §5 data
+  files with their real readers (most code reads `prg.bin` via `cpuRd`; `objtypes/shots/tables/text/sound.json` are catalog/test views); §6 the check
+  suite (`run_checks.py`: 52/52 pass in s221). `docs/architecture_exe.md`: §2.5 IRQ handlers 2-5/7 named (were "never seen"), NMI-mode list, lag-frame
+  note in §3, new §7 index of every REVERSE.md `##`-`####` section → doc section. New tools: `tools/module_summary.py` (header / imports / exports /
+  ROM addresses per web module) and `tools/doc_section_links.py` (REVERSE.md sections not named in the docs: 50 sections, 0 missing).
