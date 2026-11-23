@@ -1,0 +1,237 @@
+  ▶ ls sessions/ docs/ && wc -l TASKS.md docs/architecture_cs.md && git log --stat -1 | head -50
+  ▶ Read architecture_cs.md
+  ▶ Read TASKS.md
+  ▶ tail -60 sessions/20261123_061621_cs_session_004.txt; wc -l sessions/*005*; wc -l ../web/src/game/obj/ai_boss.js ../web/
+  ▶ tail -60 sessions/20261123_061621_cs_session_004.txt; ls src/ReC.Core/Game/Obj/
+  ▶ python3 tools/cs_coverage.py --module obj/ai_ --missing 2>&1 | tail -30
+I'm on T6, which only closes once T7's boss AIs are in. Starting with ai_final.js (19 members), then ai_boss.js (109).
+  ▶ Read ai_final.js
+  ▶ grep -rn "ai_boss\|ai_final\|AiBoss\|AiFinal" src/ --include=*.cs | head -40; sed -n 1,80p src/ReC.Core/Game/Obj/AiThund
+  ▶ Grep
+  ▶ Read Objects.cs
+  ▶ Read ai_boss.js
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP/src/ReC.Core && grep -nE "public static [^=]*\b(Rand64|ObjPos
+Found the helper signatures. Next I'm checking the Machine fields (overrun, lag flags, cycle counter) that ai_final uses.
+  ▶ grep -n "Overrun\|LagModelOn\|LagMode2\|LagMode7\|public int Cyc\|public string PassStage\|Unported\|public void Log" Ma
+  ▶ grep -n "public int Cyc\|public long Cyc\|Cyc\b\|void Log\|public void Wr\|public int Rd" Machine.cs | head; sed -n 120,
+  ▶ grep -n "public void Wr\|public void Log\|Action<string> Log\| Log" Game/Ram.cs Machine.cs | head; grep -n "Unported\|st
+  ▶ sed -n 25,40p Game/Ram.cs; sed -n 1,60p Game/Obj/AiField.cs; grep -n "Ai = new\|P(" Game/Obj/AiField.cs | head -5; grep 
+  ▶ Write AiFinal.cs
+  ▶ Read ai_boss.js
+Still reading ai_boss.js (about halfway through) before I translate it.
+  ▶ Read ai_boss.js
+  ▶ Grep
+  ▶ sed -n 160,200p Game/Obj/ObjUtil.cs; grep -n "Mirroring\|public Ppu" Machine.cs Nes/Ppu.cs | head
+  ▶ grep -n "Ppu Ppu\|Ppu? Ppu" Machine.cs; grep -n "class FarSprite\|FarSpritePass\|FarSpriteDraw" -r . | head
+Read all of ai_boss.js. One parity quirk to keep: `e9Fire` returns `spawnShot`'s bool, so a successful statue shot pops ObjUpdateAll in the JS. I'll keep that behaviour. Writing AiBoss.cs now.
+  ▶ Write AiBoss.cs
+  ▶ Edit Objects.cs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP && dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|war
+Clean build. Checking coverage, then the boss / T6 cases.
+  ▶ python3 tools/cs_coverage.py --module obj/ai_ 2>&1 | tail -12; grep -n "^    '\|^    \"" tools/cs_vs_web.py | grep -iE "
+  ▶ sed -n 1,50p tools/cs_vs_web.py; ls ../web/test/states/ | tr '\n' ' '
+  ▶ Read cs_vs_web.py
+First the four T6 leftovers:
+  ▶ python3 tools/cs_vs_web.py --no-build group6e group7f group81 group28 2>&1 | cut -c1-200
+All four pass. Running the lag-input diff and all checks for regressions:
+  ▶ python3 tools/pass_count_diff.py --no-build --checks 2>&1 | tail -8; python3 tools/cs_vs_web.py --no-build --checks 2>&1
+T6's done-criterion now holds: 23/23 checks identical, including the lag-model inputs. Next, T7's boss checks. I'll pull state / LAST / KEYS from each `*_check.mjs`.
+  ▶ Grep
+  ▶ Grep
+  ▶ Read bossflee_check.mjs
+  ▶ python3 tools/csv_last_frame.py 2>/dev/null; ls tools/
+  ▶ Grep
+  ▶ Grep
+Bosse2 ends at f3002 and finalboss at f3220. Adding the six boss checks to CASES:
+  ▶ Edit cs_vs_web.py
+  ▶ python3 tools/cs_vs_web.py --no-build bosse2 bossflee bossa6 finalboss ai70msg ai70ph3 2>&1 | cut -c1-220
+All six boss checks are identical on the first run. Checking their lag-model inputs too:
+  ▶ python3 tools/pass_count_diff.py --no-build bosse2 bossflee bossa6 finalboss ai70msg ai70ph3 2>&1 | tail -8
+T7's criterion holds too. Running all states at 120 frames for regressions and to see what else this unblocked:
+  ▶ python3 tools/cs_vs_web.py --no-build --states 2>&1 | grep -v "^ok" | cut -c1-200
+  ▶ dotnet run --project tests/ReC.Tests -c Release 2>&1 | tail -1; python3 tools/cs_coverage.py 2>&1 | tail -1; python3 too
+  ▶ dotnet run --project tests/ReC.Tests -c Release 2>&1 | tail -1; python3 tools/cs_coverage.py 2>&1 | tail -1; python3 too
+Updating TASKS.md: T6 and T7 ticked.
+  ▶ Edit TASKS.md
+  ▶ Edit TASKS.md
+Next up is T8: equip.js (43 members), shop.js (30) and the 6 saveload menu members. Starting with equip.js.
+  ▶ Read equip.js
+Read equip.js. Checking the existing Equip stub and the C# names of its callees:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP/src/ReC.Core && cat Game/States/Equip.cs; grep -rn "Equip\.\|
+  ▶ grep -n "class IrqSplit" -A5 -r . --include=*.cs | head; grep -n "NotPorted\|public static\|// js:" Game/States/SaveLoad
+  ▶ sed -n 1,24p Game/States/SaveLoad.cs; sed -n 255,300p Game/States/SaveLoad.cs; grep -rn "IrqSplit\b" --include=*.cs . | 
+Now the 6 missing saveload.js members:
+  ▶ Grep
+  ▶ Read saveload.js
+  ▶ Read saveload.js
+  ▶ grep -nE "\b(PadNew|FrameReady|IrqMode|PpuctrlShadow|PpumaskShadow|AreaId|SubState)\b =" Gen/R.cs; grep -n "static.*Busy
+Writing Equip.cs:
+  ▶ Write Equip.cs
+Now the 6 saveload.js menu-page members, added to SaveLoad.cs:
+  ▶ sed -n 25,60p Game/States/SaveLoad.cs; grep -n "SaveLoadPage\|Mode =\|Slot =" Game/States/SaveLoad.cs
+  ▶ Edit SaveLoad.cs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP && sed -i 's|^// C# s3 (T4): the menu page itself (saveLoadPa
+The `sed` needed approval. I'll make that header edit with Edit instead:
+  ▶ Edit SaveLoad.cs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP && dotnet build ReC.slnx -c Release 2>&1 | grep -E "error|war
+Clean build. Running the equip / saveload states:
+  ▶ python3 tools/cs_vs_web.py --no-build equip saveload shopmenu equip:600 saveload:600 2>&1 | cut -c1-250; python3 tools/c
+equip / saveload / shopmenu identical, including 600-frame runs. Coverage wants tags on the three inner closures (put, lookup, clamp), so I'll tag the local functions:
+  ▶ Edit Equip.cs
+  ▶ Edit Equip.cs
+  ▶ Edit Equip.cs
+  ▶ Read shop.js
+Read shop.js. Checking the C# names of PlayerUpdate / ExitScan and the existing Shop stub:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP/src/ReC.Core && grep -n "PlayerUpdate(\|ExitScan(" Game/Obj/P
+  ▶ Grep
+Writing Shop.cs:
+  ▶ Write Shop.cs
+Quick check that C# `PlayerUpdate(m, 1, new AiRet())` matches the JS `playerUpdate(m, 1)` call:
+  ▶ sed -n 430,445p Game/Obj/Player.cs
+  ▶ Grep
+Matches. Building and running the shop states:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP && dotnet build ReC.slnx -c Release 2>&1 | grep -E " error |w
+All identical, but with no keys the shops just wait at their first prompt. Looking for a web check with key sequences that drive the menus:
+  ▶ Grep
+  ▶ Grep
+No web check drives these menus, so I'll write key sequences myself. Both ports are deterministic, so any input path gives a valid comparison. First the start frames:
+  ▶ for s in armorshop toolshop inn pawnshop shopempty shopmenu equip saveload; do echo -n "$s: "; python3 tools/state_peek.
+  ▶ python3 tools/state_peek.py ../web/test/states/armorshop.json 0041,07DD,006C; python3 tools/state_peek.py ../web/test/st
+  ▶ python3 tools/state_peek.py ../web/test/states/armorshop.json | head -12
+  ▶ python3 tools/state_peek.py ../web/test/states/equip.json | head -1 | cut -c1-80; python3 tools/state_peek.py ../web/tes
+Adding menu-walk cases with my own key sequences (equip nav / equip / drop, save and load YES, shop buys, inn YES / NO, pawn-shop sell):
+  ▶ Edit cs_vs_web.py
+  ▶ python3 tools/cs_vs_web.py --no-build equip_walk equip_drop save_yes load_yes saveload_nav armorshop_buy toolshop_buy in
+All 11 identical. To confirm the keys really reached the deeper paths, I'll keep the outputs and check the end-state bytes (sub_state, gold, $7000):
+  ▶ python3 tools/cs_vs_web.py --no-build --keep inn_yes pawnshop_sell armorshop_buy load_yes equip_drop 2>&1 | tail -1; pyt
+Gold didn't change in inn_yes or pawnshop_sell. The confirm defaults to NO ($23 = 1), so a bare A means NO and YES needs a direction press first. Fixing those key sequences:
+  ▶ Edit cs_vs_web.py
+  ▶ python3 tools/cs_vs_web.py --no-build --keep armorshop_buy toolshop_buy inn_yes inn_no pawnshop_sell pawnshop_no 2>&1 | 
+Gold changed in every run (buy, inn, sell) and all are identical. Checking T8 coverage:
+  ▶ python3 tools/cs_coverage.py --module states/ 2>&1 | cut -c1-120
+Every T8 module is at 100 %. event01, which T8's criterion lists, still needs swordraise.js from T9. That's one member, so I'll port it now and then carry on into T9.
+  ▶ Read swordraise.js
+  ▶ Read Substates9.cs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP/src/ReC.Core && grep -n "static void OamClipTop\|static.*OamC
+  ▶ Write SwordRaise.cs
+  ▶ Edit Substates9.cs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP && dotnet build ReC.slnx -c Release 2>&1 | grep -E " error |w
+event01 and swordraise identical. T8 also names the `event*` states, so I'll add every event_check run at full length. Checking how event_check maps run names to states:
+  ▶ Read event_check.mjs
+  ▶ Edit cs_vs_web.py
+  ▶ Edit cs_vs_web.py
+  ▶ python3 tools/cs_vs_web.py --no-build event07 event01 event08 event21 event23 event02 event15 event28 event11 event12 ev
+All 20 event / talk runs are identical at full length. The other T8 checks named in CLAUDE.md are giveitem and itemuse. Pulling their LAST / keys:
+  ▶ Grep
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/web/test && sed -n 30,60p giveitem_check.mjs; sed -n 36,45p itemuse_
+  ▶ Read giveitem_check.mjs
+  ▶ Read itemuse_check.mjs
+  ▶ Edit cs_vs_web.py
+  ▶ python3 tools/cs_vs_web.py --no-build town02_900 giveitem_keys itemuse_herb_keys itemuse_fail_keys itemuse_opel_keys 2>&
+T8's criterion holds: every module at 100 % and all its states and checks identical. Recording it:
+  ▶ Edit TASKS.md
+  ▶ Edit TASKS.md
+On to T9. Small modules first: cure.js, formrevert.js, finalscene.js, mesia.js.
+  ▶ Read cure.js
+  ▶ Read formrevert.js
+  ▶ Read finalscene.js
+  ▶ Read mesia.js
+Read all four. Checking how play.js passes `y` to substate handlers, and the C# names for QueueAttrAll / telepathy's blackenBg:
+  ▶ grep -n "QueueAttrAll" src/ReC.Core/Game/World/PpuQueue.cs; grep -n "Substates\[\|Substates.TryGetValue\|SUBSTATES" src/
+  ▶ Grep
+  ▶ Grep
+All substates are called with `(m)` only, so JS `y = 0` defaults become one-argument overloads. Reading telepathy.js (which has blackenBg), teleport.js and changeform.js:
+  ▶ Read telepathy.js
+  ▶ Read teleport.js
+  ▶ Read changeform.js
+Read all three. Checking the C# signatures they need:
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP/src/ReC.Core && grep -nE "public static [^=]*\b(TextWindowOpe
+  ▶ Grep
+Writing the seven T9 substate files. First cure / formrevert / finalscene / mesia:
+  ▶ Write Cure.cs
+  ▶ Write FormRevert.cs
+  ▶ Write Mesia.cs
+  ▶ Write FinalScene.cs
+Now telepathy / teleport / changeform:
+  ▶ Write Telepathy.cs
+  ▶ Write Teleport.cs
+  ▶ Write ChangeForm.cs
+Checking SpendMp's Ret semantics before trimming Substates9.cs:
+  ▶ Read Player.cs
+Good. Now Substates9.cs keeps only the Wake stub:
+  ▶ Write Substates9.cs
+  ▶ cd /home/sleepy9090/Downloads/nes-port/RE-C-NES-ROM/CSHARP && dotnet build ReC.slnx -c Release 2>&1 | grep -E " error |w
+Clean build. Pulling the T9 checks' states / LAST / keys:
+  ▶ Grep
+  ▶ Grep
+  ▶ Read finalscene_check.mjs
+  ▶ Edit cs_vs_web.py
+  ▶ python3 tools/cs_vs_web.py --no-build teleport_warp teleport_magic teleport_cancel telepathy_magic telepathy_hint telepa
+13/14 identical. finalscene diverges only at f3604, when it enters main_state 4 (ending.js, not ported yet). What's left in T9 is wake.js (15) and ending.js (55). Starting with wake.js:
+  ▶ Read wake.js
+  ▶ grep -n "LsrWait" src/ReC.Core/Game/States/Talk.cs | head -2; grep -n "PalBuf =" src/ReC.Core/Gen/R.cs; grep -n "wake.js
+  ▶ Write Wake.cs
+  ▶ rm src/ReC.Core/Game/States/Substates9.cs && dotnet build ReC.slnx -c Release 2>&1 | grep -E " error |warn|Warn|Error" |
+The `rm` needs approval, so I'll empty Substates9.cs instead (a comment-only file compiles) and flag it for deletion at the end:
+  ▶ Write Substates9.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E " error |warn|Warn|Error" | sort -u | head
+Clean. Checking how wake_check starts its run:
+  ▶ Grep
+  ▶ Edit cs_vs_web.py
+  ▶ python3 tools/cs_vs_web.py --no-build wake 2>&1 | cut -c1-230; python3 tools/cs_coverage.py --module states/ 2>&1 | cut 
+The wake cut-scene is identical over 3187 frames from Reset. ending.js (55 members) is the only T9 module left. Saving progress to TASKS.md before starting it:
+  ▶ Edit TASKS.md
+  ▶ Read ending.js
+Read ending.js. Pulling its 55 inventory names so every closure gets a tag:
+  ▶ grep "ending.js" docs/obligations.csv | cut -d, -f2,4 | tr '\n' ' '; echo; grep -n "class Ending" -A8 -r src/ReC.Core/Ga
+Writing Ending.cs:
+  ▶ Write Ending.cs
+  ▶ dotnet build ReC.slnx -c Release 2>&1 | grep -E " error |warn|Warn|Error" | sort -u | head
+Clean build. Running the ending state (default plus an 8000-frame run through the credits) and finalscene into the ending:
+  ▶ python3 tools/cs_vs_web.py --no-build ending ending:8000 finalscene finalscene:3000 2>&1 | cut -c1-230
+All identical. Checking the 8000-frame run actually reached the last ending step (obj_phase = 29 = $1D):
+  ▶ python3 tools/cs_vs_web.py --no-build --keep ending:8000 2>&1 | tail -1; python3 ../tools/ram_byte.py out/ending_f8000/c
+The ending ran to step $1D (29, the final RTS loop) identically. Full regression now: every state, every CASES entry, the lag-input diff, unit tests, coverage.
+  ▶ python3 tools/cs_vs_web.py --no-build --states 2>&1 | grep -v "^ok" | cut -c1-200
+  ▶ python3 tools/cs_vs_web.py --no-build --checks 2>&1 | grep -v "^ok" | cut -c1-200
+87/87 states and 67/67 check cases identical. --checks skips the two Reset-based cases, so canon and wake separately, plus the lag-input diff:
+  ▶ python3 tools/cs_vs_web.py --no-build canon wake 2>&1 | cut -c1-200; python3 tools/pass_count_diff.py --no-build --check
+  ▶ dotnet run --project tests/ReC.Tests -c Release 2>&1 | tail -1; python3 tools/cs_coverage.py 2>&1 | tail -1; python3 too
+  ▶ Edit TASKS.md
+  ▶ Edit TASKS.md
+Now the as-built notes in architecture_cs.md and the CASES note in CLAUDE.md:
+  ▶ Edit architecture_cs.md
+  ▶ Edit CLAUDE.md
+This session closed T6 through T10: the whole game layer is now ported and matches the web port everywhere I could test it. T11 (the SDL frontend) is the next open task. I made no commits.
+
+**Verification** (both ports from the same start state with the same keys, comparing CSV columns, screen PNG, RAM, WRAM and CIRAM):
+
+| Check | Before this session | Now |
+|---|---|---|
+| States identical at 120 frames | 57/87 | **87/87** |
+| Full-length check scenarios | 23 | **67/67** identical |
+| Canonical run from Reset (2247 frames) | identical | identical |
+| Wake-up cut-scene from Reset (3187 frames) | — | identical |
+| Per-frame read/write counts that feed the lag model | 19/23 | **67/67** identical |
+| ReC.Tests | 88/88 | 88/88 |
+| Build warnings | 0 | 0 |
+| Coverage | 712/1046 | 1012 + 12 waived (97.9 %) |
+
+The 22 callables still missing are all in the platform files (audio, input, main, save), which T11 ports.
+
+**What I ported:**
+- **T7 bosses:** `Obj/AiFinal.cs` and `Obj/AiBoss.cs` (all of ai_final.js and ai_boss.js). This also closed T6, whose last three failing checks (group6e, group7f, group81) were waiting on these AIs. All six boss checks matched first time, including their lag frames.
+- **T8 menus:** `Equip.cs`, `Shop.cs`, and the save/load menu page in `SaveLoad.cs`.
+- **T9 substates and ending:** `Wake`, `Teleport`, `Telepathy`, `ChangeForm`, `Cure`, `FormRevert`, `SwordRaise`, `Mesia`, `FinalScene` and `Ending`, each in its own file. The ending ran 8000 frames identically, all the way to its final step.
+- **T10:** no fixes were needed; everything already matched once T6–T9 were in.
+
+**Things to know:**
+- **Boss quirk kept on purpose:** in the web port, a statue-boss shot that spawns successfully also ends that frame's object loop early. That behaviour comes from how the JS handles a return value. I kept it so the two ports stay identical.
+- **Menu tests use my own key presses:** no web check drives the equip, save/load, shop or inn screens. I wrote 11 key sequences myself and checked that gold changed in the buy, sell and inn runs, so those paths really ran. Note that the YES/NO prompt starts on NO, so YES needs a direction press first.
+- **Test cases:** I added all these runs to `tools/cs_vs_web.py`. `--checks` skips the two runs from Reset, so run `canon` and `wake` by name.
+
+**Cleanup for you:** `src/ReC.Core/Game/States/Substates9.cs` is now comment-only, because deleting it needed approval. You can delete it; the build doesn't depend on it. `tools/check_keys.mjs` from session 4 is still unused.
+
+TASKS.md, docs/architecture_cs.md and CLAUDE.md are updated.
+
+SESSION_SUMMARY: C# s5: T6-T10 done; ported AiBoss/AiFinal (T7), Equip/Shop/SaveLoad menu page (T8), all T9 substates + Ending; 87/87 states, 67/67 full-length checks + canon + wake identical, pass-count 67/67, 88/88 tests, 0 warnings, coverage 1012+12 waived of 1046 (97.9 %, only T11 platform files left).

@@ -140,6 +140,22 @@ Oracle = the web port: **same start (Reset or `--load-state`) + same `--keys` â†
   - The JS tables' anonymous generators / arrows (TALK_ACTIONS, EVENT_ACTIONS, USE_HANDLERS) are private named
     methods or lambdas without tags (they are not inventory callables).
 
+- C# s5 (T6-T10, game layer complete):
+  - Boss phase handlers (ai_boss.js): `delegate IEnumerable<Y>? Ph(m, x, c, r)` in a `Dictionary<int, Ph>` keyed by the
+    BossPhaseTable handler address (c = the dispatch's ASL carry, r = the AI's `AiRet`). JS return values kept for parity:
+    e9Fire returns SpawnShot's bool, so a statue shot that spawns pops ObjUpdateAll (JS `true`); ebSetup's `return 0`
+    = `r.X = 0` set at the iterator's end; AI $79 `r.X = $2F`. BossDefeated's hooks are a `Dictionary<int, Func<..>>`.
+  - JS string results (equip.js `'exit'`) and boolean generator results (MenuConfirmYesNo's C, MenuSave's "back") are
+    `Ret<bool>` arguments. Inner JS closures that the inventory lists (equip `put` / `lookup` / `clamp`, ending `rel` /
+    `next`, wake `rd` / `oam`, telepathy `row`, shop `leave`) are C# local functions with their own `// js:` tag; the two
+    identical shop.js `pr` closures are one static `Pr` (one inventory key).
+  - JS `y = 0` defaults on substates (cure, formrevert, finalscene, swordraise) = a one-argument overload passing 0
+    (play.js calls every substate with `(m)`). A member can't share its class name: telepathy.js `telepathy` ->
+    `Telepathy.TelepathyMsg`.
+  - States/Substates9.cs (the s3 stub file) is comment-only; every T9 module has its own file.
+  - `tools/cs_vs_web.py` CASES now hold every web check (boss, event / talk, giveitem / itemuse, T9 substates, wake from
+    Reset) plus T8 menu walks with chosen keys (MenuConfirmYesNo starts on NO: a direction press first = YES).
+
 ## 6. REA reconstruction tracking
 
 REA (`rea analyze-javascript-application <repo>/web/src --artifact-format directory --detail summary --evidence_output EV.json`)

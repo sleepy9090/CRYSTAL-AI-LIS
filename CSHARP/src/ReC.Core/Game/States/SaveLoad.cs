@@ -6,8 +6,7 @@
 //   HudWindowSetup(m)    19:BA65 (HUD window rebuild; also used by states 2/3/8 + SubstRestoreScreen)
 //   SubstRestoreScreen(m, res)  SubstRestoreScreen 30:CC4D (sub_state $1F; area $5F redraw, s120)
 //   SaveGame / LoadGame / LoadGameAndInit   23:BC09 / 23:BC8E / 23:BCDA (bank 23 at $A000)
-// C# s3 (T4): the menu page itself (saveLoadPage, menuSave, slotPicture, pageSetup, modeCursor, slotCursor) needs
-// states/equip.js and comes with T8.
+//   SaveLoadPage(m)      SaveLoadPage 16:9AEE + SaveLoadLoop (START in the SELECT menu; C# s5, with states/equip.js)
 // Copy-length quirks kept: BlockCopy copies lo + 1 + hi bytes, SaveSlotCopy $2FF bytes, SaveGame's not-allowed path
 // mirrors $7D00-$7FFF -> $6D00-$6FFF only from offset X = area_id.
 using ReC.Game.World;
@@ -46,6 +45,183 @@ public static class SaveLoad
     public static IEnumerable<Y> Wait48(Machine m)
     {
         for (int x = 0x30; x > 0; x--) foreach (var s in LsrWait(m)) yield return s;
+    }
+
+    private const int Mode = 0x646A;         // b0: 0 = SAVE, 1 = LOAD
+    private const int Slot = 0x646B;         // save_slot_sel b0
+
+    // js: game/states/saveload.js slotPicture
+    /// <summary>16:88A8: 3x3 picture at column $26 / row $27 of the $2800 window, tiles $29.. ($FF = blank 16:892A)</summary>
+    public static IEnumerable<Y> SlotPicture(Machine m)
+    {
+        int c = (m.Rd(0x26) << 3) & 0xFF, r = m.Rd(0x27);
+        for (int i = 0; i < 3; i++) { int cb = r & 1; r >>= 1; c = (c >> 1) | (cb << 7); }
+        m.Wr(0x26, c); m.Wr(0x27, r);
+        m.Wr(0x20, c); m.Wr(0x21, (r + 0x28) & 0xFF);
+        m.Wr(0x24, 3); m.Wr(0x25, 0);
+        bool blank = m.Rd(0x29) == 0xFF;
+        if (blank) m.Wr(0x29, 0);
+        for (int row = 0; row < 3; row++)
+        {                                                 // 88D9 / 8905 x 3
+            foreach (var s in Pause.WaitPpuQueue(m)) yield return s;
+            for (int x = 0; x < 3; x++)
+            {
+                int t = m.Rd(0x29);
+                m.Wr(0x6000 + x, blank ? Prg.CpuRd(m, 0x892A + t) : t);
+                m.Wr(0x29, (t + 1) & 0xFF);
+            }
+            Equip.MenuFlush(m);
+            int v = m.Rd(0x20) + 0x20;
+            m.Wr(0x20, v & 0xFF);
+            m.Wr(0x21, (m.Rd(0x21) + (v >> 8)) & 0xFF);
+        }
+    }
+
+    // js: game/states/saveload.js pageSetup
+    /// <summary>16:9D52: hide OAM, strings $0F $13 $35, CHR alt $3C/$38, 6 x frame rows (X = 9) from $28C0</summary>
+    private static IEnumerable<Y> PageSetup(Machine m)
+    {
+        foreach (var s in Equip.HideOam(m)) yield return s;
+        foreach (int str in new[] { 0x0F, 0x13, 0x35 }) foreach (var s in Equip.MenuPrint(m, str)) yield return s;
+        foreach (var s in Death.WaitFrame(m)) yield return s;
+        m.Wr(0x58, 0x3C); m.Wr(0x59, 0x38);
+        m.Wr(0x21, 0x28); m.Wr(0x20, 0xC0); m.Wr(0x25, 0); m.Wr(0x24, 0x40);
+        m.Wr(0x19, 6);
+        do
+        {
+            foreach (var s in Equip.FrameRows(m, 9)) yield return s;
+            m.Wr(0x19, (m.Rd(0x19) - 1) & 0xFF);
+        } while (m.Rd(0x19) != 0);
+    }
+
+    // js: game/states/saveload.js modeCursor
+    /// <summary>16:9C85 (X = 0 SAVE / 1 LOAD): the mode cursor (shape 3, tables 16:9D9C-9DA3) at OAM slot $39 + SFX $4B</summary>
+    private static void ModeCursor(Machine m, int x)
+    {
+        m.Wr(0x60FB, Prg.CpuRd(m, 0x9D9C + x));
+        m.Wr(0x60F8, Prg.CpuRd(m, 0x9D9E + x));
+        m.Wr(0x60F9, Prg.CpuRd(m, 0x9DA2 + x));
+        m.Wr(0x60FA, Prg.CpuRd(m, 0x9DA0 + x));
+        m.Wr(0x12, 3); m.Wr(0x2E, 0x39);
+        Equip.MenuSprDraw(m);
+        Equip.MenuSnd(m, 0x4B);
+    }
+
+    // js: game/states/saveload.js slotCursor
+    /// <summary>16:9CAE: the two slot arrows (OAM $027C / $0280, tile $FE, y 16:9CDE[$646B &amp; 1]) + SFX $4B</summary>
+    private static void SlotCursor(Machine m)
+    {
+        int y = Prg.CpuRd(m, 0x9CDE + (m.Rd(Slot) & 1));
+        m.Wr(0x0280, y); m.Wr(0x027C, y);
+        m.Wr(0x0281, 0xFE); m.Wr(0x027D, 0xFE);
+        m.Wr(0x0282, 0x00); m.Wr(0x027E, 0x40);
+        m.Wr(0x0283, 0x30); m.Wr(0x027F, 0xD0);
+        Equip.MenuSnd(m, 0x4B);
+    }
+
+    // js: game/states/saveload.js menuSave
+    /// <summary>MenuSave 16:9BE1: back.V = true to go back to SaveLoadLoop (confirm = NO), false = SaveLoadExit</summary>
+    private static IEnumerable<Y> MenuSave(Machine m, Ret<bool> back)
+    {
+        m.Wr(SaveState, 0xFB);
+        int msg = 0;
+        if ((Prg.CpuRd(m, 0xBF00 + m.Rd(R.AreaId)) & 1) == 0) msg = 0x16;   // "Cannot save!"
+        else if ((m.Rd(0x0710) & 0x0F) != 0) msg = 0x38;                    // player status
+        if (msg != 0)
+        {
+            Equip.MenuSnd(m, 0x4E);
+            foreach (var s in Equip.MenuPrint(m, 0x0F)) yield return s;
+            foreach (var s in Equip.MenuPrint(m, msg)) yield return s;
+            foreach (var s in Wait48(m)) yield return s;  // 9BFD
+            m.Wr(R.PadNew, 0);
+            m.Wr(SaveState, 0xAB);
+            back.V = false;
+            yield break;
+        }
+        foreach (var s in Equip.MenuPrint(m, 0x37)) yield return s;
+        foreach (var s in Equip.MenuPrint(m, 0x0E)) yield return s;
+        var no = new Ret<bool>();
+        foreach (var s in Equip.Confirm(m, 0xA1, no)) yield return s;
+        if (no.V)
+        {
+            foreach (var s in Equip.MenuPrint(m, 0x0F)) yield return s;
+            back.V = true;
+            yield break;
+        }
+        int sl = m.Rd(Slot) & 1;
+        SaveGame(m);
+        SaveSlotCopy(m, sl != 0 ? 6 : 4);
+        SaveSlotCopy(m, sl != 0 ? 7 : 5);
+        int c = m.Rd(0x70F5);
+        m.Wr(sl != 0 ? 0x70F2 : 0x70F0, c); m.Wr(sl != 0 ? 0x70F3 : 0x70F1, c);
+        foreach (var s in Busy(m, SaveLag)) yield return s;
+        back.V = false;
+    }
+
+    // js: game/states/saveload.js saveLoadPage
+    /// <summary>SaveLoadPage 16:9AEE + SaveLoadLoop 16:9B3A (returns at SaveLoadExit 16:9C7A)</summary>
+    public static IEnumerable<Y> SaveLoadPage(Machine m)
+    {
+        m.Wr(SaveState, 0); m.Wr(Mode, 0); m.Wr(Slot, 0);
+        foreach (var s in PageSetup(m)) yield return s;
+        ModeCursor(m, 0);
+        SlotCursor(m);
+        foreach (var s in Equip.MenuPrint(m, 0x39)) yield return s;
+        foreach (var s in Equip.MenuPrint(m, 0x17)) yield return s;
+        m.Wr(0x19, 0);
+        do
+        {                                                 // 9B14: the SAVE / LOAD pictures
+            int x = m.Rd(0x19);
+            m.Wr(0x26, Prg.CpuRd(m, 0x9D8D + x)); m.Wr(0x27, Prg.CpuRd(m, 0x9D92 + x)); m.Wr(0x29, Prg.CpuRd(m, 0x9D97 + x));
+            foreach (var s in SlotPicture(m)) yield return s;
+            m.Wr(0x19, (m.Rd(0x19) + 1) & 0xFF);
+        } while (((m.Rd(0x19) - 2) & 0x80) != 0);
+        foreach (var s in Equip.MenuPrint(m, 0x14)) yield return s;
+        foreach (var s in Equip.MenuPrint(m, 0x15)) yield return s;
+        var back = new Ret<bool>();
+        var no = new Ret<bool>();
+        for (; ; )
+        {                                                 // SaveLoadLoop
+            m.Wr(SaveState, 0);
+            foreach (var s in Death.WaitFrame(m)) yield return s;
+            Pads.ReadPadsMenu(m);
+            int p = m.Rd(R.PadNew);
+            if ((p & 0x30) != 0) yield break;             // SELECT / START
+            if ((p & 0x03) != 0)
+            {                                             // LEFT / RIGHT: SAVE <-> LOAD
+                m.Wr(Mode, (m.Rd(Mode) + 1) & 0xFF);
+                ModeCursor(m, m.Rd(Mode) & 1);
+                continue;
+            }
+            if ((p & 0x0C) != 0)
+            {                                             // UP / DOWN: slot (re-print the old slot's row)
+                foreach (var s in Equip.MenuPrint(m, (m.Rd(Slot) & 1) != 0 ? 0x39 : 0x3A)) yield return s;
+                m.Wr(Slot, (m.Rd(Slot) + 1) & 0xFF);
+                SlotCursor(m);
+                continue;
+            }
+            if ((p & 0x40) != 0) { m.Wr(SaveState, 0xAB); yield break; }   // B
+            if ((p & 0x80) == 0) continue;
+            if ((m.Rd(Mode) & 1) == 0)
+            {                                             // A on SAVE
+                foreach (var s in MenuSave(m, back)) yield return s;
+                if (back.V) continue;
+                yield break;
+            }
+            foreach (var s in Equip.MenuPrint(m, 0x36)) yield return s;   // A on LOAD: "Load this game?"
+            foreach (var s in Equip.MenuPrint(m, 0x0E)) yield return s;
+            foreach (var s in Equip.Confirm(m, 0xA1, no)) yield return s;
+            if (no.V)
+            {
+                foreach (var s in Equip.MenuPrint(m, 0x0F)) yield return s;
+                continue;
+            }
+            SaveSlotCopy(m, (m.Rd(Slot) & 1) != 0 ? 2 : 0);
+            foreach (var s in Busy(m, LoadLag)) yield return s;   // the NMI falls inside SaveSlotCopy
+            LoadGame(m);
+            m.Wr(SaveState, 0xFA);
+            yield break;
+        }
     }
 
     // js: game/states/saveload.js saveSlotCopy

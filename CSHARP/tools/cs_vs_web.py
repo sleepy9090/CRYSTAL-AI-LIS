@@ -37,6 +37,9 @@ def every(f0, n, step=12, spec='B:4'):
     return ' '.join(f'{f0 + step * i}:{spec}' for i in range(n))
 
 
+K4 = '2621:A 2661:A 2701:A 2741:A'   # event_check.mjs KEYS4
+
+
 # name -> dict(state=<json stem or None for Reset>, frames=N | last=F, keys='..', frame0=N (optional))
 # Frames / keys per state come from the matching ../web/test/*_check.mjs (LAST + KEYS, copied as written there;
 # `last` = the check's LAST frame, frames = last - state frame0 + 1 = the check's run). `--checks` runs every
@@ -105,6 +108,66 @@ CASES = {
     'killlevelup': dict(state='killlevelup', last=2823, keys=' '.join(
         f'{f}:{"BA"[i % 2]}:4' for i, f in enumerate([2527, 2547, 2567, 2587, 2606, 2626, 2646, 2666, 2686, 2707]))
         + ' 2727:RIGHT:4 ' + ' '.join(f'{f}:{"BA"[i % 2]}:4' for i, f in enumerate([2747, 2767, 2787, 2807]))),
+    # T7 (C# s5): boss checks (LAST of bosse2 / finalboss = the ref CSV's last row; bossflee runs to LAST + 1)
+    'bosse2': dict(state='bosse2', last=3002, keys=''),
+    'bossflee': dict(state='bossflee', last=2761, keys='2695:A 2735:A 2775:A'),
+    'bossa6': dict(state='finallocked', last=2535, keys=''),
+    'finalboss': dict(state='finalboss', last=3220, keys=''),
+    'ai70msg': dict(state='ai70msg', last=3179, keys=' '.join(f'{2866 + 30 * i}:A' for i in range(11))),
+    'ai70ph3': dict(state='restore5f', last=2758, keys=''),
+    # T8 (C# s5): event_check.mjs runs (state eventNN / talkDD, keys, last), at full length
+    'event07': dict(state='event07', last=2739, keys='2621:A 2661:A 2701:A'),
+    'event01': dict(state='event01', last=2999, keys=' '.join(f'{f + 1}:A' for f in range(2700, 2901, 40))),
+    'event08': dict(state='event08', last=2839, keys=K4),
+    'event21': dict(state='event21', last=2839, keys=''),
+    'event23': dict(state='event23', last=3099, keys=' '.join(f'{f + 1}:A' for f in range(2620, 3061, 40))),
+    **{f'event{n}': dict(state=f'event{n}', last=2839, keys=K4) for n in ('02', '15', '28', '11', '12', '13')},
+    **{f'event{n}': dict(state=f'event{n}', last=2839, keys='') for n in ('19', '20', '19b')},
+    **{f'talk{n}': dict(state=f'talk{n}', last=2839, keys=K4) for n in ('16', '20', '22', '25', '26')},
+    'talk19': dict(state='talk19', last=2839, keys=''),
+    # giveitem_check.mjs / itemuse_check.mjs keys; run past their refs' last rows (frames, not last)
+    'town02_900': dict(state='town02_enter', frames=900, keys=''),
+    'giveitem_keys': dict(state='giveitem', frames=500, keys='2601:A 2641:A'),
+    **{f'itemuse_{n}_keys': dict(state=f'itemuse_{n}', frames=400, keys='2621:A 2661:A 2701:A')
+       for n in ('herb', 'fail', 'opel')},
+    # T9 (C# s5): substate checks (state, keys, LAST from each *_check.mjs; frames= where the check reads its ref's end)
+    'wake': dict(state=None, frames=3400 - 214 + 1, keys='1250:START 1400:START 1600:START 1700:START 2301:START'),
+    'teleport_warp': dict(state='teleport_warp', last=2964, keys='2600:DOWN 2630:A'),
+    'teleport_magic': dict(state='teleport_magic', last=2844, keys='2600:RIGHT 2630:A'),
+    'teleport_cancel': dict(state='teleport_magic', frames=200, keys='2600:B'),
+    'telepathy_magic': dict(state='telepathy_magic', last=2844, keys='2600:RIGHT 2630:A 2720:A'),
+    'telepathy_hint': dict(state='telepathy_hint', frames=300, keys='2600:LEFT 2630:A 2720:A'),
+    'telepathy_cancel': dict(state='telepathy_magic', frames=150, keys='2600:B'),
+    'changeform': dict(state='changeform', last=2728, keys='2600:RIGHT 2630:RIGHT 2660:A'),
+    'changeform_left': dict(state='changeform', frames=250, keys='2600:LEFT 2630:A'),
+    'changeform_cancel': dict(state='changeform', frames=150, keys='2600:B'),
+    'cure': dict(state='cure', last=2727, keys='2720:A 2760:A'),
+    'formrevert': dict(state='formrevert', last=2797, keys=''),
+    'swordraise': dict(state='swordraise', frames=133, keys=''),
+    'mesia': dict(state='mesia', frames=320, keys=''),
+    'finalscene': dict(state='finalscene', last=3620, keys=' '.join(f'{f}:A:2' for f in range(2640, 3521, 40))),
+    # T8 (C# s5): menu walks. No web check drives these screens; keys chosen here to reach the menu paths
+    # (cursor moves, equip / unequip, drop with YES, save / load YES, shop buy / sell, inn YES / NO).
+    'equip_walk': dict(state='equip', last=3370, keys='2600:DOWN:2 2630:RIGHT:2 2660:A:2 2700:A:2 2740:DOWN:2 '
+                       '2770:DOWN:2 2800:RIGHT:2 2830:A:2 2870:UP:2 2900:LEFT:2 2930:B:2 2970:RIGHT:2 3000:A:2 '
+                       '3100:DOWN:2 3130:DOWN:2 3160:DOWN:2 3190:LEFT:2 3220:SELECT:2'),
+    'equip_drop': dict(state='equip', last=3200, keys='2600:DOWN:2 2630:DOWN:2 2660:DOWN:2 2690:DOWN:2 '
+                       '2720:B:2 2760:LEFT:2 2790:A:2 2950:B:2 2990:A:2 3100:SELECT:2'),
+    'save_yes': dict(state='saveload', last=3300, keys='2720:START:2 2860:DOWN:2 2900:A:2 2960:LEFT:2 2990:A:2'),
+    'load_yes': dict(state='saveload', last=3300, keys='2720:START:2 2860:RIGHT:2 2900:A:2 2960:LEFT:2 2990:A:2'),
+    'saveload_nav': dict(state='saveload', last=3200, keys='2720:START:2 2860:UP:2 2890:RIGHT:2 2920:RIGHT:2 '
+                         '2950:A:2 3000:A:2 3050:B:2 3120:SELECT:2'),
+    # MenuConfirmYesNo starts on NO ($23 = 1): a direction press first = YES
+    'armorshop_buy': dict(state='armorshop', last=3400, keys='2640:RIGHT:2 2670:A:2 2730:RIGHT:2 2760:A:2 '
+                          '2830:A:2 2880:RIGHT:2 2910:A:2 2960:LEFT:2 2990:A:2 3060:A:2 3110:B:2 3150:RIGHT:2 '
+                          '3180:A:2 3240:SELECT:2'),
+    'toolshop_buy': dict(state='toolshop', last=3400, keys='2640:RIGHT:2 2670:A:2 2730:RIGHT:2 2760:A:2 '
+                         '2830:A:2 2880:RIGHT:2 2910:A:2 2960:A:2 3030:A:2 3080:B:2 3120:A:2 3180:A:2'),
+    'inn_yes': dict(state='inn', last=3300, keys='2640:RIGHT:2 2670:A:2 2900:A:2 3000:A:2'),
+    'inn_no': dict(state='inn', last=3000, keys='2640:A:2 2760:A:2'),
+    'pawnshop_sell': dict(state='pawnshop', last=3500, keys='2640:RIGHT:2 2670:A:2 2820:DOWN:2 2850:A:2 '
+                          '2900:LEFT:2 2930:A:2 3000:RIGHT:2 3030:A:2 3100:DOWN:2 3130:B:2 3180:A:2 3260:A:2'),
+    'pawnshop_no': dict(state='pawnshop', last=3000, keys='2640:A:2 2760:A:2'),
 }
 
 

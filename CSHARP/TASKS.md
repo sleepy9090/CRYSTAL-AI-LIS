@@ -79,7 +79,7 @@ If parts remain, write them into the same task and leave it unchecked (no new fo
   player. There is no `area1_enter` state in ../web/test/states (area 1 is entered in the canon run, which passes).)
   **C# s4 done:** with AI $30/$78 (T6) and GiveItem (T8) ported, `cs_vs_web.py town02_enter:600` = 600 frames identical
   (csv, png, ram, wram, ciram); canon still 2247 frames identical.
-- [ ] T6 field AIs: `Obj/{AiWalk,AiField,AiStatic,AiShot,AiEffect,AiThunder}.cs`. Done when 100 % coverage for them and
+- [x] T6 field AIs: `Obj/{AiWalk,AiField,AiStatic,AiShot,AiEffect,AiThunder}.cs`. Done when 100 % coverage for them and
   the group / fan / kill / thunder states pass.
   (C# s3: AiStatic, AiShot, AiEffect done (100 %).)
   **C# s4:** `Obj/AiWalk.cs` (22/22), `Obj/AiField.cs` (33/33), `Obj/AiThunder.cs` (5/5) ported; `Objects.AiTable` merges
@@ -92,9 +92,21 @@ If parts remain, write them into the same task and leave it unchecked (no new fo
   per pass). Remaining (all T7 AIs, not T6 code): group6e from f2859 (reveal into type $7D = AI $66, ai_boss.js),
   group7f / group81 (AI $70, ai_final.js; group81 from f2507), group28's CSV passes but its AI $63 dispatch counts
   differ (stub). This task closes when T7 lands and those three pass.
-- [ ] T7 boss AIs: `Obj/AiBoss.cs` (1,436 JS lines, may span sessions), `Obj/AiFinal.cs`. Done when 100 % coverage and
+  **C# s5 done:** with T7's AiBoss / AiFinal, `cs_vs_web.py --checks` = **23/23 identical at full length** (group6e,
+  group7f, group81 now too) and `pass_count_diff.py --checks` 23/23 (group28's AI $63 counts now match).
+- [x] T7 boss AIs: `Obj/AiBoss.cs` (1,436 JS lines, may span sessions), `Obj/AiFinal.cs`. Done when 100 % coverage and
   the boss states pass (bosse2, bossflee, bossa6, finalboss, ai70*).
-- [ ] T8 menu / town substates: `States/{Pause,Equip,SaveLoad,Shop,Talk,GiveItem}.cs`. Done when 100 % coverage and
+  **C# s5 done:** `Obj/AiFinal.cs` (19/19: Ai70PhaseDispatch phases 0-12, HitFlashPal, FlashIrq with the s174 heuristic /
+  s220 `fl70` cycle booking) and `Obj/AiBoss.cs` (109/109: BossPhaseDispatch keyed by handler address, AIs $60-$6F,
+  $79, $3F, BossDefeated + its 5 hooks incl. BossFleeSpeech / BossHookA6). Phase handlers are `Ph(m, x, c, r)` (c = the
+  dispatch's ASL carry for e2Walk; r = the JS return: e9Fire's SpawnShot bool pops ObjUpdateAll as in the JS, ebSetup
+  r.X = 0, AI $79 r.X = $2F). `Objects.AiTable` now merges every module in the JS spread order. New CASES (from the
+  checks): bosse2 (f3002), bossflee (2761, keys 2695/2735/2775:A), bossa6 (finallocked, 2535), finalboss (3220),
+  ai70msg (3179, 11 A presses), ai70ph3 (restore5f, 2758): **6/6 identical** (csv, png, ram, wram, ciram) and
+  `pass_count_diff.py` 6/6 (bosse2 7, finalboss 27, ai70ph3 21 lag-model frames match). States at 120 frames: 67/87
+  (event21 now passes; the 20 left are T8 shop / equip / saveload and T9 substates / ending). ReC.Tests 88/88, build
+  0 warnings, coverage 828 + 12 waived of 1046 (80.3 %).
+- [x] T8 menu / town substates: `States/{Pause,Equip,SaveLoad,Shop,Talk,GiveItem}.cs`. Done when 100 % coverage and
   their states pass (equip, armorshop, …, giveitem, event*, itemuse*).
   (C# s3: Pause.cs 10/10 done; SaveLoad.cs 18/24, left: saveLoadPage, menuSave, slotPicture, pageSetup, modeCursor,
   slotCursor (need equip.js). Equip / Shop / Talk / GiveItem are stub classes; GiveItem.EventAction / Talk.TalkAction
@@ -106,11 +118,39 @@ If parts remain, write them into the same task and leave it unchecked (no new fo
   itemuse_fail/herb/opel, talk16/19/20/22/25/26, talk_act1/act8/probe, outofmp, tmp_iu. Left: equip.js (43), shop.js
   (30), saveload.js 6 menu-page members; event01 needs swordraise.js (T9), event21 AI $6B (T7); armorshop / inn /
   pawnshop / toolshop / shopempty / shopmenu / equip / saveload states fail on the Shop / Equip stubs.
-- [ ] T9 remaining substates + ending: `States/{Wake,Teleport,Telepathy,ChangeForm,Cure,FormRevert,SwordRaise,Mesia,
+  **C# s5 done:** `States/Equip.cs` (44/44: MenuPrint + FE/FD/FC escapes, MenuSprDraw, grids, cursor, A equip /
+  unequip, B drop + YES/NO, sort / reselect, shop mode price / sell / "Anything else?", SubstEquipMenu; the s121 IRQ 2
+  re-apply hook in SetupGrid; JS 'exit' = `Ret<bool>`), `States/Shop.cs` (30/30: walk in / out, pawn shop, armor /
+  tool buy loop, inn, empty shop; the two JS `pr` closures = one static `Pr`), `States/SaveLoad.cs` 24/24 (SaveLoadPage,
+  MenuSave, SlotPicture, PageSetup, ModeCursor, SlotCursor). Also T9's `States/SwordRaise.cs` (1/1, needed by event01).
+  Checks: every T8 state at 120 frames + 600-frame runs of equip / saveload / armorshop / inn / pawnshop / toolshop /
+  shopempty identical; new CASES (no web check drives these screens, keys chosen here; confirms start on NO, so a
+  direction press first = YES): equip_walk (900 f), equip_drop, save_yes, load_yes, saveload_nav, armorshop_buy,
+  toolshop_buy, inn_yes, inn_no, pawnshop_sell, pawnshop_no = **11/11 identical** (gold changes in the buy / inn /
+  sell runs, so those paths ran). event_check.mjs as CASES (event01/02/07/08/11/12/13/15/19/19b/20/21/23/28, talk16/19/
+  20/22/25/26 with its keys + LAST) = **20/20 identical**; giveitem / itemuse_herb/fail/opel with their check keys and
+  town02_enter 900 f = 5/5 identical.
+- [x] T9 remaining substates + ending: `States/{Wake,Teleport,Telepathy,ChangeForm,Cure,FormRevert,SwordRaise,Mesia,
   FinalScene,Ending}.cs`. Done when 100 % game-layer coverage and their states pass.
   (C# s3: their stub classes sit together in `States/Substates9.cs`; move each into its own file when porting it.)
-- [ ] T10 full parity: `cs_vs_web.py --canon --states` passes for every `../web/test/states/*.json`. Fix differences in
+  **C# s5:** ported, each in its own file: `Wake.cs` 15/15, `Teleport.cs` 7/7, `Telepathy.cs` 12/12 (JS `telepathy` ->
+  `TelepathyMsg`: a member can't share its class name), `ChangeForm.cs` 5/5, `Cure.cs` 1/1, `FormRevert.cs` 2/2,
+  `SwordRaise.cs` 1/1, `Mesia.cs` 4/4, `FinalScene.cs` 4/4 (JS `y = 0` defaults = one-argument overloads, as play.js
+  calls every substate with `(m)`; teleport's `yIn = m.rd($010F)` overload reads at the call). `Substates9.cs` is now
+  comment-only (rm needs approval in the sandbox; delete it). New CASES from the checks: wake (Reset -> f3400, 3187 f),
+  teleport_warp / _magic / _cancel, telepathy_magic / _hint / _cancel, changeform / _left / _cancel, cure, formrevert,
+  swordraise, mesia = **all identical**; finalscene identical through f3604, then main_state 4 = ending.js.
+  **C# s5 done:** `States/Ending.cs` (55/55: EndingInit / EndingTick, fades, sub-effects, metasprites, blitters, all
+  30 steps keyed by handler address; JS `throw` = InvalidOperationException). `ending` 120 f + **8000 f identical**
+  (ends at step $1D, the final RTS loop), `finalscene` (LAST 3620) and 3000 f identical (into the ending). Game layer
+  100 % (states/ 430/430, obj/ 238/238); the only missing inventory entries are the 22 platform callables (audio.js,
+  input.js, main.js, save.js = T11).
+- [x] T10 full parity: `cs_vs_web.py --canon --states` passes for every `../web/test/states/*.json`. Fix differences in
   C#; the web port is the reference (if the web port is known-wrong vs tools.emu, keep parity and comment it).
+  **C# s5 done (no fixes needed after T6-T9):** `--states` **87/87 identical** (120 f each), `canon` 2247 f identical,
+  `--checks` **67/67** CASES identical at full length (every *_check.mjs run with its state / keys / LAST, plus the
+  T8 menu walks), `wake` (Reset -> f3400) identical; `pass_count_diff.py --checks` 67/67 (lag-model inputs per stage
+  per frame); ReC.Tests 88/88; build 0 warnings; coverage 1012 + 12 waived of 1046 (97.9 %, rest = T11 platform).
 - [ ] T11 playable frontend `src/ReC.Sdl`: P/Invoke `libSDL2-2.0.so.0` (`Sdl.cs`, no NuGet), window with integer scale,
   fixed-step 60.0988 Hz, keyboard like ../web/index.html (arrows/WASD, X/K = A, Z/J = B, Enter = Start,
   Right Shift/Tab = Select, P pause, M mute) + game controller, APU audio via `SDL_QueueAudio`, battery WRAM in
