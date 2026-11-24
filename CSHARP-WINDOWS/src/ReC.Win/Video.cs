@@ -34,6 +34,8 @@ internal sealed class VideoSettings
     public bool Enhanced32;
     /// <summary>T18: with Enhanced, the HD look (Gpu.cs: Direct3D 11 lighting, shadows, bloom at the window's resolution)</summary>
     public bool Hd;
+    /// <summary>T19: HD effects (Video > Graphics): parallax depth, shadows, atmosphere (clouds, mist, dust), material detail</summary>
+    public bool HdParallax = true, HdShadows = true, HdAtmosphere = true, HdDetail = true;
     /// <summary>T13 Audio menu: CD quality (CdAudio.cs) instead of the original mono stream; stereo / reverb for it</summary>
     public bool CdAudio, AudioStereo = true, AudioReverb;
 
@@ -123,11 +125,22 @@ internal sealed class VideoSettings
         $"fullscreen_mode={(FsW > 0 ? $"{FsW}x{FsH}" : "desktop")}",
         $"menu_bar={(MenuBar ? 1 : 0)}",
         $"graphics={(!Enhanced ? "original" : Hd ? "hd" : Enhanced32 ? "enhanced32" : "enhanced")}",
+        $"hd_effects={HdEffects()}",
         $"audio={(CdAudio ? "cd" : "original")}",
         $"audio_stereo={(AudioStereo ? 1 : 0)}",
         $"audio_reverb={(AudioReverb ? 1 : 0)}",
         $"upscale={ReC.Win.Upscale.Filters.First(f => f.K == Upscale).Key}",
     }) + "\n";
+
+    private string HdEffects()
+    {
+        var e = new List<string>();
+        if (HdParallax) e.Add("parallax");
+        if (HdShadows) e.Add("shadows");
+        if (HdAtmosphere) e.Add("atmosphere");
+        if (HdDetail) e.Add("detail");
+        return e.Count > 0 ? string.Join(",", e) : "none";
+    }
 
     public static VideoSettings Parse(string text)
     {
@@ -158,6 +171,13 @@ internal sealed class VideoSettings
                 case "menu_bar": v.MenuBar = val != "0"; break;
                 case "audio": if (val is "original" or "cd") v.CdAudio = val == "cd"; break;
                 case "audio_stereo": v.AudioStereo = val != "0"; break;
+                case "hd_effects":
+                {
+                    var e = val.Split(',', StringSplitOptions.TrimEntries);
+                    v.HdParallax = e.Contains("parallax"); v.HdShadows = e.Contains("shadows");
+                    v.HdAtmosphere = e.Contains("atmosphere"); v.HdDetail = e.Contains("detail");
+                    break;
+                }
                 case "audio_reverb": v.AudioReverb = val == "1"; break;
                 case "graphics":
                     if (val is "original" or "enhanced" or "enhanced32" or "hd")

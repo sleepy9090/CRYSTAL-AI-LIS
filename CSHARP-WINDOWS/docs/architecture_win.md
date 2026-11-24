@@ -172,3 +172,20 @@ CSHARP-WINDOWS/
     swap chain is released when another look is chosen (GDI draws again); `--dump-window` reads the back buffer
     (`Gpu.Capture`, staging copy). No Direct3D 11 / compiler -> stderr + title say so and the 32-bit look is used.
     Under Wine (wined3d on Xvfb's llvmpipe GL) the device is "hardware, feature level 11.0" and all shaders compile.
+14. **HD materials, shadows, parallax (T19):** second core output hook `Ppu.LineScroll` (null = off: every parity run;
+    set with Tags while Enhanced is on): per line, after the split hook, v (15 bits) | fine X << 16, -1 = rendering off;
+    never read back (`tests` `win_hd_scene`: Fb identical with it on). `HdScene.cs` per frame (CPU): Info texture
+    256x240 (lift, NES colour, flags sprite / void / UI, bilinear void mask), Lines (world x, y of each line in the
+    512x480 nametable space + UI flag), camera (frame-to-frame playfield scroll delta, wrap-aware, > 48 px = cut),
+    outdoor (mid-tone greens), void gate, mean colour, play (HUD present). Playfield = the most common per-line offset
+    (world y - line); UI = rendering off, or lines of another offset with font-bank text (CHR 1 KB banks $38 $39 $3C
+    $3D) within 8 lines in the same offset run (a mid-screen scroll change without text stays playfield). Void = NES
+    blacks of the background (or a dark backdrop) opened with a 3x3 square. Material table: 64 entries by hue.
+    `Gpu.cs` light pass adds: world-anchored value noise (lattice periods divide 512 x 480, so it repeats with the
+    nametables) per material as albedo variation + detail normals; coloured sun / sky normalised by luminance; Blinn
+    per material + glints; rim light on sprites; 12-tap AO; 24-step soft shadow with distance penumbra; cloud
+    shadows (outdoor x atmosphere x shadows); chasm (cliff walls by stepping toward the screen centre through the void
+    mask, 3 fBm rock layers at rate 1 / (1 + 0.05 depth) in scale and camera, ledge shadow lookup toward the sun, rim
+    darkening); motes (rate 1.25) and mist (1.3). UI pixels go out with alpha 0 and skip bloom and grading. Composite:
+    shoulder tone curve (identity below 0.75), saturation 1.08, contrast 0.12, vignette 0.22. Four switches
+    (`Gpu.Parallax / Shadows / Atmosphere / Detail`, menu ids 275-278, `--menu hd:parallax` etc. toggle).

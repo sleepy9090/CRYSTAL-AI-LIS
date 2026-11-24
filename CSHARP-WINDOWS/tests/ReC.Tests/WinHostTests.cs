@@ -405,6 +405,57 @@ internal static partial class Program
             True(v.Enhanced && v.Hd && !v.Enhanced32 && v.Serialize().Contains("graphics=hd"), "ini graphics=hd");
             Eq(274, Window.CommandId("graphics:hd"), "--menu graphics:hd");
         }),
+        ("win_hd_scene", () =>
+        {
+            // T19 HD scene analysis (HdScene.cs) + the output-only Ppu.LineScroll
+            var d = TheData.Value;
+            var m1 = new Machine(d, _ => { }); var m2 = new Machine(d, _ => { });
+            m1.Reset(); m2.Reset();
+            m2.Ppu.LineScroll = new int[240];
+            for (int f = 0; f < 400; f++) { m1.RunFrame(0); m2.RunFrame(0); }
+            True(m1.Ppu.Fb.AsSpan().SequenceEqual(m2.Ppu.Fb), "LineScroll never changes Fb");
+            True(m2.Ppu.LineScroll.Any(v => v != 0), "LineScroll recorded");
+
+            Eq("0,5,2,1,3,4", string.Join(",", new[] { 0x0F, 0x2A, 0x21, 0x00, 0x30, 0x17 }.Select(HdScene.Kind)), "material kinds");
+            // synthetic gameplay frame: green ground, a 20x20 black pit, a 1-pixel black line, HUD text under a scroll split
+            var fb = Enumerable.Repeat((byte)0x2A, 256 * 240).ToArray();
+            var tags = new int[256 * 240];
+            for (int i = 0; i < tags.Length; i++) tags[i] = Ppu.TagValid | 1;
+            for (int y = 50; y < 70; y++) for (int x = 50; x < 70; x++) fb[y * 256 + x] = 0x0F;
+            for (int x = 10; x < 200; x++) fb[120 * 256 + x] = 0x0F;
+            for (int y = 200; y < 208; y++) for (int x = 20; x < 100; x++) tags[y * 256 + x] = Ppu.TagValid | 0x38 << 6;
+            // v at each line's start as the PPU makes it: world y = top + line (coarse Y / fine Y), x = coarse X + NT bit
+            static int V(int wx, int wy) => (wx >> 3 & 31) | (wx & 256) << 2 | (wy % 240 >> 3) << 5 | (wy % 240 & 7) << 12 | (wy >= 240 ? 0x800 : 0);
+            var ls = new int[240];
+            void Scroll(int wx) { for (int y = 0; y < 240; y++) ls[y] = y < 190 ? V(wx, y) : V(0, 160 + y); }   // HUD: another scroll
+            Scroll(0);
+            var pal = new byte[32];
+            var lift = new byte[256 * 240];
+            var sc = new HdScene(d.NesRgb);
+            sc.Build(fb, tags, pal, lift, ls, 0);
+            Eq((0f, 0f, 1f), (sc.Lines[100 * 4 + 2], sc.Lines[185 * 4 + 2], sc.Lines[204 * 4 + 2]), "UI lines = text under the split only");
+            True(sc.Play == 1 && sc.VoidGate > 0.9f, $"gameplay: play {sc.Play}, void gate {sc.VoidGate}");
+            True(sc.Outdoor > 0.9f, $"green ground = outdoor ({sc.Outdoor})");
+            Eq(HdScene.FVoid, (byte)(sc.Info[(60 * 256 + 60) * 4 + 2] & HdScene.FVoid), "pit is void");
+            Eq(0, sc.Info[(120 * 256 + 100) * 4 + 2] & HdScene.FVoid, "a 1-pixel black line is not void");
+            // camera: a jump is a cut; then 8-pixel steps across the nametable edge (coarse X 31 -> 0 with the NT bit)
+            Scroll(240); sc.Build(fb, tags, pal, lift, ls, 1);
+            Eq(0f, sc.CamX, "a 240-pixel jump is a cut (no camera motion)");
+            Scroll(248); sc.Build(fb, tags, pal, lift, ls, 2);
+            Scroll(256); sc.Build(fb, tags, pal, lift, ls, 3);
+            Scroll(264); sc.Build(fb, tags, pal, lift, ls, 4);
+            Eq(24f, sc.CamX, "camera follows the scroll across the nametable edge (248 -> 256 -> 264)");
+            // no HUD split (title, cut-scenes): no world effects
+            var sc2 = new HdScene(d.NesRgb);
+            for (int y = 0; y < 240; y++) ls[y] = V(0, y);
+            sc2.Build(fb, tags, pal, lift, ls, 0);
+            True(sc2.Play == 0 && sc2.VoidGate == 0 && sc2.Outdoor == 0, $"no HUD: no pits, clouds or dust (play {sc2.Play}, gate {sc2.VoidGate}, outdoor {sc2.Outdoor})");
+
+            var v = VideoSettings.Parse("graphics=hd\nhd_effects=parallax,detail\n");
+            True(v.HdParallax && !v.HdShadows && !v.HdAtmosphere && v.HdDetail && v.Serialize().Contains("hd_effects=parallax,detail"), "ini hd_effects");
+            True(new VideoSettings().Serialize().Contains("hd_effects=parallax,shadows,atmosphere,detail"), "all effects on by default");
+            Eq(276, Window.CommandId("hd:shadows"), "--menu hd:shadows");
+        }),
         ("win_png_read", () =>
         {
             var rgba = new byte[3 * 2 * 4];

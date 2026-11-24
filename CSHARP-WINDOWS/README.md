@@ -57,7 +57,7 @@ which is how you reach them in fullscreen or with the menu bar hidden. While a m
 | Fullscreen (F11) | fullscreen on / off |
 | Fullscreen resolution | *Desktop resolution* (borderless, the default) or one of the monitor's display modes (32-bit, 640×480 and up). A display mode is changed only while the game is fullscreen and in front; alt-tab or leaving fullscreen puts the desktop back. If Windows refuses a mode, the desktop resolution is used. |
 | Window size | 1× – 6× the picture (keys 1 – 6), or a fixed size: 640×480, 800×600, 1024×768, 1280×720, 1280×960, 1366×768, 1600×900, 1920×1080 |
-| Graphics (F9) | Original (NES) · Enhanced (16-bit) · Enhanced (32-bit) · HD (GPU: lighting, shadows, bloom); Reload graphics pack (F5) — see below |
+| Graphics (F9) | Original (NES) · Enhanced (16-bit) · Enhanced (32-bit) · HD (GPU: materials, lighting, shadows, parallax); HD effects: Parallax depth · Shadows · Atmosphere · Material detail; Reload graphics pack (F5) — see below |
 | Upscale filter | None (sharp pixels, the default) · Scale2x · Scale3x · Scale4x: pixel-art upscalers that round off diagonal stair-steps and curves (text, slopes, sprites) while keeping edges crisp; the result is then sized to the window as usual |
 | Aspect ratio | Square pixels (256:240, the default) · NES TV (8:7 pixels, as on a CRT) · 4:3 · 16:10 widescreen · 16:9 widescreen · Stretch to fill the window |
 | Integer scaling | on (default): whole-number scale, sharp pixels, black bars · off: as large as the window allows |
@@ -88,13 +88,25 @@ sound of the port. You can switch at any time, and the choice is saved. CD quali
 mid-game. The choice is saved.
 
 **HD (GPU)** renders on the graphics card with Direct3D 11 at your screen's own resolution (1080p, 1440p, 4K: in
-fullscreen every screen pixel is drawn, not a 4× picture stretched). Every visible shape gets a generated height
-"model" (rounded, raised in the middle), sprites stand above the ground, and shaders light it: per-pixel normals,
-diffuse light and glossy highlights from the top left, ambient occlusion in the creases, soft shadows that characters
-and enemies throw on the ground, and bloom around the brightest highlights. Pixel edges stay crisp at any size; flat
-ground keeps its exact colour; graphics-pack tiles are used; nothing the game hides is revealed. Needs a Direct3D 11
-graphics card (any PC from the last ~12 years); without one the 32-bit look is used and the title bar says so. The
-models are generated from the game's own graphics, not new 3D artwork.
+fullscreen every screen pixel is drawn, not a 4× picture stretched), in the style of a modern lit 2D game:
+- **Materials:** every surface is given a material from its colour (stone, water / ice, plaster / cloth, earth / wood /
+  sand, grass / foliage) with its own procedural surface relief: cracked stone, grain, grass blades, slowly rippling
+  water with twinkling glints. The relief is fixed to the world (it scrolls with the map, it does not swim).
+- **Lighting:** a generated height "model" for every visible shape plus the material relief give per-pixel normals,
+  lit by a warm sun and a cool sky (glossy highlights per material, ambient occlusion in the creases, rim light on
+  characters); bloom on the brightest highlights; a filmic highlight roll-off, a light colour grade and a vignette.
+- **Shadows:** soft shadows marched toward the sun through the height model (characters, enemies and walls throw them;
+  the edge softens with distance), drifting cloud shadows outdoors.
+- **Parallax:** pits, chasms and the darkness around caves become depth: cliff walls seen in perspective from the
+  middle of the screen, and three rock layers far below that scroll slower than the map (the camera comes from the
+  game's own scroll) and lie in the ledges' shadows. Dust motes and outdoor mist float in front and scroll faster.
+- Each effect can be switched off under **Video › Graphics › HD: …** (saved as `hd_effects=` in `video.ini`). The
+  HUD and all text are never lit or filtered; the title, cut-scenes and menus get no pits, clouds or dust (world
+  effects need the in-game HUD on screen); graphics-pack tiles are used; nothing the game hides black-on-black is
+  revealed (pits are found from large black areas, which stay black-on-black).
+
+Needs a Direct3D 11 graphics card (any PC from the last ~12 years); without one the 32-bit look is used and the title
+bar says so. Everything is generated from the game's own graphics at run time (no new artwork or 3D models).
 
 **Enhanced (32-bit)** goes a generation further, toward the look of the 32-bit consoles: everything of the 16-bit
 mode below, plus soft rendered lighting (every visible shape is shaded like a smooth, lit surface with a gentle
@@ -176,7 +188,7 @@ ReC.exe --wav ID OUT.wav [SECONDS] [--cd [--mono] [--reverb]]
 | `python3 tools/core_vs_web.py --canon --states --checks wake` | Linux core vs the web port: CSV, PNG, RAM, WRAM and CIRAM all identical |
 | `python3 tools/win_vs_web.py --canon --states --checks wake` | **dist/ReC.exe under Wine** (headless) vs the web port |
 | `python3 tools/win_smoke.py --canon [--no-xinput] [--verbose]` | the real window under Wine + Xvfb: a 600-frame run exits 0, writes the save file, and its PNG equals the headless one; a scripted windowed CSV equals the headless one |
-| `python3 tools/win_video_check.py` | the Video menu under Wine + Xvfb: Enhanced graphics 16-bit, 32-bit and HD (Direct3D 11 under Wine, 4x and 1080p fullscreen) (+ export, pack tile, back to Original, the hero / enemy / boss / NPC / background starter packs), upscale filters, window sizes, aspect ratios, crop, fill / smooth, menu bar, fullscreen (+ resolution fallback), settings file saved and reloaded; the drawn picture against the headless frame |
+| `python3 tools/win_video_check.py` | the Video menu under Wine + Xvfb: Enhanced graphics 16-bit, 32-bit and HD (Direct3D 11 under Wine, 4x and 1080p fullscreen, HD effects on vs off on a cave frame) (+ export, pack tile, back to Original, the hero / enemy / boss / NPC / background starter packs), upscale filters, window sizes, aspect ratios, crop, fill / smooth, menu bar, fullscreen (+ resolution fallback), settings file saved and reloaded; the drawn picture against the headless frame |
 | `python3 tools/apu_wav_compare.py --exe 0x14 0x15 0x1B` | the exe's Original APU output matches `apu_check.mjs` byte for byte on 3 full songs (`0x05` / `0x10` are short effects that end in 0.1 s) |
 | `python3 tools/wav_stats.py OUT.wav [SKIP]` | RMS / peak per channel of a WAV (compare Original and CD quality levels) |
 | `python3 tools/pack_check.py DIR` | a graphics-pack folder: names, 32×32, decodable (what the exe would skip) |

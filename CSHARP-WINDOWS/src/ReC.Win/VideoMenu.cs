@@ -21,7 +21,8 @@ internal static unsafe partial class Window
     private const int IdAspect0 = 240;           // + (int)Aspect
     private const int IdFsDesktop = 300, IdFsMode0 = 301;   // + index in _modes
     private const int IdUpscale0 = 260;          // + factor 1..4
-    private const int IdOriginal = 270, IdEnhanced = 271, IdReloadPack = 272, IdEnhanced32 = 273, IdHd = 274;
+    private const int IdOriginal = 270, IdEnhanced = 271, IdReloadPack = 272, IdEnhanced32 = 273, IdHd = 274,
+        IdHdParallax = 275, IdHdShadows = 276, IdHdAtmosphere = 277, IdHdDetail = 278;
     private const int IdAudioOriginal = 410, IdAudioCd = 411, IdStereo = 412, IdReverb = 413;
 
     private static VideoSettings _v = new();
@@ -55,6 +56,10 @@ internal static unsafe partial class Window
             case "graphics:enhanced": return IdEnhanced;
             case "graphics:enhanced32": case "graphics:32bit": return IdEnhanced32;
             case "graphics:hd": return IdHd;
+            case "hd:parallax": return IdHdParallax;
+            case "hd:shadows": return IdHdShadows;
+            case "hd:atmosphere": return IdHdAtmosphere;
+            case "hd:detail": return IdHdDetail;
             case "reloadpack": return IdReloadPack;
             case "audio:original": return IdAudioOriginal;
             case "audio:cd": return IdAudioCd;
@@ -140,7 +145,12 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(gfx, 0, IdOriginal, "&Original (NES)");
         Win32.AppendMenuW(gfx, 0, IdEnhanced, "&Enhanced (16-bit)");
         Win32.AppendMenuW(gfx, 0, IdEnhanced32, "Enhanced (&32-bit)");
-        Win32.AppendMenuW(gfx, 0, IdHd, "&HD (GPU: lighting, shadows, bloom)");
+        Win32.AppendMenuW(gfx, 0, IdHd, "&HD (GPU: materials, lighting, shadows, parallax)");
+        Win32.AppendMenuW(gfx, Win32.MF_SEPARATOR, 0, null);
+        Win32.AppendMenuW(gfx, 0, IdHdParallax, "HD: &Parallax depth (pits, cliffs, layers)");
+        Win32.AppendMenuW(gfx, 0, IdHdShadows, "HD: &Shadows (soft, clouds)");
+        Win32.AppendMenuW(gfx, 0, IdHdAtmosphere, "HD: &Atmosphere (clouds, mist, dust)");
+        Win32.AppendMenuW(gfx, 0, IdHdDetail, "HD: &Material detail (stone, grass, water)");
         Win32.AppendMenuW(gfx, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(gfx, 0, IdReloadPack, "&Reload graphics pack\tF5");
         Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)gfx, "&Graphics\tF9");
@@ -202,6 +212,8 @@ internal static unsafe partial class Window
         foreach (var f in Upscale.Filters) Check(IdUpscale0 + f.K, _v.Upscale == f.K, true);
         Check(IdOriginal, GraphicsMode == 0, true); Check(IdEnhanced, GraphicsMode == 1, true);
         Check(IdEnhanced32, GraphicsMode == 2, true); Check(IdHd, GraphicsMode == 3, true);
+        Check(IdHdParallax, _v.HdParallax); Check(IdHdShadows, _v.HdShadows);
+        Check(IdHdAtmosphere, _v.HdAtmosphere); Check(IdHdDetail, _v.HdDetail);
         Check(IdAudioOriginal, !_v.CdAudio, true); Check(IdAudioCd, _v.CdAudio, true);
         Check(IdStereo, _v.AudioStereo); Check(IdReverb, _v.AudioReverb);
         Check(IdFsDesktop, _v.FsW == 0, true);
@@ -248,6 +260,10 @@ internal static unsafe partial class Window
             case IdEnhanced: SetGraphics(1); return;
             case IdEnhanced32: SetGraphics(2); return;
             case IdHd: SetGraphics(3); return;
+            case IdHdParallax: _v.HdParallax = !_v.HdParallax; HdEffectsChanged(); return;
+            case IdHdShadows: _v.HdShadows = !_v.HdShadows; HdEffectsChanged(); return;
+            case IdHdAtmosphere: _v.HdAtmosphere = !_v.HdAtmosphere; HdEffectsChanged(); return;
+            case IdHdDetail: _v.HdDetail = !_v.HdDetail; HdEffectsChanged(); return;
             case IdReloadPack: ReloadPack(); return;
             case IdAudioOriginal: _v.CdAudio = false; ApplyAudio(); SettingsChanged(false); return;
             case IdAudioCd: _v.CdAudio = true; ApplyAudio(); SettingsChanged(false); return;
@@ -290,6 +306,12 @@ internal static unsafe partial class Window
             _ => "",
         });
         Present();
+    }
+
+    private static void HdEffectsChanged()
+    {
+        ApplyHdEffects();
+        SettingsChanged(false);
     }
 
     private static void ReloadPack()

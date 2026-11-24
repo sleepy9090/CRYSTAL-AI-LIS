@@ -91,6 +91,8 @@ internal static unsafe partial class Window
         if (_m == null) return;
         if (_v.Enhanced || _exporting) _m.Ppu.Tags ??= new int[256 * 240];
         else _m.Ppu.Tags = null;
+        if (_v.Enhanced) _m.Ppu.LineScroll ??= new int[240];
+        else _m.Ppu.LineScroll = null;
         _hdFrame = -1;
     }
 
@@ -101,12 +103,26 @@ internal static unsafe partial class Window
         _enh.ModeHd = gpu;
         _enh.Mode32 = _v.Enhanced32 || (_v.Hd && _gpu == null);          // HD without Direct3D: the 32-bit look
         _enh.Render(_m.Ppu.Fb, tags, _m.Ppu.Pal, _hd);
-        if (gpu) _gpu!.Upload(_hd, _enh.HdHeight!, _enh.HdLift);
+        if (gpu)
+        {
+            _scene ??= new HdScene(_nesRgb);
+            _scene.Build(_m.Ppu.Fb, tags, _m.Ppu.Pal, _enh.HdLift, _m.Ppu.LineScroll, _frameNo);
+            _gpu!.Upload(_hd, _enh.HdHeight!, _scene);
+        }
         _hdFrame = _frameNo;
     }
 
     // T18 HD graphics (Gpu.cs): created when HD is chosen, released when another look is (GDI draws again)
     private static Gpu? _gpu;
+    private static HdScene? _scene;
+    private static int[] _nesRgb = Array.Empty<int>();
+
+    /// <summary>T19: the Video > Graphics > HD effect switches -> the renderer</summary>
+    private static void ApplyHdEffects()
+    {
+        if (_gpu == null) return;
+        _gpu.Parallax = _v.HdParallax; _gpu.Shadows = _v.HdShadows; _gpu.Atmosphere = _v.HdAtmosphere; _gpu.Detail = _v.HdDetail;
+    }
     private static string _gpuError = "";
     private static bool _gpuTried;
 
@@ -121,6 +137,7 @@ internal static unsafe partial class Window
         _gpuTried = true;
         Win32.GetClientRect(_hwnd, out var rc);
         _gpu = Gpu.TryCreate(_hwnd, rc.Right, rc.Bottom, out _gpuError);
+        ApplyHdEffects();
         if (!_quiet)
             Console.Error.WriteLine(_gpu != null ? $"[re-c] HD graphics: {_gpu.Info}"
                                                  : $"[re-c] HD graphics not available ({_gpuError}): using the 32-bit look");
@@ -163,6 +180,7 @@ internal static unsafe partial class Window
         _quiet = o.Quiet;
         _exporting = o.ExportTiles != null;
         _enh = new Enhancer(m.Ppu.Chr, data.NesRgb, record: _exporting);
+        _nesRgb = data.NesRgb;
         _enh.LoadPack(o.PackDir ?? Path.Combine(Path.GetDirectoryName(Save.DefaultPath())!, "pack"));
         foreach (string e in _enh.PackErrors) Console.Error.WriteLine($"[re-c] graphics pack: {e}");
         _videoPath = o.VideoConfig ?? VideoSettings.DefaultPath();

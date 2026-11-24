@@ -223,4 +223,15 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   11.0 under Wine, 4x: 5 -> 3911 colours, 43404 / 61440 flat block centres exact), `hdfull` (1080p fullscreen, bars
   black), `hdoff` (HD -> Original: GDI picture exact again). `tools/hd_shots.py` (screenshots per mode). Not measured:
   GPU frame time on real hardware (Wine renders with llvmpipe on the CPU).
+- [x] T19 (interactive, 2026-11-24) done: **HD upgrade: materials, shadows, parallax** (request: graphics on par with
+  ~2010, shadows + parallax; engine kept: own Direct3D 11 renderer, since the rules allow no packages / engines).
+  Core: output-only `Ppu.LineScroll` (architecture §5.14). `HdScene.cs` (scene analysis per frame), `Gpu.cs` light
+  pass rewritten (materials with world-anchored relief, coloured sun / sky, glints, rim light, 12-tap AO, 24-step soft
+  shadows, cloud shadows, chasm parallax: cliff walls + 3 rock layers + ledge shadows, motes, mist; bloom twice-blurred
+  with a soft knee; composite tone curve + grade + vignette, HUD untouched). Video > Graphics > HD: four effect switches
+  (`hd_effects=` in video.ini). Found while tuning: the game draws its pits with black tiles (not the backdrop), and
+  `pitfall` changes scroll mid-screen (so the HUD rule needs text, not just another scroll). Tests: `win_hd_scene`
+  (LineScroll keeps Fb, kinds, UI lines, void opening, camera wrap + cut, no HUD = no world effects, ini / --menu);
+  `win_video_check` `hd` (now: text + cut-scene black exact), `hdfx` (cave gameplay, all effects on vs off: playfield
+  changes, HUD identical, `hd_effects=none` saved).
 

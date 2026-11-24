@@ -74,6 +74,11 @@ public sealed class Ppu
 
     public const int TagValid = 1 << 24;
 
+    // ---- Windows port T19 (not in the web port): per-line scroll for the HD renderer's world-anchored effects.
+    // Null = off (the default, and in every parity run). When set, LineScroll[line] = the v register (15 bits) at the
+    // line's start, after any split hook, | fine X << 16; -1 = rendering off. Output only: nothing reads it back.
+    public int[]? LineScroll;
+
     private static int BgTag(int[] offs, int pa, int p, int col) =>
         TagValid | (p >> 2) << 19 | (pa & 7) << 16 | col << 13 | ((offs[pa >> 10] + (pa & 0x3FF)) >> 4);
     private readonly short[] _tileBuf = new short[34 * 8];
@@ -384,6 +389,7 @@ public sealed class Ppu
         for (int line = 0; line < 240; line++)
         {
             if (Splits.TryGetValue(line, out var hook)) hook(this);
+            if (LineScroll != null) LineScroll[line] = Rendering ? (V & 0x7FFF) | X << 16 : -1;
             if (_timed != null) RenderLineTimed(line);
             else RenderLine(line);
             if (Rendering)
