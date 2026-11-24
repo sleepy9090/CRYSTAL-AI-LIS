@@ -22,6 +22,7 @@ internal static unsafe partial class Window
     private const int IdFsDesktop = 300, IdFsMode0 = 301;   // + index in _modes
     private const int IdUpscale0 = 260;          // + factor 1..4
     private const int IdOriginal = 270, IdEnhanced = 271, IdReloadPack = 272;
+    private const int IdAudioOriginal = 410, IdAudioCd = 411, IdStereo = 412, IdReverb = 413;
 
     private static VideoSettings _v = new();
     private static string? _videoPath;
@@ -53,6 +54,10 @@ internal static unsafe partial class Window
             case "graphics:original": return IdOriginal;
             case "graphics:enhanced": return IdEnhanced;
             case "reloadpack": return IdReloadPack;
+            case "audio:original": return IdAudioOriginal;
+            case "audio:cd": return IdAudioCd;
+            case "stereo": return IdStereo;
+            case "reverb": return IdReverb;
         }
         if (n.StartsWith("size:"))
         {
@@ -84,9 +89,11 @@ internal static unsafe partial class Window
         _modes = EnumModes();
         _menuBar = Win32.CreateMenu();
         Win32.AppendMenuW(_menuBar, Win32.MF_POPUP, (nuint)BuildGameMenu(), "&Game");
+        Win32.AppendMenuW(_menuBar, Win32.MF_POPUP, (nuint)BuildAudioMenu(), "&Audio");
         Win32.AppendMenuW(_menuBar, Win32.MF_POPUP, (nuint)BuildVideoMenu(), "&Video");
         _popup = Win32.CreatePopupMenu();
         Win32.AppendMenuW(_popup, Win32.MF_POPUP, (nuint)BuildGameMenu(), "&Game");
+        Win32.AppendMenuW(_popup, Win32.MF_POPUP, (nuint)BuildAudioMenu(), "&Audio");
         Win32.AppendMenuW(_popup, Win32.MF_POPUP, (nuint)BuildVideoMenu(), "&Video");
     }
 
@@ -100,6 +107,28 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(m, 0, IdExit, "E&xit\tEsc");
         return m;
+    }
+
+    private static IntPtr BuildAudioMenu()
+    {
+        var m = NewMenu();
+        Win32.AppendMenuW(m, 0, IdAudioOriginal, "&Original (NES, mono)");
+        Win32.AppendMenuW(m, 0, IdAudioCd, "&CD quality (44.1 kHz 16-bit stereo)");
+        Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
+        Win32.AppendMenuW(m, 0, IdStereo, "&Stereo channels (CD quality)");
+        Win32.AppendMenuW(m, 0, IdReverb, "&Reverb (CD quality)");
+        Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
+        Win32.AppendMenuW(m, 0, IdMute, "&Mute\tM");
+        return m;
+    }
+
+    /// <summary>T13: the Audio settings -> the output (reopens the device when the quality changes)</summary>
+    private static void ApplyAudio()
+    {
+        if (_audio == null) return;
+        _audio.Mixer.Stereo = _v.AudioStereo;
+        _audio.Mixer.Reverb = _v.AudioReverb;
+        if (!_audio.SetCd(_v.CdAudio)) Status("audio device could not be reopened");
     }
 
     private static IntPtr BuildVideoMenu()
@@ -168,6 +197,8 @@ internal static unsafe partial class Window
         foreach (var a in VideoSettings.Aspects) Check(IdAspect0 + (int)a.A, _v.Aspect == a.A, true);
         foreach (var f in Upscale.Filters) Check(IdUpscale0 + f.K, _v.Upscale == f.K, true);
         Check(IdOriginal, !_v.Enhanced, true); Check(IdEnhanced, _v.Enhanced, true);
+        Check(IdAudioOriginal, !_v.CdAudio, true); Check(IdAudioCd, _v.CdAudio, true);
+        Check(IdStereo, _v.AudioStereo); Check(IdReverb, _v.AudioReverb);
         Check(IdFsDesktop, _v.FsW == 0, true);
         for (int i = 0; i < _modes.Count; i++) Check(IdFsMode0 + i, (_v.FsW, _v.FsH) == _modes[i], true);
     }
@@ -211,6 +242,10 @@ internal static unsafe partial class Window
             case IdOriginal: SetEnhanced(false); return;
             case IdEnhanced: SetEnhanced(true); return;
             case IdReloadPack: ReloadPack(); return;
+            case IdAudioOriginal: _v.CdAudio = false; ApplyAudio(); SettingsChanged(false); return;
+            case IdAudioCd: _v.CdAudio = true; ApplyAudio(); SettingsChanged(false); return;
+            case IdStereo: _v.AudioStereo = !_v.AudioStereo; ApplyAudio(); SettingsChanged(false); return;
+            case IdReverb: _v.AudioReverb = !_v.AudioReverb; ApplyAudio(); SettingsChanged(false); return;
         }
         if (id > IdScale0 && id <= IdScale0 + VideoSettings.MaxScale) { _v.SetScale(id - IdScale0); SettingsChanged(true); }
         else if (id >= IdPreset0 && id < IdPreset0 + VideoSettings.Presets.Length)

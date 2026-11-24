@@ -11,6 +11,8 @@
 // drained (stall, pause, window drag) the next audio starts with Lead seconds of silence, like the JS starting its
 // next buffer LEAD seconds ahead of currentTime. Underruns are only counted (Underruns), never logged per event.
 // Until Resume() succeeds the APU stays headless (no synthesis).
+// T13: Cd = true opens the device as 44.1 kHz 16-bit STEREO and feeds it from CdMixer (CdAudio.cs, Apu.OutChannels
+// at 176.4 kHz); false = the original mono path above (the exact port). SetCd reopens the device.
 using System.Runtime.InteropServices;
 using ReC.Game;
 
@@ -75,6 +77,11 @@ internal sealed unsafe class AudioOut
     private int _n;
     private readonly Queue<short> _pending = new();
     private bool _started;
+    private readonly List<short> _cdTake = new();
+    /// <summary>T13 CD-quality stereo (CdAudio.cs) instead of the original mono stream</summary>
+    public bool Cd { get; private set; }
+    public readonly CdMixer Mixer = new();
+    private int Ch => Cd ? 2 : 1;
     public bool Muted { get; private set; }
     public int Underruns { get; private set; }
     public int Dropped { get; private set; }
@@ -98,8 +105,8 @@ internal sealed unsafe class AudioOut
         if (_hwo != IntPtr.Zero) return true;
         var fmt = new Win32.WAVEFORMATEX
         {
-            FormatTag = Win32.WAVE_FORMAT_PCM, Channels = 1, SamplesPerSec = Rate, AvgBytesPerSec = Rate * 2,
-            BlockAlign = 2, BitsPerSample = 16,
+            FormatTag = Win32.WAVE_FORMAT_PCM, Channels = (ushort)Ch, SamplesPerSec = Rate, AvgBytesPerSec = (uint)(Rate * 2 * Ch),
+            BlockAlign = (ushort)(2 * Ch), BitsPerSample = 16,
         };
         try
         {
@@ -115,19 +122,40 @@ internal sealed unsafe class AudioOut
             return false;
         }
         _hdr = (Win32.WAVEHDR*)NativeMemory.AllocZeroed((nuint)(Buffers * sizeof(Win32.WAVEHDR)));
-        _mem = (short*)NativeMemory.AllocZeroed((nuint)(Buffers * BufSamples * 2));
+        _mem = (short*)NativeMemory.AllocZeroed((nuint)(Buffers * BufSamples * 2 * Ch));
         for (int i = 0; i < Buffers; i++)
         {
-            _hdr[i].Data = (IntPtr)(_mem + i * BufSamples);
-            _hdr[i].BufferLength = BufSamples * 2;
+            _hdr[i].Data = (IntPtr)(_mem + i * BufSamples * Ch);
+            _hdr[i].BufferLength = (uint)(BufSamples * 2 * Ch);
             _hdr[i].Flags = Win32.WHDR_DONE;          // free until first written
         }
-        _m.Apu.SetOutput(Rate, Push);
+        _pending.Clear(); _n = 0; _started = false;
+        if (Cd)
+        {
+            Mixer.Clear();
+            _m.Apu.SetOutput(CdMixer.InRate, null);
+            _m.Apu.OutChannels = Mixer.Push;
+        }
+        else
+        {
+            _m.Apu.OutChannels = null;
+            _m.Apu.SetOutput(Rate, Push);
+        }
         return true;
     }
 
     // js: audio.js setMuted
     public void SetMuted(bool on) { Muted = on; }
+
+    /// <summary>T13: switch Original (mono) / CD quality (stereo); reopens the device when it is open</summary>
+    public bool SetCd(bool on)
+    {
+        if (on == Cd) return _hwo != IntPtr.Zero;
+        bool open = _hwo != IntPtr.Zero;
+        if (open) Close();
+        Cd = on;
+        return !open || Resume();
+    }
 
     // js: audio.js push
     public void Push(double v)
@@ -144,7 +172,8 @@ internal sealed unsafe class AudioOut
     // js: audio.js flush
     public void Flush()
     {
-        if (_hwo == IntPtr.Zero || _n < Chunk) return;
+        if (_hwo == IntPtr.Zero) return;
+        if (Cd ? Mixer.Count < Chunk * 2 : _n < Chunk) return;
         float g = Muted ? 0 : Gain * 32767f;
         bool drained = true;
         for (int i = 0; i < Buffers; i++) drained &= Free(i);
@@ -152,18 +181,24 @@ internal sealed unsafe class AudioOut
         {
             if (_started) Underruns++;
             _pending.Clear();
-            for (int i = 0; i < (int)(Lead * Rate); i++) _pending.Enqueue(0);
+            for (int i = 0; i < (int)(Lead * Rate) * Ch; i++) _pending.Enqueue(0);
         }
-        for (int i = 0; i < _n; i++) _pending.Enqueue((short)Math.Clamp(MathF.Round(_buf[i] * g), -32768f, 32767f));
+        if (Cd)
+        {
+            _cdTake.Clear();
+            foreach (short v in Mixer.Take(_cdTake)) _pending.Enqueue(Muted ? (short)0 : v);
+        }
+        else
+            for (int i = 0; i < _n; i++) _pending.Enqueue((short)Math.Clamp(MathF.Round(_buf[i] * g), -32768f, 32767f));
         _n = 0;
-        while (_pending.Count > MaxPending) { _pending.Dequeue(); Dropped++; }
-        for (int i = 0; i < Buffers && _pending.Count >= BufSamples; i++)
+        while (_pending.Count > MaxPending * Ch) { for (int c = 0; c < Ch; c++) _pending.Dequeue(); Dropped++; }
+        for (int i = 0; i < Buffers && _pending.Count >= BufSamples * Ch; i++)
         {
             if (!Free(i)) continue;
             Win32.WAVEHDR* h = _hdr + i;
             if ((h->Flags & Win32.WHDR_PREPARED) != 0) Win32.waveOutUnprepareHeader(_hwo, h, (uint)sizeof(Win32.WAVEHDR));
-            short* d = _mem + i * BufSamples;
-            for (int k = 0; k < BufSamples; k++) d[k] = _pending.Dequeue();
+            short* d = _mem + i * BufSamples * Ch;
+            for (int k = 0; k < BufSamples * Ch; k++) d[k] = _pending.Dequeue();
             h->Flags = 0;
             Win32.waveOutPrepareHeader(_hwo, h, (uint)sizeof(Win32.WAVEHDR));
             Win32.waveOutWrite(_hwo, h, (uint)sizeof(Win32.WAVEHDR));

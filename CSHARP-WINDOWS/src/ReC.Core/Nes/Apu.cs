@@ -272,6 +272,13 @@ public sealed class Apu
     public long Cycle;
     public int SampleRate;
     public Action<double>? Out;
+    /// <summary>
+    /// Windows port T13 (not in the web port): per-channel output for the CD-quality mixer. Null = off (the default and
+    /// every parity run). When set, each emitted sample also passes the raw channel levels averaged over the sample
+    /// period: pulse 1, pulse 2, triangle, noise (0-15), DMC (0-127). Out (mono) is unchanged by it.
+    /// </summary>
+    public Action<float, float, float, float, float>? OutChannels;
+    private double _s1, _s2, _st, _sn, _sd;
     private double _acc, _frac, _step;
     private int _n;
     private double _hp1x, _hp1y, _hp2x, _hp2y, _lp;
@@ -396,6 +403,7 @@ public sealed class Apu
         Triangle tri = TriCh;
         Noise noise = NoiseCh;
         Dmc dmc = DmcCh;
+        bool chans = OutChannels != null;
         for (int i = 0; i < n; i++)
         {
             SeqTick();
@@ -403,6 +411,7 @@ public sealed class Apu
             tri.Tick(); noise.Tick(); dmc.Tick();
             Cycle++;
             _acc += (double)PulseMix[p1.Out + p2.Out] + (double)TndMix[3 * tri.Out + 2 * noise.Out + dmc.Level];
+            if (chans) { _s1 += p1.Out; _s2 += p2.Out; _st += tri.Out; _sn += noise.Out; _sd += dmc.Level; }
             _n++;
             if (++_frac >= _step) { _frac -= _step; Emit(); }
         }
@@ -411,6 +420,12 @@ public sealed class Apu
     // js: nes/apu.js _emit
     private void Emit()
     {
+        if (OutChannels != null)
+        {
+            double k = 1.0 / _n;
+            OutChannels((float)(_s1 * k), (float)(_s2 * k), (float)(_st * k), (float)(_sn * k), (float)(_sd * k));
+            _s1 = _s2 = _st = _sn = _sd = 0;
+        }
         double x = _acc / _n; _acc = 0; _n = 0;
         _hp1y = _a90 * (_hp1y + x - _hp1x); _hp1x = x;
         _hp2y = _a440 * (_hp2y + _hp1y - _hp2x); _hp2x = _hp1y;

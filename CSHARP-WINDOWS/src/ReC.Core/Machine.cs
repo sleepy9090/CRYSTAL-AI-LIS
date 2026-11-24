@@ -171,9 +171,11 @@ public sealed class Machine
         PrgR6 = 0x18;                                  // MMC3 R6/R7 as left by reset's SwitchBank16($0C) (prg.js)
         PrgR7 = 0x19;
         var @out = Apu.Out;
+        var chans = Apu.OutChannels;                   // Windows port T13: the CD mixer's sink carries over too
         int rate = Apu.SampleRate;
         Apu = new Apu(a => Prg.CpuRd(this, a));
         if (rate != 0) Apu.SetOutput(rate, @out);
+        Apu.OutChannels = chans;
         Apu.Write(0x4010, 0);                          // 31:F2C9 DMC IRQ off
         Apu.Write(0x4017, 0x40);                       // 31:F2CE APU frame IRQ off
         Sound.Driver.SndInit(this);                    // 31:F325 JSR $8020 with banks 24/25

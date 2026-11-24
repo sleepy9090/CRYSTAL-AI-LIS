@@ -55,7 +55,8 @@ CSHARP-WINDOWS/
 ├─ src/ReC.Run/             Linux/dotnet headless runner; Headless.cs is also compiled into ReC.Win
 ├─ src/ReC.Win/             Program.cs (args, headless vs window), Win32.cs (P/Invoke), Window.cs, Video.cs +
 │                           VideoMenu.cs (T8 video settings / menus), Upscale.cs (T9),
-│                           Enhance.cs + PngRead.cs (T10 Enhanced graphics + pack), Audio.cs (waveOut),
+│                           Enhance.cs + PngRead.cs (T10 Enhanced graphics + pack),
+│                           CdAudio.cs (T13 CD-quality audio), Audio.cs (waveOut),
 │                           Pad.cs (keyboard Input + XInput Pad), Save.cs, WavOut.cs (--wav), app.ico,
 │                           app.manifest (PerMonitorV2, Win10+)
 ├─ tests/ReC.Tests/         copied unit tests (+ Windows-host pure-logic tests that run on Linux)
@@ -139,3 +140,12 @@ CSHARP-WINDOWS/
     own slot colours, learned from the frame because the game changes palettes mid-frame). Rows in parallel; ~4 ms per
     frame after JIT warm-up (`win_enhance`). `--export-tiles DIR` writes the built-in look + the 4x original of every
     non-blank, non-one-colour tile + colours seen. `video.ini` key `graphics`; F9 toggle, F5 reload pack.
+11. **CD-quality audio (T13) — second output-only core addition:** `Apu.OutChannels` (null = off, the default and every
+    parity run) passes the raw channel levels averaged over each sample period (pulse 1/2, triangle, noise 0-15, DMC
+    0-127); `Machine.Reset` carries it over like `Out`. The mono `Out` stream is unchanged (`apu_channels` test:
+    identical with the channel output on). Host `CdAudio.cs` `CdMixer`: APU at 176.4 kHz → per-side panning (P1 L,
+    P2 R, noise slightly R) through the NES mixer curves → 255-tap Kaiser low-pass (20 kHz, −83 dB at 30 kHz) decimating
+    ×4 → 20 Hz DC blocker (instead of 90 / 440 Hz) → optional Freeverb-style reverb (12 % wet) → gain 1.3, soft limit
+    above 0.8 FS, TPDF dither (fixed seed). `AudioOut` opens waveOut as 2-channel 44.1 kHz 16-bit in CD mode and
+    reopens it on a switch. Audio menu + `video.ini` keys `audio` / `audio_stereo` / `audio_reverb`; `--wav .. --cd`.
+    Level of music `$14` vs the in-game Original path: +2.9 dB, no clipping.

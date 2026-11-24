@@ -230,6 +230,91 @@ internal static partial class Program
             Eq("graphics=enhanced", VideoSettings.Parse("graphics=enhanced\n").Serialize().Split('\n').First(l => l.StartsWith("graphics")), "ini graphics");
             Eq(271, Window.CommandId("graphics:enhanced"), "--menu graphics:enhanced");
         }),
+        ("apu_channels", () =>
+        {
+            // T13: Apu.OutChannels on must not change the mono stream (the Original path / parity)
+            var d = TheData.Value;
+            List<double> Mono(bool chans)
+            {
+                var m = new Machine(d, _ => { });
+                var pcm = new List<double>();
+                m.Apu.SetOutput(44100, pcm.Add);
+                if (chans) m.Apu.OutChannels = (_, _, _, _, _) => { };
+                m.Reset();
+                True(chans == (m.Apu.OutChannels != null), "Reset carries OutChannels over");
+                PlaySound.Play(m, 0x05);
+                for (int f = 0; f < 120; f++) { m.SoundUpdate(m); m.Apu.Run(29781); }
+                return pcm;
+            }
+            var a = Mono(false); var b = Mono(true);
+            True(a.Count > 80000 && a.SequenceEqual(b), $"mono stream identical with channel output ({a.Count} samples)");
+        }),
+        ("cd_audio", () =>
+        {
+            static double Rms(List<short> s, int ch, int skip)
+            {
+                double sum = 0; int n = 0;
+                for (int i = skip * 2 + ch; i < s.Count; i += 2) { sum += (double)s[i] * s[i]; n++; }
+                return Math.Sqrt(sum / n);
+            }
+            List<short> Tone(double hz, double amp, bool stereoSame = true)
+            {
+                var mx = new CdMixer();
+                for (int i = 0; i < CdMixer.InRate / 2; i++)
+                {
+                    float v = (float)(amp * Math.Sin(2 * Math.PI * hz * i / CdMixer.InRate));
+                    mx.PushStereo(v, stereoSame ? v : 0);
+                }
+                return mx.Take(new List<short>());
+            }
+            var t1 = Tone(1000, 0.25);
+            double want = 0.25 / Math.Sqrt(2) * 1.3 * 32767;
+            double db = 20 * Math.Log10(Rms(t1, 0, 2000) / want);
+            True(Math.Abs(db) < 0.5, $"1 kHz passes: {db:F2} dB");
+            var t30 = Tone(30000, 0.25);
+            double rej = 20 * Math.Log10(Rms(t30, 0, 2000) / want);
+            True(rej < -60, $"30 kHz (would alias) rejected: {rej:F1} dB");
+            Eq(CdMixer.OutRate, t1.Count / 2 * 2, "0.5 s in -> 22050 stereo frames out");
+            // silence = dither only
+            var mz = new CdMixer();
+            for (int i = 0; i < 40000; i++) mz.Push(0, 0, 0, 0, 0);
+            True(mz.Take(new List<short>()).All(v => Math.Abs(v) <= 2), "silence stays within dither (+-2 LSB)");
+            // panning: a 1 kHz square on pulse 1 is louder left; Stereo off = balanced
+            (double L, double R) Pan(bool stereo)
+            {
+                var mx = new CdMixer { Stereo = stereo };
+                for (int i = 0; i < CdMixer.InRate / 2; i++) mx.Push((i / 88) % 2 == 0 ? 15 : 0, 0, 0, 0, 0);
+                var o = mx.Take(new List<short>());
+                return (Rms(o, 0, 2000), Rms(o, 1, 2000));
+            }
+            var ps = Pan(true); var pm = Pan(false);
+            True(ps.L > ps.R * 1.4, $"pulse 1 panned left: L {ps.L:F0} R {ps.R:F0}");
+            True(Math.Abs(pm.L / pm.R - 1) < 0.01, $"stereo off balanced: L {pm.L:F0} R {pm.R:F0}");
+            // real music: CD path level near the original mono path (gain 1.6 there), no clipping, stereo, deterministic
+            var d = TheData.Value;
+            var cd = WavOut.PlayMusicCd(d, 0x14, 6);
+            var cd2 = WavOut.PlayMusicCd(d, 0x14, 6);
+            True(cd.SequenceEqual(cd2), "deterministic (fixed dither seed)");
+            var m = new Machine(d, _ => { });
+            var mono = new List<double>();
+            m.Apu.SetOutput(44100, mono.Add); m.Reset(); PlaySound.Play(m, 0x14);
+            for (int f = 0; f < 361; f++) { m.SoundUpdate(m); m.Apu.Run(29781); }
+            double monoRms = Math.Sqrt(mono.Skip(4410).Average(x => x * x * 1.6 * 1.6)) * 32767;
+            double cdRms = (Rms(cd, 0, 4410) + Rms(cd, 1, 4410)) / 2;
+            double lvl = 20 * Math.Log10(cdRms / monoRms);
+            int peak = cd.Max(v => Math.Abs((int)v));
+            Console.WriteLine($"  cd_audio: 1 kHz {db:F2} dB, 30 kHz {rej:F1} dB, music level vs original {lvl:+0.0;-0.0} dB, peak {peak}");
+            True(lvl > -4 && lvl < 6, $"music level vs original: {lvl:F1} dB");
+            True(peak < 32700, $"no hard clipping: peak {peak}");
+            True(Enumerable.Range(0, cd.Count / 2).Any(i => cd[2 * i] != cd[2 * i + 1]), "left and right differ");
+            var rv = WavOut.PlayMusicCd(d, 0x14, 3, reverb: true);
+            True(!rv.SequenceEqual(cd.Take(rv.Count)), "reverb changes the output");
+            var v = VideoSettings.Parse("audio=cd\naudio_stereo=0\naudio_reverb=1\n");
+            True(v.CdAudio && !v.AudioStereo && v.AudioReverb, "ini audio keys");
+            True(VideoSettings.Parse(v.Serialize()).Serialize() == v.Serialize(), "ini round trip");
+            Eq(411, Window.CommandId("audio:cd"), "--menu audio:cd");
+            Eq(413, Window.CommandId("reverb"), "--menu reverb");
+        }),
         ("win_png_read", () =>
         {
             var rgba = new byte[3 * 2 * 4];

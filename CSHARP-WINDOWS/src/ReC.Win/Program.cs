@@ -45,7 +45,8 @@ internal static class Program
         Run.Headless.Help("ReC.exe --headless") + "\n" +
         "  no window (also when --compare / --dump-ram / --dump-wram / --dump-ciram / --pass-count / --shots\n" +
         "  is given without --window)\n" +
-        "usage: ReC.exe --wav ID OUT.wav [SECONDS]   music id -> 16-bit mono 44.1 kHz WAV (= apu_check.mjs --wav)";
+        "usage: ReC.exe --wav ID OUT.wav [SECONDS] [--cd [--mono] [--reverb]]\n" +
+        "  music id -> 16-bit mono 44.1 kHz WAV (= apu_check.mjs --wav); --cd: the CD-quality path, 16-bit stereo";
 
     /// <summary>A WinExe has no console: write to the parent's (cmd / PowerShell) unless stderr is already redirected.</summary>
     private static void AttachParentConsole()

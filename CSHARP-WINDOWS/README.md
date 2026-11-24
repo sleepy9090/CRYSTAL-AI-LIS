@@ -69,6 +69,20 @@ which is how you reach them in fullscreen or with the menu bar hidden. While a m
 The choices are saved in `%APPDATA%\re-c\video.ini` (delete it to get the defaults back). The game itself is always
 256×240; widescreen shapes stretch it.
 
+### Audio menu: Original or CD quality
+**Audio › CD quality (44.1 kHz 16-bit stereo)** upgrades the sound; **Audio › Original (NES, mono)** is the exact
+sound of the port. You can switch at any time, and the choice is saved. CD quality:
+- **stereo**: pulse 1 a little to the left, pulse 2 a little to the right, noise slightly right, the triangle bass and
+  samples in the centre (Audio › Stereo channels turns it back to mono-in-both-ears);
+- **cleaner highs**: the sound chip is computed at 4× the CD rate and filtered down with a steep 20 kHz filter, so the
+  square waves no longer fold back as hiss (aliasing);
+- **fuller bass**: the NES's 90 Hz + 440 Hz bass cut is replaced by a 20 Hz DC filter;
+- **the NES's own channel balance** (its non-linear mixer), a soft limiter instead of hard clipping, and 16-bit dither;
+- optional light **Reverb** (Audio › Reverb).
+
+`ReC.exe --wav ID OUT.wav [SECONDS] --cd [--mono] [--reverb]` writes a music track through the CD path as a stereo WAV
+(music ids `0x14`, `0x15`, `0x1B` are full songs).
+
 ### Graphics: Original or Enhanced (16-bit)
 **Video › Graphics** (or **F9**) switches between the original NES graphics and **Enhanced**, at any time, even mid-game.
 The choice is saved. Enhanced draws every NES pixel as a 4×4 block and adds what 16-bit hardware could show:
@@ -114,7 +128,7 @@ ReC.exe [--scale S] [--fullscreen] [--video-config F.ini] [--save F.sav] [--data
 ReC.exe --headless [--frames N] [--frame0 N] [--keys SPEC..] [--compare F.csv] [--dump-screen F.png] [--scale S]
         [--shots F,F.. DIR] [--dump-ram F] [--dump-wram F] [--dump-ciram F] [--load-state F.json] [--data DIR]
         [--quiet] [--pass-count F]
-ReC.exe --wav ID OUT.wav [SECONDS]
+ReC.exe --wav ID OUT.wav [SECONDS] [--cd [--mono] [--reverb]]
 ```
 - Window mode (the default): `--frames N` quits after N frames, `--turbo` runs frames without waiting for real time,
   and `--keys 250:START 300:A+RIGHT:8 ..` (frame:buttons[:frames held]) sends key messages to the window as if the keys
@@ -127,7 +141,7 @@ ReC.exe --wav ID OUT.wav [SECONDS]
 - `--video-config F.ini` uses another video settings file; `--fullscreen` starts fullscreen.
 - `--pack DIR` uses another graphics pack folder; `--export-tiles DIR` writes the tiles seen during the run (see above).
 - Test hooks: `--menu CMD,..` runs menu items in order at start (`fullscreen`, `menubar`, `integer`, `crop`, `smooth`,
-  `reset`, `pause`, `mute`, `size:3x`, `size:1280x720`, `aspect:square|tv|4:3|16:10|16:9|fill`, `upscale:none|scale2x|scale3x|scale4x`, `graphics:original|enhanced`, `reloadpack`, `fsmode:desktop`,
+  `reset`, `pause`, `mute`, `size:3x`, `size:1280x720`, `aspect:square|tv|4:3|16:10|16:9|fill`, `upscale:none|scale2x|scale3x|scale4x`, `graphics:original|enhanced`, `reloadpack`, `audio:original|cd`, `stereo`, `reverb`, `fsmode:desktop`,
   `fsmode:1920x1080`); `--dump-window F.png` saves the window's picture area as drawn when the run ends.
 
 ## Checks (Linux, from this folder)
@@ -137,7 +151,8 @@ ReC.exe --wav ID OUT.wav [SECONDS]
 | `python3 tools/win_vs_web.py --canon --states --checks wake` | **dist/ReC.exe under Wine** (headless) vs the web port |
 | `python3 tools/win_smoke.py --canon [--no-xinput] [--verbose]` | the real window under Wine + Xvfb: a 600-frame run exits 0, writes the save file, and its PNG equals the headless one; a scripted windowed CSV equals the headless one |
 | `python3 tools/win_video_check.py` | the Video menu under Wine + Xvfb: Enhanced graphics (+ export, pack tile, back to Original), upscale filters, window sizes, aspect ratios, crop, fill / smooth, menu bar, fullscreen (+ resolution fallback), settings file saved and reloaded; the drawn picture against the headless frame |
-| `python3 tools/apu_wav_compare.py --exe 0x05 0x10` | the exe's APU output matches `apu_check.mjs` byte for byte |
+| `python3 tools/apu_wav_compare.py --exe 0x14 0x15 0x1B` | the exe's Original APU output matches `apu_check.mjs` byte for byte on 3 full songs (`0x05` / `0x10` are short effects that end in 0.1 s) |
+| `python3 tools/wav_stats.py OUT.wav [SKIP]` | RMS / peak per channel of a WAV (compare Original and CD quality levels) |
 | `python3 tools/pack_check.py DIR` | a graphics-pack folder: names, 32×32, decodable (what the exe would skip) |
 | `python3 tools/cs_coverage.py` | every web-port function is ported (`// js:` tag) or has a written reason in `docs/waivers.csv` |
 | `python3 tools/rea_pe_report.py` + `python3 tools/cs_rea_members.py` | REA inspection of the exe → `docs/rea/summary.md` (imports, hardening, resources, exposure), and every tagged member is still present after trimming |

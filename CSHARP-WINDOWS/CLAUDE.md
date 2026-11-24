@@ -5,8 +5,8 @@ tested under Wine. Core copied from the finished `../CSHARP` port; host is raw W
 `docs/architecture_win.md`. `TASKS.md` drives the work; `re_loop.sh` runs autonomous sessions over it.
 
 ## Rules
-- Core (`src/ReC.Core`) changes: data loading, parity fixes, and T10's output-only `Ppu.Tags` (must never change Fb;
-  `ppu_tags` test). Record any other in architecture §5.
+- Core (`src/ReC.Core`) changes: data loading, parity fixes, and the output-only `Ppu.Tags` (T10, must never change Fb;
+  `ppu_tags` test) and `Apu.OutChannels` (T13, must never change the mono stream; `apu_channels` test). Record any other in architecture §5.
 - Keep everything inside `CSHARP-WINDOWS/`. `../web/`, `../CSHARP/`, `../REVERSE.md`, `../docs/`, `../tools/` are read-only.
 - Do NOT try to identify the game title (no CRC/database lookups, no title-screen hunting for that purpose). Call it "re-c".
 - Keep `// js: <module> <name>` tags on ported members (module path relative to web/src); new host code that replaces a

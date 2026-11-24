@@ -160,3 +160,15 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   ramps, cut back into tiles with the renderer's own per-line colour keys). Rejected first output: fade steps and the
   player in other palettes got painted (fixed by the >= 3-dump rule and leaving palette 0 out).
   `win_video_check.py enemypack`: areas $29 / $05: 3642 / 2045 enemy pixels repainted, hero untouched, pack loads clean.
+- [x] T13 (interactive, 2026-11-23) done: **Audio menu: Original / CD quality** (+ Stereo channels, Reverb, Mute).
+  Core: output-only `Apu.OutChannels` (per-channel levels per sample; off by default; carried over by Machine.Reset).
+  `CdAudio.cs` `CdMixer`: APU at 176.4 kHz, stereo panning through the NES mixer curves, 255-tap Kaiser low-pass +
+  decimate x4 to 44.1 kHz, 20 Hz DC blocker (fuller bass than the NES 90 / 440 Hz high-passes), optional reverb, soft
+  limiter, TPDF dither. `AudioOut` 2-channel waveOut in CD mode (reopened on switch). `--wav .. --cd [--mono] [--reverb]`.
+  Tests 249/249 (`apu_channels`: mono stream identical with channel output on; `cd_audio`: 1 kHz +0.01 dB, 30 kHz
+  -83 dB, silence within dither, P1 panned left, stereo-off balanced, music $14 +2.9 dB vs Original, no clipping,
+  deterministic, reverb). Found on the way: `apu_wav_compare.py --exe 0x05 0x10` compared short effects that end after
+  0.1 s; rerun on full songs `0x14 0x15 0x1B`: 352,959 samples identical each (README now lists those). Real-time Wine
+  smoke: CD, and CD + reverb + switching Original <-> CD + Enhanced graphics: 0 underruns. `tools/wav_stats.py`.
+  Final `dist/ReC.exe` 11,625,706 bytes, sha256 `f1b67961…`: core + exe vs web 156/156 each, win_video_check 18/18,
+  smoke --canon (CD audio) ok, coverage 100 %, REA all expectations hold, cs_rea_members 1029/1029.

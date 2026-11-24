@@ -30,6 +30,8 @@ internal sealed class VideoSettings
     public int Upscale = 1;
     /// <summary>T10: Enhanced (16-bit) graphics (Enhance.cs) instead of the original tiles</summary>
     public bool Enhanced;
+    /// <summary>T13 Audio menu: CD quality (CdAudio.cs) instead of the original mono stream; stereo / reverb for it</summary>
+    public bool CdAudio, AudioStereo = true, AudioReverb;
 
     public static readonly (Aspect A, string Key, string Label)[] Aspects =
     {
@@ -117,6 +119,9 @@ internal sealed class VideoSettings
         $"fullscreen_mode={(FsW > 0 ? $"{FsW}x{FsH}" : "desktop")}",
         $"menu_bar={(MenuBar ? 1 : 0)}",
         $"graphics={(Enhanced ? "enhanced" : "original")}",
+        $"audio={(CdAudio ? "cd" : "original")}",
+        $"audio_stereo={(AudioStereo ? 1 : 0)}",
+        $"audio_reverb={(AudioReverb ? 1 : 0)}",
         $"upscale={ReC.Win.Upscale.Filters.First(f => f.K == Upscale).Key}",
     }) + "\n";
 
@@ -147,6 +152,9 @@ internal sealed class VideoSettings
                     else if (TryWxH(val, out int fw, out int fh) && fw >= 320 && fh >= 200) { v.FsW = fw; v.FsH = fh; }
                     break;
                 case "menu_bar": v.MenuBar = val != "0"; break;
+                case "audio": if (val is "original" or "cd") v.CdAudio = val == "cd"; break;
+                case "audio_stereo": v.AudioStereo = val != "0"; break;
+                case "audio_reverb": v.AudioReverb = val == "1"; break;
                 case "graphics": if (val is "original" or "enhanced") v.Enhanced = val == "enhanced"; break;
                 case "upscale":
                     foreach (var f in ReC.Win.Upscale.Filters) if (f.Key == val) v.Upscale = f.K;

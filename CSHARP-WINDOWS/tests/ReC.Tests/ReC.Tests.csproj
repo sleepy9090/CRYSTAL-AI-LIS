@@ -8,7 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="../../src/ReC.Core/ReC.Core.csproj" />
     <!-- Windows-host pure-logic tests (WinHostTests.cs): ReC.Win sources compiled in, minus Program.cs (Main) -->
-    <Compile Include="../../src/ReC.Win/Win32.cs;../../src/ReC.Win/Pad.cs;../../src/ReC.Win/Save.cs;../../src/ReC.Win/Audio.cs;../../src/ReC.Win/Window.cs;../../src/ReC.Win/VideoMenu.cs;../../src/ReC.Win/Video.cs;../../src/ReC.Win/Upscale.cs;../../src/ReC.Win/Enhance.cs;../../src/ReC.Win/PngRead.cs"
+    <Compile Include="../../src/ReC.Win/Win32.cs;../../src/ReC.Win/Pad.cs;../../src/ReC.Win/Save.cs;../../src/ReC.Win/Audio.cs;../../src/ReC.Win/Window.cs;../../src/ReC.Win/VideoMenu.cs;../../src/ReC.Win/Video.cs;../../src/ReC.Win/Upscale.cs;../../src/ReC.Win/Enhance.cs;../../src/ReC.Win/PngRead.cs;../../src/ReC.Win/CdAudio.cs;../../src/ReC.Win/WavOut.cs"
              LinkBase="ReC.Win" />
   </ItemGroup>
 </Project>

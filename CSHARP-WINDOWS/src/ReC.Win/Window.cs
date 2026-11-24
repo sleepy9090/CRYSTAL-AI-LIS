@@ -161,11 +161,12 @@ internal static unsafe partial class Window
             if (_v.Fullscreen || o.Fullscreen) { _v.Fullscreen = false; ToggleFullscreen(); }
             foreach (string c in o.MenuCmds) { Command(CommandId(c)); Pump(); }   // = clicking the menu items in order
             // no autoplay policy on the desktop: audio starts right away (JS: on the first key / click); M = mute
+            ApplyAudio();                              // T13: CD quality / stereo / reverb from the settings (device closed)
             bool audioOn = !o.NoAudio && _audio.Resume();
             _audio.SetMuted(_muted);
             if (_muted) Status("muted (M)");
             if (!o.Quiet)
-                Console.Error.WriteLine($"[re-c] audio={(o.NoAudio ? "off" : audioOn ? $"waveOut {AudioOut.Rate} Hz" : "no device (silent)")} " +
+                Console.Error.WriteLine($"[re-c] audio={(o.NoAudio ? "off" : audioOn ? $"waveOut {AudioOut.Rate} Hz {(_audio.Cd ? "stereo (CD quality)" : "mono")}" : "no device (silent)")} " +
                                         $"pad={_pad.Api} save={(saving ? savePath : "off (--load-state without --save)")}");
 
             // js: main.js blit

@@ -1,6 +1,6 @@
 {
  "evidence_bundle": {
-  "bytes": 30737838,
+  "bytes": 30760704,
   "path": "./out/rea_members.json"
  },
  "summary": {
@@ -10,9 +10,9 @@
   "confidence": "derived",
   "environment": null,
   "evidence_format": 2,
-  "evidence_id": "ev_94a5b1ecdbbaf9e42a41999ed825a53de6744eb88c4375901d69d818cd825428",
+  "evidence_id": "ev_c37762316234f429778b8093ddfae2105297b5d8e2180c960442650aef97b5f3",
   "evidence_links": [
-   "ev_dfc7cb43d3a08cc93a87512713191a1282ca4bf23e9c20ad879ee070941900c7"
+   "ev_58dd7beda77f190c67965debdd3581f2babe14849641f522d80e200ead78d123"
   ],
   "limitations": [
    "CIL instruction anchors are decoded from file-backed method bodies only; no target assembly is loaded or executed.",
@@ -31,14 +31,14 @@
   "normalized_result": {
    "artifact": {
     "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll",
-    "sha256": "a33751c00ebdd1cd8540a600f77ed031d6aec3e27953631b23ce540923bed1b3"
+    "sha256": "edf28fba5fc010d2dbd1bef0c3e11e529c970fcc3decf783fab8503a7048f405"
    },
    "coverage": {
-    "examined": 46908,
+    "examined": 46949,
     "exhausted": true,
     "next_offset": null,
     "status": "complete-within-view",
-    "total": 46908
+    "total": 46949
    },
    "kind": "summary",
    "limitations": [
@@ -49,15 +49,15 @@
     "Metadata tokens are build-local coordinates and are only meaningful with the reported artifact SHA-256 and MVID.",
     "User strings are the #US literals loaded by ldstr in the inspected method bodies, with their own coverage; instruction anchors and normalized CIL digests keep their build-local tokens."
    ],
-   "parent_digest": "dfc7cb43d3a08cc93a87512713191a1282ca4bf23e9c20ad879ee070941900c7",
-   "parent_evidence_id": "ev_dfc7cb43d3a08cc93a87512713191a1282ca4bf23e9c20ad879ee070941900c7",
+   "parent_digest": "58dd7beda77f190c67965debdd3581f2babe14849641f522d80e200ead78d123",
+   "parent_evidence_id": "ev_58dd7beda77f190c67965debdd3581f2babe14849641f522d80e200ead78d123",
    "parent_operation": "inspect_managed_members",
    "summary": {
     "artifact": {
-     "byte_length": 4296704,
+     "byte_length": 4297216,
      "format": "pe",
      "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll",
-     "sha256": "a33751c00ebdd1cd8540a600f77ed031d6aec3e27953631b23ce540923bed1b3"
+     "sha256": "edf28fba5fc010d2dbd1bef0c3e11e529c970fcc3decf783fab8503a7048f405"
     },
     "assembly": {
      "culture": null,
@@ -70,7 +70,7 @@
       "sha256": null,
       "token": null
      },
-     "row_offset": 4225316,
+     "row_offset": 4225656,
      "token": "0x20000001",
      "version": "1.0.0.0"
     },
@@ -79,8 +79,8 @@
      "state": "complete"
     },
     "identity_scope": {
-     "requires_artifact_sha256": "a33751c00ebdd1cd8540a600f77ed031d6aec3e27953631b23ce540923bed1b3",
-     "requires_mvid": "c319468c-5d2d-4456-a0cb-b7b42fb2ca31",
+     "requires_artifact_sha256": "edf28fba5fc010d2dbd1bef0c3e11e529c970fcc3decf783fab8503a7048f405",
+     "requires_mvid": "0e315065-e544-4689-8687-03119fd2cc0b",
      "token_identity": "build-local"
     },
     "limitations": [
@@ -98,13 +98,13 @@
       "AssemblyRef": 4,
       "ClassLayout": 12,
       "Constant": 904,
-      "CustomAttribute": 3464,
-      "Field": 3196,
+      "CustomAttribute": 3465,
+      "Field": 3202,
       "FieldRVA": 74,
       "GenericParam": 1,
       "InterfaceImpl": 1262,
       "ManifestResource": 20,
-      "MemberRef": 331,
+      "MemberRef": 332,
       "MethodDef": 4078,
       "MethodImpl": 1764,
       "MethodSemantics": 534,
@@ -114,10 +114,10 @@
       "Param": 2833,
       "Property": 527,
       "PropertyMap": 261,
-      "StandAloneSig": 498,
+      "StandAloneSig": 499,
       "TypeDef": 416,
-      "TypeRef": 105,
-      "TypeSpec": 81
+      "TypeRef": 106,
+      "TypeSpec": 82
      },
      "version": "v4.0.30319"
     },
@@ -130,18 +130,18 @@
      "enc_base_id": null,
      "enc_id": null,
      "generation": 0,
-     "mvid": "c319468c-5d2d-4456-a0cb-b7b42fb2ca31",
+     "mvid": "0e315065-e544-4689-8687-03119fd2cc0b",
      "name": "ReC.Core.dll",
-     "row_offset": 4065724,
+     "row_offset": 4066004,
      "token": "0x00000001"
     },
     "nesting_read": true,
     "reported_counts": {
-     "call_edges": 19468,
+     "call_edges": 19473,
      "exported_types": 0,
-     "field_accesses": 19144,
-     "fields": 3196,
-     "member_refs": 331,
+     "field_accesses": 19173,
+     "fields": 3202,
+     "member_refs": 332,
      "methods": 4078,
      "types": 416,
      "unresolved_definitions": 0,
@@ -155,49 +155,49 @@
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4264286,
+       "offset": 4264666,
        "scope": "metadata.#US:0x7000012d"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4264577,
+       "offset": 4264957,
        "scope": "metadata.#US:0x700001d7"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4265747,
+       "offset": 4266127,
        "scope": "metadata.#US:0x700006cc"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4267151,
+       "offset": 4267531,
        "scope": "metadata.#US:0x70000bf8"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4267211,
+       "offset": 4267591,
        "scope": "metadata.#US:0x70000ca4"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4267423,
+       "offset": 4267803,
        "scope": "metadata.#US:0x70000d5e"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4267433,
+       "offset": 4267813,
        "scope": "metadata.#US:0x70000d84"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 4268776,
+       "offset": 4269156,
        "scope": "metadata.#US:0x7000126f"
       }
      ],
@@ -213,11 +213,11 @@
    "view": {
     "kind": "summary"
    },
-   "view_digest": "3222ec4cee867d55a3e7a20a253cb668ccf232d1addb668c3c708e8114ac6f9a"
+   "view_digest": "8cf64f6974720c7bb53e67a14e89e7c01f6b3a3657fc8eb93c681486bc2bd230"
   },
   "operation": "inspect_analysis_view",
   "parameters": {
-   "parent_evidence_id": "ev_dfc7cb43d3a08cc93a87512713191a1282ca4bf23e9c20ad879ee070941900c7",
+   "parent_evidence_id": "ev_58dd7beda77f190c67965debdd3581f2babe14849641f522d80e200ead78d123",
    "view": {
     "kind": "summary"
    }
@@ -236,7 +236,7 @@
     "format": "pe",
     "kind": "file",
     "selection": null,
-    "sha256": "a33751c00ebdd1cd8540a600f77ed031d6aec3e27953631b23ce540923bed1b3"
+    "sha256": "edf28fba5fc010d2dbd1bef0c3e11e529c970fcc3decf783fab8503a7048f405"
    },
    "local_path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll",
    "name": "ReC.Core.dll"
