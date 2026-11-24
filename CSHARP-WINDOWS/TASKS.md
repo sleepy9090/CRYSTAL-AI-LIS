@@ -193,3 +193,13 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   banks 38 / 39 repainted (blotchy status bar). `tools/tag_banks.py` (banks / tiles in a screen rectangle).
   `win_video_check.py bgpack` (+ `--bg-pack DIR`): town $02 entry and area $29, 16-bit and 32-bit: pack loads clean,
   25-44 % of the picture repainted, hero pixels untouched. win_video_check 23/23. No exe change.
+- [x] T16 (interactive, 2026-11-24) done: **starter graphics pack for the NPCs**, `packs/npcs/` (121 tiles): villagers /
+  shopkeepers of 35 town / shop / inn / event / talk states (the `out/bg` dumps), + the ending's tower and the shop item
+  display. `sprite_pack.py` options (defaults unchanged: packs/enemies regenerates byte-identical): `--only`,
+  `--exclude` (keys already in another pack: no collisions), `--palettes 0,1,2,3` (NPCs in the hero's palette; hero banks
+  still excluded), `--min-height 12` (cursors / icons), `--no-dark` (held fade-out steps), `--soft-dark` (people: half-step
+  ramps, near-black hair / robes, untinted outlines). Rejected on screen: the enemy look on people (grey beard / robe
+  slabs, red-tinted eyes, orange face bands); menu / player-only states (cursors, item icons, the hero in other forms).
+  `tools/sprite_tiles.py`. `win_video_check.py npcpack` (town $18, armour shop; the hero's exact pixels from a headless
+  `--dump-tags` run, frame checked equal to the exe's, as NPCs wear the hero's magenta). All four packs together: 2,554
+  files, no name collides. No exe change.

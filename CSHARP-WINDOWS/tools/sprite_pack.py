@@ -4,8 +4,16 @@ the sprites as they appear on screen (tools/sprite_capture.py dumps).
 usage: python3 tools/sprite_pack.py [--in DIR] [--out DIR] [--preview PNG] [--skip STATE,..] [--max-preview N]
   --in       capture folder (default out/sprites, one sub-folder per state)
   --out      pack folder (default packs/enemies)
-  --preview  default <out>/../enemies_preview.png: each newly painted object, NES (4x) next to the pack
+  --preview  default <out>/../<out name>_preview.png: each newly painted object, NES (4x) next to the pack
   --skip     states to leave out (default group18,death: a town's NPCs and the player alone)
+  --exclude  pack folder(s), comma-separated: tile + colour keys that already have a PNG there are not painted (so a
+             second pack never collides with the first; packs/npcs is made with --exclude packs/enemies)
+  --palettes sprite palettes to paint (default 1,2,3; 0 is the player's, packs/hero)
+  --only     states to use (comma-separated; default all but --skip)
+  --min-height N  objects less than N pixels tall are left out (cursors, small icons; default 0)
+  --soft-dark  gentle look for people: colour ramps at half / 0.8 steps (no extremes), black areas stay near-black
+             (no grey cloth ramp), outlines not tinted
+  --no-dark  colour sets with >= 2 near-black colours are left out (fade-out steps that last a while)
 
 Per dump (Ppu.Tags + Fb + palette of one frame): sprite pixels in sprite palettes 1-3 (palette 0 is the player's,
 packs/hero) and not from the player's banks ($40/$41/$42), whose tile + colours show in >= 3 dumps (so fade and hit
@@ -40,6 +48,8 @@ VALID = 1 << 24
 OUTLINE_OUT = (0x0A, 0x08, 0x10)
 DETAIL = (0x10, 0x0C, 0x16)
 DARK_RAMP = [(0x10, 0x10, 0x18), (0x1C, 0x1C, 0x28), (0x2A, 0x2A, 0x3A), (0x3C, 0x3C, 0x50), (0x52, 0x52, 0x6A)]
+# --soft-dark (packs/npcs): black hair / beards / robes stay near-black, only a slight cool lift toward the light
+SOFT_DARK_RAMP = [(0x06, 0x05, 0x0A), (0x0C, 0x0B, 0x12), (0x14, 0x13, 0x1C), (0x22, 0x21, 0x30), (0x30, 0x2E, 0x44)]
 
 
 def luma(c):
@@ -113,13 +123,19 @@ def regions(grid):
 
 
 class Painter:
-    def __init__(self, nes_rgb):
+    def __init__(self, nes_rgb, soft_dark=False):
         self.rgb = [((c >> 16) & 255, (c >> 8) & 255, c & 255) for c in nes_rgb]
         self.ramps = {}
+        self.soft_dark = soft_dark
 
     def ramp_of(self, c):
         if c not in self.ramps:
-            self.ramps[c] = ramp(self.rgb[c])
+            r = ramp(self.rgb[c])
+            if self.soft_dark:          # gentle shading for people: half steps, no extremes
+                base = r[2]
+                lo, hi = mix(base, r[1], 0.5), mix(base, r[3], 0.5)
+                r = [mix(base, r[1], 0.8), lo, base, hi, mix(base, r[3], 0.8)]
+            self.ramps[c] = r
         return self.ramps[c]
 
     def dark(self, c):
@@ -144,12 +160,13 @@ class Painter:
                     if None in n8:
                         inner = [g(x + dx, y + dy) for dx, dy in ((1, 0), (0, 1), (1, 1), (-1, 0), (0, -1))]
                         mat = next((m for m in inner if m is not None and not self.dark(m)), None)
-                        out[y][x] = mix(OUTLINE_OUT, self.ramp_of(mat)[0], 0.3) if mat is not None else OUTLINE_OUT
+                        out[y][x] = mix(OUTLINE_OUT, self.ramp_of(mat)[0], 0.3) \
+                            if mat is not None and not self.soft_dark else OUTLINE_OUT
                         continue
                     if size[y][x] <= 3:
                         out[y][x] = DETAIL
                         continue
-                    tones = DARK_RAMP
+                    tones = SOFT_DARK_RAMP if self.soft_dark else DARK_RAMP
                 else:
                     tones = self.ramp_of(v)
                 lit = g(x, y - 1) != v or g(x - 1, y) != v
@@ -180,9 +197,10 @@ def slot_of(chr_, tag):
 
 
 MIN_DUMPS = 3
+BLACKS = {0x0D, 0x0E, 0x0F, 0x1D, 0x1E, 0x1F, 0x2E, 0x2F, 0x3E, 0x3F}
 
 
-def frame_keys(chr_, tags, fb, pal):
+def frame_keys(chr_, tags, fb, pal, pals=frozenset((1, 2, 3))):
     """per pixel: the pack key (tile, c1, c2, c3) of enemy sprite pixels (else None), and the enemy-pixel mask.
     Enemy = sprite palette 1-3 (palette 0 is the player's, packs/hero) and not a player bank. Colours = the
     renderer's per-line palette (Enhance.cs Render): end-of-frame palette, updated by each line's own pixels."""
@@ -203,7 +221,7 @@ def frame_keys(chr_, tags, fb, pal):
             if not t & VALID:
                 continue
             g = (t >> 19 & 7) - 4
-            if g < 1 or ((t & 0x1FFF) >> 6) in HERO_BANKS:
+            if g not in pals or ((t & 0x1FFF) >> 6) in HERO_BANKS:
                 continue
             c1, c2, c3 = lp[g * 4 + 1], lp[g * 4 + 2], lp[g * 4 + 3]
             if c1 == c2 == c3:
@@ -215,6 +233,7 @@ def frame_keys(chr_, tags, fb, pal):
 
 def main(argv):
     src, out_dir, preview, skip, maxprev = os.path.join(cv.ROOT, 'out', 'sprites'), os.path.join(cv.ROOT, 'packs', 'enemies'), None, {'group18', 'death'}, 48
+    excl, pals, min_h, no_dark, only, soft_dark = set(), {1, 2, 3}, 0, False, None, False
     i = 0
     while i < len(argv):
         a = argv[i]
@@ -226,32 +245,49 @@ def main(argv):
             preview = argv[i + 1]; i += 1
         elif a == '--skip':
             skip = set(argv[i + 1].split(',')); i += 1
+        elif a == '--exclude':
+            for d in argv[i + 1].split(','):
+                excl |= {f[:-4] for f in os.listdir(d) if f.endswith('.png')}
+            i += 1
+        elif a == '--palettes':
+            pals = {int(v) for v in argv[i + 1].split(',')}; i += 1
+        elif a == '--only':
+            only = set(argv[i + 1].split(',')); i += 1
+        elif a == '--min-height':
+            min_h = int(argv[i + 1]); i += 1
+        elif a == '--soft-dark':
+            soft_dark = True
+        elif a == '--no-dark':
+            no_dark = True
         elif a == '--max-preview':
             maxprev = int(argv[i + 1]); i += 1
         elif a in ('-h', '--help'):
             print(__doc__); return 0
         i += 1
-    preview = preview or os.path.join(os.path.dirname(os.path.abspath(out_dir)), 'enemies_preview.png')
+    preview = preview or os.path.join(os.path.dirname(os.path.abspath(out_dir)),
+                                      os.path.basename(os.path.abspath(out_dir)) + '_preview.png')
     chr_ = open(os.path.join(DATA, 'chr.bin'), 'rb').read()
-    painter = Painter(json.load(open(os.path.join(DATA, 'palettes.json')))['nesRgb'])
+    painter = Painter(json.load(open(os.path.join(DATA, 'palettes.json')))['nesRgb'], soft_dark)
     art = {}                     # key (tile, c1, c2, c3) -> 32x32 RGBA rows
     shots = []
-    states = sorted(d for d in os.listdir(src) if os.path.isdir(os.path.join(src, d)) and d not in skip) \
+    states = sorted(d for d in os.listdir(src) if os.path.isdir(os.path.join(src, d)) and d not in skip
+                    and (only is None or d in only)) \
         if os.path.isdir(src) else []
     # pass 1: how many dumps show each tile + colours (fades / hit flashes last a few frames: seen in 1-2 dumps)
     seen_n = {}
     for st in states:
         for fn in sorted(os.listdir(os.path.join(src, st))):
-            for k in set(frame_keys(chr_, *load_dump(os.path.join(src, st, fn)))[0]) - {None}:
+            for k in set(frame_keys(chr_, *load_dump(os.path.join(src, st, fn)), pals)[0]) - {None}:
                 seen_n[k] = seen_n.get(k, 0) + 1
-    stable = {k for k, n in seen_n.items() if n >= MIN_DUMPS}
+    stable = {k for k, n in seen_n.items() if n >= MIN_DUMPS and f'{k[0]:04X}_{k[1]:02X}{k[2]:02X}{k[3]:02X}' not in excl
+              and not (no_dark and sum(c in BLACKS for c in k[1:]) >= 2)}
     dumps = 0
     per_state = {}
     for st in states:
         for fn in sorted(os.listdir(os.path.join(src, st))):
             tags, fb, pal = load_dump(os.path.join(src, st, fn))
             dumps += 1
-            keys, sprite = frame_keys(chr_, tags, fb, pal)
+            keys, sprite = frame_keys(chr_, tags, fb, pal, pals)
             for p in range(256 * 240):
                 if sprite[p] and keys[p] not in stable:
                     sprite[p] = 0
@@ -278,6 +314,8 @@ def main(argv):
                     continue
                 xs, ys = [p % 256 for p in comp], [p // 256 for p in comp]
                 x0, y0, w, h = min(xs), min(ys), max(xs) - min(xs) + 1, max(ys) - min(ys) + 1
+                if h < min_h:
+                    continue
                 grid = [[None] * w for _ in range(h)]
                 for p in comp:
                     grid[p // 256 - y0][p % 256 - x0] = fb[p] & 0x3F

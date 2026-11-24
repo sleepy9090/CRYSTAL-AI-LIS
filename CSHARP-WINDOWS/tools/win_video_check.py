@@ -13,6 +13,7 @@ and Graphics > Original must not draw it.
 `enhanced32` (T14): Graphics > Enhanced (32-bit): client 1024x960, > 2000 colours, settings file.
 `heropack` (T11): packs/hero on a gameplay frame: loads cleanly, repaints only the hero.
 `enemypack` (T12): packs/enemies on areas $29 and $05: loads cleanly, repaints enemies, not the hero.
+`npcpack` (T16): packs/npcs in a town ($18) and a shop: loads cleanly, repaints NPCs, not the hero.
 `bgpack` (T15): packs/backgrounds on a town and a field frame, 16-bit and 32-bit: loads cleanly, repaints scenery,
 the hero's own pixels unchanged.
 Exit 1 on any failure.
@@ -239,6 +240,8 @@ def main(argv):
         fails += hero_check(exe, timeout)
     if not names or 'enemypack' in names:
         fails += enemy_check(exe, timeout)
+    if not names or 'npcpack' in names:
+        fails += enemy_check(exe, timeout, 'npcpack', 'npcs', NPC_CASES)
     if not names or 'bgpack' in names:
         fails += bg_check(exe, timeout)
     return 1 if fails else 0
@@ -367,40 +370,78 @@ def hero_check(exe, timeout):
     return 0
 
 
-def enemy_check(exe, timeout):
-    """T12 packs/enemies: areas $29 and $05 with enemies on screen, Enhanced with and without the pack.
-    The pack loads without skipped files, enemy pixels change, and the hero's pixels (magenta box) do not."""
+ENEMY_CASES = (('group29', 175, ['2520:LEFT:30', '2555:UP:30', '2590:RIGHT:30', '2625:DOWN:30', '2660:A:4']),
+               ('group05', 120, ['2530:RIGHT:20', '2560:A:6']))
+NPC_CASES = (('group18', 120, ['2520:LEFT:20']), ('armorshop', 60, []))
+
+
+def hero_pixels(state, frames, keys, nes_png):
+    """the hero's own pixels (sprite tiles from the player banks $40-$42) in the last frame of a headless ReC.Run run
+    with --dump-tags; checked against the exe's --dump-screen frame (same colours there) -> list of (x, y) or None"""
+    import json
     import shutil
+    from sprite_pack import load_dump, VALID, HERO_BANKS
+    d = os.path.join(OUT, 'hero_tags')
+    shutil.rmtree(d, ignore_errors=True)
+    os.makedirs(d)
+    run_bin = os.path.join(cv.ROOT, 'src', 'ReC.Run', 'bin', 'Release', 'net10.0', 'ReC.Run')
+    r = subprocess.run([run_bin, '--load-state', state, '--frames', str(frames), '--quiet', '--dump-tags', d, '1'] +
+                       (['--keys'] + keys if keys else []), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=300)
+    files = sorted(os.listdir(d))
+    if r.returncode or not files:
+        return None
+    tags, fb, _ = load_dump(os.path.join(d, files[-1]))
+    rgb = json.load(open(os.path.join(cv.ROOT, '..', 'web', 'data', 'palettes.json')))['nesRgb']
+    _, _, fr = png_decode(open(nes_png, 'rb').read())
+    if any(fr[p // 256][p % 256] != (rgb[fb[p] & 0x3F] >> 16, rgb[fb[p] & 0x3F] >> 8 & 255, rgb[fb[p] & 0x3F] & 255)
+           for p in range(0, 256 * 240, 97)):
+        return None                                          # not the same frame
+    return [(p % 256, p // 256) for p, t in enumerate(tags)
+            if t & VALID and (t >> 19 & 7) >= 4 and ((t & 0x1FFF) >> 6) in HERO_BANKS]
+
+
+def enemy_check(exe, timeout, label='enemypack', pack_name='enemies', cases=ENEMY_CASES):
+    """T12 packs/enemies: areas $29 and $05 with enemies on screen, Enhanced with and without the pack (T16: also
+    packs/npcs on a town and a shop). The pack loads without skipped files, sprite pixels change, and the hero's
+    pixels do not (enemypack: the box around its magenta; npcpack: its exact pixels from a headless --dump-tags run,
+    as NPCs wear the same magenta)."""
     fails = 0
-    for st, frames, keys in (('group29', 175, ['2520:LEFT:30', '2555:UP:30', '2590:RIGHT:30', '2625:DOWN:30', '2660:A:4']),
-                             ('group05', 120, ['2530:RIGHT:20', '2560:A:6'])):
+    for st, frames, keys in cases:
         state = os.path.join(cv.ROOT, '..', 'web', 'test', 'states', st + '.json')
         pics, nes = {}, os.path.join(OUT, f'enemy_{st}_nes.png')
-        for name, pk in (('with', os.path.join(cv.ROOT, 'packs', 'enemies')), ('without', os.path.join(OUT, 'no_pack'))):
-            png = os.path.join(OUT, f'enemy_{st}_{name}.png')
+        for name, pk in (('with', os.path.join(cv.ROOT, 'packs', pack_name)), ('without', os.path.join(OUT, 'no_pack'))):
+            png = os.path.join(OUT, f'{label}_{st}_{name}.png')
             rc, out = run(exe, ['--load-state', winpath(state), '--frames', str(frames), '--turbo', '--no-audio',
-                                '--video-config', winpath(os.path.join(OUT, 'enemy.ini')), '--keys'] + keys +
+                                '--video-config', winpath(os.path.join(OUT, 'enemy.ini'))] + (['--keys'] + keys if keys else []) +
                           ['--menu', 'graphics:enhanced,size:4x', '--pack', winpath(pk), '--dump-window', winpath(png),
                            '--dump-screen', winpath(nes), '--save', winpath(os.path.join(OUT, 'video.sav'))], timeout)
             if rc or not os.path.exists(png) or 'graphics pack:' in out:
-                print(f'FAIL enemypack {st} {name}: rc={rc}' + (', pack files skipped' if 'graphics pack:' in out else ''))
+                print(f'FAIL {label:9s} {st} {name}: rc={rc}' + (', pack files skipped' if 'graphics pack:' in out else ''))
                 fails += 1
                 break
             pics[name] = png_decode(open(png, 'rb').read())[2]
         if len(pics) < 2:
             continue
         a, b = pics['with'], pics['without']
-        _, _, fr = png_decode(open(nes, 'rb').read())
-        hero = [(x, y) for y, row in enumerate(fr) for x, p in enumerate(row) if p == (0xD8, 0x00, 0xCC)]
-        box = ((min(p[0] for p in hero) - 4) * 4, (min(p[1] for p in hero) - 6) * 4,
-               (max(p[0] for p in hero) + 4) * 4, (max(p[1] for p in hero) + 6) * 4) if hero else (0, 0, 0, 0)
         changed = sum(a[y][x] != b[y][x] for y in range(len(a)) for x in range(len(a[0])))
-        in_hero = sum(a[y][x] != b[y][x] for y in range(box[1], box[3]) for x in range(box[0], box[2]))
+        if label == 'npcpack':
+            hp = hero_pixels(state, frames, keys, nes)
+            if not hp:
+                print(f'FAIL {label:9s} {st}: no hero pixels from the headless run (or not the same frame)')
+                fails += 1
+                continue
+            in_hero = sum(a[y * 4 + 2][x * 4 + 2] != b[y * 4 + 2][x * 4 + 2] for x, y in hp)
+        else:
+            _, _, fr = png_decode(open(nes, 'rb').read())
+            hero = [(x, y) for y, row in enumerate(fr) for x, p in enumerate(row) if p == (0xD8, 0x00, 0xCC)]
+            box = ((min(p[0] for p in hero) - 4) * 4, (min(p[1] for p in hero) - 6) * 4,
+                   (max(p[0] for p in hero) + 4) * 4, (max(p[1] for p in hero) + 6) * 4) if hero else (0, 0, 0, 0)
+            in_hero = sum(a[y][x] != b[y][x] for y in range(box[1], box[3]) for x in range(box[0], box[2]))
         if changed < 300 or in_hero:
-            print(f'FAIL enemypack {st}: {changed} pixels changed, {in_hero} on the hero')
+            print(f'FAIL {label:9s} {st}: {changed} pixels changed, {in_hero} on the hero')
             fails += 1
         else:
-            print(f'ok   enemypack  {st}: {changed} enemy pixels repainted, hero untouched')
+            print(f'ok   {label:10s} {st}: {changed} sprite pixels repainted, hero untouched')
     return fails
 
 

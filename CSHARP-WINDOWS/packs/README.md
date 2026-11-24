@@ -62,3 +62,22 @@ palette (e.g. the same wall in another town's colours) needs its own copy under 
 **Made by:** `python3 tools/sprite_capture.py --out out/bg --every 16 <every state in ../web/test/states>` (about two
 minutes) then `python3 tools/bg_pack.py` (about six minutes; `--stats` lists the CHR banks the backgrounds use,
 `tools/tag_banks.py` the ones in a screen rectangle). Deterministic.
+
+## `npcs/` — starter pack for the townspeople
+121 tiles for the villagers, shopkeepers and other people of the towns, shops, the inn and the story scenes (35 test
+situations), plus two big sprites nobody else covers: the tower of the ending and the item on display in the shops.
+`npcs_preview.png` shows each one: NES (left) and the pack (right).
+
+The sprite packs' style in a gentler version for people: half-step light / shadow tones (no extremes, so faces stay
+soft), black hair, beards and robes stay near-black, plain dark outlines, then the Enhanced rounding. Townspeople who
+wear the hero's colours are covered too; the hero's own tiles are not touched.
+
+**Install:** copy `npcs/*.png` into the same `%APPDATA%\re-c\pack\` folder (names never collide with the other three
+packs: tiles the enemy pack already paints are left out), press F9 / F5.
+
+**Limits:** only people the test runs show (other towns' residents keep the built-in look); fade-out steps and menu
+cursors / small icons are left out.
+
+**Made by:** the background capture (`out/bg`, see above), then
+`python3 tools/sprite_pack.py --in out/bg --only armorshop,cure,ending,event01,event02,event07,event08,event11,event12,event13,event15,event19,event19b,event20,event21,event23,event28,giveitem,group18,inn,mesia,pawnshop,shopempty,shopmenu,talk16,talk19,talk20,talk22,talk25,talk26,talk_act1,talk_act8,talk_probe,toolshop,town02_enter --out packs/npcs --skip none --exclude packs/enemies --palettes 0,1,2,3 --min-height 12 --no-dark --soft-dark`
+(under a minute; `tools/sprite_tiles.py DUMP.bin` lists the sprite tiles per palette of a dump).
