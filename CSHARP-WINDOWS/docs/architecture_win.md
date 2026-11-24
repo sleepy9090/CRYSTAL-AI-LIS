@@ -229,3 +229,9 @@ CSHARP-WINDOWS/
     blended in outdoors. Shoreline foam: dark water (`c < $20`) with non-water within 1.6 px (8 taps), animated world
     noise. The light map also gets the sprite lift (warm, 0.35): characters light their surroundings in the dark.
     `win_hd_engine` checks the measures on four scenes (ice cave snow, fire hall embers, town leaves only, red cave none).
+18. **HD lighting (T23, host only):** bounce light = `PSBounce` (playfield albedo averaged per 2x2 NES pixels, HUD weight 0,
+    weight in alpha) at 128x120 + 2 x H + V blur at a 2-texel step, bound at t11 (`Pass` got a 5th input); the light
+    pass tints the sky ambient by the luminance-normalised bounce colour (35 %, clamped 0-2). Local lights take their
+    direction from the light map's gradient (`LocalDiffuse`: 0.35 + 0.9 n.l). Eye adaptation on the CPU (`Upload`):
+    exposure = sqrt(0.42 / mean playfield luminance) clamped 0.9-1.22, times gameplay (cut-scenes stay 1), eased 5 % per
+    frame, applied before the tone curve (`Grade.x`). Composite adds +-0.5 / 255 hash dither.

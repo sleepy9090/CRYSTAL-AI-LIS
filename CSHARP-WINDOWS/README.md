@@ -115,6 +115,9 @@ splits) and draws the scene itself. It does not take the emulated NES picture.
 - **Weather and particles:** snow / ice crystals drift down in icy places, embers rise in fire halls, leaves blow
   across outdoor scenes (each in two depths, scrolling faster than the map); foam lines deep water along the shore
   and around characters wading in it; characters carry a little warm light into dark places.
+- **Light that behaves:** the ambient light takes on the colour of its surroundings (bounce light: a red carpet warms
+  the floor beside it); fires and characters light from a direction, so bumps facing them catch the light; in
+  gameplay the exposure adapts gently to dark and bright places; the output is dithered so smooth gradients do not band.
 - **Parallax:** pits, chasms and the darkness around caves become depth: cliff walls seen in perspective from the
   middle of the screen, and three rock layers far below that scroll slower than the map (the camera comes from the
   game's own scroll) and lie in the ledges' shadows. Dust motes and outdoor mist float in front and scroll faster.

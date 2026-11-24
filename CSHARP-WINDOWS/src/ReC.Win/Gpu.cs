@@ -56,6 +56,8 @@ internal sealed unsafe partial class Gpu : IDisposable
     // frame targets
     private void* _k1Tex, _k1Rtv, _k1Srv, _k2Tex, _k2Rtv, _k2Srv, _albTex, _albRtv, _albSrv;
     private void* _jaTex, _jaRtv, _jaSrv, _jbTex, _jbRtv, _jbSrv, _hTex, _hRtv, _hSrv, _l1Tex, _l1Rtv, _l1Srv, _l2Tex, _l2Rtv, _l2Srv;
+    private void* _g1Tex, _g1Rtv, _g1Srv, _g2Tex, _g2Rtv, _g2Srv, _psBounce;   // T23 bounce light (colour bleeding)
+    private float _exposure = 1;
     // draw targets
     private void* _hdrTex, _hdrRtv, _hdrSrv, _b1Tex, _b1Rtv, _b1Srv, _b2Tex, _b2Rtv, _b2Srv;
     private void* _b3Tex, _b3Rtv, _b3Srv, _b4Tex, _b4Rtv, _b4Srv, _ldrTex, _ldrRtv, _ldrSrv;
@@ -117,7 +119,7 @@ internal sealed unsafe partial class Gpu : IDisposable
 
     private const uint FmtBgra = 87, FmtRgba8 = 28, FmtRgba8U = 30, FmtRg32U = 17, FmtRgba32F = 2, FmtRgba16F = 10;
     private const uint BindSrv = 8, BindRtv = 0x20;
-    private const int NSrv = 11, NConst = 16;
+    private const int NSrv = 12, NConst = 16;
     private static readonly Guid IidTex2D = new("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
 
     private static void** Vt(void* o) => *(void***)o;
@@ -186,6 +188,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         _psJfa = Compile("PSJfa", "ps_4_0");
         _psHeight = Compile("PSHeight", "ps_4_0");
         _psEmit = Compile("PSEmit", "ps_4_0");
+        _psBounce = Compile("PSBounce", "ps_4_0");
         _psLight = Compile("PSLight", "ps_4_0");
         _psBright = Compile("PSBright", "ps_4_0");
         _psBlur = Compile("PSBlur", "ps_4_0");
@@ -216,6 +219,8 @@ internal sealed unsafe partial class Gpu : IDisposable
         MakeTarget(KW, KH, FmtRgba16F, out _hTex, out _hRtv, out _hSrv);
         MakeTarget(LW, LH, FmtRgba16F, out _l1Tex, out _l1Rtv, out _l1Srv);
         MakeTarget(LW, LH, FmtRgba16F, out _l2Tex, out _l2Rtv, out _l2Srv);
+        MakeTarget(LW, LH, FmtRgba16F, out _g1Tex, out _g1Rtv, out _g1Srv);
+        MakeTarget(LW, LH, FmtRgba16F, out _g2Tex, out _g2Rtv, out _g2Srv);
 
         var samp = new SampDesc { Filter = 0x15 /* MIN_MAG_MIP_LINEAR */, U = 3, V = 3, W = 3, MaxAniso = 1, MaxLod = float.MaxValue };
         void* s;
@@ -406,6 +411,10 @@ internal sealed unsafe partial class Gpu : IDisposable
         fixed (float* p = sc.Lines) Update(_lnTex, p, 240 * 16);
         _camX = sc.CamX; _camY = sc.CamY; _time = sc.Time; _outdoor = sc.Outdoor; _voidGate = sc.VoidGate; _play = sc.Play;
         _icy = sc.Icy; _hot = sc.Hot;
+        // eye adaptation (gameplay only): dark scenes a little brighter, bright ones a little darker, eased over ~1 s
+        float lum = Math.Max(_mr * 0.299f + _mg * 0.587f + _mb * 0.114f, 0.05f);
+        float want = 1 + (Math.Clamp(MathF.Sqrt(0.42f / lum), 0.9f, 1.22f) - 1) * _play;
+        _exposure += (want - _exposure) * 0.05f;
         (_mr, _mg, _mb) = sc.Mean;
 
         Constants(1, 1, 0, 240);
@@ -433,6 +442,15 @@ internal sealed unsafe partial class Gpu : IDisposable
             _c[28] = 0; _c[29] = 1f / LH; SetConstants();
             Pass(_l1Rtv, 0, 0, LW, LH, _psBlur, _l2Srv, null, null, null);
         }
+        // bounce light: the albedo averaged at 128x120, blurred very wide (2 x H + V at 2x the step)
+        Pass(_g1Rtv, 0, 0, LW, LH, _psBounce, _albSrv, null, null, null);
+        for (int k = 0; k < 2; k++)
+        {
+            _c[28] = 2f / LW; _c[29] = 0; SetConstants();
+            Pass(_g2Rtv, 0, 0, LW, LH, _psBlur, _g1Srv, null, null, null);
+            _c[28] = 0; _c[29] = 2f / LH; SetConstants();
+            Pass(_g1Rtv, 0, 0, LW, LH, _psBlur, _g2Srv, null, null, null);
+        }
         Unbind();
     }
 
@@ -457,7 +475,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             Parallax ? 1 : 0, Shadows ? 1 : 0, Atmosphere ? 1 : 0, Detail ? 1 : 0,
             _outdoor, _voidGate, _play, dark * dark * (3 - 2 * dark),
             _mr, _mg, _mb, 0,
-            0, Saturation, Contrast, Vignette,
+            _exposure, Saturation, Contrast, Vignette,
             Reflections ? ReflectK : 0, Lights ? LightK : 0, Atmosphere ? _icy : 0, Atmosphere ? _hot : 0,
             0, 0, 0, 0,
             0, 0, 0, 0,
@@ -488,7 +506,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         Constants(pw, ph, firstLine, lines);
         Begin();
         // 5. light -> HDR
-        Pass(_hdrRtv, 0, 0, pw, ph, _psLight, _albSrv, _hSrv, _l1Srv, null);
+        Pass(_hdrRtv, 0, 0, pw, ph, _psLight, _albSrv, _hSrv, _l1Srv, null, _g1Srv);
         // 6. bloom: bright part at 1/4, blur H + V twice (wide, soft glow)
         int bw = Math.Max(pw / 4, 1), bh = Math.Max(ph / 4, 1);
         Pass(_b1Rtv, 0, 0, bw, bh, _psBright, _hdrSrv, null, null, null);
@@ -527,13 +545,13 @@ internal sealed unsafe partial class Gpu : IDisposable
 
     /// <summary>one full-screen pass: t0-t2 float inputs, t3 uint keys; t4-t10 = the uploads (info, lines, materials,
     /// NES colours, layers, art map, atlas), bound for every pass</summary>
-    private void Pass(void* rtv, int x, int y, int w, int h, void* ps, void* t0, void* t1, void* t2, void* t3)
+    private void Pass(void* rtv, int x, int y, int w, int h, void* ps, void* t0, void* t1, void* t2, void* t3, void* t11 = null)
     {
         Unbind();
         ((delegate* unmanaged[Stdcall]<void*, uint, void**, void*, void>)Vt(_ctx)[33])(_ctx, 1, &rtv, null);
         var vp = new Viewport { X = x, Y = y, W = w, H = h, MaxZ = 1 };
         ((delegate* unmanaged[Stdcall]<void*, uint, Viewport*, void>)Vt(_ctx)[44])(_ctx, 1, &vp);
-        void** srv = stackalloc void*[] { t0, t1, t2, t3, _iSrv, _lnSrv, _mSrv, _rgbSrv, _laySrv, _artSrv, _atlSrv };
+        void** srv = stackalloc void*[] { t0, t1, t2, t3, _iSrv, _lnSrv, _mSrv, _rgbSrv, _laySrv, _artSrv, _atlSrv, t11 };
         ((delegate* unmanaged[Stdcall]<void*, uint, uint, void**, void>)Vt(_ctx)[8])(_ctx, 0, NSrv, srv);
         ((delegate* unmanaged[Stdcall]<void*, void*, void**, uint, void>)Vt(_ctx)[9])(_ctx, ps, null, 0);
         ((delegate* unmanaged[Stdcall]<void*, uint, uint, void>)Vt(_ctx)[13])(_ctx, 3, 0);
@@ -593,6 +611,8 @@ internal sealed unsafe partial class Gpu : IDisposable
         Release(ref _hSrv); Release(ref _hRtv); Release(ref _hTex);
         Release(ref _l1Srv); Release(ref _l1Rtv); Release(ref _l1Tex);
         Release(ref _l2Srv); Release(ref _l2Rtv); Release(ref _l2Tex);
+        Release(ref _g1Srv); Release(ref _g1Rtv); Release(ref _g1Tex); Release(ref _g2Srv); Release(ref _g2Rtv); Release(ref _g2Tex);
+        Release(ref _psBounce);
         Release(ref _laySrv); Release(ref _layTex); Release(ref _artSrv); Release(ref _artTex);
         Release(ref _iSrv); Release(ref _iTex); Release(ref _lnSrv); Release(ref _lnTex); Release(ref _mSrv); Release(ref _mTex);
         Release(ref _rgbSrv); Release(ref _rgbTex); Release(ref _atlSrv); Release(ref _atlTex);

@@ -18,7 +18,7 @@ cbuffer C : register(b0)
     float4 Opt;    // parallax, shadows, atmosphere, material detail (0 / 1)
     float4 Scn;    // outdoor, void gate, gameplay, darkness
     float4 MeanC;  // mean playfield colour
-    float4 Grade;  // -, saturation, contrast, vignette
+    float4 Grade;  // exposure (eye adaptation), saturation, contrast, vignette
     float4 Opt2;   // reflection strength, local light strength, icy scene (snow), hot scene (embers)
 };
 Texture2D SrcA : register(t0);
@@ -32,6 +32,7 @@ Texture2D Rgb : register(t7);
 Texture2D<uint4> Lay : register(t8);
 Texture2D<uint2> ArtM : register(t9);
 Texture2D Atlas : register(t10);
+Texture2D Bnc : register(t11);   // bounce light: rgb = albedo sum, a = weight (blurred)
 SamplerState Lin : register(s0);
 
 static const float2 NES = float2(256, 240);
@@ -177,6 +178,21 @@ float Emissive(uint c)
     return 0;
 }
 
+// bounce light source: the playfield albedo averaged per 2x2 NES pixels (HUD left out), weight in alpha
+float4 PSBounce(V i) : SV_Target
+{
+    int2 o = int2(i.p.xy) * 2;
+    float4 acc = 0;
+    [loop] for (int y = 0; y < 2; y++)
+        [loop] for (int x = 0; x < 2; x++)
+        {
+            int2 n = o + int2(x, y);
+            float wgt = (Lay.Load(int3(n, 0)).r & 0x80) != 0 ? 0 : 1;
+            acc += float4(SrcA.SampleLevel(Lin, (float2(n) + 0.5) / NES, 0).rgb, 1) * wgt;
+        }
+    return acc / 4;
+}
+
 float4 PSEmit(V i) : SV_Target
 {
     int2 o = int2(i.p.xy) * 2;
@@ -219,6 +235,16 @@ float3 Albedo(float2 s)
     float2 i = floor(t), f = t - i;
     f = saturate((f - 0.5) * Fx2.y + 0.5);
     return SrcA.SampleLevel(Lin, (i + f + 0.5) / ALB, 0).rgb;
+}
+
+// local lights come from a direction: toward where the light map gets brighter, so bumps facing a fire are lit
+float LocalDiffuse(float2 s, float3 n, float3 lm)
+{
+    float2 le = float2(2.0 / 128, 2.0 / 120);
+    float gx = dot(SrcC.SampleLevel(Lin, s + float2(le.x, 0), 0).rgb - SrcC.SampleLevel(Lin, s - float2(le.x, 0), 0).rgb, LUM);
+    float gy = dot(SrcC.SampleLevel(Lin, s + float2(0, le.y), 0).rgb - SrcC.SampleLevel(Lin, s - float2(0, le.y), 0).rgb, LUM);
+    float3 l = normalize(float3(gx, gy, 0.08 + dot(lm, LUM) * 0.5));
+    return 0.35 + 0.9 * saturate(dot(n, l));
 }
 
 // ---- noise (hash without sine; value noise on a lattice that repeats every `per` cells)
@@ -485,11 +511,16 @@ float4 PSLight(V i) : SV_Target
         float3 sky = lerp(float3(0.78, 0.86, 1.0), MeanC.rgb / max(max(MeanC.r, MeanC.g), max(MeanC.b, 0.05)), 0.2);
         float diff = saturate(dot(n, Lgt.xyz));
         float norm = dot(Mat.x * sky + Mat.y * Hlf.w * sunC, LUM);
-        float3 lightC = (Mat.x * sky * ao + Mat.y * diff * sunC * shade) / norm;
+        // bounce light: the ambient takes on the colour of what is around (a red carpet warms the floor beside it)
+        float4 bn = Bnc.SampleLevel(Lin, s, 0);
+        float3 bc = bn.a > 0.01 ? bn.rgb / bn.a : sky;
+        bc = clamp(bc / max(dot(bc, LUM), 0.08), 0, 2);
+        float3 amb = sky * lerp(1, bc, 0.35);
+        float3 lightC = (Mat.x * amb * ao + Mat.y * diff * sunC * shade) / norm;
         // local lights (fire, lava, lamps): in dark places the light map lights everything around it
         float3 lm = SrcC.SampleLevel(Lin, s, 0).rgb;
         float lightUp = Opt2.y * (0.05 + 0.95 * Scn.w);
-        lightC = lightC * (1 - 0.2 * Scn.w * saturate(Opt2.y)) + lm * lightUp * (0.6 + 0.4 * saturate(n.z));
+        lightC = lightC * (1 - 0.2 * Scn.w * saturate(Opt2.y)) + lm * lightUp * LocalDiffuse(s, n, lm);
         // specular per material, glints on water / ice
         float gp = 6 + (spr ? 0.3 : m.b) * 120;
         float nh = saturate(dot(n, Hlf.xyz));
@@ -562,13 +593,14 @@ float4 PSComp(V i) : SV_Target
     if (h.a < 0.5) return float4(saturate(h.rgb), 0);                   // HUD: untouched (alpha 0: no AA either)
     // two bloom sizes: a tight glow (1/4) and a wide halo (1/8)
     float3 bl = SrcB.SampleLevel(Lin, i.uv, 0).rgb * 0.75 + SrcC.SampleLevel(Lin, i.uv, 0).rgb * 0.55;
-    float3 c = Tone(h.rgb + bl * Fx2.w);
+    float3 c = Tone(h.rgb * Grade.x + bl * Fx2.w);
     c = lerp(dot(c, LUM).xxx, c, Grade.y);
     c = lerp(c, c * c * (3 - 2 * c), Grade.z);
     // scene grade: warmer outdoors, cooler in dark places
     c *= lerp(1, float3(1.04, 1.0, 0.94), Scn.x * 0.7) * lerp(1, float3(0.93, 0.97, 1.07), Scn.w * 0.7);
     float2 d = i.uv - 0.5;
     c *= 1 - Grade.w * dot(d, d) * 2;
+    c += (Hash(i.p.xy + frac(Cam.z) * 517) - 0.5) / 255;               // dither: no banding in smooth gradients
     return float4(saturate(c), 1);
 }
 

@@ -262,3 +262,7 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   ice cave's whites are $30), snow / ice crystals, rising embers, falling leaves (2 depths, parallax), shoreline foam,
   characters' warm light in the dark. 296 tests (weather per scene asserted); hd 40853 colours, hdfx 701326 / 714240
   playfield pixels changed, HUD identical; smoke + canon, REA, coverage ok. Previews: out/hd22/ (`weather.png`, `snow.png`).
+- [x] T23 (interactive, 2026-11-24) done: **HD lighting** (request: "make the HD graphics even better" a third time).
+  Host only (architecture §5.18): bounce light (colour bleeding), directional local lights, eye adaptation (gameplay
+  only), output dither. 296 tests; hd 5 -> 53982 colours (T22: 40853), hdfx 697713 / 714240, HUD identical; packs,
+  smoke + canon, REA ok. Previews: out/hd23/ (`fire_cmp.png` T22 vs T23).
