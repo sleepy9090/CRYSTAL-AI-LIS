@@ -10,6 +10,7 @@ and the settings file written by the menu. Xvfb screen: 1920x1080x24.
 `enhanced` (T10, Video > Graphics): Enhanced at 4x (client 1024x960, > 3x the colours, block centres of flat areas
 keep their colour, settings file, --export-tiles), then the exported tiles painted magenta as a pack must be drawn,
 and Graphics > Original must not draw it.
+`heropack` (T11): packs/hero on a gameplay frame: loads cleanly, repaints only the hero.
 Exit 1 on any failure.
 """
 import os
@@ -226,6 +227,8 @@ def main(argv):
             print(f'ok   {name:10s} {msg_ok}', flush=True)
     if not names or 'enhanced' in names:
         fails += enhanced_checks(exe, timeout, hpng, frame)
+    if not names or 'heropack' in names:
+        fails += hero_check(exe, timeout)
     return 1 if fails else 0
 
 
@@ -300,6 +303,44 @@ def enhanced_checks(exe, timeout, hpng, frame):
         one('packtile', [], magenta)              # settings reloaded from enhanced.ini: graphics=enhanced
         one('original', ['--menu', 'graphics:original'], no_magenta)
     return fails
+
+
+
+def hero_check(exe, timeout):
+    """T11 packs/hero: a group-29 gameplay frame, Enhanced with and without the pack. The pack loads without skipped
+    files, the hero's 4x box gets the pack's colours (hair ramp), and nothing outside the box changes."""
+    state = os.path.join(cv.ROOT, '..', 'web', 'test', 'states', 'group29.json')
+    pack = os.path.join(cv.ROOT, 'packs', 'hero')
+    keys = ['2520:LEFT:30', '2555:UP:30', '2590:RIGHT:30', '2625:DOWN:30', '2660:A:4']
+    pics, nes = {}, os.path.join(OUT, 'hero_nes.png')
+    for name, pk in (('with', pack), ('without', os.path.join(OUT, 'no_pack'))):
+        png = os.path.join(OUT, f'hero_{name}.png')
+        rc, out = run(exe, ['--load-state', winpath(state), '--frames', '175', '--turbo', '--no-audio',
+                            '--video-config', winpath(os.path.join(OUT, 'hero.ini')), '--keys'] + keys +
+                      ['--menu', 'graphics:enhanced,size:4x', '--pack', winpath(pk), '--dump-window', winpath(png),
+                       '--dump-screen', winpath(nes), '--save', winpath(os.path.join(OUT, 'video.sav'))], timeout)
+        if rc or not os.path.exists(png) or 'graphics pack:' in out:
+            print(f'FAIL heropack  run {name}: rc={rc}' + ('' if 'graphics pack:' not in out else ', pack files skipped'))
+            print('     ' + '\n     '.join(out.strip().splitlines()[-8:]))
+            return 1
+        pics[name] = png_decode(open(png, 'rb').read())[2]
+    # the hero: bounding box of its magenta ($14 = D800CC) in the NES frame, 2 px margin, at 4x
+    _, _, fr = png_decode(open(nes, 'rb').read())
+    pts = [(x, y) for y, row in enumerate(fr) for x, p in enumerate(row) if p == (0xD8, 0x00, 0xCC)]
+    if not pts:
+        print('FAIL heropack  no hero colour in the frame'); return 1
+    x0, y0 = (min(p[0] for p in pts) - 6) * 4, (min(p[1] for p in pts) - 8) * 4
+    x1, y1 = (max(p[0] for p in pts) + 6) * 4, (max(p[1] for p in pts) + 8) * 4
+    a, b = pics['with'], pics['without']
+    inside = sum(a[y][x] != b[y][x] for y in range(y0, y1) for x in range(x0, x1))
+    outside = sum(a[y][x] != b[y][x] for y in range(len(a)) for x in range(len(a[0]))
+                  if not (x0 <= x < x1 and y0 <= y < y1))
+    hair = sum(a[y][x] == (0xC8, 0x2C, 0xC4) for y in range(y0, y1) for x in range(x0, x1))
+    if inside < 500 or outside or hair < 50:
+        print(f'FAIL heropack  {inside} hero pixels changed, {outside} outside the hero box, {hair} hair-ramp pixels')
+        return 1
+    print(f'ok   heropack   {inside} hero pixels repainted, 0 elsewhere, {hair} hair-ramp pixels')
+    return 0
 
 
 if __name__ == '__main__':

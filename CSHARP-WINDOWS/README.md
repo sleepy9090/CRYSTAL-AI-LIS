@@ -91,6 +91,9 @@ hand-drawn 16-bit art. For that, you can add your own tiles:
 3. Copy the finished PNGs into `%APPDATA%\re-c\pack\` (or start with `--pack DIR`) and press **F5** (Video ›
    Graphics › Reload graphics pack) to see them in the game at once.
 
+**Starter pack for the main character:** `packs/hero/` (133 tiles, see `packs/README.md` and
+`packs/hero_preview.png`) — copy its PNGs into `%APPDATA%\re-c\pack\` and press F9.
+
 How a name matches: `TTTT` is the tile number (hex) and `AABBCC` are the three NES colours (hex) it is drawn with.
 The same tile in other colours (another palette, or a step of a fade) uses the built-in look, so draw the tile in the
 colours you see at full brightness and copy it under the other names if needed. Bad files are skipped and listed in
@@ -133,6 +136,7 @@ ReC.exe --wav ID OUT.wav [SECONDS]
 | `python3 tools/win_smoke.py --canon [--no-xinput] [--verbose]` | the real window under Wine + Xvfb: a 600-frame run exits 0, writes the save file, and its PNG equals the headless one; a scripted windowed CSV equals the headless one |
 | `python3 tools/win_video_check.py` | the Video menu under Wine + Xvfb: Enhanced graphics (+ export, pack tile, back to Original), upscale filters, window sizes, aspect ratios, crop, fill / smooth, menu bar, fullscreen (+ resolution fallback), settings file saved and reloaded; the drawn picture against the headless frame |
 | `python3 tools/apu_wav_compare.py --exe 0x05 0x10` | the exe's APU output matches `apu_check.mjs` byte for byte |
+| `python3 tools/pack_check.py DIR` | a graphics-pack folder: names, 32×32, decodable (what the exe would skip) |
 | `python3 tools/cs_coverage.py` | every web-port function is ported (`// js:` tag) or has a written reason in `docs/waivers.csv` |
 | `python3 tools/rea_pe_report.py` + `python3 tools/cs_rea_members.py` | REA inspection of the exe → `docs/rea/summary.md` (imports, hardening, resources, exposure), and every tagged member is still present after trimming |
 

@@ -142,3 +142,13 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   11,621,459 bytes, sha256 `2fd7bbf2…`; `core_vs_web` + `win_vs_web` `--canon --states --checks wake` 156/156 each,
   `win_smoke.py --canon` ok, coverage 100 %, REA all expectations hold, `cs_rea_members` 1029/1029.
   Not automated: hand-drawn art itself (the pack is empty; the built-in look is generated), play-test on Windows.
+- [x] T11 (interactive, 2026-11-23) done: **starter graphics pack for the main character**, `packs/hero/` (133 tiles
+  `TTTT_36140F.png`: metasprite records 00-07 walk / attack, 09/0B/0D/0F, BC/BD/CC/CD poses; body banks R2 = $40 / $41,
+  sword R3 = $42; found by `--export-tiles` runs + `metasprites.json`, `tools/chr_sheet.py` sheets). `tools/hero_pack.py`
+  repaints each whole frame per NES pixel (5-tone ramps skin / magenta / dark cloth, light from the top left, tinted
+  selective outline, near-black details, the NES skin-colour hair shine -> pink highlight), rounds with Scale2x x2 inside
+  the NES silhouette, cuts back into tile-space tiles (first frame wins); deterministic. Two earlier tries were
+  rejected on screen: shading per output pixel (pale, speckled) and 2-px outline thinning (crumbly edges at game scale).
+  `tools/pack_check.py` (pack folder rules), `png_crop.py` / `png_find.py` (close-ups), `pngio.py`.
+  `win_video_check.py heropack`: pack loads with 0 skipped files, 3667 hero pixels repainted, 0 elsewhere.
+  Not done: other palettes (fades / hit flash fall back to the built-in look), other characters.
