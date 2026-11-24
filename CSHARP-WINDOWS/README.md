@@ -108,6 +108,10 @@ splits) and draws the scene itself. It does not take the emulated NES picture.
 - **Local lights:** fire, lava and lamp colours light up their surroundings, mostly in dark places (caves, dungeons).
 - **Reflections:** water and ice mirror the characters and enemies standing on the shore (rippled), and faintly the
   scenery.
+- **Motion and light:** deep water refracts in slow waves, grass sways in gusts of wind, soft sun shafts drift across
+  outdoor scenes; fine relief is taken from the art itself (roof tiles, bricks, faces); a tight glow plus a wide halo
+  on bright spots; a warmer tone outdoors and a cooler one in dark places; edges are anti-aliased at screen
+  resolution (the HUD stays exact).
 - **Parallax:** pits, chasms and the darkness around caves become depth: cliff walls seen in perspective from the
   middle of the screen, and three rock layers far below that scroll slower than the map (the camera comes from the
   game's own scroll) and lie in the ledges' shadows. Dust motes and outdoor mist float in front and scroll faster.

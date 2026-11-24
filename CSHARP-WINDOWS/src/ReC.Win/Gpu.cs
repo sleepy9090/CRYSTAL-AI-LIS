@@ -23,8 +23,10 @@
 //   4. light map: emissive colours (fire, lava, lamps) at 128x120, blurred wide: local light in dark places.
 // Draw passes (output resolution):
 //   5. light -> HDR: material detail, normals, warm sun + cool sky, specular, glints, AO, soft height-field shadows,
-//      sprite contact shadows, cloud shadows, local lights, water reflections, chasm parallax, mist, dust motes;
-//   6. bloom (soft knee, 1/4 size, blurred twice); 7. composite: tone shoulder, grade, vignette (HUD untouched).
+//      sprite contact shadows, cloud shadows, local lights, water reflections, chasm parallax, mist, dust motes,
+//      fine relief from the 8x art, water refraction + grass in the wind, sun shafts outdoors (T21);
+//   6. bloom (soft knee, 1/4 size + a wide 1/8 halo); 7. composite: tone shoulder, grade, scene tint (warm outdoors,
+//      cool in the dark), vignette (HUD untouched); 8. FXAA-style edge anti-aliasing at screen resolution (HUD exact).
 // Any failure (no Direct3D 11, compiler missing) -> the caller falls back to Enhanced (32-bit).
 using System.Runtime.InteropServices;
 using System.Text;
@@ -56,7 +58,8 @@ internal sealed unsafe partial class Gpu : IDisposable
     private void* _jaTex, _jaRtv, _jaSrv, _jbTex, _jbRtv, _jbSrv, _hTex, _hRtv, _hSrv, _l1Tex, _l1Rtv, _l1Srv, _l2Tex, _l2Rtv, _l2Srv;
     // draw targets
     private void* _hdrTex, _hdrRtv, _hdrSrv, _b1Tex, _b1Rtv, _b1Srv, _b2Tex, _b2Rtv, _b2Srv;
-    private void* _vs, _psScale, _psAlbedo, _psSeed, _psJfa, _psHeight, _psEmit, _psLight, _psBright, _psBlur, _psComp, _sampLin, _cb;
+    private void* _b3Tex, _b3Rtv, _b3Srv, _b4Tex, _b4Rtv, _b4Srv, _ldrTex, _ldrRtv, _ldrSrv;
+    private void* _vs, _psScale, _psAlbedo, _psSeed, _psJfa, _psHeight, _psEmit, _psLight, _psBright, _psBlur, _psComp, _psFinal, _sampLin, _cb;
     private int _bw, _bh, _pw, _ph;
     private float _camX, _camY, _time, _outdoor, _voidGate, _mr = 0.3f, _mg = 0.3f, _mb = 0.3f, _play;
     private readonly float[] _c = new float[NConst * 4];
@@ -187,6 +190,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         _psBright = Compile("PSBright", "ps_4_0");
         _psBlur = Compile("PSBlur", "ps_4_0");
         _psComp = Compile("PSComp", "ps_4_0");
+        _psFinal = Compile("PSFinal", "ps_4_0");
 
         MakeTex(256, 240, FmtRgba8U, out _layTex, out _laySrv);
         MakeTex(256, 240, FmtRg32U, out _artTex, out _artSrv);
@@ -299,10 +303,15 @@ internal sealed unsafe partial class Gpu : IDisposable
         Release(ref _hdrSrv); Release(ref _hdrRtv); Release(ref _hdrTex);
         Release(ref _b1Srv); Release(ref _b1Rtv); Release(ref _b1Tex);
         Release(ref _b2Srv); Release(ref _b2Rtv); Release(ref _b2Tex);
+        Release(ref _b3Srv); Release(ref _b3Rtv); Release(ref _b3Tex); Release(ref _b4Srv); Release(ref _b4Rtv); Release(ref _b4Tex);
+        Release(ref _ldrSrv); Release(ref _ldrRtv); Release(ref _ldrTex);
         _pw = pw; _ph = ph;
         MakeTarget(pw, ph, FmtRgba16F, out _hdrTex, out _hdrRtv, out _hdrSrv);
         MakeTarget(Math.Max(pw / 4, 1), Math.Max(ph / 4, 1), FmtRgba16F, out _b1Tex, out _b1Rtv, out _b1Srv);
         MakeTarget(Math.Max(pw / 4, 1), Math.Max(ph / 4, 1), FmtRgba16F, out _b2Tex, out _b2Rtv, out _b2Srv);
+        MakeTarget(Math.Max(pw / 8, 1), Math.Max(ph / 8, 1), FmtRgba16F, out _b3Tex, out _b3Rtv, out _b3Srv);
+        MakeTarget(Math.Max(pw / 8, 1), Math.Max(ph / 8, 1), FmtRgba16F, out _b4Tex, out _b4Rtv, out _b4Srv);
+        MakeTarget(pw, ph, FmtRgba8, out _ldrTex, out _ldrRtv, out _ldrSrv);
     }
 
     // ---- graphics pack -> atlas
@@ -489,8 +498,20 @@ internal sealed unsafe partial class Gpu : IDisposable
             _c[28] = 0; _c[29] = 1f / bh; SetConstants();
             Pass(_b1Rtv, 0, 0, bw, bh, _psBlur, _b2Srv, null, null, null);
         }
-        // 7. composite into the picture rectangle
-        Pass(_backRtv, r.X, r.Y, pw, ph, _psComp, _hdrSrv, _b1Srv, null, null);
+        // wide halo: the glow again at 1/8, blurred twice more
+        int cw8 = Math.Max(pw / 8, 1), ch8 = Math.Max(ph / 8, 1);
+        _c[28] = 0; _c[29] = 0; SetConstants();
+        Pass(_b3Rtv, 0, 0, cw8, ch8, _psBlur, _b1Srv, null, null, null);
+        for (int k = 0; k < 2; k++)
+        {
+            _c[28] = 1f / cw8; _c[29] = 0; SetConstants();
+            Pass(_b4Rtv, 0, 0, cw8, ch8, _psBlur, _b3Srv, null, null, null);
+            _c[28] = 0; _c[29] = 1f / ch8; SetConstants();
+            Pass(_b3Rtv, 0, 0, cw8, ch8, _psBlur, _b4Srv, null, null, null);
+        }
+        // 7. composite (tone, grade), then 8. edge anti-aliasing into the picture rectangle
+        Pass(_ldrRtv, 0, 0, pw, ph, _psComp, _hdrSrv, _b1Srv, _b3Srv, null);
+        Pass(_backRtv, r.X, r.Y, pw, ph, _psFinal, _ldrSrv, null, null, null);
         Unbind();
         if (present) ((delegate* unmanaged[Stdcall]<void*, uint, uint, int>)Vt(_swap)[8])(_swap, 0, 0);
     }
@@ -558,6 +579,8 @@ internal sealed unsafe partial class Gpu : IDisposable
     {
         Unbind();
         Release(ref _backRtv);
+        Release(ref _b3Srv); Release(ref _b3Rtv); Release(ref _b3Tex); Release(ref _b4Srv); Release(ref _b4Rtv); Release(ref _b4Tex);
+        Release(ref _ldrSrv); Release(ref _ldrRtv); Release(ref _ldrTex);
         Release(ref _hdrSrv); Release(ref _hdrRtv); Release(ref _hdrTex);
         Release(ref _b1Srv); Release(ref _b1Rtv); Release(ref _b1Tex);
         Release(ref _b2Srv); Release(ref _b2Rtv); Release(ref _b2Tex);
@@ -573,7 +596,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         Release(ref _iSrv); Release(ref _iTex); Release(ref _lnSrv); Release(ref _lnTex); Release(ref _mSrv); Release(ref _mTex);
         Release(ref _rgbSrv); Release(ref _rgbTex); Release(ref _atlSrv); Release(ref _atlTex);
         Release(ref _vs); Release(ref _psScale); Release(ref _psAlbedo); Release(ref _psSeed); Release(ref _psJfa);
-        Release(ref _psHeight); Release(ref _psEmit); Release(ref _psLight); Release(ref _psBright); Release(ref _psBlur); Release(ref _psComp);
+        Release(ref _psHeight); Release(ref _psEmit); Release(ref _psLight); Release(ref _psBright); Release(ref _psBlur); Release(ref _psComp); Release(ref _psFinal);
         Release(ref _sampLin); Release(ref _cb);
         Release(ref _swap); Release(ref _ctx); Release(ref _dev);
     }

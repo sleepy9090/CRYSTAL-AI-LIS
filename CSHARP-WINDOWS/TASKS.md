@@ -252,3 +252,8 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   Found: Wine's shader compiler cannot unroll loops with conditional jumps (new passes use `[loop]`); a ragged shore
   mirrors scenery into streaks (scenery reflects at 0.12, sprites fully). Previews: out/hd20/. Not measured: GPU frame
   time on real hardware (Wine renders with llvmpipe).
+- [x] T21 (interactive, 2026-11-24) done: **HD polish** (request: "make the HD graphics even better"). Host shaders only
+  (architecture §5.16): water refraction + grass wind sway, fine relief from the 8x art, sun shafts outdoors, two-level
+  bloom, scene tint (warm outdoors / cool in the dark), FXAA-style edge AA pass (HUD exact). `win_video_check` hd 5 ->
+  40853 colours (T20: 30741), hdfx 667799 / 714240 playfield pixels changed, HUD identical; packs, smoke, canon ok;
+  292 tests; REA ok. Previews: out/hd21/ (`town_cmp.png` T20 vs T21).

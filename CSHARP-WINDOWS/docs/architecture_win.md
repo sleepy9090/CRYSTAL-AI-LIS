@@ -214,3 +214,10 @@ CSHARP-WINDOWS/
     sprites full / scenery 0.12, softened). Wine's vkd3d compiler cannot unroll loops with conditional jumps: the new
     passes use `[loop]`. Without Direct3D 11 HD uses the raster's Fb + Tags in the 32-bit look (no PPU pixels either).
     Menu ids 279-281 (`hd:reflections`, `hd:lights`, `hd:noflicker`).
+16. **HD polish (T21, host only):** light pass: albedo resampled with a per-pixel offset (dark water `c < $20` of kind 2:
+    world noise waves 0.7 px; foliage: wind sway 0.3 px with gusts) under the material-detail switch; fine relief =
+    luminance gradient of the 8x albedo (±1.5 texels, x 0.5, clamped ±0.3) added to the detail normal; sun shafts =
+    value noise across the light direction (world-anchored at camera rate 1.15), outdoor x atmosphere. Bloom gets a
+    second level (1/8, blurred twice, weights 0.75 / 0.55). Composite adds the scene tint (outdoor warm, darkness cool)
+    and writes an RGBA8 picture with HUD alpha 0; `PSFinal` = FXAA-style anti-aliasing (diagonal lumas, edge direction,
+    2 + 2 taps, range test) into the swap chain, HUD pixels copied exactly.

@@ -351,8 +351,21 @@ float4 PSLight(V i) : SV_Target
     float4 ln = Lne.Load(int3(clamp(int(p.y), 0, 239), 0, 0));
     if (ln.z > 0.5 || (fl & 4) != 0) return float4(a, 0);          // HUD / text: the albedo, unlit
     float t = Cam.z;
-    float3 c = a;
     bool spr = (fl & 1) != 0;
+    // motion in the world (material detail switch): water refracts in slow waves, grass sways in gusts of wind
+    if (!spr && Opt.w > 0.5)
+    {
+        float2 w0 = ln.xy + float2(p.x, frac(p.y));
+        int c0 = (int)round(inf.g * 255 / 4);
+        int k0 = (int)round(MatT.Load(int3(c0, 0, 0)).r * 255 / 40);
+        float2 off = 0;
+        if (k0 == 2 && c0 < 0x20)                                      // dark (deep) water, not ice
+            off = float2(WN(w0 + float2(t * 2, 0), float2(6, 6)) - 0.5, WN(w0 + float2(0, t * 1.5), float2(6, 6)) - 0.5) * 0.7;
+        if (k0 == 5)
+            off.x = sin(t * 1.4 + w0.x * 0.045 + w0.y * 0.07) * 0.3 * WN(w0 + float2(t * 6, 0), float2(48, 48));
+        a = Albedo(s + off / NES);
+    }
+    float3 c = a;
     float mv = Opt.x > 0.5 && Scn.y > 0.01 && !spr ? smoothstep(0.3, 0.7, VoidS(p)) * (1 - smoothstep(0.06, 0.18, dot(a, LUM))) : 0;
     if (mv < 0.999)
     {
@@ -369,6 +382,14 @@ float4 PSLight(V i) : SV_Target
             float d0 = Detail(w, kind, t), dx = Detail(w + float2(e, 0), kind, t), dy = Detail(w + float2(0, e), kind, t);
             gd = float2(dx - d0, dy - d0) / e * amp * 0.22;
             a *= 1 + amp * 0.55 * (d0 - 0.5);
+        }
+        // fine relief from the 8x art itself (pack tiles, faces, bricks): its light and dark as a small bump
+        if (Opt.w > 0.5)
+        {
+            float2 eu = float2(1.5 / 2048, 1.5 / 1920);
+            float lx = dot(Albedo(s + float2(eu.x, 0)), LUM) - dot(Albedo(s - float2(eu.x, 0)), LUM);
+            float ly = dot(Albedo(s + float2(0, eu.y)), LUM) - dot(Albedo(s - float2(0, eu.y)), LUM);
+            gd += clamp(float2(lx, ly) * 0.5, -0.3, 0.3);
         }
         // water reflections (before lighting: the reflected scenery is lit like the water)
         if (kind == 2 && Opt2.x > 0 && (fl & 2) == 0)
@@ -444,6 +465,12 @@ float4 PSLight(V i) : SV_Target
         c = a * lightC + sp * sunC + glint + rim * sky * (0.4 + 0.6 * lum);
         // emissive colours glow a little themselves in the dark
         c += a * Emissive((uint)col) * Scn.w * Opt2.y * 0.25;
+        // sun shafts outdoors: soft beams along the light direction, fixed to the world, slowly drifting
+        float2 sd = normalize(Lgt.xy), sq = float2(-sd.y, sd.x);
+        float2 wp = p + Cam.xy * 1.15;
+        float band = FN(float2(dot(wp, sq), dot(wp, sd) * 0.08 + t * 1.5), 14);
+        float shaft = smoothstep(0.5, 0.85, band) * Scn.x * Opt.z;
+        c = c * (1 - 0.06 * Scn.x * Opt.z + 0.06 * shaft) + sunC * shaft * 0.14 * (0.5 + 0.5 * shade);
         // mist outdoors (closer than the playfield)
         float2 mp = p + Cam.xy * 1.3 + float2(t * 4, t * 1.5);
         float mist = smoothstep(0.55, 0.85, FN(mp, 60) * 0.6 + FN(mp, 24) * 0.4);
@@ -484,13 +511,39 @@ float3 Tone(float3 c)
 float4 PSComp(V i) : SV_Target
 {
     float4 h = SrcA.SampleLevel(Lin, i.uv, 0);
-    if (h.a < 0.5) return float4(saturate(h.rgb), 1);                   // HUD: untouched
-    float3 c = Tone(h.rgb + SrcB.SampleLevel(Lin, i.uv, 0).rgb * Fx2.w);
+    if (h.a < 0.5) return float4(saturate(h.rgb), 0);                   // HUD: untouched (alpha 0: no AA either)
+    // two bloom sizes: a tight glow (1/4) and a wide halo (1/8)
+    float3 bl = SrcB.SampleLevel(Lin, i.uv, 0).rgb * 0.75 + SrcC.SampleLevel(Lin, i.uv, 0).rgb * 0.55;
+    float3 c = Tone(h.rgb + bl * Fx2.w);
     c = lerp(dot(c, LUM).xxx, c, Grade.y);
     c = lerp(c, c * c * (3 - 2 * c), Grade.z);
+    // scene grade: warmer outdoors, cooler in dark places
+    c *= lerp(1, float3(1.04, 1.0, 0.94), Scn.x * 0.7) * lerp(1, float3(0.93, 0.97, 1.07), Scn.w * 0.7);
     float2 d = i.uv - 0.5;
     c *= 1 - Grade.w * dot(d, d) * 2;
     return float4(saturate(c), 1);
+}
+
+// edge anti-aliasing at screen resolution (FXAA-style: blend along the edge where the contrast is high); HUD exact
+float4 PSFinal(V i) : SV_Target
+{
+    float2 px = Out.zw;
+    float4 m = SrcA.SampleLevel(Lin, i.uv, 0);
+    if (m.a < 0.5) return float4(m.rgb, 1);
+    float lNW = dot(SrcA.SampleLevel(Lin, i.uv + float2(-1, -1) * px, 0).rgb, LUM);
+    float lNE = dot(SrcA.SampleLevel(Lin, i.uv + float2(1, -1) * px, 0).rgb, LUM);
+    float lSW = dot(SrcA.SampleLevel(Lin, i.uv + float2(-1, 1) * px, 0).rgb, LUM);
+    float lSE = dot(SrcA.SampleLevel(Lin, i.uv + float2(1, 1) * px, 0).rgb, LUM);
+    float lM = dot(m.rgb, LUM);
+    float lMin = min(lM, min(min(lNW, lNE), min(lSW, lSE))), lMax = max(lM, max(max(lNW, lNE), max(lSW, lSE)));
+    float2 dir = float2(-((lNW + lNE) - (lSW + lSE)), (lNW + lSW) - (lNE + lSE));
+    float red = max((lNW + lNE + lSW + lSE) * 0.03125, 1.0 / 128);
+    dir = clamp(dir / (min(abs(dir.x), abs(dir.y)) + red), -4, 4) * px;
+    float3 a = 0.5 * (SrcA.SampleLevel(Lin, i.uv - dir / 6, 0).rgb + SrcA.SampleLevel(Lin, i.uv + dir / 6, 0).rgb);
+    float3 b = a * 0.5 + 0.25 * (SrcA.SampleLevel(Lin, i.uv - dir * 0.5, 0).rgb + SrcA.SampleLevel(Lin, i.uv + dir * 0.5, 0).rgb);
+    float lB = dot(b, LUM);
+    float3 r = lB < lMin || lB > lMax ? a : b;
+    return float4(lMax - lMin < 0.08 ? m.rgb : r, 1);
 }
 """;
 }
