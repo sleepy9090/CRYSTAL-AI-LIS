@@ -152,3 +152,11 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   `tools/pack_check.py` (pack folder rules), `png_crop.py` / `png_find.py` (close-ups), `pngio.py`.
   `win_video_check.py heropack`: pack loads with 0 skipped files, 3667 hero pixels repainted, 0 elsewhere.
   Not done: other palettes (fades / hit flash fall back to the built-in look), other characters.
+- [x] T12 (interactive, 2026-11-23) done: **starter graphics pack for the enemies**, `packs/enemies/` (461 tiles, 402
+  distinct). `ReC.Run --dump-tags DIR EVERY` (Headless.cs: Ppu.Tags + Fb + palette per sampled frame);
+  `tools/sprite_capture.py` (34 enemy / boss states x 480 frames with a walk + sword key script, every 8th frame);
+  `tools/sprite_pack.py` (objects = 8-connected sprite pixels in palettes 1-3 outside the player banks, keys seen in
+  >= 3 dumps only (drops fade / flash steps), the hero's repaint rules made generic with per-NES-colour hue-shifted
+  ramps, cut back into tiles with the renderer's own per-line colour keys). Rejected first output: fade steps and the
+  player in other palettes got painted (fixed by the >= 3-dump rule and leaving palette 0 out).
+  `win_video_check.py enemypack`: areas $29 / $05: 3642 / 2045 enemy pixels repainted, hero untouched, pack loads clean.

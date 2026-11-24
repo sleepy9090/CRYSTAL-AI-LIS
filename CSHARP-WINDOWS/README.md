@@ -93,6 +93,8 @@ hand-drawn 16-bit art. For that, you can add your own tiles:
 
 **Starter pack for the main character:** `packs/hero/` (133 tiles, see `packs/README.md` and
 `packs/hero_preview.png`) — copy its PNGs into `%APPDATA%\re-c\pack\` and press F9.
+**Starter pack for the enemies and bosses:** `packs/enemies/` (461 tiles, `packs/enemies_preview.png`) — copy it into
+the same folder.
 
 How a name matches: `TTTT` is the tile number (hex) and `AABBCC` are the three NES colours (hex) it is drawn with.
 The same tile in other colours (another palette, or a step of a fade) uses the built-in look, so draw the tile in the

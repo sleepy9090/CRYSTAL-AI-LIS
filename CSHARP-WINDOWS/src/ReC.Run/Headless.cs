@@ -25,13 +25,15 @@ public static class Headless
     public static readonly string[] Options =
     {
         "--frames", "--frame0", "--keys", "--dump-screen", "--shots", "--scale", "--dump-ram", "--dump-wram",
-        "--dump-ciram", "--compare", "--quiet", "--load-state", "--data", "--pass-count",
+        "--dump-ciram", "--compare", "--quiet", "--load-state", "--data", "--pass-count", "--dump-tags",
     };
 
     public static string Help(string prog) =>
         $"usage: {prog} [--frames N] [--frame0 N] [--keys SPEC..] [--compare F.csv] [--dump-screen F.png] [--scale S]\n" +
         "               [--shots F,F.. DIR] [--dump-ram F] [--dump-wram F] [--dump-ciram F] [--load-state F.json]\n" +
-        "               [--data DIR] [--quiet] [--pass-count F]";
+        "               [--data DIR] [--quiet] [--pass-count F] [--dump-tags DIR EVERY]\n" +
+        "  --dump-tags: every EVERY frames DIR/tFFFF.bin = Ppu.Tags (61440 int32 LE) + Fb (61440 bytes) + palette (32)\n" +
+        "               (Windows port T12, for tools/sprite_pack.py)";
 
     // = ../web/test/run.mjs (a test script, not an inventory callable: no js tag)
     public static int Run(string[] args, string prog = "ReC.Run")
@@ -40,7 +42,8 @@ public static class Headless
         bool quiet = false, frame0Given = false;
         var keySpecs = new List<string>();
         string? screen = null, ramOut = null, wramOut = null, ciramOut = null, compare = null, statePath = null, dataDir = null, shotDir = null;
-        string? passCountOut = null;
+        string? passCountOut = null, tagDir = null;
+        int tagEvery = 0;
         HashSet<int>? shots = null;
         try
         {
@@ -64,6 +67,7 @@ public static class Headless
                     case "--load-state": statePath = V(); break;
                     case "--data": dataDir = V(); break;
                     case "--pass-count": passCountOut = V(); break;
+                    case "--dump-tags": tagDir = V(); tagEvery = int.Parse(V()); break;
                     case "-h": case "--help": Console.WriteLine(Help(prog)); return 0;
                     default: throw new ArgumentException($"unknown option {k} (--help)");
                 }
@@ -85,6 +89,7 @@ public static class Headless
             if (!frame0Given) frame0 = s.Frame0 ?? s.Frame;
         }
         var keys = Keys.Parse(keySpecs);
+        if (tagDir != null) { Directory.CreateDirectory(tagDir); m.Ppu.Tags = new int[256 * 240]; }
         var rows = compare != null ? new List<string> { string.Join(',', Csv.CompareColumns()) } : null;
         var passCount = passCountOut != null ? new List<string>() : null;
         var sw = Stopwatch.StartNew();
@@ -98,6 +103,14 @@ public static class Headless
             {
                 passCount.Add(PassCountLine(m, f));
                 if (m.LagFrames != lag0) passCount.Add($"# LAG {f} (lag model, next frame has no pass)");
+            }
+            if (tagDir != null && tagEvery > 0 && i % tagEvery == tagEvery - 1)
+            {
+                var buf = new byte[256 * 240 * 4 + 256 * 240 + 32];
+                Buffer.BlockCopy(m.Ppu.Tags!, 0, buf, 0, 256 * 240 * 4);
+                Buffer.BlockCopy(m.Ppu.Fb, 0, buf, 256 * 240 * 4, 256 * 240);
+                Buffer.BlockCopy(m.Ppu.Pal, 0, buf, 256 * 240 * 5, 32);
+                File.WriteAllBytes(Path.Combine(tagDir, $"t{f:D5}.bin"), buf);
             }
             if (shots != null && shots.Contains(f))
                 Png.WriteFb(Path.Combine(shotDir!, $"web_{f:D4}.png"), m.Ppu.Fb, data.NesRgb, 1);

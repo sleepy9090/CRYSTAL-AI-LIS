@@ -11,6 +11,7 @@ and the settings file written by the menu. Xvfb screen: 1920x1080x24.
 keep their colour, settings file, --export-tiles), then the exported tiles painted magenta as a pack must be drawn,
 and Graphics > Original must not draw it.
 `heropack` (T11): packs/hero on a gameplay frame: loads cleanly, repaints only the hero.
+`enemypack` (T12): packs/enemies on areas $29 and $05: loads cleanly, repaints enemies, not the hero.
 Exit 1 on any failure.
 """
 import os
@@ -229,6 +230,8 @@ def main(argv):
         fails += enhanced_checks(exe, timeout, hpng, frame)
     if not names or 'heropack' in names:
         fails += hero_check(exe, timeout)
+    if not names or 'enemypack' in names:
+        fails += enemy_check(exe, timeout)
     return 1 if fails else 0
 
 
@@ -341,6 +344,43 @@ def hero_check(exe, timeout):
         return 1
     print(f'ok   heropack   {inside} hero pixels repainted, 0 elsewhere, {hair} hair-ramp pixels')
     return 0
+
+
+def enemy_check(exe, timeout):
+    """T12 packs/enemies: areas $29 and $05 with enemies on screen, Enhanced with and without the pack.
+    The pack loads without skipped files, enemy pixels change, and the hero's pixels (magenta box) do not."""
+    import shutil
+    fails = 0
+    for st, frames, keys in (('group29', 175, ['2520:LEFT:30', '2555:UP:30', '2590:RIGHT:30', '2625:DOWN:30', '2660:A:4']),
+                             ('group05', 120, ['2530:RIGHT:20', '2560:A:6'])):
+        state = os.path.join(cv.ROOT, '..', 'web', 'test', 'states', st + '.json')
+        pics, nes = {}, os.path.join(OUT, f'enemy_{st}_nes.png')
+        for name, pk in (('with', os.path.join(cv.ROOT, 'packs', 'enemies')), ('without', os.path.join(OUT, 'no_pack'))):
+            png = os.path.join(OUT, f'enemy_{st}_{name}.png')
+            rc, out = run(exe, ['--load-state', winpath(state), '--frames', str(frames), '--turbo', '--no-audio',
+                                '--video-config', winpath(os.path.join(OUT, 'enemy.ini')), '--keys'] + keys +
+                          ['--menu', 'graphics:enhanced,size:4x', '--pack', winpath(pk), '--dump-window', winpath(png),
+                           '--dump-screen', winpath(nes), '--save', winpath(os.path.join(OUT, 'video.sav'))], timeout)
+            if rc or not os.path.exists(png) or 'graphics pack:' in out:
+                print(f'FAIL enemypack {st} {name}: rc={rc}' + (', pack files skipped' if 'graphics pack:' in out else ''))
+                fails += 1
+                break
+            pics[name] = png_decode(open(png, 'rb').read())[2]
+        if len(pics) < 2:
+            continue
+        a, b = pics['with'], pics['without']
+        _, _, fr = png_decode(open(nes, 'rb').read())
+        hero = [(x, y) for y, row in enumerate(fr) for x, p in enumerate(row) if p == (0xD8, 0x00, 0xCC)]
+        box = ((min(p[0] for p in hero) - 4) * 4, (min(p[1] for p in hero) - 6) * 4,
+               (max(p[0] for p in hero) + 4) * 4, (max(p[1] for p in hero) + 6) * 4) if hero else (0, 0, 0, 0)
+        changed = sum(a[y][x] != b[y][x] for y in range(len(a)) for x in range(len(a[0])))
+        in_hero = sum(a[y][x] != b[y][x] for y in range(box[1], box[3]) for x in range(box[0], box[2]))
+        if changed < 300 or in_hero:
+            print(f'FAIL enemypack {st}: {changed} pixels changed, {in_hero} on the hero')
+            fails += 1
+        else:
+            print(f'ok   enemypack  {st}: {changed} enemy pixels repainted, hero untouched')
+    return fails
 
 
 if __name__ == '__main__':
