@@ -81,3 +81,20 @@ cursors / small icons are left out.
 **Made by:** the background capture (`out/bg`, see above), then
 `python3 tools/sprite_pack.py --in out/bg --only armorshop,cure,ending,event01,event02,event07,event08,event11,event12,event13,event15,event19,event19b,event20,event21,event23,event28,giveitem,group18,inn,mesia,pawnshop,shopempty,shopmenu,talk16,talk19,talk20,talk22,talk25,talk26,talk_act1,talk_act8,talk_probe,toolshop,town02_enter --out packs/npcs --skip none --exclude packs/enemies --palettes 0,1,2,3 --min-height 12 --no-dark --soft-dark`
 (under a minute; `tools/sprite_tiles.py DUMP.bin` lists the sprite tiles per palette of a dump).
+
+## `bosses/` — starter pack for the bosses (adds to `enemies/`)
+104 tiles (87 different tiles) that the enemy pack does not have: bosses drawn in palette 0 (the hero's palette, which
+the enemy pack leaves out: the boss of the area-$28 speech, the fan turret, the AI-$70 boss of area $5F), later attack
+phases of the boss fights, their 8-pixel pieces and shots, the figures of the final scenes and what the bosses leave
+behind (chest, item). `bosses_preview.png`: NES (left) and the pack (right).
+
+Same look as the enemy pack. Measured with `tools/pack_coverage.py` over 1,500-frame runs of the 9 boss states, boss
+sprite pixels covered by enemies + bosses: area-$28 speech 4 -> 100 %, fan turret 3 -> 100 %, final locked / final scene
+-> 100 %, AI $70 message 17 -> 91 %, $1A boss 67 -> 83 %, final boss 76 -> 87 %, area $5F 21 -> 75 %. The rest are
+all-black silhouettes (one colour: nothing to paint) and hit-flash colours (left to the built-in look on purpose).
+
+**Install:** copy `bosses/*.png` into the same `%APPDATA%\re-c\pack\` folder (no name collides with the other packs).
+
+**Made by:** `python3 tools/sprite_capture.py --out out/boss/dumps --frames 1500 --every 8 bosse2 bossflee finalboss
+finallocked finalscene ai70msg restore5f fanturret fanskip`, then `python3 tools/sprite_pack.py --in out/boss/dumps
+--out packs/bosses --skip none --exclude packs/enemies,packs/npcs --palettes 0,1,2,3 --no-dark`.

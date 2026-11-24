@@ -14,6 +14,7 @@ and Graphics > Original must not draw it.
 `heropack` (T11): packs/hero on a gameplay frame: loads cleanly, repaints only the hero.
 `enemypack` (T12): packs/enemies on areas $29 and $05: loads cleanly, repaints enemies, not the hero.
 `npcpack` (T16): packs/npcs in a town ($18) and a shop: loads cleanly, repaints NPCs, not the hero.
+`bosspack` (T17): packs/bosses on the area-$28 boss speech and the fan turret (palette-0 bosses): repaints, hero untouched.
 `bgpack` (T15): packs/backgrounds on a town and a field frame, 16-bit and 32-bit: loads cleanly, repaints scenery,
 the hero's own pixels unchanged.
 Exit 1 on any failure.
@@ -242,6 +243,8 @@ def main(argv):
         fails += enemy_check(exe, timeout)
     if not names or 'npcpack' in names:
         fails += enemy_check(exe, timeout, 'npcpack', 'npcs', NPC_CASES)
+    if not names or 'bosspack' in names:
+        fails += enemy_check(exe, timeout, 'bosspack', 'bosses', BOSS_CASES)
     if not names or 'bgpack' in names:
         fails += bg_check(exe, timeout)
     return 1 if fails else 0
@@ -373,6 +376,10 @@ def hero_check(exe, timeout):
 ENEMY_CASES = (('group29', 175, ['2520:LEFT:30', '2555:UP:30', '2590:RIGHT:30', '2625:DOWN:30', '2660:A:4']),
                ('group05', 120, ['2530:RIGHT:20', '2560:A:6']))
 NPC_CASES = (('group18', 120, ['2520:LEFT:20']), ('armorshop', 60, []))
+# the walk of tools/sprite_capture.py (the boss pieces in palette 0 show while the hero moves)
+BOSS_CASES = (('bossflee', 170, [f'{2504 + o}:{b}:{h}' for o, b, h in ((14, 'LEFT', 24), (40, 'A', 4), (60, 'UP', 24), (86, 'A', 4),
+                                                                      (106, 'RIGHT', 30), (138, 'A', 4), (160, 'DOWN', 24))]),
+              ('fanturret', 60, [f'{2509 + o}:{b}:{h}' for o, b, h in ((14, 'LEFT', 24), (40, 'A', 4))]))
 
 
 def hero_pixels(state, frames, keys, nes_png):
@@ -403,8 +410,8 @@ def hero_pixels(state, frames, keys, nes_png):
 def enemy_check(exe, timeout, label='enemypack', pack_name='enemies', cases=ENEMY_CASES):
     """T12 packs/enemies: areas $29 and $05 with enemies on screen, Enhanced with and without the pack (T16: also
     packs/npcs on a town and a shop). The pack loads without skipped files, sprite pixels change, and the hero's
-    pixels do not (enemypack: the box around its magenta; npcpack: its exact pixels from a headless --dump-tags run,
-    as NPCs wear the same magenta)."""
+    pixels do not (enemypack: the box around its magenta; npcpack / bosspack: its exact pixels from a headless --dump-tags run,
+    as NPCs and palette-0 bosses wear the same magenta)."""
     fails = 0
     for st, frames, keys in cases:
         state = os.path.join(cv.ROOT, '..', 'web', 'test', 'states', st + '.json')
@@ -424,7 +431,7 @@ def enemy_check(exe, timeout, label='enemypack', pack_name='enemies', cases=ENEM
             continue
         a, b = pics['with'], pics['without']
         changed = sum(a[y][x] != b[y][x] for y in range(len(a)) for x in range(len(a[0])))
-        if label == 'npcpack':
+        if label != 'enemypack':
             hp = hero_pixels(state, frames, keys, nes)
             if not hp:
                 print(f'FAIL {label:9s} {st}: no hero pixels from the headless run (or not the same frame)')

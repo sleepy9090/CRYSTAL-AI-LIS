@@ -203,3 +203,12 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   `tools/sprite_tiles.py`. `win_video_check.py npcpack` (town $18, armour shop; the hero's exact pixels from a headless
   `--dump-tags` run, frame checked equal to the exe's, as NPCs wear the hero's magenta). All four packs together: 2,554
   files, no name collides. No exe change.
+- [x] T17 (interactive, 2026-11-24) done: **starter graphics pack for the bosses**, `packs/bosses/` (104 tiles, adds to
+  packs/enemies, which already painted most boss sprites). `tools/pack_coverage.py` (per state: share of sprite / BG
+  pixels whose key has a pack PNG, top missing keys) found the gaps: bosses in palette 0 (left out by the enemy pack),
+  later phases (enemy capture = 480 frames), 8-px pieces. Boss runs recaptured at 1,500 frames (`out/boss/dumps`);
+  `sprite_pack.py --palettes 0,1,2,3 --exclude packs/enemies,packs/npcs --no-dark`. Coverage of boss sprite pixels now
+  75-100 % per boss state (rest: one-colour silhouettes, hit flashes). Boss arenas' background is the HUD (skipped) or
+  black. `win_video_check.py bosspack` (area-$28 speech at its boss frames, fan turret; exact hero pixels): 25/25 with
+  the rest. Found: the ai70msg state walked past its scenario crashes the core at an exit into area $A7 ("no
+  record/header in areas.json"); the web port crashes the same way (data gap there, see the web fix).
