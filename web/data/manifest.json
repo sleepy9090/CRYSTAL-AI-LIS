@@ -85,8 +85,8 @@
    "kind": "json",
    "source": "banks 4/5, 10/11, 12/13",
    "desc": "area records, spawns, header k0-k5",
-   "size": 189235,
-   "sha1": "60dd3428e64e7b150351b577e61af8d23b810116"
+   "size": 192291,
+   "sha1": "3d174d70b5318b1df280e2632adbcb7775b758c8"
   },
   "objtypes.json": {
    "kind": "json",

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Export every ROM table the web port needs to web/data/ (Ph7 web 1/8, session 49).
 
-usage: gen_web_data.py [--out-dir web/data] [--skip-sound] [--check]
+usage: gen_web_data.py [--out-dir web/data] [--skip-sound] [--check] [--only NAME]
   (default)     regenerate all files + manifest.json
   --skip-sound  do not re-run sound_export.py (slow, 2.7 MB); keeps the existing sound.json
   --check       do not write: recompute everything and compare with manifest.json sha1s
+  --only NAME   write just NAME (e.g. areas.json) and update its manifest.json entry; other files untouched
 
 Design: docs/architecture_web.md section 5. The port must not hand-copy table values; it reads
 these files. Binary blobs keep ROM byte order and ROM CPU addressing (offsets documented in the
@@ -124,7 +125,13 @@ def area_json(a):
     rd = area_dump.rd10
     d = area_dump.decode(a)
     if d is None:
-        return None
+        # null AreaPtrTable record (AreaLoad 31:E16B BPL -> RTS: no CHR / spawn record, $07E6/$07E7/R4/R5 kept)
+        # but the area can still have a real AreaSubTable header (k0 map, k1 gfx, k3 exits): $16 $6F $A7 $B7
+        # (tools/null_record_areas.py; $A7 = the room above the final-boss hall $A6, entered by its top exits)
+        h, ps = area_dump.sub_header(a)
+        if not h & 0x8000 or not 0x8000 <= ps[0] < 0xC000 or rd(ps[0] + 1) > 7 or rd(ps[0] + 2) > 11:
+            return None                      # no header, or $BD $CA $CC $DB $E6 $EA: garbage (unused) headers
+        return area_header({'record': {'ptr': area_dump.ptr(a), 'null': True}}, a)
     rec = {'ptr': d['ptr']}
     if 'ignored' in d:
         rec['ignored'] = d['ignored']
@@ -138,7 +145,12 @@ def area_json(a):
         else:
             y, x, h, prm, b2 = e
             rec['spawns'].append({'slot': slot, 'x': x, 'y': y, 'handler': h, 'param': prm, 'b2': b2})
-    out = {'record': rec}
+    return area_header({'record': rec}, a)
+
+
+def area_header(out, a):
+    """add AreaSubTable 10:8300[a]'s header sub-tables k0-k5 to out (when the header pointer is real)"""
+    rd = area_dump.rd10
     h, ps = area_dump.sub_header(a)
     if not h & 0x8000:
         return out
@@ -376,6 +388,20 @@ def main(argv):
         bad += spot_checks(files)
         print('check:', 'OK' if not bad else f'{bad} stale')
         return 1 if bad else 0
+    if '--only' in argv:
+        name = argv[argv.index('--only') + 1]
+        hit = [f for f in files if f[0] == name]
+        if not hit:
+            print(f'--only: no generated file {name}'); return 1
+        _, data, meta = hit[0]
+        with open(os.path.join(out_dir, name), 'wb') as f:
+            f.write(data)
+        man = json.load(open(mpath))
+        man['files'][name] = dict(meta, size=len(data), sha1=sha1(data))
+        with open(mpath, 'w') as f:
+            json.dump(man, f, indent=1)
+        print(f'wrote {name} ({len(data)} bytes) + its manifest.json entry -> {out_dir}')
+        return 0
     os.makedirs(out_dir, exist_ok=True)
     run_text_sound(out_dir, '--skip-sound' in argv)
     manifest = {'generator': f'tools/gen_web_data.py (session {SESSION})',
