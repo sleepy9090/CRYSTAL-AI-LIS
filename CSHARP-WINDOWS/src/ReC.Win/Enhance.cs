@@ -30,6 +30,13 @@ internal sealed class Enhancer
     private readonly int _nTiles;
     private readonly uint[] _rgb;                // NES colour -> 0x00RRGGBB
     private readonly byte[] _dist = new byte[W * H], _colDist = new byte[W * H];
+    /// <summary>T14: the "32-bit" look (Video > Graphics > Enhanced (32-bit)) instead of the 16-bit one</summary>
+    public bool Mode32;
+    private float[]? _h32, _t32;
+    private byte[]? _sh1;
+    private float[]? _shA, _shB;
+    private uint[]? _aa;
+    private const int D32 = 10;                  // 32-bit: height-field radius in output pixels
     private const int D = 5;                     // bevel width in output pixels
     private readonly Dictionary<long, uint[]> _art = new();
     private readonly bool[] _hasArt;
@@ -141,58 +148,7 @@ internal sealed class Enhancer
     /// </summary>
     public static void Bevel(uint[] img, int w, int h, byte[] dist, uint? skip = null, byte[]? colDist = null)
     {
-        var vd = colDist ?? new byte[w * h];
-        Rows(h, y =>                                           // edges + row distance -> dist
-        {
-            int r = y * w, last = -100;
-            unsafe
-            {
-                fixed (uint* pi = img)
-                fixed (byte* pdist = dist)
-                {
-                    uint* row = pi + r, up = pi + (y > 0 ? r - w : r), dn = pi + (y < h - 1 ? r + w : r);
-                    byte* dd = pdist + r;
-                    for (int x = 0; x < w; x++)
-                    {
-                        uint c = row[x];
-                        bool edge = up[x] != c || dn[x] != c || (x > 0 && row[x - 1] != c) || (x < w - 1 && row[x + 1] != c);
-                        if (edge) last = x;
-                        int d = x - last + 1;
-                        dd[x] = (byte)(d < D ? d : D);
-                    }
-                }
-            }
-            last = w + 100;
-            for (int x = w - 1; x >= 0; x--)
-            {
-                int i = r + x;
-                if (dist[i] == 1) { last = x; continue; }
-                int d = last - x + 1;
-                if (d < dist[i]) dist[i] = (byte)d;
-            }
-        });
-        int cb = Math.Min(Environment.ProcessorCount * 2, 32), per = (w + cb - 1) / cb;
-        void Cols(int b)                                       // column distance, min into dist
-        {
-            int x0 = b * per, x1 = Math.Min(w, x0 + per);
-            if (x0 >= x1) return;
-            for (int x = x0; x < x1; x++) vd[x] = (byte)(dist[x] == 1 ? 1 : D);
-            for (int y = 1; y < h; y++)
-                for (int x = x0, i = y * w + x0; x < x1; x++, i++)
-                {
-                    int d = dist[i] == 1 ? 1 : vd[i - w] + 1;
-                    vd[i] = (byte)(d < D ? d : D);
-                }
-            for (int y = h - 2; y >= 0; y--)
-                for (int x = x0, i = y * w + x0; x < x1; x++, i++)
-                {
-                    int d = vd[i + w] + 1;
-                    if (d < vd[i]) vd[i] = (byte)d;
-                    if (vd[i] < dist[i]) dist[i] = vd[i];
-                }
-            for (int x = x0, i = (h - 1) * w + x0; x < x1; x++, i++) if (vd[i] < dist[i]) dist[i] = vd[i];
-        }
-        if (w * h < 4096) { for (int b = 0; b < cb; b++) Cols(b); } else Parallel.For(0, cb, Cols);
+        Distance(img, w, h, dist, colDist ?? new byte[w * h], D);
         bool hasSkip = skip.HasValue;
         uint sk = skip ?? 0;
         Rows(h, y =>
@@ -222,6 +178,63 @@ internal sealed class Enhancer
     /// <summary>shade level for a slope gx + gy in -4D..4D: 16 + (gx + gy) / (2D) * 16 * 1.1, rounded</summary>
     private static readonly int[] LevelOf = Enumerable.Range(-4 * D, 8 * D + 1)
         .Select(g => Math.Clamp(Neutral + (int)Math.Round(g * Neutral * 1.1 / (2.0 * D)), 0, Levels - 1)).ToArray();
+
+    /// <summary>dist = 1 + distance (capped at cap) along the row or column to the nearest pixel touching another
+    /// colour (4-neighbours); rows, then column blocks, in parallel. vd = scratch, w * h.</summary>
+    public static void Distance(uint[] img, int w, int h, byte[] dist, byte[] vd, int cap)
+    {
+        Rows(h, y =>                                           // edges + row distance -> dist
+        {
+            int r = y * w, last = -100;
+            unsafe
+            {
+                fixed (uint* pi = img)
+                fixed (byte* pdist = dist)
+                {
+                    uint* row = pi + r, up = pi + (y > 0 ? r - w : r), dn = pi + (y < h - 1 ? r + w : r);
+                    byte* dd = pdist + r;
+                    for (int x = 0; x < w; x++)
+                    {
+                        uint c = row[x];
+                        bool edge = up[x] != c || dn[x] != c || (x > 0 && row[x - 1] != c) || (x < w - 1 && row[x + 1] != c);
+                        if (edge) last = x;
+                        int d = x - last + 1;
+                        dd[x] = (byte)(d < cap ? d : cap);
+                    }
+                }
+            }
+            last = w + 100;
+            for (int x = w - 1; x >= 0; x--)
+            {
+                int i = r + x;
+                if (dist[i] == 1) { last = x; continue; }
+                int d = last - x + 1;
+                if (d < dist[i]) dist[i] = (byte)d;
+            }
+        });
+        int cb = Math.Min(Environment.ProcessorCount * 2, 32), per = (w + cb - 1) / cb;
+        void Cols(int b)                                       // column distance, min into dist
+        {
+            int x0 = b * per, x1 = Math.Min(w, x0 + per);
+            if (x0 >= x1) return;
+            for (int x = x0; x < x1; x++) vd[x] = (byte)(dist[x] == 1 ? 1 : cap);
+            for (int y = 1; y < h; y++)
+                for (int x = x0, i = y * w + x0; x < x1; x++, i++)
+                {
+                    int d = dist[i] == 1 ? 1 : vd[i - w] + 1;
+                    vd[i] = (byte)(d < cap ? d : cap);
+                }
+            for (int y = h - 2; y >= 0; y--)
+                for (int x = x0, i = y * w + x0; x < x1; x++, i++)
+                {
+                    int d = vd[i + w] + 1;
+                    if (d < vd[i]) vd[i] = (byte)d;
+                    if (vd[i] < dist[i]) dist[i] = vd[i];
+                }
+            for (int x = x0, i = (h - 1) * w + x0; x < x1; x++, i++) if (vd[i] < dist[i]) dist[i] = vd[i];
+        }
+        if (w * h < 4096) { for (int b = 0; b < cb; b++) Cols(b); } else Parallel.For(0, cb, Cols);
+    }
 
     /// <summary>rows 0..h-1 in parallel blocks (small images inline)</summary>
     private static void Rows(int h, Action<int> row)
@@ -259,8 +272,9 @@ internal sealed class Enhancer
         // 2. rounding
         Rows(240, y => Upscale.Scale2xRow(_base, 256, 240, _x2, y));
         Rows(480, y => Upscale.Scale2xRow(_x2, 512, 480, dst, y));
-        // 3. bevel shading
-        Bevel(dst, W, H, _dist, null, _colDist);
+        // 3. bevel shading (16-bit) / soft lighting (32-bit)
+        if (Mode32) Light32(dst);
+        else Bevel(dst, W, H, _dist, null, _colDist);
 
         // 4. hand-drawn tiles
         var lp = _linePal;
@@ -300,6 +314,184 @@ internal sealed class Enhancer
                 }
             }
         }
+        if (Mode32)
+        {
+            Shadows32(fb, tags, dst);                  // 5. soft sprite shadows
+            AntiAlias32(dst);                          // 6. edge anti-aliasing
+        }
+    }
+
+    // ---- T14 "32-bit" look ------------------------------------------------------------------------------------
+    // Light32: a smooth height field per visible shape (pillow profile from the distance to the shape's edge, blurred),
+    // normals from its slope, Lambert diffuse + Blinn specular from the top left; a flat area keeps its exact colour
+    // (the light is normalised to the flat normal). Like the 16-bit bevel it only sees colours on screen.
+    private const float Amb = 0.55f, Kd = 0.45f, Bump = 1.3f, SpecK = 0.30f;   // Bump for the half-resolution field
+    private static readonly (float X, float Y, float Z) Lv = Norm(-0.45f, -0.62f, 0.64f);
+    private static readonly (float X, float Y, float Z) Hv = Norm(Lv.X, Lv.Y, Lv.Z + 1);
+    private const float SpecPow = 18;                                         // as nh^16 * nh^2 below
+    private static readonly float Diff0 = Lv.Z, Spec0 = MathF.Pow(Hv.Z, SpecPow);
+
+    private static (float, float, float) Norm(float x, float y, float z)
+    {
+        float l = MathF.Sqrt(x * x + y * y + z * z);
+        return (x / l, y / l, z / l);
+    }
+
+    private float[]? _f32, _s32;
+    private const int LW = W / 2, LH = H / 2;     // lighting resolution: the 512x480 rounding step (smooth anyway)
+
+    /// <summary>lighting computed on half (the 2x image, D32 / 2 radius), applied to the 4x image per 2x2 block</summary>
+    private void Light32(uint[] img)
+    {
+        const int Cap = D32 / 2;
+        var src = _x2;                                         // the 512x480 Scale2x step of this frame
+        Distance(src, LW, LH, _dist, _colDist, Cap);
+        var h = _h32 ??= new float[LW * LH];
+        var t = _t32 ??= new float[LW * LH];
+        var f = _f32 ??= new float[LW * LH];
+        var sp = _s32 ??= new float[LW * LH];
+        var dist = _dist;
+        var pl = PillowHalf;
+        Rows(LH, y =>
+        {
+            int r = y * LW;
+            for (int x = 0; x < LW; x++)
+            {
+                float acc = 0;
+                if (x >= 1 && x < LW - 1) acc = pl[dist[r + x - 1]] + pl[dist[r + x]] + pl[dist[r + x + 1]];
+                else for (int k = -1; k <= 1; k++) acc += pl[dist[r + Math.Clamp(x + k, 0, LW - 1)]];
+                t[r + x] = acc * (1f / 3);
+            }
+        });
+        Rows(LH, y =>
+        {
+            int r = y * LW, a0 = Math.Max(y - 1, 0) * LW, a2 = Math.Min(y + 1, LH - 1) * LW;
+            for (int x = 0; x < LW; x++) h[r + x] = (t[a0 + x] + t[r + x] + t[a2 + x]) * (1f / 3);
+        });
+        // per 2x pixel: light factor and highlight (0 / 1 = flat)
+        Rows(LH, y =>
+        {
+            int r = y * LW, up = Math.Max(y - 1, 0) * LW, dn = Math.Min(y + 1, LH - 1) * LW;
+            for (int x = 0; x < LW; x++)
+            {
+                int i = r + x;
+                if (dist[i] >= Cap) { f[i] = 1; sp[i] = 0; continue; }
+                float gx = (h[r + Math.Min(x + 1, LW - 1)] - h[r + Math.Max(x - 1, 0)]) * Bump;
+                float gy = (h[dn + x] - h[up + x]) * Bump;
+                float inv = MathF.ReciprocalSqrtEstimate(gx * gx + gy * gy + 1);
+                float nx = -gx * inv, ny = -gy * inv, nz = inv;
+                float diff = MathF.Max(0, nx * Lv.X + ny * Lv.Y + nz * Lv.Z);
+                f[i] = (Amb + Kd * diff) / (Amb + Kd * Diff0);
+                float nh = MathF.Max(0, nx * Hv.X + ny * Hv.Y + nz * Hv.Z), n2 = nh * nh, n4 = n2 * n2, n8 = n4 * n4;
+                sp[i] = MathF.Max(0, n8 * n8 * n2 - Spec0) * SpecK * 255;                 // nh^18
+            }
+        });
+        Rows(H, y =>
+        {
+            int r = y * W, lr = (y >> 1) * LW;
+            for (int x = 0; x < W; x++)
+            {
+                int li = lr + (x >> 1);
+                float ff = f[li], s2 = sp[li];
+                if (ff == 1 && s2 == 0) continue;
+                uint c = img[r + x];
+                // the highlight scales with the surface's own brightness: black stays black, light colours shine
+                float cr = c >> 16 & 255, cg = c >> 8 & 255, cb = c & 255;
+                float s3 = s2 * (0.15f + 0.85f * (cr * 0.299f + cg * 0.587f + cb * 0.114f) / 255f);
+                img[r + x] = (uint)Math.Clamp((int)(cr * ff + s3), 0, 255) << 16 | (uint)Math.Clamp((int)(cg * ff + s3), 0, 255) << 8 |
+                             (uint)Math.Clamp((int)(cb * ff + s3), 0, 255);
+            }
+        });
+    }
+
+    /// <summary>pillow height profile for the half-resolution distance (cap D32 / 2)</summary>
+    private static readonly float[] PillowHalf = Enumerable.Range(0, D32 / 2 + 1)
+        .Select(d => d == 0 ? 0f : (float)(1 - Math.Pow(1 - Math.Min(d, D32 / 2) / (double)(D32 / 2), 2))).ToArray();
+
+    // Shadows32: every sprite pixel casts a soft shadow 2 NES pixels down-right onto non-sprite pixels (40 % darker at
+    // the core, blurred over ~1.5 NES pixels). Only a sprite pixel that differs in colour from where its shadow lands
+    // casts one, so a sprite drawn in the background colour (hidden) stays hidden.
+    private void Shadows32(byte[] fb, int[] tags, uint[] img)
+    {
+        var src = _sh1 ??= new byte[256 * 240];
+        Array.Clear(src);
+        bool any = false;
+        for (int y = 0; y < 238; y++)
+            for (int x = 0; x < 254; x++)
+            {
+                int i = y * 256 + x, t = tags[i];
+                if ((t & Ppu.TagValid) == 0 || (t >> 19 & 7) < 4) continue;
+                int j = i + 2 * 256 + 2;
+                if (fb[i] != fb[j]) { src[j] = 1; any = true; }
+            }
+        if (!any) return;
+        // alpha at the NES resolution: two 3x3 box blurs (~1.5 NES pixels), then bilinear up to 4x
+        var a = _shA ??= new float[256 * 240];
+        var b = _shB ??= new float[256 * 240];
+        for (int i = 0; i < a.Length; i++) a[i] = src[i];
+        for (int pass = 0; pass < 2; pass++)
+        {
+            for (int y = 0; y < 240; y++)
+                for (int x = 0; x < 256; x++)
+                {
+                    float acc = 0;
+                    for (int dy = -1; dy <= 1; dy++)
+                    {
+                        int yy = Math.Clamp(y + dy, 0, 239) * 256;
+                        acc += a[yy + Math.Max(x - 1, 0)] + a[yy + x] + a[yy + Math.Min(x + 1, 255)];
+                    }
+                    b[y * 256 + x] = acc / 9;
+                }
+            (a, b) = (b, a);
+        }
+        var al1 = a;
+        Rows(H, y =>
+        {
+            int r = y * W;
+            float fy = (y + 0.5f) / S - 0.5f;
+            int y0 = Math.Clamp((int)MathF.Floor(fy), 0, 239), y1 = Math.Min(y0 + 1, 239);
+            float wy = Math.Clamp(fy - y0, 0, 1);
+            int tr = (y / S) * 256;
+            for (int x = 0; x < W; x++)
+            {
+                float fx = (x + 0.5f) / S - 0.5f;
+                int x0 = Math.Clamp((int)MathF.Floor(fx), 0, 255), x1 = Math.Min(x0 + 1, 255);
+                float wx = Math.Clamp(fx - x0, 0, 1);
+                float top = al1[y0 * 256 + x0] * (1 - wx) + al1[y0 * 256 + x1] * wx;
+                float bot = al1[y1 * 256 + x0] * (1 - wx) + al1[y1 * 256 + x1] * wx;
+                float al = top * (1 - wy) + bot * wy;
+                if (al < 0.004f) continue;
+                int t = tags[tr + x / S];
+                if ((t & Ppu.TagValid) != 0 && (t >> 19 & 7) >= 4) continue;   // never on the sprites themselves
+                float f = 1 - 0.4f * al;
+                uint c = img[r + x];
+                img[r + x] = (uint)((c >> 16 & 255) * f) << 16 | (uint)((c >> 8 & 255) * f) << 8 | (uint)((c & 255) * f);
+            }
+        });
+    }
+
+    // AntiAlias32: a pixel on a colour edge becomes (4 x itself + its 4 neighbours) / 8 -> smooth, anti-aliased curves;
+    // flat areas are untouched.
+    private void AntiAlias32(uint[] img)
+    {
+        var src = _aa ??= new uint[W * H];
+        Array.Copy(img, src, img.Length);
+        Rows(H, y =>
+        {
+            int r = y * W, up = y > 0 ? r - W : r, dn = y < H - 1 ? r + W : r;
+            for (int x = 0; x < W; x++)
+            {
+                uint c = src[r + x], l = src[r + Math.Max(x - 1, 0)], rr = src[r + Math.Min(x + 1, W - 1)], u = src[up + x], d = src[dn + x];
+                if (c == l && c == rr && c == u && c == d) continue;
+                uint R(uint v) => v >> 16 & 255;
+                uint G(uint v) => v >> 8 & 255;
+                uint B(uint v) => v & 255;
+                uint nr = (4 * R(c) + R(l) + R(rr) + R(u) + R(d) + 4) >> 3;
+                uint ng = (4 * G(c) + G(l) + G(rr) + G(u) + G(d) + 4) >> 3;
+                uint nb = (4 * B(c) + B(l) + B(rr) + B(u) + B(d) + 4) >> 3;
+                img[r + x] = nr << 16 | ng << 8 | nb;
+            }
+        });
     }
 
     /// <summary>--export-tiles: every tile + colours seen (not blank, not one colour) -> DIR/TTTT_AABBCC.png (the built-in look of the tile alone:

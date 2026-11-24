@@ -315,6 +315,51 @@ internal static partial class Program
             Eq(411, Window.CommandId("audio:cd"), "--menu audio:cd");
             Eq(413, Window.CommandId("reverb"), "--menu reverb");
         }),
+        ("win_enhance32", () =>
+        {
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { });
+            m.Reset();
+            m.Ppu.Tags = new int[256 * 240];
+            for (int f = 0; f < 787; f++) m.RunFrame(0);           // the intro picture
+            var e16 = new Enhancer(m.Ppu.Chr, d.NesRgb);
+            var e32 = new Enhancer(m.Ppu.Chr, d.NesRgb) { Mode32 = true };
+            var h16 = new uint[Enhancer.W * Enhancer.H]; var h32 = new uint[Enhancer.W * Enhancer.H];
+            e16.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, h16);
+            e32.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, h32);
+            int c16 = h16.Distinct().Count(), c32 = h32.Distinct().Count();
+            True(c32 > c16 * 4, $"32-bit has far more colours: {c16} -> {c32}");
+            for (int r = 0; r < 100; r++) e32.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, h32);   // warm-up (tiered JIT)
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            for (int r = 0; r < 50; r++) e32.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, h32);
+            double ms = sw.Elapsed.TotalMilliseconds / 50;
+            Console.WriteLine($"  win_enhance32: Render {ms:F1} ms / frame, colours 16-bit {c16} -> 32-bit {c32}");
+            True(ms < 10, $"32-bit render fast enough: {ms:F1} ms");
+            // one-colour frame stays one colour (tags of real tiles; lighting / AA / shadows must not reveal anything)
+            var flat = Enumerable.Repeat((byte)0x0F, 256 * 240).ToArray();
+            e32.Render(flat, m.Ppu.Tags, m.Ppu.Pal, h32);
+            uint black = (uint)d.NesRgb[0x0F] & 0xFFFFFF;
+            True(h32.All(c => c == black), "one-colour frame stays one colour");
+            // shadows: a 16x16 sprite block (colour $16) on a $21 background casts a shadow down-right, none up-left;
+            // the same sprite in the background colour casts none
+            var fb = Enumerable.Repeat((byte)0x21, 256 * 240).ToArray();
+            var tags = new int[256 * 240];
+            for (int y = 100; y < 116; y++)
+                for (int x = 100; x < 116; x++) { fb[y * 256 + x] = 0x16; tags[y * 256 + x] = Ppu.TagValid | 5 << 19 | 1; }
+            e32.Render(fb, tags, m.Ppu.Pal, h32);
+            uint bg = (uint)d.NesRgb[0x21] & 0xFFFFFF;
+            static int Lum(uint c) => (int)((c >> 16 & 255) + (c >> 8 & 255) + (c & 255));
+            int under = Lum(h32[(117 * 4) * Enhancer.W + 110 * 4]), far = Lum(h32[(30 * 4) * Enhancer.W + 30 * 4]);
+            int above = Lum(h32[(97 * 4) * Enhancer.W + 97 * 4]);
+            True(under < far - 30, $"shadow below-right: {under} vs {far}");
+            Eq(Lum(bg), above, "no shadow up-left");
+            for (int y = 100; y < 116; y++) for (int x = 100; x < 116; x++) fb[y * 256 + x] = 0x21;
+            e32.Render(fb, tags, m.Ppu.Pal, h32);
+            True(h32.All(c => c == bg), "a sprite in the background colour casts no shadow (stays hidden)");
+            var v = VideoSettings.Parse("graphics=enhanced32\n");
+            True(v.Enhanced && v.Enhanced32 && v.Serialize().Contains("graphics=enhanced32"), "ini graphics=enhanced32");
+            Eq(273, Window.CommandId("graphics:32bit"), "--menu graphics:32bit");
+        }),
         ("win_png_read", () =>
         {
             var rgba = new byte[3 * 2 * 4];

@@ -149,3 +149,13 @@ CSHARP-WINDOWS/
     above 0.8 FS, TPDF dither (fixed seed). `AudioOut` opens waveOut as 2-channel 44.1 kHz 16-bit in CD mode and
     reopens it on a switch. Audio menu + `video.ini` keys `audio` / `audio_stereo` / `audio_reverb`; `--wav .. --cd`.
     Level of music `$14` vs the in-game Original path: +2.9 dB, no clipping.
+12. **Enhanced (32-bit) graphics (T14):** `Enhancer.Mode32` (`video.ini` `graphics=enhanced32`, F9 cycles 3 modes).
+    After the 16-bit dither blend + Scale2x x2: `Light32` on the 512x480 step (4x fewer pixels; lighting is smooth):
+    distance to the nearest other colour (cap 5) → pillow height → 3x3 blur → normals → Lambert (ambient 0.55) +
+    Blinn nh^18 highlight scaled by the surface brightness, normalised so flat areas keep their colour; applied to the
+    1024x960 image per 2x2 block. Pack tiles; then `Shadows32` (sprite pixels whose colour differs from where the
+    shadow lands cast a 40 % shadow 2 NES px down-right, blurred at 1x and bilinear-upsampled, never on sprites) and
+    `AntiAlias32` (edge pixels → (4c + 4 neighbours) / 8). 5.2 ms / frame after JIT warm-up (`win_enhance32`, from 9.6
+    ms: half-resolution lighting, 1x shadow blur, SIMD / fused blurs). First-frame stall fixed by
+    `TieredCompilationQuickJitForLoops=false` (ReC.Win.csproj) + one Enhanced render before the audio starts. Wine
+    real-time: 1-2 audio underruns at start-up with 32-bit + CD (16-bit: 0-1), none dropped, not growing.

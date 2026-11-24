@@ -25,6 +25,9 @@
     <FileVersion>1.0.0.0</FileVersion>
     <InformationalVersion>1.0.0</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <!-- T14: methods with loops (the renderers, the APU) are compiled optimised on their first call instead of starting
+         as unoptimised tier-0 code: the Enhanced (32-bit) look otherwise underran the audio in the first seconds -->
+    <TieredCompilationQuickJitForLoops>false</TieredCompilationQuickJitForLoops>
   </PropertyGroup>
   <PropertyGroup Condition="'$(_IsPublishing)' == 'true'">
     <PublishSingleFile>true</PublishSingleFile>

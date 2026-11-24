@@ -97,6 +97,7 @@ internal static unsafe partial class Window
     private static void RenderHd()
     {
         if (_m?.Ppu.Tags is not { } tags || _enh == null) return;
+        _enh.Mode32 = _v.Enhanced32;
         _enh.Render(_m.Ppu.Fb, tags, _m.Ppu.Pal, _hd);
         _hdFrame = _frameNo;
     }
@@ -161,6 +162,12 @@ internal static unsafe partial class Window
             if (_v.Fullscreen || o.Fullscreen) { _v.Fullscreen = false; ToggleFullscreen(); }
             foreach (string c in o.MenuCmds) { Command(CommandId(c)); Pump(); }   // = clicking the menu items in order
             // no autoplay policy on the desktop: audio starts right away (JS: on the first key / click); M = mute
+            // T14: compile the Enhanced pipeline before the audio starts (its first frame would stall the sound)
+            if (_v.Enhanced && m.Ppu.Tags != null)
+            {
+                _enh.Mode32 = _v.Enhanced32;
+                _enh.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, _hd);
+            }
             ApplyAudio();                              // T13: CD quality / stereo / reverb from the settings (device closed)
             bool audioOn = !o.NoAudio && _audio.Resume();
             _audio.SetMuted(_muted);
@@ -382,7 +389,7 @@ internal static unsafe partial class Window
                 break;
             case Win32.VK_ESCAPE: Win32.DestroyWindow(_hwnd); break;
             case Win32.VK_F11: ToggleFullscreen(); break;
-            case 0x78 /* F9 */: SetEnhanced(!_v.Enhanced); break;
+            case 0x78 /* F9 */: SetGraphics((GraphicsMode + 1) % 3); break;
             case 0x74 /* F5 */: ReloadPack(); break;
             case >= '1' and <= '6': _v.SetScale(vk - '0'); SettingsChanged(true); break;
         }

@@ -10,6 +10,7 @@ and the settings file written by the menu. Xvfb screen: 1920x1080x24.
 `enhanced` (T10, Video > Graphics): Enhanced at 4x (client 1024x960, > 3x the colours, block centres of flat areas
 keep their colour, settings file, --export-tiles), then the exported tiles painted magenta as a pack must be drawn,
 and Graphics > Original must not draw it.
+`enhanced32` (T14): Graphics > Enhanced (32-bit): client 1024x960, > 2000 colours, settings file.
 `heropack` (T11): packs/hero on a gameplay frame: loads cleanly, repaints only the hero.
 `enemypack` (T12): packs/enemies on areas $29 and $05: loads cleanly, repaints enemies, not the hero.
 Exit 1 on any failure.
@@ -285,6 +286,18 @@ def enhanced_checks(exe, timeout, hpng, frame):
         return f'ok: {len(orig_colours)} -> {len(cols)} colours, {diff} reshaded block centres, {len(names)} tiles exported'
 
     one('enhanced', ['--menu', 'graphics:enhanced,size:4x', '--export-tiles', winpath(exp)], enhanced)
+
+    def enhanced32(cw, ch, rows):
+        if (cw, ch) != (1024, 960):
+            return f'client {cw}x{ch}, want 1024x960'
+        cols = {c for row in rows for c in row}
+        if len(cols) < 2000:
+            return f'{len(cols)} colours, want > 2000 (soft lighting + anti-aliasing)'
+        if 'graphics=enhanced32' not in open(ini).read().splitlines():
+            return 'settings file lacks graphics=enhanced32'
+        return f'ok: {len(orig_colours)} -> {len(cols)} colours (32-bit look)'
+
+    one('enhanced32', ['--menu', 'graphics:32bit,size:4x'], enhanced32)
 
     # a hand-drawn pack tile: the first exported tile, painted magenta, must appear; Original hides it again
     names = sorted(f for f in os.listdir(exp) if f.endswith('.png')) if os.path.isdir(exp) else []

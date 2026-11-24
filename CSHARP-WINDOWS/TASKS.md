@@ -172,3 +172,12 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   smoke: CD, and CD + reverb + switching Original <-> CD + Enhanced graphics: 0 underruns. `tools/wav_stats.py`.
   Final `dist/ReC.exe` 11,625,706 bytes, sha256 `f1b67961…`: core + exe vs web 156/156 each, win_video_check 18/18,
   smoke --canon (CD audio) ok, coverage 100 %, REA all expectations hold, cs_rea_members 1029/1029.
+- [x] T14 (interactive, 2026-11-23) done: **Graphics: Enhanced (32-bit)** as a third option (Video > Graphics, F9 cycles).
+  `Enhance.cs` Mode32: soft lighting (half-resolution height field from the visible colours, diffuse + brightness-scaled
+  highlight, flat areas unchanged), soft sprite drop shadows (only where they land on another colour), edge
+  anti-aliasing; pack tiles apply. First try was an emboss look (hard white streaks, grey highlights on black): toned
+  down (shallower slope, softer highlight scaled by brightness, more ambient). 9.6 -> 5.2 ms / frame. Start-up audio
+  stall: `TieredCompilationQuickJitForLoops=false` + a priming render. Tests 257/257 (`win_enhance32`: 76 -> 5588
+  colours, one-colour frame unchanged, shadow down-right only, hidden sprite casts none, < 10 ms). win_video_check
+  19/19 (+ `enhanced32`); exe vs web 156/156; smoke --canon ok; apu $14 identical; coverage 100 %; REA all hold.
+  Final `dist/ReC.exe` 11,628,260 bytes, sha256 `e90a5826…`. Wine real-time 32-bit + CD: 1-2 underruns at start-up only.

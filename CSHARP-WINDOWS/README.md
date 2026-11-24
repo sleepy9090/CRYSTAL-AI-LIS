@@ -35,7 +35,7 @@ anyway**, or right-click the file → Properties → **Unblock**.
 | Enter | Start |
 | Right Shift / Tab | Select |
 | P | pause (the title bar shows it) |
-| F9 | Original / Enhanced (16-bit) graphics |
+| F9 | graphics: Original → Enhanced (16-bit) → Enhanced (32-bit) |
 | F5 | reload the graphics pack |
 | M | mute |
 | F11 / Alt+Enter | fullscreen on / off |
@@ -57,7 +57,7 @@ which is how you reach them in fullscreen or with the menu bar hidden. While a m
 | Fullscreen (F11) | fullscreen on / off |
 | Fullscreen resolution | *Desktop resolution* (borderless, the default) or one of the monitor's display modes (32-bit, 640×480 and up). A display mode is changed only while the game is fullscreen and in front; alt-tab or leaving fullscreen puts the desktop back. If Windows refuses a mode, the desktop resolution is used. |
 | Window size | 1× – 6× the picture (keys 1 – 6), or a fixed size: 640×480, 800×600, 1024×768, 1280×720, 1280×960, 1366×768, 1600×900, 1920×1080 |
-| Graphics (F9) | Original (NES) · Enhanced (16-bit); Reload graphics pack (F5) — see below |
+| Graphics (F9) | Original (NES) · Enhanced (16-bit) · Enhanced (32-bit); Reload graphics pack (F5) — see below |
 | Upscale filter | None (sharp pixels, the default) · Scale2x · Scale3x · Scale4x: pixel-art upscalers that round off diagonal stair-steps and curves (text, slopes, sprites) while keeping edges crisp; the result is then sized to the window as usual |
 | Aspect ratio | Square pixels (256:240, the default) · NES TV (8:7 pixels, as on a CRT) · 4:3 · 16:10 widescreen · 16:9 widescreen · Stretch to fill the window |
 | Integer scaling | on (default): whole-number scale, sharp pixels, black bars · off: as large as the window allows |
@@ -83,9 +83,18 @@ sound of the port. You can switch at any time, and the choice is saved. CD quali
 `ReC.exe --wav ID OUT.wav [SECONDS] --cd [--mono] [--reverb]` writes a music track through the CD path as a stereo WAV
 (music ids `0x14`, `0x15`, `0x1B` are full songs).
 
-### Graphics: Original or Enhanced (16-bit)
-**Video › Graphics** (or **F9**) switches between the original NES graphics and **Enhanced**, at any time, even mid-game.
-The choice is saved. Enhanced draws every NES pixel as a 4×4 block and adds what 16-bit hardware could show:
+### Graphics: Original, Enhanced (16-bit) or Enhanced (32-bit)
+**Video › Graphics** (or **F9**, which cycles Original → 16-bit → 32-bit) switches the look at any time, even mid-game.
+The choice is saved.
+
+**Enhanced (32-bit)** goes a generation further, toward the look of the 32-bit consoles: everything of the 16-bit
+mode below, plus soft rendered lighting (every visible shape is shaded like a smooth, lit surface with a gentle
+highlight from the top left; flat areas keep their exact colour), soft drop shadows under characters, enemies and items,
+and anti-aliased edges. It is generated from the game's own graphics (no new artwork), costs ~5 ms per frame, and
+graphics-pack tiles are used in it too. Nothing the game hides (shapes or sprites drawn in the background colour) is
+revealed by the lighting or the shadows.
+
+The 16-bit mode: Enhanced draws every NES pixel as a 4×4 block and adds what 16-bit hardware could show:
 - **in-between colours**: NES checkerboard dithering becomes smooth blended colour;
 - **rounded shapes**: diagonal stair-steps and curves are smoothed across the whole screen;
 - **lighting**: every visible shape gets bevel shading (light from the top left), so rocks, walls, text and characters
@@ -141,7 +150,7 @@ ReC.exe --wav ID OUT.wav [SECONDS] [--cd [--mono] [--reverb]]
 - `--video-config F.ini` uses another video settings file; `--fullscreen` starts fullscreen.
 - `--pack DIR` uses another graphics pack folder; `--export-tiles DIR` writes the tiles seen during the run (see above).
 - Test hooks: `--menu CMD,..` runs menu items in order at start (`fullscreen`, `menubar`, `integer`, `crop`, `smooth`,
-  `reset`, `pause`, `mute`, `size:3x`, `size:1280x720`, `aspect:square|tv|4:3|16:10|16:9|fill`, `upscale:none|scale2x|scale3x|scale4x`, `graphics:original|enhanced`, `reloadpack`, `audio:original|cd`, `stereo`, `reverb`, `fsmode:desktop`,
+  `reset`, `pause`, `mute`, `size:3x`, `size:1280x720`, `aspect:square|tv|4:3|16:10|16:9|fill`, `upscale:none|scale2x|scale3x|scale4x`, `graphics:original|enhanced|32bit`, `reloadpack`, `audio:original|cd`, `stereo`, `reverb`, `fsmode:desktop`,
   `fsmode:1920x1080`); `--dump-window F.png` saves the window's picture area as drawn when the run ends.
 
 ## Checks (Linux, from this folder)
@@ -150,7 +159,7 @@ ReC.exe --wav ID OUT.wav [SECONDS] [--cd [--mono] [--reverb]]
 | `python3 tools/core_vs_web.py --canon --states --checks wake` | Linux core vs the web port: CSV, PNG, RAM, WRAM and CIRAM all identical |
 | `python3 tools/win_vs_web.py --canon --states --checks wake` | **dist/ReC.exe under Wine** (headless) vs the web port |
 | `python3 tools/win_smoke.py --canon [--no-xinput] [--verbose]` | the real window under Wine + Xvfb: a 600-frame run exits 0, writes the save file, and its PNG equals the headless one; a scripted windowed CSV equals the headless one |
-| `python3 tools/win_video_check.py` | the Video menu under Wine + Xvfb: Enhanced graphics (+ export, pack tile, back to Original), upscale filters, window sizes, aspect ratios, crop, fill / smooth, menu bar, fullscreen (+ resolution fallback), settings file saved and reloaded; the drawn picture against the headless frame |
+| `python3 tools/win_video_check.py` | the Video menu under Wine + Xvfb: Enhanced graphics 16-bit and 32-bit (+ export, pack tile, back to Original), upscale filters, window sizes, aspect ratios, crop, fill / smooth, menu bar, fullscreen (+ resolution fallback), settings file saved and reloaded; the drawn picture against the headless frame |
 | `python3 tools/apu_wav_compare.py --exe 0x14 0x15 0x1B` | the exe's Original APU output matches `apu_check.mjs` byte for byte on 3 full songs (`0x05` / `0x10` are short effects that end in 0.1 s) |
 | `python3 tools/wav_stats.py OUT.wav [SKIP]` | RMS / peak per channel of a WAV (compare Original and CD quality levels) |
 | `python3 tools/pack_check.py DIR` | a graphics-pack folder: names, 32×32, decodable (what the exe would skip) |
