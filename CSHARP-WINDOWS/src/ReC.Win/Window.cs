@@ -85,32 +85,70 @@ internal static unsafe partial class Window
     private static int _hdFrame = -1;
     private static bool _quiet, _exporting;
 
-    /// <summary>tags are recorded only while they are needed (Enhanced on, or --export-tiles)</summary>
+    /// <summary>T20: HD draws with its own engine (SceneRaster + Gpu) from the captured video state, the PPU makes no pixels</summary>
+    private static bool HdEngine => _v.Enhanced && _v.Hd;
+
+    /// <summary>a picture to make per frame: Enhanced looks (PPU tags), HD engine (video capture), --export-tiles</summary>
+    private static bool NeedRender => _m != null && (_m.Ppu.Tags != null || _m.Ppu.Capture != null);
+
+    /// <summary>the frame on screen as NES colours: the HD engine's own raster while it runs, else the PPU's</summary>
+    private static byte[] ShownFb => _m!.Ppu.NoPixels && _raster != null ? _raster.Fb : _m.Ppu.Fb;
+
+    /// <summary>tags / video capture are recorded only while they are needed (Enhanced on, or --export-tiles)</summary>
     private static void EnsureTags()
     {
         if (_m == null) return;
-        if (_v.Enhanced || _exporting) _m.Ppu.Tags ??= new int[256 * 240];
-        else _m.Ppu.Tags = null;
-        if (_v.Enhanced) _m.Ppu.LineScroll ??= new int[240];
-        else _m.Ppu.LineScroll = null;
+        var ppu = _m.Ppu;
+        if (HdEngine)
+        {
+            ppu.Capture ??= new ReC.Nes.VideoCapture();
+            ppu.NoPixels = true;
+            ppu.Tags = null;                                 // the raster makes its own tags
+            _raster ??= new SceneRaster(ppu.Chr);
+        }
+        else
+        {
+            if (ppu.NoPixels && _raster != null) Array.Copy(_raster.Fb, ppu.Fb, ppu.Fb.Length);   // until the PPU draws again
+            ppu.NoPixels = false;
+            ppu.Capture = null;
+            if (_v.Enhanced || _exporting) ppu.Tags ??= new int[256 * 240];
+            else ppu.Tags = null;
+        }
         _hdFrame = -1;
     }
 
     private static void RenderHd()
     {
-        if (_m?.Ppu.Tags is not { } tags || _enh == null) return;
-        bool gpu = _v.Hd && _gpu != null;
-        _enh.ModeHd = gpu;
-        _enh.Mode32 = _v.Enhanced32 || (_v.Hd && _gpu == null);          // HD without Direct3D: the 32-bit look
-        _enh.Render(_m.Ppu.Fb, tags, _m.Ppu.Pal, _hd);
-        if (gpu)
+        if (_m == null || _enh == null) return;
+        byte[] fb, pal;
+        int[] tags;
+        if (_m.Ppu.Capture is { } cap)
         {
+            if (cap.Frames == 0 || _raster == null) return;  // nothing captured yet (HD was just chosen)
+            _raster.SpriteLimit = !_v.HdNoFlicker;
+            _raster.Build(cap);
+            (fb, tags, pal) = (_raster.Fb, _raster.Tags, _raster.LinePal[239]);
+        }
+        else if (_m.Ppu.Tags is { } t) (fb, tags, pal) = (_m.Ppu.Fb, t, _m.Ppu.Pal);
+        else return;
+        if (HdEngine && _gpu != null)
+        {
+            if (_exporting) { _enh.ModeHd = true; _enh.Render(fb, tags, pal, _hd); }   // records the tiles seen
+            else _enh.LiftHd(fb, tags);
             _scene ??= new HdScene(_nesRgb);
-            _scene.Build(_m.Ppu.Fb, tags, _m.Ppu.Pal, _enh.HdLift, _m.Ppu.LineScroll, _frameNo);
-            _gpu!.Upload(_hd, _enh.HdHeight!, _scene);
+            _scene.Build(fb, tags, pal, _enh.HdLift, _raster!.LineScroll, _frameNo);
+            _gpu.Upload(_raster, _scene);
+        }
+        else
+        {
+            _enh.ModeHd = false;
+            _enh.Mode32 = _v.Enhanced32 || HdEngine;          // HD without Direct3D: the 32-bit look
+            _enh.Render(fb, tags, pal, _hd);
         }
         _hdFrame = _frameNo;
     }
+
+    private static SceneRaster? _raster;
 
     // T18 HD graphics (Gpu.cs): created when HD is chosen, released when another look is (GDI draws again)
     private static Gpu? _gpu;
@@ -122,6 +160,7 @@ internal static unsafe partial class Window
     {
         if (_gpu == null) return;
         _gpu.Parallax = _v.HdParallax; _gpu.Shadows = _v.HdShadows; _gpu.Atmosphere = _v.HdAtmosphere; _gpu.Detail = _v.HdDetail;
+        _gpu.Reflections = _v.HdReflections; _gpu.Lights = _v.HdLights;
     }
     private static string _gpuError = "";
     private static bool _gpuTried;
@@ -136,10 +175,12 @@ internal static unsafe partial class Window
         if (_gpu != null || _gpuTried || _hwnd == IntPtr.Zero) return;
         _gpuTried = true;
         Win32.GetClientRect(_hwnd, out var rc);
-        _gpu = Gpu.TryCreate(_hwnd, rc.Right, rc.Bottom, out _gpuError);
+        _gpu = Gpu.TryCreate(_hwnd, rc.Right, rc.Bottom, _nesRgb, out _gpuError);
         ApplyHdEffects();
+        int left = _gpu != null && _enh != null ? _gpu.SetArt(_enh.Art, _m!.Ppu.Chr.Length / 16) : 0;
         if (!_quiet)
-            Console.Error.WriteLine(_gpu != null ? $"[re-c] HD graphics: {_gpu.Info}"
+            Console.Error.WriteLine(_gpu != null ? $"[re-c] HD engine: {_gpu.Info}, {_gpu.Slots} pack tiles in the atlas" +
+                                                   (left > 0 ? $" ({left} left out: atlas full)" : "")
                                                  : $"[re-c] HD graphics not available ({_gpuError}): using the 32-bit look");
         _hdFrame = -1;
     }
@@ -207,7 +248,7 @@ internal static unsafe partial class Window
             // no autoplay policy on the desktop: audio starts right away (JS: on the first key / click); M = mute
             // T14: compile the Enhanced pipeline before the audio starts (its first frame would stall the sound)
             EnsureGpu();
-            if (_v.Enhanced && m.Ppu.Tags != null)
+            if (_v.Enhanced && NeedRender)
             {
                 RenderHd();
                 _hdFrame = -1;
@@ -222,12 +263,13 @@ internal static unsafe partial class Window
                                         $"pad={_pad.Api} save={(saving ? savePath : "off (--load-state without --save)")}");
 
             // js: main.js blit
-            void Blit(byte[] fb)
+            void Blit()
             {
-                for (int i = 0; i < fb.Length; i++) Px[i] = lut[fb[i] & 0x3F];
                 _frameNo++;
-                // every line of a frame run with Tags set is tagged -> the enhanced picture (+ --export-tiles record)
-                if (m.Ppu.Tags != null) RenderHd();
+                // every line of a frame run with Tags / Capture set is recorded -> the enhanced / HD picture (+ --export-tiles)
+                if (NeedRender) RenderHd();
+                var fb = ShownFb;
+                for (int i = 0; i < fb.Length; i++) Px[i] = lut[fb[i] & 0x3F];
                 Present();
             }
 
@@ -262,13 +304,13 @@ internal static unsafe partial class Window
                         if (o.Frames >= 0 && ranTotal >= o.Frames) { _quit = true; break; }
                         if (o.Turbo) _acc = 0;
                     }
-                    if (ran) { Blit(m.Ppu.Fb); _audio.Flush(); }
+                    if (ran) { Blit(); _audio.Flush(); }
                 }
                 _last = now;
             }
 
             Status("");
-            Blit(m.Ppu.Fb);
+            Blit();
             if (o.Frames == 0) _quit = true;
             while (!_quit)
             {
@@ -283,7 +325,7 @@ internal static unsafe partial class Window
             }
 
             if (rows != null) File.WriteAllText(o.Compare!, string.Join('\n', rows) + "\n");
-            if (o.Screen != null) Png.WriteFb(o.Screen, m.Ppu.Fb, data.NesRgb, 1);
+            if (o.Screen != null) Png.WriteFb(o.Screen, ShownFb, data.NesRgb, 1);
             if (o.DumpWindow != null && _hwnd != IntPtr.Zero) DumpWindow(o.DumpWindow);
             if (o.ExportTiles != null)
             {

@@ -172,7 +172,7 @@ CSHARP-WINDOWS/
     swap chain is released when another look is chosen (GDI draws again); `--dump-window` reads the back buffer
     (`Gpu.Capture`, staging copy). No Direct3D 11 / compiler -> stderr + title say so and the 32-bit look is used.
     Under Wine (wined3d on Xvfb's llvmpipe GL) the device is "hardware, feature level 11.0" and all shaders compile.
-14. **HD materials, shadows, parallax (T19):** second core output hook `Ppu.LineScroll` (null = off: every parity run;
+14. **HD materials, shadows, parallax (T19):** second core output hook `Ppu.LineScroll` (T20: replaced by item 15; null = off: every parity run;
     set with Tags while Enhanced is on): per line, after the split hook, v (15 bits) | fine X << 16, -1 = rendering off;
     never read back (`tests` `win_hd_scene`: Fb identical with it on). `HdScene.cs` per frame (CPU): Info texture
     256x240 (lift, NES colour, flags sprite / void / UI, bilinear void mask), Lines (world x, y of each line in the
@@ -189,3 +189,28 @@ CSHARP-WINDOWS/
     darkening); motes (rate 1.25) and mist (1.3). UI pixels go out with alpha 0 and skip bloom and grading. Composite:
     shoulder tone curve (identity below 0.75), saturation 1.08, contrast 0.12, vignette 0.22. Four switches
     (`Gpu.Parallax / Shadows / Atmosphere / Detail`, menu ids 275-278, `--menu hd:parallax` etc. toggle).
+15. **HD engine (T20): the HD look no longer uses the PPU's picture.** Core: `Ppu.LineScroll` (item 14) is replaced by
+    `Ppu.Capture` (`Nes/VideoCapture.cs`, null = off: every parity run) and `Ppu.NoPixels` (false = default). Capture
+    records per frame the nametables / palette / OAM as the frame starts (a new copy only if the game writes one while
+    the frame is drawn), per line the registers it starts with after its split hook (v, fine x, PPUCTRL, PPUMASK, the 8
+    CHR bank offsets), the registers after every mid-line write (`Timed`, with its dot) and the registers each line's
+    sprite evaluation used; output only. NoPixels skips `RenderLine`'s pixels, `RenderLineTimed`'s drawing and the
+    sprite decode (overflow flag still set); all register, scroll and split behaviour is unchanged and the game never
+    reads the picture. While HD is chosen both are on (Tags off). Host: `SceneRaster.cs` draws the background and
+    sprite layers from the capture with the PPU's fetch order (tiles 0 / 1 at the line start, tile t at dot 8(t-1); a
+    write at dot D is seen by fetches at >= D and pixels >= D-1) and composes them as the PPU does: `win_scene_raster`
+    checks Fb + Tags against the PPU on every frame of the canon boot run + 90 frames of each of the 87 web test states
+    (10330 frames, 45060 mid-line writes: 0 different) and that NoPixels leaves every compare-CSV row unchanged.
+    `SpriteLimit` false (default, `hd_effects` `noflicker`) shows every sprite on a line; the 8-sprite picture's pixels
+    are kept (`win_hd_engine`). `Gpu.cs` + `GpuShaders.cs`: uploads `Gpu.Layers` (per pixel uint4: background colour +
+    opaque + HUD, sprite colour + present + behind, symmetric dither pair) and an art map (uint2: pack atlas slot + 1,
+    tile column / row, flips, per layer; keys from each line's own palette), atlas 2048x2048 = 64x64 pack tiles of
+    32x32 (`SetArt` at start and on F5). Frame passes: Scale2x on the keys (background and sprite layers separately, HUD
+    exact) 256 -> 512 -> 1024; albedo 2048x1920 (third Scale2x step, pack tiles sampled bilinear inside their cell,
+    dither mix, PPU priority); height = jump flood (4, 2, 1) to the nearest edge of the 2x keys, pillow of 1 + distance
+    (cap 5), 3x3 blur; light map 128x120 of emissive colours ($27 $28; $16 $26 $37 at 0.55) blurred 3 x H + V. Draw
+    passes as T19 plus: sprite contact shadow (5 taps of the lift above), local light from the map scaled by darkness
+    (mean playfield luminance 0.12-0.30), water / ice reflection (march up to 28 px to the shore, mirror, ripple,
+    sprites full / scenery 0.12, softened). Wine's vkd3d compiler cannot unroll loops with conditional jumps: the new
+    passes use `[loop]`. Without Direct3D 11 HD uses the raster's Fb + Tags in the 32-bit look (no PPU pixels either).
+    Menu ids 279-281 (`hd:reflections`, `hd:lights`, `hd:noflicker`).

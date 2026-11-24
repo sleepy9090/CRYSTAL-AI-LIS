@@ -11,8 +11,9 @@ and the settings file written by the menu. Xvfb screen: 1920x1080x24.
 keep their colour, settings file, --export-tiles), then the exported tiles painted magenta as a pack must be drawn,
 and Graphics > Original must not draw it.
 `enhanced32` (T14): Graphics > Enhanced (32-bit): client 1024x960, > 2000 colours, settings file.
-`hdfx` (T19): HD effects all on vs all off on a cave gameplay frame (playfield changes, HUD identical, ini records it);
-`hd` / `hdfull` / `hdoff` (T18): Graphics > HD (Direct3D 11 under Wine): device + shaders made, 4x window and 1080p
+`hdfx` (T19, T20): HD effects all on vs all off (no-flicker stays on) on a cave gameplay frame (playfield changes, HUD
+identical, ini records it);
+`hd` / `hdfull` / `hdoff` (T18, T20 engine): Graphics > HD (Direct3D 11 under Wine): device + shaders made, 4x window and 1080p
 fullscreen pictures (> 2000 colours, flat areas keep their colour, black bars), back to Original draws with GDI again.
 `heropack` (T11): packs/hero on a gameplay frame: loads cleanly, repaints only the hero.
 `enemypack` (T12): packs/enemies on areas $29 and $05: loads cleanly, repaints enemies, not the hero.
@@ -362,8 +363,8 @@ def hd_checks(exe, timeout, hpng, frame, names):
         msg = None
         if rc or not os.path.exists(wpng):
             msg = f'rc={rc}'
-        elif 'HD graphics: Direct3D 11' not in out:
-            msg = 'no Direct3D 11 device (' + next((l for l in out.splitlines() if 'HD graphics' in l), 'no HD line') + ')'
+        elif 'HD engine: Direct3D 11' not in out:
+            msg = 'no Direct3D 11 device (' + next((l for l in out.splitlines() if 'HD ' in l), 'no HD line') + ')'
         elif open(spng, 'rb').read() != open(hpng, 'rb').read():
             msg = 'game frame differs from the headless run'
         else:
@@ -411,14 +412,14 @@ def hdfx_check(exe, timeout):
     keys = ['2520:LEFT:30', '2555:UP:30', '2590:RIGHT:30', '2625:DOWN:30', '2660:A:4']
     pics, ini = {}, os.path.join(OUT, 'hdfx.ini')
     for name, menu in (('on', 'graphics:hd,size:4x'),
-                       ('off', 'graphics:hd,size:4x,hd:parallax,hd:shadows,hd:atmosphere,hd:detail')):
+                       ('off', 'graphics:hd,size:4x,hd:parallax,hd:shadows,hd:atmosphere,hd:detail,hd:reflections,hd:lights')):
         if os.path.exists(ini):
             os.remove(ini)
         png = os.path.join(OUT, f'hdfx_{name}.png')
         rc, out = run(exe, ['--load-state', winpath(state), '--frames', '175', '--turbo', '--no-audio',
                             '--video-config', winpath(ini), '--save', winpath(os.path.join(OUT, 'video.sav')),
                             '--keys'] + keys + ['--menu', menu, '--dump-window', winpath(png)], timeout)
-        if rc or not os.path.exists(png) or 'HD graphics: Direct3D 11' not in out:
+        if rc or not os.path.exists(png) or 'HD engine: Direct3D 11' not in out:
             print(f'FAIL hdfx       run {name}: rc={rc}')
             print('     ' + '\n     '.join(out.strip().splitlines()[-8:]))
             return 1
@@ -429,14 +430,14 @@ def hdfx_check(exe, timeout):
     hud = sum(on[y][x] != off[y][x] for y in range(780, 890) for x in range(1024))
     play = sum(on[y][x] != off[y][x] for y in range(0, 720) for x in range(32, 1024))
     total = 720 * 992
-    if 'hd_effects=none' not in lines:
-        msg = 'settings file lacks hd_effects=none'
+    if 'hd_effects=noflicker' not in lines:
+        msg = 'settings file lacks hd_effects=noflicker'
     elif hud:
         msg = f'{hud} HUD pixels change with the effects (HUD must stay unlit)'
     elif play < 0.3 * total:
         msg = f'only {play} / {total} playfield pixels change with the effects'
     else:
-        msg = f'ok: effects change {play} / {total} playfield pixels, HUD identical, hd_effects=none saved'
+        msg = f'ok: effects change {play} / {total} playfield pixels, HUD identical, hd_effects=noflicker saved'
     print(f'{"ok  " if msg.startswith("ok:") else "FAIL"} {"hdfx":10s} {msg[4:] if msg.startswith("ok:") else msg}', flush=True)
     return 0 if msg.startswith('ok:') else 1
 

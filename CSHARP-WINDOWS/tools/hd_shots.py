@@ -1,6 +1,6 @@
 """Screenshots of one game state in several graphics modes from dist/ReC.exe under Wine (for HD look reviews).
 
-usage: python3 tools/hd_shots.py STATE FRAMES OUTDIR [MODE ..] [--keys K ..]
+usage: python3 tools/hd_shots.py STATE FRAMES OUTDIR [MODE ..] [--pack DIR] [--keys K ..]
   MODE = a --menu list, e.g. graphics:32bit,size:4x  graphics:hd,size:4x  graphics:hd+fullscreen (default: original,
   32-bit and HD at 4x); writes OUTDIR/<n>_<mode>.png (window picture) and prints the exe's HD line.
 """
@@ -19,6 +19,9 @@ def main(argv):
     keys = []
     if '--keys' in argv:
         i = argv.index('--keys'); keys = argv[i + 1:]; argv = argv[:i]
+    pack = []
+    if '--pack' in argv:
+        i = argv.index('--pack'); pack = ['--pack', winpath(os.path.abspath(argv[i + 1]))]; argv = argv[:i] + argv[i + 2:]
     state, frames, out = argv[0], argv[1], argv[2]
     modes = argv[3:] or ['graphics:original,size:4x', 'graphics:32bit,size:4x', 'graphics:hd,size:4x']
     os.makedirs(out, exist_ok=True)
@@ -32,9 +35,9 @@ def main(argv):
         png = os.path.join(out, f'{n}_{menu.split(",")[0].split(":")[-1]}{"_fs" if fs else ""}.png')
         rc, text = run(exe, ['--load-state', winpath(sp), '--frames', frames, '--turbo', '--no-audio',
                              '--video-config', winpath(ini), '--save', winpath(os.path.join(out, 'shots.sav')),
-                             '--menu', menu, '--dump-window', winpath(png)] + (['--fullscreen'] if fs else []) +
+                             '--menu', menu, '--dump-window', winpath(png)] + (['--fullscreen'] if fs else []) + pack +
                        (['--keys'] + keys if keys else []), 600)
-        hd = next((l for l in text.splitlines() if 'HD graphics' in l), '')
+        hd = next((l for l in text.splitlines() if 'HD ' in l), '')
         print(f'{"ok  " if rc == 0 and os.path.exists(png) else "FAIL"} {png} {hd}')
     return 0
 

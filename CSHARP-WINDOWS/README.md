@@ -35,7 +35,7 @@ anyway**, or right-click the file → Properties → **Unblock**.
 | Enter | Start |
 | Right Shift / Tab | Select |
 | P | pause (the title bar shows it) |
-| F9 | graphics: Original → Enhanced (16-bit) → Enhanced (32-bit) → HD (GPU) |
+| F9 | graphics: Original → Enhanced (16-bit) → Enhanced (32-bit) → HD engine (GPU) |
 | F5 | reload the graphics pack |
 | M | mute |
 | F11 / Alt+Enter | fullscreen on / off |
@@ -87,8 +87,16 @@ sound of the port. You can switch at any time, and the choice is saved. CD quali
 **Video › Graphics** (or **F9**, which cycles Original → 16-bit → 32-bit → HD) switches the look at any time, even
 mid-game. The choice is saved.
 
-**HD (GPU)** renders on the graphics card with Direct3D 11 at your screen's own resolution (1080p, 1440p, 4K: in
-fullscreen every screen pixel is drawn, not a 4× picture stretched), in the style of a modern lit 2D game:
+**HD engine (GPU)** renders on the graphics card with Direct3D 11 at your screen's own resolution (1080p, 1440p, 4K:
+in fullscreen every screen pixel is drawn, not a 4× picture stretched), in the style of a modern lit 2D game. It has
+its own renderer: it reads what the game put in video memory (map tiles, palettes, sprite list, scroll and screen
+splits) and draws the scene itself. It does not take the emulated NES picture.
+- **Layers at 8×:** background and sprites are kept apart and each is rounded on its own (a character's outline is
+  smoothed against itself, not against the floor behind it), then built at 8× the NES resolution (2048×1920) with
+  graphics-pack tiles placed and filtered inside their own 32×32 cell, so edges stay smooth at any screen size. HUD
+  text and numbers stay exact pixels.
+- **No sprite flicker:** every sprite on a line is drawn, not only the first 8 (the NES limit that makes busy scenes
+  flicker). Switch it off to see the original behaviour.
 - **Materials:** every surface is given a material from its colour (stone, water / ice, plaster / cloth, earth / wood /
   sand, grass / foliage) with its own procedural surface relief: cracked stone, grain, grass blades, slowly rippling
   water with twinkling glints. The relief is fixed to the world (it scrolls with the map, it does not swim).
@@ -96,7 +104,10 @@ fullscreen every screen pixel is drawn, not a 4× picture stretched), in the sty
   lit by a warm sun and a cool sky (glossy highlights per material, ambient occlusion in the creases, rim light on
   characters); bloom on the brightest highlights; a filmic highlight roll-off, a light colour grade and a vignette.
 - **Shadows:** soft shadows marched toward the sun through the height model (characters, enemies and walls throw them;
-  the edge softens with distance), drifting cloud shadows outdoors.
+  the edge softens with distance), a soft contact shadow under every character, drifting cloud shadows outdoors.
+- **Local lights:** fire, lava and lamp colours light up their surroundings, mostly in dark places (caves, dungeons).
+- **Reflections:** water and ice mirror the characters and enemies standing on the shore (rippled), and faintly the
+  scenery.
 - **Parallax:** pits, chasms and the darkness around caves become depth: cliff walls seen in perspective from the
   middle of the screen, and three rock layers far below that scroll slower than the map (the camera comes from the
   game's own scroll) and lie in the ledges' shadows. Dust motes and outdoor mist float in front and scroll faster.

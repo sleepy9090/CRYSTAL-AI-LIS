@@ -6,8 +6,9 @@ tested under Wine. Core copied from the finished `../CSHARP` port; host is raw W
 
 ## Rules
 - Core (`src/ReC.Core`) changes: data loading, parity fixes, and the output-only `Ppu.Tags` (T10, must never change Fb;
-  `ppu_tags` test), `Ppu.LineScroll` (T19, same; `win_hd_scene` test) and `Apu.OutChannels` (T13, must never change
-  the mono stream; `apu_channels` test). Record any other in architecture §5.
+  `ppu_tags` test), `Ppu.Capture` + `Ppu.NoPixels` (T20: capture is output-only, NoPixels only skips pixels; `win_scene_raster`
+  test) and `Apu.OutChannels` (T13, must never change the mono stream; `apu_channels` test). Record any other in
+  architecture §5.
 - Keep everything inside `CSHARP-WINDOWS/`. `../web/`, `../CSHARP/`, `../REVERSE.md`, `../docs/`, `../tools/` are read-only.
 - Do NOT try to identify the game title (no CRC/database lookups, no title-screen hunting for that purpose). Call it "re-c".
 - Keep `// js: <module> <name>` tags on ported members (module path relative to web/src); new host code that replaces a

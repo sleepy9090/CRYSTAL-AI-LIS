@@ -235,3 +235,20 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   `win_video_check` `hd` (now: text + cut-scene black exact), `hdfx` (cave gameplay, all effects on vs off: playfield
   changes, HUD identical, `hd_effects=none` saved).
 
+- [x] T20 (interactive, 2026-11-24) done: **HD engine: own renderer, no PPU picture** (request: "dont use the ppu
+  anymore, create a new graphics engine"). Core (architecture §5.15): `Ppu.LineScroll` replaced by the output-only
+  `Ppu.Capture` (`VideoCapture.cs`: nametables / palette / OAM per frame + copies on mid-frame writes, registers per
+  line, per mid-line write and per sprite evaluation) and `Ppu.NoPixels` (the PPU keeps its register / scroll / split
+  behaviour but draws nothing). `SceneRaster.cs` draws the background and sprite layers from the capture (PPU fetch
+  order incl. mid-line writes) and composes them; `Gpu.cs` + `GpuShaders.cs` rebuilt: layer + art-map uploads, pack
+  atlas (2048x2048, 4096 tiles; all 2658 starter-pack tiles fit), Scale2x per layer 256 -> 512 -> 1024, albedo at 8x
+  (2048x1920), jump-flood height field, emissive light map, then the T19 light pass + contact shadows, local lights,
+  water / ice reflections. New switches `hd:reflections` / `hd:lights` / `hd:noflicker` (every sprite on a line).
+  Tests: `win_scene_raster` (raster = PPU Fb + Tags on 10330 frames: canon boot + 87 states x 90, 45060 mid-line
+  writes, 0 different; NoPixels: every compare-CSV row unchanged), `win_hd_engine` (no-flicker keeps the 8-sprite
+  pixels, +2608 sprite pixels in 2610 frames; layer / art words; atlas slots; ini / --menu); 292 passed.
+  `win_video_check` hd 5 -> 30741 colours, hdfx changes 623881 / 714240 playfield pixels with the HUD identical; all 31
+  ok; smoke + canon ok; core_vs_web / win_vs_web 155/155 (`--canon --states --checks`); coverage 100 %; REA ok.
+  Found: Wine's shader compiler cannot unroll loops with conditional jumps (new passes use `[loop]`); a ragged shore
+  mirrors scenery into streaks (scenery reflects at 0.12, sprites fully). Previews: out/hd20/. Not measured: GPU frame
+  time on real hardware (Wine renders with llvmpipe).

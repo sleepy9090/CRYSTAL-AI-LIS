@@ -376,7 +376,7 @@ internal static partial class Program
             // albedo = no baked shading: every colour is an NES colour or a dither 50/50 mix, fewer than the 16-bit look
             True(alb.Distinct().Count() < h16.Distinct().Count(), $"albedo unshaded: {alb.Distinct().Count()} colours vs 16-bit {h16.Distinct().Count()}");
             var hgt = ehd.HdHeight!;
-            Eq(Gpu.HW * Gpu.HH, hgt.Length, "height model 512x480");
+            Eq(512 * 480, hgt.Length, "height model 512x480");
             True(hgt.All(v => v >= 0 && v <= 1.0001f), "height in 0..1");
             True(hgt.Distinct().Count() > 20, $"height has relief ({hgt.Distinct().Count()} levels)");
             for (int r = 0; r < 100; r++) ehd.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, alb);   // warm-up (tiered JIT)
@@ -407,14 +407,15 @@ internal static partial class Program
         }),
         ("win_hd_scene", () =>
         {
-            // T19 HD scene analysis (HdScene.cs) + the output-only Ppu.LineScroll
+            // T19 HD scene analysis (HdScene.cs); line scroll from the T20 scene raster
             var d = TheData.Value;
-            var m1 = new Machine(d, _ => { }); var m2 = new Machine(d, _ => { });
-            m1.Reset(); m2.Reset();
-            m2.Ppu.LineScroll = new int[240];
-            for (int f = 0; f < 400; f++) { m1.RunFrame(0); m2.RunFrame(0); }
-            True(m1.Ppu.Fb.AsSpan().SequenceEqual(m2.Ppu.Fb), "LineScroll never changes Fb");
-            True(m2.Ppu.LineScroll.Any(v => v != 0), "LineScroll recorded");
+            var m2 = new Machine(d, _ => { });
+            m2.Reset();
+            m2.Ppu.Capture = new VideoCapture();
+            for (int f = 0; f < 400; f++) m2.RunFrame(0);
+            var sr = new SceneRaster(m2.Ppu.Chr);
+            sr.Build(m2.Ppu.Capture);
+            True(sr.LineScroll.Any(v => v != 0), "line scroll recorded");
 
             Eq("0,5,2,1,3,4", string.Join(",", new[] { 0x0F, 0x2A, 0x21, 0x00, 0x30, 0x17 }.Select(HdScene.Kind)), "material kinds");
             // synthetic gameplay frame: green ground, a 20x20 black pit, a 1-pixel black line, HUD text under a scroll split
@@ -453,8 +454,121 @@ internal static partial class Program
 
             var v = VideoSettings.Parse("graphics=hd\nhd_effects=parallax,detail\n");
             True(v.HdParallax && !v.HdShadows && !v.HdAtmosphere && v.HdDetail && v.Serialize().Contains("hd_effects=parallax,detail"), "ini hd_effects");
-            True(new VideoSettings().Serialize().Contains("hd_effects=parallax,shadows,atmosphere,detail"), "all effects on by default");
+            True(new VideoSettings().Serialize().Contains("hd_effects=parallax,shadows,atmosphere,detail,"), "all effects on by default");
             Eq(276, Window.CommandId("hd:shadows"), "--menu hd:shadows");
+        }),
+        ("win_scene_raster", () =>
+        {
+            // T20 HD engine stage 1: the scene raster draws every frame from the captured video state exactly as the PPU
+            // does (Fb + Tags, sprite limit on), Capture never changes Fb, and NoPixels never changes the game
+            var d = TheData.Value;
+            long frames = 0, events = 0, versions = 0;
+            var bad = new List<string>();
+            void Run(Machine a, Machine b, Func<int, int> keys, int f0, int n, string name)
+            {
+                a.Ppu.Tags = new int[256 * 240];
+                a.Ppu.Capture = new VideoCapture();
+                b.Ppu.Capture = new VideoCapture();
+                b.Ppu.NoPixels = true;
+                var ra = new SceneRaster(a.Ppu.Chr); var rb = new SceneRaster(b.Ppu.Chr);
+                for (int f = f0; f < f0 + n; f++)
+                {
+                    int k = keys(f);
+                    a.RunFrame(k); b.RunFrame(k);
+                    ra.Build(a.Ppu.Capture); rb.Build(b.Ppu.Capture);
+                    frames++;
+                    events += a.Ppu.Capture.Events.Sum(e => e.Count);
+                    versions += a.Ppu.Capture.Vram.Count + a.Ppu.Capture.Pal.Count;
+                    string why = !ra.Fb.AsSpan().SequenceEqual(a.Ppu.Fb) ? "Fb"
+                        : !ra.Tags.AsSpan().SequenceEqual(a.Ppu.Tags) ? "Tags"
+                        : !rb.Fb.AsSpan().SequenceEqual(ra.Fb) ? "NoPixels raster"
+                        : string.Join(',', Csv.CompareRow(a, f)) != string.Join(',', Csv.CompareRow(b, f)) ? "NoPixels game state" : "";
+                    if (why == "") continue;
+                    int first = Enumerable.Range(0, 256 * 240).FirstOrDefault(i => ra.Fb[i] != a.Ppu.Fb[i] || ra.Tags[i] != a.Ppu.Tags[i]);
+                    bad.Add($"{name} f{f}: {why} (first pixel {first & 255},{first >> 8})");
+                    break;
+                }
+            }
+            var keys = Keys.Parse("1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80 2430:RIGHT:200".Split(' '));
+            var a0 = new Machine(d, _ => { }); var b0 = new Machine(d, _ => { });
+            a0.Reset(); b0.Reset();
+            Run(a0, b0, f => keys.TryGetValue(f, out int v) ? v : 0, 214, 2500, "boot");
+            string dir = Path.Combine(Data.FindDir(), "..", "test", "states");
+            foreach (string p in Directory.GetFiles(dir, "*.json").OrderBy(p => p, StringComparer.Ordinal))
+            {
+                var st = StateFile.Load(p);
+                var a = new Machine(d, _ => { }); var b = new Machine(d, _ => { });
+                a.Reset(); b.Reset(); a.LoadState(st); b.LoadState(st);
+                int f0 = st.Frame;
+                Run(a, b, f => (f / 23 % 5) switch { 0 => 0x01, 1 => 0x80, 2 => 0x04, 3 => 0x40, _ => 0 }, f0, 90, Path.GetFileNameWithoutExtension(p));
+            }
+            Console.WriteLine($"  win_scene_raster: {frames} frames, {events} mid-line writes, {versions} nametable + palette copies, {bad.Count} bad");
+            foreach (string s in bad.Take(12)) Console.WriteLine($"    {s}");
+            Eq(0, bad.Count, "scene raster = PPU on every frame");
+            True(events > 0, "mid-line writes seen");
+        }),
+        ("win_hd_engine", () =>
+        {
+            // T20 HD engine: no-flicker sprite layer, the GPU layer words (Gpu.Layers) and the pack atlas slots
+            var d = TheData.Value;
+            string dir = Path.Combine(Data.FindDir(), "..", "test", "states");
+            long extra = 0, checkedPx = 0;
+            bool superset = true;
+            SceneRaster? last = null; Machine? lastM = null;
+            foreach (string p in Directory.GetFiles(dir, "*.json").OrderBy(p => p, StringComparer.Ordinal))
+            {
+                var st = StateFile.Load(p);
+                var m = new Machine(d, _ => { });
+                m.Reset(); m.LoadState(st);
+                m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+                var lim = new SceneRaster(m.Ppu.Chr); var all = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+                for (int f = 0; f < 30; f++)
+                {
+                    m.RunFrame(0);
+                    lim.Build(m.Ppu.Capture); all.Build(m.Ppu.Capture);
+                    for (int i = 0; i < 256 * 240; i++)
+                    {
+                        if (lim.Sp[i] != 0 && (all.Sp[i] != lim.Sp[i] || all.SpTag[i] != lim.SpTag[i])) superset = false;
+                        if (lim.Sp[i] == 0 && all.Sp[i] != 0) extra++;
+                    }
+                    checkedPx += 256 * 240;
+                }
+                if (Path.GetFileNameWithoutExtension(p) == "town02_enter") { last = all; lastM = m; }
+            }
+            Console.WriteLine($"  win_hd_engine: no flicker shows {extra} more sprite pixels in {checkedPx / 61440} frames");
+            True(superset, "no-flicker keeps every sprite pixel the 8-sprite limit shows");
+            // layer words of a town frame
+            var r = last!;
+            var sc = new HdScene(d.NesRgb);
+            var lift = new byte[256 * 240];
+            sc.Build(r.Fb, r.Tags, r.LinePal[239], lift, r.LineScroll, 0);
+            int tagged = Enumerable.Range(0, 256 * 240).First(i => (r.BgTag[i] & Ppu.TagValid) != 0 && r.Bg[i] != 0 && (sc.Info[i * 4 + 2] & HdScene.FUi) == 0);
+            int tile = r.BgTag[tagged] & 0x1FFF, g = r.BgTag[tagged] >> 19 & 7;
+            var pal = r.LinePal[tagged >> 8];
+            long key = Enhancer.ArtKey(tile, pal[g * 4 + 1], pal[g * 4 + 2], pal[g * 4 + 3]);
+            var art = new Dictionary<long, uint[]> { [key] = new uint[32 * 32], [Enhancer.ArtKey(0x1FFF, 1, 2, 3)] = new uint[32 * 32] };
+            var slots = new Dictionary<long, int>();
+            var tileArt = Gpu.BuildSlots(art, r.Tags.Length > 0 ? lastM!.Ppu.Chr.Length / 16 : 0, slots);
+            True(tileArt[tile] && slots[key] == 0 && slots.Count == 2, "atlas slots by key");
+            var lay = new byte[256 * 240 * 4]; var am = new uint[256 * 240 * 2];
+            Gpu.Layers(r, sc, slots, tileArt, lay, am);
+            bool ok = true;
+            int arts = 0, hud = 0;
+            for (int i = 0; i < 256 * 240; i++)
+            {
+                int o = i * 4;
+                ok &= (lay[o + 2] != 0 || (lay[o] & 63) == (r.BgCol[i] & 63)) && ((lay[o] & 0x40) != 0) == (r.Bg[i] != 0);
+                ok &= r.Sp[i] == 0 ? lay[o + 1] == 0 : (lay[o + 1] & 63) == (r.SpCol[i] & 63) && ((lay[o + 1] & 0x80) != 0) == ((r.Sp[i] & 0x40) != 0);
+                if ((lay[o] & 0x80) != 0) hud++;
+                if (am[i * 2] != 0) { arts++; ok &= (am[i * 2] & 0x1FFF) == 1 && (r.BgTag[i] & 0x1FFF) == tile; }
+            }
+            True(ok, "layer words = the raster's layers");
+            True(hud > 1000, $"HUD pixels flagged ({hud})");
+            True(arts >= 8 && (am[tagged * 2] >> 13 & 7) == (r.BgTag[tagged] >> 13 & 7), $"pack tile under its pixels ({arts}), with the pixel's column");
+            var v = VideoSettings.Parse("graphics=hd\nhd_effects=reflections,noflicker\n");
+            True(v.HdReflections && !v.HdLights && v.HdNoFlicker && !v.HdShadows, "ini hd_effects (T20 switches)");
+            True(new VideoSettings().Serialize().Contains("hd_effects=parallax,shadows,atmosphere,detail,reflections,lights,noflicker"), "all on by default");
+            Eq(281, Window.CommandId("hd:noflicker"), "--menu hd:noflicker");
         }),
         ("win_png_read", () =>
         {

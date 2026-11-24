@@ -49,6 +49,8 @@ internal sealed class Enhancer
     private readonly int[] _linePal = new int[32];    // [group * 4 + slot] as seen on the current line
     public string? PackDir { get; private set; }
     public int ArtCount => _art.Count;
+    /// <summary>T20: the pack tiles by ArtKey (the HD engine puts them in its GPU atlas)</summary>
+    public IReadOnlyDictionary<long, uint[]> Art => _art;
     public readonly List<string> PackErrors = new();
     public readonly HashSet<long>? Seen;
 
@@ -427,7 +429,7 @@ internal sealed class Enhancer
     /// <summary>HD: a sprite (8-connected sprite pixels) stands above the background (HdLift = 255) only if one of its
     /// edge pixels shows a colour different from the non-sprite pixel next to it: a sprite the game hides (drawn in the
     /// colour around it) gets no height, so it casts no shadow and stays hidden</summary>
-    private void LiftHd(byte[] fb, int[] tags)
+    public void LiftHd(byte[] fb, int[] tags)
     {
         var lift = HdLift; var seen = _liftSeen; var st = _liftStack;
         Array.Clear(lift); Array.Clear(seen);

@@ -74,10 +74,12 @@ public sealed class Ppu
 
     public const int TagValid = 1 << 24;
 
-    // ---- Windows port T19 (not in the web port): per-line scroll for the HD renderer's world-anchored effects.
-    // Null = off (the default, and in every parity run). When set, LineScroll[line] = the v register (15 bits) at the
-    // line's start, after any split hook, | fine X << 16; -1 = rendering off. Output only: nothing reads it back.
-    public int[]? LineScroll;
+    // ---- Windows port T20 (not in the web port): the HD engine draws the picture itself from the video state.
+    // Capture (null = off, the default, and in every parity run) records that state per frame (VideoCapture.cs),
+    // output only. NoPixels (false = the default) skips the PPU's own pixel work (Fb and Tags are not updated, nothing
+    // else changes: register, scroll and split behaviour stay exact; the game never reads the picture back).
+    public VideoCapture? Capture;
+    public bool NoPixels;
 
     private static int BgTag(int[] offs, int pa, int p, int col) =>
         TagValid | (p >> 2) << 19 | (pa & 7) << 16 | col << 13 | ((offs[pa >> 10] + (pa & 0x3FF)) >> 4);
@@ -174,6 +176,7 @@ public sealed class Ppu
         if (a < 0x2000) return;                                     // CHR ROM: ignored
         if (a < 0x3F00) Vram[NtIndex(a)] = (byte)val;
         else Pal[PalMirror(a)] = (byte)(val & 0x3F);
+        Capture?.Dirty(a < 0x3F00 ? 0 : 1);
     }
 
     // js: nes/ppu.js vramRead
@@ -205,7 +208,7 @@ public sealed class Ppu
             case 0: Ctrl = val; T = (T & 0xF3FF) | ((val & 3) << 10); break;
             case 1: Mask = val; break;
             case 3: OamAddr = val; break;
-            case 4: Oam[OamAddr] = (byte)val; OamAddr = (OamAddr + 1) & 0xFF; break;
+            case 4: Oam[OamAddr] = (byte)val; OamAddr = (OamAddr + 1) & 0xFF; Capture?.Dirty(2); break;
             case 5:
                 if (W == 0) { T = (T & 0x7FE0) | (val >> 3); X = val & 7; W = 1; }
                 else { T = (T & 0x0C1F) | ((val & 7) << 12) | ((val & 0xF8) << 2); W = 0; }
@@ -228,6 +231,7 @@ public sealed class Ppu
     {
         if (_timed != null) FlushTimed();
         for (int i = 0; i < 256; i++) Oam[(OamAddr + i) & 0xFF] = src[off + i];
+        Capture?.Dirty(2);
     }
 
     public void OamDma(ArraySegment<byte> page) => OamDma(page.Array!, page.Offset);
@@ -256,6 +260,7 @@ public sealed class Ppu
     /// <summary>Render one visible line from the current v (= line start, before the 2-tile prefetch).</summary>
     public void RenderLine(int line)
     {
+        if (NoPixels) return;
         byte[] fb = Fb, pal = Pal;
         int @base = line * 256, mask = Mask;
         int grey = (mask & 1) != 0 ? 0x30 : 0x3F;
@@ -333,6 +338,12 @@ public sealed class Ppu
         if (line <= 0 || line >= 240) return;
         int ctrl = Ctrl, h = (ctrl & 0x20) != 0 ? 16 : 8;
         var oam = Oam;
+        if (NoPixels)                                 // T20: only the overflow flag
+        {
+            int cnt = 0;
+            for (int i = 0; i < 256; i += 4) { int row = line - 1 - oam[i]; if (row >= 0 && row < h && ++cnt > 8) { Status |= 0x20; break; } }
+            return;
+        }
         var offs = BankOffsets();
         var chr = Chr;
         int n = 0;
@@ -386,16 +397,18 @@ public sealed class Ppu
             V = (tv & 0x7BE0) | (T & 0x041F);
         }
         Array.Clear(SprBuf);                  // no sprites on line 0
+        Capture?.Begin(this);
         for (int line = 0; line < 240; line++)
         {
             if (Splits.TryGetValue(line, out var hook)) hook(this);
-            if (LineScroll != null) LineScroll[line] = Rendering ? (V & 0x7FFF) | X << 16 : -1;
+            if (Capture != null) Capture.Line[line] = Capture.Snap(this, BankOffsets());
             if (_timed != null) RenderLineTimed(line);
             else RenderLine(line);
             if (Rendering)
             {
                 IncY();
                 V = (V & ~0x041F) | (T & 0x041F);
+                if (Capture != null && line < 239) { Capture.Spr[line + 1] = Capture.Snap(this, BankOffsets()); Capture.SprValid[line + 1] = true; }
                 EvalSprites(line + 1);
             }
             else Array.Clear(SprBuf);
@@ -471,6 +484,7 @@ public sealed class Ppu
         void DrawBefore(int xe)                          // pixels x .. < xe with the current state
         {
             xe = Math.Min(xe, 256);
+            if (NoPixels) { x = Math.Max(x, xe); return; }
             byte[] pal = Pal;
             int mask = Mask, grey = (mask & 1) != 0 ? 0x30 : 0x3F;
             if ((mask & 0x18) == 0)
@@ -505,6 +519,7 @@ public sealed class Ppu
             FetchBefore(dot);
             DrawBefore(dot - 1);
             fn(this);
+            Capture?.Events[line].Add(new VideoCapture.Event(dot, Capture.Snap(this, BankOffsets())));
         }
         _inTimed = false;
         FetchBefore(257);
