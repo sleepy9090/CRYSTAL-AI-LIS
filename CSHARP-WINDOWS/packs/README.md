@@ -37,3 +37,28 @@ that last only a moment (fade-ins, hit flashes) are left out on purpose; the pla
 **Made by:** `python3 tools/sprite_capture.py` (headless core runs with `--dump-tags`, about a minute) then
 `python3 tools/sprite_pack.py` (paints each object as it appears on screen and cuts it back into tiles keyed exactly as
 the exe looks them up). Rerun both to cover more scenarios.
+
+## `backgrounds/` — starter pack for the scenery
+1,839 tiles (1,189 different tiles in their usual colours) for the backgrounds of every screen the test suite visits
+(86 game situations: towns, shops, the inn, fields, forests, caves, ice, deserts, dungeons, boss rooms, the ending).
+`backgrounds_preview.png` shows eight of them: NES (left) and the pack over the NES picture (right).
+
+Same 16-bit style as the sprite packs: every NES pixel keeps its place and gets a richer colour from the 5-tone ramp of
+its NES colour. Where a shape meets a clearly darker ground or outline it gets a lit rim at the top / left and a shadow
+at the bottom / right (bricks, cobbles, rocks, shingles, fences stand out); two-tone shapes keep the NES art's own
+shading, near-white highlights stay white, dither dots and cracks keep their colour, then the Enhanced rounding. Each
+tile is painted from its own pixels, so floors and walls repeat without seams.
+
+**Install:** copy `backgrounds/*.png` into the same `%APPDATA%\re-c\pack\` folder (names never collide with the hero /
+enemy tiles), press F9 / F5. Works in Enhanced (16-bit) and Enhanced (32-bit).
+
+**Left alone on purpose:** the status bar, window frames, menus and all text (CHR banks 38 / 39 / 3C / 3D, keep them
+crisp), the backdrop colour (transparent in the tiles: the built-in look shows there), and colours that last only a
+moment (fades).
+
+**Limits:** only scenery the test runs show is covered (other areas keep the built-in look); a tile shown with another
+palette (e.g. the same wall in another town's colours) needs its own copy under that name.
+
+**Made by:** `python3 tools/sprite_capture.py --out out/bg --every 16 <every state in ../web/test/states>` (about two
+minutes) then `python3 tools/bg_pack.py` (about six minutes; `--stats` lists the CHR banks the backgrounds use,
+`tools/tag_banks.py` the ones in a screen rectangle). Deterministic.

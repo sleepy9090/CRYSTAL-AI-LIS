@@ -118,6 +118,9 @@ hand-drawn 16-bit art. For that, you can add your own tiles:
 `packs/hero_preview.png`) — copy its PNGs into `%APPDATA%\re-c\pack\` and press F9.
 **Starter pack for the enemies and bosses:** `packs/enemies/` (461 tiles, `packs/enemies_preview.png`) — copy it into
 the same folder.
+**Starter pack for the backgrounds:** `packs/backgrounds/` (1,839 tiles, `packs/backgrounds_preview.png`) — towns,
+fields, caves, shops and the other scenery seen in the test runs; the status bar, menus and text stay as they are. Copy
+it into the same folder too (the three packs' names never collide).
 
 How a name matches: `TTTT` is the tile number (hex) and `AABBCC` are the three NES colours (hex) it is drawn with.
 The same tile in other colours (another palette, or a step of a fade) uses the built-in look, so draw the tile in the
@@ -159,7 +162,7 @@ ReC.exe --wav ID OUT.wav [SECONDS] [--cd [--mono] [--reverb]]
 | `python3 tools/core_vs_web.py --canon --states --checks wake` | Linux core vs the web port: CSV, PNG, RAM, WRAM and CIRAM all identical |
 | `python3 tools/win_vs_web.py --canon --states --checks wake` | **dist/ReC.exe under Wine** (headless) vs the web port |
 | `python3 tools/win_smoke.py --canon [--no-xinput] [--verbose]` | the real window under Wine + Xvfb: a 600-frame run exits 0, writes the save file, and its PNG equals the headless one; a scripted windowed CSV equals the headless one |
-| `python3 tools/win_video_check.py` | the Video menu under Wine + Xvfb: Enhanced graphics 16-bit and 32-bit (+ export, pack tile, back to Original), upscale filters, window sizes, aspect ratios, crop, fill / smooth, menu bar, fullscreen (+ resolution fallback), settings file saved and reloaded; the drawn picture against the headless frame |
+| `python3 tools/win_video_check.py` | the Video menu under Wine + Xvfb: Enhanced graphics 16-bit and 32-bit (+ export, pack tile, back to Original, the hero / enemy / background starter packs), upscale filters, window sizes, aspect ratios, crop, fill / smooth, menu bar, fullscreen (+ resolution fallback), settings file saved and reloaded; the drawn picture against the headless frame |
 | `python3 tools/apu_wav_compare.py --exe 0x14 0x15 0x1B` | the exe's Original APU output matches `apu_check.mjs` byte for byte on 3 full songs (`0x05` / `0x10` are short effects that end in 0.1 s) |
 | `python3 tools/wav_stats.py OUT.wav [SKIP]` | RMS / peak per channel of a WAV (compare Original and CD quality levels) |
 | `python3 tools/pack_check.py DIR` | a graphics-pack folder: names, 32×32, decodable (what the exe would skip) |

@@ -1,6 +1,6 @@
 """Video menu checks of ReC.exe under Wine + Xvfb (Video.cs / VideoMenu.cs).
 
-usage: python3 tools/win_video_check.py [--exe PATH] [--timeout S] [--keep] [NAME..]
+usage: python3 tools/win_video_check.py [--exe PATH] [--timeout S] [--keep] [--bg-pack DIR] [NAME..]
 Each case runs the real window for 787 frames (frame_no 1000, the intro picture of app.ico) (--turbo) with its own settings file (out/video/NAME.ini), applies menu
 commands with `--menu` (the same Command() path as clicking the items), and reads the drawn client area back with
 `--dump-window`. Checked per case: exit 0, the client size, the picture rectangle (from the same layout rules as
@@ -13,6 +13,8 @@ and Graphics > Original must not draw it.
 `enhanced32` (T14): Graphics > Enhanced (32-bit): client 1024x960, > 2000 colours, settings file.
 `heropack` (T11): packs/hero on a gameplay frame: loads cleanly, repaints only the hero.
 `enemypack` (T12): packs/enemies on areas $29 and $05: loads cleanly, repaints enemies, not the hero.
+`bgpack` (T15): packs/backgrounds on a town and a field frame, 16-bit and 32-bit: loads cleanly, repaints scenery,
+the hero's own pixels unchanged.
 Exit 1 on any failure.
 """
 import os
@@ -27,6 +29,7 @@ from win_vs_web import wine_env, winpath  # noqa: E402
 OUT = os.path.join(cv.ROOT, 'out', 'video')
 SCREEN = (1920, 1080)
 FRAMES = 787
+BG_PACK = os.path.join(cv.ROOT, 'packs', 'backgrounds')
 RATIO = {'square': None, 'tv': 256 * 8 / 7, '4:3': 4 / 3, '16:10': 16 / 10, '16:9': 16 / 9}
 
 # name, extra args, menu commands, expected client size, expected settings (aspect, integer, crop, smooth[, upscale]),
@@ -170,6 +173,9 @@ def main(argv):
             timeout = int(argv[i + 1]); i += 1
         elif a == '--keep':
             keep = True
+        elif a == '--bg-pack':                  # bgpack: another backgrounds pack folder (default packs/backgrounds)
+            global BG_PACK
+            BG_PACK = argv[i + 1]; i += 1
         elif a in ('-h', '--help'):
             print(__doc__); return 0
         else:
@@ -233,6 +239,8 @@ def main(argv):
         fails += hero_check(exe, timeout)
     if not names or 'enemypack' in names:
         fails += enemy_check(exe, timeout)
+    if not names or 'bgpack' in names:
+        fails += bg_check(exe, timeout)
     return 1 if fails else 0
 
 
@@ -393,6 +401,43 @@ def enemy_check(exe, timeout):
             fails += 1
         else:
             print(f'ok   enemypack  {st}: {changed} enemy pixels repainted, hero untouched')
+    return fails
+
+
+def bg_check(exe, timeout):
+    """T15 packs/backgrounds: a town (town02_enter) and a field (group29) frame, Enhanced 16-bit and 32-bit, with and
+    without the pack. The pack loads without skipped files, >= 15 % of the picture changes, and the hero's own
+    magenta pixels (sprite) are the same in both pictures."""
+    fails = 0
+    for st, frames, keys in (('town02_enter', 120, ['2520:UP:20']), ('group29', 120, ['2520:LEFT:30'])):
+        state = os.path.join(cv.ROOT, '..', 'web', 'test', 'states', st + '.json')
+        for mode in ('enhanced', '32bit'):
+            pics, nes = {}, os.path.join(OUT, f'bg_{st}_nes.png')
+            for name, pk in (('with', BG_PACK), ('without', os.path.join(OUT, 'no_pack'))):
+                png = os.path.join(OUT, f'bg_{st}_{mode}_{name}.png')
+                rc, out = run(exe, ['--load-state', winpath(state), '--frames', str(frames), '--turbo', '--no-audio',
+                                    '--video-config', winpath(os.path.join(OUT, 'bg.ini')), '--keys'] + keys +
+                              ['--menu', f'graphics:{mode},size:4x', '--pack', winpath(pk), '--dump-window', winpath(png),
+                               '--dump-screen', winpath(nes), '--save', winpath(os.path.join(OUT, 'video.sav'))], timeout)
+                if rc or not os.path.exists(png) or 'graphics pack:' in out:
+                    print(f'FAIL bgpack    {st} {mode} {name}: rc={rc}' + (', pack files skipped' if 'graphics pack:' in out else ''))
+                    fails += 1
+                    break
+                pics[name] = png_decode(open(png, 'rb').read())[2]
+            if len(pics) < 2:
+                continue
+            a, b = pics['with'], pics['without']
+            _, _, fr = png_decode(open(nes, 'rb').read())
+            hero = [(x, y) for y, row in enumerate(fr) for x, p in enumerate(row) if p == (0xD8, 0x00, 0xCC)]
+            changed = sum(a[y][x] != b[y][x] for y in range(len(a)) for x in range(len(a[0])))
+            # centre of each hero pixel's 4x block (edges may be anti-aliased / shadowed against new scenery)
+            hero_diff = sum(a[y * 4 + 2][x * 4 + 2] != b[y * 4 + 2][x * 4 + 2] for x, y in hero)
+            total = len(a) * len(a[0])
+            if changed < total * 0.15 or hero_diff or not hero:
+                print(f'FAIL bgpack    {st} {mode}: {changed} of {total} pixels changed, {hero_diff} of {len(hero)} hero pixels')
+                fails += 1
+            else:
+                print(f'ok   bgpack     {st} {mode}: {100 * changed / total:.0f} % repainted, {len(hero)} hero pixels untouched')
     return fails
 
 

@@ -181,3 +181,15 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   colours, one-colour frame unchanged, shadow down-right only, hidden sprite casts none, < 10 ms). win_video_check
   19/19 (+ `enhanced32`); exe vs web 156/156; smoke --canon ok; apu $14 identical; coverage 100 %; REA all hold.
   Final `dist/ReC.exe` 11,628,260 bytes, sha256 `e90a5826…`. Wine real-time 32-bit + CD: 1-2 underruns at start-up only.
+- [x] T15 (interactive, 2026-11-24) done: **starter graphics pack for the backgrounds**, `packs/backgrounds/` (1,839
+  tiles, 1,189 distinct). Capture: `sprite_capture.py --out out/bg --every 16` over all 86 states (2,580 dumps, 1,590
+  unique screens). `tools/bg_pack.py`: BG pixels (Tags group 0-3) keyed with the renderer's per-line BG colours, keys
+  in >= 3 dumps, HUD / window / font banks 38 39 3C 3D skipped; each tile placement painted from its own pixels
+  (rim light / shadow only against a clearly darker neighbour, near-white never darkened, < 4-pixel specks kept),
+  rounded with Scale2x on the NES colours carrying the painted colour, backdrop pixels transparent, most frequent
+  painting per key. Rejected on screen under Wine: tile-local grain (speckled walls, blotchy paths), painting across
+  tile edges (seam lines in flat ground: a flat tile took its edge painting), Scale2x on painted colours (blocky,
+  no rounding), shading two-tone boundaries (striped shingles), darkening white highlight caps (grey cobbles), HUD
+  banks 38 / 39 repainted (blotchy status bar). `tools/tag_banks.py` (banks / tiles in a screen rectangle).
+  `win_video_check.py bgpack` (+ `--bg-pack DIR`): town $02 entry and area $29, 16-bit and 32-bit: pack loads clean,
+  25-44 % of the picture repainted, hero pixels untouched. win_video_check 23/23. No exe change.
