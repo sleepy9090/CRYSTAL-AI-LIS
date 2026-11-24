@@ -97,9 +97,34 @@ internal static unsafe partial class Window
     private static void RenderHd()
     {
         if (_m?.Ppu.Tags is not { } tags || _enh == null) return;
-        _enh.Mode32 = _v.Enhanced32;
+        bool gpu = _v.Hd && _gpu != null;
+        _enh.ModeHd = gpu;
+        _enh.Mode32 = _v.Enhanced32 || (_v.Hd && _gpu == null);          // HD without Direct3D: the 32-bit look
         _enh.Render(_m.Ppu.Fb, tags, _m.Ppu.Pal, _hd);
+        if (gpu) _gpu!.Upload(_hd, _enh.HdHeight!, _enh.HdLift);
         _hdFrame = _frameNo;
+    }
+
+    // T18 HD graphics (Gpu.cs): created when HD is chosen, released when another look is (GDI draws again)
+    private static Gpu? _gpu;
+    private static string _gpuError = "";
+    private static bool _gpuTried;
+
+    private static void EnsureGpu()
+    {
+        if (!_v.Hd)
+        {
+            if (_gpu != null) { _gpu.Dispose(); _gpu = null; _gpuTried = false; Win32.InvalidateRect(_hwnd, IntPtr.Zero, true); }
+            return;
+        }
+        if (_gpu != null || _gpuTried || _hwnd == IntPtr.Zero) return;
+        _gpuTried = true;
+        Win32.GetClientRect(_hwnd, out var rc);
+        _gpu = Gpu.TryCreate(_hwnd, rc.Right, rc.Bottom, out _gpuError);
+        if (!_quiet)
+            Console.Error.WriteLine(_gpu != null ? $"[re-c] HD graphics: {_gpu.Info}"
+                                                 : $"[re-c] HD graphics not available ({_gpuError}): using the 32-bit look");
+        _hdFrame = -1;
     }
     private static Win32.BITMAPINFOHEADER _bmi;
     private static readonly uint Style = Win32.WS_OVERLAPPEDWINDOW;
@@ -163,10 +188,12 @@ internal static unsafe partial class Window
             foreach (string c in o.MenuCmds) { Command(CommandId(c)); Pump(); }   // = clicking the menu items in order
             // no autoplay policy on the desktop: audio starts right away (JS: on the first key / click); M = mute
             // T14: compile the Enhanced pipeline before the audio starts (its first frame would stall the sound)
+            EnsureGpu();
             if (_v.Enhanced && m.Ppu.Tags != null)
             {
-                _enh.Mode32 = _v.Enhanced32;
-                _enh.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, _hd);
+                RenderHd();
+                _hdFrame = -1;
+                if (_gpu != null && Win32.GetClientRect(_hwnd, out var prc)) _gpu.Draw(prc.Right, prc.Bottom, Fit(prc.Right, prc.Bottom), _v.FirstLine, _v.VisibleH);
             }
             ApplyAudio();                              // T13: CD quality / stereo / reverb from the settings (device closed)
             bool audioOn = !o.NoAudio && _audio.Resume();
@@ -346,6 +373,11 @@ internal static unsafe partial class Window
     private static void Paint(IntPtr hdc, int cw, int ch)
     {
         if (cw <= 0 || ch <= 0) return;
+        if (_gpu != null && _v.Hd)                    // T18: Direct3D draws the whole client area (bars included)
+        {
+            _gpu.Draw(cw, ch, Fit(cw, ch), _v.FirstLine, _v.VisibleH);
+            return;
+        }
         var (x, y, w, h) = Fit(cw, ch);
         IntPtr black = Win32.GetStockObject(Win32.BLACK_BRUSH);
         if (y > 0) Win32.FillRect(hdc, new Win32.RECT { Right = cw, Bottom = y }, black);
@@ -389,7 +421,7 @@ internal static unsafe partial class Window
                 break;
             case Win32.VK_ESCAPE: Win32.DestroyWindow(_hwnd); break;
             case Win32.VK_F11: ToggleFullscreen(); break;
-            case 0x78 /* F9 */: SetGraphics((GraphicsMode + 1) % 3); break;
+            case 0x78 /* F9 */: SetGraphics((GraphicsMode + 1) % 4); break;
             case 0x74 /* F5 */: ReloadPack(); break;
             case >= '1' and <= '6': _v.SetScale(vk - '0'); SettingsChanged(true); break;
         }

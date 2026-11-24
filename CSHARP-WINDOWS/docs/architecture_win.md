@@ -159,3 +159,16 @@ CSHARP-WINDOWS/
     ms: half-resolution lighting, 1x shadow blur, SIMD / fused blurs). First-frame stall fixed by
     `TieredCompilationQuickJitForLoops=false` (ReC.Win.csproj) + one Enhanced render before the audio starts. Wine
     real-time: 1-2 audio underruns at start-up with 32-bit + CD (16-bit: 0-1), none dropped, not growing.
+13. **HD graphics (T18, GPU):** `Gpu.cs`, `video.ini` `graphics=hd`, Video > Graphics > HD, F9 cycles 4 modes. Direct3D 11
+    through raw COM vtables (`d3d11.dll` `D3D11CreateDeviceAndSwapChain`, hardware then WARP; `d3dcompiler_47.dll`
+    `D3DCompile` of the embedded HLSL, SM 4.0; no packages). CPU part (`Enhancer.ModeHd`, 2.4 ms): albedo = the
+    Enhanced picture without step 3 (dither blend, Scale2x x2, pack tiles), `HdHeight` = the 32-bit look's height
+    field (`HeightField()`, shared with `Light32`: pillow profile of the visible shapes, 512x480), `HdLift` = sprites
+    whose edge shows a colour different from the non-sprite pixel beside them (hidden sprites get no height, cast no
+    shadow). GPU part at the picture size of the window (any resolution): light pass to RGBA16F (normals from the
+    height model + lift, Lambert + Blinn-Phong normalised so flat ground = albedo exactly, 8-tap AO, 16-step soft
+    shadow march toward the light, "sharp bilinear" albedo), bloom of the part above 1.0 at 1/4 size (Gaussian H + V),
+    composite into the picture rectangle of the swap chain (bars black). Paint goes to `Gpu.Draw` while HD is on; the
+    swap chain is released when another look is chosen (GDI draws again); `--dump-window` reads the back buffer
+    (`Gpu.Capture`, staging copy). No Direct3D 11 / compiler -> stderr + title say so and the 32-bit look is used.
+    Under Wine (wined3d on Xvfb's llvmpipe GL) the device is "hardware, feature level 11.0" and all shaders compile.

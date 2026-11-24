@@ -32,6 +32,8 @@ internal sealed class VideoSettings
     public bool Enhanced;
     /// <summary>T14: with Enhanced, the "32-bit" look (soft lighting, shadows, anti-aliasing) instead of the 16-bit one</summary>
     public bool Enhanced32;
+    /// <summary>T18: with Enhanced, the HD look (Gpu.cs: Direct3D 11 lighting, shadows, bloom at the window's resolution)</summary>
+    public bool Hd;
     /// <summary>T13 Audio menu: CD quality (CdAudio.cs) instead of the original mono stream; stereo / reverb for it</summary>
     public bool CdAudio, AudioStereo = true, AudioReverb;
 
@@ -120,7 +122,7 @@ internal sealed class VideoSettings
         $"fullscreen={(Fullscreen ? 1 : 0)}",
         $"fullscreen_mode={(FsW > 0 ? $"{FsW}x{FsH}" : "desktop")}",
         $"menu_bar={(MenuBar ? 1 : 0)}",
-        $"graphics={(!Enhanced ? "original" : Enhanced32 ? "enhanced32" : "enhanced")}",
+        $"graphics={(!Enhanced ? "original" : Hd ? "hd" : Enhanced32 ? "enhanced32" : "enhanced")}",
         $"audio={(CdAudio ? "cd" : "original")}",
         $"audio_stereo={(AudioStereo ? 1 : 0)}",
         $"audio_reverb={(AudioReverb ? 1 : 0)}",
@@ -158,7 +160,10 @@ internal sealed class VideoSettings
                 case "audio_stereo": v.AudioStereo = val != "0"; break;
                 case "audio_reverb": v.AudioReverb = val == "1"; break;
                 case "graphics":
-                    if (val is "original" or "enhanced" or "enhanced32") { v.Enhanced = val != "original"; v.Enhanced32 = val == "enhanced32"; }
+                    if (val is "original" or "enhanced" or "enhanced32" or "hd")
+                    {
+                        v.Enhanced = val != "original"; v.Enhanced32 = val == "enhanced32"; v.Hd = val == "hd";
+                    }
                     break;
                 case "upscale":
                     foreach (var f in ReC.Win.Upscale.Filters) if (f.Key == val) v.Upscale = f.K;

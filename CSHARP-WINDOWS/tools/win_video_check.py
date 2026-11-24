@@ -11,6 +11,8 @@ and the settings file written by the menu. Xvfb screen: 1920x1080x24.
 keep their colour, settings file, --export-tiles), then the exported tiles painted magenta as a pack must be drawn,
 and Graphics > Original must not draw it.
 `enhanced32` (T14): Graphics > Enhanced (32-bit): client 1024x960, > 2000 colours, settings file.
+`hd` / `hdfull` / `hdoff` (T18): Graphics > HD (Direct3D 11 under Wine): device + shaders made, 4x window and 1080p
+fullscreen pictures (> 2000 colours, flat areas keep their colour, black bars), back to Original draws with GDI again.
 `heropack` (T11): packs/hero on a gameplay frame: loads cleanly, repaints only the hero.
 `enemypack` (T12): packs/enemies on areas $29 and $05: loads cleanly, repaints enemies, not the hero.
 `npcpack` (T16): packs/npcs in a town ($18) and a shop: loads cleanly, repaints NPCs, not the hero.
@@ -237,6 +239,8 @@ def main(argv):
             print(f'ok   {name:10s} {msg_ok}', flush=True)
     if not names or 'enhanced' in names:
         fails += enhanced_checks(exe, timeout, hpng, frame)
+    if not names or any(n in names for n in ('hd', 'hdfull', 'hdoff')):
+        fails += hd_checks(exe, timeout, hpng, frame, names)
     if not names or 'heropack' in names:
         fails += hero_check(exe, timeout)
     if not names or 'enemypack' in names:
@@ -334,6 +338,66 @@ def enhanced_checks(exe, timeout, hpng, frame):
         one('original', ['--menu', 'graphics:original'], no_magenta)
     return fails
 
+
+
+def hd_checks(exe, timeout, hpng, frame, names):
+    """T18 Video > Graphics > HD: the Direct3D 11 renderer draws (not the 32-bit fallback), the picture is lit
+    (> 2000 colours) with flat areas at their exact colour, fullscreen keeps the layout's black bars, and leaving HD
+    gives the GDI picture back"""
+    fails = 0
+    ini = os.path.join(OUT, 'hd.ini')
+    orig = {c for row in frame for c in row}
+    cases = [('hd', ['--menu', 'graphics:hd,size:4x']), ('hdfull', ['--menu', 'graphics:hd', '--fullscreen']),
+             ('hdoff', ['--menu', 'graphics:hd,size:4x,graphics:original'])]
+    for name, extra in cases:
+        if names and name not in names:
+            continue
+        wpng, spng = os.path.join(OUT, f'{name}_window.png'), os.path.join(OUT, f'{name}_screen.png')
+        if os.path.exists(ini):
+            os.remove(ini)                               # each case starts from default settings
+        rc, out = run(exe, ['--frames', str(FRAMES), '--turbo', '--no-audio', '--video-config', winpath(ini),
+                            '--save', winpath(os.path.join(OUT, 'video.sav')), '--dump-window', winpath(wpng),
+                            '--dump-screen', winpath(spng)] + extra, timeout)
+        msg = None
+        if rc or not os.path.exists(wpng):
+            msg = f'rc={rc}'
+        elif 'HD graphics: Direct3D 11' not in out:
+            msg = 'no Direct3D 11 device (' + next((l for l in out.splitlines() if 'HD graphics' in l), 'no HD line') + ')'
+        elif open(spng, 'rb').read() != open(hpng, 'rb').read():
+            msg = 'game frame differs from the headless run'
+        else:
+            cw, ch, rows = png_decode(open(wpng, 'rb').read())
+            if name == 'hdoff':
+                same = sum(rows[y * 4 + 2][x * 4 + 2] == frame[y][x] for y in range(240) for x in range(256))
+                msg = f'ok: back to Original: {same} / 61440 block centres = the NES frame' if (cw, ch) == (1024, 960) \
+                    and same == 256 * 240 else f'Original after HD: client {cw}x{ch}, {same} / 61440 centres match'
+            else:
+                x0, y0, pw, ph = (0, 0, 1024, 960) if name == 'hd' else (448, 60, 1024, 960)
+                want = (1024, 960) if name == 'hd' else SCREEN
+                cols = {rows[y][x] for y in range(y0, y0 + ph) for x in range(x0, x0 + pw)}
+                bars = sum(rows[y][x] != (0, 0, 0) for y in range(ch) for x in range(cw)
+                           if not (x0 <= x < x0 + pw and y0 <= y < y0 + ph)) if (cw, ch) == want else 0
+                same = sum(rows[y0 + y * 4 + 2][x0 + x * 4 + 2] == frame[y][x] for y in range(240) for x in range(256)) \
+                    if (cw, ch) == want else 0
+                if (cw, ch) != want:
+                    msg = f'client {cw}x{ch}, want {want[0]}x{want[1]}'
+                elif len(cols) < 2000:
+                    msg = f'{len(cols)} colours, want > 2000 (lit relief, shadows, bloom)'
+                elif same < 0.5 * 256 * 240:
+                    msg = f'only {same} block centres keep their colour (flat areas must stay exact)'
+                elif bars:
+                    msg = f'{bars} non-black pixels in the bars'
+                elif name == 'hd' and 'graphics=hd' not in open(ini).read().splitlines():
+                    msg = 'settings file lacks graphics=hd'
+                else:
+                    msg = f'ok: {len(orig)} -> {len(cols)} colours, {same} / 61440 flat block centres exact'
+        if not msg.startswith('ok:'):
+            fails += 1
+            print(f'FAIL {name:10s} {msg}')
+            print('     ' + '\n     '.join(out.strip().splitlines()[-8:]))
+        else:
+            print(f'ok   {name:10s} {msg[4:]}', flush=True)
+    return fails
 
 
 def hero_check(exe, timeout):

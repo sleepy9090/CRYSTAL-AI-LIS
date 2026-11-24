@@ -360,6 +360,51 @@ internal static partial class Program
             True(v.Enhanced && v.Enhanced32 && v.Serialize().Contains("graphics=enhanced32"), "ini graphics=enhanced32");
             Eq(273, Window.CommandId("graphics:32bit"), "--menu graphics:32bit");
         }),
+        ("win_enhance_hd", () =>
+        {
+            // T18 HD: the CPU half of the GPU renderer (Gpu.cs needs Direct3D: checked under Wine, win_video_check hd)
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { });
+            m.Reset();
+            m.Ppu.Tags = new int[256 * 240];
+            for (int f = 0; f < 787; f++) m.RunFrame(0);           // the intro picture
+            var e16 = new Enhancer(m.Ppu.Chr, d.NesRgb);
+            var ehd = new Enhancer(m.Ppu.Chr, d.NesRgb) { ModeHd = true };
+            var h16 = new uint[Enhancer.W * Enhancer.H]; var alb = new uint[Enhancer.W * Enhancer.H];
+            e16.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, h16);
+            ehd.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, alb);
+            // albedo = no baked shading: every colour is an NES colour or a dither 50/50 mix, fewer than the 16-bit look
+            True(alb.Distinct().Count() < h16.Distinct().Count(), $"albedo unshaded: {alb.Distinct().Count()} colours vs 16-bit {h16.Distinct().Count()}");
+            var hgt = ehd.HdHeight!;
+            Eq(Gpu.HW * Gpu.HH, hgt.Length, "height model 512x480");
+            True(hgt.All(v => v >= 0 && v <= 1.0001f), "height in 0..1");
+            True(hgt.Distinct().Count() > 20, $"height has relief ({hgt.Distinct().Count()} levels)");
+            for (int r = 0; r < 100; r++) ehd.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, alb);   // warm-up (tiered JIT)
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            for (int r = 0; r < 50; r++) ehd.Render(m.Ppu.Fb, m.Ppu.Tags, m.Ppu.Pal, alb);
+            double ms = sw.Elapsed.TotalMilliseconds / 50;
+            Console.WriteLine($"  win_enhance_hd: CPU part {ms:F1} ms / frame (albedo + height model + lift)");
+            True(ms < 10, $"HD CPU part fast enough: {ms:F1} ms");
+            // one-colour frame: flat height, nothing lifted (hidden shapes stay hidden)
+            var flat = Enumerable.Repeat((byte)0x0F, 256 * 240).ToArray();
+            ehd.Render(flat, m.Ppu.Tags, m.Ppu.Pal, alb);
+            True(ehd.HdHeight!.Distinct().Count() == 1, "one-colour frame: flat height model");
+            True(ehd.HdLift.All(v => v == 0), "one-colour frame: no sprite lifted");
+            // a visible sprite stands up; the same sprite in the background colour does not
+            var fb = Enumerable.Repeat((byte)0x21, 256 * 240).ToArray();
+            var tags = new int[256 * 240];
+            for (int y = 100; y < 116; y++)
+                for (int x = 100; x < 116; x++) { fb[y * 256 + x] = 0x16; tags[y * 256 + x] = Ppu.TagValid | 5 << 19 | 1; }
+            ehd.Render(fb, tags, m.Ppu.Pal, alb);
+            Eq(255, (int)ehd.HdLift[108 * 256 + 108], "visible sprite lifted");
+            Eq(0, (int)ehd.HdLift[50 * 256 + 50], "background not lifted");
+            for (int y = 100; y < 116; y++) for (int x = 100; x < 116; x++) fb[y * 256 + x] = 0x21;
+            ehd.Render(fb, tags, m.Ppu.Pal, alb);
+            True(ehd.HdLift.All(v => v == 0), "a sprite in the background colour is not lifted (stays hidden)");
+            var v = VideoSettings.Parse("graphics=hd\n");
+            True(v.Enhanced && v.Hd && !v.Enhanced32 && v.Serialize().Contains("graphics=hd"), "ini graphics=hd");
+            Eq(274, Window.CommandId("graphics:hd"), "--menu graphics:hd");
+        }),
         ("win_png_read", () =>
         {
             var rgba = new byte[3 * 2 * 4];

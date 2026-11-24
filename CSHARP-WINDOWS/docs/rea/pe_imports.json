@@ -5,7 +5,7 @@
  "confidence": "observed",
  "environment": null,
  "evidence_format": 2,
- "evidence_id": "ev_e2666aa2f9703e33b979c1d0b2eefb544dda864aa586089aeb3c9463ea935fa5",
+ "evidence_id": "ev_5331b72c34f099bfd747ebc07a22474b3b8510c3bb8ec8a3a738d10a32e5af8f",
  "evidence_links": [],
  "limitations": [
   "Rows reproduce the PE import and delay-load directories; they do not establish that an import is bound, forwarded or reachable at runtime.",
@@ -30,9 +30,9 @@
  "normalized_result": {
   "architecture": "amd64",
   "artifact": {
-   "bytes": 11628260,
+   "bytes": 11638654,
    "path": "./dist/ReC.exe",
-   "sha256": "e90a5826b0d39559b7068b11ca7e1b7b4fbd5369cb692f5285a66d045b706e01"
+   "sha256": "fa922cffa30196d2ab8e112328c8e2b10bc12641d2b115b63a441c861a81b63c"
   },
   "bits": 64,
   "coverage": {
@@ -3967,7 +3967,7 @@
    "format": "pe",
    "kind": "file",
    "selection": null,
-   "sha256": "e90a5826b0d39559b7068b11ca7e1b7b4fbd5369cb692f5285a66d045b706e01"
+   "sha256": "fa922cffa30196d2ab8e112328c8e2b10bc12641d2b115b63a441c861a81b63c"
   },
   "local_path": "./dist/ReC.exe",
   "name": "ReC.exe"

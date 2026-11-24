@@ -32,6 +32,11 @@ internal sealed class Enhancer
     private readonly byte[] _dist = new byte[W * H], _colDist = new byte[W * H];
     /// <summary>T14: the "32-bit" look (Video > Graphics > Enhanced (32-bit)) instead of the 16-bit one</summary>
     public bool Mode32;
+    /// <summary>T18: HD (GPU, Gpu.cs): Render makes the albedo only (steps 1, 2, 4: no baked shading) and fills
+    /// HdHeight (the 32-bit look's height field of the visible shapes, 512x480) and HdLift (sprites that stand out)</summary>
+    public bool ModeHd;
+    public float[]? HdHeight;
+    public readonly byte[] HdLift = new byte[256 * 240];
     private float[]? _h32, _t32;
     private byte[]? _sh1;
     private float[]? _shA, _shB;
@@ -272,8 +277,9 @@ internal sealed class Enhancer
         // 2. rounding
         Rows(240, y => Upscale.Scale2xRow(_base, 256, 240, _x2, y));
         Rows(480, y => Upscale.Scale2xRow(_x2, 512, 480, dst, y));
-        // 3. bevel shading (16-bit) / soft lighting (32-bit)
-        if (Mode32) Light32(dst);
+        // 3. bevel shading (16-bit) / soft lighting (32-bit) / none (HD: the GPU lights it)
+        if (ModeHd) HdHeight = HeightField();
+        else if (Mode32) Light32(dst);
         else Bevel(dst, W, H, _dist, null, _colDist);
 
         // 4. hand-drawn tiles
@@ -314,7 +320,8 @@ internal sealed class Enhancer
                 }
             }
         }
-        if (Mode32)
+        if (ModeHd) LiftHd(fb, tags);                   // 5. HD: which sprites stand above the background
+        else if (Mode32)
         {
             Shadows32(fb, tags, dst);                  // 5. soft sprite shadows
             AntiAlias32(dst);                          // 6. edge anti-aliasing
@@ -344,30 +351,10 @@ internal sealed class Enhancer
     private void Light32(uint[] img)
     {
         const int Cap = D32 / 2;
-        var src = _x2;                                         // the 512x480 Scale2x step of this frame
-        Distance(src, LW, LH, _dist, _colDist, Cap);
-        var h = _h32 ??= new float[LW * LH];
-        var t = _t32 ??= new float[LW * LH];
+        var h = HeightField();
         var f = _f32 ??= new float[LW * LH];
         var sp = _s32 ??= new float[LW * LH];
         var dist = _dist;
-        var pl = PillowHalf;
-        Rows(LH, y =>
-        {
-            int r = y * LW;
-            for (int x = 0; x < LW; x++)
-            {
-                float acc = 0;
-                if (x >= 1 && x < LW - 1) acc = pl[dist[r + x - 1]] + pl[dist[r + x]] + pl[dist[r + x + 1]];
-                else for (int k = -1; k <= 1; k++) acc += pl[dist[r + Math.Clamp(x + k, 0, LW - 1)]];
-                t[r + x] = acc * (1f / 3);
-            }
-        });
-        Rows(LH, y =>
-        {
-            int r = y * LW, a0 = Math.Max(y - 1, 0) * LW, a2 = Math.Min(y + 1, LH - 1) * LW;
-            for (int x = 0; x < LW; x++) h[r + x] = (t[a0 + x] + t[r + x] + t[a2 + x]) * (1f / 3);
-        });
         // per 2x pixel: light factor and highlight (0 / 1 = flat)
         Rows(LH, y =>
         {
@@ -402,6 +389,75 @@ internal sealed class Enhancer
                              (uint)Math.Clamp((int)(cb * ff + s3), 0, 255);
             }
         });
+    }
+
+    /// <summary>the height field of the visible shapes at 512x480 (the 2x rounding step): pillow profile of each pixel's
+    /// distance to its shape's edge (cap D32 / 2), blurred 3x3; leaves the distances in _dist (Light32 uses them)</summary>
+    private float[] HeightField()
+    {
+        const int Cap = D32 / 2;
+        Distance(_x2, LW, LH, _dist, _colDist, Cap);
+        var h = _h32 ??= new float[LW * LH];
+        var t = _t32 ??= new float[LW * LH];
+        var dist = _dist;
+        var pl = PillowHalf;
+        Rows(LH, y =>
+        {
+            int r = y * LW;
+            for (int x = 0; x < LW; x++)
+            {
+                float acc = 0;
+                if (x >= 1 && x < LW - 1) acc = pl[dist[r + x - 1]] + pl[dist[r + x]] + pl[dist[r + x + 1]];
+                else for (int k = -1; k <= 1; k++) acc += pl[dist[r + Math.Clamp(x + k, 0, LW - 1)]];
+                t[r + x] = acc * (1f / 3);
+            }
+        });
+        Rows(LH, y =>
+        {
+            int r = y * LW, a0 = Math.Max(y - 1, 0) * LW, a2 = Math.Min(y + 1, LH - 1) * LW;
+            for (int x = 0; x < LW; x++) h[r + x] = (t[a0 + x] + t[r + x] + t[a2 + x]) * (1f / 3);
+        });
+        return h;
+    }
+
+    private readonly int[] _liftStack = new int[256 * 240];
+    private readonly byte[] _liftSeen = new byte[256 * 240];
+    private readonly List<int> _liftComp = new();
+
+    /// <summary>HD: a sprite (8-connected sprite pixels) stands above the background (HdLift = 255) only if one of its
+    /// edge pixels shows a colour different from the non-sprite pixel next to it: a sprite the game hides (drawn in the
+    /// colour around it) gets no height, so it casts no shadow and stays hidden</summary>
+    private void LiftHd(byte[] fb, int[] tags)
+    {
+        var lift = HdLift; var seen = _liftSeen; var st = _liftStack;
+        Array.Clear(lift); Array.Clear(seen);
+        static bool Spr(int t) => (t & Ppu.TagValid) != 0 && (t >> 19 & 7) >= 4;
+        for (int start = 0; start < 256 * 240; start++)
+        {
+            if (seen[start] != 0 || !Spr(tags[start])) continue;
+            int top = 0;
+            bool shows = false;
+            st[top++] = start; seen[start] = 1;
+            var comp = _liftComp;
+            comp.Clear();
+            while (top > 0)
+            {
+                int p = st[--top];
+                comp.Add(p);
+                int px = p & 255, py = p >> 8;
+                for (int dy = -1; dy <= 1; dy++)
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        if (dx == 0 && dy == 0) continue;
+                        int nx = px + dx, ny = py + dy;
+                        if ((uint)nx >= 256 || (uint)ny >= 240) continue;
+                        int q = ny * 256 + nx;
+                        if (Spr(tags[q])) { if (seen[q] == 0) { seen[q] = 1; st[top++] = q; } }
+                        else if ((dx == 0 || dy == 0) && (fb[q] & 0x3F) != (fb[p] & 0x3F)) shows = true;
+                    }
+            }
+            if (shows) foreach (int p in comp) lift[p] = 255;
+        }
     }
 
     /// <summary>pillow height profile for the half-resolution distance (cap D32 / 2)</summary>

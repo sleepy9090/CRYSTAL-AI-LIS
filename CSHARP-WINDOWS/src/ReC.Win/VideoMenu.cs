@@ -21,7 +21,7 @@ internal static unsafe partial class Window
     private const int IdAspect0 = 240;           // + (int)Aspect
     private const int IdFsDesktop = 300, IdFsMode0 = 301;   // + index in _modes
     private const int IdUpscale0 = 260;          // + factor 1..4
-    private const int IdOriginal = 270, IdEnhanced = 271, IdReloadPack = 272, IdEnhanced32 = 273;
+    private const int IdOriginal = 270, IdEnhanced = 271, IdReloadPack = 272, IdEnhanced32 = 273, IdHd = 274;
     private const int IdAudioOriginal = 410, IdAudioCd = 411, IdStereo = 412, IdReverb = 413;
 
     private static VideoSettings _v = new();
@@ -54,6 +54,7 @@ internal static unsafe partial class Window
             case "graphics:original": return IdOriginal;
             case "graphics:enhanced": return IdEnhanced;
             case "graphics:enhanced32": case "graphics:32bit": return IdEnhanced32;
+            case "graphics:hd": return IdHd;
             case "reloadpack": return IdReloadPack;
             case "audio:original": return IdAudioOriginal;
             case "audio:cd": return IdAudioCd;
@@ -139,6 +140,7 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(gfx, 0, IdOriginal, "&Original (NES)");
         Win32.AppendMenuW(gfx, 0, IdEnhanced, "&Enhanced (16-bit)");
         Win32.AppendMenuW(gfx, 0, IdEnhanced32, "Enhanced (&32-bit)");
+        Win32.AppendMenuW(gfx, 0, IdHd, "&HD (GPU: lighting, shadows, bloom)");
         Win32.AppendMenuW(gfx, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(gfx, 0, IdReloadPack, "&Reload graphics pack\tF5");
         Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)gfx, "&Graphics\tF9");
@@ -198,8 +200,8 @@ internal static unsafe partial class Window
             Check(IdPreset0 + i, (_v.WindowW, _v.WindowH) == VideoSettings.Presets[i], true);
         foreach (var a in VideoSettings.Aspects) Check(IdAspect0 + (int)a.A, _v.Aspect == a.A, true);
         foreach (var f in Upscale.Filters) Check(IdUpscale0 + f.K, _v.Upscale == f.K, true);
-        Check(IdOriginal, !_v.Enhanced, true); Check(IdEnhanced, _v.Enhanced && !_v.Enhanced32, true);
-        Check(IdEnhanced32, _v.Enhanced && _v.Enhanced32, true);
+        Check(IdOriginal, GraphicsMode == 0, true); Check(IdEnhanced, GraphicsMode == 1, true);
+        Check(IdEnhanced32, GraphicsMode == 2, true); Check(IdHd, GraphicsMode == 3, true);
         Check(IdAudioOriginal, !_v.CdAudio, true); Check(IdAudioCd, _v.CdAudio, true);
         Check(IdStereo, _v.AudioStereo); Check(IdReverb, _v.AudioReverb);
         Check(IdFsDesktop, _v.FsW == 0, true);
@@ -245,6 +247,7 @@ internal static unsafe partial class Window
             case IdOriginal: SetGraphics(0); return;
             case IdEnhanced: SetGraphics(1); return;
             case IdEnhanced32: SetGraphics(2); return;
+            case IdHd: SetGraphics(3); return;
             case IdReloadPack: ReloadPack(); return;
             case IdAudioOriginal: _v.CdAudio = false; ApplyAudio(); SettingsChanged(false); return;
             case IdAudioCd: _v.CdAudio = true; ApplyAudio(); SettingsChanged(false); return;
@@ -267,18 +270,26 @@ internal static unsafe partial class Window
         else if (id < 0) SetFsMode(-id >> 16, -id & 0xFFFF);
     }
 
-    /// <summary>0 = original, 1 = Enhanced (16-bit), 2 = Enhanced (32-bit); F9 cycles</summary>
-    private static int GraphicsMode => !_v.Enhanced ? 0 : _v.Enhanced32 ? 2 : 1;
+    /// <summary>0 = original, 1 = Enhanced (16-bit), 2 = Enhanced (32-bit), 3 = HD (GPU); F9 cycles</summary>
+    private static int GraphicsMode => !_v.Enhanced ? 0 : _v.Hd ? 3 : _v.Enhanced32 ? 2 : 1;
 
     private static void SetGraphics(int mode)
     {
         _v.Enhanced = mode > 0;
         _v.Enhanced32 = mode == 2;
+        _v.Hd = mode == 3;
         EnsureTags();
+        EnsureGpu();
         if (_m?.Ppu.Tags != null && _hdFrame == _frameNo) RenderHd();   // redraw the current frame in the new look
         SettingsChanged(false);
         string pack = _enh?.ArtCount > 0 ? $" + {_enh.ArtCount} pack tiles" : "";
-        Status(mode switch { 1 => $"enhanced graphics (16-bit){pack} (F9)", 2 => $"enhanced graphics (32-bit){pack} (F9)", _ => "" });
+        Status(mode switch
+        {
+            1 => $"enhanced graphics (16-bit){pack} (F9)", 2 => $"enhanced graphics (32-bit){pack} (F9)",
+            3 => _gpu != null ? $"HD graphics{pack} (F9)" : $"HD not available ({_gpuError}): 32-bit look{pack} (F9)",
+            _ => "",
+        });
+        Present();
     }
 
     private static void ReloadPack()
@@ -425,6 +436,17 @@ internal static unsafe partial class Window
     {
         if (!Win32.GetClientRect(_hwnd, out var rc) || rc.Right <= 0 || rc.Bottom <= 0) return;
         int w = rc.Right, h = rc.Bottom;
+        if (_gpu != null && _v.Hd)                    // T18: read the Direct3D back buffer
+        {
+            var gp = _gpu.Capture(w, h, Fit(w, h), _v.FirstLine, _v.VisibleH);
+            var grgb = new byte[w * h * 3];
+            for (int i = 0; i < gp.Length; i++)
+            {
+                grgb[i * 3] = (byte)(gp[i] >> 16); grgb[i * 3 + 1] = (byte)(gp[i] >> 8); grgb[i * 3 + 2] = (byte)gp[i];
+            }
+            File.WriteAllBytes(path, Png.Encode(w, h, grgb));
+            return;
+        }
         Present();
         IntPtr mem = Win32.CreateCompatibleDC(_hdc), bmp = Win32.CreateCompatibleBitmap(_hdc, w, h);
         IntPtr old = Win32.SelectObject(mem, bmp);

@@ -212,3 +212,15 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   black. `win_video_check.py bosspack` (area-$28 speech at its boss frames, fan turret; exact hero pixels): 25/25 with
   the rest. Found: the ai70msg state walked past its scenario crashes the core at an exit into area $A7 ("no
   record/header in areas.json"); the web port crashes the same way (data gap there, see the web fix).
+- [x] T18 (interactive, 2026-11-24) done: **Graphics: HD (GPU)** as a fourth option (Video > Graphics, F9 cycles 4).
+  `Gpu.cs`: Direct3D 11 via raw COM vtables + `D3DCompile` (HLSL SM 4.0, 5 shaders: full-screen VS, light, bright,
+  blur, composite), drawn at the window's / screen's resolution. Height "models" from the visible shapes (`Enhancer`
+  `HeightField`, shared with Light32: 32-bit output unchanged) + sprite lift (hidden sprites none); light pass with
+  normals, diffuse + specular, AO, 16-step soft shadows; bloom; composite into the layout rectangle. Fallback to the
+  32-bit look without Direct3D 11. Tuned once on screen (AO 0.55 -> 0.40, bloom 0.55 -> 0.40: halos on HUD text and
+  dark rims at every colour edge). Tests: `win_enhance_hd` (albedo unshaded, height 0..1 with relief, flat frame flat +
+  nothing lifted, hidden sprite not lifted, 2.4 ms, ini / --menu); `win_video_check` `hd` (Direct3D 11 hardware FL
+  11.0 under Wine, 4x: 5 -> 3911 colours, 43404 / 61440 flat block centres exact), `hdfull` (1080p fullscreen, bars
+  black), `hdoff` (HD -> Original: GDI picture exact again). `tools/hd_shots.py` (screenshots per mode). Not measured:
+  GPU frame time on real hardware (Wine renders with llvmpipe on the CPU).
+
