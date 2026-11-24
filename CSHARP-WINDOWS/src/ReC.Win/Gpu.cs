@@ -61,7 +61,7 @@ internal sealed unsafe partial class Gpu : IDisposable
     private void* _b3Tex, _b3Rtv, _b3Srv, _b4Tex, _b4Rtv, _b4Srv, _ldrTex, _ldrRtv, _ldrSrv;
     private void* _vs, _psScale, _psAlbedo, _psSeed, _psJfa, _psHeight, _psEmit, _psLight, _psBright, _psBlur, _psComp, _psFinal, _sampLin, _cb;
     private int _bw, _bh, _pw, _ph;
-    private float _camX, _camY, _time, _outdoor, _voidGate, _mr = 0.3f, _mg = 0.3f, _mb = 0.3f, _play;
+    private float _camX, _camY, _time, _outdoor, _voidGate, _mr = 0.3f, _mg = 0.3f, _mb = 0.3f, _play, _icy, _hot;
     private readonly float[] _c = new float[NConst * 4];
 
     // pack art -> atlas slots
@@ -405,6 +405,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         fixed (byte* p = sc.Info) Update(_iTex, p, 256 * 4);
         fixed (float* p = sc.Lines) Update(_lnTex, p, 240 * 16);
         _camX = sc.CamX; _camY = sc.CamY; _time = sc.Time; _outdoor = sc.Outdoor; _voidGate = sc.VoidGate; _play = sc.Play;
+        _icy = sc.Icy; _hot = sc.Hot;
         (_mr, _mg, _mb) = sc.Mean;
 
         Constants(1, 1, 0, 240);
@@ -457,7 +458,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             _outdoor, _voidGate, _play, dark * dark * (3 - 2 * dark),
             _mr, _mg, _mb, 0,
             0, Saturation, Contrast, Vignette,
-            Reflections ? ReflectK : 0, Lights ? LightK : 0, 0, 0,
+            Reflections ? ReflectK : 0, Lights ? LightK : 0, Atmosphere ? _icy : 0, Atmosphere ? _hot : 0,
             0, 0, 0, 0,
             0, 0, 0, 0,
         };

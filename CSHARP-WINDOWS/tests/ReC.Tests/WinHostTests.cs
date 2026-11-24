@@ -569,6 +569,31 @@ internal static partial class Program
             True(v.HdReflections && !v.HdLights && v.HdNoFlicker && !v.HdShadows, "ini hd_effects (T20 switches)");
             True(new VideoSettings().Serialize().Contains("hd_effects=parallax,shadows,atmosphere,detail,reflections,lights,noflicker"), "all on by default");
             Eq(281, Window.CommandId("hd:noflicker"), "--menu hd:noflicker");
+            // T22 scene weather: icy / hot / outdoor per scene
+            var weather = new Dictionary<string, (float Icy, float Hot, float Out)>();
+            foreach (string name in new[] { "group29", "finalboss", "town02_enter", "group7c" })
+            {
+                var st = StateFile.Load(Path.Combine(dir, name + ".json"));
+                var m = new Machine(d, _ => { });
+                m.Reset(); m.LoadState(st);
+                m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+                var rr = new SceneRaster(m.Ppu.Chr);
+                var s2 = new HdScene(d.NesRgb);
+                var hist = new int[64];
+                for (int f = 0; f < 60; f++)
+                {
+                    m.RunFrame(0); rr.Build(m.Ppu.Capture);
+                    s2.Build(rr.Fb, rr.Tags, rr.LinePal[239], lift, rr.LineScroll, f);
+                }
+                for (int i = 0; i < 256 * 200; i++) hist[rr.Fb[i] & 63]++;
+                weather[name] = (s2.Icy, s2.Hot, s2.Outdoor);
+                Console.WriteLine($"  {name}: icy {s2.Icy:F2} hot {s2.Hot:F2} outdoor {s2.Outdoor:F2}; colours " +
+                                  string.Join(' ', Enumerable.Range(0, 64).OrderByDescending(c => hist[c]).Take(5).Select(c => $"{c:X2}:{hist[c] * 100 / 51200}%")));
+            }
+            True(weather["group29"].Icy > 0.5f && weather["group29"].Hot < 0.05f, "ice cave: snow, no embers");
+            True(weather["finalboss"].Hot > 0.5f && weather["finalboss"].Icy < 0.05f, "fire hall: embers, no snow");
+            True(weather["town02_enter"].Out > 0.5f && weather["town02_enter"].Icy < 0.05f && weather["town02_enter"].Hot < 0.05f, "town: leaves only");
+            True(weather["group7c"].Icy < 0.05f && weather["group7c"].Hot < 0.05f && weather["group7c"].Out < 0.05f, "red cave: no weather");
         }),
         ("win_png_read", () =>
         {

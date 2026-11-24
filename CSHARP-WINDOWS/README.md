@@ -112,6 +112,9 @@ splits) and draws the scene itself. It does not take the emulated NES picture.
   outdoor scenes; fine relief is taken from the art itself (roof tiles, bricks, faces); a tight glow plus a wide halo
   on bright spots; a warmer tone outdoors and a cooler one in dark places; edges are anti-aliased at screen
   resolution (the HUD stays exact).
+- **Weather and particles:** snow / ice crystals drift down in icy places, embers rise in fire halls, leaves blow
+  across outdoor scenes (each in two depths, scrolling faster than the map); foam lines deep water along the shore
+  and around characters wading in it; characters carry a little warm light into dark places.
 - **Parallax:** pits, chasms and the darkness around caves become depth: cliff walls seen in perspective from the
   middle of the screen, and three rock layers far below that scroll slower than the map (the camera comes from the
   game's own scroll) and lie in the ledges' shadows. Dust motes and outdoor mist float in front and scroll faster.

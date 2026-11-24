@@ -19,7 +19,7 @@ cbuffer C : register(b0)
     float4 Scn;    // outdoor, void gate, gameplay, darkness
     float4 MeanC;  // mean playfield colour
     float4 Grade;  // -, saturation, contrast, vignette
-    float4 Opt2;   // reflection strength, local light strength, -, -
+    float4 Opt2;   // reflection strength, local light strength, icy scene (snow), hot scene (embers)
 };
 Texture2D SrcA : register(t0);
 Texture2D SrcB : register(t1);
@@ -187,6 +187,8 @@ float4 PSEmit(V i) : SV_Target
             uint4 L = Lay.Load(int3(o + int2(x, y), 0));
             uint c = SprFront(L) ? L.g : L.r;
             acc += (L.r & 0x80) != 0 ? 0 : NesRgb(c) * Emissive(c);
+            // characters carry a little warm light (visible in dark places; hidden sprites have no lift)
+            acc += float3(1.0, 0.8, 0.55) * Inf.Load(int3(o + int2(x, y), 0)).r * 0.35;
         }
     return float4(acc / 4, 1);
 }
@@ -320,6 +322,35 @@ float3 Motes(float2 p, float t)
     return float3(1, 0.95, 0.8) * smoothstep(1.1, 0.2, length(f - pos)) * 0.22 * tw * step(0.55, h);
 }
 
+// one particle per cell of a world grid that moves with time (vel, NES px / s), seen at camera rate `rate` (parallax:
+// > 1 = closer than the playfield); returns (coverage, cell hash)
+float2 Particle(float2 p, float rate, float cell, float2 vel, float t, float size, float sway)
+{
+    float2 q = p + Cam.xy * rate - vel * t;
+    float2 ci = floor(q / cell), f = q - ci * cell;
+    float h = Hash(ci + rate * 17);
+    float2 pos = float2(Hash(ci + 3.1), Hash(ci + 7.7)) * (cell - 8) + 4;
+    pos.x += sin(t * 1.3 + h * 40) * sway;
+    return float2(smoothstep(size, size * 0.3, length(f - pos)), h);
+}
+
+float3 Weather(float2 p, float t)
+{
+    float3 c = 0;
+    if (Opt2.z > 0.01)                                                // snow / ice crystals: two layers, near = bigger, faster
+    {
+        float2 a = Particle(p, 1.2, 12, float2(-4, 18), t, 1.2, 2);
+        float2 b = Particle(p, 1.45, 18, float2(-6, 30), t, 1.9, 2);
+        c += float3(0.9, 0.95, 1.0) * (a.x * step(0.3, a.y) * 0.65 + b.x * step(0.45, b.y) * 0.8) * Opt2.z;
+    }
+    if (Opt2.w > 0.01)                                                // embers rising, flickering
+    {
+        float2 e = Particle(p, 1.15, 14, float2(3, -22), t, 1.1, 2);
+        c += float3(1.6, 0.6, 0.15) * e.x * step(0.5, e.y) * (0.6 + 0.4 * sin(t * 9 + e.y * 60)) * Opt2.w;
+    }
+    return c;
+}
+
 // water / ice: what stands above the shore, mirrored and rippled (marches up to the first non-water pixel). Sprites
 // (people, enemies) reflect clearly; scenery only faintly and softened (a ragged shore would mirror into streaks)
 float4 Reflect(float2 p, float t)
@@ -396,6 +427,19 @@ float4 PSLight(V i) : SV_Target
         {
             float4 rf = Reflect(p, t);
             a = lerp(a, rf.rgb * 0.85 + a * 0.15, rf.a * Opt2.x * 1.6);
+        }
+        // shoreline foam: deep water next to land (or a character wading in it), animated
+        if (kind == 2 && col < 0x20 && Opt.w > 0.5)
+        {
+            float edge = 0;
+            [loop] for (int r = 0; r < 8; r++)
+            {
+                float an = r * 0.785398;
+                float2 q = p + float2(cos(an), sin(an)) * 1.6;
+                edge += (KindAt(q) != 2 && !IsVoid(q)) ? 1 : 0;
+            }
+            float fn = WN(w * 2 + float2(t * 3, t * 1.2), float2(3, 3));
+            a = lerp(a, float3(0.92, 0.97, 1.0), saturate(edge / 3) * smoothstep(0.35, 0.65, fn) * 0.6);
         }
         // macro normal from the height model
         float2 dxs = float2(1.0 / 512, 0), dys = float2(0, 1.0 / 480);
@@ -478,6 +522,10 @@ float4 PSLight(V i) : SV_Target
     }
     if (mv > 0.001) c = lerp(c, lerp(c, Chasm(p, t), Scn.y), mv);
     c += Motes(p, t) * Opt.z * Scn.z;
+    // weather by scene: snow / ice crystals, rising embers (additive, they glow), falling leaves outdoors
+    c += Weather(p, t) * Scn.z;
+    float2 lf = Particle(p, 1.3, 26, float2(14, 9), t, 1.2, 2);
+    c = lerp(c, lerp(float3(0.30, 0.50, 0.12), float3(0.75, 0.45, 0.12), frac(lf.y * 7)), lf.x * step(0.82, lf.y) * 0.8 * Scn.x * Opt.z * Scn.z);
     return float4(c, 1);
 }
 

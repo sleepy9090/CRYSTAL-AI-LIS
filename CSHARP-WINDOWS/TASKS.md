@@ -257,3 +257,8 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   bloom, scene tint (warm outdoors / cool in the dark), FXAA-style edge AA pass (HUD exact). `win_video_check` hd 5 ->
   40853 colours (T20: 30741), hdfx 667799 / 714240 playfield pixels changed, HUD identical; packs, smoke, canon ok;
   292 tests; REA ok. Previews: out/hd21/ (`town_cmp.png` T20 vs T21).
+- [x] T22 (interactive, 2026-11-24) done: **HD weather + particles** (request: "make the HD graphics even better" again).
+  Host only (architecture §5.17): scene measures `Icy` / `Hot` (tuned on real frames: the fire hall floor is $17, the
+  ice cave's whites are $30), snow / ice crystals, rising embers, falling leaves (2 depths, parallax), shoreline foam,
+  characters' warm light in the dark. 296 tests (weather per scene asserted); hd 40853 colours, hdfx 701326 / 714240
+  playfield pixels changed, HUD identical; smoke + canon, REA, coverage ok. Previews: out/hd22/ (`weather.png`, `snow.png`).

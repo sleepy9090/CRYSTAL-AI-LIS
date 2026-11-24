@@ -21,6 +21,9 @@ internal sealed class HdScene
     public readonly byte[] Info = new byte[256 * 240 * 4];
     public readonly float[] Lines = new float[240 * 4];
     public float CamX, CamY, Outdoor, VoidGate, Time;
+    /// <summary>T22: share of icy colours (light water / ice blues, whites half) and of fire colours ($06 $16 $17 $27 $28,
+    /// with at least a quarter of the playfield dark) in the playfield, smoothed: snow / ice crystals and rising embers</summary>
+    public float Icy, Hot;
     /// <summary>1 = gameplay (a HUD split with text is on screen): world effects on; 0 = title, cut-scenes, menus</summary>
     public float Play;
     public (float R, float G, float B) Mean = (0.3f, 0.3f, 0.3f);
@@ -133,7 +136,7 @@ internal sealed class HdScene
         // backdrop colour: the most common colour of pixels with no tile / slot 0
         int bd = pal[0] & 0x3F;
         var info = Info;
-        int nPlay = 0, nSolid = 0, nLeaf = 0;
+        int nPlay = 0, nSolid = 0, nLeaf = 0, nIce = 0, nHot = 0;
         double mr = 0, mg = 0, mb = 0;
         bool darkBack = Luma(_rgb[bd]) < 0.25f;
         // void: background blacks, opened (erode + dilate 3x3)
@@ -180,6 +183,8 @@ internal sealed class HdScene
                 if (spr || isVoid || font) continue;
                 nSolid++;
                 if (Kind(c) == 5 && c < 0x30) nLeaf++;            // grass / trees (not pastel greens)
+                if (Kind(c) == 2 && c >= 0x20) nIce += 2; else if (c is 0x20 or 0x30) nIce++;   // light blues, half for whites
+                if (c is 0x06 or 0x16 or 0x17 or 0x27 or 0x28) nHot++;
                 uint rgb = _rgb[c];
                 mr += rgb >> 16 & 255; mg += rgb >> 8 & 255; mb += rgb & 255;
             }
@@ -189,6 +194,9 @@ internal sealed class HdScene
         var mean = nSolid > 0 ? ((float)(mr / nSolid / 255), (float)(mg / nSolid / 255), (float)(mb / nSolid / 255)) : (0f, 0f, 0f);
         float k = cut || _frames == 0 ? 1 : 0.12f;                   // settle over a few frames, jump on a cut
         Outdoor += (outdoor * (hud ? 1 : 0) - Outdoor) * k;
+        float icy = nSolid > 0 ? Smooth(0.25f, 0.45f, nIce / 2f / nSolid) : 0, hot = nSolid > 0 ? Smooth(0.35f, 0.55f, nHot / (float)nSolid) * Smooth(0.25f, 0.45f, (nPlay - nSolid) / (float)nPlay) : 0;   // + a dark, cavernous screen
+        Icy += (icy * (hud ? 1 : 0) - Icy) * k;
+        Hot += (hot * (hud ? 1 : 0) - Hot) * k;
         Play += ((hud ? 1 : 0) - Play) * k;
         VoidGate += (gate - VoidGate) * k;
         Mean = (Mean.R + (mean.Item1 - Mean.R) * k, Mean.G + (mean.Item2 - Mean.G) * k, Mean.B + (mean.Item3 - Mean.B) * k);

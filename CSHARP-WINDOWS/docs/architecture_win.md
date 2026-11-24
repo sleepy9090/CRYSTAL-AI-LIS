@@ -221,3 +221,11 @@ CSHARP-WINDOWS/
     second level (1/8, blurred twice, weights 0.75 / 0.55). Composite adds the scene tint (outdoor warm, darkness cool)
     and writes an RGBA8 picture with HUD alpha 0; `PSFinal` = FXAA-style anti-aliasing (diagonal lumas, edge direction,
     2 + 2 taps, range test) into the swap chain, HUD pixels copied exactly.
+17. **HD weather (T22, host only):** `HdScene` adds `Icy` (share of light kind-2 colours, whites half, smoothstep
+    0.25-0.45) and `Hot` (share of $06 $16 $17 $27 $28, 0.35-0.55, times a dark-screen factor: non-solid share
+    0.25-0.45), both gated by the HUD and smoothed like `Outdoor`; sent as `Opt2.z / w` (x Atmosphere switch).
+    Shader `Particle()` = one particle per cell of a world grid moving with a velocity, at a camera rate > 1 (closer
+    than the playfield); `Weather()` = snow (2 layers) and embers (additive, > 1 so bloom catches them); leaves are
+    blended in outdoors. Shoreline foam: dark water (`c < $20`) with non-water within 1.6 px (8 taps), animated world
+    noise. The light map also gets the sprite lift (warm, 0.35): characters light their surroundings in the dark.
+    `win_hd_engine` checks the measures on four scenes (ice cave snow, fire hall embers, town leaves only, red cave none).
