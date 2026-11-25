@@ -118,6 +118,7 @@ splits) and draws the scene itself. It does not take the emulated NES picture.
 - **Light that behaves:** the ambient light takes on the colour of its surroundings (bounce light: a red carpet warms
   the floor beside it); fires and characters light from a direction, so bumps facing them catch the light; in
   gameplay the exposure adapts gently to dark and bright places; the output is dithered so smooth gradients do not band.
+- **Heat and sheen:** the air shimmers just above fires; deep water (and faintly ice) carries a drifting sky sheen.
 - **Parallax:** pits, chasms and the darkness around caves become depth: cliff walls seen in perspective from the
   middle of the screen, and three rock layers far below that scroll slower than the map (the camera comes from the
   game's own scroll) and lie in the ledges' shadows. Dust motes and outdoor mist float in front and scroll faster.

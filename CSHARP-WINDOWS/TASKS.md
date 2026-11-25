@@ -266,3 +266,7 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   Host only (architecture §5.18): bounce light (colour bleeding), directional local lights, eye adaptation (gameplay
   only), output dither. 296 tests; hd 5 -> 53982 colours (T22: 40853), hdfx 697713 / 714240, HUD identical; packs,
   smoke + canon, REA ok. Previews: out/hd23/ (`fire_cmp.png` T22 vs T23).
+- [x] T24 (interactive, 2026-11-24) done: **HD heat shimmer + water sheen** (request: "make the HD graphics even better"
+  a fourth time). Host only (architecture §5.19). An xBR-style replacement for the first rounding step was built and
+  dropped: its test showed Scale2x already handles 2:1 slopes and xBR made them worse. 296 tests; hd 5 -> 53881
+  colours, hdfx 700457 / 714240, HUD identical; smoke + canon, REA ok. Previews: out/hd24/.

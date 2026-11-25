@@ -235,3 +235,9 @@ CSHARP-WINDOWS/
     direction from the light map's gradient (`LocalDiffuse`: 0.35 + 0.9 n.l). Eye adaptation on the CPU (`Upload`):
     exposure = sqrt(0.42 / mean playfield luminance) clamped 0.9-1.22, times gameplay (cut-scenes stay 1), eased 5 % per
     frame, applied before the tone curve (`Grade.x`). Composite adds +-0.5 / 255 hash dither.
+19. **HD heat + sheen (T24, host only):** heat shimmer = albedo offset (up to 1.2 px, fast-rising value noise) where the
+    light map 6 lines below is brighter than here (x 12, gated by its level); sky sheen on kind 2 = sky x (0.06 + 0.10
+    toward the screen top) x drifting world noise, ice (`c >= $20`) at 0.2; both under the material-detail switch.
+    Tried and dropped: an xBR-style first 2x step on the keys. A test showed Scale2x already draws 2:1 slopes as straight
+    lines at 2x and the xBR rule turned them into 2-row stairs; the remaining steps are the game art's own irregular
+    steps, which a faithful upscaler keeps.

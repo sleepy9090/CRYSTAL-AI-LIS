@@ -420,6 +420,10 @@ float4 PSLight(V i) : SV_Target
             off = float2(WN(w0 + float2(t * 2, 0), float2(6, 6)) - 0.5, WN(w0 + float2(0, t * 1.5), float2(6, 6)) - 0.5) * 0.7;
         if (k0 == 5)
             off.x = sin(t * 1.4 + w0.x * 0.045 + w0.y * 0.07) * 0.3 * WN(w0 + float2(t * 6, 0), float2(48, 48));
+        // heat shimmer: only just above a light source (the light map is brighter a few pixels below)
+        float lh = dot(SrcC.SampleLevel(Lin, s, 0).rgb, LUM), lb = dot(SrcC.SampleLevel(Lin, s + float2(0, 6.0 / 240), 0).rgb, LUM);
+        float heat = saturate((lb - lh) * 12) * saturate(lb * 4);
+        off += float2(FN(p * 0.9 + float2(0, t * 14), 2.5) - 0.5, (FN(p * 0.9 + float2(t * 5, t * 14) + 31, 2.5) - 0.5) * 0.5) * heat * 1.2;
         a = Albedo(s + off / NES);
     }
     float3 c = a;
@@ -526,6 +530,8 @@ float4 PSLight(V i) : SV_Target
         float nh = saturate(dot(n, Hlf.xyz));
         float lum = dot(a, LUM);
         float sp = max(0, pow(nh, gp) - pow(Hlf.z, gp)) * (spr ? 0.35 : m.g) * Mat.z * (0.3 + 0.7 * lum) * shade * (gp + 8) / 40;
+        // sky sheen on water / ice: stronger toward the top of the screen (a flatter view), drifting slowly
+        float sheen = kind == 2 ? (0.06 + 0.10 * (1 - p.y / 240)) * (0.55 + 0.45 * WN(w * 0.5 + float2(t * 2, t), float2(24, 24))) * (col < 0x20 ? 1 : 0.2) : 0;
         float3 glint = 0;
         if (kind == 2)
         {
@@ -537,7 +543,7 @@ float4 PSLight(V i) : SV_Target
         }
         // rim light on sprites (their lifted edges catch the sky)
         float rim = spr ? pow(saturate(1 - n.z), 1.5) * 0.7 : 0;
-        c = a * lightC + sp * sunC + glint + rim * sky * (0.4 + 0.6 * lum);
+        c = a * lightC + sp * sunC + glint + rim * sky * (0.4 + 0.6 * lum) + sky * sheen * Opt.w;
         // emissive colours glow a little themselves in the dark
         c += a * Emissive((uint)col) * Scn.w * Opt2.y * 0.25;
         // sun shafts outdoors: soft beams along the light direction, fixed to the world, slowly drifting
