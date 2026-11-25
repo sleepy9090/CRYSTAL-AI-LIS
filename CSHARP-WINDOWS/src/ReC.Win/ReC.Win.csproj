@@ -47,5 +47,7 @@
     <!-- keep every member of the ported core in the exe (architecture §4: every `// js:` member present after
          trimming; 17 render / test helpers would otherwise be removed); only the framework is trimmed -->
     <TrimmerRootAssembly Include="ReC.Core" />
+    <!-- T25: the starter graphics packs, built in for the HD engine (BuiltinArt.cs) -->
+    <EmbeddedResource Include="../../packs/**/*.png" LogicalName="re-c.pack.%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

@@ -270,3 +270,7 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   a fourth time). Host only (architecture §5.19). An xBR-style replacement for the first rounding step was built and
   dropped: its test showed Scale2x already handles 2:1 slopes and xBR made them worse. 296 tests; hd 5 -> 53881
   colours, hdfx 700457 / 714240, HUD identical; smoke + canon, REA ok. Previews: out/hd24/.
+- [x] T25 (interactive, 2026-11-24) done: **Built-in art for the HD engine** (request: "keep making the HD graphics
+  even better"). The five starter packs are embedded in ReC.exe (+0.66 MB) and used by HD by default (switch
+  `hd:art`; user packs override). 303 tests; `win_video_check` 32 ok (new `hdart`); smoke + canon, REA (members core /
+  win), cs_rea_members ok. Previews: out/hd25/art_cmp.png (off vs on).

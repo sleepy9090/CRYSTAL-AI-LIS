@@ -150,6 +150,17 @@ internal static unsafe partial class Window
 
     private static SceneRaster? _raster;
 
+    /// <summary>T25: the HD engine atlas = the built-in starter packs (if on) + the user pack over them; returns the tiles
+    /// left out (atlas full)</summary>
+    private static int GpuArt()
+    {
+        if (_gpu == null || _enh == null || _m == null) return 0;
+        var builtin = _v.HdArt ? BuiltinArt.Embedded() : null;
+        foreach (string e in BuiltinArt.Errors) Console.Error.WriteLine($"[re-c] built-in art: {e}");
+        BuiltinArt.Errors.Clear();
+        return _gpu.SetArt(BuiltinArt.Merge(builtin, _enh.Art), _m.Ppu.Chr.Length / 16);
+    }
+
     // T18 HD graphics (Gpu.cs): created when HD is chosen, released when another look is (GDI draws again)
     private static Gpu? _gpu;
     private static HdScene? _scene;
@@ -177,7 +188,7 @@ internal static unsafe partial class Window
         Win32.GetClientRect(_hwnd, out var rc);
         _gpu = Gpu.TryCreate(_hwnd, rc.Right, rc.Bottom, _nesRgb, out _gpuError);
         ApplyHdEffects();
-        int left = _gpu != null && _enh != null ? _gpu.SetArt(_enh.Art, _m!.Ppu.Chr.Length / 16) : 0;
+        int left = GpuArt();
         if (!_quiet)
             Console.Error.WriteLine(_gpu != null ? $"[re-c] HD engine: {_gpu.Info}, {_gpu.Slots} pack tiles in the atlas" +
                                                    (left > 0 ? $" ({left} left out: atlas full)" : "")

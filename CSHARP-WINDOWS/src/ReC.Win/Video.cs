@@ -38,6 +38,8 @@ internal sealed class VideoSettings
     public bool HdParallax = true, HdShadows = true, HdAtmosphere = true, HdDetail = true;
     /// <summary>T20: HD engine effects: water reflections, local lights (fire, lamps), every sprite on a line (no flicker)</summary>
     public bool HdReflections = true, HdLights = true, HdNoFlicker = true;
+    /// <summary>T25: the starter packs built into the exe, in the HD engine</summary>
+    public bool HdArt = true;
     /// <summary>T13 Audio menu: CD quality (CdAudio.cs) instead of the original mono stream; stereo / reverb for it</summary>
     public bool CdAudio, AudioStereo = true, AudioReverb;
 
@@ -144,6 +146,7 @@ internal sealed class VideoSettings
         if (HdReflections) e.Add("reflections");
         if (HdLights) e.Add("lights");
         if (HdNoFlicker) e.Add("noflicker");
+        if (HdArt) e.Add("art");
         return e.Count > 0 ? string.Join(",", e) : "none";
     }
 
@@ -181,7 +184,7 @@ internal sealed class VideoSettings
                     var e = val.Split(',', StringSplitOptions.TrimEntries);
                     v.HdParallax = e.Contains("parallax"); v.HdShadows = e.Contains("shadows");
                     v.HdAtmosphere = e.Contains("atmosphere"); v.HdDetail = e.Contains("detail");
-                    v.HdReflections = e.Contains("reflections"); v.HdLights = e.Contains("lights"); v.HdNoFlicker = e.Contains("noflicker");
+                    v.HdReflections = e.Contains("reflections"); v.HdLights = e.Contains("lights"); v.HdNoFlicker = e.Contains("noflicker"); v.HdArt = e.Contains("art");
                     break;
                 }
                 case "audio_reverb": v.AudioReverb = val == "1"; break;

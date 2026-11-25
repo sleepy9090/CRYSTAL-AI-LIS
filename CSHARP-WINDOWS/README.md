@@ -119,6 +119,9 @@ splits) and draws the scene itself. It does not take the emulated NES picture.
   the floor beside it); fires and characters light from a direction, so bumps facing them catch the light; in
   gameplay the exposure adapts gently to dark and bright places; the output is dithered so smooth gradients do not band.
 - **Heat and sheen:** the air shimmers just above fires; deep water (and faintly ice) carries a drifting sky sheen.
+- **Built-in art:** the starter graphics packs (hero, enemies, townspeople, bosses, scenery: 2658 tiles) are built into
+  ReC.exe and used by the HD engine without installing anything (**Video › Graphics › HD: Built-in art** turns them
+  off; a pack of your own in `%APPDATA%\re-c\pack` or `--pack` overrides them tile by tile).
 - **Parallax:** pits, chasms and the darkness around caves become depth: cliff walls seen in perspective from the
   middle of the screen, and three rock layers far below that scroll slower than the map (the camera comes from the
   game's own scroll) and lie in the ledges' shadows. Dust motes and outdoor mist float in front and scroll faster.

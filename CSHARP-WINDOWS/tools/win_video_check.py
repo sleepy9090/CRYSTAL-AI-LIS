@@ -11,6 +11,7 @@ and the settings file written by the menu. Xvfb screen: 1920x1080x24.
 keep their colour, settings file, --export-tiles), then the exported tiles painted magenta as a pack must be drawn,
 and Graphics > Original must not draw it.
 `enhanced32` (T14): Graphics > Enhanced (32-bit): client 1024x960, > 2000 colours, settings file.
+`hdart` (T25): HD with the built-in starter packs vs without (atlas holds 2658 tiles, playfield repainted, HUD identical);
 `hdfx` (T19, T20): HD effects all on vs all off (no-flicker stays on) on a cave gameplay frame (playfield changes, HUD
 identical, ini records it);
 `hd` / `hdfull` / `hdoff` (T18, T20 engine): Graphics > HD (Direct3D 11 under Wine): device + shaders made, 4x window and 1080p
@@ -241,7 +242,7 @@ def main(argv):
             print(f'ok   {name:10s} {msg_ok}', flush=True)
     if not names or 'enhanced' in names:
         fails += enhanced_checks(exe, timeout, hpng, frame)
-    if not names or any(n in names for n in ('hd', 'hdfull', 'hdoff', 'hdfx')):
+    if not names or any(n in names for n in ('hd', 'hdfull', 'hdoff', 'hdfx', 'hdart')):
         fails += hd_checks(exe, timeout, hpng, frame, names)
     if not names or 'heropack' in names:
         fails += hero_check(exe, timeout)
@@ -401,6 +402,8 @@ def hd_checks(exe, timeout, hpng, frame, names):
             print(f'ok   {name:10s} {msg[4:]}', flush=True)
     if not names or 'hdfx' in names:
         fails += hdfx_check(exe, timeout)
+    if not names or 'hdart' in names:
+        fails += hdart_check(exe, timeout)
     return fails
 
 
@@ -430,15 +433,50 @@ def hdfx_check(exe, timeout):
     hud = sum(on[y][x] != off[y][x] for y in range(780, 890) for x in range(1024))
     play = sum(on[y][x] != off[y][x] for y in range(0, 720) for x in range(32, 1024))
     total = 720 * 992
-    if 'hd_effects=noflicker' not in lines:
-        msg = 'settings file lacks hd_effects=noflicker'
+    if 'hd_effects=noflicker,art' not in lines:
+        msg = 'settings file lacks hd_effects=noflicker,art'
     elif hud:
         msg = f'{hud} HUD pixels change with the effects (HUD must stay unlit)'
     elif play < 0.3 * total:
         msg = f'only {play} / {total} playfield pixels change with the effects'
     else:
-        msg = f'ok: effects change {play} / {total} playfield pixels, HUD identical, hd_effects=noflicker saved'
+        msg = f'ok: effects change {play} / {total} playfield pixels, HUD identical, hd_effects=noflicker,art saved'
     print(f'{"ok  " if msg.startswith("ok:") else "FAIL"} {"hdfx":10s} {msg[4:] if msg.startswith("ok:") else msg}', flush=True)
+    return 0 if msg.startswith('ok:') else 1
+
+
+def hdart_check(exe, timeout):
+    """T25 built-in art: the cave gameplay frame in HD with the starter packs built into the exe vs Graphics > HD:
+    Built-in art switched off: the exe reports the 2658 tiles in its atlas, the playfield changes (hero, enemies,
+    scenery), the HUD is identical (its font is never in a pack)"""
+    state = os.path.join(cv.ROOT, '..', 'web', 'test', 'states', 'group29.json')
+    pics, ini = {}, os.path.join(OUT, 'hdart.ini')
+    for name, menu in (('on', 'graphics:hd,size:4x'), ('off', 'graphics:hd,size:4x,hd:art')):
+        if os.path.exists(ini):
+            os.remove(ini)
+        png = os.path.join(OUT, f'hdart_{name}.png')
+        rc, out = run(exe, ['--load-state', winpath(state), '--frames', '60', '--turbo', '--no-audio',
+                            '--video-config', winpath(ini), '--save', winpath(os.path.join(OUT, 'video.sav')),
+                            '--pack', winpath(os.path.join(OUT, 'no_pack')), '--menu', menu, '--dump-window', winpath(png)], timeout)
+        if rc or not os.path.exists(png) or 'HD engine: Direct3D 11' not in out:
+            print(f'FAIL hdart      run {name}: rc={rc}')
+            print('     ' + '\n     '.join(out.strip().splitlines()[-8:]))
+            return 1
+        if name == 'on':
+            tiles = next((l for l in out.splitlines() if 'HD engine' in l), '')
+        pics[name] = png_decode(open(png, 'rb').read())[2]
+    on, off = pics['on'], pics['off']
+    hud = sum(on[y][x] != off[y][x] for y in range(780, 890) for x in range(1024))
+    play = sum(on[y][x] != off[y][x] for y in range(0, 720) for x in range(32, 1024))
+    if '2658 pack tiles in the atlas' not in tiles:
+        msg = f'atlas line: {tiles}'
+    elif hud:
+        msg = f'{hud} HUD pixels change with the built-in art'
+    elif play < 20000:
+        msg = f'only {play} playfield pixels change with the built-in art'
+    else:
+        msg = f'ok: 2658 built-in tiles, {play} playfield pixels repainted, HUD identical'
+    print(f'{"ok  " if msg.startswith("ok:") else "FAIL"} {"hdart":10s} {msg[4:] if msg.startswith("ok:") else msg}', flush=True)
     return 0 if msg.startswith('ok:') else 1
 
 

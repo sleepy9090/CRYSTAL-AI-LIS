@@ -23,7 +23,7 @@ internal static unsafe partial class Window
     private const int IdUpscale0 = 260;          // + factor 1..4
     private const int IdOriginal = 270, IdEnhanced = 271, IdReloadPack = 272, IdEnhanced32 = 273, IdHd = 274,
         IdHdParallax = 275, IdHdShadows = 276, IdHdAtmosphere = 277, IdHdDetail = 278,
-        IdHdReflections = 279, IdHdLights = 280, IdHdNoFlicker = 281;
+        IdHdReflections = 279, IdHdLights = 280, IdHdNoFlicker = 281, IdHdArt = 282;
     private const int IdAudioOriginal = 410, IdAudioCd = 411, IdStereo = 412, IdReverb = 413;
 
     private static VideoSettings _v = new();
@@ -64,6 +64,7 @@ internal static unsafe partial class Window
             case "hd:reflections": return IdHdReflections;
             case "hd:lights": return IdHdLights;
             case "hd:noflicker": return IdHdNoFlicker;
+            case "hd:art": return IdHdArt;
             case "reloadpack": return IdReloadPack;
             case "audio:original": return IdAudioOriginal;
             case "audio:cd": return IdAudioCd;
@@ -158,6 +159,7 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(gfx, 0, IdHdReflections, "HD: &Water reflections");
         Win32.AppendMenuW(gfx, 0, IdHdLights, "HD: &Local lights (fire, lamps)");
         Win32.AppendMenuW(gfx, 0, IdHdNoFlicker, "HD: &No sprite flicker (all sprites on a line)");
+        Win32.AppendMenuW(gfx, 0, IdHdArt, "HD: &Built-in art (starter packs)");
         Win32.AppendMenuW(gfx, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(gfx, 0, IdReloadPack, "&Reload graphics pack\tF5");
         Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)gfx, "&Graphics\tF9");
@@ -221,7 +223,7 @@ internal static unsafe partial class Window
         Check(IdEnhanced32, GraphicsMode == 2, true); Check(IdHd, GraphicsMode == 3, true);
         Check(IdHdParallax, _v.HdParallax); Check(IdHdShadows, _v.HdShadows);
         Check(IdHdAtmosphere, _v.HdAtmosphere); Check(IdHdDetail, _v.HdDetail);
-        Check(IdHdReflections, _v.HdReflections); Check(IdHdLights, _v.HdLights); Check(IdHdNoFlicker, _v.HdNoFlicker);
+        Check(IdHdReflections, _v.HdReflections); Check(IdHdLights, _v.HdLights); Check(IdHdNoFlicker, _v.HdNoFlicker); Check(IdHdArt, _v.HdArt);
         Check(IdAudioOriginal, !_v.CdAudio, true); Check(IdAudioCd, _v.CdAudio, true);
         Check(IdStereo, _v.AudioStereo); Check(IdReverb, _v.AudioReverb);
         Check(IdFsDesktop, _v.FsW == 0, true);
@@ -275,6 +277,7 @@ internal static unsafe partial class Window
             case IdHdReflections: _v.HdReflections = !_v.HdReflections; HdEffectsChanged(); return;
             case IdHdLights: _v.HdLights = !_v.HdLights; HdEffectsChanged(); return;
             case IdHdNoFlicker: _v.HdNoFlicker = !_v.HdNoFlicker; HdEffectsChanged(); return;
+            case IdHdArt: _v.HdArt = !_v.HdArt; HdEffectsChanged(); GpuArt(); if (NeedRender) RenderHd(); Present(); return;
             case IdReloadPack: ReloadPack(); return;
             case IdAudioOriginal: _v.CdAudio = false; ApplyAudio(); SettingsChanged(false); return;
             case IdAudioCd: _v.CdAudio = true; ApplyAudio(); SettingsChanged(false); return;
@@ -334,7 +337,7 @@ internal static unsafe partial class Window
         if (_enh.PackDir != null && !_quiet)
             Console.Error.WriteLine($"[re-c] graphics pack {_enh.PackDir}: {_enh.ArtCount} tiles, {_enh.PackErrors.Count} skipped");
         Status($"graphics pack: {_enh.ArtCount} tiles{(_enh.PackErrors.Count > 0 ? $", {_enh.PackErrors.Count} skipped" : "")}");
-        _gpu?.SetArt(_enh.Art, _m?.Ppu.Chr.Length / 16 ?? 0);
+        GpuArt();
         if (NeedRender) RenderHd();
         Present();
     }

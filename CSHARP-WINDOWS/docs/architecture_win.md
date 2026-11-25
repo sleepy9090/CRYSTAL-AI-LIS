@@ -241,3 +241,9 @@ CSHARP-WINDOWS/
     Tried and dropped: an xBR-style first 2x step on the keys. A test showed Scale2x already draws 2:1 slopes as straight
     lines at 2x and the xBR rule turned them into 2-row stairs; the remaining steps are the game art's own irregular
     steps, which a faithful upscaler keeps.
+20. **Built-in art (T25):** `ReC.Win.csproj` embeds `packs/**/*.png` as `re-c.pack.<folder>/<file>` (+0.66 MB exe, the
+    PNGs total 848 KB). `BuiltinArt.Embedded()` decodes them once (`PngRead`, 32x32 each) when the HD engine builds its
+    atlas; `Window.GpuArt()` = built-in (if `HdArt`, `hd_effects` `art`, menu id 282) merged under the user pack and
+    sent to `Gpu.SetArt` (at device creation, F5, and the switch). The Enhanced 16-bit / 32-bit looks still use only
+    the user pack. `win_builtin_art`: 2658 files -> 2658 tiles, no collisions, fits the 4096-slot atlas, user overrides;
+    `win_video_check` `hdart`: atlas line, 501865 playfield pixels repainted, HUD identical.

@@ -595,6 +595,26 @@ internal static partial class Program
             True(weather["town02_enter"].Out > 0.5f && weather["town02_enter"].Icy < 0.05f && weather["town02_enter"].Hot < 0.05f, "town: leaves only");
             True(weather["group7c"].Icy < 0.05f && weather["group7c"].Hot < 0.05f && weather["group7c"].Out < 0.05f, "red cave: no weather");
         }),
+        ("win_builtin_art", () =>
+        {
+            // T25 built-in starter packs: every pack PNG decodes into a tile, no name collisions, a user tile wins
+            string packs = Path.Combine(Data.FindDir(), "..", "..", "CSHARP-WINDOWS", "packs");
+            int files = Directory.GetDirectories(packs).Sum(d => Directory.GetFiles(d, "*.png").Length);
+            var errors = new List<string>();
+            var art = BuiltinArt.FromDirectory(packs, errors);
+            Console.WriteLine($"  win_builtin_art: {files} pack files -> {art.Count} tiles, {errors.Count} errors");
+            Eq(0, errors.Count, "all pack files decode");
+            Eq(files, art.Count, "no two packs paint the same tile + colours");
+            True(art.Count <= Gpu.MaxSlots, "fits the GPU atlas");
+            long key = art.Keys.First();
+            var mine = new uint[32 * 32];
+            var merged = BuiltinArt.Merge(art, new Dictionary<long, uint[]> { [key] = mine });
+            True(merged.Count == art.Count && ReferenceEquals(merged[key], mine), "user pack overrides a built-in tile");
+            Eq(0, BuiltinArt.Merge(null, new Dictionary<long, uint[]>()).Count, "built-in off + no user pack = no art");
+            var v = VideoSettings.Parse("graphics=hd\nhd_effects=parallax\n");
+            True(!v.HdArt && new VideoSettings().HdArt, "ini: art on by default, off when not listed");
+            Eq(282, Window.CommandId("hd:art"), "--menu hd:art");
+        }),
         ("win_png_read", () =>
         {
             var rgba = new byte[3 * 2 * 4];
