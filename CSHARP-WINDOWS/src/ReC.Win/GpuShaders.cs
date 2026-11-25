@@ -21,6 +21,7 @@ cbuffer C : register(b0)
     float4 Grade;  // exposure (eye adaptation), saturation, contrast, vignette
     float4 Opt2;   // reflection strength, local light strength, icy scene (snow), hot scene (embers)
     float4 HudC;   // HUD panel: fill colour (-1 = none), first line, last line + 1, -
+    float4 QualC;  // shadow steps, extras (reflections, fine relief) 0 / 1, albedo scale (8 / 4), -
 };
 Texture2D SrcA : register(t0);
 Texture2D SrcB : register(t1);
@@ -38,7 +39,7 @@ SamplerState Lin : register(s0);
 
 static const float2 NES = float2(256, 240);
 static const float3 LUM = float3(0.299, 0.587, 0.114);
-static const float2 ALB = float2(2048, 1920);
+#define ALB (NES * QualC.z)    // albedo size: 8x (2048x1920), 4x in fast quality
 
 struct V { float4 p : SV_Position; float2 uv : TEXCOORD0; };
 
@@ -107,11 +108,12 @@ float3 Faded(float3 c, uint a, uint col)
 // the albedo at 8x: Scale2x level 3 on the 4x keys, pack tiles, dither blend, sprite over background
 float4 PSAlbedo(V i) : SV_Target
 {
-    int2 o = int2(i.p.xy), n = o / 8;
+    int sc = (int)QualC.z;
+    int2 o = int2(i.p.xy), n = o / sc;
     uint4 L = Lay.Load(int3(n, 0));
     bool ui = (L.r & 0x80) != 0;
     uint4 k = ui ? L : Scale2(o);
-    float2 sub = (float2(o - n * 8) + 0.5) / 8;
+    float2 sub = (float2(o - n * sc) + 0.5) / sc;
     float3 bg = NesRgb(k.r);
     if (k.b != 0) bg = (bg + NesRgb(k.b - 1)) * 0.5;
     uint2 art = ArtM.Load(int3(n, 0));
@@ -474,15 +476,15 @@ float4 PSLight(V i) : SV_Target
             a *= 1 + amp * 0.55 * (d0 - 0.5);
         }
         // fine relief from the 8x art itself (pack tiles, faces, bricks): its light and dark as a small bump
-        if (Opt.w > 0.5)
+        if (Opt.w > 0.5 && QualC.y > 0.5)
         {
-            float2 eu = float2(1.5 / 2048, 1.5 / 1920);
+            float2 eu = 1.5 / ALB;
             float lx = dot(Albedo(s + float2(eu.x, 0)), LUM) - dot(Albedo(s - float2(eu.x, 0)), LUM);
             float ly = dot(Albedo(s + float2(0, eu.y)), LUM) - dot(Albedo(s - float2(0, eu.y)), LUM);
             gd += clamp(float2(lx, ly) * 0.5, -0.3, 0.3);
         }
         // water reflections (before lighting: the reflected scenery is lit like the water)
-        if (kind == 2 && Opt2.x > 0 && (fl & 2) == 0)
+        if (kind == 2 && Opt2.x > 0 && QualC.y > 0.5 && (fl & 2) == 0)
         {
             float4 rf = Reflect(p, t);
             a = lerp(a, rf.rgb * 0.85 + a * 0.15, rf.a * Opt2.x * 1.6);
@@ -519,6 +521,7 @@ float4 PSLight(V i) : SV_Target
         float sh = 0;
         [loop] for (int j = 1; j <= 24; j++)
         {
+            if (j > (int)QualC.x) break;
             float d = j;
             float hq = H(s + float2(ld.x / 512, ld.y / 480) * d);
             sh = max(sh, saturate((hq - h - d * Fx2.x) * 2 / (0.4 + 0.06 * d)) * (1 - j / 25.0));

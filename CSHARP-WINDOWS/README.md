@@ -130,6 +130,10 @@ splits) and draws the scene itself. It does not take the emulated NES picture.
   the sprites and 97 % of the scenery on the screens the test runs explore) are built into
   ReC.exe and used by the HD engine without installing anything (**Video › Graphics › HD: Built-in art** turns them
   off; a pack of your own in `%APPDATA%\re-c\pack` or `--pack` overrides them tile by tile).
+- **Quality:** **Video › Graphics › HD quality** Full (default), Balanced or Fast for slower (integrated) graphics:
+  Balanced lights at 75 % resolution with shorter shadow marches; Fast lights at 50 %, builds the picture at 4× instead
+  of 8× and leaves out reflections and fine relief. **HD: VSync** (on by default) presents in step with the monitor
+  (no tearing).
 - **HUD panel:** the status bar's panel gets a soft gloss and the text a 1-pixel drop shadow (every letter and digit
   stays exactly its NES colour).
 - **Fades keep the art:** when the game fades a room in or out, painted tiles follow the fade (their colours darken

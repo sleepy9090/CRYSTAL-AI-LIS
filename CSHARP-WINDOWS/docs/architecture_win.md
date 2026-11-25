@@ -274,3 +274,8 @@ CSHARP-WINDOWS/
     and separable 3x3 erode / dilate (`Box3`). Embedded packs: `packs/*/*.png` only (the preview PNGs stay out).
     Real time under Wine (llvmpipe renders the shaders on the CPU): ~47 audio underruns in 600 frames with HD on, 0
     with Original; vsync on / off makes no difference. Not measured on real GPU hardware.
+26. **HD quality (T31):** `Gpu.Quality` (`hd_quality=full|balanced|fast`, menu ids 284-286, `--menu hd:fast` ..): HDR /
+    bloom targets at 1 / 0.75 / 0.5 of the picture (composite + FXAA upsample to the picture), shadow steps 24 / 16 / 10
+    (`QualC.x`), reflections + fine relief off in fast (`QualC.y`), fast builds the albedo at 4x (1024x960, from the 2x
+    keys, no K2 pass; `QualC.z` = albedo scale, HLSL `ALB` macro). Real time under Wine (llvmpipe), group29, 600 frames,
+    CD audio: full 45 underruns, balanced 22, fast 0 (42 samples dropped); Original 0.

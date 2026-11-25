@@ -23,7 +23,7 @@ internal static unsafe partial class Window
     private const int IdUpscale0 = 260;          // + factor 1..4
     private const int IdOriginal = 270, IdEnhanced = 271, IdReloadPack = 272, IdEnhanced32 = 273, IdHd = 274,
         IdHdParallax = 275, IdHdShadows = 276, IdHdAtmosphere = 277, IdHdDetail = 278,
-        IdHdReflections = 279, IdHdLights = 280, IdHdNoFlicker = 281, IdHdArt = 282, IdHdVsync = 283;
+        IdHdReflections = 279, IdHdLights = 280, IdHdNoFlicker = 281, IdHdArt = 282, IdHdVsync = 283, IdHdQuality0 = 284;   // + 0 fast, 1 balanced, 2 full
     private const int IdAudioOriginal = 410, IdAudioCd = 411, IdStereo = 412, IdReverb = 413, IdAudioRemaster = 414;
 
     private static VideoSettings _v = new();
@@ -66,6 +66,9 @@ internal static unsafe partial class Window
             case "hd:noflicker": return IdHdNoFlicker;
             case "hd:art": return IdHdArt;
             case "hd:vsync": return IdHdVsync;
+            case "hd:fast": return IdHdQuality0;
+            case "hd:balanced": return IdHdQuality0 + 1;
+            case "hd:full": return IdHdQuality0 + 2;
             case "reloadpack": return IdReloadPack;
             case "audio:original": return IdAudioOriginal;
             case "audio:cd": return IdAudioCd;
@@ -166,6 +169,9 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(gfx, 0, IdHdNoFlicker, "HD: &No sprite flicker (all sprites on a line)");
         Win32.AppendMenuW(gfx, 0, IdHdArt, "HD: &Built-in art (starter packs)");
         Win32.AppendMenuW(gfx, 0, IdHdVsync, "HD: &VSync (no tearing)");
+        Win32.AppendMenuW(gfx, 0, IdHdQuality0 + 2, "HD quality: F&ull");
+        Win32.AppendMenuW(gfx, 0, IdHdQuality0 + 1, "HD quality: Ba&lanced (slower graphics)");
+        Win32.AppendMenuW(gfx, 0, IdHdQuality0, "HD quality: Fa&st (integrated graphics)");
         Win32.AppendMenuW(gfx, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(gfx, 0, IdReloadPack, "&Reload graphics pack\tF5");
         Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)gfx, "&Graphics\tF9");
@@ -230,6 +236,7 @@ internal static unsafe partial class Window
         Check(IdHdParallax, _v.HdParallax); Check(IdHdShadows, _v.HdShadows);
         Check(IdHdAtmosphere, _v.HdAtmosphere); Check(IdHdDetail, _v.HdDetail);
         Check(IdHdReflections, _v.HdReflections); Check(IdHdLights, _v.HdLights); Check(IdHdNoFlicker, _v.HdNoFlicker); Check(IdHdArt, _v.HdArt); Check(IdHdVsync, _v.HdVsync);
+        for (int q = 0; q < 3; q++) Check(IdHdQuality0 + q, _v.HdQuality == q, true);
         Check(IdAudioOriginal, !_v.CdAudio && !_v.AudioRemaster, true); Check(IdAudioCd, _v.CdAudio, true);
         Check(IdAudioRemaster, _v.AudioRemaster, true);
         Check(IdStereo, _v.AudioStereo); Check(IdReverb, _v.AudioReverb);
@@ -284,6 +291,7 @@ internal static unsafe partial class Window
             case IdHdReflections: _v.HdReflections = !_v.HdReflections; HdEffectsChanged(); return;
             case IdHdLights: _v.HdLights = !_v.HdLights; HdEffectsChanged(); return;
             case IdHdNoFlicker: _v.HdNoFlicker = !_v.HdNoFlicker; HdEffectsChanged(); return;
+            case >= IdHdQuality0 and <= IdHdQuality0 + 2: _v.HdQuality = id - IdHdQuality0; HdEffectsChanged(); Present(); return;
             case IdHdVsync: _v.HdVsync = !_v.HdVsync; HdEffectsChanged(); return;
             case IdHdArt: _v.HdArt = !_v.HdArt; HdEffectsChanged(); GpuArt(); if (NeedRender) RenderHd(); Present(); return;
             case IdReloadPack: ReloadPack(); return;

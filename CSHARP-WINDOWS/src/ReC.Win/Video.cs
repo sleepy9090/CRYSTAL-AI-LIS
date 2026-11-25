@@ -42,6 +42,8 @@ internal sealed class VideoSettings
     public bool HdArt = true;
     /// <summary>T30: HD presents with vsync (no tearing)</summary>
     public bool HdVsync = true;
+    /// <summary>T31: HD quality 2 full, 1 balanced, 0 fast (Gpu.Quality)</summary>
+    public int HdQuality = 2;
     /// <summary>T13 Audio menu: CD quality (CdAudio.cs) instead of the original mono stream; stereo / reverb for it</summary>
     public bool CdAudio, AudioStereo = true, AudioReverb;
     /// <summary>T28: Audio > Remastered (CdMixer.Remaster: chorus, smooth bass, room, EQ); implies the CD device path</summary>
@@ -134,6 +136,7 @@ internal sealed class VideoSettings
         $"menu_bar={(MenuBar ? 1 : 0)}",
         $"graphics={(!Enhanced ? "original" : Hd ? "hd" : Enhanced32 ? "enhanced32" : "enhanced")}",
         $"hd_effects={HdEffects()}",
+        $"hd_quality={(HdQuality >= 2 ? "full" : HdQuality == 1 ? "balanced" : "fast")}",
         $"audio={(AudioRemaster ? "remaster" : CdAudio ? "cd" : "original")}",
         $"audio_stereo={(AudioStereo ? 1 : 0)}",
         $"audio_reverb={(AudioReverb ? 1 : 0)}",
@@ -194,6 +197,9 @@ internal sealed class VideoSettings
                     v.HdReflections = e.Contains("reflections"); v.HdLights = e.Contains("lights"); v.HdNoFlicker = e.Contains("noflicker"); v.HdArt = e.Contains("art"); v.HdVsync = e.Contains("vsync");
                     break;
                 }
+                case "hd_quality":
+                    if (val is "full" or "balanced" or "fast") v.HdQuality = val == "full" ? 2 : val == "balanced" ? 1 : 0;
+                    break;
                 case "audio_reverb": v.AudioReverb = val == "1"; break;
                 case "graphics":
                     if (val is "original" or "enhanced" or "enhanced32" or "hd")

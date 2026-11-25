@@ -45,6 +45,12 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool Parallax = true, Shadows = true, Atmosphere = true, Detail = true, Reflections = true, Lights = true;
     /// <summary>T30: present in step with the monitor (sync interval 1: no tearing while the screen scrolls)</summary>
     public bool VSync;
+    /// <summary>T31: HD quality 2 = full, 1 = balanced (lighting at 75 % resolution, 16 shadow steps), 0 = fast (50 %, 10
+    /// steps, no reflections / fine relief): for slower (integrated) graphics</summary>
+    public int Quality = 2;
+    private int _lw, _lh;
+    private void* _a4Tex, _a4Rtv, _a4Srv, _albCur;          // fast quality: the albedo at 4x
+    private int _albScale = 8;
 
     // ---- tunables (cbuffer)
     private static readonly (float X, float Y, float Z) Light = Norm(-0.45f, -0.62f, 0.64f);
@@ -218,6 +224,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         MakeTarget(KW, KH, FmtRgba8U, out _k1Tex, out _k1Rtv, out _k1Srv);
         MakeTarget(KW * 2, KH * 2, FmtRgba8U, out _k2Tex, out _k2Rtv, out _k2Srv);
         MakeTarget(AW, AH, FmtRgba8, out _albTex, out _albRtv, out _albSrv);
+        MakeTarget(AW / 2, AH / 2, FmtRgba8, out _a4Tex, out _a4Rtv, out _a4Srv);
         MakeTarget(KW, KH, FmtRgba16F, out _jaTex, out _jaRtv, out _jaSrv);
         MakeTarget(KW, KH, FmtRgba16F, out _jbTex, out _jbRtv, out _jbSrv);
         MakeTarget(KW, KH, FmtRgba16F, out _hTex, out _hRtv, out _hSrv);
@@ -307,19 +314,21 @@ internal sealed unsafe partial class Gpu : IDisposable
     /// <summary>HDR + bloom targets = picture size</summary>
     private void Targets(int pw, int ph)
     {
-        if (pw == _pw && ph == _ph && _hdrTex != null) return;
+        float sc = Quality >= 2 ? 1f : Quality == 1 ? 0.75f : 0.5f;
+        int lw = Math.Max((int)(pw * sc), 1), lh = Math.Max((int)(ph * sc), 1);
+        if (pw == _pw && ph == _ph && lw == _lw && lh == _lh && _hdrTex != null) return;
         Unbind();
         Release(ref _hdrSrv); Release(ref _hdrRtv); Release(ref _hdrTex);
         Release(ref _b1Srv); Release(ref _b1Rtv); Release(ref _b1Tex);
         Release(ref _b2Srv); Release(ref _b2Rtv); Release(ref _b2Tex);
         Release(ref _b3Srv); Release(ref _b3Rtv); Release(ref _b3Tex); Release(ref _b4Srv); Release(ref _b4Rtv); Release(ref _b4Tex);
         Release(ref _ldrSrv); Release(ref _ldrRtv); Release(ref _ldrTex);
-        _pw = pw; _ph = ph;
-        MakeTarget(pw, ph, FmtRgba16F, out _hdrTex, out _hdrRtv, out _hdrSrv);
-        MakeTarget(Math.Max(pw / 4, 1), Math.Max(ph / 4, 1), FmtRgba16F, out _b1Tex, out _b1Rtv, out _b1Srv);
-        MakeTarget(Math.Max(pw / 4, 1), Math.Max(ph / 4, 1), FmtRgba16F, out _b2Tex, out _b2Rtv, out _b2Srv);
-        MakeTarget(Math.Max(pw / 8, 1), Math.Max(ph / 8, 1), FmtRgba16F, out _b3Tex, out _b3Rtv, out _b3Srv);
-        MakeTarget(Math.Max(pw / 8, 1), Math.Max(ph / 8, 1), FmtRgba16F, out _b4Tex, out _b4Rtv, out _b4Srv);
+        _pw = pw; _ph = ph; _lw = lw; _lh = lh;
+        MakeTarget(lw, lh, FmtRgba16F, out _hdrTex, out _hdrRtv, out _hdrSrv);       // lighting (scaled by quality)
+        MakeTarget(Math.Max(lw / 4, 1), Math.Max(lh / 4, 1), FmtRgba16F, out _b1Tex, out _b1Rtv, out _b1Srv);
+        MakeTarget(Math.Max(lw / 4, 1), Math.Max(lh / 4, 1), FmtRgba16F, out _b2Tex, out _b2Rtv, out _b2Srv);
+        MakeTarget(Math.Max(lw / 8, 1), Math.Max(lh / 8, 1), FmtRgba16F, out _b3Tex, out _b3Rtv, out _b3Srv);
+        MakeTarget(Math.Max(lw / 8, 1), Math.Max(lh / 8, 1), FmtRgba16F, out _b4Tex, out _b4Rtv, out _b4Srv);
         MakeTarget(pw, ph, FmtRgba8, out _ldrTex, out _ldrRtv, out _ldrSrv);
     }
 
@@ -472,11 +481,21 @@ internal sealed unsafe partial class Gpu : IDisposable
         _exposure += (want - _exposure) * 0.05f;
         (_mr, _mg, _mb) = sc.Mean;
 
+        _albScale = Quality == 0 ? 4 : 8;
         Constants(1, 1, 0, 240);
         Begin();
         Pass(_k1Rtv, 0, 0, KW, KH, _psScale, null, null, null, _laySrv);
-        Pass(_k2Rtv, 0, 0, KW * 2, KH * 2, _psScale, null, null, null, _k1Srv);
-        Pass(_albRtv, 0, 0, AW, AH, _psAlbedo, null, null, null, _k2Srv);
+        if (_albScale == 8)
+        {
+            Pass(_k2Rtv, 0, 0, KW * 2, KH * 2, _psScale, null, null, null, _k1Srv);
+            Pass(_albRtv, 0, 0, AW, AH, _psAlbedo, null, null, null, _k2Srv);
+            _albCur = _albSrv;
+        }
+        else
+        {
+            Pass(_a4Rtv, 0, 0, AW / 2, AH / 2, _psAlbedo, null, null, null, _k1Srv);   // fast: 4x straight from the 2x keys
+            _albCur = _a4Srv;
+        }
         // height: seeds, jump flood 4 / 2 / 1, pillow + blur
         Pass(_jaRtv, 0, 0, KW, KH, _psSeed, null, null, null, _k1Srv);
         void* a = _jaSrv, ar = _jaRtv, b = _jbSrv, br = _jbRtv;
@@ -498,7 +517,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             Pass(_l1Rtv, 0, 0, LW, LH, _psBlur, _l2Srv, null, null, null);
         }
         // bounce light: the albedo averaged at 128x120, blurred very wide (2 x H + V at 2x the step)
-        Pass(_g1Rtv, 0, 0, LW, LH, _psBounce, _albSrv, null, null, null);
+        Pass(_g1Rtv, 0, 0, LW, LH, _psBounce, _albCur, null, null, null);
         for (int k = 0; k < 2; k++)
         {
             _c[28] = 2f / LW; _c[29] = 0; SetConstants();
@@ -513,7 +532,7 @@ internal sealed unsafe partial class Gpu : IDisposable
     private void Constants(int pw, int ph, int firstLine, int lines)
     {
         var (hx, hy, hz) = Norm(Light.X, Light.Y, Light.Z + 1);
-        float sharp = Math.Max(1f, ph / (lines * 8f));
+        float sharp = Math.Max(1f, ph / (lines * (float)_albScale));
         float lum = _mr * 0.299f + _mg * 0.587f + _mb * 0.114f;
         float dark = 1 - Math.Clamp((lum - 0.12f) / 0.18f, 0, 1);
         float[] c =
@@ -533,7 +552,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             _exposure, Saturation, Contrast, Vignette,
             Reflections ? ReflectK : 0, Lights ? LightK : 0, Atmosphere ? _icy : 0, Atmosphere ? _hot : 0,
             _hudFill, _hudTop, _hudBottom + 1, 0,
-            0, 0, 0, 0,
+            Quality >= 2 ? 24 : Quality == 1 ? 16 : 10, Quality >= 1 ? 1 : 0, _albScale, 0,
         };
         c.CopyTo(_c, 0);
         SetConstants();
@@ -558,12 +577,13 @@ internal sealed unsafe partial class Gpu : IDisposable
         Targets(pw, ph);
         float* clear = stackalloc float[] { 0, 0, 0, 1 };
         ((delegate* unmanaged[Stdcall]<void*, void*, float*, void>)Vt(_ctx)[50])(_ctx, _backRtv, clear);
-        Constants(pw, ph, firstLine, lines);
+        int lw = _lw, lh = _lh;
+        Constants(lw, lh, firstLine, lines);
         Begin();
-        // 5. light -> HDR
-        Pass(_hdrRtv, 0, 0, pw, ph, _psLight, _albSrv, _hSrv, _l1Srv, null, _g1Srv);
+        // 5. light -> HDR (at the quality's resolution)
+        Pass(_hdrRtv, 0, 0, lw, lh, _psLight, _albCur == null ? _albSrv : _albCur, _hSrv, _l1Srv, null, _g1Srv);
         // 6. bloom: bright part at 1/4, blur H + V twice (wide, soft glow)
-        int bw = Math.Max(pw / 4, 1), bh = Math.Max(ph / 4, 1);
+        int bw = Math.Max(lw / 4, 1), bh = Math.Max(lh / 4, 1);
         Pass(_b1Rtv, 0, 0, bw, bh, _psBright, _hdrSrv, null, null, null);
         for (int k = 0; k < 2; k++)
         {
@@ -573,7 +593,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             Pass(_b1Rtv, 0, 0, bw, bh, _psBlur, _b2Srv, null, null, null);
         }
         // wide halo: the glow again at 1/8, blurred twice more
-        int cw8 = Math.Max(pw / 8, 1), ch8 = Math.Max(ph / 8, 1);
+        int cw8 = Math.Max(lw / 8, 1), ch8 = Math.Max(lh / 8, 1);
         _c[28] = 0; _c[29] = 0; SetConstants();
         Pass(_b3Rtv, 0, 0, cw8, ch8, _psBlur, _b1Srv, null, null, null);
         for (int k = 0; k < 2; k++)
@@ -584,6 +604,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             Pass(_b3Rtv, 0, 0, cw8, ch8, _psBlur, _b4Srv, null, null, null);
         }
         // 7. composite (tone, grade), then 8. edge anti-aliasing into the picture rectangle
+        _c[0] = pw; _c[1] = ph; _c[2] = 1f / pw; _c[3] = 1f / ph; SetConstants();
         Pass(_ldrRtv, 0, 0, pw, ph, _psComp, _hdrSrv, _b1Srv, _b3Srv, null);
         Pass(_backRtv, r.X, r.Y, pw, ph, _psFinal, _ldrSrv, null, null, null);
         Unbind();
@@ -661,6 +682,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         Release(ref _k1Srv); Release(ref _k1Rtv); Release(ref _k1Tex);
         Release(ref _k2Srv); Release(ref _k2Rtv); Release(ref _k2Tex);
         Release(ref _albSrv); Release(ref _albRtv); Release(ref _albTex);
+        Release(ref _a4Srv); Release(ref _a4Rtv); Release(ref _a4Tex);
         Release(ref _jaSrv); Release(ref _jaRtv); Release(ref _jaTex);
         Release(ref _jbSrv); Release(ref _jbRtv); Release(ref _jbTex);
         Release(ref _hSrv); Release(ref _hRtv); Release(ref _hTex);

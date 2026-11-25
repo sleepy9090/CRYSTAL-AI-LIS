@@ -293,3 +293,6 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] T30 (interactive, 2026-11-24) done: **VSync + faster HD CPU side** (architecture §5.25): HD presents with vsync
   (no tearing; switch `hd:vsync`); CPU side 6.2 -> 3.8 ms / frame; pack previews no longer embedded. 323 tests; HD /
   pack checks, smoke + canon, REA ok. Under Wine's software GPU HD still underruns audio (~47 / 600 frames, GPU-bound).
+- [x] T31 (interactive, 2026-11-24) done: **HD quality levels** (Full / Balanced / Fast) for slower graphics
+  (architecture §5.26). Under Wine's software GPU Fast keeps real time (0 underruns vs 45 at Full). 325 tests; HD /
+  pack checks, smoke + canon, REA ok. Previews: out/hd31/q_cmp.png (full vs fast).
