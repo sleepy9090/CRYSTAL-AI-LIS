@@ -38,7 +38,7 @@ internal sealed unsafe partial class Gpu : IDisposable
     public const int AW = 2048, AH = 1920;            // albedo: 8x
     public const int KW = 512, KH = 480;              // height field: 2x
     public const int LW = 128, LH = 120;              // light map
-    public const int AtlasN = 64, MaxSlots = AtlasN * AtlasN;   // 64 x 64 pack tiles of 32x32
+    public const int AtlasN = 128, MaxSlots = AtlasN * AtlasN;  // T27: 128 x 128 pack tiles of 32x32 (4096x4096; fades)
     public string Info { get; private set; } = "";
 
     /// <summary>effect switches (Video > Graphics > HD effects)</summary>
@@ -69,6 +69,8 @@ internal sealed unsafe partial class Gpu : IDisposable
     // pack art -> atlas slots
     private readonly Dictionary<long, int> _slots = new();
     private bool[] _tileArt = Array.Empty<bool>();
+    private Dictionary<long, int> _fades = new();
+    private int _atlasN = 64;
     public int Slots => _slots.Count;
 
     // CPU side of the uploads
@@ -201,7 +203,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         MakeTex(240, 1, FmtRgba32F, out _lnTex, out _lnSrv);
         MakeTex(64, 1, FmtRgba8, out _mTex, out _mSrv);
         MakeTex(64, 1, FmtRgba8, out _rgbTex, out _rgbSrv);
-        MakeTex(AtlasN * 32, AtlasN * 32, FmtBgra, out _atlTex, out _atlSrv);
+        MakeTex(64 * 32, 64 * 32, FmtBgra, out _atlTex, out _atlSrv);
         fixed (byte* m = HdScene.MaterialTable()) Update(_mTex, m, 64 * 4);
         var rgb = new byte[64 * 4];
         for (int i = 0; i < 64; i++)
@@ -324,15 +326,41 @@ internal sealed unsafe partial class Gpu : IDisposable
     public int SetArt(IReadOnlyDictionary<long, uint[]> art, int nTiles)
     {
         _tileArt = BuildSlots(art, nTiles, _slots);
-        var px = new uint[AtlasN * 32 * AtlasN * 32];
+        _fades = BuildFades(_slots);
+        int n = _slots.Count <= 64 * 64 ? 64 : AtlasN;          // the atlas grows to 4096x4096 only when needed
+        if (n != _atlasN)
+        {
+            Unbind();
+            Release(ref _atlSrv); Release(ref _atlTex);
+            MakeTex(n * 32, n * 32, FmtBgra, out _atlTex, out _atlSrv);
+            _atlasN = n;
+        }
+        var px = new uint[n * 32 * n * 32];
         foreach (var (key, slot) in _slots)
         {
             var img = art[key];
-            int ox = slot % AtlasN * 32, oy = slot / AtlasN * 32;
-            for (int y = 0; y < 32; y++) Array.Copy(img, y * 32, px, (oy + y) * AtlasN * 32 + ox, 32);
+            int ox = slot % n * 32, oy = slot / n * 32;
+            for (int y = 0; y < 32; y++) Array.Copy(img, y * 32, px, (oy + y) * n * 32 + ox, 32);
         }
-        fixed (uint* p = px) Update(_atlTex, p, AtlasN * 32 * 4);
+        fixed (uint* p = px) Update(_atlTex, p, n * 32 * 4);
         return art.Count - _slots.Count;
+    }
+
+    /// <summary>T27: palette fade steps (the game fades by $10 per step, BuiltinArt.Fade): faded key -> slot | step << 16,
+    /// for every tile whose faded colours have no tile of their own (and are not all black)</summary>
+    public static Dictionary<long, int> BuildFades(IReadOnlyDictionary<long, int> slots)
+    {
+        var fades = new Dictionary<long, int>();
+        for (int k = 1; k <= 3; k++)                              // the nearest painting (smallest step) wins
+            foreach (var (key, slot) in slots.OrderBy(kv => kv.Key))
+            {
+                int tile = (int)(key >> 24), c1 = (int)(key >> 16 & 63), c2 = (int)(key >> 8 & 63), c3 = (int)(key & 63);
+                int f1 = BuiltinArt.Fade(c1, k), f2 = BuiltinArt.Fade(c2, k), f3 = BuiltinArt.Fade(c3, k);
+                if (f1 == 0x0F && f2 == 0x0F && f3 == 0x0F) continue;
+                long fk = Enhancer.ArtKey(tile, f1, f2, f3);
+                if (!slots.ContainsKey(fk)) fades.TryAdd(fk, slot | k << 16);
+            }
+        return fades;
     }
 
     /// <summary>atlas slot of every pack tile (sorted by key, at most MaxSlots) + which CHR tiles have any</summary>
@@ -354,8 +382,10 @@ internal sealed unsafe partial class Gpu : IDisposable
     /// <summary>the layer + art words of one frame (CPU side of the uploads, pure: tested on Linux).
     /// Lay per pixel: r = background colour | 0x40 opaque | 0x80 HUD / text, g = sprite colour | 0x40 present |
     /// 0x80 behind the background, b = dither partner colour + 1 (0 = none), a = 0.
-    /// ArtMap per pixel: [background, sprite] = atlas slot + 1 | col << 13 | row << 16 | flipH << 19 | flipV << 20 (0 = none)</summary>
-    public static void Layers(SceneRaster r, HdScene sc, IReadOnlyDictionary<long, int> slots, bool[] tileArt, byte[] lay, uint[] artMap)
+    /// ArtMap per pixel: [background, sprite] = atlas slot + 1 (15 bits) | col << 15 | row << 18 | flipH << 21 | flipV << 22 |
+    /// fade step << 23 (0 = none)</summary>
+    public static void Layers(SceneRaster r, HdScene sc, IReadOnlyDictionary<long, int> slots, IReadOnlyDictionary<long, int> fades,
+        bool[] tileArt, byte[] lay, uint[] artMap)
     {
         var fb = r.Fb;
         for (int y = 0; y < 240; y++)
@@ -384,27 +414,33 @@ internal sealed unsafe partial class Gpu : IDisposable
                 lay[o + 1] = (byte)(sp != 0 ? r.SpCol[i] & 63 | 0x40 | (sp & 0x40) << 1 : 0);
                 lay[o + 2] = (byte)partner;
                 lay[o + 3] = 0;
-                artMap[i * 2] = ArtWord(r.BgTag[i], pal, slots, tileArt);
-                artMap[i * 2 + 1] = sp != 0 ? ArtWord(r.SpTag[i], pal, slots, tileArt) : 0;
+                artMap[i * 2] = ArtWord(r.BgTag[i], pal, slots, fades, tileArt);
+                artMap[i * 2 + 1] = sp != 0 ? ArtWord(r.SpTag[i], pal, slots, fades, tileArt) : 0;
             }
         }
     }
 
-    private static uint ArtWord(int tag, byte[] pal, IReadOnlyDictionary<long, int> slots, bool[] tileArt)
+    public static uint ArtWord(int tag, byte[] pal, IReadOnlyDictionary<long, int> slots, IReadOnlyDictionary<long, int> fades, bool[] tileArt)
     {
         if ((tag & ReC.Nes.Ppu.TagValid) == 0) return 0;
         int tile = tag & 0x1FFF;
         if (tile >= tileArt.Length || !tileArt[tile]) return 0;
         int g = tag >> 19 & 7, b = g < 4 ? g * 4 : 0x10 + (g - 4) * 4;
-        if (!slots.TryGetValue(Enhancer.ArtKey(tile, pal[b + 1], pal[b + 2], pal[b + 3]), out int slot)) return 0;
-        return (uint)(slot + 1) | (uint)(tag >> 13 & 7) << 13 | (uint)(tag >> 16 & 7) << 16 |
-               ((tag & 1 << 22) != 0 ? 1u << 19 : 0) | ((tag & 1 << 23) != 0 ? 1u << 20 : 0);
+        long key = Enhancer.ArtKey(tile, pal[b + 1], pal[b + 2], pal[b + 3]);
+        int step = 0;
+        if (!slots.TryGetValue(key, out int slot))
+        {
+            if (!fades.TryGetValue(key, out int fs)) return 0;
+            slot = fs & 0xFFFF; step = fs >> 16;                     // a fade step of a painted tile
+        }
+        return (uint)(slot + 1) | (uint)(tag >> 13 & 7) << 15 | (uint)(tag >> 16 & 7) << 18 |
+               ((tag & 1 << 22) != 0 ? 1u << 21 : 0) | ((tag & 1 << 23) != 0 ? 1u << 22 : 0) | (uint)step << 23;
     }
 
     /// <summary>this frame: layers + art + scene to the GPU, then the frame passes (rounding, albedo, height, light map)</summary>
     public void Upload(SceneRaster r, HdScene sc)
     {
-        Layers(r, sc, _slots, _tileArt, Lay, ArtMap);
+        Layers(r, sc, _slots, _fades, _tileArt, Lay, ArtMap);
         fixed (byte* p = Lay) Update(_layTex, p, 256 * 4);
         fixed (uint* p = ArtMap) Update(_artTex, p, 256 * 8);
         fixed (byte* p = sc.Info) Update(_iTex, p, 256 * 4);

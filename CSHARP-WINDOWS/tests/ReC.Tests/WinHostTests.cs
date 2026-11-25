@@ -551,7 +551,7 @@ internal static partial class Program
             var tileArt = Gpu.BuildSlots(art, r.Tags.Length > 0 ? lastM!.Ppu.Chr.Length / 16 : 0, slots);
             True(tileArt[tile] && slots[key] == 0 && slots.Count == 2, "atlas slots by key");
             var lay = new byte[256 * 240 * 4]; var am = new uint[256 * 240 * 2];
-            Gpu.Layers(r, sc, slots, tileArt, lay, am);
+            Gpu.Layers(r, sc, slots, Gpu.BuildFades(slots), tileArt, lay, am);
             bool ok = true;
             int arts = 0, hud = 0;
             for (int i = 0; i < 256 * 240; i++)
@@ -560,11 +560,11 @@ internal static partial class Program
                 ok &= (lay[o + 2] != 0 || (lay[o] & 63) == (r.BgCol[i] & 63)) && ((lay[o] & 0x40) != 0) == (r.Bg[i] != 0);
                 ok &= r.Sp[i] == 0 ? lay[o + 1] == 0 : (lay[o + 1] & 63) == (r.SpCol[i] & 63) && ((lay[o + 1] & 0x80) != 0) == ((r.Sp[i] & 0x40) != 0);
                 if ((lay[o] & 0x80) != 0) hud++;
-                if (am[i * 2] != 0) { arts++; ok &= (am[i * 2] & 0x1FFF) == 1 && (r.BgTag[i] & 0x1FFF) == tile; }
+                if (am[i * 2] != 0) { arts++; ok &= (am[i * 2] & 0x7FFF) == 1 && (r.BgTag[i] & 0x1FFF) == tile; }
             }
             True(ok, "layer words = the raster's layers");
             True(hud > 1000, $"HUD pixels flagged ({hud})");
-            True(arts >= 8 && (am[tagged * 2] >> 13 & 7) == (r.BgTag[tagged] >> 13 & 7), $"pack tile under its pixels ({arts}), with the pixel's column");
+            True(arts >= 8 && (am[tagged * 2] >> 15 & 7) == (r.BgTag[tagged] >> 13 & 7), $"pack tile under its pixels ({arts}), with the pixel's column");
             var v = VideoSettings.Parse("graphics=hd\nhd_effects=reflections,noflicker\n");
             True(v.HdReflections && !v.HdLights && v.HdNoFlicker && !v.HdShadows, "ini hd_effects (T20 switches)");
             True(new VideoSettings().Serialize().Contains("hd_effects=parallax,shadows,atmosphere,detail,reflections,lights,noflicker"), "all on by default");
@@ -614,6 +614,69 @@ internal static partial class Program
             var v = VideoSettings.Parse("graphics=hd\nhd_effects=parallax\n");
             True(!v.HdArt && new VideoSettings().HdArt, "ini: art on by default, off when not listed");
             Eq(282, Window.CommandId("hd:art"), "--menu hd:art");
+            // T27 fades: a tile painted for $30 $21 $11 is found in fade steps 1-2 ($20 $11 $01, $10 $01 $0F) with its step;
+            // step 3 ($00 $0F $0F) too; an all-black step is not; a faded key with its own tile keeps that tile
+            Eq((0x20, 0x0F, 0x0F), (BuiltinArt.Fade(0x30, 1), BuiltinArt.Fade(0x0F, 1), BuiltinArt.Fade(0x05, 1)), "NES fade rule");
+            var sl = new Dictionary<long, int> { [Enhancer.ArtKey(5, 0x30, 0x21, 0x11)] = 0, [Enhancer.ArtKey(5, 0x10, 0x01, 0x0F)] = 1 };
+            var fd = Gpu.BuildFades(sl);
+            Eq(1 << 16, fd[Enhancer.ArtKey(5, 0x20, 0x11, 0x01)], "step 1 -> slot 0");
+            False(fd.ContainsKey(Enhancer.ArtKey(5, 0x10, 0x01, 0x0F)), "a faded key with its own tile keeps it");
+            Eq(1 | 1 << 16, fd[Enhancer.ArtKey(5, 0x00, 0x0F, 0x0F)], "step 3 of slot 0 = step 1 of slot 1: the nearer painting wins");
+            var ta = new bool[8192]; ta[5] = true;
+            var fpal = new byte[32]; fpal[1] = 0x20; fpal[2] = 0x11; fpal[3] = 0x01;
+            uint w = Gpu.ArtWord(Ppu.TagValid | 5, fpal, sl, fd, ta);
+            Eq((1u, 1u), (w & 0x7FFF, w >> 23 & 3), "art word: slot 0 + 1, fade step 1");
+        }),
+        ("win_audio_remaster", () =>
+        {
+            // T28 Remastered audio (CdMixer.Remaster): same loudness as CD quality, no clipping, wider stereo, the
+            // triangle's step buzz reduced, the EQ curve as specified, deterministic
+            var d = TheData.Value;
+            var cd = WavOut.PlayMusicCd(d, 0x14, 8);
+            var rm = WavOut.PlayMusicCd(d, 0x14, 8, remaster: true);
+            True(rm.SequenceEqual(WavOut.PlayMusicCd(d, 0x14, 8, remaster: true)), "deterministic");
+            double Rms(List<short> s) => Math.Sqrt(s.Average(v => (double)v * v));
+            double Corr(List<short> s)
+            {
+                double sl = 0, sr = 0, slr = 0;
+                // on the sample-to-sample differences: the mids / highs (the melody voices; bass stays centred on purpose)
+                for (int i = 2; i + 1 < s.Count; i += 2)
+                {
+                    double a = s[i] - s[i - 2], b = s[i + 1] - s[i - 1];
+                    sl += a * a; sr += b * b; slr += a * b;
+                }
+                return slr / Math.Sqrt(sl * sr);
+            }
+            double db = 20 * Math.Log10(Rms(rm) / Rms(cd));
+            int peak = rm.Max(v => Math.Abs((int)v));
+            Console.WriteLine($"  win_audio_remaster: music $14 level {db:+0.0;-0.0} dB vs CD, peak {peak}, mid / high L/R correlation {Corr(rm):F3} (CD {Corr(cd):F3})");
+            True(Math.Abs(db) < 3, $"loudness within 3 dB of CD ({db:F1})");
+            True(peak < 32700, $"no clipping ({peak})");
+            True(Corr(rm) < Corr(cd) - 0.05, "wider stereo than CD in the mids / highs");
+            // triangle alone (a 4-bit staircase at 110 Hz): less energy above 6 kHz (step buzz) than the CD path
+            double Hf(bool remaster)
+            {
+                var mx = new CdMixer { Remaster = remaster };
+                for (int i = 0; i < CdMixer.InRate / 2; i++)
+                {
+                    double ph = i * 110.0 / CdMixer.InRate % 1;
+                    int step = (int)(ph * 32) % 32;
+                    mx.Push(0, 0, step < 16 ? 15 - step : step - 16, 0, 0);
+                }
+                var o = mx.Take(new List<short>());
+                double hf = 0, prev = 0;
+                for (int i = 0; i < o.Count; i += 2) { double x = o[i]; hf += (x - prev) * (x - prev); prev = x; }   // first difference ~ highs
+                return hf / Math.Max(1, o.Sum(v => (double)v * v));
+            }
+            double hcd = Hf(false), hrm = Hf(true);
+            True(hrm < hcd * 0.6, $"triangle buzz reduced: {hrm:E2} vs CD {hcd:E2}");
+            var ls = Biquad.LowShelf(120, 2.5); var hs = Biquad.HighShelf(7000, 1.5);
+            double Db(double g) => 20 * Math.Log10(g);
+            True(Math.Abs(Db(ls.GainAt(20)) - 2.5) < 0.3 && Math.Abs(Db(ls.GainAt(5000))) < 0.2, "low shelf +2.5 dB");
+            True(Math.Abs(Db(hs.GainAt(18000)) - 1.5) < 0.3 && Math.Abs(Db(hs.GainAt(200))) < 0.2, "high shelf +1.5 dB");
+            var v = VideoSettings.Parse("audio=remaster\n");
+            True(v.AudioRemaster && !v.CdAudio && v.Serialize().Contains("audio=remaster"), "ini audio=remaster");
+            Eq(414, Window.CommandId("audio:remaster"), "--menu audio:remaster");
         }),
         ("win_png_read", () =>
         {

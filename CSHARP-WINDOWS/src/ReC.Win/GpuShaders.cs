@@ -80,12 +80,27 @@ bool SprFront(uint4 k) { return (k.g & 0x40) != 0 && !((k.g & 0x80) != 0 && (k.r
 // a graphics-pack tile at position sub (0..1) inside its NES pixel: bilinear inside the tile's 32x32 cell only
 float4 ArtSample(uint a, float2 sub)
 {
-    uint slot = (a & 0x1FFF) - 1;
-    float2 cr = float2((a >> 13) & 7, (a >> 16) & 7);
-    float2 f = float2(((a >> 19) & 1) != 0 ? 1 - sub.x : sub.x, ((a >> 20) & 1) != 0 ? 1 - sub.y : sub.y);
+    uint slot = (a & 0x7FFF) - 1;
+    float2 cr = float2((a >> 15) & 7, (a >> 18) & 7);
+    float2 f = float2(((a >> 21) & 1) != 0 ? 1 - sub.x : sub.x, ((a >> 22) & 1) != 0 ? 1 - sub.y : sub.y);
     float2 t = clamp((cr + f) * 4, 0.5, 31.5);
-    float2 org = float2(slot % 64, slot / 64) * 32;
-    return Atlas.SampleLevel(Lin, (org + t) / 2048, 0);
+    uint aw, ah;
+    Atlas.GetDimensions(aw, ah);
+    uint n = aw / 32;
+    float2 org = float2(slot % n, slot / n) * 32;
+    return Atlas.SampleLevel(Lin, (org + t) / aw, 0);
+}
+
+// T27: a pack tile in a palette fade step (art word bits 23-24): its painted colours follow the faded NES colour on
+// screen, keeping their light / shade relative to the colour they were painted for (the step's $10 lighter one)
+float3 Faded(float3 c, uint a, uint col)
+{
+    uint k = (a >> 23) & 3;
+    col &= 63;
+    if (k == 0) return c;
+    if (col == 0x0F) return NesRgb(0x0F);
+    float ls = dot(NesRgb(min(col + 0x10 * k, 0x3F)), LUM);
+    return NesRgb(col) * (ls > 0.03 ? clamp(dot(c, LUM) / ls, 0, 2.5) : 1);
 }
 
 // the albedo at 8x: Scale2x level 3 on the 4x keys, pack tiles, dither blend, sprite over background
@@ -99,19 +114,19 @@ float4 PSAlbedo(V i) : SV_Target
     float3 bg = NesRgb(k.r);
     if (k.b != 0) bg = (bg + NesRgb(k.b - 1)) * 0.5;
     uint2 art = ArtM.Load(int3(n, 0));
-    if (!ui && (art.x & 0x1FFF) != 0)
+    if (!ui && (art.x & 0x7FFF) != 0)
     {
         float4 a = ArtSample(art.x, sub);
-        if (a.a >= 0.5) bg = a.rgb;
+        if (a.a >= 0.5) bg = Faded(a.rgb, art.x, k.r);
     }
     float3 c = bg;
     if (SprFront(k))
     {
         c = NesRgb(k.g);
-        if (!ui && (art.y & 0x1FFF) != 0)
+        if (!ui && (art.y & 0x7FFF) != 0)
         {
             float4 a = ArtSample(art.y, sub);
-            if (a.a >= 0.5) c = a.rgb;
+            if (a.a >= 0.5) c = Faded(a.rgb, art.y, k.g);
         }
     }
     return float4(c, 1);

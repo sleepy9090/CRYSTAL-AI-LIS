@@ -55,6 +55,13 @@ internal static class BuiltinArt
             .SelectMany(d => Directory.GetFiles(d, "*.png").OrderBy(f => f, StringComparer.Ordinal))
             .Select(f => (Path.GetFileName(f), File.ReadAllBytes(f))), errors);
 
+    /// <summary>NES fade step k of colour c (PaletteBuild 26:8C10: c - $10 k, negative -> $0F)</summary>
+    public static int Fade(int c, int k)
+    {
+        int f = (c & 0x3F) - 0x10 * k;
+        return f < 0 ? 0x0F : f;
+    }
+
     /// <summary>the HD engine's tiles: built-in (if on), then the user pack over them</summary>
     public static Dictionary<long, uint[]> Merge(IReadOnlyDictionary<long, uint[]>? builtin, IReadOnlyDictionary<long, uint[]> user)
     {

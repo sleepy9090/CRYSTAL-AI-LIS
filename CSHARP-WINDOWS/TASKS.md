@@ -278,3 +278,9 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   Exploration capture (6450 dumps from 86 states), +1143 new pack tiles (backgrounds +697, enemies +378, NPCs +68; old
   tiles unchanged; 3801 in all, atlas 4096). Coverage of explored screens: sprites 59 -> 82 %, background 51 -> 58 %.
   303 tests; hd 5 -> 65049 colours; hdart / pack checks / smoke + canon / REA ok. Exe 12.5 MB.
+- [x] T27 (interactive, 2026-11-24) done: **Pack art through palette fades** (request: "dont leave out anything"):
+  fade-step keys map to the painted tile + step, the shader recolours it (architecture §5.22); atlas grows on demand.
+  Tested in `win_builtin_art` (fade rule, nearest step wins, own tile kept, art word step bits).
+- [x] T28 (interactive, 2026-11-24) done: **Remastered audio** (user: "feel free to ... upgrade ... the audio engine"):
+  Audio > Remastered (architecture §5.23). 317 tests; Wine renders `out/audio28/music14_{cd,remaster}.wav`
+  (-19.8 vs -18.7 dBFS RMS, peaks 27189 vs 14973); hd / hdfx / hdart / heropack, smoke + canon, REA ok.

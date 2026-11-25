@@ -80,8 +80,15 @@ sound of the port. You can switch at any time, and the choice is saved. CD quali
 - **the NES's own channel balance** (its non-linear mixer), a soft limiter instead of hard clipping, and 16-bit dither;
 - optional light **Reverb** (Audio › Reverb).
 
-`ReC.exe --wav ID OUT.wav [SECONDS] --cd [--mono] [--reverb]` writes a music track through the CD path as a stereo WAV
-(music ids `0x14`, `0x15`, `0x1B` are full songs).
+**Audio › Remastered** goes further, in the style of a 16-bit remaster (built on the CD path):
+- **chorus** on the two melody voices: each gets a slowly swaying, slightly delayed copy on the other side, so they
+  sound wide and warm instead of thin;
+- **smooth bass**: the triangle channel's 4-bit steps (a faint buzz) are smoothed, with a touch of tape-like warmth;
+- **room**: a reverb with more space on the drums than on the melody; a little extra bass (+2.5 dB at 120 Hz) and air
+  (+1.5 dB at 7 kHz). Same loudness as CD quality; the bass stays centred.
+
+`ReC.exe --wav ID OUT.wav [SECONDS] --cd [--mono] [--reverb]` writes a music track through the CD path as a stereo WAV,
+`--remaster` through the remastered one (music ids `0x14`, `0x15`, `0x1B` are full songs).
 
 ### Graphics: Original, Enhanced (16-bit), Enhanced (32-bit) or HD
 **Video › Graphics** (or **F9**, which cycles Original → 16-bit → 32-bit → HD) switches the look at any time, even
@@ -122,6 +129,8 @@ splits) and draws the scene itself. It does not take the emulated NES picture.
 - **Built-in art:** the starter graphics packs (hero, enemies, townspeople, bosses, scenery: 2658 tiles) are built into
   ReC.exe and used by the HD engine without installing anything (**Video › Graphics › HD: Built-in art** turns them
   off; a pack of your own in `%APPDATA%\re-c\pack` or `--pack` overrides them tile by tile).
+- **Fades keep the art:** when the game fades a room in or out, painted tiles follow the fade (their colours darken
+  with the NES palette) instead of dropping back to the generated look.
 - **Parallax:** pits, chasms and the darkness around caves become depth: cliff walls seen in perspective from the
   middle of the screen, and three rock layers far below that scroll slower than the map (the camera comes from the
   game's own scroll) and lie in the ledges' shadows. Dust motes and outdoor mist float in front and scroll faster.

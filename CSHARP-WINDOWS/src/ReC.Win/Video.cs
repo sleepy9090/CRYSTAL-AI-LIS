@@ -42,6 +42,8 @@ internal sealed class VideoSettings
     public bool HdArt = true;
     /// <summary>T13 Audio menu: CD quality (CdAudio.cs) instead of the original mono stream; stereo / reverb for it</summary>
     public bool CdAudio, AudioStereo = true, AudioReverb;
+    /// <summary>T28: Audio > Remastered (CdMixer.Remaster: chorus, smooth bass, room, EQ); implies the CD device path</summary>
+    public bool AudioRemaster;
 
     public static readonly (Aspect A, string Key, string Label)[] Aspects =
     {
@@ -130,7 +132,7 @@ internal sealed class VideoSettings
         $"menu_bar={(MenuBar ? 1 : 0)}",
         $"graphics={(!Enhanced ? "original" : Hd ? "hd" : Enhanced32 ? "enhanced32" : "enhanced")}",
         $"hd_effects={HdEffects()}",
-        $"audio={(CdAudio ? "cd" : "original")}",
+        $"audio={(AudioRemaster ? "remaster" : CdAudio ? "cd" : "original")}",
         $"audio_stereo={(AudioStereo ? 1 : 0)}",
         $"audio_reverb={(AudioReverb ? 1 : 0)}",
         $"upscale={ReC.Win.Upscale.Filters.First(f => f.K == Upscale).Key}",
@@ -177,7 +179,9 @@ internal sealed class VideoSettings
                     else if (TryWxH(val, out int fw, out int fh) && fw >= 320 && fh >= 200) { v.FsW = fw; v.FsH = fh; }
                     break;
                 case "menu_bar": v.MenuBar = val != "0"; break;
-                case "audio": if (val is "original" or "cd") v.CdAudio = val == "cd"; break;
+                case "audio":
+                    if (val is "original" or "cd" or "remaster") { v.CdAudio = val == "cd"; v.AudioRemaster = val == "remaster"; }
+                    break;
                 case "audio_stereo": v.AudioStereo = val != "0"; break;
                 case "hd_effects":
                 {

@@ -251,3 +251,15 @@ CSHARP-WINDOWS/
     --sample N` (TOTAL line); new keys only were added to packs/backgrounds / enemies / npcs (3801 tiles, built into the
     exe: 12.5 MB). Explored screens: sprites 59 -> 82 %, background 51 -> 58 %. `win_video_check` `hdart` now counts the
     packs/ files.
+22. **Fades for pack art (T27):** `Gpu.BuildFades` maps every key a palette fade step (1-3, `BuiltinArt.Fade` = the ROM's
+    c - $10 k, negative -> $0F) makes of a pack tile to that tile + step (smallest step wins; keys with their own tile
+    and all-black steps excluded). The art word got 15 slot bits + fade step bits 23-24; the atlas is 2048x2048 up to
+    4096 tiles and grows to 4096x4096 (`AtlasN` 128) only when needed (shader reads the size). `PSAlbedo` `Faded()`:
+    painted colour x luminance ratio onto the faded NES colour on screen (black stays black).
+23. **Remastered audio (T28):** `CdMixer.Remaster` (`audio=remaster`, Audio menu id 414, `--wav .. --remaster`): 4 buses
+    (pulse 1, pulse 2, triangle, noise + DMC) through their mixer curves and the shared 255-tap low-pass / decimation;
+    at 44.1 kHz chorus per pulse (6-10 ms delay, LFO 0.5 / 0.37 Hz, cross-panned), triangle one-pole 5 kHz + tanh,
+    pulses panned 1.05 / 0.40 + chorus 0.60, noise slightly right, DC blocker, Freeverb room with per-bus sends (return
+    0.2), RBJ low shelf +2.5 dB @ 120 Hz and high shelf +1.5 dB @ 7 kHz, gain 0.45 x, shared limiter + dither.
+    `win_audio_remaster`: music $14 +0.4 dB vs CD, peak 13978, mid / high L/R correlation 0.813 (CD 0.933),
+    triangle step buzz reduced, shelf gains, deterministic, ini / --menu.
