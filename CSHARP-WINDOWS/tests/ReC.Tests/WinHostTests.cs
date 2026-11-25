@@ -695,6 +695,72 @@ internal static partial class Program
             uint w = Gpu.ArtWord(Ppu.TagValid | 5, fpal, sl, fd, ta);
             Eq((1u, 1u), (w & 0x7FFF, w >> 23 & 3), "art word: slot 0 + 1, fade step 1");
         }),
+        ("win_cheats", () =>
+        {
+            // T36 cheats: the HP-bar tiles = the game's own HudHpBar buffer ($6060) in every gameplay state; the cheats
+            // set what they promise in gameplay only; ini round trip; menu names
+            var d = TheData.Value;
+            string dir = Path.Combine(Data.FindDir(), "..", "test", "states");
+            // the game's own HudHpBar (ported, 26:8CC0) on 400 random max / HP pairs vs Cheats.HpBarTiles (test states
+            // poke HP without redrawing the bar, so their nametables are no reference)
+            var mh = new Machine(d, _ => { });
+            mh.Reset(); mh.LoadState(StateFile.Load(Path.Combine(dir, "group09.json")));
+            var rng = new Random(36);
+            int same = 0;
+            for (int k = 0; k < 400; k++)
+            {
+                int max = rng.Next(1, 256), hp = rng.Next(0, max + 1);
+                mh.Mem.RamBytes[0x03C0] = (byte)max; mh.Mem.RamBytes[0x03C1] = (byte)hp;
+                int steps = 0;
+                foreach (var _ in ReC.Game.States.Death.HudHpBar(mh)) if (++steps > 4) break;
+                var t = Cheats.HpBarTiles(max, hp, i => Prg.PrgByte(mh, 26, 0x8D49 + i));
+                if (Enumerable.Range(0, 17).All(i => mh.Mem.Wram[0x60 + i] == t[i])) same++;
+                mh.RunFrame(0);                                      // flushes the PPU queue (HudHpBar waits for it)
+            }
+            Console.WriteLine($"  win_cheats: HP-bar tiles = the game's HudHpBar for {same} / 400 random max / HP pairs");
+            Eq(400, same, "HP-bar tiles as HudHpBar draws them");
+            // the cheats on a gameplay state
+            var mc = new Machine(d, _ => { });
+            mc.Reset(); mc.LoadState(StateFile.Load(Path.Combine(dir, "group09.json")));
+            mc.RunFrame(0);
+            var r = mc.Mem.RamBytes;
+            r[0x03C1] = 1; r[0x0708] = 0; r[0x0702] = 5; r[0x0703] = 0; r[0x0710] = (byte)(r[0x0710] & 0xF0 | 3); r[0x06C0] = 0;
+            var c = new Cheats();
+            c.Parse("life,magic,gold,status,charge,xp");
+            True(c.Life && c.Magic && c.Gold && c.Status && c.Charge && c.Xp && c.Serialize() == "life,magic,gold,status,charge,xp", "cheats ini round trip");
+            c.Apply(mc, true);
+            int cap = Prg.PrgByte(mc, 26, 0x9D7E + Math.Min((int)r[0x0719], 2));
+            True(r[0x03C1] == r[0x03C0] && r[0x0708] == r[0x0709] && (r[0x0702] | r[0x0703] << 8) == 60000 && (r[0x0710] & 0x0F) == 0 &&
+                 r[0x06C0] == cap && (r[0x0704] | r[0x0705] << 8) == (r[0x0706] | r[0x0707] << 8) - 1, "cheats set HP, MP, gold, status, charge, XP");
+            var tb = Cheats.HpBarTiles(r[0x03C0], r[0x03C1], k => Prg.PrgByte(mc, 26, 0x8D49 + k));
+            True(Enumerable.Range(0, 17).All(i => mc.Ppu.Vram[mc.Ppu.NtIndex(0x2B26 + i)] == tb[i]), "infinite life redraws the HP bar");
+            for (int f = 0; f < 60; f++) { mc.RunFrame(0); c.Apply(mc, false); }
+            True(r[0x03C1] == r[0x03C0], "life stays full while playing");
+            r[0x40] = 2; r[0x03C1] = 3; c.Apply(mc, false);
+            True(r[0x03C1] == 3, "no cheats outside gameplay");
+            True(!new Cheats().Any && new Cheats().Serialize() == "none" && VideoSettings.Parse("cheats=gold\n").Cheats.Gold, "off by default, ini key");
+            Eq(602, Window.CommandId("cheat:gold"), "--menu cheat:gold");
+            // T38 turbo: B held = 3 frames down, 3 up; other buttons untouched; ini
+            var pulse = Enumerable.Range(0, 12).Select(f => VideoSettings.Turbo(0x40 | 0x01, f, false, true)).ToArray();
+            True(pulse.All(b => (b & 0x01) != 0) && pulse.Count(b => (b & 0x40) != 0) == 6 && (pulse[0] & 0x40) != 0 && (pulse[3] & 0x40) == 0, "turbo B pulses, D-pad kept");
+            True(VideoSettings.Turbo(0x80, 4, false, false) == 0x80 && VideoSettings.Parse("turbo=a,b\n").TurboA && new VideoSettings().Serialize().Contains("turbo=none"), "turbo off by default, ini");
+            Eq(104, Window.CommandId("turbo:b"), "--menu turbo:b");
+        }),
+        ("win_osd", () =>
+        {
+            // T37 on-screen display: nothing by default, the pause screen dims everything and puts an opaque panel in the
+            // middle, notices / fast forward sit at the top, the GDI blend darkens under the dim
+            True(!Osd.Build(false, false, null, new List<string>()) && Osd.Pix.All(p => p == 0), "nothing to show: empty overlay");
+            True(Osd.Build(true, false, null, new List<string> { "life" }), "pause screen");
+            uint corner = Osd.Pix[5 * Osd.W + 5], panel = Osd.Pix[330 * Osd.W + 110];
+            Console.WriteLine($"  win_osd: pause dim alpha {corner >> 24}, panel alpha {panel >> 24}");
+            True((corner >> 24) is > 140 and < 180 && (panel >> 24) > 230, "dim ~62 %, panel ~94 % opaque");
+            var pic = Enumerable.Repeat(0xFFFFFFu & 0xC0C0C0, 64 * 60).ToArray();
+            Osd.Blend(pic, 64, 60);
+            True((pic[10 * 64 + 10] & 255) < 0x60, "GDI blend darkens under the dim");
+            True(Osd.Build(false, true, "INFINITE LIFE: ON", new List<string>()) && (Osd.Pix[25 * Osd.W + 30] >> 24) > 100 && (Osd.Pix[25 * Osd.W + Osd.W - 50] >> 24) > 100, "notice + fast forward");
+            True(Osd.TextWidth("AB", 2) == 22, "text width");
+        }),
         ("win_audio_remaster", () =>
         {
             // T28 Remastered audio (CdMixer.Remaster): same loudness as CD quality, no clipping, wider stereo, the

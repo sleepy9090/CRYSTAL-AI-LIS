@@ -19,7 +19,7 @@ internal sealed class WindowOptions
 {
     public int Scale = 3, Frames = -1, Frame0 = 214;
     public bool Frame0Given, ScaleGiven, Mute, NoAudio, Turbo, Quiet, Fullscreen;
-    public string? SavePath, DataDir, StatePath, Screen, Compare, VideoConfig, DumpWindow, PackDir, ExportTiles;
+    public string? SavePath, DataDir, StatePath, Screen, Compare, VideoConfig, DumpWindow, PackDir, ExportTiles, OsdShot;
     public readonly List<string> KeySpecs = new(), MenuCmds = new();
 
     /// <summary>Window-mode options (ArgumentException / FormatException on bad input; `--help` -> null).</summary>
@@ -38,6 +38,7 @@ internal sealed class WindowOptions
                 case "--video-config": o.VideoConfig = V(); break;
                 case "--menu": o.MenuCmds.AddRange(V().Split(',', StringSplitOptions.RemoveEmptyEntries)); break;
                 case "--dump-window": o.DumpWindow = V(); break;
+                case "--osd": o.OsdShot = V(); break;           // T37 checks: pause | fast | notice=TEXT before --dump-window
                 case "--pack": o.PackDir = V(); break;
                 case "--export-tiles": o.ExportTiles = V(); break;
                 case "--save": o.SavePath = V(); break;
@@ -206,6 +207,38 @@ internal static unsafe partial class Window
 
     // js: main.js status
     /// <summary>= the page's status line: shown in the window title (paused / muted).</summary>
+    /// <summary>T36: the title-bar status: paused, muted, fast forward, cheats</summary>
+    private static void StatusLine()
+    {
+        var p = new List<string>();
+        if (_paused) p.Add("paused (P)");
+        if (_muted) p.Add("muted (M)");
+        if (_fast) p.Add("fast forward (Space)");
+        if (_v.Cheats.Any) p.Add("cheats: " + _v.Cheats.Serialize());
+        Status(string.Join(", ", p));
+    }
+    private static bool _fast;
+    // T37 on-screen display: a short notice (cheat / setting switched), the pause screen, the fast-forward mark
+    private static bool _osdReady;
+    private static string? _notice;
+    private static double _noticeUntil;
+    private static uint[] _osdBuf = Array.Empty<uint>();
+    public static void Notice(string s)
+    {
+        if (!_osdReady) return;
+        _notice = s; _noticeUntil = Clock.Elapsed.TotalMilliseconds + 2000;
+    }
+    /// <summary>builds the overlay for now; false = nothing on screen</summary>
+    private static bool BuildOsd()
+    {
+        if (_notice != null && Clock.Elapsed.TotalMilliseconds > _noticeUntil) _notice = null;
+        if (!_paused && !_fast && _notice == null && !_osdShown) return false;
+        var cheats = Enumerable.Range(0, Cheats.Names.Length).Where(_v.Cheats.Get).Select(i => Cheats.Names[i]).ToList();
+        _osdShown = Osd.Build(_paused, _fast, _notice, cheats);
+        return _osdShown;
+    }
+    private static bool _osdShown;
+
     private static void Status(string s)
     {
         if (_hwnd != IntPtr.Zero) Win32.SetWindowTextW(_hwnd, s.Length > 0 ? $"{Title} — {s}" : Title);
@@ -263,6 +296,7 @@ internal static unsafe partial class Window
             if (!CreateMainWindow()) { Console.Error.WriteLine("ReC.exe: could not create the window"); return 1; }
             if (_v.Fullscreen || o.Fullscreen) { _v.Fullscreen = false; ToggleFullscreen(); }
             foreach (string c in o.MenuCmds) { Command(CommandId(c)); Pump(); }   // = clicking the menu items in order
+            _osdReady = true;                          // T37: notices only for what the player does from here on
             // no autoplay policy on the desktop: audio starts right away (JS: on the first key / click); M = mute
             // T14: compile the Enhanced pipeline before the audio starts (its first frame would stall the sound)
             EnsureGpu();
@@ -304,7 +338,7 @@ internal static unsafe partial class Window
                 bool ran = false;
                 if (!_paused && !_hidden)
                 {
-                    _acc += Math.Min(now - _last, 250);       // never run more than ~15 frames to catch up
+                    _acc += Math.Min(now - _last, 250) * (_fast ? 4 : 1);   // never run more than ~15 frames to catch up; T36: Space = 4x
                     if (o.Turbo) _acc = Math.Max(_acc, step);
                     while (_acc >= step && !_quit)
                     {
@@ -316,7 +350,10 @@ internal static unsafe partial class Window
                             scriptMask = want;
                             Pump();
                         }
-                        m.RunFrame(_input.Read() | (_scripted ? 0 : _pad.Read(now))); _acc -= step; ran = true; ranTotal++;
+                        int buttons = _input.Read() | (_scripted ? 0 : _pad.Read(now));
+                        if (!_scripted) buttons = VideoSettings.Turbo(buttons, m.Frame, _v.TurboA, _v.TurboB);   // T38
+                        m.RunFrame(buttons); _acc -= step; ran = true; ranTotal++;
+                        _v.Cheats.Apply(m, (buttons & 0x40) != 0);           // T36 cheats (B = bit 6)
                         rows?.Add(string.Join(',', Csv.CompareRow(m, f)));
                         if (saver != null && m.Frame % 300 == 0) saver.Poll();     // ~5 s
                         if (o.Frames >= 0 && ranTotal >= o.Frames) { _quit = true; break; }
@@ -344,6 +381,13 @@ internal static unsafe partial class Window
 
             if (rows != null) File.WriteAllText(o.Compare!, string.Join('\n', rows) + "\n");
             if (o.Screen != null) Png.WriteFb(o.Screen, ShownFb, data.NesRgb, 1);
+            if (o.OsdShot != null)
+            {
+                _osdReady = true;
+                if (o.OsdShot == "pause") _paused = true;
+                else if (o.OsdShot == "fast") _fast = true;
+                else if (o.OsdShot.StartsWith("notice=", StringComparison.Ordinal)) Notice(o.OsdShot[7..]);
+            }
             if (o.DumpWindow != null && _hwnd != IntPtr.Zero) DumpWindow(o.DumpWindow);
             if (o.ExportTiles != null)
             {
@@ -451,8 +495,10 @@ internal static unsafe partial class Window
     private static void Paint(IntPtr hdc, int cw, int ch)
     {
         if (cw <= 0 || ch <= 0) return;
+        bool osd = BuildOsd();
         if (_gpu != null && _v.Hd)                    // T18: Direct3D draws the whole client area (bars included)
         {
+            _gpu.Overlay(osd);
             _gpu.Draw(cw, ch, Fit(cw, ch), _v.FirstLine, _v.VisibleH);
             return;
         }
@@ -478,8 +524,17 @@ internal static unsafe partial class Window
         var bmi = _bmi;
         bmi.Width = 256 * k;
         bmi.Height = -_v.VisibleH * k;
+        int first = _v.FirstLine * k * 256 * k;
+        if (osd)                                       // T37: the overlay blended into a copy of the visible picture
+        {
+            int n = 256 * k * _v.VisibleH * k;
+            if (_osdBuf.Length != n) _osdBuf = new uint[n];
+            Array.Copy(src, first, _osdBuf, 0, n);
+            Osd.Blend(_osdBuf, 256 * k, _v.VisibleH * k);
+            src = _osdBuf; first = 0;
+        }
         fixed (uint* p = src)
-            Win32.StretchDIBits(hdc, x, y, w, h, 0, 0, 256 * k, _v.VisibleH * k, p + _v.FirstLine * k * 256 * k, bmi,
+            Win32.StretchDIBits(hdc, x, y, w, h, 0, 0, 256 * k, _v.VisibleH * k, p + first, bmi,
                 Win32.DIB_RGB_COLORS, Win32.SRCCOPY);
     }
 
@@ -490,17 +545,20 @@ internal static unsafe partial class Window
             case 'P':
                 _paused = !_paused;
                 _last = Clock.Elapsed.TotalMilliseconds; _acc = 0;
-                Status(_paused ? "paused (P)" : _muted ? "muted (M)" : "");
+                StatusLine();
+                Present();                             // T37: the pause screen at once
                 break;
             case 'M':
                 _muted = !_muted;
                 _audio.SetMuted(_muted);
-                Status(_paused ? "paused (P)" : _muted ? "muted (M)" : "");
+                Notice(_muted ? "SOUND OFF" : "SOUND ON");
+                StatusLine();
                 break;
             case Win32.VK_ESCAPE: Win32.DestroyWindow(_hwnd); break;
             case Win32.VK_F11: ToggleFullscreen(); break;
-            case 0x78 /* F9 */: SetGraphics((GraphicsMode + 1) % 4); break;
+            case 0x78 /* F9 */: SetGraphics((GraphicsMode + 1) % 4); Notice("GRAPHICS: " + new[] { "ORIGINAL", "ENHANCED 16-BIT", "ENHANCED 32-BIT", "HD ENGINE" }[GraphicsMode]); break;
             case 0x74 /* F5 */: ReloadPack(); break;
+            case 0x20 /* Space */: _fast = true; StatusLine(); if (_paused) Present(); break;   // T36: fast forward while held
             case >= '1' and <= '6': _v.SetScale(vk - '0'); SettingsChanged(true); break;
         }
         UpdateMenus();
@@ -525,6 +583,7 @@ internal static unsafe partial class Window
                 }
                 case Win32.WM_KEYUP:
                     _input.KeyUp(Input.Vk((int)wParam, (long)lParam));
+                    if ((int)wParam == 0x20 && _fast) { _fast = false; StatusLine(); }
                     return IntPtr.Zero;
                 case Win32.WM_SYSKEYDOWN:
                     if ((int)wParam == Win32.VK_RETURN)

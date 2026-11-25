@@ -317,3 +317,18 @@ CSHARP-WINDOWS/
     NES frame's square corners show the panel. FORCE keeps the game's (rounded) chevrons / segments: unlit (black) =
     bevelled dark glass, lit (any other NES colour of the pixel) = glowing energy (white -> cyan, or the colour's own hue)
     with a pulse running along. Found in all 83 HUD test states (`win_hd_engine`).
+
+31. **Cheats (T36):** `Cheats.cs`, menu **Cheats** (ids 600-605, 620 = all off; `--menu cheat:life` ..; ini `cheats=`).
+    RAM writes after every frame in gameplay only (`main_state` 1): life (`$03C1` = `$03C0`; in plain play, sub_state 8,
+    the 17 LIFE tiles at `$2B26` are rewritten as `HudHpBar` `26:8CC0` draws them, VRAM only: the `$6060` buffer is
+    shared with the charge meter), magic (`$0708` = `$0709`), gold (`$0702/3` = 60000), status (obj1_flash `$0710`
+    low nibble 1 / 3 cleared), charge (`orbit_level` `$06C0` = `SwordChargeCap` `26:9D7E`[`$0719`] while B is held), xp
+    (`$0704` = `$0706` − 1). `win_cheats`: the tile rule = the ported HudHpBar on 400 random max / HP pairs. Off by default
+    (canon / smoke / parity never use them). Space held = fast forward (4x frames; audio drops what does not fit).
+32. **On-screen display (T37):** `Osd.cs`: a 512x480 premultiplied overlay over the visible picture with a built-in 5x7
+    font: pause screen (dim 62 %, a 94 % panel with PAUSED, the keys, active cheats), notices for 2 s (cheat / graphics /
+    sound switched; only after start-up, so `--menu` runs stay clean), the fast-forward mark. HD: texture `_oTex`, PSFinal
+    = `Fxaa()` + composite when `QualC.w`; GDI modes: `Osd.Blend` into a copy of the visible picture. `--osd
+    pause|fast|notice=TEXT` sets one before `--dump-window` (checks, `hd_shots.py --osd`).
+    **Turbo (T38):** Game menu Turbo A / B (ids 103 / 104, ini `turbo=a,b`): a held button is released every other 3 frames
+    (`VideoSettings.Turbo`; not for `--keys` runs).

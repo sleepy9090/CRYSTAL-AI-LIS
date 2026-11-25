@@ -21,7 +21,7 @@ cbuffer C : register(b0)
     float4 Grade;  // exposure (eye adaptation), saturation, contrast, vignette
     float4 Opt2;   // reflection strength, local light strength, icy scene (snow), hot scene (embers)
     float4 HudC;   // HUD panel: fill colour (-1 = none), first line, last line + 1, -
-    float4 QualC;  // shadow steps, extras (reflections, fine relief) 0 / 1, albedo scale (8 / 4), -
+    float4 QualC;  // shadow steps, extras (reflections, fine relief) 0 / 1, albedo scale (8 / 4), on-screen display 0 / 1
     float4 MeterL; // T35 LIFE meter: x0, x1 (frame), fill end, top line (x1 = 0: none)
     float4 MeterF; // T35 FORCE meter: x0, x1, top line, -
 };
@@ -884,11 +884,11 @@ float4 PSComp(V i) : SV_Target
 }
 
 // edge anti-aliasing at screen resolution (FXAA-style: blend along the edge where the contrast is high); HUD exact
-float4 PSFinal(V i) : SV_Target
+float3 Fxaa(V i)
 {
     float2 px = Out.zw;
     float4 m = SrcA.SampleLevel(Lin, i.uv, 0);
-    if (m.a < 0.5) return float4(m.rgb, 1);
+    if (m.a < 0.5) return m.rgb;
     float lNW = dot(SrcA.SampleLevel(Lin, i.uv + float2(-1, -1) * px, 0).rgb, LUM);
     float lNE = dot(SrcA.SampleLevel(Lin, i.uv + float2(1, -1) * px, 0).rgb, LUM);
     float lSW = dot(SrcA.SampleLevel(Lin, i.uv + float2(-1, 1) * px, 0).rgb, LUM);
@@ -902,7 +902,19 @@ float4 PSFinal(V i) : SV_Target
     float3 b = a * 0.5 + 0.25 * (SrcA.SampleLevel(Lin, i.uv - dir * 0.5, 0).rgb + SrcA.SampleLevel(Lin, i.uv + dir * 0.5, 0).rgb);
     float lB = dot(b, LUM);
     float3 r = lB < lMin || lB > lMax ? a : b;
-    return float4(lMax - lMin < 0.08 ? m.rgb : r, 1);
+    return lMax - lMin < 0.08 ? m.rgb : r;
+}
+
+// T37: the on-screen display (Osd, premultiplied) over the anti-aliased picture
+float4 PSFinal(V i) : SV_Target
+{
+    float3 c = Fxaa(i);
+    if (QualC.w > 0.5)
+    {
+        float4 o = SrcB.SampleLevel(Lin, i.uv, 0);
+        c = c * (1 - o.a) + o.rgb;
+    }
+    return float4(c, 1);
 }
 """;
 }

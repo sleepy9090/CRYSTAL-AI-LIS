@@ -51,6 +51,14 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool HudStyle = true;
     /// <summary>T35: the player's HP (RAM $03C1) for the LIFE meter's fill (set before Upload)</summary>
     public int Hp;
+    /// <summary>T37: the on-screen display (Osd.Pix) is shown in the final pass</summary>
+    private bool _osdOn;
+    private void* _oTex, _oSrv;
+    public void Overlay(bool on)
+    {
+        _osdOn = on;
+        if (on && _oTex != null) fixed (uint* p = Osd.Pix) Update(_oTex, p, Osd.W * 4);
+    }
     private float[] _meters = new float[8];
     /// <summary>T31: HD quality 2 = full, 1 = balanced (lighting at 75 % resolution, 16 shadow steps), 0 = fast (50 %, 10
     /// steps, no reflections / fine relief): for slower (integrated) graphics</summary>
@@ -237,6 +245,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         MakeTarget(KW, KH, FmtRgba16F, out _hTex, out _hRtv, out _hSrv);
         MakeTarget(LW, LH, FmtRgba16F, out _l1Tex, out _l1Rtv, out _l1Srv);
         MakeTarget(LW, LH, FmtRgba16F, out _l2Tex, out _l2Rtv, out _l2Srv);
+        MakeTex(Osd.W, Osd.H, FmtRgba8, out _oTex, out _oSrv);
         MakeTarget(LW, LH, FmtRgba16F, out _g1Tex, out _g1Rtv, out _g1Srv);
         MakeTarget(LW, LH, FmtRgba16F, out _g2Tex, out _g2Rtv, out _g2Srv);
 
@@ -676,7 +685,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             _exposure, Saturation, Contrast, Vignette,
             Reflections ? ReflectK : 0, Lights ? LightK : 0, Atmosphere ? _icy : 0, Atmosphere ? _hot : 0,
             _hudFill, _hudTop, _hudBottom + 1, HudStyle ? 1 : 0,
-            Quality >= 2 ? 24 : Quality == 1 ? 16 : 10, Quality >= 1 ? 1 : 0, _albScale, 0,
+            Quality >= 2 ? 24 : Quality == 1 ? 16 : 10, Quality >= 1 ? 1 : 0, _albScale, _osdOn ? 1 : 0,
             _meters[0], _meters[1], _meters[2], _meters[3],
             _meters[4], _meters[5], _meters[6], _meters[7],
         };
@@ -732,7 +741,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         // 7. composite (tone, grade), then 8. edge anti-aliasing into the picture rectangle
         _c[0] = pw; _c[1] = ph; _c[2] = 1f / pw; _c[3] = 1f / ph; SetConstants();
         Pass(_ldrRtv, 0, 0, pw, ph, _psComp, _hdrSrv, _b1Srv, _b3Srv, null);
-        Pass(_backRtv, r.X, r.Y, pw, ph, _psFinal, _ldrSrv, null, null, null);
+        Pass(_backRtv, r.X, r.Y, pw, ph, _psFinal, _ldrSrv, _oSrv, null, null);
         Unbind();
         if (present) ((delegate* unmanaged[Stdcall]<void*, uint, uint, int>)Vt(_swap)[8])(_swap, VSync ? 1u : 0u, 0);
     }
@@ -815,7 +824,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         Release(ref _l1Srv); Release(ref _l1Rtv); Release(ref _l1Tex);
         Release(ref _l2Srv); Release(ref _l2Rtv); Release(ref _l2Tex);
         Release(ref _g1Srv); Release(ref _g1Rtv); Release(ref _g1Tex); Release(ref _g2Srv); Release(ref _g2Rtv); Release(ref _g2Tex);
-        Release(ref _psBounce);
+        Release(ref _psBounce); Release(ref _oSrv); Release(ref _oTex);
         Release(ref _laySrv); Release(ref _layTex); Release(ref _artSrv); Release(ref _artTex);
         Release(ref _iSrv); Release(ref _iTex); Release(ref _lnSrv); Release(ref _lnTex); Release(ref _mSrv); Release(ref _mTex);
         Release(ref _rgbSrv); Release(ref _rgbTex); Release(ref _atlSrv); Release(ref _atlTex);

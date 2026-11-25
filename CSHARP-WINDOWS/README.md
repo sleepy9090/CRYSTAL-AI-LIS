@@ -34,7 +34,9 @@ anyway**, or right-click the file → Properties → **Unblock**.
 | Z / J | B |
 | Enter | Start |
 | Right Shift / Tab | Select |
-| P | pause (the title bar shows it) |
+| P | pause: the game dims and a pause panel shows the keys and the active cheats |
+| Space (hold) | fast forward (4×) |
+| Game › Turbo B / Turbo A | a held button repeats (rapid sword with B) |
 | F9 | graphics: Original → Enhanced (16-bit) → Enhanced (32-bit) → HD engine (GPU) |
 | F5 | reload the graphics pack |
 | M | mute |
@@ -47,6 +49,12 @@ An XInput controller (Xbox-style) works too: D-pad or left stick to move, A/B bu
 Back = Select, Start = Start. You can plug it in while the game is running; the exe looks for it every 2 s.
 Minimising the window pauses the game. The picture is drawn at the largest whole-number scale that fits the window,
 with black bars around it.
+
+### Cheats menu
+Right-click › **Cheats** (or the menu bar): **Infinite life** (energy always full; the LIFE bar stays full), **Infinite
+magic**, **Max gold** (60000), **No paralysis / poison**, **Instant sword charge** (hold B), **Quick level-up** (the next
+kill levels up), **All cheats off**. They work in gameplay only, are remembered in the settings file (`cheats=`), and the
+title bar and pause screen list the ones that are on. A short notice on screen confirms each switch.
 
 ### Video menu
 The menu bar has **Game** (pause, mute, exit) and **Video**. Right-click anywhere in the window opens the same menus,

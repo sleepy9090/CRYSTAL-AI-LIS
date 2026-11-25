@@ -15,6 +15,8 @@ internal static unsafe partial class Window
 {
     // command ids
     private const int IdPause = 100, IdMute = 101, IdExit = 102;
+    private const int IdTurboA = 103, IdTurboB = 104;       // T38
+    private const int IdCheat0 = 600, IdCheatsOff = 620;     // T36: + Cheats index (life, magic, gold, status, charge, xp)
     private const int IdFullscreen = 200, IdMenuBar = 201, IdInteger = 202, IdCrop = 203, IdSmooth = 204, IdReset = 205;
     private const int IdScale0 = 210;            // + 1..6
     private const int IdPreset0 = 220;           // + index in VideoSettings.Presets
@@ -41,10 +43,14 @@ internal static unsafe partial class Window
     /// <summary>--menu names -> command ids (also documents what each id does)</summary>
     public static int CommandId(string name)
     {
+        if (name.StartsWith("cheat:", StringComparison.Ordinal) && Array.IndexOf(Cheats.Names, name[6..]) is int ci and >= 0) return IdCheat0 + ci;
         string n = name.Trim().ToLowerInvariant();
         switch (n)
         {
             case "pause": return IdPause;
+            case "turbo:a": return IdTurboA;
+            case "turbo:b": return IdTurboB;
+            case "cheats:off": return IdCheatsOff;
             case "mute": return IdMute;
             case "exit": return IdExit;
             case "fullscreen": return IdFullscreen;
@@ -111,19 +117,39 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(_menuBar, Win32.MF_POPUP, (nuint)BuildGameMenu(), "&Game");
         Win32.AppendMenuW(_menuBar, Win32.MF_POPUP, (nuint)BuildAudioMenu(), "&Audio");
         Win32.AppendMenuW(_menuBar, Win32.MF_POPUP, (nuint)BuildVideoMenu(), "&Video");
+        Win32.AppendMenuW(_menuBar, Win32.MF_POPUP, (nuint)BuildCheatMenu(), "&Cheats");
         _popup = Win32.CreatePopupMenu();
         Win32.AppendMenuW(_popup, Win32.MF_POPUP, (nuint)BuildGameMenu(), "&Game");
         Win32.AppendMenuW(_popup, Win32.MF_POPUP, (nuint)BuildAudioMenu(), "&Audio");
         Win32.AppendMenuW(_popup, Win32.MF_POPUP, (nuint)BuildVideoMenu(), "&Video");
+        Win32.AppendMenuW(_popup, Win32.MF_POPUP, (nuint)BuildCheatMenu(), "&Cheats");
     }
 
     private static IntPtr NewMenu() { var m = Win32.CreatePopupMenu(); _menus.Add(m); return m; }
+
+    // T36 cheats: RAM writes after every gameplay frame (Cheats.cs)
+    private static IntPtr BuildCheatMenu()
+    {
+        var m = NewMenu();
+        string[] text =
+        {
+            "Infinite &life (energy always full)", "Infinite &magic (MP always full)", "&Max gold (60000)",
+            "&No paralysis / poison", "Instant sword &charge (hold B)", "&Quick level-up (next kill levels up)",
+        };
+        for (int i = 0; i < text.Length; i++) Win32.AppendMenuW(m, 0, (nuint)(IdCheat0 + i), text[i]);
+        Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
+        Win32.AppendMenuW(m, 0, IdCheatsOff, "&All cheats off");
+        return m;
+    }
 
     private static IntPtr BuildGameMenu()
     {
         var m = NewMenu();
         Win32.AppendMenuW(m, 0, IdPause, "&Pause\tP");
         Win32.AppendMenuW(m, 0, IdMute, "&Mute\tM");
+        Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
+        Win32.AppendMenuW(m, 0, IdTurboB, "Turbo &B (rapid sword while held)");
+        Win32.AppendMenuW(m, 0, IdTurboA, "Turbo &A (repeats while held)");
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(m, 0, IdExit, "E&xit\tEsc");
         return m;
@@ -228,7 +254,8 @@ internal static unsafe partial class Window
     private static void UpdateMenus()
     {
         if (_menus.Count == 0) return;
-        Check(IdPause, _paused); Check(IdMute, _muted);
+        Check(IdPause, _paused); Check(IdMute, _muted); Check(IdTurboA, _v.TurboA); Check(IdTurboB, _v.TurboB);
+        for (int i = 0; i < Cheats.Names.Length; i++) Check(IdCheat0 + i, _v.Cheats.Get(i));
         Check(IdFullscreen, _fullscreen); Check(IdMenuBar, _v.MenuBar);
         Check(IdInteger, _v.Integer); Check(IdCrop, _v.CropOverscan); Check(IdSmooth, _v.Smooth);
         for (int s = 1; s <= VideoSettings.MaxScale; s++) Check(IdScale0 + s, _v.WindowW == 0 && _v.Scale == s, true);
@@ -264,6 +291,14 @@ internal static unsafe partial class Window
         switch (id)
         {
             case IdPause: KeyCommand('P'); return;
+            case IdTurboA: _v.TurboA = !_v.TurboA; Notice(_v.TurboA ? "TURBO A: ON" : "TURBO A: OFF"); SettingsChanged(false); return;
+            case IdTurboB: _v.TurboB = !_v.TurboB; Notice(_v.TurboB ? "TURBO B: ON" : "TURBO B: OFF"); SettingsChanged(false); return;
+            case >= IdCheat0 and < IdCheat0 + 6:
+                _v.Cheats.Set(id - IdCheat0, !_v.Cheats.Get(id - IdCheat0));
+                Notice(Cheats.Labels[id - IdCheat0] + (_v.Cheats.Get(id - IdCheat0) ? ": ON" : ": OFF"));
+                if (id == IdCheat0 && _v.Cheats.Life && _m != null) _v.Cheats.Apply(_m, false);
+                SettingsChanged(false); StatusLine(); return;
+            case IdCheatsOff: _v.Cheats.Parse("none"); Notice("ALL CHEATS OFF"); SettingsChanged(false); StatusLine(); return;
             case IdMute: KeyCommand('M'); return;
             case IdExit: Win32.DestroyWindow(_hwnd); return;
             case IdFullscreen: ToggleFullscreen(); return;
@@ -499,6 +534,7 @@ internal static unsafe partial class Window
         int w = rc.Right, h = rc.Bottom;
         if (_gpu != null && _v.Hd)                    // T18: read the Direct3D back buffer
         {
+            _gpu.Overlay(BuildOsd());                  // T37: the on-screen display as Paint draws it
             var gp = _gpu.Capture(w, h, Fit(w, h), _v.FirstLine, _v.VisibleH);
             var grgb = new byte[w * h * 3];
             for (int i = 0; i < gp.Length; i++)

@@ -48,6 +48,17 @@ internal sealed class VideoSettings
     public bool HdHud = true;
     /// <summary>T31: HD quality 2 full, 1 balanced, 0 fast (Gpu.Quality)</summary>
     public int HdQuality = 2;
+    /// <summary>T36: cheats (Cheats menu; ini cheats=life,magic,..)</summary>
+    public readonly Cheats Cheats = new();
+    /// <summary>T38: turbo A / B (Game menu; ini turbo=a,b): a held button repeats, 3 frames down, 3 up</summary>
+    public bool TurboA, TurboB;
+    public static int Turbo(int buttons, int frame, bool a, bool b)
+    {
+        bool up = frame / 3 % 2 == 1;
+        if (a && up) buttons &= ~0x80;
+        if (b && up) buttons &= ~0x40;
+        return buttons;
+    }
     /// <summary>T13 Audio menu: CD quality (CdAudio.cs) instead of the original mono stream; stereo / reverb for it</summary>
     public bool CdAudio, AudioStereo = true, AudioReverb;
     /// <summary>T28: Audio > Remastered (CdMixer.Remaster: chorus, smooth bass, room, EQ); implies the CD device path</summary>
@@ -145,6 +156,8 @@ internal sealed class VideoSettings
         $"audio_stereo={(AudioStereo ? 1 : 0)}",
         $"audio_reverb={(AudioReverb ? 1 : 0)}",
         $"upscale={ReC.Win.Upscale.Filters.First(f => f.K == Upscale).Key}",
+        $"cheats={Cheats.Serialize()}",
+        $"turbo={(TurboA && TurboB ? "a,b" : TurboA ? "a" : TurboB ? "b" : "none")}",
     }) + "\n";
 
     private string HdEffects()
@@ -207,6 +220,8 @@ internal sealed class VideoSettings
                     if (val is "full" or "balanced" or "fast") v.HdQuality = val == "full" ? 2 : val == "balanced" ? 1 : 0;
                     break;
                 case "audio_reverb": v.AudioReverb = val == "1"; break;
+                case "cheats": v.Cheats.Parse(val); break;
+                case "turbo": { var t = val.Split(','); v.TurboA = t.Contains("a"); v.TurboB = t.Contains("b"); break; }
                 case "graphics":
                     if (val is "original" or "enhanced" or "enhanced32" or "hd")
                     {

@@ -318,3 +318,9 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   when low); FORCE = the game's chevrons / segments as dark glass, glowing cyan when lit by the charge. Found in all 83
   HUD test states. 330 tests; win_video_check 32 ok; smoke + canon, REA, coverage ok. Previews: out/hd35/bars.png,
   out/hd35/charge.png / charge2.png (original vs HD while charging).
+- [x] T36-T38 (2026-11-25, user away 4 h: "enhance all aspects ... add a menu for cheat codes such as infinite energy"):
+  **Cheats menu** (infinite life with the NES bar redrawn as HudHpBar draws it, infinite magic, max gold, no paralysis /
+  poison, instant sword charge, quick level-up; gameplay only, ini `cheats=`), **fast forward** (hold Space, 4x),
+  **on-screen display** (pause screen with keys + active cheats, notices, fast-forward mark; HD final pass + GDI blend),
+  **turbo A / B** (Game menu). architecture §5.31-32. 344 tests (new win_cheats: tiles = HudHpBar on 400 random pairs;
+  win_osd); win_video_check 32 ok; smoke + canon, REA, coverage ok. Previews: out/hd37/pause/.
