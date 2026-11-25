@@ -1,6 +1,7 @@
 """Screenshots of one game state in several graphics modes from dist/ReC.exe under Wine (for HD look reviews).
 
 usage: python3 tools/hd_shots.py STATE FRAMES OUTDIR [MODE ..] [--pack DIR] [--osd pause|fast|notice=TEXT] [--keys K ..]
+  STATE = a web/test/states name, or reset (from power-on: title, intro)
   MODE = a --menu list, e.g. graphics:32bit,size:4x  graphics:hd,size:4x  graphics:hd+fullscreen (default: original,
   32-bit and HD at 4x); writes OUTDIR/<n>_<mode>.png (window picture) and prints the exe's HD line.
 """
@@ -36,7 +37,7 @@ def main(argv):
             os.remove(ini)
         menu, fs = mode.replace('+fullscreen', ''), mode.endswith('+fullscreen')
         png = os.path.join(out, f'{n}_{menu.split(",")[0].split(":")[-1]}{"_fs" if fs else ""}.png')
-        rc, text = run(exe, ['--load-state', winpath(sp), '--frames', frames, '--turbo', '--no-audio',
+        rc, text = run(exe, ([] if state == 'reset' else ['--load-state', winpath(sp)]) + ['--frames', frames, '--turbo', '--no-audio',
                              '--video-config', winpath(ini), '--save', winpath(os.path.join(out, 'shots.sav')),
                              '--menu', menu, '--dump-window', winpath(png)] + (['--fullscreen'] if fs else []) + pack + osd +
                        (['--keys'] + keys if keys else []), 600)

@@ -146,7 +146,8 @@ internal sealed class HdScene
         bool hud = false;
         for (int y = 0; y < 240 && !hud; y++) hud = offs[y] >= 0 && Lines[y * 4 + 2] > 0;
         HudFill = -1;
-        if (hud)
+        HudTop = 0; HudBottom = -1;
+        // T41: also without status-bar lines (story text, menus): the panel colour from the font tiles
         {
             var hist = new int[64];
             int top = 240, bot = -1;
@@ -173,7 +174,8 @@ internal sealed class HdScene
                 }
             }
             int best = Array.IndexOf(hist, hist.Max());
-            if (best != 0x0F && best != 0x0D) { HudFill = best; HudTop = top; HudBottom = bot; }   // a black panel stays black
+            // T41: a black panel is a panel too (story text, cut scenes): the shader styles only its text, no gloss
+            if (hist[best] >= 256) { HudFill = best == 0x0D ? 0x0F : best; if (hud) { HudTop = top; HudBottom = bot; } }
         }
 
         // camera from the playfield offset (wrap-aware); a jump of more than 48 pixels is a cut (no motion)

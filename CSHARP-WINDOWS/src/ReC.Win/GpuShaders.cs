@@ -640,9 +640,11 @@ float3 HudPanel(float3 a, float2 p, float2 s, float4 inf)
     float3 fc = NesRgb((uint)fill);
     float t = rows ? saturate((p.y - HudC.y) / max(HudC.z - HudC.y, 1)) : 0.15 + 0.6 * saturate(p.y / 240);
     bool isFill = length(a - fc) < 0.1;
+    bool black = fill == 0x0F;
     if (HudC.w < 0.5)
     {
         // plain (T29): gloss on the fill, a 1-pixel drop shadow under the text
+        if (black) return a;                                           // (T41: black panels stay exact)
         if ((int)round(inf.g * 255 / 4) != fill) return a;
         float g0 = 1.10 - 0.20 * t + 0.08 * exp(-pow((t - 0.12) * 9, 2));
         float4 q = InfoPx(p - float2(1, 1));
@@ -650,12 +652,25 @@ float3 HudPanel(float3 a, float2 p, float2 s, float4 inf)
         return saturate(a * g0 * (shade ? 0.7 : 1));
     }
     float2 tx = 1.0 / ALB;                                            // one albedo texel
+    if (black)
+    {
+        // T41 text on black (story, cut scenes): the glyph look below, a faint cool glow around the letters
+        if (isFill)
+        {
+            float2 g1 = float2(0.8, 0) / NES, g2 = float2(0, 0.8) / NES;
+            float glow = (HudMask(s + g1, fc) + HudMask(s - g1, fc) + HudMask(s + g2, fc) + HudMask(s - g2, fc)) * 0.25;
+            return a + glow * 0.10 * float3(0.6, 0.75, 1);
+        }
+    }
+    else
+    {
     float3 panel = PanelFill(p, s, fc, t);
     float4 mt = LifeMeter(p, panel);
     if (mt.a > 0) return mt.rgb;
     mt = ForceMeter(p, s, fc);
     if (mt.a > 0) return mt.rgb;
     if (isFill) return panel;
+    }
     // glyphs: bevel lit from the top left (gradient of the mask 1.5 texels around) + a metallic sheen, brighter near the
     // glyph's top edge and darker near its bottom edge (half an NES pixel up / down)
     float2 ox = float2(tx.x * 1.5, 0), oy = float2(0, tx.y * 1.5);

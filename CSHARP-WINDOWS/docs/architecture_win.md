@@ -341,3 +341,9 @@ CSHARP-WINDOWS/
     (`SplitGap`) instead of `HudTop` (a dialog box at the top made it small).
     **Volume (T40):** Audio › Volume 100 / 75 / 50 / 25 % (ids 420-423, ini `volume=`): `AudioOut.Volume` scales both
     the original and the CD / remastered paths.
+    **Story text + meter check (T41):** the panel colour is found from font tiles even without status-bar lines, and a
+    black panel counts (story text, cut scenes): its text gets the glyph look and a faint glow, no gloss / meters; the
+    plain HUD mode keeps black panels exact. `Gpu.Meters` now needs a LIFE frame of at most 17 tiles with white inside
+    (ticks / end cap) and a FORCE row of at most 17 tiles (an all-black death screen drew a capsule). `hd_shots.py reset`
+    = from power-on (title, intro).
+    **Screenshot (T42):** F12 = `DumpWindow` to `Pictures\re-c\re-c_YYYYMMDD_HHMMSS.png` (notice cleared first).

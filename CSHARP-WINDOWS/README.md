@@ -36,6 +36,7 @@ anyway**, or right-click the file → Properties → **Unblock**.
 | Right Shift / Tab | Select |
 | P | pause: the game dims and a pause panel shows the keys and the active cheats |
 | Space (hold) | fast forward (4×) |
+| F12 | screenshot (the picture as shown, HD included) to `Pictures\re-c` |
 | Game › Turbo B / Turbo A | a held button repeats (rapid sword with B) |
 | F9 | graphics: Original → Enhanced (16-bit) → Enhanced (32-bit) → HD engine (GPU) |
 | F5 | reload the graphics pack |

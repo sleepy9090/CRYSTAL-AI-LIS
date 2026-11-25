@@ -328,3 +328,7 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   menu windows, panel colour from font tiles, backdrop strips black; bottom band anchored on the status bar's fixed
   scroll) and **Audio › Volume**. architecture §5.33. 347 tests; win_video_check 32 ok; smoke + canon, REA, coverage
   ok. Previews: out/hd39/ (s_* after, menus.png).
+- [x] T41-T42 (2026-11-25, user away): **Story / cut-scene text styled** (panel colour from font tiles without a status
+  bar; black panels: glyph look + faint glow), **meter detection hardened** (an all-black death screen drew a LIFE
+  capsule), **F12 screenshot**, `hd_shots.py reset`. 349 tests; win_video_check 32 ok; smoke + canon, REA, coverage ok.
+  Previews: out/hd41/ (title.png intro original vs HD, intro_text.png, death_b.png).

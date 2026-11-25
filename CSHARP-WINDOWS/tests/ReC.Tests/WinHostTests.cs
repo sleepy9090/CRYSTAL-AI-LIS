@@ -544,7 +544,9 @@ internal static partial class Program
                     if (gt - gf > 1) padded.Add($"{Path.GetFileNameWithoutExtension(p)} {gf}-{gt - 1}");
                     gapOk &= gt >= 180 && gt <= 200 && gt - gf >= 1 && gt - gf <= 24;
                     // T35 meters under the HUD: LIFE frame from column 6 (x 46..48), fill inside it, FORCE from x 48
-                    var mt = Gpu.Meters(all, 0x12, m.Mem.RamBytes[0x03C1]);
+                    var scm = new HdScene(d.NesRgb);
+                    scm.Build(all.Fb, all.Tags, all.LinePal[239], new byte[61440], all.LineScroll, 0);
+                    var mt = Gpu.Meters(all, scm.HudFill, m.Mem.RamBytes[0x03C1]);
                     if (mt[1] > 0) { lifeN++; meterOk &= mt[0] >= 40 && mt[0] <= 48 && mt[1] > 60 && mt[2] > mt[0] && mt[2] < mt[1] && mt[3] > gt && mt[3] < gt + 12; }
                     if (mt[5] > 0) { forceN++; meterOk &= mt[4] == 48 && mt[5] > 64 && mt[6] > mt[3]; }
                 }

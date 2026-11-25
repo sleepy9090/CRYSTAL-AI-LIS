@@ -561,7 +561,10 @@ internal sealed unsafe partial class Gpu : IDisposable
             int x0 = 48, x1 = 48;
             while (x0 > 40 && Black(x0 - 1, ly)) x0--;
             while (x1 < 255 && Black(x1, ly)) x1++;
-            if (x1 - x0 >= 12 && Black(x0 + 1, ly + 6) && Black(x1 - 2, ly + 6))
+            int lit = 0;                                         // ticks / the end cap: white inside the frame
+            for (int y = ly + 1; y <= ly + 5; y++)
+                for (int x = x0; x < x1; x++) if (!Black(x, y) && (r.Fb[y * 256 + x] & 63) != fill) lit++;
+            if (x1 - x0 >= 12 && x1 - x0 <= 17 * 8 + 8 && lit >= 4 && Black(x0 + 1, ly + 6) && Black(x1 - 2, ly + 6))
             {
                 m[0] = x0; m[1] = x1; m[3] = ly;
                 m[2] = Math.Clamp(48 + hp * 0.5f, x0 + 1, x1 - 1);
@@ -577,7 +580,7 @@ internal sealed unsafe partial class Gpu : IDisposable
                 for (int y = fy; y < fy + 8 && !any; y++) any = (r.Fb[y * 256 + x] & 63) != fill;
                 if (any) { last = x; gap = 0; } else gap++;
             }
-            if (last - 48 >= 15) { m[4] = 48; m[5] = last + 1; m[6] = fy; }
+            if (last - 48 >= 15 && last - 48 <= 17 * 8) { m[4] = 48; m[5] = last + 1; m[6] = fy; }
         }
         return m;
     }

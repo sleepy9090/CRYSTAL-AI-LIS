@@ -207,6 +207,22 @@ internal static unsafe partial class Window
 
     // js: main.js status
     /// <summary>= the page's status line: shown in the window title (paused / muted).</summary>
+    /// <summary>T42: F12 = the picture as shown (HD included) to Pictures\re-c\re-c_YYYYMMDD_HHMMSS.png</summary>
+    private static void Screenshot()
+    {
+        try
+        {
+            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "re-c");
+            Directory.CreateDirectory(dir);
+            string path = Path.Combine(dir, $"re-c_{DateTime.Now:yyyyMMdd_HHmmss}.png");
+            _notice = null;                                    // no notice in the picture
+            DumpWindow(path);
+            Notice("SCREENSHOT SAVED: PICTURES/RE-C");
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { Notice("SCREENSHOT FAILED"); }
+        Present();
+    }
+
     /// <summary>T36: the title-bar status: paused, muted, fast forward, cheats</summary>
     private static void StatusLine()
     {
@@ -558,7 +574,8 @@ internal static unsafe partial class Window
             case Win32.VK_F11: ToggleFullscreen(); break;
             case 0x78 /* F9 */: SetGraphics((GraphicsMode + 1) % 4); Notice("GRAPHICS: " + new[] { "ORIGINAL", "ENHANCED 16-BIT", "ENHANCED 32-BIT", "HD ENGINE" }[GraphicsMode]); break;
             case 0x74 /* F5 */: ReloadPack(); break;
-            case 0x20 /* Space */: _fast = true; StatusLine(); if (_paused) Present(); break;   // T36: fast forward while held
+            case 0x20 /* Space */: _fast = true; StatusLine(); if (_paused) Present(); break;
+            case 0x7B /* F12 */: Screenshot(); break;                     // T42
             case >= '1' and <= '6': _v.SetScale(vk - '0'); SettingsChanged(true); break;
         }
         UpdateMenus();
