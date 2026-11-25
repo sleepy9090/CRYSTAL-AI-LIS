@@ -750,6 +750,11 @@ internal static partial class Program
             // T40 volume
             True(new VideoSettings().Volume == 100 && VideoSettings.Parse("volume=50\n").Volume == 50 && VideoSettings.Parse("volume=900\n").Volume == 100, "volume ini (clamped)");
             Eq(422, Window.CommandId("volume:50"), "--menu volume:50");
+            // T45 CRT look: 3x, the scanline row darker than the others, ini
+            var crtOut = new uint[256 * 240 * 9];
+            Crt.Apply(Enumerable.Repeat(0x808080u, 256 * 240).ToArray(), 256, 240, crtOut);
+            True((crtOut[2 * 768] & 0xFF00) < (crtOut[768] & 0xFF00) && VideoSettings.Parse("crt=1\n").Crt && !new VideoSettings().Crt, "CRT scanlines, ini");
+            Eq(290, Window.CommandId("crt"), "--menu crt");
         }),
         ("win_osd", () =>
         {

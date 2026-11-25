@@ -353,3 +353,8 @@ CSHARP-WINDOWS/
     split (group81: junk tiles at lines 184-190 with a continuous scroll, so `SplitGap` cannot tell it) stays hidden.
     Foliage colours indoors (`Scn.x` <= 0.3) are moss / carpet (kind 3): no lawn, blades or sway.
     **Help (T44):** F1 toggles a key-list panel on the on-screen display (`Osd.HelpLines`; pauses; `--osd help`).
+    **CRT look (T45):** Video › CRT look (id 290, ini `crt=1`, Original graphics): `Crt.Apply` (Upscale.cs) makes each NES
+    pixel 3x3 with a darker third row (scanline) and an RGB aperture mask, brightness made up for; then the usual
+    stretch (and on-screen display).
+    **Controller extras (T46):** `Pad.Raw` (XInput buttons of the last read); polled every loop pass (also paused):
+    RB held = fast forward (with Space), LB = pause on / off.

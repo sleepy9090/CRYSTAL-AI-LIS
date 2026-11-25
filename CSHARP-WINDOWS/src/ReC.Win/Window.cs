@@ -234,6 +234,17 @@ internal static unsafe partial class Window
         Status(string.Join(", ", p));
     }
     private static bool _fast;
+    private static bool _fastKey, _lbDown;
+    /// <summary>T46: controller shoulders: RB held = fast forward (with Space), LB = pause on / off</summary>
+    private static void PadExtras(double now)
+    {
+        _pad.Read(now);
+        bool f = _fastKey || (_pad.Raw & 0x0200) != 0;
+        if (f != _fast) { _fast = f; StatusLine(); if (_paused) Present(); }
+        bool lb = (_pad.Raw & 0x0100) != 0;
+        if (lb && !_lbDown) KeyCommand('P');
+        _lbDown = lb;
+    }
     // T37 on-screen display: a short notice (cheat / setting switched), the pause screen, the fast-forward mark
     private static bool _osdReady;
     private static string? _notice;
@@ -254,6 +265,8 @@ internal static unsafe partial class Window
         return _osdShown;
     }
     private static bool _osdShown;
+    private static uint[] _crt = Array.Empty<uint>();
+    private static int _crtFrame = -1;
     private static bool _help;                                 // T44: F1 help panel (the game pauses under it)
 
     private static void Status(string s)
@@ -353,6 +366,7 @@ internal static unsafe partial class Window
             void Tick(double now)
             {
                 bool ran = false;
+                if (!_scripted) PadExtras(now);                      // T46: RB = fast forward, LB = pause
                 if (!_paused && !_hidden)
                 {
                     _acc += Math.Min(now - _last, 250) * (_fast ? 4 : 1);   // never run more than ~15 frames to catch up; T36: Space = 4x
@@ -532,6 +546,12 @@ internal static unsafe partial class Window
         int k = Math.Clamp(_v.Upscale, 1, 4);
         uint[] src = Px;
         if (_v.Enhanced && _hdFrame == _frameNo) { src = _hd; k = Enhancer.S; }
+        else if (_v.Crt)                               // T45: CRT look from the NES frame at 3x
+        {
+            if (_crt.Length != Px.Length * 9) { _crt = new uint[Px.Length * 9]; _crtFrame = -1; }
+            if (_crtFrame != _frameNo) { Crt.Apply(Px, 256, 240, _crt); _crtFrame = _frameNo; }
+            src = _crt; k = 3;
+        }
         else if (k > 1)
         {
             if (_up.Length != Px.Length * k * k) { _up = new uint[Px.Length * k * k]; _upFrame = -1; }
@@ -576,7 +596,7 @@ internal static unsafe partial class Window
             case Win32.VK_F11: ToggleFullscreen(); break;
             case 0x78 /* F9 */: SetGraphics((GraphicsMode + 1) % 4); Notice("GRAPHICS: " + new[] { "ORIGINAL", "ENHANCED 16-BIT", "ENHANCED 32-BIT", "HD ENGINE" }[GraphicsMode]); break;
             case 0x74 /* F5 */: ReloadPack(); break;
-            case 0x20 /* Space */: _fast = true; StatusLine(); if (_paused) Present(); break;
+            case 0x20 /* Space */: _fastKey = _fast = true; StatusLine(); if (_paused) Present(); break;
             case 0x7B /* F12 */: Screenshot(); break;                     // T42
             case 0x70 /* F1 */:
                 _help = !_help; _paused = _help;
@@ -606,7 +626,7 @@ internal static unsafe partial class Window
                 }
                 case Win32.WM_KEYUP:
                     _input.KeyUp(Input.Vk((int)wParam, (long)lParam));
-                    if ((int)wParam == 0x20 && _fast) { _fast = false; StatusLine(); }
+                    if ((int)wParam == 0x20 && _fastKey) { _fastKey = _fast = false; StatusLine(); }
                     return IntPtr.Zero;
                 case Win32.WM_SYSKEYDOWN:
                     if ((int)wParam == Win32.VK_RETURN)

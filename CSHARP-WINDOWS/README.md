@@ -48,7 +48,7 @@ anyway**, or right-click the file → Properties → **Unblock**.
 | Esc | quit (the save is written first) |
 
 An XInput controller (Xbox-style) works too: D-pad or left stick to move, A/B buttons = A, X/Y buttons = B,
-Back = Select, Start = Start. You can plug it in while the game is running; the exe looks for it every 2 s.
+Back = Select, Start = Start. **RB** (hold) = fast forward, **LB** = pause. You can plug it in while the game is running; the exe looks for it every 2 s.
 Minimising the window pauses the game. The picture is drawn at the largest whole-number scale that fits the window,
 with black bars around it.
 
@@ -103,6 +103,8 @@ sound of the port. You can switch at any time, and the choice is saved. CD quali
 `--remaster` through the remastered one (music ids `0x14`, `0x15`, `0x1B` are full songs).
 
 ### Graphics: Original, Enhanced (16-bit), Enhanced (32-bit) or HD
+**Video › CRT look** gives Original graphics the look of a TV: scanlines and an RGB aperture mask.
+
 **Video › Graphics** (or **F9**, which cycles Original → 16-bit → 32-bit → HD) switches the look at any time, even
 mid-game. The choice is saved.
 

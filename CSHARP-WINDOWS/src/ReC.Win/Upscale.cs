@@ -93,3 +93,30 @@ internal static class Upscale
         }
     }
 }
+
+// T45: Video > CRT look (Original graphics): each NES pixel -> 3x3, the third row a darker scanline, the columns an RGB
+// aperture mask, brightness made up for so the picture stays as bright
+internal static class Crt
+{
+    private static readonly float[] Row = { 1.06f, 1.0f, 0.6f };
+    private static readonly (float R, float G, float B)[] Col = { (1.08f, 0.9f, 0.9f), (0.9f, 1.08f, 0.9f), (0.9f, 0.9f, 1.08f) };
+
+    public static void Apply(uint[] src, int w, int h, uint[] dst)
+    {
+        int dw = w * 3;
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+            {
+                uint p = src[y * w + x];
+                float r = p >> 16 & 255, g = p >> 8 & 255, b = p & 255;
+                for (int yy = 0; yy < 3; yy++)
+                    for (int xx = 0; xx < 3; xx++)
+                    {
+                        float k = Row[yy] * 1.12f;
+                        var c = Col[xx];
+                        uint R = (uint)Math.Min(255f, r * k * c.R), G = (uint)Math.Min(255f, g * k * c.G), B = (uint)Math.Min(255f, b * k * c.B);
+                        dst[(y * 3 + yy) * dw + x * 3 + xx] = R << 16 | G << 8 | B;
+                    }
+            }
+    }
+}

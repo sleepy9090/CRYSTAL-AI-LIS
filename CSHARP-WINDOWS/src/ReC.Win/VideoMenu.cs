@@ -28,6 +28,7 @@ internal static unsafe partial class Window
         IdHdReflections = 279, IdHdLights = 280, IdHdNoFlicker = 281, IdHdArt = 282, IdHdVsync = 283, IdHdQuality0 = 284,   // + 0 fast, 1 balanced, 2 full
         IdHdEdges = 287, IdHdHud = 288;
     private const int IdVolume0 = 420;                      // T40: + 0..3 = 100 / 75 / 50 / 25 %
+    private const int IdCrt = 290;                          // T45
     private const int IdAudioOriginal = 410, IdAudioCd = 411, IdStereo = 412, IdReverb = 413, IdAudioRemaster = 414;
 
     private static VideoSettings _v = new();
@@ -49,6 +50,7 @@ internal static unsafe partial class Window
         switch (n)
         {
             case "pause": return IdPause;
+            case "crt": return IdCrt;
             case "volume:100": return IdVolume0;
             case "volume:75": return IdVolume0 + 1;
             case "volume:50": return IdVolume0 + 2;
@@ -197,6 +199,7 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(gfx, 0, IdEnhanced, "&Enhanced (16-bit)");
         Win32.AppendMenuW(gfx, 0, IdEnhanced32, "Enhanced (&32-bit)");
         Win32.AppendMenuW(gfx, 0, IdHd, "&HD engine (GPU: 8x layers, lighting, shadows, parallax)");
+        Win32.AppendMenuW(gfx, 0, IdCrt, "&CRT look (scanlines, Original graphics)");
         Win32.AppendMenuW(gfx, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(gfx, 0, IdHdParallax, "HD: &Parallax depth (pits, cliffs, layers)");
         Win32.AppendMenuW(gfx, 0, IdHdShadows, "HD: &Shadows (soft, contact, clouds)");
@@ -263,7 +266,7 @@ internal static unsafe partial class Window
     private static void UpdateMenus()
     {
         if (_menus.Count == 0) return;
-        Check(IdPause, _paused); Check(IdMute, _muted);
+        Check(IdPause, _paused); Check(IdMute, _muted); Check(IdCrt, _v.Crt);
         for (int i = 0; i < 4; i++) Check(IdVolume0 + i, _v.Volume == 100 - 25 * i); Check(IdTurboA, _v.TurboA); Check(IdTurboB, _v.TurboB);
         for (int i = 0; i < Cheats.Names.Length; i++) Check(IdCheat0 + i, _v.Cheats.Get(i));
         Check(IdFullscreen, _fullscreen); Check(IdMenuBar, _v.MenuBar);
@@ -301,6 +304,7 @@ internal static unsafe partial class Window
         switch (id)
         {
             case IdPause: KeyCommand('P'); return;
+            case IdCrt: _v.Crt = !_v.Crt; Notice(_v.Crt ? "CRT LOOK: ON" : "CRT LOOK: OFF"); SettingsChanged(false); Present(); return;
             case >= IdVolume0 and < IdVolume0 + 4:
                 _v.Volume = 100 - 25 * (id - IdVolume0);
                 if (_audio != null) _audio.Volume = _v.Volume / 100f;

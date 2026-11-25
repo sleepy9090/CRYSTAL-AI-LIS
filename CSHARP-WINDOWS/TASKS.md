@@ -335,3 +335,6 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] T43-T44 (2026-11-25, user away): **status-bar shadow** (the not-yet-loaded tile row under the split, group81, is
   hidden: the map fades to black from the last tile row above the panel), **indoor greens** = moss / carpet (no lawn),
   **F1 help** panel. 351 tests; win_video_check 32 ok; smoke + canon, REA, coverage ok. Previews: out/hd43/, out/hd44/help.
+- [x] T45-T46 (2026-11-25, user away): **Video › CRT look** (Original graphics: 3x scanlines + RGB aperture mask) and
+  **controller extras** (RB = fast forward, LB = pause). 353 tests; win_video_check 32 ok (T45); smoke + canon (T46)
+  ok; REA, coverage ok. Preview: out/hd45/crt_cmp.png.

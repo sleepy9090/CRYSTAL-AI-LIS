@@ -54,6 +54,8 @@ internal sealed class VideoSettings
     public bool TurboA, TurboB;
     /// <summary>T40: master volume in % (Audio > Volume; ini volume=)</summary>
     public int Volume = 100;
+    /// <summary>T45: CRT look for Original graphics (Video menu; ini crt=1)</summary>
+    public bool Crt;
     public static int Turbo(int buttons, int frame, bool a, bool b)
     {
         bool up = frame / 3 % 2 == 1;
@@ -158,6 +160,7 @@ internal sealed class VideoSettings
         $"audio_stereo={(AudioStereo ? 1 : 0)}",
         $"audio_reverb={(AudioReverb ? 1 : 0)}",
         $"volume={Volume}",
+        $"crt={(Crt ? 1 : 0)}",
         $"upscale={ReC.Win.Upscale.Filters.First(f => f.K == Upscale).Key}",
         $"cheats={Cheats.Serialize()}",
         $"turbo={(TurboA && TurboB ? "a,b" : TurboA ? "a" : TurboB ? "b" : "none")}",
@@ -224,6 +227,7 @@ internal sealed class VideoSettings
                     break;
                 case "audio_reverb": v.AudioReverb = val == "1"; break;
                 case "volume": if (int.TryParse(val, out int vol)) v.Volume = Math.Clamp(vol, 0, 100); break;
+                case "crt": v.Crt = val == "1"; break;
                 case "cheats": v.Cheats.Parse(val); break;
                 case "turbo": { var t = val.Split(','); v.TurboA = t.Contains("a"); v.TurboB = t.Contains("b"); break; }
                 case "graphics":

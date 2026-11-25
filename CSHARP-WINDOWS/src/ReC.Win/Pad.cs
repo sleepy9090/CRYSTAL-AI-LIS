@@ -105,9 +105,13 @@ internal sealed unsafe class Pad
     }
 
     /// <summary>NES button byte of the connected controller (0 if none); `nowMs` paces the absent-controller scan.</summary>
+    /// <summary>T46: the controller's raw XInput buttons of the last Read (0 = none): shoulders for fast forward / pause</summary>
+    public ushort Raw;
+
     public int Read(double nowMs)
     {
         if (_getState == null) return 0;
+        Raw = 0;
         XInputState s;
         if (_slot < 0)
         {
@@ -123,6 +127,7 @@ internal sealed unsafe class Pad
             _nextPoll = nowMs + AbsentPollMs;
             return 0;
         }
+        Raw = s.Buttons;
         return Buttons(s.Buttons, s.ThumbLX, s.ThumbLY);
     }
 
