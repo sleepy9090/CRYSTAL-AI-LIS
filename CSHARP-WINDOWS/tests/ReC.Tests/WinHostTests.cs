@@ -745,6 +745,9 @@ internal static partial class Program
             True(pulse.All(b => (b & 0x01) != 0) && pulse.Count(b => (b & 0x40) != 0) == 6 && (pulse[0] & 0x40) != 0 && (pulse[3] & 0x40) == 0, "turbo B pulses, D-pad kept");
             True(VideoSettings.Turbo(0x80, 4, false, false) == 0x80 && VideoSettings.Parse("turbo=a,b\n").TurboA && new VideoSettings().Serialize().Contains("turbo=none"), "turbo off by default, ini");
             Eq(104, Window.CommandId("turbo:b"), "--menu turbo:b");
+            // T40 volume
+            True(new VideoSettings().Volume == 100 && VideoSettings.Parse("volume=50\n").Volume == 50 && VideoSettings.Parse("volume=900\n").Volume == 100, "volume ini (clamped)");
+            Eq(422, Window.CommandId("volume:50"), "--menu volume:50");
         }),
         ("win_osd", () =>
         {

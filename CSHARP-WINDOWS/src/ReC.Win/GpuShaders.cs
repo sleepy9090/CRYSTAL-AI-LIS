@@ -633,9 +633,12 @@ float4 ForceMeter(float2 p, float2 s, float3 fc)
 float3 HudPanel(float3 a, float2 p, float2 s, float4 inf)
 {
     int fill = (int)round(HudC.x);
-    if (fill < 0 || p.y < HudC.y || p.y >= HudC.z) return a;
+    bool rows = p.y >= HudC.y && p.y < HudC.z;
+    if (fill < 0) return a;
+    // T39: with HUD style, font tiles anywhere (menu windows: equipment, status, shops) get the same look
+    if (!rows && (HudC.w < 0.5 || (Flags(inf) & 4) == 0)) return a;
     float3 fc = NesRgb((uint)fill);
-    float t = saturate((p.y - HudC.y) / max(HudC.z - HudC.y, 1));
+    float t = rows ? saturate((p.y - HudC.y) / max(HudC.z - HudC.y, 1)) : 0.15 + 0.6 * saturate(p.y / 240);
     bool isFill = length(a - fc) < 0.1;
     if (HudC.w < 0.5)
     {

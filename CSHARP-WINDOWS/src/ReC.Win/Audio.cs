@@ -67,6 +67,8 @@ internal sealed unsafe class AudioOut
     private const int Buffers = 4, BufSamples = 1024;
     private const double Lead = 0.05;
     private const float Gain = 1.6f;           // APU mixer peaks near 0.4 after the output filters (apu_check)
+    /// <summary>T40: master volume 0..1 (Audio > Volume), both paths</summary>
+    public float Volume = 1f;
     private const int MaxPending = Rate / 4;   // drop the oldest samples rather than let latency grow past 0.25 s
 
     private readonly Machine _m;
@@ -174,7 +176,7 @@ internal sealed unsafe class AudioOut
     {
         if (_hwo == IntPtr.Zero) return;
         if (Cd ? Mixer.Count < Chunk * 2 : _n < Chunk) return;
-        float g = Muted ? 0 : Gain * 32767f;
+        float g = Muted ? 0 : Gain * Volume * 32767f;
         bool drained = true;
         for (int i = 0; i < Buffers; i++) drained &= Free(i);
         if (drained)
@@ -186,7 +188,7 @@ internal sealed unsafe class AudioOut
         if (Cd)
         {
             _cdTake.Clear();
-            foreach (short v in Mixer.Take(_cdTake)) _pending.Enqueue(Muted ? (short)0 : v);
+            foreach (short v in Mixer.Take(_cdTake)) _pending.Enqueue(Muted ? (short)0 : (short)(v * Volume));
         }
         else
             for (int i = 0; i < _n; i++) _pending.Enqueue((short)Math.Clamp(MathF.Round(_buf[i] * g), -32768f, 32767f));

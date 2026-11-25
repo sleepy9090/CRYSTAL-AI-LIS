@@ -154,7 +154,23 @@ internal sealed class HdScene
             {
                 if (offs[y] < 0 || Lines[y * 4 + 2] == 0) continue;
                 top = Math.Min(top, y); bot = Math.Max(bot, y);
-                for (int x = 0; x < 256; x++) hist[fb[y * 256 + x] & 0x3F]++;
+            }
+            // T39: the panel colour from the HUD lines and the font tiles anywhere (menu windows are drawn with the
+            // playfield's scroll), leaving out one-colour rows (the backdrop strips around a panel)
+            for (int y = 0; y < 240; y++)
+            {
+                if (offs[y] < 0) continue;
+                int c0 = fb[y * 256] & 0x3F;
+                bool flat = true;
+                for (int x = 1; x < 256 && flat; x++) flat = (fb[y * 256 + x] & 0x3F) == c0;
+                if (flat) continue;
+                bool uiLine = Lines[y * 4 + 2] > 0;
+                for (int x = 0; x < 256; x++)
+                {
+                    int i = y * 256 + x, tag = tags[i];
+                    bool font = (tag & Ppu.TagValid) != 0 && (tag >> 19 & 7) < 4 && FontBank[(tag & 0x1FFF) >> 6];
+                    if (uiLine || font) hist[fb[i] & 0x3F]++;
+                }
             }
             int best = Array.IndexOf(hist, hist.Max());
             if (best != 0x0F && best != 0x0D) { HudFill = best; HudTop = top; HudBottom = bot; }   // a black panel stays black

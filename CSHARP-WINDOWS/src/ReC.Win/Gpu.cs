@@ -417,11 +417,12 @@ internal sealed unsafe partial class Gpu : IDisposable
         var fb = r.Fb;
         int band = edges ? EdgeBand(r, sc) : 240;
         var (gap0, gap1) = edges ? SplitGap(r) : (0, 0);
+        var menuRows = edges ? MenuRows(r, sc) : null;
         for (int y = 0; y < 240; y++)
         {
             // T32 clean edges: the lines a TV hid (232-239, where the game leaves stray tiles) and the left column the game
             // masks (backdrop colour), the backdrop rows under a bottom HUD panel and the HUD split seam (SplitGap) are exact black: HUD bit, no sprite, no art
-            int ex = !edges ? 0 : y >= band || (y >= gap0 && y < gap1) ? 256 : r.LeftClip[y] ? 8 : 0;
+            int ex = !edges ? 0 : y >= band || (y >= gap0 && y < gap1) || (menuRows != null && menuRows[y]) ? 256 : r.LeftClip[y] ? 8 : 0;
             for (int x = 0; x < ex; x++)
             {
                 int i = y * 256 + x, o = i * 4;
@@ -474,9 +475,9 @@ internal sealed unsafe partial class Gpu : IDisposable
     /// the line's backdrop) right above it when a HUD panel sits at the bottom (the strip under the panel)</summary>
     public static int EdgeBand(SceneRaster r, HdScene sc)
     {
-        int band = 232;
-        if (sc.HudFill < 0 || sc.HudTop < 160) return band;
-        while (band > sc.HudTop + 1)
+        int band = 232, hudTop = SplitGap(r).To;              // T39: the status bar's first line (fixed scroll)
+        if (hudTop < 160) return band;
+        while (band > hudTop + 1)
         {
             int y = band - 1, c = r.Fb[y * 256] & 63;
             if (c != (r.LinePal[y][0] & 63) || r.Sp[y * 256] != 0) break;
@@ -486,6 +487,29 @@ internal sealed unsafe partial class Gpu : IDisposable
             band = y;
         }
         return band;
+    }
+
+    /// <summary>T39: on a menu screen (font tiles on most lines: equipment, status, shops) the one-colour backdrop rows
+    /// around the windows are black too; null when this is no menu screen</summary>
+    public static bool[]? MenuRows(SceneRaster r, HdScene sc)
+    {
+        int fontLines = 0;
+        for (int y = 0; y < 240; y++)
+        {
+            bool any = false;
+            for (int x = 0; x < 256 && !any; x++) any = (sc.Info[(y * 256 + x) * 4 + 2] & HdScene.FUi) != 0;
+            if (any) fontLines++;
+        }
+        if (fontLines < 150) return null;
+        var rows = new bool[240];
+        for (int y = 0; y < 240; y++)
+        {
+            int c0 = r.Fb[y * 256] & 63;
+            bool flat = r.Sp[y * 256] == 0;
+            for (int x = 1; x < 256 && flat; x++) flat = (r.Fb[y * 256 + x] & 63) == c0 && r.Sp[y * 256 + x] == 0;
+            rows[y] = flat;
+        }
+        return rows;
     }
 
     /// <summary>T33: the black band at the HUD split, [from, to): the gameplay HUD's scroll is fixed (nametable 2, row 24:

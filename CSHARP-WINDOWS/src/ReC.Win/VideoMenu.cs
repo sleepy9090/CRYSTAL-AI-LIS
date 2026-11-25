@@ -27,6 +27,7 @@ internal static unsafe partial class Window
         IdHdParallax = 275, IdHdShadows = 276, IdHdAtmosphere = 277, IdHdDetail = 278,
         IdHdReflections = 279, IdHdLights = 280, IdHdNoFlicker = 281, IdHdArt = 282, IdHdVsync = 283, IdHdQuality0 = 284,   // + 0 fast, 1 balanced, 2 full
         IdHdEdges = 287, IdHdHud = 288;
+    private const int IdVolume0 = 420;                      // T40: + 0..3 = 100 / 75 / 50 / 25 %
     private const int IdAudioOriginal = 410, IdAudioCd = 411, IdStereo = 412, IdReverb = 413, IdAudioRemaster = 414;
 
     private static VideoSettings _v = new();
@@ -48,6 +49,10 @@ internal static unsafe partial class Window
         switch (n)
         {
             case "pause": return IdPause;
+            case "volume:100": return IdVolume0;
+            case "volume:75": return IdVolume0 + 1;
+            case "volume:50": return IdVolume0 + 2;
+            case "volume:25": return IdVolume0 + 3;
             case "turbo:a": return IdTurboA;
             case "turbo:b": return IdTurboB;
             case "cheats:off": return IdCheatsOff;
@@ -162,6 +167,9 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(m, 0, IdAudioCd, "&CD quality (44.1 kHz 16-bit stereo)");
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(m, 0, IdAudioRemaster, "&Remastered (chorus, smooth bass, room, EQ)");
+        var vm = NewMenu();
+        for (int i = 0; i < 4; i++) Win32.AppendMenuW(vm, 0, (nuint)(IdVolume0 + i), $"{100 - 25 * i} %");
+        Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)vm, "&Volume");
         Win32.AppendMenuW(m, 0, IdStereo, "&Stereo channels (CD quality)");
         Win32.AppendMenuW(m, 0, IdReverb, "&Reverb (CD quality)");
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
@@ -176,6 +184,7 @@ internal static unsafe partial class Window
         _audio.Mixer.Stereo = _v.AudioStereo;
         _audio.Mixer.Reverb = _v.AudioReverb;
         _audio.Mixer.Remaster = _v.AudioRemaster;
+        _audio.Volume = _v.Volume / 100f;
         _audio.Mixer.Clear();
         if (!_audio.SetCd(_v.CdAudio || _v.AudioRemaster)) Status("audio device could not be reopened");
     }
@@ -254,7 +263,8 @@ internal static unsafe partial class Window
     private static void UpdateMenus()
     {
         if (_menus.Count == 0) return;
-        Check(IdPause, _paused); Check(IdMute, _muted); Check(IdTurboA, _v.TurboA); Check(IdTurboB, _v.TurboB);
+        Check(IdPause, _paused); Check(IdMute, _muted);
+        for (int i = 0; i < 4; i++) Check(IdVolume0 + i, _v.Volume == 100 - 25 * i); Check(IdTurboA, _v.TurboA); Check(IdTurboB, _v.TurboB);
         for (int i = 0; i < Cheats.Names.Length; i++) Check(IdCheat0 + i, _v.Cheats.Get(i));
         Check(IdFullscreen, _fullscreen); Check(IdMenuBar, _v.MenuBar);
         Check(IdInteger, _v.Integer); Check(IdCrop, _v.CropOverscan); Check(IdSmooth, _v.Smooth);
@@ -291,6 +301,10 @@ internal static unsafe partial class Window
         switch (id)
         {
             case IdPause: KeyCommand('P'); return;
+            case >= IdVolume0 and < IdVolume0 + 4:
+                _v.Volume = 100 - 25 * (id - IdVolume0);
+                if (_audio != null) _audio.Volume = _v.Volume / 100f;
+                Notice($"VOLUME {_v.Volume}%"); SettingsChanged(false); return;
             case IdTurboA: _v.TurboA = !_v.TurboA; Notice(_v.TurboA ? "TURBO A: ON" : "TURBO A: OFF"); SettingsChanged(false); return;
             case IdTurboB: _v.TurboB = !_v.TurboB; Notice(_v.TurboB ? "TURBO B: ON" : "TURBO B: OFF"); SettingsChanged(false); return;
             case >= IdCheat0 and < IdCheat0 + 6:

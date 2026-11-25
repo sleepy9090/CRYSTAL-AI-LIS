@@ -78,6 +78,8 @@ The choices are saved in `%APPDATA%\re-c\video.ini` (delete it to get the defaul
 256×240; widescreen shapes stretch it.
 
 ### Audio menu: Original or CD quality
+**Audio › Volume** sets the master volume (100 / 75 / 50 / 25 %).
+
 **Audio › CD quality (44.1 kHz 16-bit stereo)** upgrades the sound; **Audio › Original (NES, mono)** is the exact
 sound of the port. You can switch at any time, and the choice is saved. CD quality:
 - **stereo**: pulse 1 a little to the left, pulse 2 a little to the right, noise slightly right, the triangle bass and
@@ -149,6 +151,8 @@ splits) and draws the scene itself. It does not take the emulated NES picture.
   few small pebbles. The junk line where the status bar splits from the map is hidden too.
 - **HUD style:** the status bar and dialog boxes have smooth, rounded letters and digits with a bevelled, brushed-metal
   look and soft shadows on a glossy panel (**HD: HUD style** turns it off for the exact NES text).
+- **Menus:** the equipment, status, shop and item screens get the same bevelled text and glossy windows, with the
+  backdrop strips around the windows cleaned up.
 - **LIFE and FORCE bars:** LIFE is a glossy red capsule (one mark per 16 HP, a shine sweeping along, a heartbeat when
   low); FORCE keeps the game's chevrons as dark glass that glow cyan as the sword charges.
 - **Fades keep the art:** when the game fades a room in or out, painted tiles follow the fade (their colours darken

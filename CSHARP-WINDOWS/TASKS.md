@@ -324,3 +324,7 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   **on-screen display** (pause screen with keys + active cheats, notices, fast-forward mark; HD final pass + GDI blend),
   **turbo A / B** (Game menu). architecture §5.31-32. 344 tests (new win_cheats: tiles = HudHpBar on 400 random pairs;
   win_osd); win_video_check 32 ok; smoke + canon, REA, coverage ok. Previews: out/hd37/pause/.
+- [x] T39-T40 (2026-11-25, user away): **Menu screens in HD** (equipment, status, shops, item use: HUD style on the
+  menu windows, panel colour from font tiles, backdrop strips black; bottom band anchored on the status bar's fixed
+  scroll) and **Audio › Volume**. architecture §5.33. 347 tests; win_video_check 32 ok; smoke + canon, REA, coverage
+  ok. Previews: out/hd39/ (s_* after, menus.png).

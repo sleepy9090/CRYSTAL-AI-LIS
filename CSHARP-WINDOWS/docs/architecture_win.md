@@ -332,3 +332,12 @@ CSHARP-WINDOWS/
     pause|fast|notice=TEXT` sets one before `--dump-window` (checks, `hd_shots.py --osd`).
     **Turbo (T38):** Game menu Turbo A / B (ids 103 / 104, ini `turbo=a,b`): a held button is released every other 3 frames
     (`VideoSettings.Turbo`; not for `--keys` runs).
+
+33. **Menu screens (T39):** the HUD style reaches the game's menu windows (equipment, status, shops, item use): font tiles
+    are flagged per pixel (`FUi`) and menu windows are drawn with the playfield's scroll, so `HdScene` takes the panel
+    colour from the HUD lines plus font pixels anywhere, leaving out one-colour rows, and `HudPanel` styles font pixels
+    outside the status-bar rows too (gloss by screen height). `Gpu.MenuRows`: on a menu screen (font tiles on >= 150
+    lines) one-colour rows around the windows are black. `EdgeBand` anchors on the status bar's fixed-scroll first line
+    (`SplitGap`) instead of `HudTop` (a dialog box at the top made it small).
+    **Volume (T40):** Audio › Volume 100 / 75 / 50 / 25 % (ids 420-423, ini `volume=`): `AudioOut.Volume` scales both
+    the original and the CD / remastered paths.
