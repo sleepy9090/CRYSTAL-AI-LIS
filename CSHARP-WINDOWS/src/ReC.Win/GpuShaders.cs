@@ -308,6 +308,48 @@ float Detail(float2 w, int kind, float t)
     return 0.5;
 }
 
+// ---- T32 lawns: foliage-coloured background without pack art (the game's flat grass tiles and their generated look) gets
+// warm / cool patches, blade strokes that lean with the wind and a few small flowers; pack tiles keep their own painting
+// except where it is the plain grass colour
+float3 Lawn(float3 a, float2 s, float2 w, float t, int col)
+{
+    // in a pack tile only its plain grass (close to the NES colour: the fill between fence posts)
+    float wl = 1;
+    if (ArtM.Load(int3(clamp(int2(s * NES), int2(0, 0), int2(255, 239)), 0)).x != 0)
+        wl = 1 - smoothstep(0.06, 0.16, length(Albedo(s) - NesRgb(col)));
+    if (wl <= 0) return a;
+    // patches: sunny dry grass and deep cool clumps
+    float patch = WN(w, float2(28, 28)) * 0.6 + WN(w, float2(11, 11)) * 0.4;
+    // (tints toward target colours by brightness: the NES greens are so saturated that a multiply barely shows)
+    float l = dot(a, LUM);
+    float3 base = lerp(float3(l, l, l), a, 0.8);                      // a little less neon
+    float3 warm = l * float3(1.25, 1.18, 0.42), cool = l * float3(0.42, 0.95, 0.70) * 0.85;
+    float pw = smoothstep(0.45, 0.8, patch), pc = 1 - smoothstep(0.2, 0.5, patch);
+    float3 g = lerp(lerp(base, warm, pw * 0.45), cool, pc * 0.4);
+    // blades: thin vertical strokes (fine in x, long in y), leaning with a slow gust
+    float lean = sin(t * 1.1 + w.y * 0.05 + w.x * 0.02) * 0.35;
+    float2 bw = float2(w.x + (frac(w.y / 3) - 0.5) * lean, w.y);
+    float bl = WN(bw, float2(0.55, 3.2)), tip = WN(bw + 17.3, float2(0.7, 2.1));
+    g *= 1 - 0.3 * smoothstep(0.58, 0.9, bl);
+    g *= 1 + 0.2 * smoothstep(0.68, 0.95, tip);
+    // flowers: one cell in ~40 of 6 x 6 pixels, a soft round blossom in white / yellow / pink
+    float2 fc = floor(w / 6), fo = frac(w / 6) - 0.5;
+    float h = Hash(fc + 3.7);
+    if (h > 0.975)
+    {
+        float2 ctr = float2(Hash(fc + 9.1), Hash(fc + 5.3)) * 0.5 - 0.25;
+        float r = length((fo - ctr) * 6);
+        float hue = frac(h * 97);
+        float3 fl = hue < 0.4 ? float3(1, 0.97, 0.9) : hue < 0.75 ? float3(1, 0.86, 0.3) : float3(1, 0.6, 0.75);
+        float2 pd = (fo - ctr) * 6;
+        float petal = 0.75 + 0.3 * cos(atan2(pd.y, pd.x) * 5 + h * 40);        // five petals
+        g *= 1 - 0.3 * (smoothstep(0.8, 1.0, r) - smoothstep(1.0, 1.5, r));     // a little shade round it
+        g = lerp(g, fl, (1 - smoothstep(petal - 0.15, petal, r)) * 0.95);
+        g = lerp(g, float3(1, 0.8, 0.2), 1 - smoothstep(0.2, 0.32, r));          // centre
+    }
+    return lerp(a, g, wl * Opt.w);
+}
+
 // ---- parallax depth in a dark backdrop: cliff walls, then three rock layers that scroll slower than the playfield
 float3 Chasm(float2 p, float t)
 {
@@ -437,7 +479,8 @@ float4 PSLight(V i) : SV_Target
     float4 inf = InfoPx(p);
     uint fl = Flags(inf);
     float4 ln = Lne.Load(int3(clamp(int(p.y), 0, 239), 0, 0));
-    if (ln.z > 0.5 || (fl & 4) != 0) return float4(HudPanel(a, p, inf), 0);   // HUD / text: unlit (panel gloss only)
+    if (ln.z > 0.5 || (fl & 4) != 0 || (Lay.Load(int3(clamp(int2(p), int2(0, 0), int2(255, 239)), 0)).r & 0x80) != 0)
+        return float4(HudPanel(a, p, inf), 0);   // HUD / text + clean edges (Layers HUD bit): unlit (panel gloss only)
     float t = Cam.z;
     bool spr = (fl & 1) != 0;
     // motion in the world (material detail switch): water refracts in slow waves, grass sways in gusts of wind
@@ -474,6 +517,7 @@ float4 PSLight(V i) : SV_Target
             float d0 = Detail(w, kind, t), dx = Detail(w + float2(e, 0), kind, t), dy = Detail(w + float2(0, e), kind, t);
             gd = float2(dx - d0, dy - d0) / e * amp * 0.22;
             a *= 1 + amp * 0.55 * (d0 - 0.5);
+            if (kind == 5) a = Lawn(a, s, w, t, col);
         }
         // fine relief from the 8x art itself (pack tiles, faces, bricks): its light and dark as a small bump
         if (Opt.w > 0.5 && QualC.y > 0.5)

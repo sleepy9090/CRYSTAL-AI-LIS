@@ -588,10 +588,30 @@ internal static partial class Program
             True(ok, "layer words = the raster's layers");
             True(hud > 1000, $"HUD pixels flagged ({hud})");
             True(arts >= 8 && (am[tagged * 2] >> 15 & 7) == (r.BgTag[tagged] >> 13 & 7), $"pack tile under its pixels ({arts}), with the pixel's column");
+            {
+                // T32 clean edges: overscan lines + masked left columns exact black, everything else unchanged
+                var lay3 = new byte[lay.Length]; var am3 = new uint[am.Length];
+                Gpu.Layers(r, sc, slots, Gpu.BuildFades(slots), tileArt, lay3, am3, edges: true);
+                bool eOk = true; int black = 0, clipLines = 0, band = Gpu.EdgeBand(r, sc);
+                for (int y = 0; y < 240; y++)
+                {
+                    if (r.LeftClip[y]) clipLines++;
+                    for (int x = 0; x < 256; x++)
+                    {
+                        int i = y * 256 + x, o = i * 4;
+                        bool edge = y >= band || (x < 8 && r.LeftClip[y]);
+                        if (edge) { black++; eOk &= lay3[o] == 0x8F && lay3[o + 1] == 0 && am3[i * 2] == 0 && am3[i * 2 + 1] == 0; }
+                        else eOk &= lay3[o] == lay[o] && lay3[o + 1] == lay[o + 1] && lay3[o + 2] == lay[o + 2] && am3[i * 2] == am[i * 2] && am3[i * 2 + 1] == am[i * 2 + 1];
+                    }
+                }
+                Console.WriteLine($"  win_hd_engine: clean edges: {black} black pixels, bottom band from line {band}, {clipLines} masked-column lines");
+                True(eOk && black >= 8 * 256, "clean edges: overscan + masked column black, rest unchanged");
+            }
             var v = VideoSettings.Parse("graphics=hd\nhd_effects=reflections,noflicker\n");
             True(v.HdReflections && !v.HdLights && v.HdNoFlicker && !v.HdShadows, "ini hd_effects (T20 switches)");
-            True(new VideoSettings().Serialize().Contains("hd_effects=parallax,shadows,atmosphere,detail,reflections,lights,noflicker,art,vsync"), "all on by default");
+            True(new VideoSettings().Serialize().Contains("hd_effects=parallax,shadows,atmosphere,detail,reflections,lights,noflicker,art,vsync,edges"), "all on by default");
             Eq(283, Window.CommandId("hd:vsync"), "--menu hd:vsync");
+            Eq(287, Window.CommandId("hd:edges"), "--menu hd:edges");
             Eq(284, Window.CommandId("hd:fast"), "--menu hd:fast");
             True(VideoSettings.Parse("hd_quality=balanced\n").HdQuality == 1 && new VideoSettings().Serialize().Contains("hd_quality=full"), "ini hd_quality");
             Eq(281, Window.CommandId("hd:noflicker"), "--menu hd:noflicker");

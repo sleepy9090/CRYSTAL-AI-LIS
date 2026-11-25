@@ -134,6 +134,9 @@ splits) and draws the scene itself. It does not take the emulated NES picture.
   Balanced lights at 75 % resolution with shorter shadow marches; Fast lights at 50 %, builds the picture at 4× instead
   of 8× and leaves out reflections and fine relief. **HD: VSync** (on by default) presents in step with the monitor
   (no tearing).
+- **Clean edges:** the rows under the status bar that a TV hid (the game leaves stray tiles there) and the left column the
+  game masks while scrolling are drawn black like a TV bezel (**HD: Clean edges** turns it off).
+- **Lawns:** plain grass gets sunny and shaded patches, blades that lean with the wind and a few small flowers.
 - **HUD panel:** the status bar's panel gets a soft gloss and the text a 1-pixel drop shadow (every letter and digit
   stays exactly its NES colour).
 - **Fades keep the art:** when the game fades a room in or out, painted tiles follow the fade (their colours darken

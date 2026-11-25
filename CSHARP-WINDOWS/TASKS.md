@@ -296,3 +296,9 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] T31 (interactive, 2026-11-24) done: **HD quality levels** (Full / Balanced / Fast) for slower graphics
   (architecture §5.26). Under Wine's software GPU Fast keeps real time (0 underruns vs 45 at Full). 325 tests; HD /
   pack checks, smoke + canon, REA ok. Previews: out/hd31/q_cmp.png (full vs fast).
+- [x] T32 (interactive, 2026-11-25) done: **Clean edges + lawns** (request: "keep making the HD graphics even better";
+  architecture §5.27). HD draws the overscan rows (and the backdrop strip under a bottom HUD panel) and the game's masked
+  left column as black (switch `hd:edges`, default on; no weather over them); plain grass gets warm / cool patches,
+  wind-leaning blades and sparse flowers (pack tiles only where they are the plain grass colour). 327 tests;
+  win_video_check 32 ok (hdfx saves `hd_effects=noflicker,art,vsync,edges`); smoke + canon, REA, coverage ok.
+  Previews: out/hd32/ (e_* edges, l_* lawns, l_zoom.png fence close-up before / after).

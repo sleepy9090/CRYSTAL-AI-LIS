@@ -175,6 +175,7 @@ internal static unsafe partial class Window
         _gpu.Reflections = _v.HdReflections; _gpu.Lights = _v.HdLights;
         _gpu.VSync = _v.HdVsync && !_turbo;                  // --turbo runs never wait for the monitor
         _gpu.Quality = _v.HdQuality;
+        _gpu.Edges = _v.HdEdges;
     }
     private static string _gpuError = "";
     private static bool _gpuTried;

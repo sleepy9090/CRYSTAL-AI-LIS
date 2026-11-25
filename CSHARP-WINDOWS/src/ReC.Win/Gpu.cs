@@ -45,6 +45,8 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool Parallax = true, Shadows = true, Atmosphere = true, Detail = true, Reflections = true, Lights = true;
     /// <summary>T30: present in step with the monitor (sync interval 1: no tearing while the screen scrolls)</summary>
     public bool VSync;
+    /// <summary>T32: overscan lines 232-239 + a masked left column drawn as exact black (Layers)</summary>
+    public bool Edges = true;
     /// <summary>T31: HD quality 2 = full, 1 = balanced (lighting at 75 % resolution, 16 shadow steps), 0 = fast (50 %, 10
     /// steps, no reflections / fine relief): for slower (integrated) graphics</summary>
     public int Quality = 2;
@@ -396,17 +398,27 @@ internal sealed unsafe partial class Gpu : IDisposable
     /// ArtMap per pixel: [background, sprite] = atlas slot + 1 (15 bits) | col << 15 | row << 18 | flipH << 21 | flipV << 22 |
     /// fade step << 23 (0 = none)</summary>
     public static void Layers(SceneRaster r, HdScene sc, IReadOnlyDictionary<long, int> slots, IReadOnlyDictionary<long, int> fades,
-        bool[] tileArt, byte[] lay, uint[] artMap)
+        bool[] tileArt, byte[] lay, uint[] artMap, bool edges = false)
     {
         var fb = r.Fb;
+        int band = edges ? EdgeBand(r, sc) : 240;
         for (int y = 0; y < 240; y++)
         {
+            // T32 clean edges: the lines a TV hid (232-239, where the game leaves stray tiles) and the left column the game
+            // masks (backdrop colour), and the backdrop rows under a bottom HUD panel, are exact black: HUD bit, no sprite, no art
+            int ex = !edges ? 0 : y >= band ? 256 : r.LeftClip[y] ? 8 : 0;
+            for (int x = 0; x < ex; x++)
+            {
+                int i = y * 256 + x, o = i * 4;
+                lay[o] = 0x0F | 0x80; lay[o + 1] = 0; lay[o + 2] = 0; lay[o + 3] = 0;
+                artMap[i * 2] = 0; artMap[i * 2 + 1] = 0;
+            }
             var pal = r.LinePal[y];
             // the slot / step part of an art word depends only on tile + palette group (+ the line's palette): cached per
             // run of equal keys (tiles repeat for 8 pixels); the pixel's column / row / flips are added per pixel
             int bk = -1, sk = -1;
             uint bw = 0, sw = 0;
-            for (int x = 0; x < 256; x++)
+            for (int x = ex; x < 256; x++)
             {
                 int i = y * 256 + x, o = i * 4;
                 bool ui = (sc.Info[o + 2] & HdScene.FUi) != 0;
@@ -443,6 +455,24 @@ internal sealed unsafe partial class Gpu : IDisposable
         }
     }
 
+    /// <summary>T32: first line of the black bottom band: 232 (overscan), or higher over the plain backdrop rows (one colour =
+    /// the line's backdrop) right above it when a HUD panel sits at the bottom (the strip under the panel)</summary>
+    public static int EdgeBand(SceneRaster r, HdScene sc)
+    {
+        int band = 232;
+        if (sc.HudFill < 0 || sc.HudTop < 160) return band;
+        while (band > sc.HudTop + 1)
+        {
+            int y = band - 1, c = r.Fb[y * 256] & 63;
+            if (c != (r.LinePal[y][0] & 63) || r.Sp[y * 256] != 0) break;
+            bool flat = true;
+            for (int x = 1; x < 256 && flat; x++) flat = (r.Fb[y * 256 + x] & 63) == c;
+            if (!flat) break;
+            band = y;
+        }
+        return band;
+    }
+
     /// <summary>the column / row / flip bits of an art word from a tag</summary>
     private static uint PosBits(int tag) => (uint)(tag >> 13 & 7) << 15 | (uint)(tag >> 16 & 7) << 18 |
         ((tag & 1 << 22) != 0 ? 1u << 21 : 0) | ((tag & 1 << 23) != 0 ? 1u << 22 : 0);
@@ -467,7 +497,7 @@ internal sealed unsafe partial class Gpu : IDisposable
     /// <summary>this frame: layers + art + scene to the GPU, then the frame passes (rounding, albedo, height, light map)</summary>
     public void Upload(SceneRaster r, HdScene sc)
     {
-        Layers(r, sc, _slots, _fades, _tileArt, Lay, ArtMap);
+        Layers(r, sc, _slots, _fades, _tileArt, Lay, ArtMap, Edges);
         fixed (byte* p = Lay) Update(_layTex, p, 256 * 4);
         fixed (uint* p = ArtMap) Update(_artTex, p, 256 * 8);
         fixed (byte* p = sc.Info) Update(_iTex, p, 256 * 4);

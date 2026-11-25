@@ -11,6 +11,7 @@
 //                         SpriteLimit on: `win_scene_raster` checks every frame of a long run against the PPU)
 //   LineScroll            v | fine x << 16 at each line's start (-1 = rendering off), for HdScene
 //   LinePal               the palette each line was drawn with (the game changes palettes mid-frame)
+//   LeftClip              the line hides the background's left 8 pixels (PPUMASK bit 1 clear): they show the backdrop
 // SpriteLimit false (HD default: Video > Graphics > HD: no sprite flicker) shows every sprite on a line instead of the
 // first 8 by OAM order, so objects the game flickers to get past the hardware limit stay solid.
 using ReC.Nes;
@@ -23,6 +24,7 @@ internal sealed class SceneRaster
     public readonly byte[] Sp = new byte[256 * 240], SpCol = new byte[256 * 240];
     public readonly int[] Tags = new int[256 * 240], BgTag = new int[256 * 240], SpTag = new int[256 * 240];
     public readonly int[] LineScroll = new int[240];
+    public readonly bool[] LeftClip = new bool[240];
     public readonly byte[][] LinePal = Enumerable.Range(0, 240).Select(_ => new byte[32]).ToArray();
     public bool SpriteLimit = true;
     public int FrameNo;
@@ -115,6 +117,7 @@ internal sealed class SceneRaster
             var r0 = cap.Line[y];
             var ev = cap.Events[y];
             LineScroll[y] = r0.Rendering ? (r0.V & 0x7FFF) | r0.X << 16 : -1;
+            LeftClip[y] = r0.Rendering && (r0.Mask & 0x0A) == 0x08;
             Buffer.BlockCopy(cap.Pal[r0.Pal], 0, LinePal[y], 0, 32);
             Sprites(cap, y);
             // BG fetches in PPU order: tiles 0 / 1 at the line start, tile t >= 2 at dot 8 (t - 1); a mid-line write at

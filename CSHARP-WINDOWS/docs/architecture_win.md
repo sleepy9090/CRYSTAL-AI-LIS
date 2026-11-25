@@ -279,3 +279,12 @@ CSHARP-WINDOWS/
     (`QualC.x`), reflections + fine relief off in fast (`QualC.y`), fast builds the albedo at 4x (1024x960, from the 2x
     keys, no K2 pass; `QualC.z` = albedo scale, HLSL `ALB` macro). Real time under Wine (llvmpipe), group29, 600 frames,
     CD audio: full 45 underruns, balanced 22, fast 0 (42 samples dropped); Original 0.
+
+27. **Clean edges + lawns (T32):** `Gpu.Edges` (`hd_effects` `edges`, default on, menu id 287, `--menu hd:edges`): `Layers`
+    writes exact black (HUD bit, no sprite, no art) to the lines from `Gpu.EdgeBand` (232 = NTSC overscan, where the game
+    leaves stray tiles; higher over the plain backdrop rows right above it when a HUD panel sits at the bottom) and to the
+    left 8 pixels of lines the game masks (`SceneRaster.LeftClip`: PPUMASK bit 1 clear, they show the backdrop colour).
+    PSLight treats a `Lay` HUD bit as HUD (no weather / lighting over the edges). `Lawn()` (material detail, foliage
+    kind 5): background without pack art, and plain grass-coloured pixels of pack tiles, get brightness-based warm / cool
+    patches (the NES greens are too saturated for a multiply), 20 % less neon, wind-leaning blade strokes and sparse
+    five-petal flowers (world-anchored: they stay put while the map scrolls).
