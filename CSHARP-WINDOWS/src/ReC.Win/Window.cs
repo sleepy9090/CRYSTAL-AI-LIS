@@ -248,12 +248,13 @@ internal static unsafe partial class Window
     private static bool BuildOsd()
     {
         if (_notice != null && Clock.Elapsed.TotalMilliseconds > _noticeUntil) _notice = null;
-        if (!_paused && !_fast && _notice == null && !_osdShown) return false;
+        if (!_paused && !_fast && _notice == null && !_help && !_osdShown) return false;
         var cheats = Enumerable.Range(0, Cheats.Names.Length).Where(_v.Cheats.Get).Select(i => Cheats.Names[i]).ToList();
-        _osdShown = Osd.Build(_paused, _fast, _notice, cheats);
+        _osdShown = Osd.Build(_paused, _fast, _notice, cheats, _help);
         return _osdShown;
     }
     private static bool _osdShown;
+    private static bool _help;                                 // T44: F1 help panel (the game pauses under it)
 
     private static void Status(string s)
     {
@@ -402,6 +403,7 @@ internal static unsafe partial class Window
                 _osdReady = true;
                 if (o.OsdShot == "pause") _paused = true;
                 else if (o.OsdShot == "fast") _fast = true;
+                else if (o.OsdShot == "help") { _help = true; _paused = true; }
                 else if (o.OsdShot.StartsWith("notice=", StringComparison.Ordinal)) Notice(o.OsdShot[7..]);
             }
             if (o.DumpWindow != null && _hwnd != IntPtr.Zero) DumpWindow(o.DumpWindow);
@@ -559,7 +561,7 @@ internal static unsafe partial class Window
         switch (vk)
         {
             case 'P':
-                _paused = !_paused;
+                _paused = !_paused; _help = false;
                 _last = Clock.Elapsed.TotalMilliseconds; _acc = 0;
                 StatusLine();
                 Present();                             // T37: the pause screen at once
@@ -576,6 +578,10 @@ internal static unsafe partial class Window
             case 0x74 /* F5 */: ReloadPack(); break;
             case 0x20 /* Space */: _fast = true; StatusLine(); if (_paused) Present(); break;
             case 0x7B /* F12 */: Screenshot(); break;                     // T42
+            case 0x70 /* F1 */:
+                _help = !_help; _paused = _help;
+                _last = Clock.Elapsed.TotalMilliseconds; _acc = 0;
+                StatusLine(); Present(); break;
             case >= '1' and <= '6': _v.SetScale(vk - '0'); SettingsChanged(true); break;
         }
         UpdateMenus();

@@ -131,10 +131,33 @@ internal static class Osd
         Text((W - TextWidth(s, scale)) / 2, y, s, scale, r, g, b);
 
     /// <summary>the overlay for this moment; false = nothing to show (Pix cleared)</summary>
-    public static bool Build(bool paused, bool fast, string? notice, IReadOnlyList<string> cheats)
+    /// <summary>T44: the F1 help panel's lines (key, what it does)</summary>
+    public static readonly (string Key, string What)[] HelpLines =
+    {
+        ("ARROWS / WASD", "MOVE"), ("X / K", "A BUTTON"), ("Z / J", "SWORD, HOLD: CHARGE"),
+        ("ENTER", "START"), ("TAB / R-SHIFT", "SELECT"), ("P", "PAUSE"), ("SPACE (HOLD)", "FAST FORWARD X4"),
+        ("F1", "THIS HELP"), ("F9", "GRAPHICS MODE"), ("F11", "FULLSCREEN"), ("F12", "SCREENSHOT"), ("M", "MUTE"),
+        ("1 - 6", "WINDOW SIZE"), ("RIGHT CLICK", "MENUS, CHEATS"), ("ESC", "QUIT (SAVES FIRST)"),
+    };
+
+    public static bool Build(bool paused, bool fast, string? notice, IReadOnlyList<string> cheats, bool help = false)
     {
         Clear();
         bool any = false;
+        if (help)
+        {
+            Box(0, 0, W, H, 0.01f, 0.02f, 0.06f, 0.7f);
+            Box(32, 40, W - 64, H - 80, 0.05f, 0.08f, 0.20f, 0.93f);
+            Box(36, 44, W - 72, 4, 0.55f, 0.7f, 1f, 0.6f);
+            Centered(62, "KEYS", 4, 1f, 0.95f, 0.75f);
+            for (int i = 0; i < HelpLines.Length; i++)
+            {
+                Text(56, 112 + i * 20, HelpLines[i].Key, 2, 1f, 0.85f, 0.55f);
+                Text(56 + 15 * 12, 112 + i * 20, HelpLines[i].What, 2, 0.85f, 0.9f, 1f);
+            }
+            Centered(H - 58, "F1 OR P TO CLOSE", 1, 0.7f, 0.8f, 1f);
+            return true;
+        }
         if (paused)
         {
             Box(0, 0, W, H, 0.01f, 0.02f, 0.06f, 0.62f);

@@ -765,6 +765,8 @@ internal static partial class Program
             True((pic[10 * 64 + 10] & 255) < 0x60, "GDI blend darkens under the dim");
             True(Osd.Build(false, true, "INFINITE LIFE: ON", new List<string>()) && (Osd.Pix[25 * Osd.W + 30] >> 24) > 100 && (Osd.Pix[25 * Osd.W + Osd.W - 50] >> 24) > 100, "notice + fast forward");
             True(Osd.TextWidth("AB", 2) == 22, "text width");
+            True(Osd.HelpLines.All(l => 56 + 15 * 12 + Osd.TextWidth(l.What, 2) <= Osd.W - 40 && Osd.TextWidth(l.Key, 2) < 15 * 12), "help lines fit the panel");
+            True(Osd.Build(true, false, null, new List<string>(), help: true) && (Osd.Pix[200 * Osd.W + 256] >> 24) > 230, "help panel");
         }),
         ("win_audio_remaster", () =>
         {

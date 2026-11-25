@@ -347,3 +347,9 @@ CSHARP-WINDOWS/
     (ticks / end cap) and a FORCE row of at most 17 tiles (an all-black death screen drew a capsule). `hd_shots.py reset`
     = from power-on (title, intro).
     **Screenshot (T42):** F12 = `DumpWindow` to `Pictures\re-c\re-c_YYYYMMDD_HHMMSS.png` (notice cleared first).
+    **Status-bar shadow, indoor greens (T43):** with HUD style the map darkens to black from the first line of the last
+    tile row above the status bar (`MeterF.w` = status-bar line × 256 + that row's start, from `Gpu.Meters` / `SplitGap`),
+    fading in over 4 lines (`BarShadow`, also on font-tile pixels there): the row the game has not loaded yet under the
+    split (group81: junk tiles at lines 184-190 with a continuous scroll, so `SplitGap` cannot tell it) stays hidden.
+    Foliage colours indoors (`Scn.x` <= 0.3) are moss / carpet (kind 3): no lawn, blades or sway.
+    **Help (T44):** F1 toggles a key-list panel on the on-screen display (`Osd.HelpLines`; pauses; `--osd help`).

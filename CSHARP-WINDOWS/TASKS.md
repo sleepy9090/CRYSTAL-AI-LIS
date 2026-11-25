@@ -332,3 +332,6 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   bar; black panels: glyph look + faint glow), **meter detection hardened** (an all-black death screen drew a LIFE
   capsule), **F12 screenshot**, `hd_shots.py reset`. 349 tests; win_video_check 32 ok; smoke + canon, REA, coverage ok.
   Previews: out/hd41/ (title.png intro original vs HD, intro_text.png, death_b.png).
+- [x] T43-T44 (2026-11-25, user away): **status-bar shadow** (the not-yet-loaded tile row under the split, group81, is
+  hidden: the map fades to black from the last tile row above the panel), **indoor greens** = moss / carpet (no lawn),
+  **F1 help** panel. 351 tests; win_video_check 32 ok; smoke + canon, REA, coverage ok. Previews: out/hd43/, out/hd44/help.

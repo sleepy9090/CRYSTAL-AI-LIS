@@ -582,6 +582,10 @@ internal sealed unsafe partial class Gpu : IDisposable
             }
             if (last - 48 >= 15 && last - 48 <= 17 * 8) { m[4] = 48; m[5] = last + 1; m[6] = fy; }
         }
+        // T43: the status bar's first line and the first line of the last tile row above it (fine y 0), for its shadow
+        int hudTop = SplitGap(r).To, rowStart = hudTop - 1;
+        while (hudTop > 0 && rowStart > hudTop - 9 && r.LineScroll[rowStart] >= 0 && (r.LineScroll[rowStart] >> 12 & 7) != 0) rowStart--;
+        m[7] = hudTop > 0 ? hudTop * 256 + rowStart : 0;
         return m;
     }
 

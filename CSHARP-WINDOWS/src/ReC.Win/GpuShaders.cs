@@ -23,7 +23,7 @@ cbuffer C : register(b0)
     float4 HudC;   // HUD panel: fill colour (-1 = none), first line, last line + 1, -
     float4 QualC;  // shadow steps, extras (reflections, fine relief) 0 / 1, albedo scale (8 / 4), on-screen display 0 / 1
     float4 MeterL; // T35 LIFE meter: x0, x1 (frame), fill end, top line (x1 = 0: none)
-    float4 MeterF; // T35 FORCE meter: x0, x1, top line, -
+    float4 MeterF; // T35 FORCE meter: x0, x1, top line; w = the status bar's first line (T43, 0 = none)
 };
 Texture2D SrcA : register(t0);
 Texture2D SrcB : register(t1);
@@ -685,6 +685,17 @@ float3 HudPanel(float3 a, float2 p, float2 s, float4 inf)
     return saturate(c);
 }
 
+// T43 the status bar's shadow factor at p (1 = none): black from the last tile row above the panel, fading in over 4 lines;
+// pixels on or below the panel's first line are not shaded (font tiles in the junk row take the HUD path, so both use it)
+float BarShadow(float2 p)
+{
+    if (HudC.w < 0.5 || MeterF.w <= 0) return 1;
+    float top = floor(MeterF.w / 256), rs = MeterF.w - top * 256;
+    if (p.y >= top) return 1;
+    float u = saturate((rs - p.y) / 4);
+    return u * u * (3 - 2 * u);
+}
+
 float4 PSLight(V i) : SV_Target
 {
     float2 s = Uv.zw + i.uv * Uv.xy;
@@ -694,7 +705,7 @@ float4 PSLight(V i) : SV_Target
     uint fl = Flags(inf);
     float4 ln = Lne.Load(int3(clamp(int(p.y), 0, 239), 0, 0));
     if (ln.z > 0.5 || (fl & 4) != 0 || (Lay.Load(int3(clamp(int2(p), int2(0, 0), int2(255, 239)), 0)).r & 0x80) != 0)
-        return float4(HudPanel(a, p, s, inf), 0);   // HUD / text + clean edges (Layers HUD bit): unlit (panel gloss only)
+        return float4(HudPanel(a, p, s, inf) * BarShadow(p), 0);   // HUD / text + clean edges (Layers HUD bit): unlit (panel gloss only)
     float t = Cam.z;
     bool spr = (fl & 1) != 0;
     // motion in the world (material detail switch): water refracts in slow waves, grass sways in gusts of wind
@@ -706,7 +717,7 @@ float4 PSLight(V i) : SV_Target
         float2 off = 0;
         if (k0 == 2 && c0 < 0x20)                                      // dark (deep) water, not ice
             off = float2(WN(w0 + float2(t * 2, 0), float2(6, 6)) - 0.5, WN(w0 + float2(0, t * 1.5), float2(6, 6)) - 0.5) * 0.7;
-        if (k0 == 5)
+        if (k0 == 5 && Scn.x > 0.3)
             off.x = sin(t * 1.4 + w0.x * 0.045 + w0.y * 0.07) * 0.3 * WN(w0 + float2(t * 6, 0), float2(48, 48));
         // heat shimmer: only just above a light source (the light map is brighter a few pixels below)
         float lh = dot(SrcC.SampleLevel(Lin, s, 0).rgb, LUM), lb = dot(SrcC.SampleLevel(Lin, s + float2(0, 6.0 / 240), 0).rgb, LUM);
@@ -722,6 +733,7 @@ float4 PSLight(V i) : SV_Target
         int col = (int)round(inf.g * 255 / 4);
         float4 m = MatT.Load(int3(col, 0, 0));
         int kind = spr ? 0 : (int)round(m.r * 255 / 40);
+        if (kind == 5 && Scn.x <= 0.3) kind = 3;                         // T43: green indoors = moss / carpet, not grass
         // material detail
         float2 gd = 0;
         float amp = kind > 0 ? m.a * Opt.w : 0;
@@ -854,6 +866,9 @@ float4 PSLight(V i) : SV_Target
     c += Weather(p, t) * Scn.z;
     float2 lf = Particle(p, 1.3, 26, float2(14, 9), t, 1.2, 2);
     c = lerp(c, lerp(float3(0.30, 0.50, 0.12), float3(0.75, 0.45, 0.12), frac(lf.y * 7)), lf.x * step(0.82, lf.y) * 0.8 * Scn.x * Opt.z * Scn.z);
+    // T43: the status bar casts a soft shadow up onto the map: from the last tile row above the panel (the row the game
+    // has not loaded yet under the split) black, fading in over 4 lines; MeterF.w = status-bar line * 256 + row start
+    c *= BarShadow(p);
     return float4(c, 1);
 }
 
