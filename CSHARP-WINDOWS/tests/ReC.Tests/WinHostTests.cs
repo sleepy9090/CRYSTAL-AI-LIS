@@ -621,9 +621,10 @@ internal static partial class Program
             }
             var v = VideoSettings.Parse("graphics=hd\nhd_effects=reflections,noflicker\n");
             True(v.HdReflections && !v.HdLights && v.HdNoFlicker && !v.HdShadows, "ini hd_effects (T20 switches)");
-            True(new VideoSettings().Serialize().Contains("hd_effects=parallax,shadows,atmosphere,detail,reflections,lights,noflicker,art,vsync,edges"), "all on by default");
+            True(new VideoSettings().Serialize().Contains("hd_effects=parallax,shadows,atmosphere,detail,reflections,lights,noflicker,art,vsync,edges,hud"), "all on by default");
             Eq(283, Window.CommandId("hd:vsync"), "--menu hd:vsync");
             Eq(287, Window.CommandId("hd:edges"), "--menu hd:edges");
+            Eq(288, Window.CommandId("hd:hud"), "--menu hd:hud");
             Eq(284, Window.CommandId("hd:fast"), "--menu hd:fast");
             True(VideoSettings.Parse("hd_quality=balanced\n").HdQuality == 1 && new VideoSettings().Serialize().Contains("hd_quality=full"), "ini hd_quality");
             Eq(281, Window.CommandId("hd:noflicker"), "--menu hd:noflicker");

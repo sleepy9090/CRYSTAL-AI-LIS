@@ -299,3 +299,11 @@ CSHARP-WINDOWS/
     of a pack tile's edge, where the NES colour across the edge is the same, blend toward the neighbour's art at the
     shared edge (both sides meet at 50 / 50). Tried and dropped: a tone pass (NES colour − art average per NES pixel,
     blurred, added to the albedo) pulled painted highlights (ice, characters) back toward the NES palette.
+
+29. **HUD style (T34):** `Gpu.HudStyle` (`hd_effects` `hud`, default on, menu id 288, `--menu hd:hud`; constant `HudC.w`).
+    Scale2x now also rounds HUD pixels (only toward other HUD keys: `(X.r & 0x80) == (E.r & 0x80)`), so letters, digits,
+    meters and the panel frame are smooth at 8x; PSAlbedo no longer bypasses Scale2 for HUD pixels. `HudPanel`: the
+    glyph mask is "albedo differs from the panel fill colour"; glyphs get a bevel lit from the top left (mask gradient
+    1.5 texels around), a brighter top edge and a cooler darker lower edge (half an NES pixel up / down: brushed metal),
+    dark glyphs a little light; the fill gets the gloss, a brushed sheen and a soft drop shadow (4 mask taps down-right).
+    Dialog boxes use the same path (same fill colour). Off = the T29 look (exact text, hard 1-pixel shadow).

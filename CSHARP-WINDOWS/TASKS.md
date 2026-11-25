@@ -309,3 +309,7 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   picture is continuous. A tone-matching pass was built and dropped (it dulled painted highlights). 328 tests;
   win_video_check 32 ok (hd 5 -> 66042 colours); smoke + canon, REA, coverage ok. Previews: out/hd33/ (n_* floors,
   g_* split seam vs original, s_* / n_zoom3.png seams).
+- [x] T34 (interactive, 2026-11-25) done: **HUD style** (request: "enhance the hud"; architecture §5.29). Scale2x rounds the
+  HUD / dialog glyphs (only toward HUD keys); text gets a top-left bevel and a brushed-metal sheen, the panel a brushed
+  gloss and soft drop shadows (switch `hd:hud`, default on; off = exact NES text). 329 tests; win_video_check 32 ok;
+  smoke + canon, REA, coverage ok. Previews: out/hd34/hud_cmp.png, out/hd34/inn_cmp.png.

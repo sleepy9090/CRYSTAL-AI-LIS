@@ -47,6 +47,8 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool VSync;
     /// <summary>T32: overscan lines 232-239 + a masked left column drawn as exact black (Layers)</summary>
     public bool Edges = true;
+    /// <summary>T34: HUD style: rounded glyphs (Scale2x inside the HUD), bevelled metallic text, soft shadows, brushed panel</summary>
+    public bool HudStyle = true;
     /// <summary>T31: HD quality 2 = full, 1 = balanced (lighting at 75 % resolution, 16 shadow steps), 0 = fast (50 %, 10
     /// steps, no reflections / fine relief): for slower (integrated) graphics</summary>
     public int Quality = 2;
@@ -625,7 +627,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             _mr, _mg, _mb, 0,
             _exposure, Saturation, Contrast, Vignette,
             Reflections ? ReflectK : 0, Lights ? LightK : 0, Atmosphere ? _icy : 0, Atmosphere ? _hot : 0,
-            _hudFill, _hudTop, _hudBottom + 1, 0,
+            _hudFill, _hudTop, _hudBottom + 1, HudStyle ? 1 : 0,
             Quality >= 2 ? 24 : Quality == 1 ? 16 : 10, Quality >= 1 ? 1 : 0, _albScale, 0,
         };
         c.CopyTo(_c, 0);

@@ -64,12 +64,12 @@ uint4 Scale2(int2 o)
     Keys.GetDimensions(w, h);
     int2 sz = int2(w, h), q = o / 2, sub = o - q * 2;
     uint4 E = KeyAt(q, sz);
-    if ((E.r & 0x80) != 0) return E;                                  // HUD / text: exact pixels
+    if ((E.r & 0x80) != 0 && HudC.w < 0.5) return E;                  // HUD / text: exact pixels (T34: rounded with HUD style)
     int2 dx = int2(sub.x != 0 ? 1 : -1, 0), dy = int2(0, sub.y != 0 ? 1 : -1);
     uint4 X = KeyAt(q + dx, sz), X2 = KeyAt(q - dx, sz), Y = KeyAt(q + dy, sz), Y2 = KeyAt(q - dy, sz);
     uint4 r = E;
     uint xb = X.r | X.b << 8, yb = Y.r | Y.b << 8, x2b = X2.r | X2.b << 8, y2b = Y2.r | Y2.b << 8;   // background key: colour + dither partner
-    if (xb == yb && yb != x2b && xb != y2b && (X.r & 0x80) == 0) { r.r = X.r; r.b = X.b; }
+    if (xb == yb && yb != x2b && xb != y2b && (X.r & 0x80) == (E.r & 0x80)) { r.r = X.r; r.b = X.b; }
     if (X.g == Y.g && Y.g != X2.g && X.g != Y2.g) r.g = X.g;
     return r;
 }
@@ -152,7 +152,7 @@ float4 PSAlbedo(V i) : SV_Target
     int2 o = int2(i.p.xy), n = o / sc;
     uint4 L = Lay.Load(int3(n, 0));
     bool ui = (L.r & 0x80) != 0;
-    uint4 k = ui ? L : Scale2(o);
+    uint4 k = ui && HudC.w < 0.5 ? L : Scale2(o);
     float2 sub = (float2(o - n * sc) + 0.5) / sc;
     float3 bg = NesRgb(k.r);
     if (k.b != 0) bg = (bg + NesRgb(k.b - 1)) * 0.5;
@@ -552,15 +552,49 @@ float4 Reflect(float2 p, float t)
 
 // T29: the HUD panel's fill colour gets a soft gloss (lighter band near the top, darker toward the bottom) and a 1-pixel
 // drop shadow under text and frame pixels; every text / frame pixel itself stays exactly its NES colour
-float3 HudPanel(float3 a, float2 p, float4 inf)
+// T34 HUD style (HudC.w): the glyph mask = HUD pixels whose colour is not the panel fill (letters, digits, meters, the
+// frame), from the rounded albedo, so the shapes are the smooth Scale2x ones
+float HudMask(float2 s, float3 fc) { return length(Albedo(s) - fc) > 0.1 ? 1 : 0; }
+
+float3 HudPanel(float3 a, float2 p, float2 s, float4 inf)
 {
     int fill = (int)round(HudC.x);
-    if (fill < 0 || (int)round(inf.g * 255 / 4) != fill || p.y < HudC.y || p.y >= HudC.z) return a;
+    if (fill < 0 || p.y < HudC.y || p.y >= HudC.z) return a;
+    float3 fc = NesRgb((uint)fill);
     float t = saturate((p.y - HudC.y) / max(HudC.z - HudC.y, 1));
-    float g = 1.10 - 0.20 * t + 0.08 * exp(-pow((t - 0.12) * 9, 2));
-    float4 q = InfoPx(p - float2(1, 1));
-    bool shade = (Flags(q) & 4) != 0 && (int)round(q.g * 255 / 4) != fill && p.y - 1 >= HudC.y;
-    return saturate(a * g * (shade ? 0.7 : 1));
+    bool isFill = length(a - fc) < 0.1;
+    if (HudC.w < 0.5)
+    {
+        // plain (T29): gloss on the fill, a 1-pixel drop shadow under the text
+        if ((int)round(inf.g * 255 / 4) != fill) return a;
+        float g0 = 1.10 - 0.20 * t + 0.08 * exp(-pow((t - 0.12) * 9, 2));
+        float4 q = InfoPx(p - float2(1, 1));
+        bool shade = (Flags(q) & 4) != 0 && (int)round(q.g * 255 / 4) != fill && p.y - 1 >= HudC.y;
+        return saturate(a * g0 * (shade ? 0.7 : 1));
+    }
+    float2 tx = 1.0 / ALB;                                            // one albedo texel
+    if (isFill)
+    {
+        // the panel: glossy top, a brushed sheen, a soft drop shadow under the glyphs (down-right, 4 taps)
+        float g = 1.12 - 0.24 * t + 0.10 * exp(-pow((t - 0.10) * 9, 2));
+        g *= 1 + 0.025 * (FN(float2(p.x * 0.15, p.y * 6), 1) - 0.5);
+        float2 so = float2(0.9, 0.9) / NES;
+        float sh = HudMask(s - so, fc) * 0.4 + HudMask(s - so + float2(tx.x * 3, 0), fc) * 0.2 +
+                   HudMask(s - so + float2(0, tx.y * 3), fc) * 0.2 + HudMask(s - so * 1.6, fc) * 0.2;
+        return saturate(a * g * (1 - 0.45 * sh));
+    }
+    // glyphs: bevel lit from the top left (gradient of the mask 1.5 texels around) + a metallic sheen, brighter near the
+    // glyph's top edge and darker near its bottom edge (half an NES pixel up / down)
+    float2 ox = float2(tx.x * 1.5, 0), oy = float2(0, tx.y * 1.5);
+    float gx = HudMask(s + ox, fc) - HudMask(s - ox, fc), gy = HudMask(s + oy, fc) - HudMask(s - oy, fc);
+    float bevel = (gx + gy) * 0.5;
+    float2 r2 = float2(0, 0.5 / NES.y);
+    float top = 1 - HudMask(s - r2, fc), bottom = 1 - HudMask(s + r2, fc);
+    float l = dot(a, LUM);
+    float3 c = a * (1 + 0.22 * bevel + 0.12 * top);
+    c *= lerp(float3(1, 1, 1), float3(0.76, 0.83, 0.95), bottom);          // cool, darker lower edge: brushed metal
+    c += (0.10 * saturate(bevel) + 0.05 * top) * (1 - l) * float3(0.85, 0.92, 1);   // dark glyphs catch a little light too
+    return saturate(c);
 }
 
 float4 PSLight(V i) : SV_Target
@@ -572,7 +606,7 @@ float4 PSLight(V i) : SV_Target
     uint fl = Flags(inf);
     float4 ln = Lne.Load(int3(clamp(int(p.y), 0, 239), 0, 0));
     if (ln.z > 0.5 || (fl & 4) != 0 || (Lay.Load(int3(clamp(int2(p), int2(0, 0), int2(255, 239)), 0)).r & 0x80) != 0)
-        return float4(HudPanel(a, p, inf), 0);   // HUD / text + clean edges (Layers HUD bit): unlit (panel gloss only)
+        return float4(HudPanel(a, p, s, inf), 0);   // HUD / text + clean edges (Layers HUD bit): unlit (panel gloss only)
     float t = Cam.z;
     bool spr = (fl & 1) != 0;
     // motion in the world (material detail switch): water refracts in slow waves, grass sways in gusts of wind

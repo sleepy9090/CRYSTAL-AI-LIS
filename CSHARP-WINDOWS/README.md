@@ -139,8 +139,8 @@ splits) and draws the scene itself. It does not take the emulated NES picture.
 - **Lawns:** plain grass gets sunny and shaded patches, blades that lean with the wind and a few small flowers.
 - **Plain floors:** the game's flat floors (earth, stone, carpet, sand) get soft stains, grain and grit; outdoor earth a
   few small pebbles. The junk line where the status bar splits from the map is hidden too.
-- **HUD panel:** the status bar's panel gets a soft gloss and the text a 1-pixel drop shadow (every letter and digit
-  stays exactly its NES colour).
+- **HUD style:** the status bar and dialog boxes have smooth, rounded letters and digits with a bevelled, brushed-metal
+  look and soft shadows on a glossy panel (**HD: HUD style** turns it off for the exact NES text).
 - **Fades keep the art:** when the game fades a room in or out, painted tiles follow the fade (their colours darken
   with the NES palette) instead of dropping back to the generated look.
 - **Parallax:** pits, chasms and the darkness around caves become depth: cliff walls seen in perspective from the

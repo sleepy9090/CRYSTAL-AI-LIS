@@ -44,6 +44,8 @@ internal sealed class VideoSettings
     public bool HdVsync = true;
     /// <summary>T32: HD draws the overscan lines 232-239 and the game's masked left column as black (a TV bezel)</summary>
     public bool HdEdges = true;
+    /// <summary>T34: HD HUD style (smooth bevelled text, soft shadows)</summary>
+    public bool HdHud = true;
     /// <summary>T31: HD quality 2 full, 1 balanced, 0 fast (Gpu.Quality)</summary>
     public int HdQuality = 2;
     /// <summary>T13 Audio menu: CD quality (CdAudio.cs) instead of the original mono stream; stereo / reverb for it</summary>
@@ -158,6 +160,7 @@ internal sealed class VideoSettings
         if (HdArt) e.Add("art");
         if (HdVsync) e.Add("vsync");
         if (HdEdges) e.Add("edges");
+        if (HdHud) e.Add("hud");
         return e.Count > 0 ? string.Join(",", e) : "none";
     }
 
@@ -197,7 +200,7 @@ internal sealed class VideoSettings
                     var e = val.Split(',', StringSplitOptions.TrimEntries);
                     v.HdParallax = e.Contains("parallax"); v.HdShadows = e.Contains("shadows");
                     v.HdAtmosphere = e.Contains("atmosphere"); v.HdDetail = e.Contains("detail");
-                    v.HdReflections = e.Contains("reflections"); v.HdLights = e.Contains("lights"); v.HdNoFlicker = e.Contains("noflicker"); v.HdArt = e.Contains("art"); v.HdVsync = e.Contains("vsync"); v.HdEdges = e.Contains("edges");
+                    v.HdReflections = e.Contains("reflections"); v.HdLights = e.Contains("lights"); v.HdNoFlicker = e.Contains("noflicker"); v.HdArt = e.Contains("art"); v.HdVsync = e.Contains("vsync"); v.HdEdges = e.Contains("edges"); v.HdHud = e.Contains("hud");
                     break;
                 }
                 case "hd_quality":
