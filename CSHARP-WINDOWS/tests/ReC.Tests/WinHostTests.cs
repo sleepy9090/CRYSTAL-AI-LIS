@@ -516,6 +516,7 @@ internal static partial class Program
             bool superset = true;
             SceneRaster? last = null; Machine? lastM = null;
             int gaps = 0; bool gapOk = true; var padded = new List<string>();
+            int lifeN = 0, forceN = 0; bool meterOk = true;
             foreach (string p in Directory.GetFiles(dir, "*.json").OrderBy(p => p, StringComparer.Ordinal))
             {
                 var st = StateFile.Load(p);
@@ -542,12 +543,18 @@ internal static partial class Program
                     gaps++;
                     if (gt - gf > 1) padded.Add($"{Path.GetFileNameWithoutExtension(p)} {gf}-{gt - 1}");
                     gapOk &= gt >= 180 && gt <= 200 && gt - gf >= 1 && gt - gf <= 24;
+                    // T35 meters under the HUD: LIFE frame from column 6 (x 46..48), fill inside it, FORCE from x 48
+                    var mt = Gpu.Meters(all, 0x12, m.Mem.RamBytes[0x03C1]);
+                    if (mt[1] > 0) { lifeN++; meterOk &= mt[0] >= 40 && mt[0] <= 48 && mt[1] > 60 && mt[2] > mt[0] && mt[2] < mt[1] && mt[3] > gt && mt[3] < gt + 12; }
+                    if (mt[5] > 0) { forceN++; meterOk &= mt[4] == 48 && mt[5] > 64 && mt[6] > mt[3]; }
                 }
             }
             Console.WriteLine($"  win_hd_engine: no flicker shows {extra} more sprite pixels in {checkedPx / 61440} frames");
             True(superset, "no-flicker keeps every sprite pixel the 8-sprite limit shows");
             Console.WriteLine($"  win_hd_engine: HUD split gap in {gaps} states, padding band in {padded.Count}: {string.Join(", ", padded.Take(10))}");
             True(gaps > 40 && gapOk, "HUD split gap under the HUD's fixed scroll, at most 24 lines");
+            Console.WriteLine($"  win_hd_engine: HUD meters: LIFE in {lifeN} states, FORCE in {forceN}");
+            True(lifeN > 40 && forceN > 40 && meterOk, "LIFE / FORCE meters found under the HUD, fill inside the frame");
             // layer words of a town frame
             var r = last!;
             var sc = new HdScene(d.NesRgb);

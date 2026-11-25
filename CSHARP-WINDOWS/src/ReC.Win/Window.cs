@@ -138,6 +138,7 @@ internal static unsafe partial class Window
             else _enh.LiftHd(fb, tags);
             _scene ??= new HdScene(_nesRgb);
             _scene.Build(fb, tags, pal, _enh.HdLift, _raster!.LineScroll, _frameNo);
+            _gpu.Hp = _m.Mem.RamBytes[0x03C1];               // T35: LIFE meter fill (HudHpBar draws from it)
             _gpu.Upload(_raster, _scene);
         }
         else

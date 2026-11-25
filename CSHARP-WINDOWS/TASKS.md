@@ -313,3 +313,8 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   HUD / dialog glyphs (only toward HUD keys); text gets a top-left bevel and a brushed-metal sheen, the panel a brushed
   gloss and soft drop shadows (switch `hd:hud`, default on; off = exact NES text). 329 tests; win_video_check 32 ok;
   smoke + canon, REA, coverage ok. Previews: out/hd34/hud_cmp.png, out/hd34/inn_cmp.png.
+- [x] T35 (interactive, 2026-11-25) done: **LIFE / FORCE meters** (request: "make the life and force bars look better
+  too"; architecture §5.30). LIFE = glossy red capsule to the drawn HP (cell marks per 16 HP, sweeping shine, heartbeat
+  when low); FORCE = the game's chevrons / segments as dark glass, glowing cyan when lit by the charge. Found in all 83
+  HUD test states. 330 tests; win_video_check 32 ok; smoke + canon, REA, coverage ok. Previews: out/hd35/bars.png,
+  out/hd35/charge.png / charge2.png (original vs HD while charging).

@@ -307,3 +307,13 @@ CSHARP-WINDOWS/
     1.5 texels around), a brighter top edge and a cooler darker lower edge (half an NES pixel up / down: brushed metal),
     dark glyphs a little light; the fill gets the gloss, a brushed sheen and a soft drop shadow (4 mask taps down-right).
     Dialog boxes use the same path (same fill colour). Off = the T29 look (exact text, hard 1-pixel shadow).
+
+30. **HUD meters (T35, with HUD style):** `Gpu.Meters` finds both under the HUD's fixed scroll: LIFE = nametable row 25
+    (`HudHpBar` `26:8CC0`: a black frame from column 6 up to max HP, a cell per 16 HP; frame x-extent from its top line),
+    FORCE = row 26 (charge meter `26:8D7A`, from x 48 to the last non-fill column). The LIFE fill end is column 6 + HP / 2
+    with HP = RAM `$03C1` (`Gpu.Hp`, set by Window before Upload; the bar is drawn from it). Constant rows 16 / 17
+    (`MeterL`, `MeterF`; NConst 18). Shader: LIFE = an anti-aliased rounded capsule (`SdRound`), rim with a light top lip,
+    dark glass trough, red gradient fill, a cell mark every 16 HP, a shine sweeping along, a heartbeat under 25 %; the
+    NES frame's square corners show the panel. FORCE keeps the game's (rounded) chevrons / segments: unlit (black) =
+    bevelled dark glass, lit (any other NES colour of the pixel) = glowing energy (white -> cyan, or the colour's own hue)
+    with a pulse running along. Found in all 83 HUD test states (`win_hd_engine`).

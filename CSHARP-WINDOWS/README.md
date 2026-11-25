@@ -141,6 +141,8 @@ splits) and draws the scene itself. It does not take the emulated NES picture.
   few small pebbles. The junk line where the status bar splits from the map is hidden too.
 - **HUD style:** the status bar and dialog boxes have smooth, rounded letters and digits with a bevelled, brushed-metal
   look and soft shadows on a glossy panel (**HD: HUD style** turns it off for the exact NES text).
+- **LIFE and FORCE bars:** LIFE is a glossy red capsule (one mark per 16 HP, a shine sweeping along, a heartbeat when
+  low); FORCE keeps the game's chevrons as dark glass that glow cyan as the sword charges.
 - **Fades keep the art:** when the game fades a room in or out, painted tiles follow the fade (their colours darken
   with the NES palette) instead of dropping back to the generated look.
 - **Parallax:** pits, chasms and the darkness around caves become depth: cliff walls seen in perspective from the

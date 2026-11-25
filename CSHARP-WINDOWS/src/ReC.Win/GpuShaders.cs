@@ -22,6 +22,8 @@ cbuffer C : register(b0)
     float4 Opt2;   // reflection strength, local light strength, icy scene (snow), hot scene (embers)
     float4 HudC;   // HUD panel: fill colour (-1 = none), first line, last line + 1, -
     float4 QualC;  // shadow steps, extras (reflections, fine relief) 0 / 1, albedo scale (8 / 4), -
+    float4 MeterL; // T35 LIFE meter: x0, x1 (frame), fill end, top line (x1 = 0: none)
+    float4 MeterF; // T35 FORCE meter: x0, x1, top line, -
 };
 Texture2D SrcA : register(t0);
 Texture2D SrcB : register(t1);
@@ -556,6 +558,78 @@ float4 Reflect(float2 p, float t)
 // frame), from the rounded albedo, so the shapes are the smooth Scale2x ones
 float HudMask(float2 s, float3 fc) { return length(Albedo(s) - fc) > 0.1 ? 1 : 0; }
 
+// ---- T35 HUD meters (HUD style): LIFE = a glossy capsule (dark glass trough, red fill to the HP the game draws, a cell
+// mark every 16 HP, a shine sweeping along, a pulse when low); FORCE = the game's chevrons / segments (rounded) as dark
+// bevelled glass, glowing when lit. Geometry from Gpu.Meters (MeterL / MeterF, NES pixels)
+float SdRound(float2 q, float2 he, float r)
+{
+    float2 d = abs(q) - he + r;
+    return length(max(d, 0)) + min(max(d.x, d.y), 0) - r;
+}
+float3 PanelFill(float2 p, float2 s, float3 fc, float t)
+{
+    // the panel: glossy top, a brushed sheen, a soft drop shadow under the glyphs (down-right, 4 taps)
+    float2 tx = 1.0 / ALB;
+    float g = 1.12 - 0.24 * t + 0.10 * exp(-pow((t - 0.10) * 9, 2));
+    g *= 1 + 0.025 * (FN(float2(p.x * 0.15, p.y * 6), 1) - 0.5);
+    float2 so = float2(0.9, 0.9) / NES;
+    float sh = HudMask(s - so, fc) * 0.4 + HudMask(s - so + float2(tx.x * 3, 0), fc) * 0.2 +
+               HudMask(s - so + float2(0, tx.y * 3), fc) * 0.2 + HudMask(s - so * 1.6, fc) * 0.2;
+    return saturate(fc * g * (1 - 0.45 * sh));
+}
+float4 LifeMeter(float2 p, float3 panel)
+{
+    if (MeterL.y <= 0) return 0;
+    float x0 = MeterL.x, w = MeterL.y - MeterL.x, fx = MeterL.z - MeterL.x;
+    float2 q = p - float2(x0, MeterL.w);
+    if (q.x < -1 || q.x > w + 1 || q.y < -1 || q.y > 8) return 0;
+    float2 c = float2(w * 0.5, 3.5);
+    float d = SdRound(q - c, float2(w * 0.5, 3.5), 3.2);
+    float cov = 1 - smoothstep(-0.18, 0.18, d);
+    if (cov <= 0) return float4(panel, 1);                             // the NES frame's square corners: panel
+    float3 rim = lerp(float3(0.02, 0.03, 0.07), float3(0.70, 0.78, 0.92), saturate(1 - q.y / 1.1) * 0.85);
+    float ci = 1 - smoothstep(-0.15, 0.15, SdRound(q - c, float2(w * 0.5 - 0.9, 2.6), 2.4));
+    float ty = saturate((q.y - 0.9) / 5.2);
+    float3 trough = lerp(float3(0.02, 0.03, 0.07), float3(0.09, 0.11, 0.19), ty);
+    float cf = 1 - smoothstep(fx - 0.25, fx + 0.25, q.x);
+    float3 red = lerp(float3(1.0, 0.62, 0.52), float3(0.93, 0.13, 0.10), smoothstep(0.0, 0.45, ty));
+    red = lerp(red, float3(0.42, 0.03, 0.05), smoothstep(0.55, 1.0, ty));
+    float ratio = saturate(fx / max(w - 2, 1));
+    if (ratio < 0.25) red *= 1 + 0.3 * (0.5 + 0.5 * sin(Cam.z * 7));     // low life: a heartbeat
+    float sweep = frac(Cam.z * 0.22) * (w + 24) - 12;                    // a shine sweeping along
+    red += 0.35 * exp(-pow((q.x - sweep - q.y * 0.8) * 0.55, 2)) * float3(1, 0.85, 0.75) * cf;
+    float cm = frac((p.x - 48) / 8);                                     // a cell mark every 16 HP
+    red *= 1 - 0.22 * (1 - smoothstep(0.0, 0.07, min(cm, 1 - cm))) * step(48.5, p.x);
+    float3 tip = lerp(trough, red, cf) + 0.25 * exp(-pow((q.x - fx) * 2.5, 2)) * float3(1, 0.6, 0.5) * step(0.5, fx);
+    return float4(lerp(panel, lerp(rim, tip, ci), cov), 1);
+}
+float4 ForceMeter(float2 p, float2 s, float3 fc)
+{
+    if (MeterF.y <= 0) return 0;
+    float2 q = p - float2(MeterF.x, MeterF.z);
+    if (q.x < -0.5 || p.x > MeterF.y + 0.5 || q.y < 0 || q.y >= 8) return 0;
+    if (HudMask(s, fc) < 0.5) return 0;                                  // the panel between: normal path
+    float3 a = Albedo(s);
+    float2 tx = 1.0 / ALB, ox = float2(tx.x * 1.5, 0), oy = float2(0, tx.y * 1.5);
+    float bevel = ((HudMask(s + ox, fc) - HudMask(s - ox, fc)) + (HudMask(s + oy, fc) - HudMask(s - oy, fc))) * 0.5;
+    float top = 1 - HudMask(s - float2(0, 0.6 / NES.y), fc);
+    float ty = saturate((q.y - 1) / 6);
+    float3 col;
+    int nc = (int)round(InfoPx(p).g * 255 / 4);                        // the NES colour decides (rounded edges blend)
+    if (nc != 0x0F && nc != 0x0D && nc != 0x1D && nc != (int)round(HudC.x))
+    {
+        // lit: the game's colour as glowing energy (white -> electric cyan), a pulse running along
+        float3 nr = NesRgb((uint)nc);
+        float sat = max(nr.r, max(nr.g, nr.b)) - min(nr.r, min(nr.g, nr.b));
+        float3 hue = sat < 0.15 ? float3(0.25, 0.85, 1.0) : nr;
+        col = lerp(float3(0.95, 1, 1), hue, smoothstep(0.1, 0.7, ty)) * (1 + 0.18 * sin(Cam.z * 9 - p.x * 0.45));
+        col += 0.3 * top;
+    }
+    else
+        col = lerp(float3(0.13, 0.17, 0.30), float3(0.02, 0.03, 0.07), ty) + (0.4 * saturate(bevel) + 0.25 * top) * float3(0.55, 0.7, 1);
+    return float4(saturate(col), 1);
+}
+
 float3 HudPanel(float3 a, float2 p, float2 s, float4 inf)
 {
     int fill = (int)round(HudC.x);
@@ -573,16 +647,12 @@ float3 HudPanel(float3 a, float2 p, float2 s, float4 inf)
         return saturate(a * g0 * (shade ? 0.7 : 1));
     }
     float2 tx = 1.0 / ALB;                                            // one albedo texel
-    if (isFill)
-    {
-        // the panel: glossy top, a brushed sheen, a soft drop shadow under the glyphs (down-right, 4 taps)
-        float g = 1.12 - 0.24 * t + 0.10 * exp(-pow((t - 0.10) * 9, 2));
-        g *= 1 + 0.025 * (FN(float2(p.x * 0.15, p.y * 6), 1) - 0.5);
-        float2 so = float2(0.9, 0.9) / NES;
-        float sh = HudMask(s - so, fc) * 0.4 + HudMask(s - so + float2(tx.x * 3, 0), fc) * 0.2 +
-                   HudMask(s - so + float2(0, tx.y * 3), fc) * 0.2 + HudMask(s - so * 1.6, fc) * 0.2;
-        return saturate(a * g * (1 - 0.45 * sh));
-    }
+    float3 panel = PanelFill(p, s, fc, t);
+    float4 mt = LifeMeter(p, panel);
+    if (mt.a > 0) return mt.rgb;
+    mt = ForceMeter(p, s, fc);
+    if (mt.a > 0) return mt.rgb;
+    if (isFill) return panel;
     // glyphs: bevel lit from the top left (gradient of the mask 1.5 texels around) + a metallic sheen, brighter near the
     // glyph's top edge and darker near its bottom edge (half an NES pixel up / down)
     float2 ox = float2(tx.x * 1.5, 0), oy = float2(0, tx.y * 1.5);

@@ -49,6 +49,9 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool Edges = true;
     /// <summary>T34: HUD style: rounded glyphs (Scale2x inside the HUD), bevelled metallic text, soft shadows, brushed panel</summary>
     public bool HudStyle = true;
+    /// <summary>T35: the player's HP (RAM $03C1) for the LIFE meter's fill (set before Upload)</summary>
+    public int Hp;
+    private float[] _meters = new float[8];
     /// <summary>T31: HD quality 2 = full, 1 = balanced (lighting at 75 % resolution, 16 shadow steps), 0 = fast (50 %, 10
     /// steps, no reflections / fine relief): for slower (integrated) graphics</summary>
     public int Quality = 2;
@@ -133,7 +136,7 @@ internal sealed unsafe partial class Gpu : IDisposable
 
     private const uint FmtBgra = 87, FmtRgba8 = 28, FmtRgba8U = 30, FmtRg32U = 17, FmtRgba32F = 2, FmtRgba16F = 10;
     private const uint BindSrv = 8, BindRtv = 0x20;
-    private const int NSrv = 12, NConst = 16;
+    private const int NSrv = 12, NConst = 18;
     private static readonly Guid IidTex2D = new("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
 
     private static void** Vt(void* o) => *(void***)o;
@@ -502,6 +505,50 @@ internal sealed unsafe partial class Gpu : IDisposable
         return (from, hud);
     }
 
+    /// <summary>T35 HUD meters, found on screen under the HUD's fixed scroll: LIFE = nametable row 25 (HudHpBar 26:8CC0
+    /// draws 17 tiles from $2B26 = column 6: a black frame up to max HP, a cell per 16 HP), FORCE = row 26 (the charge
+    /// meter 26:8D7A: chevrons + segments from column 6). Returns {life x0, x1, fill end, top line, force x0, x1, top
+    /// line, 0}; x1 = 0 = not on screen. The LIFE fill end is the HP the bar is drawn from ($03C1): column 6 + HP / 2.</summary>
+    public static float[] Meters(SceneRaster r, int fill, int hp)
+    {
+        var m = new float[8];
+        int Band(int row)
+        {
+            for (int y = 150; y < 232; y++)
+            {
+                int ls = r.LineScroll[y];
+                if (ls >= 0 && (ls & 0x0FE0) == (0x0B00 | row << 5) && (ls >> 12 & 7) == 0) return y;
+            }
+            return -1;
+        }
+        bool Black(int x, int y) => (r.Fb[y * 256 + x] & 63) == 0x0F;
+        int ly = Band(1);
+        if (ly >= 0 && ly + 6 < 240 && Black(48, ly))
+        {
+            int x0 = 48, x1 = 48;
+            while (x0 > 40 && Black(x0 - 1, ly)) x0--;
+            while (x1 < 255 && Black(x1, ly)) x1++;
+            if (x1 - x0 >= 12 && Black(x0 + 1, ly + 6) && Black(x1 - 2, ly + 6))
+            {
+                m[0] = x0; m[1] = x1; m[3] = ly;
+                m[2] = Math.Clamp(48 + hp * 0.5f, x0 + 1, x1 - 1);
+            }
+        }
+        int fy = Band(2);
+        if (fy >= 0 && fy + 7 < 240 && fill >= 0)
+        {
+            int last = -1, gap = 0;
+            for (int x = 48; x < 256 && gap <= 6; x++)
+            {
+                bool any = false;
+                for (int y = fy; y < fy + 8 && !any; y++) any = (r.Fb[y * 256 + x] & 63) != fill;
+                if (any) { last = x; gap = 0; } else gap++;
+            }
+            if (last - 48 >= 15) { m[4] = 48; m[5] = last + 1; m[6] = fy; }
+        }
+        return m;
+    }
+
     /// <summary>the line-start scroll word (v | fine x << 16) of the next line by the PPU's own y increment</summary>
     private static int NextLine(int ls)
     {
@@ -551,6 +598,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         _camX = sc.CamX; _camY = sc.CamY; _time = sc.Time; _outdoor = sc.Outdoor; _voidGate = sc.VoidGate; _play = sc.Play;
         _icy = sc.Icy; _hot = sc.Hot;
         _hudFill = sc.HudFill; _hudTop = sc.HudTop; _hudBottom = sc.HudBottom;
+        _meters = Meters(r, sc.HudFill, Hp);
         // eye adaptation (gameplay only): dark scenes a little brighter, bright ones a little darker, eased over ~1 s
         float lum = Math.Max(_mr * 0.299f + _mg * 0.587f + _mb * 0.114f, 0.05f);
         float want = 1 + (Math.Clamp(MathF.Sqrt(0.42f / lum), 0.9f, 1.22f) - 1) * _play;
@@ -629,6 +677,8 @@ internal sealed unsafe partial class Gpu : IDisposable
             Reflections ? ReflectK : 0, Lights ? LightK : 0, Atmosphere ? _icy : 0, Atmosphere ? _hot : 0,
             _hudFill, _hudTop, _hudBottom + 1, HudStyle ? 1 : 0,
             Quality >= 2 ? 24 : Quality == 1 ? 16 : 10, Quality >= 1 ? 1 : 0, _albScale, 0,
+            _meters[0], _meters[1], _meters[2], _meters[3],
+            _meters[4], _meters[5], _meters[6], _meters[7],
         };
         c.CopyTo(_c, 0);
         SetConstants();
