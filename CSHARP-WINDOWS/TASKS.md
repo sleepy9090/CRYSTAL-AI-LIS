@@ -338,3 +338,7 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] T45-T46 (2026-11-25, user away): **Video › CRT look** (Original graphics: 3x scanlines + RGB aperture mask) and
   **controller extras** (RB = fast forward, LB = pause). 353 tests; win_video_check 32 ok (T45); smoke + canon (T46)
   ok; REA, coverage ok. Preview: out/hd45/crt_cmp.png.
+- [x] T47-T49 (2026-11-25, request "update the graphics engine and the audio engine"): **audio engine v2**
+  (AudioFx.cs: resampler + rate control instead of dropped blocks, continuous fast-forward sound, Audio › Channels
+  mutes, Audio › Headphone crossfeed), **HD sharpening** (contrast adaptive, HD › Sharpen) + **water caustics**,
+  **FPS counter** (F2). 379 tests. Preview: out/hd48/sharpen_cmp.png (off | on).

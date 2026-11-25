@@ -26,10 +26,12 @@ internal static unsafe partial class Window
     private const int IdOriginal = 270, IdEnhanced = 271, IdReloadPack = 272, IdEnhanced32 = 273, IdHd = 274,
         IdHdParallax = 275, IdHdShadows = 276, IdHdAtmosphere = 277, IdHdDetail = 278,
         IdHdReflections = 279, IdHdLights = 280, IdHdNoFlicker = 281, IdHdArt = 282, IdHdVsync = 283, IdHdQuality0 = 284,   // + 0 fast, 1 balanced, 2 full
-        IdHdEdges = 287, IdHdHud = 288;
+        IdHdEdges = 287, IdHdHud = 288, IdHdSharpen = 289;
     private const int IdVolume0 = 420;                      // T40: + 0..3 = 100 / 75 / 50 / 25 %
     private const int IdCrt = 290;                          // T45
+    private const int IdFps = 291;                          // T49
     private const int IdAudioOriginal = 410, IdAudioCd = 411, IdStereo = 412, IdReverb = 413, IdAudioRemaster = 414;
+    private const int IdCrossfeed = 415, IdChannel0 = 430;   // T47: + 0..4 = pulse 1, pulse 2, triangle, noise, DMC
 
     private static VideoSettings _v = new();
     private static string? _videoPath;
@@ -51,6 +53,7 @@ internal static unsafe partial class Window
         {
             case "pause": return IdPause;
             case "crt": return IdCrt;
+            case "fps": return IdFps;
             case "volume:100": return IdVolume0;
             case "volume:75": return IdVolume0 + 1;
             case "volume:50": return IdVolume0 + 2;
@@ -82,6 +85,7 @@ internal static unsafe partial class Window
             case "hd:vsync": return IdHdVsync;
             case "hd:edges": return IdHdEdges;
             case "hd:hud": return IdHdHud;
+            case "hd:sharpen": return IdHdSharpen;
             case "hd:fast": return IdHdQuality0;
             case "hd:balanced": return IdHdQuality0 + 1;
             case "hd:full": return IdHdQuality0 + 2;
@@ -91,6 +95,9 @@ internal static unsafe partial class Window
             case "stereo": return IdStereo;
             case "reverb": return IdReverb;
             case "audio:remaster": return IdAudioRemaster;
+            case "crossfeed": return IdCrossfeed;
+            case var ch when ch.StartsWith("channel:") && Array.IndexOf(VideoSettings.ChannelNames, ch[8..]) >= 0:
+                return IdChannel0 + Array.IndexOf(VideoSettings.ChannelNames, ch[8..]);
         }
         if (n.StartsWith("size:"))
         {
@@ -174,6 +181,11 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)vm, "&Volume");
         Win32.AppendMenuW(m, 0, IdStereo, "&Stereo channels (CD quality)");
         Win32.AppendMenuW(m, 0, IdReverb, "&Reverb (CD quality)");
+        Win32.AppendMenuW(m, 0, IdCrossfeed, "&Headphone crossfeed (CD quality / Remastered)");
+        var cm = NewMenu();
+        string[] cn = { "Pulse &1 (melody)", "Pulse &2 (harmony)", "&Triangle (bass)", "&Noise (drums)", "&DMC (samples)" };
+        for (int i = 0; i < 5; i++) Win32.AppendMenuW(cm, 0, (nuint)(IdChannel0 + i), cn[i]);
+        Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)cm, "C&hannels (CD quality / Remastered)");
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(m, 0, IdMute, "&Mute\tM");
         return m;
@@ -186,6 +198,8 @@ internal static unsafe partial class Window
         _audio.Mixer.Stereo = _v.AudioStereo;
         _audio.Mixer.Reverb = _v.AudioReverb;
         _audio.Mixer.Remaster = _v.AudioRemaster;
+        _audio.Mixer.Mute = _v.AudioMute;
+        _audio.Mixer.Crossfeed = _v.Crossfeed;
         _audio.Volume = _v.Volume / 100f;
         _audio.Mixer.Clear();
         if (!_audio.SetCd(_v.CdAudio || _v.AudioRemaster)) Status("audio device could not be reopened");
@@ -200,6 +214,7 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(gfx, 0, IdEnhanced32, "Enhanced (&32-bit)");
         Win32.AppendMenuW(gfx, 0, IdHd, "&HD engine (GPU: 8x layers, lighting, shadows, parallax)");
         Win32.AppendMenuW(gfx, 0, IdCrt, "&CRT look (scanlines, Original graphics)");
+        Win32.AppendMenuW(gfx, 0, IdFps, "Show &FPS\tF2");
         Win32.AppendMenuW(gfx, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(gfx, 0, IdHdParallax, "HD: &Parallax depth (pits, cliffs, layers)");
         Win32.AppendMenuW(gfx, 0, IdHdShadows, "HD: &Shadows (soft, contact, clouds)");
@@ -212,6 +227,7 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(gfx, 0, IdHdVsync, "HD: &VSync (no tearing)");
         Win32.AppendMenuW(gfx, 0, IdHdEdges, "HD: Clean &edges (hide overscan + masked column)");
         Win32.AppendMenuW(gfx, 0, IdHdHud, "HD: &HUD style (smooth bevelled text)");
+        Win32.AppendMenuW(gfx, 0, IdHdSharpen, "HD: &Sharpen (contrast adaptive)");
         Win32.AppendMenuW(gfx, 0, IdHdQuality0 + 2, "HD quality: F&ull");
         Win32.AppendMenuW(gfx, 0, IdHdQuality0 + 1, "HD quality: Ba&lanced (slower graphics)");
         Win32.AppendMenuW(gfx, 0, IdHdQuality0, "HD quality: Fa&st (integrated graphics)");
@@ -266,7 +282,7 @@ internal static unsafe partial class Window
     private static void UpdateMenus()
     {
         if (_menus.Count == 0) return;
-        Check(IdPause, _paused); Check(IdMute, _muted); Check(IdCrt, _v.Crt);
+        Check(IdPause, _paused); Check(IdMute, _muted); Check(IdCrt, _v.Crt); Check(IdFps, _v.ShowFps);
         for (int i = 0; i < 4; i++) Check(IdVolume0 + i, _v.Volume == 100 - 25 * i); Check(IdTurboA, _v.TurboA); Check(IdTurboB, _v.TurboB);
         for (int i = 0; i < Cheats.Names.Length; i++) Check(IdCheat0 + i, _v.Cheats.Get(i));
         Check(IdFullscreen, _fullscreen); Check(IdMenuBar, _v.MenuBar);
@@ -280,11 +296,13 @@ internal static unsafe partial class Window
         Check(IdEnhanced32, GraphicsMode == 2, true); Check(IdHd, GraphicsMode == 3, true);
         Check(IdHdParallax, _v.HdParallax); Check(IdHdShadows, _v.HdShadows);
         Check(IdHdAtmosphere, _v.HdAtmosphere); Check(IdHdDetail, _v.HdDetail);
-        Check(IdHdReflections, _v.HdReflections); Check(IdHdLights, _v.HdLights); Check(IdHdNoFlicker, _v.HdNoFlicker); Check(IdHdArt, _v.HdArt); Check(IdHdVsync, _v.HdVsync); Check(IdHdEdges, _v.HdEdges); Check(IdHdHud, _v.HdHud);
+        Check(IdHdReflections, _v.HdReflections); Check(IdHdLights, _v.HdLights); Check(IdHdNoFlicker, _v.HdNoFlicker); Check(IdHdArt, _v.HdArt); Check(IdHdVsync, _v.HdVsync); Check(IdHdEdges, _v.HdEdges); Check(IdHdHud, _v.HdHud); Check(IdHdSharpen, _v.HdSharpen);
         for (int q = 0; q < 3; q++) Check(IdHdQuality0 + q, _v.HdQuality == q, true);
         Check(IdAudioOriginal, !_v.CdAudio && !_v.AudioRemaster, true); Check(IdAudioCd, _v.CdAudio, true);
         Check(IdAudioRemaster, _v.AudioRemaster, true);
         Check(IdStereo, _v.AudioStereo); Check(IdReverb, _v.AudioReverb);
+        Check(IdCrossfeed, _v.Crossfeed);
+        for (int i = 0; i < 5; i++) Check(IdChannel0 + i, (_v.AudioMute >> i & 1) == 0);
         Check(IdFsDesktop, _v.FsW == 0, true);
         for (int i = 0; i < _modes.Count; i++) Check(IdFsMode0 + i, (_v.FsW, _v.FsH) == _modes[i], true);
     }
@@ -305,6 +323,7 @@ internal static unsafe partial class Window
         {
             case IdPause: KeyCommand('P'); return;
             case IdCrt: _v.Crt = !_v.Crt; Notice(_v.Crt ? "CRT LOOK: ON" : "CRT LOOK: OFF"); SettingsChanged(false); Present(); return;
+            case IdFps: _v.ShowFps = !_v.ShowFps; SettingsChanged(false); Present(); return;
             case >= IdVolume0 and < IdVolume0 + 4:
                 _v.Volume = 100 - 25 * (id - IdVolume0);
                 if (_audio != null) _audio.Volume = _v.Volume / 100f;
@@ -352,6 +371,7 @@ internal static unsafe partial class Window
             case >= IdHdQuality0 and <= IdHdQuality0 + 2: _v.HdQuality = id - IdHdQuality0; HdEffectsChanged(); Present(); return;
             case IdHdVsync: _v.HdVsync = !_v.HdVsync; HdEffectsChanged(); return;
             case IdHdEdges: _v.HdEdges = !_v.HdEdges; HdEffectsChanged(); return;
+            case IdHdSharpen: _v.HdSharpen = !_v.HdSharpen; HdEffectsChanged(); return;
             case IdHdHud: _v.HdHud = !_v.HdHud; HdEffectsChanged(); return;
             case IdHdArt: _v.HdArt = !_v.HdArt; HdEffectsChanged(); GpuArt(); if (NeedRender) RenderHd(); Present(); return;
             case IdReloadPack: ReloadPack(); return;
@@ -360,6 +380,15 @@ internal static unsafe partial class Window
             case IdAudioRemaster: _v.AudioRemaster = true; _v.CdAudio = false; ApplyAudio(); SettingsChanged(false); return;
             case IdStereo: _v.AudioStereo = !_v.AudioStereo; ApplyAudio(); SettingsChanged(false); return;
             case IdReverb: _v.AudioReverb = !_v.AudioReverb; ApplyAudio(); SettingsChanged(false); return;
+            case IdCrossfeed:
+                _v.Crossfeed = !_v.Crossfeed;
+                if (_audio != null) _audio.Mixer.Crossfeed = _v.Crossfeed;
+                Notice(_v.Crossfeed ? "CROSSFEED: ON" : "CROSSFEED: OFF"); SettingsChanged(false); return;
+            case >= IdChannel0 and < IdChannel0 + 5:
+                _v.AudioMute ^= 1 << (id - IdChannel0);
+                if (_audio != null) _audio.Mixer.Mute = _v.AudioMute;
+                Notice(VideoSettings.ChannelNames[id - IdChannel0].ToUpperInvariant() + ((_v.AudioMute >> (id - IdChannel0) & 1) != 0 ? ": MUTED" : ": ON"));
+                SettingsChanged(false); return;
         }
         if (id > IdScale0 && id <= IdScale0 + VideoSettings.MaxScale) { _v.SetScale(id - IdScale0); SettingsChanged(true); }
         else if (id >= IdPreset0 && id < IdPreset0 + VideoSettings.Presets.Length)

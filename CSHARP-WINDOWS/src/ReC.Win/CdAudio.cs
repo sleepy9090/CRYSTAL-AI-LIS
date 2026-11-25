@@ -26,6 +26,11 @@ internal sealed class CdMixer
     /// <summary>T28: the remastered sound (chorus, smooth bass, room, EQ) instead of the CD path</summary>
     public bool Remaster;
     public float Gain = 1.3f;
+    /// <summary>T47: muted channels (bit 0 pulse 1, 1 pulse 2, 2 triangle, 3 noise, 4 DMC; Audio > Channels)</summary>
+    public int Mute;
+    /// <summary>T47: headphone crossfeed (AudioFx.cs)</summary>
+    public bool Crossfeed;
+    private readonly Crossfeed _xf = new();
 
     // pan gains (left, right) per channel; the two sides add up to 2 so mono balance is unchanged
     private static readonly (float L, float R) PanP1 = (1.25f, 0.75f), PanP2 = (0.75f, 1.25f), PanNoise = (0.85f, 1.15f);
@@ -79,6 +84,14 @@ internal sealed class CdMixer
     /// <summary>one InRate sample of channel levels (the Apu.OutChannels sink)</summary>
     public void Push(float p1, float p2, float tri, float noise, float dmc)
     {
+        if (Mute != 0)
+        {
+            if ((Mute & 1) != 0) p1 = 0;
+            if ((Mute & 2) != 0) p2 = 0;
+            if ((Mute & 4) != 0) tri = 0;
+            if ((Mute & 8) != 0) noise = 0;
+            if ((Mute & 16) != 0) dmc = 0;
+        }
         if (Remaster) { PushRemaster(p1, p2, tri, noise, dmc); return; }
         float l, r;
         if (Stereo)
@@ -110,8 +123,7 @@ internal sealed class CdMixer
             yl = yl * 0.88 + _rvL.Process(mono) * 0.12;
             yr = yr * 0.88 + _rvR.Process(mono) * 0.12;
         }
-        _out.Add(ToPcm(yl * Gain));
-        _out.Add(ToPcm(yr * Gain));
+        Emit(yl * Gain, yr * Gain);
     }
 
     // ---- T28 remaster
@@ -158,8 +170,7 @@ internal sealed class CdMixer
         yr += _rmR.Process(send) * 0.2;
         yl = _hsL.Process(_lsL.Process(yl));
         yr = _hsR.Process(_lsR.Process(yr));
-        _out.Add(ToPcm(yl * Gain * 0.45));
-        _out.Add(ToPcm(yr * Gain * 0.45));
+        Emit(yl * Gain * 0.45, yr * Gain * 0.45);
     }
 
     /// <summary>delay line read `sec` seconds back, linear interpolation</summary>
@@ -170,6 +181,13 @@ internal sealed class CdMixer
         double f = back - i;
         float a = d[(_dpos - i) & 1023], b = d[(_dpos - i - 1) & 1023];
         return a + (b - a) * f;
+    }
+
+    private void Emit(double l, double r)
+    {
+        if (Crossfeed) (l, r) = _xf.Process(l, r);
+        _out.Add(ToPcm(l));
+        _out.Add(ToPcm(r));
     }
 
     /// <summary>soft limiter above 0.8 FS, TPDF dither (+-1 LSB), round to 16 bits</summary>
@@ -195,6 +213,7 @@ internal sealed class CdMixer
         Array.Clear(_hl); Array.Clear(_hr);
         _pos = _phase = 0;
         _dcxl = _dcyl = _dcxr = _dcyr = 0;
+        _xf.Clear();
         _out.Clear();
     }
 }

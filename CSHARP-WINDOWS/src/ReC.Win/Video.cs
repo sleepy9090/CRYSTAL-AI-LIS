@@ -44,6 +44,8 @@ internal sealed class VideoSettings
     public bool HdVsync = true;
     /// <summary>T32: HD draws the overscan lines 232-239 and the game's masked left column as black (a TV bezel)</summary>
     public bool HdEdges = true;
+    /// <summary>T48: HD sharpening (hd_effects sharpen)</summary>
+    public bool HdSharpen = true;
     /// <summary>T34: HD HUD style (smooth bevelled text, soft shadows)</summary>
     public bool HdHud = true;
     /// <summary>T31: HD quality 2 full, 1 balanced, 0 fast (Gpu.Quality)</summary>
@@ -56,6 +58,8 @@ internal sealed class VideoSettings
     public int Volume = 100;
     /// <summary>T45: CRT look for Original graphics (Video menu; ini crt=1)</summary>
     public bool Crt;
+    /// <summary>T49: FPS counter on screen (F2 / Video > Show FPS; ini show_fps=1)</summary>
+    public bool ShowFps;
     public static int Turbo(int buttons, int frame, bool a, bool b)
     {
         bool up = frame / 3 % 2 == 1;
@@ -67,6 +71,11 @@ internal sealed class VideoSettings
     public bool CdAudio, AudioStereo = true, AudioReverb;
     /// <summary>T28: Audio > Remastered (CdMixer.Remaster: chorus, smooth bass, room, EQ); implies the CD device path</summary>
     public bool AudioRemaster;
+    /// <summary>T47: muted channels for CD / Remastered (Audio > Channels; ini audio_mute=pulse1,..), CdMixer.Mute bits</summary>
+    public int AudioMute;
+    public static readonly string[] ChannelNames = { "pulse1", "pulse2", "triangle", "noise", "dmc" };
+    /// <summary>T47: headphone crossfeed (ini crossfeed=1)</summary>
+    public bool Crossfeed;
 
     public static readonly (Aspect A, string Key, string Label)[] Aspects =
     {
@@ -161,6 +170,9 @@ internal sealed class VideoSettings
         $"audio_reverb={(AudioReverb ? 1 : 0)}",
         $"volume={Volume}",
         $"crt={(Crt ? 1 : 0)}",
+        $"show_fps={(ShowFps ? 1 : 0)}",
+        $"audio_mute={(AudioMute == 0 ? "none" : string.Join(",", ChannelNames.Where((_, i) => (AudioMute >> i & 1) != 0)))}",
+        $"crossfeed={(Crossfeed ? 1 : 0)}",
         $"upscale={ReC.Win.Upscale.Filters.First(f => f.K == Upscale).Key}",
         $"cheats={Cheats.Serialize()}",
         $"turbo={(TurboA && TurboB ? "a,b" : TurboA ? "a" : TurboB ? "b" : "none")}",
@@ -180,6 +192,7 @@ internal sealed class VideoSettings
         if (HdVsync) e.Add("vsync");
         if (HdEdges) e.Add("edges");
         if (HdHud) e.Add("hud");
+        if (HdSharpen) e.Add("sharpen");
         return e.Count > 0 ? string.Join(",", e) : "none";
     }
 
@@ -219,7 +232,7 @@ internal sealed class VideoSettings
                     var e = val.Split(',', StringSplitOptions.TrimEntries);
                     v.HdParallax = e.Contains("parallax"); v.HdShadows = e.Contains("shadows");
                     v.HdAtmosphere = e.Contains("atmosphere"); v.HdDetail = e.Contains("detail");
-                    v.HdReflections = e.Contains("reflections"); v.HdLights = e.Contains("lights"); v.HdNoFlicker = e.Contains("noflicker"); v.HdArt = e.Contains("art"); v.HdVsync = e.Contains("vsync"); v.HdEdges = e.Contains("edges"); v.HdHud = e.Contains("hud");
+                    v.HdReflections = e.Contains("reflections"); v.HdLights = e.Contains("lights"); v.HdNoFlicker = e.Contains("noflicker"); v.HdArt = e.Contains("art"); v.HdVsync = e.Contains("vsync"); v.HdEdges = e.Contains("edges"); v.HdHud = e.Contains("hud"); v.HdSharpen = e.Contains("sharpen");
                     break;
                 }
                 case "hd_quality":
@@ -228,6 +241,14 @@ internal sealed class VideoSettings
                 case "audio_reverb": v.AudioReverb = val == "1"; break;
                 case "volume": if (int.TryParse(val, out int vol)) v.Volume = Math.Clamp(vol, 0, 100); break;
                 case "crt": v.Crt = val == "1"; break;
+                case "show_fps": v.ShowFps = val == "1"; break;
+                case "audio_mute":
+                {
+                    var t = val.Split(','); v.AudioMute = 0;
+                    for (int i = 0; i < ChannelNames.Length; i++) if (t.Contains(ChannelNames[i])) v.AudioMute |= 1 << i;
+                    break;
+                }
+                case "crossfeed": v.Crossfeed = val == "1"; break;
                 case "cheats": v.Cheats.Parse(val); break;
                 case "turbo": { var t = val.Split(','); v.TurboA = t.Contains("a"); v.TurboB = t.Contains("b"); break; }
                 case "graphics":

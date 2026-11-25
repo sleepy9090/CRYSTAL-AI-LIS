@@ -80,6 +80,13 @@ internal sealed unsafe class AudioOut
     private readonly Queue<short> _pending = new();
     private bool _started;
     private readonly List<short> _cdTake = new();
+    // T47: rate control + resampling to the device (AudioFx.cs) instead of dropping the oldest samples
+    private Resampler _rs = new(1);
+    private readonly RateControl _rc = new();
+    private readonly List<float> _in = new(), _res = new();
+    /// <summary>T47: game speed (4 while fast forward): the stream is resampled by it, so the sound stays continuous</summary>
+    public double Speed = 1;
+    private const int Target = BufSamples * 5 / 2;   // frames queued (device + pending) the rate loop aims at
     /// <summary>T13 CD-quality stereo (CdAudio.cs) instead of the original mono stream</summary>
     public bool Cd { get; private set; }
     public readonly CdMixer Mixer = new();
@@ -132,6 +139,7 @@ internal sealed unsafe class AudioOut
             _hdr[i].Flags = Win32.WHDR_DONE;          // free until first written
         }
         _pending.Clear(); _n = 0; _started = false;
+        _rs = new Resampler(Ch); _rc.Reset();
         if (Cd)
         {
             Mixer.Clear();
@@ -185,14 +193,20 @@ internal sealed unsafe class AudioOut
             _pending.Clear();
             for (int i = 0; i < (int)(Lead * Rate) * Ch; i++) _pending.Enqueue(0);
         }
+        _in.Clear(); _res.Clear();
         if (Cd)
         {
             _cdTake.Clear();
-            foreach (short v in Mixer.Take(_cdTake)) _pending.Enqueue(Muted ? (short)0 : (short)(v * Volume));
+            foreach (short v in Mixer.Take(_cdTake)) _in.Add(v);
+            g = Muted ? 0 : Volume;
         }
         else
-            for (int i = 0; i < _n; i++) _pending.Enqueue((short)Math.Clamp(MathF.Round(_buf[i] * g), -32768f, 32767f));
+            for (int i = 0; i < _n; i++) _in.Add(_buf[i]);
         _n = 0;
+        int queued = _pending.Count / Ch;
+        for (int i = 0; i < Buffers; i++) if (!Free(i)) queued += BufSamples;
+        _rs.Process(_in, _rc.Ratio(Speed, queued, Target), _res);
+        foreach (float v in _res) _pending.Enqueue((short)Math.Clamp(MathF.Round(v * g), -32768f, 32767f));
         while (_pending.Count > MaxPending * Ch) { for (int c = 0; c < Ch; c++) _pending.Dequeue(); Dropped++; }
         for (int i = 0; i < Buffers && _pending.Count >= BufSamples * Ch; i++)
         {

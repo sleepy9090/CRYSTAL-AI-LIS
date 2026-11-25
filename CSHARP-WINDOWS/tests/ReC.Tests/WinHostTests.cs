@@ -824,6 +824,89 @@ internal static partial class Program
             True(v.AudioRemaster && !v.CdAudio && v.Serialize().Contains("audio=remaster"), "ini audio=remaster");
             Eq(414, Window.CommandId("audio:remaster"), "--menu audio:remaster");
         }),
+        ("win_audio_engine", () =>
+        {
+            // T47 audio engine v2 (AudioFx.cs): resampler + rate control instead of dropped blocks, fast forward at
+            // ratio 4, headphone crossfeed, channel mutes
+            var rnd = new Random(7);
+            var src = Enumerable.Range(0, 5000).Select(_ => (float)(rnd.NextDouble() * 2 - 1)).ToList();
+            List<float> Run(Resampler rs, List<float> input, double ratio, int chunk)
+            {
+                var o = new List<float>();
+                for (int i = 0; i < input.Count; i += chunk) rs.Process(input.GetRange(i, Math.Min(chunk, input.Count - i)), ratio, o);
+                return o;
+            }
+            var id = Run(new Resampler(1), src, 1, 37);
+            True(id.Count == src.Count - 2 && id.SequenceEqual(src.Take(id.Count)), "ratio 1: sample for sample");
+            // a 440 Hz sine at 44.1 kHz through ratio 1.005: the ideal sine at the new rate, no seams at chunk edges
+            var sine = Enumerable.Range(0, 44100).Select(i => (float)Math.Sin(2 * Math.PI * 440 * i / 44100)).ToList();
+            var up = Run(new Resampler(1), sine, 1.005, 333);
+            double err = 0;
+            for (int k = 0; k < up.Count; k++) err = Math.Max(err, Math.Abs(up[k] - Math.Sin(2 * Math.PI * 440 * k * 1.005 / 44100)));
+            True(Math.Abs(up.Count - 44100 / 1.005) < 4, $"ratio 1.005: {up.Count} frames");
+            True(err < 1e-3, $"ratio 1.005: max error {err:E1} vs the ideal sine");
+            var st = sine.SelectMany(v => new[] { v, -v }).ToList();
+            var so = Run(new Resampler(2), st, 0.995, 500);
+            True(Enumerable.Range(0, so.Count / 2).All(k => so[2 * k + 1] == -so[2 * k]), "stereo sides resampled alike");
+            var ff = Run(new Resampler(1), Enumerable.Repeat(0.25f, 8000).ToList(), 4, 1024);
+            True(Math.Abs(ff.Count - 2000) < 3 && ff.All(v => Math.Abs(v - 0.25f) < 1e-6), $"fast forward 4x: {ff.Count} frames, level kept");
+            var rc = new RateControl();
+            Eq(1.0, rc.Ratio(1, 2560, 2560), "on target: ratio 1");
+            var hi = new RateControl(); double rh = 0;
+            for (int i = 0; i < 200; i++) rh = hi.Ratio(1, 20000, 2560);
+            True(rh > 1 && rh <= 1 + RateControl.MaxAdjust + 1e-12, $"too much queued: faster ({rh:F4}), at most +0.5 %");
+            var lo = new RateControl(); double rl = 0;
+            for (int i = 0; i < 200; i++) rl = lo.Ratio(4, 0, 2560);
+            True(Math.Abs(rl - 4 * (1 - RateControl.MaxAdjust)) < 1e-9, "starved at 4x: 4 x 0.995");
+            // crossfeed: centred bass unchanged, a hard-left bass reaches the right side at about -14 dB, highs much less
+            double Pass(double hz, bool right, bool mono)
+            {
+                var xf = new Crossfeed(); double pk = 0;
+                for (int i = 0; i < 44100; i++)
+                {
+                    double x = Math.Sin(2 * Math.PI * hz * i / 44100);
+                    var (l, r) = xf.Process(x, mono ? x : 0);
+                    if (i > 22050) pk = Math.Max(pk, Math.Abs(right ? r : l));
+                }
+                return 20 * Math.Log10(pk);
+            }
+            double mb = Pass(100, false, true), lb = Pass(100, true, false), lh = Pass(8000, true, false);
+            Console.WriteLine($"  win_audio_engine: crossfeed centre 100 Hz {mb:+0.0;-0.0} dB, left->right 100 Hz {lb:F1} dB, 8 kHz {lh:F1} dB");
+            True(Math.Abs(mb) < 0.5, "centred bass unchanged");
+            True(lb > -16 && lb < -12, "hard-left bass bleeds to the right");
+            True(lh < lb - 10, "highs stay on their side");
+            double Level(int mute)
+            {
+                var mx = new CdMixer { Mute = mute };
+                for (int i = 0; i < CdMixer.InRate / 4; i++) mx.Push((i / 88) % 2 == 0 ? 15 : 0, 0, (i / 200) % 16, 0, 0);
+                return mx.Take(new List<short>()).Skip(4000).Sum(v => (double)v * v);
+            }
+            True(Level(1 | 4) < Level(0) * 1e-6 && Level(1) > Level(0) * 0.01 && Level(4) > Level(0) * 0.01 && Level(2) == Level(0), "channel mutes (pulse 1, triangle) silence only that channel (dither left)");
+            var v = VideoSettings.Parse("audio_mute=pulse1,noise\ncrossfeed=1\n");
+            True(v.AudioMute == 9 && v.Crossfeed && v.Serialize().Contains("audio_mute=pulse1,noise") && v.Serialize().Contains("crossfeed=1"), "ini audio_mute / crossfeed");
+            True(new VideoSettings().Serialize().Contains("audio_mute=none"), "ini default: nothing muted");
+            Eq(415, Window.CommandId("crossfeed"), "--menu crossfeed");
+            Eq(433, Window.CommandId("channel:noise"), "--menu channel:noise");
+        }),
+        ("win_frame_stats", () =>
+        {
+            // T49 FPS counter: 60 frames per second at 4 ms each, then a slow patch at 30 fps / 20 ms
+            var fs = new FrameStats();
+            for (int i = 0; i < 180; i++) fs.Record(i * 1000.0 / 60, i * 1000.0 / 60 + 4);
+            True(Math.Abs(fs.Fps - 60) < 1 && Math.Abs(fs.Ms - 4) < 1e-9, $"60 fps, 4 ms ({fs.Text})");
+            Eq("60 FPS  4.0 MS", fs.Text, "text");
+            double t = 3000;
+            for (int i = 0; i < 60; i++) { fs.Record(t, t + 20); t += 1000.0 / 30; }
+            True(Math.Abs(fs.Fps - 30) < 1.5 && Math.Abs(fs.Ms - 20) < 1e-9, $"30 fps after a second of slow frames ({fs.Text})");
+            True(Osd.Build(false, false, null, new List<string>(), stats: fs.Text) && (Osd.Pix[18 * Osd.W + 14] >> 24) > 100, "counter drawn top left");
+            True(Osd.Build(false, false, "NOTICE", new List<string>(), stats: fs.Text) && (Osd.Pix[54 * Osd.W + 14] >> 24) > 100, "under a notice");
+            var v = VideoSettings.Parse("show_fps=1\n");
+            True(v.ShowFps && v.Serialize().Contains("show_fps=1") && new VideoSettings().Serialize().Contains("show_fps=0"), "ini show_fps");
+            Eq(291, Window.CommandId("fps"), "--menu fps");
+            Eq(289, Window.CommandId("hd:sharpen"), "--menu hd:sharpen");
+            True(new VideoSettings().HdSharpen && !VideoSettings.Parse("hd_effects=edges\n").HdSharpen, "ini hd_effects sharpen");
+            True((Osd.HelpLines.Length - 1) * 19 + 112 + 14 <= Osd.H - 58, "help lines above the footer");
+        }),
         ("win_png_read", () =>
         {
             var rgba = new byte[3 * 2 * 4];

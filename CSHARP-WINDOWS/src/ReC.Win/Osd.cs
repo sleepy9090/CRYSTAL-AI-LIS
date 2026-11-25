@@ -136,11 +136,11 @@ internal static class Osd
     {
         ("ARROWS / WASD", "MOVE"), ("X / K", "A BUTTON"), ("Z / J", "SWORD, HOLD: CHARGE"),
         ("ENTER", "START"), ("TAB / R-SHIFT", "SELECT"), ("P", "PAUSE"), ("SPACE (HOLD)", "FAST FORWARD X4"),
-        ("F1", "THIS HELP"), ("F9", "GRAPHICS MODE"), ("F11", "FULLSCREEN"), ("F12", "SCREENSHOT"), ("M", "MUTE"),
+        ("F1", "THIS HELP"), ("F2", "FPS COUNTER"), ("F9", "GRAPHICS MODE"), ("F11", "FULLSCREEN"), ("F12", "SCREENSHOT"), ("M", "MUTE"),
         ("1 - 6", "WINDOW SIZE"), ("RIGHT CLICK", "MENUS, CHEATS"), ("ESC", "QUIT (SAVES FIRST)"),
     };
 
-    public static bool Build(bool paused, bool fast, string? notice, IReadOnlyList<string> cheats, bool help = false)
+    public static bool Build(bool paused, bool fast, string? notice, IReadOnlyList<string> cheats, bool help = false, string? stats = null)
     {
         Clear();
         bool any = false;
@@ -152,8 +152,8 @@ internal static class Osd
             Centered(62, "KEYS", 4, 1f, 0.95f, 0.75f);
             for (int i = 0; i < HelpLines.Length; i++)
             {
-                Text(56, 112 + i * 20, HelpLines[i].Key, 2, 1f, 0.85f, 0.55f);
-                Text(56 + 15 * 12, 112 + i * 20, HelpLines[i].What, 2, 0.85f, 0.9f, 1f);
+                Text(56, 112 + i * 19, HelpLines[i].Key, 2, 1f, 0.85f, 0.55f);
+                Text(56 + 15 * 12, 112 + i * 19, HelpLines[i].What, 2, 0.85f, 0.9f, 1f);
             }
             Centered(H - 58, "F1 OR P TO CLOSE", 1, 0.7f, 0.8f, 1f);
             return true;
@@ -182,6 +182,13 @@ internal static class Osd
             int w = TextWidth(notice, 2) + 24;
             Box(10, 10, w, 30, 0.02f, 0.04f, 0.1f, 0.65f);
             Text(22, 18, notice, 2, 1f, 0.95f, 0.8f);
+            any = true;
+        }
+        if (!string.IsNullOrEmpty(stats))                    // T49: FPS counter, under a notice
+        {
+            int y = !string.IsNullOrEmpty(notice) && !paused ? 46 : 10;
+            Box(10, y, TextWidth(stats, 1) + 16, 18, 0.02f, 0.04f, 0.1f, 0.6f);
+            Text(18, y + 6, stats, 1, 0.7f, 1f, 0.7f);
             any = true;
         }
         return any;

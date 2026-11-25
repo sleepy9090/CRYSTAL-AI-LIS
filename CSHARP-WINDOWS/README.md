@@ -38,6 +38,7 @@ anyway**, or right-click the file → Properties → **Unblock**.
 | Space (hold) | fast forward (4×) |
 | F12 | screenshot (the picture as shown, HD included) to `Pictures\re-c` |
 | F1 | help: every key on screen (the game pauses under it) |
+| F2 | FPS counter (frames per second + time per frame; also Video › Show FPS) |
 | Game › Turbo B / Turbo A | a held button repeats (rapid sword with B) |
 | F9 | graphics: Original → Enhanced (16-bit) → Enhanced (32-bit) → HD engine (GPU) |
 | F5 | reload the graphics pack |
@@ -82,6 +83,11 @@ The choices are saved in `%APPDATA%\re-c\video.ini` (delete it to get the defaul
 ### Audio menu: Original or CD quality
 **Audio › Volume** sets the master volume (100 / 75 / 50 / 25 %).
 
+**Audio › Channels** mutes single sound channels (melody, harmony, bass, drums, samples) and **Audio › Headphone
+crossfeed** blends a little of each side into the other so hard-panned voices sound natural on headphones (both for CD
+quality and Remastered). The sound now follows the sound card's clock smoothly (no clicks from dropped blocks), and
+fast forward plays sped-up sound instead of chopped pieces.
+
 **Audio › CD quality (44.1 kHz 16-bit stereo)** upgrades the sound; **Audio › Original (NES, mono)** is the exact
 sound of the port. You can switch at any time, and the choice is saved. CD quality:
 - **stereo**: pulse 1 a little to the left, pulse 2 a little to the right, noise slightly right, the triangle bass and
@@ -104,6 +110,8 @@ sound of the port. You can switch at any time, and the choice is saved. CD quali
 
 ### Graphics: Original, Enhanced (16-bit), Enhanced (32-bit) or HD
 **Video › CRT look** gives Original graphics the look of a TV: scanlines and an RGB aperture mask.
+
+HD › Sharpen (on by default) makes the HD picture crisper without halos; deep water shows moving light caustics.
 
 **Video › Graphics** (or **F9**, which cycles Original → 16-bit → 32-bit → HD) switches the look at any time, even
 mid-game. The choice is saved.

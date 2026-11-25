@@ -49,6 +49,9 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool Edges = true;
     /// <summary>T34: HUD style: rounded glyphs (Scale2x inside the HUD), bevelled metallic text, soft shadows, brushed panel</summary>
     public bool HudStyle = true;
+    /// <summary>T48: contrast-adaptive sharpening after the anti-aliasing (Cam.w = strength)</summary>
+    public bool Sharpen = true;
+    public const float SharpenK = 0.6f;
     /// <summary>T35: the player's HP (RAM $03C1) for the LIFE meter's fill (set before Upload)</summary>
     public int Hp;
     /// <summary>T37: the on-screen display (Osd.Pix) is shown in the final pass</summary>
@@ -709,7 +712,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             LiftH, AoK, Shadows ? ShadowK : 0, Shadows ? ContactK : 0,
             ShadowSlope, sharp, BloomThreshold, BloomK,
             0, 0, 0, 0,
-            _camX, _camY, _time, 0,
+            _camX, _camY, _time, Sharpen ? SharpenK : 0,
             Parallax ? 1 : 0, Shadows ? 1 : 0, Atmosphere ? 1 : 0, Detail ? 1 : 0,
             _outdoor, _voidGate, _play, dark * dark * (3 - 2 * dark),
             _mr, _mg, _mb, 0,

@@ -14,7 +14,7 @@ cbuffer C : register(b0)
     float4 Fx;     // sprite lift, AO strength, shadow strength, contact shadow strength
     float4 Fx2;    // shadow slope, albedo sharpness, bloom threshold, bloom strength
     float4 Blur;   // blur step (uv), jump-flood step (pixels), -
-    float4 Cam;    // camera x, y (NES pixels, unwrapped), time (s), -
+    float4 Cam;    // camera x, y (NES pixels, unwrapped), time (s), sharpening (T48, 0 = off)
     float4 Opt;    // parallax, shadows, atmosphere, material detail (0 / 1)
     float4 Scn;    // outdoor, void gate, gameplay, darkness
     float4 MeanC;  // mean playfield colour
@@ -772,6 +772,10 @@ float4 PSLight(V i) : SV_Target
             }
             float fn = WN(w * 2 + float2(t * 3, t * 1.2), float2(3, 3));
             a = lerp(a, float3(0.92, 0.97, 1.0), saturate(edge / 3) * smoothstep(0.35, 0.65, fn) * 0.6);
+            // T48: caustics: bright threads where two drifting ridge patterns cross (sunlight focused by the waves)
+            float r1 = 1 - abs(2 * WN(w * 0.9 + float2(t * 2.2, t * 0.8), float2(12, 12)) - 1);
+            float r2 = 1 - abs(2 * WN(w * 0.9 + float2(-t * 1.4, t * 1.9) + 17, float2(9, 9)) - 1);
+            a += float3(0.55, 0.8, 0.9) * pow(saturate(r1 * r2), 8) * 0.22 * (0.4 + 0.6 * Scn.x);
         }
         // macro normal from the height model
         float2 dxs = float2(1.0 / 512, 0), dys = float2(0, 1.0 / 480);
@@ -938,10 +942,25 @@ float3 Fxaa(V i)
     return lMax - lMin < 0.08 ? m.rgb : r;
 }
 
+// T48: contrast-adaptive sharpening (AMD CAS style): a negative-lobe cross filter whose weight falls where the
+// neighbourhood is already near black or white, so edges get crisper without halos; HUD (alpha 0) exact
+float3 Sharpen(float3 c, V i)
+{
+    if (Cam.w <= 0 || SrcA.SampleLevel(Lin, i.uv, 0).a < 0.5) return c;
+    float2 px = Out.zw;
+    float3 n = SrcA.SampleLevel(Lin, i.uv - float2(0, px.y), 0).rgb, s = SrcA.SampleLevel(Lin, i.uv + float2(0, px.y), 0).rgb;
+    float3 e = SrcA.SampleLevel(Lin, i.uv + float2(px.x, 0), 0).rgb, w = SrcA.SampleLevel(Lin, i.uv - float2(px.x, 0), 0).rgb;
+    float3 mn = min(c, min(min(n, s), min(e, w))), mx = max(c, max(max(n, s), max(e, w)));
+    float3 amp = sqrt(saturate(min(mn, 1 - mx) / max(mx, 1e-4)));
+    float3 wt = -amp * lerp(0.125, 0.2, saturate(Cam.w));
+    return saturate((c + (n + s + e + w) * wt) / (1 + 4 * wt));
+}
+
 // T37: the on-screen display (Osd, premultiplied) over the anti-aliased picture
 float4 PSFinal(V i) : SV_Target
 {
     float3 c = Fxaa(i);
+    c = Sharpen(c, i);
     if (QualC.w > 0.5)
     {
         float4 o = SrcB.SampleLevel(Lin, i.uv, 0);

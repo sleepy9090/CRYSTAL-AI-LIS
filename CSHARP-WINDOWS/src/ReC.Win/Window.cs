@@ -179,6 +179,7 @@ internal static unsafe partial class Window
         _gpu.Quality = _v.HdQuality;
         _gpu.Edges = _v.HdEdges;
         _gpu.HudStyle = _v.HdHud;
+        _gpu.Sharpen = _v.HdSharpen;
     }
     private static string _gpuError = "";
     private static bool _gpuTried;
@@ -259,12 +260,13 @@ internal static unsafe partial class Window
     private static bool BuildOsd()
     {
         if (_notice != null && Clock.Elapsed.TotalMilliseconds > _noticeUntil) _notice = null;
-        if (!_paused && !_fast && _notice == null && !_help && !_osdShown) return false;
+        if (!_paused && !_fast && _notice == null && !_help && !_osdShown && !_v.ShowFps) return false;
         var cheats = Enumerable.Range(0, Cheats.Names.Length).Where(_v.Cheats.Get).Select(i => Cheats.Names[i]).ToList();
-        _osdShown = Osd.Build(_paused, _fast, _notice, cheats, _help);
+        _osdShown = Osd.Build(_paused, _fast, _notice, cheats, _help, _v.ShowFps ? Stats.Text : null);
         return _osdShown;
     }
     private static bool _osdShown;
+    private static readonly FrameStats Stats = new();          // T49
     private static uint[] _crt = Array.Empty<uint>();
     private static int _crtFrame = -1;
     private static bool _help;                                 // T44: F1 help panel (the game pauses under it)
@@ -348,11 +350,13 @@ internal static unsafe partial class Window
             void Blit()
             {
                 _frameNo++;
+                double t0 = Clock.Elapsed.TotalMilliseconds;
                 // every line of a frame run with Tags / Capture set is recorded -> the enhanced / HD picture (+ --export-tiles)
                 if (NeedRender) RenderHd();
                 var fb = ShownFb;
                 for (int i = 0; i < fb.Length; i++) Px[i] = lut[fb[i] & 0x3F];
                 Present();
+                Stats.Record(t0, Clock.Elapsed.TotalMilliseconds);
             }
 
             double step = 1000.0 / Machine.FrameHz;
@@ -390,7 +394,7 @@ internal static unsafe partial class Window
                         if (o.Frames >= 0 && ranTotal >= o.Frames) { _quit = true; break; }
                         if (o.Turbo) _acc = 0;
                     }
-                    if (ran) { Blit(); _audio.Flush(); }
+                    if (ran) { Blit(); _audio.Speed = _fast ? 4 : 1; _audio.Flush(); }
                 }
                 _last = now;
             }
@@ -598,6 +602,7 @@ internal static unsafe partial class Window
             case 0x74 /* F5 */: ReloadPack(); break;
             case 0x20 /* Space */: _fastKey = _fast = true; StatusLine(); if (_paused) Present(); break;
             case 0x7B /* F12 */: Screenshot(); break;                     // T42
+            case 0x71 /* F2 */: Command(IdFps); break;                    // T49
             case 0x70 /* F1 */:
                 _help = !_help; _paused = _help;
                 _last = Clock.Elapsed.TotalMilliseconds; _acc = 0;

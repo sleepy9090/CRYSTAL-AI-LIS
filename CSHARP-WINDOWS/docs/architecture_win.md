@@ -358,3 +358,19 @@ CSHARP-WINDOWS/
     stretch (and on-screen display).
     **Controller extras (T46):** `Pad.Raw` (XInput buttons of the last read); polled every loop pass (also paused):
     RB held = fast forward (with Space), LB = pause on / off.
+    **Audio engine v2 (T47, AudioFx.cs):** the last stage before waveOut, both paths, is a `Resampler` (4-point
+    Catmull-Rom; ratio 1 at an integer position = the input sample for sample) driven by `RateControl`: ratio = speed ×
+    (1 + 0.005 × clamp((queued − target) / target)), queued = pending + busy device buffers (EMA 0.05), target 2.5
+    buffers. It replaces dropping the oldest samples (clicks) when the game runs ahead; the drop stays only as a 0.25 s
+    safety cap. Fast forward sets speed 4 (`AudioOut.Speed`, box average): continuous pitched-up sound. CD / Remastered:
+    `CdMixer.Mute` (Audio › Channels, ids 430-434, ini `audio_mute=pulse1,pulse2,triangle,noise,dmc`, `--menu
+    channel:NAME`) zeroes channel levels before the mixer curves; `Crossfeed` (Audio › Headphone crossfeed, id 415, ini
+    `crossfeed=1`) feeds each side the other's lows (one-pole 700 Hz, 0.3 ms, −12 dB), centred bass unchanged. The
+    APU's mono stream is untouched (`apu_channels`). Test `win_audio_engine`.
+    **Sharpening + caustics (T48):** `PSFinal` runs a contrast-adaptive sharpen (AMD CAS style cross, weight from the
+    local min / max, `Cam.w` = 0.6) after FXAA, HUD (alpha 0) exact; HD › Sharpen (id 289, `hd_effects` `sharpen`,
+    on by default). Deep water (`kind` 2, colour < `$20`, material detail on) gets caustics: two drifting ridge noises
+    multiplied, `pow 8`, cyan-white, weaker indoors.
+    **FPS counter (T49):** F2 / Video › Show FPS (id 291, ini `show_fps=1`, `--menu fps`): `FrameStats` (frames in the
+    last second, mean `Blit` time incl. HD render + present) as a line on the on-screen display (top left, under a
+    notice). Test `win_frame_stats`.
