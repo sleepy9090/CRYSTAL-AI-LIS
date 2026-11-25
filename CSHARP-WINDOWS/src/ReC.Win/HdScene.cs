@@ -34,6 +34,29 @@ internal sealed class HdScene
     private readonly uint[] _rgb;
     private readonly byte[] _black = new byte[256 * 240], _ero = new byte[256 * 240];
     private static readonly int[] FontBanks = { 0x38, 0x39, 0x3C, 0x3D };   // 1 KB CHR banks of the font / HUD icons
+    private static readonly bool[] FontBank = Enumerable.Range(0, 128).Select(b => FontBanks.Contains(b)).ToArray();
+    private readonly byte[] _tmp = new byte[256 * 240], _dil = new byte[256 * 240];
+
+    /// <summary>3x3 box min (erode, and = true) or max (dilate) of a 0 / 1 image, edges clamped: rows, then columns</summary>
+    private void Box3(byte[] src, byte[] dst, bool and)
+    {
+        var t = _tmp;
+        for (int y = 0; y < 240; y++)
+        {
+            int r = y * 256;
+            for (int x = 0; x < 256; x++)
+            {
+                int a = src[r + (x > 0 ? x - 1 : x)], b = src[r + x], c = src[r + (x < 255 ? x + 1 : x)];
+                t[r + x] = (byte)(and ? a & b & c : a | b | c);
+            }
+        }
+        for (int y = 0; y < 240; y++)
+        {
+            int r = y * 256, u = (y > 0 ? y - 1 : y) * 256, d = (y < 239 ? y + 1 : y) * 256;
+            for (int x = 0; x < 256; x++)
+                dst[r + x] = (byte)(and ? t[u + x] & t[r + x] & t[d + x] : t[u + x] | t[r + x] | t[d + x]);
+        }
+    }
 
     public HdScene(int[] nesRgb) { _rgb = nesRgb.Select(c => (uint)c & 0xFFFFFF).ToArray(); }
 
@@ -103,7 +126,7 @@ internal sealed class HdScene
         for (int i = 0; i < 256 * 240; i++)
         {
             int tag = tags[i];
-            if ((tag & Ppu.TagValid) != 0 && Array.IndexOf(FontBanks, (tag & 0x1FFF) >> 6) >= 0) fontPx[i >> 8]++;
+            if ((tag & Ppu.TagValid) != 0 && FontBank[(tag & 0x1FFF) >> 6]) fontPx[i >> 8]++;
         }
         for (int y = 0; y < 240; y++)
         {
@@ -161,20 +184,10 @@ internal sealed class HdScene
         {
             int tag = tags[i], c = fb[i] & 0x3F;
             bool spr = (tag & Ppu.TagValid) != 0 && (tag >> 19 & 7) >= 4;
-            _black[i] = (byte)(!spr && Lines[i / 256 * 4 + 2] == 0 && ((c & 15) >= 0xD && c != 0x2D && c != 0x3D || c == bd && darkBack) ? 1 : 0);
+            _black[i] = (byte)(!spr && Lines[(i >> 8) * 4 + 2] == 0 && ((c & 15) >= 0xD && c != 0x2D && c != 0x3D || c == bd && darkBack) ? 1 : 0);
         }
-        for (int y = 0; y < 240; y++)
-            for (int x = 0; x < 256; x++)
-            {
-                byte e = 1;
-                for (int dy = -1; dy <= 1 && e != 0; dy++)
-                    for (int dx = -1; dx <= 1; dx++)
-                    {
-                        int yy = Math.Clamp(y + dy, 0, 239), xx = Math.Clamp(x + dx, 0, 255);
-                        if (_black[yy * 256 + xx] == 0) { e = 0; break; }
-                    }
-                _ero[y * 256 + x] = e;
-            }
+        Box3(_black, _ero, true);                                // erode, then dilate: the opening
+        Box3(_ero, _dil, false);
         for (int y = 0; y < 240; y++)
         {
             bool ui = Lines[y * 4 + 2] > 0;
@@ -183,15 +196,8 @@ internal sealed class HdScene
                 int i = y * 256 + x, tag = tags[i], c = fb[i] & 0x3F;
                 bool valid = (tag & Ppu.TagValid) != 0;
                 bool spr = valid && (tag >> 19 & 7) >= 4;
-                bool font = valid && Array.IndexOf(FontBanks, (tag & 0x1FFF) >> 6) >= 0;
-                bool isVoid = false;
-                if (_black[i] != 0)
-                    for (int dy = -1; dy <= 1 && !isVoid; dy++)
-                        for (int dx = -1; dx <= 1; dx++)
-                        {
-                            int yy = Math.Clamp(y + dy, 0, 239), xx = Math.Clamp(x + dx, 0, 255);
-                            if (_ero[yy * 256 + xx] != 0) { isVoid = true; break; }
-                        }
+                bool font = valid && FontBank[(tag & 0x1FFF) >> 6];
+                bool isVoid = _black[i] != 0 && _dil[i] != 0;
                 byte f = (byte)((spr ? FSprite : 0) | (isVoid ? FVoid : 0) | (ui || font ? FUi : 0));
                 int o = i * 4;
                 info[o] = lift[i]; info[o + 1] = (byte)(c * 4); info[o + 2] = f; info[o + 3] = (byte)(isVoid ? 255 : 0);

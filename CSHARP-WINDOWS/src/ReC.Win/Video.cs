@@ -40,6 +40,8 @@ internal sealed class VideoSettings
     public bool HdReflections = true, HdLights = true, HdNoFlicker = true;
     /// <summary>T25: the starter packs built into the exe, in the HD engine</summary>
     public bool HdArt = true;
+    /// <summary>T30: HD presents with vsync (no tearing)</summary>
+    public bool HdVsync = true;
     /// <summary>T13 Audio menu: CD quality (CdAudio.cs) instead of the original mono stream; stereo / reverb for it</summary>
     public bool CdAudio, AudioStereo = true, AudioReverb;
     /// <summary>T28: Audio > Remastered (CdMixer.Remaster: chorus, smooth bass, room, EQ); implies the CD device path</summary>
@@ -149,6 +151,7 @@ internal sealed class VideoSettings
         if (HdLights) e.Add("lights");
         if (HdNoFlicker) e.Add("noflicker");
         if (HdArt) e.Add("art");
+        if (HdVsync) e.Add("vsync");
         return e.Count > 0 ? string.Join(",", e) : "none";
     }
 
@@ -188,7 +191,7 @@ internal sealed class VideoSettings
                     var e = val.Split(',', StringSplitOptions.TrimEntries);
                     v.HdParallax = e.Contains("parallax"); v.HdShadows = e.Contains("shadows");
                     v.HdAtmosphere = e.Contains("atmosphere"); v.HdDetail = e.Contains("detail");
-                    v.HdReflections = e.Contains("reflections"); v.HdLights = e.Contains("lights"); v.HdNoFlicker = e.Contains("noflicker"); v.HdArt = e.Contains("art");
+                    v.HdReflections = e.Contains("reflections"); v.HdLights = e.Contains("lights"); v.HdNoFlicker = e.Contains("noflicker"); v.HdArt = e.Contains("art"); v.HdVsync = e.Contains("vsync");
                     break;
                 }
                 case "audio_reverb": v.AudioReverb = val == "1"; break;

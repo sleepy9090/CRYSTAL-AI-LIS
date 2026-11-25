@@ -433,14 +433,14 @@ def hdfx_check(exe, timeout):
     hud = sum(on[y][x] != off[y][x] for y in range(780, 890) for x in range(1024))
     play = sum(on[y][x] != off[y][x] for y in range(0, 720) for x in range(32, 1024))
     total = 720 * 992
-    if 'hd_effects=noflicker,art' not in lines:
-        msg = 'settings file lacks hd_effects=noflicker,art'
+    if 'hd_effects=noflicker,art,vsync' not in lines:
+        msg = 'settings file lacks hd_effects=noflicker,art,vsync'
     elif hud:
         msg = f'{hud} HUD pixels change with the effects (HUD must stay unlit)'
     elif play < 0.3 * total:
         msg = f'only {play} / {total} playfield pixels change with the effects'
     else:
-        msg = f'ok: effects change {play} / {total} playfield pixels, HUD identical, hd_effects=noflicker,art saved'
+        msg = f'ok: effects change {play} / {total} playfield pixels, HUD identical, hd_effects=noflicker,art,vsync saved'
     print(f'{"ok  " if msg.startswith("ok:") else "FAIL"} {"hdfx":10s} {msg[4:] if msg.startswith("ok:") else msg}', flush=True)
     return 0 if msg.startswith('ok:') else 1
 

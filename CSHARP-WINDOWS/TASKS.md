@@ -290,3 +290,6 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   97-98 % (`pack_coverage.py` now leaves out the HUD / font banks and one-colour keys: never painted, on purpose).
   HUD panel gloss + text drop shadow (text pixels exact). 321 tests; win_video_check 32 ok; smoke + canon, REA,
   coverage ok; exe 12.8 MB.
+- [x] T30 (interactive, 2026-11-24) done: **VSync + faster HD CPU side** (architecture §5.25): HD presents with vsync
+  (no tearing; switch `hd:vsync`); CPU side 6.2 -> 3.8 ms / frame; pack previews no longer embedded. 323 tests; HD /
+  pack checks, smoke + canon, REA ok. Under Wine's software GPU HD still underruns audio (~47 / 600 frames, GPU-bound).

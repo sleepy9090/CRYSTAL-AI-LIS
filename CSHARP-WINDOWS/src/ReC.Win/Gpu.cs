@@ -43,6 +43,8 @@ internal sealed unsafe partial class Gpu : IDisposable
 
     /// <summary>effect switches (Video > Graphics > HD effects)</summary>
     public bool Parallax = true, Shadows = true, Atmosphere = true, Detail = true, Reflections = true, Lights = true;
+    /// <summary>T30: present in step with the monitor (sync interval 1: no tearing while the screen scrolls)</summary>
+    public bool VSync;
 
     // ---- tunables (cbuffer)
     private static readonly (float X, float Y, float Z) Light = Norm(-0.45f, -0.62f, 0.64f);
@@ -391,6 +393,10 @@ internal sealed unsafe partial class Gpu : IDisposable
         for (int y = 0; y < 240; y++)
         {
             var pal = r.LinePal[y];
+            // the slot / step part of an art word depends only on tile + palette group (+ the line's palette): cached per
+            // run of equal keys (tiles repeat for 8 pixels); the pixel's column / row / flips are added per pixel
+            int bk = -1, sk = -1;
+            uint bw = 0, sw = 0;
             for (int x = 0; x < 256; x++)
             {
                 int i = y * 256 + x, o = i * 4;
@@ -414,11 +420,23 @@ internal sealed unsafe partial class Gpu : IDisposable
                 lay[o + 1] = (byte)(sp != 0 ? r.SpCol[i] & 63 | 0x40 | (sp & 0x40) << 1 : 0);
                 lay[o + 2] = (byte)partner;
                 lay[o + 3] = 0;
-                artMap[i * 2] = ArtWord(r.BgTag[i], pal, slots, fades, tileArt);
-                artMap[i * 2 + 1] = sp != 0 ? ArtWord(r.SpTag[i], pal, slots, fades, tileArt) : 0;
+                int bt = r.BgTag[i], bkey = bt & (ReC.Nes.Ppu.TagValid | 7 << 19 | 0x1FFF);
+                if (bkey != bk) { bk = bkey; bw = ArtWord(bkey, pal, slots, fades, tileArt); }
+                artMap[i * 2] = bw == 0 ? 0 : bw | PosBits(bt);
+                if (sp != 0)
+                {
+                    int st = r.SpTag[i], skey = st & (ReC.Nes.Ppu.TagValid | 7 << 19 | 0x1FFF);
+                    if (skey != sk) { sk = skey; sw = ArtWord(skey, pal, slots, fades, tileArt); }
+                    artMap[i * 2 + 1] = sw == 0 ? 0 : sw | PosBits(st);
+                }
+                else artMap[i * 2 + 1] = 0;
             }
         }
     }
+
+    /// <summary>the column / row / flip bits of an art word from a tag</summary>
+    private static uint PosBits(int tag) => (uint)(tag >> 13 & 7) << 15 | (uint)(tag >> 16 & 7) << 18 |
+        ((tag & 1 << 22) != 0 ? 1u << 21 : 0) | ((tag & 1 << 23) != 0 ? 1u << 22 : 0);
 
     public static uint ArtWord(int tag, byte[] pal, IReadOnlyDictionary<long, int> slots, IReadOnlyDictionary<long, int> fades, bool[] tileArt)
     {
@@ -569,7 +587,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         Pass(_ldrRtv, 0, 0, pw, ph, _psComp, _hdrSrv, _b1Srv, _b3Srv, null);
         Pass(_backRtv, r.X, r.Y, pw, ph, _psFinal, _ldrSrv, null, null, null);
         Unbind();
-        if (present) ((delegate* unmanaged[Stdcall]<void*, uint, uint, int>)Vt(_swap)[8])(_swap, 0, 0);
+        if (present) ((delegate* unmanaged[Stdcall]<void*, uint, uint, int>)Vt(_swap)[8])(_swap, VSync ? 1u : 0u, 0);
     }
 
     private void SetConstants()

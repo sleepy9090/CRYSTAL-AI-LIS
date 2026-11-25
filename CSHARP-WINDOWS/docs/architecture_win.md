@@ -268,3 +268,9 @@ CSHARP-WINDOWS/
     5342 tiles (atlas 4096x4096). HUD panel: `HdScene.HudFill / HudTop / HudBottom` (most common colour of the HUD
     lines, not black), constants row 14 `HudC`; `HudPanel()` in the light pass: fill pixels x (1.10 - 0.20 t + 0.08
     gloss band), x 0.7 under a non-fill HUD pixel up-left (drop shadow); text / frame pixels unchanged.
+25. **VSync + CPU side (T30):** `Gpu.VSync` (`hd_effects` `vsync`, default on, menu id 283; never with `--turbo`)
+    presents with sync interval 1. CPU side of an HD frame 6.2 -> 3.8 ms (`win_hd_engine` times it, limit 5 ms):
+    art words cached per run of equal tile + group keys (`PosBits` added per pixel), `HdScene` font-bank lookup table
+    and separable 3x3 erode / dilate (`Box3`). Embedded packs: `packs/*/*.png` only (the preview PNGs stay out).
+    Real time under Wine (llvmpipe renders the shaders on the CPU): ~47 audio underruns in 600 frames with HD on, 0
+    with Original; vsync on / off makes no difference. Not measured on real GPU hardware.

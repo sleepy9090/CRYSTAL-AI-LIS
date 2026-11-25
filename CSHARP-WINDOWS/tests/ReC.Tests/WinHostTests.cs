@@ -552,6 +552,29 @@ internal static partial class Program
             True(tileArt[tile] && slots[key] == 0 && slots.Count == 2, "atlas slots by key");
             var lay = new byte[256 * 240 * 4]; var am = new uint[256 * 240 * 2];
             Gpu.Layers(r, sc, slots, Gpu.BuildFades(slots), tileArt, lay, am);
+            {
+                // CPU side of one HD frame (raster + scene analysis + sprite lift + layer words), after JIT warm-up
+                var enhT = new Enhancer(lastM!.Ppu.Chr, d.NesRgb);
+                var fullArt = BuiltinArt.FromDirectory(Path.Combine(Data.FindDir(), "..", "..", "CSHARP-WINDOWS", "packs"), new List<string>());
+                var fs = new Dictionary<long, int>(); var fta = Gpu.BuildSlots(fullArt, 8192, fs); var ff = Gpu.BuildFades(fs);
+                var lay2 = new byte[lay.Length]; var am2 = new uint[am.Length];
+                var parts = new double[4];
+                var swp = new System.Diagnostics.Stopwatch();
+                void Part(int k, Action a) { swp.Restart(); a(); parts[k] += swp.Elapsed.TotalMilliseconds; }
+                void One()
+                {
+                    Part(0, () => r.Build(lastM.Ppu.Capture!));
+                    Part(1, () => enhT.LiftHd(r.Fb, r.Tags));
+                    Part(2, () => sc.Build(r.Fb, r.Tags, r.LinePal[239], enhT.HdLift, r.LineScroll, 1));
+                    Part(3, () => Gpu.Layers(r, sc, fs, ff, fta, lay2, am2));
+                }
+                for (int k = 0; k < 60; k++) One();
+                Array.Clear(parts);
+                for (int k = 0; k < 60; k++) One();
+                double msc = parts.Sum() / 60;
+                Console.WriteLine($"  win_hd_engine: CPU side {msc:F2} ms / frame: raster {parts[0] / 60:F2}, lift {parts[1] / 60:F2}, scene {parts[2] / 60:F2}, layers {parts[3] / 60:F2}");
+                True(msc < 5, $"HD CPU side fast enough ({msc:F2} ms)");
+            }
             bool ok = true;
             int arts = 0, hud = 0;
             for (int i = 0; i < 256 * 240; i++)
@@ -567,7 +590,8 @@ internal static partial class Program
             True(arts >= 8 && (am[tagged * 2] >> 15 & 7) == (r.BgTag[tagged] >> 13 & 7), $"pack tile under its pixels ({arts}), with the pixel's column");
             var v = VideoSettings.Parse("graphics=hd\nhd_effects=reflections,noflicker\n");
             True(v.HdReflections && !v.HdLights && v.HdNoFlicker && !v.HdShadows, "ini hd_effects (T20 switches)");
-            True(new VideoSettings().Serialize().Contains("hd_effects=parallax,shadows,atmosphere,detail,reflections,lights,noflicker"), "all on by default");
+            True(new VideoSettings().Serialize().Contains("hd_effects=parallax,shadows,atmosphere,detail,reflections,lights,noflicker,art,vsync"), "all on by default");
+            Eq(283, Window.CommandId("hd:vsync"), "--menu hd:vsync");
             Eq(281, Window.CommandId("hd:noflicker"), "--menu hd:noflicker");
             // T22 scene weather: icy / hot / outdoor per scene
             var weather = new Dictionary<string, (float Icy, float Hot, float Out)>();

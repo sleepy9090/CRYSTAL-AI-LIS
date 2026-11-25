@@ -1,5 +1,5 @@
 // re-c Windows host — HD engine (T25): the starter graphics packs (packs/hero, enemies, npcs, bosses, backgrounds; made
-// by tools/*_pack.py from the game's own graphics) built into ReC.exe as embedded PNGs (`re-c.pack.<folder>.<file>`),
+// by tools/*_pack.py from the game's own graphics) built into ReC.exe as embedded PNGs (`re-c.pack.<file>`; names never collide),
 // so the HD look has them without installing anything. Only the HD engine uses them (Video > Graphics > HD: Built-in
 // art); a user pack (%APPDATA%\re-c\pack or --pack) overrides tile by tile. Not in the web port.
 using System.Reflection;
@@ -44,7 +44,7 @@ internal static class BuiltinArt
                 using var s = asm.GetManifestResourceStream(n)!;
                 var b = new byte[s.Length];
                 s.ReadExactly(b);
-                return (n[(n.LastIndexOf('.', n.Length - 5) + 1)..], b);    // "<folder>.TTTT_AABBCC.png" -> file name
+                return (n[(n.LastIndexOf('.', n.Length - 5) + 1)..], b);    // "re-c.pack.TTTT_AABBCC.png" -> file name
             });
         return _cache = Decode(files, Errors);
     }

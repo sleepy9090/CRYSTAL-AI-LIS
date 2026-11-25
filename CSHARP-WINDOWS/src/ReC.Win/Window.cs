@@ -84,6 +84,7 @@ internal static unsafe partial class Window
     private static readonly uint[] _hd = new uint[Enhancer.W * Enhancer.H];
     private static int _hdFrame = -1;
     private static bool _quiet, _exporting;
+    private static bool _turbo;
 
     /// <summary>T20: HD draws with its own engine (SceneRaster + Gpu) from the captured video state, the PPU makes no pixels</summary>
     private static bool HdEngine => _v.Enhanced && _v.Hd;
@@ -172,6 +173,7 @@ internal static unsafe partial class Window
         if (_gpu == null) return;
         _gpu.Parallax = _v.HdParallax; _gpu.Shadows = _v.HdShadows; _gpu.Atmosphere = _v.HdAtmosphere; _gpu.Detail = _v.HdDetail;
         _gpu.Reflections = _v.HdReflections; _gpu.Lights = _v.HdLights;
+        _gpu.VSync = _v.HdVsync && !_turbo;                  // --turbo runs never wait for the monitor
     }
     private static string _gpuError = "";
     private static bool _gpuTried;
@@ -230,6 +232,7 @@ internal static unsafe partial class Window
         _muted = o.Mute;
         _m = m;
         _quiet = o.Quiet;
+        _turbo = o.Turbo;
         _exporting = o.ExportTiles != null;
         _enh = new Enhancer(m.Ppu.Chr, data.NesRgb, record: _exporting);
         _nesRgb = data.NesRgb;
