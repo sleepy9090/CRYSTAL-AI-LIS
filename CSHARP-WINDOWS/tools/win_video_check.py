@@ -11,7 +11,7 @@ and the settings file written by the menu. Xvfb screen: 1920x1080x24.
 keep their colour, settings file, --export-tiles), then the exported tiles painted magenta as a pack must be drawn,
 and Graphics > Original must not draw it.
 `enhanced32` (T14): Graphics > Enhanced (32-bit): client 1024x960, > 2000 colours, settings file.
-`hdart` (T25): HD with the built-in starter packs vs without (atlas holds 2658 tiles, playfield repainted, HUD identical);
+`hdart` (T25): HD with the built-in starter packs vs without (atlas holds every packs/ tile, playfield repainted, HUD identical);
 `hdfx` (T19, T20): HD effects all on vs all off (no-flicker stays on) on a cave gameplay frame (playfield changes, HUD
 identical, ini records it);
 `hd` / `hdfull` / `hdoff` (T18, T20 engine): Graphics > HD (Direct3D 11 under Wine): device + shaders made, 4x window and 1080p
@@ -447,7 +447,7 @@ def hdfx_check(exe, timeout):
 
 def hdart_check(exe, timeout):
     """T25 built-in art: the cave gameplay frame in HD with the starter packs built into the exe vs Graphics > HD:
-    Built-in art switched off: the exe reports the 2658 tiles in its atlas, the playfield changes (hero, enemies,
+    Built-in art switched off: the exe reports every packs/ tile in its atlas, the playfield changes (hero, enemies,
     scenery), the HUD is identical (its font is never in a pack)"""
     state = os.path.join(cv.ROOT, '..', 'web', 'test', 'states', 'group29.json')
     pics, ini = {}, os.path.join(OUT, 'hdart.ini')
@@ -468,14 +468,16 @@ def hdart_check(exe, timeout):
     on, off = pics['on'], pics['off']
     hud = sum(on[y][x] != off[y][x] for y in range(780, 890) for x in range(1024))
     play = sum(on[y][x] != off[y][x] for y in range(0, 720) for x in range(32, 1024))
-    if '2658 pack tiles in the atlas' not in tiles:
+    total = sum(len([f for f in os.listdir(os.path.join(cv.ROOT, 'packs', d)) if f.endswith('.png')])
+                for d in os.listdir(os.path.join(cv.ROOT, 'packs')) if os.path.isdir(os.path.join(cv.ROOT, 'packs', d)))
+    if f'{total} pack tiles in the atlas' not in tiles:
         msg = f'atlas line: {tiles}'
     elif hud:
         msg = f'{hud} HUD pixels change with the built-in art'
     elif play < 20000:
         msg = f'only {play} playfield pixels change with the built-in art'
     else:
-        msg = f'ok: 2658 built-in tiles, {play} playfield pixels repainted, HUD identical'
+        msg = f'ok: {total} built-in tiles, {play} playfield pixels repainted, HUD identical'
     print(f'{"ok  " if msg.startswith("ok:") else "FAIL"} {"hdart":10s} {msg[4:] if msg.startswith("ok:") else msg}', flush=True)
     return 0 if msg.startswith('ok:') else 1
 

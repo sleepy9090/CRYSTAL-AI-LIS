@@ -274,3 +274,7 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   even better"). The five starter packs are embedded in ReC.exe (+0.66 MB) and used by HD by default (switch
   `hd:art`; user packs override). 303 tests; `win_video_check` 32 ok (new `hdart`); smoke + canon, REA (members core /
   win), cs_rea_members ok. Previews: out/hd25/art_cmp.png (off vs on).
+- [x] T26 (interactive, 2026-11-24) done: **More built-in art** (request: "keep making the HD graphics even better").
+  Exploration capture (6450 dumps from 86 states), +1143 new pack tiles (backgrounds +697, enemies +378, NPCs +68; old
+  tiles unchanged; 3801 in all, atlas 4096). Coverage of explored screens: sprites 59 -> 82 %, background 51 -> 58 %.
+  303 tests; hd 5 -> 65049 colours; hdart / pack checks / smoke + canon / REA ok. Exe 12.5 MB.

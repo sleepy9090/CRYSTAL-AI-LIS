@@ -1,7 +1,8 @@
 """How much of each captured state the graphics packs cover: per state, the share of sprite pixels (not the hero's
 banks) and of background pixels (slot 1-3) whose tile + colour key has a PNG in one of the pack folders.
 
-usage: python3 tools/pack_coverage.py DUMPS_DIR PACK_DIR[,PACK_DIR..] [STATE ..] [--bg]
+usage: python3 tools/pack_coverage.py DUMPS_DIR PACK_DIR[,PACK_DIR..] [STATE ..] [--bg] [--sample N]
+  --sample N: every Nth dump of each state only (big captures); a TOTAL line sums all states
   --bg: the top missing keys include background keys (default: sprite keys only)
   DUMPS_DIR = a tools/sprite_capture.py output (one sub-folder per state). Uses the renderer's per-line colour keys.
 """
@@ -37,7 +38,11 @@ def main(argv):
     if len(argv) < 2:
         print(__doc__); return 1
     bg_missing = '--bg' in argv
+    sample = 1
+    if '--sample' in argv:
+        i = argv.index('--sample'); sample = int(argv[i + 1]); argv = argv[:i] + argv[i + 2:]
     argv = [a for a in argv if a != '--bg']
+    tot = [0, 0, 0, 0]
     src, packs, only = argv[0], argv[1].split(','), set(argv[2:])
     have = set()
     for d in packs:
@@ -50,7 +55,7 @@ def main(argv):
             continue
         n = [0, 0, 0, 0]         # sprite total, sprite covered, bg total, bg covered
         missing = {}
-        for fn in sorted(os.listdir(os.path.join(src, st))):
+        for fn in sorted(os.listdir(os.path.join(src, st)))[::sample]:
             for k, spr in keys_of(chr_, *load_dump(os.path.join(src, st, fn))):
                 if spr and (k[0] >> 6) in HERO_BANKS:
                     continue
@@ -60,9 +65,11 @@ def main(argv):
                     n[i + 1] += 1
                 elif spr or bg_missing:
                     missing[k] = missing.get(k, 0) + 1
+        tot = [a + b for a, b in zip(tot, n)]
         top = sorted(missing.items(), key=lambda kv: -kv[1])[:10]
         print(f'{st:14s} sprites {n[1] * 100 // max(n[0], 1):3d} % of {n[0]:8d}   background {n[3] * 100 // max(n[2], 1):3d} % of {n[2]:8d}'
               + ('   top missing sprite keys: ' + ' '.join(f'{k[0]:04X}_{k[1]:02X}{k[2]:02X}{k[3]:02X}x{c}' for k, c in top) if top else ''))
+    print(f'TOTAL          sprites {tot[1] * 100 // max(tot[0], 1):3d} % of {tot[0]:8d}   background {tot[3] * 100 // max(tot[2], 1):3d} % of {tot[2]:8d}')
     return 0
 
 

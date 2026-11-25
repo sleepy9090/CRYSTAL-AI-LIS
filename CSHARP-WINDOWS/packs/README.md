@@ -98,3 +98,14 @@ all-black silhouettes (one colour: nothing to paint) and hit-flash colours (left
 **Made by:** `python3 tools/sprite_capture.py --out out/boss/dumps --frames 1500 --every 8 bosse2 bossflee finalboss
 finallocked finalscene ai70msg restore5f fanturret fanskip`, then `python3 tools/sprite_pack.py --in out/boss/dumps
 --out packs/bosses --skip none --exclude packs/enemies,packs/npcs --palettes 0,1,2,3 --no-dark`.
+
+## Extended coverage (T26)
+The capture now also walks far out of every test situation (`python3 tools/sprite_capture.py --out out/explore
+--explore --every 32 <all 86 states>`: 2400 frames per state, eight long walks with sword swings, twice; 6450 screen
+dumps, about 4 minutes). New tiles were painted from it by the same tools and only keys that no pack had yet were
+added (existing tiles unchanged): `bg_pack.py --in out/explore --out out/pk_bg` (+697 backgrounds),
+`sprite_pack.py --in out/explore --out out/pk_en --skip <town states>,death --exclude <all packs>` (+378 enemies),
+`sprite_pack.py --in out/explore --only <town states> --out out/pk_npc` with the NPC options and `--exclude <all packs>,out/pk_en`
+(+68 NPCs). All packs: 3801 tiles. Coverage of the explored screens (`tools/pack_coverage.py out/explore <packs>
+--sample 8`): sprite pixels 59 % -> 82 %, background pixels 51 % -> 58 % (the rest: colours that last only a moment,
+keys seen fewer than 3 times, the font / window banks left crisp on purpose).

@@ -247,3 +247,7 @@ CSHARP-WINDOWS/
     sent to `Gpu.SetArt` (at device creation, F5, and the switch). The Enhanced 16-bit / 32-bit looks still use only
     the user pack. `win_builtin_art`: 2658 files -> 2658 tiles, no collisions, fits the 4096-slot atlas, user overrides;
     `win_video_check` `hdart`: atlas line, 501865 playfield pixels repainted, HUD identical.
+21. **Pack coverage (T26):** `sprite_capture.py --explore` (2400-frame walk) over all 86 states + `pack_coverage.py
+    --sample N` (TOTAL line); new keys only were added to packs/backgrounds / enemies / npcs (3801 tiles, built into the
+    exe: 12.5 MB). Explored screens: sprites 59 -> 82 %, background 51 -> 58 %. `win_video_check` `hdart` now counts the
+    packs/ files.
