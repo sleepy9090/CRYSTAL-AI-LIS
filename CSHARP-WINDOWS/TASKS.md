@@ -302,3 +302,10 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   wind-leaning blades and sparse flowers (pack tiles only where they are the plain grass colour). 327 tests;
   win_video_check 32 ok (hdfx saves `hd_effects=noflicker,art,vsync,edges`); smoke + canon, REA, coverage ok.
   Previews: out/hd32/ (e_* edges, l_* lawns, l_zoom.png fence close-up before / after).
+- [x] T33 (interactive, 2026-11-25) done: **HUD split seam, plain ground, pack seams** (request: "keep making the HD
+  graphics even better, rebuild the engine as necessary"; architecture §5.28). The junk line at the status-bar split
+  (and a padding band the game scrolls to on purpose: group05, pitfall) is black; plain floors (earth, stone, carpet,
+  sand) get stains, grain, specks and outdoor pebbles; pack tile edges blend into their neighbours where the game's
+  picture is continuous. A tone-matching pass was built and dropped (it dulled painted highlights). 328 tests;
+  win_video_check 32 ok (hd 5 -> 66042 colours); smoke + canon, REA, coverage ok. Previews: out/hd33/ (n_* floors,
+  g_* split seam vs original, s_* / n_zoom3.png seams).

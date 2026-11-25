@@ -105,6 +105,46 @@ float3 Faded(float3 c, uint a, uint col)
     return NesRgb(col) * (ls > 0.03 ? clamp(dot(c, LUM) / ls, 0, 2.5) : 1);
 }
 
+// T33 seams: pack tiles are painted one by one, so a tile's edge need not meet its neighbour's. Where the NES pixels on
+// both sides of a tile edge have the same colour (the game's picture is continuous there), the last NES pixel before the
+// edge blends toward the neighbour's art at the shared edge: both sides reach the same 50 / 50 mix at the edge, so the
+// seam closes. Real edges (another colour across them) stay crisp. layer 0 = background, 1 = sprite
+float3 ArtAt(int2 n, float2 sub, uint layer, uint col)
+{
+    uint2 aw = ArtM.Load(int3(n, 0));
+    uint a = layer == 0 ? aw.x : aw.y;
+    if ((a & 0x7FFF) == 0) return float3(-1, -1, -1);
+    float4 s = ArtSample(a, sub);
+    return s.a >= 0.5 ? Faded(s.rgb, a, col) : float3(-1, -1, -1);
+}
+float3 Seams(float3 c, int2 n, float2 sub, uint a, uint layer, uint col)
+{
+    // the pixel's place in its tile on screen (the art word's column / row, mirrored back by the flips)
+    float cx = (a >> 15) & 7, cy = (a >> 18) & 7;
+    if (((a >> 21) & 1) != 0) cx = 7 - cx;
+    if (((a >> 22) & 1) != 0) cy = 7 - cy;
+    float2 tp = float2(cx, cy) + sub;
+    int2 dirs[4] = { int2(-1, 0), int2(1, 0), int2(0, -1), int2(0, 1) };
+    float dist[4] = { tp.x, 8 - tp.x, tp.y, 8 - tp.y };
+    float3 r = c;
+    [loop] for (int k = 0; k < 4; k++)
+    {
+        if (dist[k] >= 1) continue;
+        int2 m = n + dirs[k];
+        if (m.x < 0 || m.y < 0 || m.x > 255 || m.y > 239) continue;
+        uint4 L = Lay.Load(int3(m, 0));
+        if ((L.r & 0x80) != 0) continue;
+        uint mc = layer == 0 ? (L.r & 63) : ((L.g & 0x40) != 0 ? (L.g & 63) : 999);
+        if (mc != col) continue;
+        // the neighbour's sub-pixel at the shared edge, same place along it
+        float2 es = k == 0 ? float2(1, sub.y) : k == 1 ? float2(0, sub.y) : k == 2 ? float2(sub.x, 1) : float2(sub.x, 0);
+        float3 o = ArtAt(m, es, layer, col);
+        if (o.x < 0) continue;
+        r = lerp(r, o, 0.5 * (1 - dist[k]));
+    }
+    return r;
+}
+
 // the albedo at 8x: Scale2x level 3 on the 4x keys, pack tiles, dither blend, sprite over background
 float4 PSAlbedo(V i) : SV_Target
 {
@@ -120,7 +160,7 @@ float4 PSAlbedo(V i) : SV_Target
     if (!ui && (art.x & 0x7FFF) != 0)
     {
         float4 a = ArtSample(art.x, sub);
-        if (a.a >= 0.5) bg = Faded(a.rgb, art.x, k.r);
+        if (a.a >= 0.5) bg = Seams(Faded(a.rgb, art.x, k.r), n, sub, art.x, 0, L.r & 63);
     }
     float3 c = bg;
     if (SprFront(k))
@@ -129,7 +169,7 @@ float4 PSAlbedo(V i) : SV_Target
         if (!ui && (art.y & 0x7FFF) != 0)
         {
             float4 a = ArtSample(art.y, sub);
-            if (a.a >= 0.5) c = Faded(a.rgb, art.y, k.g);
+            if (a.a >= 0.5) c = Seams(Faded(a.rgb, art.y, k.g), n, sub, art.y, 1, L.g & 63);
         }
     }
     return float4(c, 1);
@@ -308,15 +348,67 @@ float Detail(float2 w, int kind, float t)
     return 0.5;
 }
 
+// ---- T33 plain ground: the flat fills of earth / sand / wood (kind 4), plaster / cloth (3) and stone (1) without pack
+// art (the game's one-colour tiles) get wear: mottled stains, fine grain and specks; outdoor earth also small pebbles lit
+// from the sun. World-anchored like the rest of the detail. PlainW: 1 off pack tiles, in a pack tile only near its NES colour
+float PlainW(float2 s, int col)
+{
+    if (ArtM.Load(int3(clamp(int2(s * NES), int2(0, 0), int2(255, 239)), 0)).x == 0) return 1;
+    return 1 - smoothstep(0.06, 0.16, length(Albedo(s) - NesRgb(col)));
+}
+float3 Ground(float3 a, float2 s, float2 w, int kind, int col)
+{
+    // only the game's own plain tiles: painted pack tiles keep their colours (ice highlights are NES white = "plaster")
+    if (ArtM.Load(int3(clamp(int2(s * NES), int2(0, 0), int2(255, 239)), 0)).x != 0) return a;
+    float wl = kind == 3 && col >= 0x30 && Opt2.z > 0.3 ? 0.3 : 1;   // snow in icy places: only a trace
+    // very saturated fills (NES magenta, red) a little less neon
+    float3 g = a;
+    float sat = max(a.r, max(a.g, a.b)) - min(a.r, min(a.g, a.b));
+    g = lerp(dot(a, LUM).xxx, g, 1 - 0.22 * smoothstep(0.45, 0.8, sat));
+    // stains: large soft patches, a touch darker and warmer (earth) or just darker (cloth, stone)
+    float st = WN(w, float2(23, 23)) * 0.6 + WN(w, float2(9, 9)) * 0.4;
+    float3 stainC = kind == 4 ? float3(0.86, 0.80, 0.72) : kind == 3 ? float3(0.90, 0.88, 0.90) : float3(0.84, 0.86, 0.88);
+    g *= lerp(float3(1.05, 1.04, 1.02), stainC, smoothstep(0.35, 0.8, st));
+    // grain
+    g *= 1 + (WN(w, float2(0.5, 0.5)) - 0.5) * (kind == 3 ? 0.07 : 0.12);
+    // specks: dark grit and a few bright grains
+    float2 sc = floor(w * 0.5);
+    float hs = Hash(sc + 41.7);
+    float2 so = frac(w * 0.5) - 0.5 - (float2(Hash(sc + 2.3), Hash(sc + 8.9)) - 0.5) * 0.5;
+    float sd = 1 - smoothstep(0.12, 0.3, length(so));
+    g *= 1 - sd * (hs > 0.93 ? 0.28 : 0) + sd * (hs < 0.03 ? 0.18 : 0);
+    // pebbles (outdoor earth): one in ~7 cells of 5 x 5 pixels, a rounded stone with a lit top and a shadow below
+    if (kind == 4 && Scn.x > 0.3)
+    {
+        float2 pc = floor(w / 5), po = frac(w / 5) * 5 - 2.5;
+        float hp = Hash(pc + 13.1);
+        if (hp > 0.86)
+        {
+            float2 ctr = (float2(Hash(pc + 4.4), Hash(pc + 7.7)) - 0.5) * 2.0;
+            float rad = 0.7 + 0.6 * Hash(pc + 1.9);
+            float2 q = (po - ctr) / rad;
+            q.x *= 0.85 + 0.3 * Hash(pc + 6.1);
+            float r = length(q);
+            float sh = 1 - smoothstep(0.7, 1.3, length(q - float2(0.35, 0.55)));      // shadow, down-right
+            g *= 1 - 0.3 * sh * Scn.x * step(1.0, r);
+            if (r < 1)
+            {
+                float3 nrm = normalize(float3(q, sqrt(saturate(1 - r * r)) + 0.2));
+                float lit = saturate(dot(nrm, normalize(float3(-0.5, -0.7, 0.6))));
+                float3 stone = dot(a, LUM) * float3(1.05, 1.0, 0.95) * (0.75 + 0.2 * Hash(pc + 3.3));
+                g = lerp(g, stone * (0.6 + 0.65 * lit), 1 - smoothstep(0.85, 1.0, r));
+            }
+        }
+    }
+    return lerp(a, g, wl * Opt.w);
+}
+
 // ---- T32 lawns: foliage-coloured background without pack art (the game's flat grass tiles and their generated look) gets
 // warm / cool patches, blade strokes that lean with the wind and a few small flowers; pack tiles keep their own painting
 // except where it is the plain grass colour
 float3 Lawn(float3 a, float2 s, float2 w, float t, int col)
 {
-    // in a pack tile only its plain grass (close to the NES colour: the fill between fence posts)
-    float wl = 1;
-    if (ArtM.Load(int3(clamp(int2(s * NES), int2(0, 0), int2(255, 239)), 0)).x != 0)
-        wl = 1 - smoothstep(0.06, 0.16, length(Albedo(s) - NesRgb(col)));
+    float wl = PlainW(s, col);            // in a pack tile only its plain grass (the fill between fence posts)
     if (wl <= 0) return a;
     // patches: sunny dry grass and deep cool clumps
     float patch = WN(w, float2(28, 28)) * 0.6 + WN(w, float2(11, 11)) * 0.4;
@@ -518,6 +610,7 @@ float4 PSLight(V i) : SV_Target
             gd = float2(dx - d0, dy - d0) / e * amp * 0.22;
             a *= 1 + amp * 0.55 * (d0 - 0.5);
             if (kind == 5) a = Lawn(a, s, w, t, col);
+            else if (kind == 1 || kind == 3 || kind == 4) a = Ground(a, s, w, kind, col);
         }
         // fine relief from the 8x art itself (pack tiles, faces, bricks): its light and dark as a small bump
         if (Opt.w > 0.5 && QualC.y > 0.5)

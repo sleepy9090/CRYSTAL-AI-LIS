@@ -288,3 +288,14 @@ CSHARP-WINDOWS/
     kind 5): background without pack art, and plain grass-coloured pixels of pack tiles, get brightness-based warm / cool
     patches (the NES greens are too saturated for a multiply), 20 % less neon, wind-leaning blade strokes and sparse
     five-petal flowers (world-anchored: they stay put while the map scrolls).
+
+28. **HUD split seam, plain ground, pack seams (T33):** `Gpu.SplitGap` (with `Edges`): the gameplay HUD's scroll is fixed
+    (nametable 2, row 24, v & `$0FE0` = `$0B00`; IRQ handler 1 at line 190, REVERSE.md), so its first line is found
+    from `SceneRaster.LineScroll`; the line above it (half the HUD's top row, stray tiles) is black, and so is a padding
+    band above that when the game scrolled there on purpose (the scroll does not follow the PPU's own y increment
+    `NextLine`, from line 150, mostly dark): 83 of 86 test states have the seam, group05 / pitfall a band.
+    `Ground()` (material detail, kinds 1 / 3 / 4, background without pack art): stains, grain, specks, pebbles on outdoor
+    earth, very saturated fills 22 % less neon, white in icy places only a trace. `Seams()` in PSAlbedo: within one NES pixel
+    of a pack tile's edge, where the NES colour across the edge is the same, blend toward the neighbour's art at the
+    shared edge (both sides meet at 50 / 50). Tried and dropped: a tone pass (NES colour − art average per NES pixel,
+    blurred, added to the albedo) pulled painted highlights (ice, characters) back toward the NES palette.

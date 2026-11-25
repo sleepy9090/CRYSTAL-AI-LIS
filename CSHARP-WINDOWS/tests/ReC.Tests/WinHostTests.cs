@@ -515,6 +515,7 @@ internal static partial class Program
             long extra = 0, checkedPx = 0;
             bool superset = true;
             SceneRaster? last = null; Machine? lastM = null;
+            int gaps = 0; bool gapOk = true; var padded = new List<string>();
             foreach (string p in Directory.GetFiles(dir, "*.json").OrderBy(p => p, StringComparer.Ordinal))
             {
                 var st = StateFile.Load(p);
@@ -534,9 +535,19 @@ internal static partial class Program
                     checkedPx += 256 * 240;
                 }
                 if (Path.GetFileNameWithoutExtension(p) == "town02_enter") { last = all; lastM = m; }
+                // T33 HUD split gap: under the HUD's fixed scroll, a seam line + at most a short padding band
+                var (gf, gt) = Gpu.SplitGap(all);
+                if (gt > 0)
+                {
+                    gaps++;
+                    if (gt - gf > 1) padded.Add($"{Path.GetFileNameWithoutExtension(p)} {gf}-{gt - 1}");
+                    gapOk &= gt >= 180 && gt <= 200 && gt - gf >= 1 && gt - gf <= 24;
+                }
             }
             Console.WriteLine($"  win_hd_engine: no flicker shows {extra} more sprite pixels in {checkedPx / 61440} frames");
             True(superset, "no-flicker keeps every sprite pixel the 8-sprite limit shows");
+            Console.WriteLine($"  win_hd_engine: HUD split gap in {gaps} states, padding band in {padded.Count}: {string.Join(", ", padded.Take(10))}");
+            True(gaps > 40 && gapOk, "HUD split gap under the HUD's fixed scroll, at most 24 lines");
             // layer words of a town frame
             var r = last!;
             var sc = new HdScene(d.NesRgb);
@@ -593,13 +604,14 @@ internal static partial class Program
                 var lay3 = new byte[lay.Length]; var am3 = new uint[am.Length];
                 Gpu.Layers(r, sc, slots, Gpu.BuildFades(slots), tileArt, lay3, am3, edges: true);
                 bool eOk = true; int black = 0, clipLines = 0, band = Gpu.EdgeBand(r, sc);
+                var (g0, g1) = Gpu.SplitGap(r);
                 for (int y = 0; y < 240; y++)
                 {
                     if (r.LeftClip[y]) clipLines++;
                     for (int x = 0; x < 256; x++)
                     {
                         int i = y * 256 + x, o = i * 4;
-                        bool edge = y >= band || (x < 8 && r.LeftClip[y]);
+                        bool edge = y >= band || (y >= g0 && y < g1) || (x < 8 && r.LeftClip[y]);
                         if (edge) { black++; eOk &= lay3[o] == 0x8F && lay3[o + 1] == 0 && am3[i * 2] == 0 && am3[i * 2 + 1] == 0; }
                         else eOk &= lay3[o] == lay[o] && lay3[o + 1] == lay[o + 1] && lay3[o + 2] == lay[o + 2] && am3[i * 2] == am[i * 2] && am3[i * 2 + 1] == am[i * 2 + 1];
                     }

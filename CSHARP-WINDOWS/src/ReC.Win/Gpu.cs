@@ -402,11 +402,12 @@ internal sealed unsafe partial class Gpu : IDisposable
     {
         var fb = r.Fb;
         int band = edges ? EdgeBand(r, sc) : 240;
+        var (gap0, gap1) = edges ? SplitGap(r) : (0, 0);
         for (int y = 0; y < 240; y++)
         {
             // T32 clean edges: the lines a TV hid (232-239, where the game leaves stray tiles) and the left column the game
-            // masks (backdrop colour), and the backdrop rows under a bottom HUD panel, are exact black: HUD bit, no sprite, no art
-            int ex = !edges ? 0 : y >= band ? 256 : r.LeftClip[y] ? 8 : 0;
+            // masks (backdrop colour), the backdrop rows under a bottom HUD panel and the HUD split seam (SplitGap) are exact black: HUD bit, no sprite, no art
+            int ex = !edges ? 0 : y >= band || (y >= gap0 && y < gap1) ? 256 : r.LeftClip[y] ? 8 : 0;
             for (int x = 0; x < ex; x++)
             {
                 int i = y * 256 + x, o = i * 4;
@@ -471,6 +472,49 @@ internal sealed unsafe partial class Gpu : IDisposable
             band = y;
         }
         return band;
+    }
+
+    /// <summary>T33: the black band at the HUD split, [from, to): the gameplay HUD's scroll is fixed (nametable 2, row 24:
+    /// v & $0FE0 = $0B00), and the IRQ at line 190 that sets it leaves a seam line above it (half the HUD's top row, stray
+    /// tiles). Above the seam, a band the game scrolled to on purpose (a scroll that does not follow the PPU's own line
+    /// increment, from line 150 on, running into the HUD) shows unloaded nametable rows: black too when it is mostly dark
+    /// background. (0, 0) = no HUD split on this frame.</summary>
+    public static (int From, int To) SplitGap(SceneRaster r)
+    {
+        int hud = -1;
+        for (int y = 160; y < 232 && hud < 0; y++)
+            if (r.LineScroll[y] >= 0 && (r.LineScroll[y] & 0x0FE0) == 0x0B00 && (r.LineScroll[y - 1] & 0x0FE0) != 0x0B00) hud = y;
+        if (hud < 0) return (0, 0);
+        int from = hud - 1;
+        // walk up while each line continues the one above it (same fine x / coarse x, v = the PPU's y increment)
+        int b = hud - 1;
+        while (b > 150 && r.LineScroll[b - 1] >= 0 && r.LineScroll[b] == NextLine(r.LineScroll[b - 1])) b--;
+        if (b > 150 && b < hud - 1)
+        {
+            long lit = 0;
+            for (int y = b; y < hud; y++)
+                for (int x = 0; x < 256; x++)
+                    if ((r.BgCol[y * 256 + x] & 63) != 0x0F && r.Bg[y * 256 + x] != 0) lit++;
+            if (lit * 100 < (long)(hud - b) * 256 * 30) from = b;   // < 30 % lit: padding, not a scene
+        }
+        return (from, hud);
+    }
+
+    /// <summary>the line-start scroll word (v | fine x << 16) of the next line by the PPU's own y increment</summary>
+    private static int NextLine(int ls)
+    {
+        int v = ls & 0x7FFF, fx = ls & 0x70000;
+        if ((v & 0x7000) != 0x7000) v += 0x1000;
+        else
+        {
+            v &= ~0x7000;
+            int cy = (v >> 5) & 31;
+            if (cy == 29) { cy = 0; v ^= 0x800; }
+            else if (cy == 31) cy = 0;
+            else cy++;
+            v = (v & ~0x3E0) | cy << 5;
+        }
+        return v | fx;
     }
 
     /// <summary>the column / row / flip bits of an art word from a tag</summary>
