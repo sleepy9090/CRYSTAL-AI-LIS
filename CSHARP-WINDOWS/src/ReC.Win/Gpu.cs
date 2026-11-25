@@ -63,7 +63,7 @@ internal sealed unsafe partial class Gpu : IDisposable
     private void* _b3Tex, _b3Rtv, _b3Srv, _b4Tex, _b4Rtv, _b4Srv, _ldrTex, _ldrRtv, _ldrSrv;
     private void* _vs, _psScale, _psAlbedo, _psSeed, _psJfa, _psHeight, _psEmit, _psLight, _psBright, _psBlur, _psComp, _psFinal, _sampLin, _cb;
     private int _bw, _bh, _pw, _ph;
-    private float _camX, _camY, _time, _outdoor, _voidGate, _mr = 0.3f, _mg = 0.3f, _mb = 0.3f, _play, _icy, _hot;
+    private float _camX, _camY, _time, _outdoor, _voidGate, _mr = 0.3f, _mg = 0.3f, _mb = 0.3f, _play, _icy, _hot, _hudFill = -1, _hudTop, _hudBottom;
     private readonly float[] _c = new float[NConst * 4];
 
     // pack art -> atlas slots
@@ -447,6 +447,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         fixed (float* p = sc.Lines) Update(_lnTex, p, 240 * 16);
         _camX = sc.CamX; _camY = sc.CamY; _time = sc.Time; _outdoor = sc.Outdoor; _voidGate = sc.VoidGate; _play = sc.Play;
         _icy = sc.Icy; _hot = sc.Hot;
+        _hudFill = sc.HudFill; _hudTop = sc.HudTop; _hudBottom = sc.HudBottom;
         // eye adaptation (gameplay only): dark scenes a little brighter, bright ones a little darker, eased over ~1 s
         float lum = Math.Max(_mr * 0.299f + _mg * 0.587f + _mb * 0.114f, 0.05f);
         float want = 1 + (Math.Clamp(MathF.Sqrt(0.42f / lum), 0.9f, 1.22f) - 1) * _play;
@@ -513,7 +514,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             _mr, _mg, _mb, 0,
             _exposure, Saturation, Contrast, Vignette,
             Reflections ? ReflectK : 0, Lights ? LightK : 0, Atmosphere ? _icy : 0, Atmosphere ? _hot : 0,
-            0, 0, 0, 0,
+            _hudFill, _hudTop, _hudBottom + 1, 0,
             0, 0, 0, 0,
         };
         c.CopyTo(_c, 0);

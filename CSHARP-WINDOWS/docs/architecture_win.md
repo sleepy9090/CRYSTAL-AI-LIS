@@ -263,3 +263,8 @@ CSHARP-WINDOWS/
     0.2), RBJ low shelf +2.5 dB @ 120 Hz and high shelf +1.5 dB @ 7 kHz, gain 0.45 x, shared limiter + dither.
     `win_audio_remaster`: music $14 +0.4 dB vs CD, peak 13978, mid / high L/R correlation 0.813 (CD 0.933),
     triangle step buzz reduced, shelf gains, deterministic, ini / --menu.
+24. **Coverage + HUD (T29):** `sprite_capture.py --explore V` variants 1-3; `packs/objects` (palette-0 sprites outside
+    the hero banks, min height 9); `pack_coverage.py` leaves out HUD / font banks and one-colour keys unless `--all`.
+    5342 tiles (atlas 4096x4096). HUD panel: `HdScene.HudFill / HudTop / HudBottom` (most common colour of the HUD
+    lines, not black), constants row 14 `HudC`; `HudPanel()` in the light pass: fill pixels x (1.10 - 0.20 t + 0.08
+    gloss band), x 0.7 under a non-fill HUD pixel up-left (drop shadow); text / frame pixels unchanged.

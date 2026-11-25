@@ -20,6 +20,7 @@ cbuffer C : register(b0)
     float4 MeanC;  // mean playfield colour
     float4 Grade;  // exposure (eye adaptation), saturation, contrast, vignette
     float4 Opt2;   // reflection strength, local light strength, icy scene (snow), hot scene (embers)
+    float4 HudC;   // HUD panel: fill colour (-1 = none), first line, last line + 1, -
 };
 Texture2D SrcA : register(t0);
 Texture2D SrcB : register(t1);
@@ -413,6 +414,19 @@ float4 Reflect(float2 p, float t)
     return 0;
 }
 
+// T29: the HUD panel's fill colour gets a soft gloss (lighter band near the top, darker toward the bottom) and a 1-pixel
+// drop shadow under text and frame pixels; every text / frame pixel itself stays exactly its NES colour
+float3 HudPanel(float3 a, float2 p, float4 inf)
+{
+    int fill = (int)round(HudC.x);
+    if (fill < 0 || (int)round(inf.g * 255 / 4) != fill || p.y < HudC.y || p.y >= HudC.z) return a;
+    float t = saturate((p.y - HudC.y) / max(HudC.z - HudC.y, 1));
+    float g = 1.10 - 0.20 * t + 0.08 * exp(-pow((t - 0.12) * 9, 2));
+    float4 q = InfoPx(p - float2(1, 1));
+    bool shade = (Flags(q) & 4) != 0 && (int)round(q.g * 255 / 4) != fill && p.y - 1 >= HudC.y;
+    return saturate(a * g * (shade ? 0.7 : 1));
+}
+
 float4 PSLight(V i) : SV_Target
 {
     float2 s = Uv.zw + i.uv * Uv.xy;
@@ -421,7 +435,7 @@ float4 PSLight(V i) : SV_Target
     float4 inf = InfoPx(p);
     uint fl = Flags(inf);
     float4 ln = Lne.Load(int3(clamp(int(p.y), 0, 239), 0, 0));
-    if (ln.z > 0.5 || (fl & 4) != 0) return float4(a, 0);          // HUD / text: the albedo, unlit
+    if (ln.z > 0.5 || (fl & 4) != 0) return float4(HudPanel(a, p, inf), 0);   // HUD / text: unlit (panel gloss only)
     float t = Cam.z;
     bool spr = (fl & 1) != 0;
     // motion in the world (material detail switch): water refracts in slow waves, grass sways in gusts of wind

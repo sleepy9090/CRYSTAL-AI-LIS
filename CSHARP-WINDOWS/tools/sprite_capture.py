@@ -1,13 +1,15 @@
 """Capture on-screen sprites for tools/sprite_pack.py (T12): run the Linux headless core over the combat / boss states
 with --dump-tags (Ppu.Tags + Fb + palette every EVERY frames).
 
-usage: python3 tools/sprite_capture.py [--out DIR] [--frames N] [--every K] [--explore] [STATE ..]
+usage: python3 tools/sprite_capture.py [--out DIR] [--frames N] [--every K] [--explore [V]] [STATE ..]
   default DIR out/sprites, N 480, K 8; default states = the enemy scenarios of ../web/test/states (group*, boss*,
   final*, fan*, thunder, kill*, pitfall, ai70msg, restore5f, death); each state gets DIR/<state>/tFFFFF.bin.
   Keys (relative to the state's first frame): a walk around in all 4 directions with sword swings, so enemies move,
   turn and attack.
   --explore: a long walk instead (2400 frames: up, right, up, left, down, left, down, right, 140 frames each with a
   sword swing between, twice), so the run leaves its room and crosses into neighbouring screens and areas (T26).
+  --explore V (T27): variant V >= 1 of that walk: the direction list rotated by V, each walk 140 + 60 V frames long,
+  3600 frames in all, so the runs reach other screens.
 """
 import json
 import os
@@ -30,6 +32,23 @@ EXPLORE = [(14 + lap * 1200 + k * 150 + o, b, h) for lap in range(2)
            for o, b, h in ((0, d, 140), (142, 'A', 4))]
 
 
+def explore(v):
+    """variant v of the exploration walk (0 = EXPLORE)"""
+    if v == 0:
+        return EXPLORE
+    dirs = ['UP', 'RIGHT', 'UP', 'LEFT', 'DOWN', 'LEFT', 'DOWN', 'RIGHT']
+    dirs = dirs[v % 8:] + dirs[:v % 8]
+    hold = 140 + 60 * v
+    out, t = [], 14
+    while t + hold < 3600:
+        for d in dirs:
+            if t + hold >= 3600:
+                break
+            out += [(t, d, hold), (t + hold + 2, 'A', 4)]
+            t += hold + 10
+    return out
+
+
 def main(argv):
     out, frames, every, names, walk = os.path.join(cv.ROOT, 'out', 'sprites'), 480, 8, [], WALK
     i = 0
@@ -42,7 +61,9 @@ def main(argv):
         elif a == '--every':
             every = int(argv[i + 1]); i += 1
         elif a == '--explore':
-            walk, frames = EXPLORE, max(frames, 2400)
+            v = int(argv[i + 1]) if i + 1 < len(argv) and argv[i + 1].isdigit() else 0
+            i += 1 if i + 1 < len(argv) and argv[i + 1].isdigit() else 0
+            walk, frames = explore(v), max(frames, 2400 if v == 0 else 3600)
         elif a in ('-h', '--help'):
             print(__doc__); return 0
         else:

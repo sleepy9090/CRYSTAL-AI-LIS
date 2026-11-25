@@ -24,6 +24,9 @@ internal sealed class HdScene
     /// <summary>T22: share of icy colours (light water / ice blues, whites half) and of fire colours ($06 $16 $17 $27 $28,
     /// with at least a quarter of the playfield dark) in the playfield, smoothed: snow / ice crystals and rising embers</summary>
     public float Icy, Hot;
+    /// <summary>T29: the HUD panel: its fill colour (the most common colour of the HUD lines, -1 = no HUD) and its first /
+    /// last line (the panel gets a gloss gradient there; text and frame pixels stay exact)</summary>
+    public int HudFill = -1, HudTop, HudBottom;
     /// <summary>1 = gameplay (a HUD split with text is on screen): world effects on; 0 = title, cut-scenes, menus</summary>
     public float Play;
     public (float R, float G, float B) Mean = (0.3f, 0.3f, 0.3f);
@@ -119,6 +122,20 @@ internal sealed class HdScene
         }
         bool hud = false;
         for (int y = 0; y < 240 && !hud; y++) hud = offs[y] >= 0 && Lines[y * 4 + 2] > 0;
+        HudFill = -1;
+        if (hud)
+        {
+            var hist = new int[64];
+            int top = 240, bot = -1;
+            for (int y = 0; y < 240; y++)
+            {
+                if (offs[y] < 0 || Lines[y * 4 + 2] == 0) continue;
+                top = Math.Min(top, y); bot = Math.Max(bot, y);
+                for (int x = 0; x < 256; x++) hist[fb[y * 256 + x] & 0x3F]++;
+            }
+            int best = Array.IndexOf(hist, hist.Max());
+            if (best != 0x0F && best != 0x0D) { HudFill = best; HudTop = top; HudBottom = bot; }   // a black panel stays black
+        }
 
         // camera from the playfield offset (wrap-aware); a jump of more than 48 pixels is a cut (no motion)
         bool cut = false;

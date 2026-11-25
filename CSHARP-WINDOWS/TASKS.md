@@ -284,3 +284,9 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] T28 (interactive, 2026-11-24) done: **Remastered audio** (user: "feel free to ... upgrade ... the audio engine"):
   Audio > Remastered (architecture §5.23). 317 tests; Wine renders `out/audio28/music14_{cd,remaster}.wav`
   (-19.8 vs -18.7 dBFS RMS, peaks 27189 vs 14973); hd / hdfx / hdart / heropack, smoke + canon, REA ok.
+- [x] T29 (interactive, 2026-11-24) done: **Art coverage to 98 % + HUD panel** (request: "keep going ... dont leave out
+  anything"). Exploration variants 1-3 (+1363 tiles), new `packs/objects` (+178: hero forms, tower, clouds, items),
+  5342 tiles in all (atlas grows to 4096x4096). Playfield coverage of all explored screens: sprites 98 %, background
+  97-98 % (`pack_coverage.py` now leaves out the HUD / font banks and one-colour keys: never painted, on purpose).
+  HUD panel gloss + text drop shadow (text pixels exact). 321 tests; win_video_check 32 ok; smoke + canon, REA,
+  coverage ok; exe 12.8 MB.

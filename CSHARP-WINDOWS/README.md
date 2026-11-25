@@ -126,9 +126,12 @@ splits) and draws the scene itself. It does not take the emulated NES picture.
   the floor beside it); fires and characters light from a direction, so bumps facing them catch the light; in
   gameplay the exposure adapts gently to dark and bright places; the output is dithered so smooth gradients do not band.
 - **Heat and sheen:** the air shimmers just above fires; deep water (and faintly ice) carries a drifting sky sheen.
-- **Built-in art:** the starter graphics packs (hero, enemies, townspeople, bosses, scenery: 2658 tiles) are built into
+- **Built-in art:** the starter graphics packs (hero, enemies, townspeople, bosses, objects, scenery: 5342 tiles, 98 % of
+  the sprites and 97 % of the scenery on the screens the test runs explore) are built into
   ReC.exe and used by the HD engine without installing anything (**Video › Graphics › HD: Built-in art** turns them
   off; a pack of your own in `%APPDATA%\re-c\pack` or `--pack` overrides them tile by tile).
+- **HUD panel:** the status bar's panel gets a soft gloss and the text a 1-pixel drop shadow (every letter and digit
+  stays exactly its NES colour).
 - **Fades keep the art:** when the game fades a room in or out, painted tiles follow the fade (their colours darken
   with the NES palette) instead of dropping back to the generated look.
 - **Parallax:** pits, chasms and the darkness around caves become depth: cliff walls seen in perspective from the

@@ -10,9 +10,9 @@
   "confidence": "derived",
   "environment": null,
   "evidence_format": 2,
-  "evidence_id": "ev_18f46fbde7cb371f02686f722e21042ce8c4c91b2960894f74e43032f8855679",
+  "evidence_id": "ev_e409e76469d68cdf8a524d5cabbe9187f24ee83a8c82307ecc72f51a66dfd4a6",
   "evidence_links": [
-   "ev_2327f22083fd5eee99de2532af96710b6eddd4096bf850ed9a2a5075b84e79c9"
+   "ev_ef61abe5ec919a5017ec3c6efb90a0fd019b0ba2c2c9dbebddb39355fa2589a0"
   ],
   "limitations": [
    "CIL instruction anchors are decoded from file-backed method bodies only; no target assembly is loaded or executed.",
@@ -31,7 +31,7 @@
   "normalized_result": {
    "artifact": {
     "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll",
-    "sha256": "905781be569e85f93c3c372041bb74a9a386bbc5a510ab03e030e06e38631af1"
+    "sha256": "2d8b6ac698042249291f586dcf3dd4d46281c80a42670c95418945ba128fa13c"
    },
    "coverage": {
     "examined": 47145,
@@ -49,15 +49,15 @@
     "Metadata tokens are build-local coordinates and are only meaningful with the reported artifact SHA-256 and MVID.",
     "User strings are the #US literals loaded by ldstr in the inspected method bodies, with their own coverage; instruction anchors and normalized CIL digests keep their build-local tokens."
    ],
-   "parent_digest": "2327f22083fd5eee99de2532af96710b6eddd4096bf850ed9a2a5075b84e79c9",
-   "parent_evidence_id": "ev_2327f22083fd5eee99de2532af96710b6eddd4096bf850ed9a2a5075b84e79c9",
+   "parent_digest": "ef61abe5ec919a5017ec3c6efb90a0fd019b0ba2c2c9dbebddb39355fa2589a0",
+   "parent_evidence_id": "ev_ef61abe5ec919a5017ec3c6efb90a0fd019b0ba2c2c9dbebddb39355fa2589a0",
    "parent_operation": "inspect_managed_members",
    "summary": {
     "artifact": {
      "byte_length": 4302336,
      "format": "pe",
      "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll",
-     "sha256": "905781be569e85f93c3c372041bb74a9a386bbc5a510ab03e030e06e38631af1"
+     "sha256": "2d8b6ac698042249291f586dcf3dd4d46281c80a42670c95418945ba128fa13c"
     },
     "assembly": {
      "culture": null,
@@ -79,8 +79,8 @@
      "state": "complete"
     },
     "identity_scope": {
-     "requires_artifact_sha256": "905781be569e85f93c3c372041bb74a9a386bbc5a510ab03e030e06e38631af1",
-     "requires_mvid": "52015202-37af-4e4b-abc1-00ae0612e450",
+     "requires_artifact_sha256": "2d8b6ac698042249291f586dcf3dd4d46281c80a42670c95418945ba128fa13c",
+     "requires_mvid": "08a41629-88f7-4d06-8c74-6e0450a9f3cd",
      "token_identity": "build-local"
     },
     "limitations": [
@@ -130,7 +130,7 @@
      "enc_base_id": null,
      "enc_id": null,
      "generation": 0,
-     "mvid": "52015202-37af-4e4b-abc1-00ae0612e450",
+     "mvid": "08a41629-88f7-4d06-8c74-6e0450a9f3cd",
      "name": "ReC.Core.dll",
      "row_offset": 4070236,
      "token": "0x00000001"
@@ -213,11 +213,11 @@
    "view": {
     "kind": "summary"
    },
-   "view_digest": "9f47abcb073e70fc6f83341a0e2df5d40ea377fd1d262062ec64519eb07cde62"
+   "view_digest": "00bd129d7bac18e89d393f5e3f2876fa1d893d1676cff52d31f7c981eef529af"
   },
   "operation": "inspect_analysis_view",
   "parameters": {
-   "parent_evidence_id": "ev_2327f22083fd5eee99de2532af96710b6eddd4096bf850ed9a2a5075b84e79c9",
+   "parent_evidence_id": "ev_ef61abe5ec919a5017ec3c6efb90a0fd019b0ba2c2c9dbebddb39355fa2589a0",
    "view": {
     "kind": "summary"
    }
@@ -236,7 +236,7 @@
     "format": "pe",
     "kind": "file",
     "selection": null,
-    "sha256": "905781be569e85f93c3c372041bb74a9a386bbc5a510ab03e030e06e38631af1"
+    "sha256": "2d8b6ac698042249291f586dcf3dd4d46281c80a42670c95418945ba128fa13c"
    },
    "local_path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.Core.dll",
    "name": "ReC.Core.dll"

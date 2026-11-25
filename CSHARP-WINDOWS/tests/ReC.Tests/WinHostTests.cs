@@ -587,6 +587,8 @@ internal static partial class Program
                 }
                 for (int i = 0; i < 256 * 200; i++) hist[rr.Fb[i] & 63]++;
                 weather[name] = (s2.Icy, s2.Hot, s2.Outdoor);
+                // T29 HUD panel: found under the playfield, a real (not black) fill colour that most HUD pixels have
+                True(s2.HudFill is >= 0 and not 0x0F && s2.HudTop > 150 && s2.HudBottom < 240 && s2.HudBottom > s2.HudTop + 16, $"{name}: HUD panel fill {s2.HudFill:X2} lines {s2.HudTop}-{s2.HudBottom}");
                 Console.WriteLine($"  {name}: icy {s2.Icy:F2} hot {s2.Hot:F2} outdoor {s2.Outdoor:F2}; colours " +
                                   string.Join(' ', Enumerable.Range(0, 64).OrderByDescending(c => hist[c]).Take(5).Select(c => $"{c:X2}:{hist[c] * 100 / 51200}%")));
             }

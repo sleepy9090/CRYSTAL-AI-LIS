@@ -109,3 +109,12 @@ added (existing tiles unchanged): `bg_pack.py --in out/explore --out out/pk_bg` 
 (+68 NPCs). All packs: 3801 tiles. Coverage of the explored screens (`tools/pack_coverage.py out/explore <packs>
 --sample 8`): sprite pixels 59 % -> 82 %, background pixels 51 % -> 58 % (the rest: colours that last only a moment,
 keys seen fewer than 3 times, the font / window banks left crisp on purpose).
+
+## More walks, objects (T29)
+Three more exploration variants (`sprite_capture.py --explore 1|2|3 --every 48`: other walk orders, longer walks, 3600
+frames; 19350 dumps) added +991 backgrounds, +249 enemies, +123 NPCs (new keys only). `objects/` (+178 tiles,
+`objects_preview.png`) is new: sprites in palette 0 that are not the hero's own banks: the hero's changed forms, the
+ending's tower, clouds, items, creatures (`sprite_pack.py --in <both captures> --out out/pk3_p0 --skip none
+--exclude <all packs> --palettes 0 --min-height 9`; the height limit keeps sprite letters and cursors crisp).
+All packs: 5342 tiles. Playfield coverage of all explored screens (`pack_coverage.py`, now without the HUD / font
+banks and one-colour keys, which are never painted on purpose; `--all` counts them): sprites 98 %, background 97-98 %.

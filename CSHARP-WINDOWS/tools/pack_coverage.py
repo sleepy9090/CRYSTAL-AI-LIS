@@ -3,6 +3,8 @@ banks) and of background pixels (slot 1-3) whose tile + colour key has a PNG in 
 
 usage: python3 tools/pack_coverage.py DUMPS_DIR PACK_DIR[,PACK_DIR..] [STATE ..] [--bg] [--sample N]
   --sample N: every Nth dump of each state only (big captures); a TOTAL line sums all states
+  --all: also count the background keys no pack paints on purpose (the font / HUD / window banks, kept crisp, and
+         one-colour keys such as all black, sprites too); by default they are left out: the playfield figure
   --bg: the top missing keys include background keys (default: sprite keys only)
   DUMPS_DIR = a tools/sprite_capture.py output (one sub-folder per state). Uses the renderer's per-line colour keys.
 """
@@ -11,6 +13,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sprite_pack import load_dump, slot_of, VALID, HERO_BANKS, DATA  # noqa: E402
+from bg_pack import FONT_BANKS  # noqa: E402
 
 
 def keys_of(chr_, tags, fb, pal):
@@ -41,6 +44,8 @@ def main(argv):
     sample = 1
     if '--sample' in argv:
         i = argv.index('--sample'); sample = int(argv[i + 1]); argv = argv[:i] + argv[i + 2:]
+    count_all = '--all' in argv
+    argv = [a for a in argv if a != '--all']
     argv = [a for a in argv if a != '--bg']
     tot = [0, 0, 0, 0]
     src, packs, only = argv[0], argv[1].split(','), set(argv[2:])
@@ -58,6 +63,8 @@ def main(argv):
         for fn in sorted(os.listdir(os.path.join(src, st)))[::sample]:
             for k, spr in keys_of(chr_, *load_dump(os.path.join(src, st, fn))):
                 if spr and (k[0] >> 6) in HERO_BANKS:
+                    continue
+                if not count_all and (k[1] == k[2] == k[3] or not spr and (k[0] >> 6) in FONT_BANKS):
                     continue
                 i = 0 if spr else 2
                 n[i] += 1
