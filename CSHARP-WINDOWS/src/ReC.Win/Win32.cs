@@ -271,6 +271,10 @@ internal static unsafe partial class Win32
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool ReleaseCapture();
 
+    // ---- shell32: open a folder in Explorer (Game > Open screenshots folder)
+    [LibraryImport("shell32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial IntPtr ShellExecuteW(IntPtr hwnd, string? op, string file, string? args, string? dir, int show);
+
     // ---- dwmapi: playtest 3, the GDI picture paced to the compositor (no tearing)
     [LibraryImport("dwmapi.dll")]
     public static partial int DwmFlush();

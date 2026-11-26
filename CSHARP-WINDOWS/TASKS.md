@@ -387,3 +387,4 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] P5 (2026-11-26, playtest 4: "crackling/popping on scene change; huge black areas on the sides in widescreen HD"):
   no ~30 MB area allocations per scene change (blocking GCs), DMC level jumps ramped, screen shake kept, camera
   corrections searched, no-map side pixels filled with a soft mirrored glow instead of black.
+- [x] P6 (2026-11-26, "add an option to take a screenshot"): Game › Take screenshot (F12) + Open screenshots folder; unique names.

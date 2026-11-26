@@ -1737,6 +1737,25 @@ internal static partial class Program
             True(!v.Mouse && new VideoSettings().Mouse && v.Serialize().Contains("mouse=0"), "ini mouse");
             Eq(108, Window.CommandId("mouse"), "--menu mouse");
         }),
+        ("win_screenshot", () =>
+        {
+            // Game > Take screenshot / Open screenshots folder; names do not overwrite within the same second
+            string dir = Path.Combine(Path.GetTempPath(), "rec_shots_" + Environment.ProcessId);
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var t = new DateTime(2026, 11, 26, 12, 34, 56);
+                string a = Window.ShotPath(dir, t);
+                File.WriteAllBytes(a, new byte[1]);
+                string b = Window.ShotPath(dir, t);
+                File.WriteAllBytes(b, new byte[1]);
+                string c = Window.ShotPath(dir, t);
+                True(Path.GetFileName(a) == "re-c_20261126_123456.png" && Path.GetFileName(b) == "re-c_20261126_123456_2.png" && Path.GetFileName(c) == "re-c_20261126_123456_3.png", "unique names");
+            }
+            finally { Directory.Delete(dir, true); }
+            Eq(109, Window.CommandId("screenshot"), "--menu screenshot");
+            Eq(110, Window.CommandId("screenshots"), "--menu screenshots");
+        }),
         ("win_frame_stats", () =>
         {
             // T49 FPS counter: 60 frames per second at 4 ms each, then a slow patch at 30 fps / 20 ms

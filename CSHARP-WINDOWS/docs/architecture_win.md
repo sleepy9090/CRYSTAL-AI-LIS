@@ -556,3 +556,6 @@ CSHARP-WINDOWS/
     flagged `HdScene.FNoMap` (`SceneRaster.NoMap` → `WidenInfo`) and `PSFinal` fills them with the blurred lit picture
     mirrored back across the game's column edge, dimmer outward (the blurred copy is made whenever there are sides),
     instead of black. Preview out/wide6/0_hd.png (a one-screen corridor at 16:9).
+    **Screenshot menu (P6):** Game › Take screenshot (id 109, `--menu screenshot`, = F12) and Game › Open screenshots
+    folder (id 110, `ShellExecuteW` "open" on `Pictures\re-c`). `Window.ShotPath` adds `_2`, `_3` .. so shots in the same
+    second do not overwrite each other. Test `win_screenshot`. (Under Wine "My Pictures" is the Linux ~/Pictures.)

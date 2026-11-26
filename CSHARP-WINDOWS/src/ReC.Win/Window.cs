@@ -367,13 +367,31 @@ internal static unsafe partial class Window
     // js: main.js status
     /// <summary>= the page's status line: shown in the window title (paused / muted).</summary>
     /// <summary>T42: F12 = the picture as shown (HD included) to Pictures\re-c\re-c_YYYYMMDD_HHMMSS.png</summary>
+    /// <summary>the folder screenshots go to: Pictures\re-c</summary>
+    private static string ShotDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "re-c");
+
+    /// <summary>a free file name: re-c_YYYYMMDD_HHMMSS.png, then _2, _3 .. within the same second</summary>
+    public static string ShotPath(string dir, DateTime t)
+    {
+        string b = Path.Combine(dir, $"re-c_{t:yyyyMMdd_HHmmss}");
+        string p = b + ".png";
+        for (int k = 2; File.Exists(p); k++) p = $"{b}_{k}.png";
+        return p;
+    }
+
+    private static void OpenShotFolder()
+    {
+        try { Directory.CreateDirectory(ShotDir); Win32.ShellExecuteW(_hwnd, "open", ShotDir, null, null, 1 /* SW_SHOWNORMAL */); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or DllNotFoundException or EntryPointNotFoundException) { Notice("COULD NOT OPEN THE FOLDER"); }
+    }
+
     private static void Screenshot()
     {
         try
         {
-            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "re-c");
+            string dir = ShotDir;
             Directory.CreateDirectory(dir);
-            string path = Path.Combine(dir, $"re-c_{DateTime.Now:yyyyMMdd_HHmmss}.png");
+            string path = ShotPath(dir, DateTime.Now);
             _notice = null;                                    // no notice in the picture
             DumpWindow(path);
             Notice("SCREENSHOT SAVED: PICTURES/RE-C");

@@ -36,7 +36,7 @@ anyway**, or right-click the file → Properties → **Unblock**.
 | Right Shift / Tab | Select |
 | P | pause: the game dims and a pause panel shows the keys and the active cheats (in HD the game behind it is frosted glass) |
 | Space (hold) | fast forward (4×) |
-| F12 | screenshot (the picture as shown, HD included) to `Pictures\re-c` |
+| F12 | screenshot (the picture as shown, HD included) to `Pictures\re-c`; also Game › Take screenshot, and Game › Open screenshots folder |
 | F1 | help: every key on screen (the game pauses under it) |
 | F2 | FPS counter (frames per second + time per frame; also Video › Show FPS) |
 | Game › Turbo B / Turbo A | a held button repeats (rapid sword with B) |

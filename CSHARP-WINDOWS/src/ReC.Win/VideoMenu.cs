@@ -15,7 +15,7 @@ internal static unsafe partial class Window
 {
     // command ids
     private const int IdPause = 100, IdMute = 101, IdExit = 102;
-    private const int IdTurboA = 103, IdTurboB = 104, IdFeedback = 105, IdRemap = 106, IdResetKeys = 107, IdMouse = 108;   // T38, T57, T61
+    private const int IdTurboA = 103, IdTurboB = 104, IdFeedback = 105, IdRemap = 106, IdResetKeys = 107, IdMouse = 108, IdShot = 109, IdShotFolder = 110;   // T38, T57, T61
     private const int IdCheat0 = 600, IdCheatsOff = 620;     // T36: + Cheats index (life, magic, gold, status, charge, xp)
     private const int IdFullscreen = 200, IdMenuBar = 201, IdInteger = 202, IdCrop = 203, IdSmooth = 204, IdReset = 205;
     private const int IdScale0 = 210;            // + 1..6
@@ -71,6 +71,8 @@ internal static unsafe partial class Window
             case "feedback": return IdFeedback;
             case "remapkeys": return IdRemap;
             case "mouse": return IdMouse;
+            case "screenshot": return IdShot;
+            case "screenshots": return IdShotFolder;
             case "resetkeys": return IdResetKeys;
             case "cheats:off": return IdCheatsOff;
             case "mute": return IdMute;
@@ -185,6 +187,9 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(m, 0, IdTurboB, "Turbo &B (rapid sword while held)");
         Win32.AppendMenuW(m, 0, IdTurboA, "Turbo &A (repeats while held)");
         Win32.AppendMenuW(m, 0, IdFeedback, "&Damage feedback (red flash, low-life pulse, rumble)");
+        Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
+        Win32.AppendMenuW(m, 0, IdShot, "Take &screenshot\tF12");
+        Win32.AppendMenuW(m, 0, IdShotFolder, "Open screenshots &folder");
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(m, 0, IdMouse, "M&ouse control (hold left: walk, right: sword, middle: A)");
         Win32.AppendMenuW(m, 0, IdRemap, "&Remap keys...");
@@ -397,6 +402,8 @@ internal static unsafe partial class Window
             case IdFeedback: _v.Feedback = !_v.Feedback; Notice(_v.Feedback ? "DAMAGE FEEDBACK: ON" : "DAMAGE FEEDBACK: OFF"); SettingsChanged(false); return;
             case IdRemap: StartRemap(); return;
             case IdMouse: _v.Mouse = !_v.Mouse; Notice(_v.Mouse ? "MOUSE CONTROL: ON" : "MOUSE CONTROL: OFF"); SettingsChanged(false); return;
+            case IdShot: Screenshot(); return;
+            case IdShotFolder: OpenShotFolder(); return;
             case IdResetKeys: _v.KeyBinds = new int[8]; _input.SetBinds(_v.KeyBinds); Notice("KEYS: DEFAULTS"); SettingsChanged(false); return;
             case >= IdCheat0 and < IdCheat0 + 6:
                 _v.Cheats.Set(id - IdCheat0, !_v.Cheats.Get(id - IdCheat0));
