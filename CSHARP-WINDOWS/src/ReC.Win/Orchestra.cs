@@ -25,6 +25,7 @@ internal sealed class Orchestra
     private readonly Voice _vn = new(Kind.Violins), _hn = new(Kind.Horns), _bs = new(Kind.Bass);
     private readonly Perc _pc = new();
     private double _dmcX, _dmcY;
+    private double _dmcLp;
     private readonly float[] _pre = new float[2048];
     private int _pi;
     private readonly Freeverb _hallL = new(0, 0.86f, 1.45), _hallR = new(23, 0.86f, 1.45);
@@ -40,6 +41,8 @@ internal sealed class Orchestra
         var (b, _) = (mute & 4) != 0 ? (0.0, 0.0) : _bs.Tri(apu.TriCh);
         var (tp, sn) = (mute & 8) != 0 ? (0.0, 0.0) : _pc.Next(apu.NoiseCh);
         double d = (mute & 16) != 0 ? 0 : CdMixer.TndCurve(dmc);
+        _dmcLp += (d - _dmcLp) * 0.68;                               // the samples low-passed ~8 kHz (their 1-bit steps)
+        d = _dmcLp;
         double dy = d - _dmcX + 0.9972 * _dmcY; _dmcX = d; _dmcY = dy;
         // balance: each instrument at about its chip channel's loudness (measured on music $14 solo, CD path)
         v *= 0.5; vp *= 0.5; h *= 0.37; hp *= 0.37; b *= 0.45; tp *= 0.45; sn *= 0.45; dy *= 2.5;
@@ -104,6 +107,8 @@ internal sealed class Orchestra
         private readonly Kind _k;
         private readonly double _att, _rel;
         private double _amp, _logF = -1, _age, _p0, _p1, _p2, _p3, _vib;
+        private double _ampFx, _pf;
+        private static readonly double[] Duties = { 0.125, 0.25, 0.5, 0.75 };
         private bool _wasStart, _wasOn, _fx;
         private int _prevPer = -1, _fxHold;
         private Svf _f, _f2;
@@ -123,7 +128,7 @@ internal sealed class Orchestra
         private void Track(bool on, double hz, double vol, bool note)
         {
             double lf = Math.Log(hz);
-            if (note || _logF < 0) { _logF = lf; _age = 0; if (_amp > 0.05) _amp *= 0.7; }
+            if (note || _logF < 0) { _logF = lf; _age = 0; }
             else _logF += (lf - _logF) * Coef(0.003);
             _age += 1 / Fs;
             double target = on ? vol : 0;
@@ -137,23 +142,24 @@ internal sealed class Orchestra
             bool start = p.Env.Start && !_wasStart;
             _wasStart = p.Env.Start;
             // a sound effect: sweep on, or the period jumping around faster than music (2+ big changes within 50 ms)
-            if (p.Period != _prevPer && _prevPer >= 0 && Math.Abs(Math.Log((p.Period + 1.0) / (_prevPer + 1.0))) > 0.045)   // above the driver's vibrato (<= ~2 %) _fxHold += 2205 / 2;
+            if (p.Period != _prevPer && _prevPer >= 0 && Math.Abs(Math.Log((p.Period + 1.0) / (_prevPer + 1.0))) > 0.045)   // above the driver's vibrato (<= ~2 %)
+                _fxHold += 2205 / 2;
             _prevPer = p.Period;
             _fxHold = Math.Max(0, _fxHold - 1);
             bool fx = on && ((p.SwEn && p.SwShift > 0) || _fxHold > 2205);
-            if (fx != _fx) { _fx = fx; _amp = 0; }
+            _fx = fx;
             bool note = start || (on && !_wasOn) || (on && _logF > 0 && Math.Abs(Math.Log(hz) - _logF) > 0.04);
             _wasOn = on;
             double vol = p.Env.Out / 15.0;
-            if (_fx)
-            {
-                // the chip's own sound, band-limited
-                _amp = on ? vol : _amp * 0.995;
-                double s = Square(ref _p0, hz / Fs, new[] { 0.125, 0.25, 0.5, 0.75 }[p.Duty]);
-                return (s * _amp * 0.35, 0);
-            }
-            Track(on, hz, vol, note);
-            return Render(Math.Exp(_logF), p.Duty);
+            // the chip's own sound (band-limited) for sound effects, the instrument for music: each with its own level, eased
+            // over ~1-2 ms, so switching between them crossfades instead of cutting (a cut is a pop)
+            double fxT = _fx && on ? vol : 0;
+            _ampFx += (fxT - _ampFx) * 0.02;
+            double fxs = 0;
+            if (_ampFx > 1e-4) fxs = Square(ref _pf, hz / Fs, Duties[p.Duty]) * _ampFx * 0.35;
+            Track(on && !_fx, hz, vol, note && !_fx);
+            var (main, spread) = Render(Math.Exp(_logF), p.Duty);
+            return (main + fxs, spread);
         }
 
         public (double Main, double Spread) Tri(Triangle t)
@@ -207,7 +213,7 @@ internal sealed class Orchestra
     private sealed class Perc
     {
         private static readonly int[] NoisePeriods = { 4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068 };   // = Apu.NoisePeriod
-        private double _amp, _thump, _tph, _tf;
+        private double _amp, _thump, _thumpT, _tph, _tf, _snLp;
         private bool _wasStart, _wasOn;
         private int _idx;
         private uint _rng = 0x2545F491;
@@ -231,22 +237,26 @@ internal sealed class Orchestra
                 _idx = Array.IndexOf(NoisePeriods, n.Period);
                 if (_idx >= 8)                                    // low noise: a timpani stroke
                 {
-                    _thump = Math.Max(_thump, 0.3 + 0.7 * n.Env.Out / 15.0);
+                    if (_thump < 0.02) _tph = 0;
+                    _thumpT = Math.Max(_thumpT, 0.3 + 0.7 * n.Env.Out / 15.0);
                     _tf = 58 + (15 - _idx) * 9;
                 }
             }
-            _amp += (vol - _amp) * (vol > _amp ? 0.5 : 0.004);
+            _amp += (vol - _amp) * (vol > _amp ? 0.03 : 0.004);    // ~1 ms attack: a drum hit, not a click
             double w = White();
             // timpani: a decaying sine dropping slightly in pitch + low rumble
             _tph += _tf * (1 + 0.15 * _thump) / Fs; if (_tph >= 1) _tph -= 1;
             double tp = Math.Sin(2 * Math.PI * _tph) * _thump;
-            _thump *= 0.99988;                                   // ~0.4 s
+            if (_thumpT > _thump) { _thump += (_thumpT - _thump) * 0.025; if (_thumpT - _thump < 0.01) _thumpT = 0; }   // ~1 ms attack
+            else _thump *= 0.99988;                              // ~0.4 s decay
             _lo.Run(w, 260, 0.7);
             tp += _lo.Lp * (_idx >= 8 ? _amp * 1.4 : 0);
             // snare / cymbal: band-passed noise, brighter for short periods; the metallic mode rings
-            double centre = _idx < 0 ? 4000 : 9000 * Math.Pow(0.78, _idx);
+            double centre = Math.Min(6000, _idx < 0 ? 4000 : 9000 * Math.Pow(0.78, _idx));   // not above 6 kHz (harsh)
             _hi.Run(w, Math.Max(centre, 900), n.Mode ? 6 : 0.9);
             double sn = _hi.Bp * (_idx >= 8 ? 0.25 : 1) * _amp * (n.Mode ? 1.6 : 1.2);
+            _snLp += (sn - _snLp) * 0.55;                            // gentle low-pass (~6 kHz): softer edges
+            sn = _snLp;
             return (tp, sn);
         }
     }

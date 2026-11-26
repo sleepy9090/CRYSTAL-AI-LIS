@@ -44,6 +44,21 @@ internal sealed class SceneRaster
         Tags = new int[w * 240]; BgTag = new int[w * 240]; SpTag = new int[w * 240];
     }
 
+    /// <summary>widescreen: the side sprites (SideSprites.Draw output) over the widened background, as the PPU composes:
+    /// a sprite pixel behind an opaque background pixel stays hidden</summary>
+    public void ApplySideSprites(byte[] spr, int[] tag)
+    {
+        for (int i = 0; i < W * 240; i++)
+        {
+            int sp = spr[i];
+            if (sp == 0) continue;
+            var pal = LinePal[i / W];
+            Sp[i] = (byte)sp; SpCol[i] = (byte)(pal[0x10 | (sp & 0x0F)] & 0x3F); SpTag[i] = tag[i];
+            bool front = (sp & 0x40) == 0 || Bg[i] == 0;
+            if (front) { Fb[i] = SpCol[i]; Tags[i] = tag[i]; }
+        }
+    }
+
     /// <summary>widescreen (Wide.cs): this (W wide) = src (256) in the middle, the area at the camera on the sides of the
     /// lines that show the map (and in src's masked left column there): background only, tags with the area's tiles
     /// (pack art / materials work there too). mapLine[y] = the line shows the map (Window.Compose's rule).</summary>

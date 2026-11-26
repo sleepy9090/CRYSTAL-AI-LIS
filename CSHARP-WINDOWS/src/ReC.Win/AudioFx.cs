@@ -75,14 +75,18 @@ internal sealed class Resampler
 internal sealed class RateControl
 {
     public const double MaxAdjust = 0.005;
+    public const double FarAdjust = 0.015;
     private double _avg = -1;
 
     /// <summary>queued = frames waiting (device buffers + pending), target = the latency aimed at, in frames</summary>
     public double Ratio(double speed, double queued, double target)
     {
         _avg = _avg < 0 ? queued : _avg + (queued - _avg) * 0.05;
-        double e = Math.Clamp((_avg - target) / target, -1, 1);
-        return speed * (1 + MaxAdjust * e);
+        double e = (_avg - target) / target;
+        // near the target +-0.5 % (inaudible); far above it (a catch-up burst) up to +2 % more, so a backlog drains in a
+        // second or two instead of being cut out
+        double adj = MaxAdjust * Math.Clamp(e, -1, 1) + (e > 1 ? FarAdjust * Math.Min(e - 1, 1) : 0);
+        return speed * (1 + adj);
     }
 
     public void Reset() => _avg = -1;

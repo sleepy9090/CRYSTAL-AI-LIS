@@ -373,3 +373,8 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] W1-W2 (2026-11-26, request "add widescreen playfield"): **Video › Widescreen playfield** 16:10 / 16:9 / 21:9 in
   Original and HD graphics: the columns beside the screen are drawn from the area's own map (exact, the camera of
   each frame), fade in only while the screen shows the map. Previews: out/wide1/ (Original), out/wide2/ (HD 16:9).
+- [x] P2 (2026-11-26, playtest 2): widescreen crash after name entry fixed (bounds-checked off-thread area build),
+  widescreen drops / artifacts (cache rebuilt every 4 frames + from half-loaded areas; hysteresis; no void beyond the
+  area), **objects drawn in the side columns** (replay of the game's sprite pass), orchestra pops (543 → 4 clicks per
+  minute on the instruments; a disabled effect detector, per-sample allocation, hard level switches), audio cut-outs
+  (no more drops on catch-up bursts), display lag (1 frame queued instead of 3).

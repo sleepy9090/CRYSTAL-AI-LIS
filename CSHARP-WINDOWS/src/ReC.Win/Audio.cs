@@ -90,8 +90,8 @@ internal sealed unsafe class AudioOut
     /// <summary>T54: ambient sounds (Ambience.cs), targets set per frame by the window from the HD scene</summary>
     public readonly Ambience Amb = new();
     private const int Target = 3072;                 // frames queued (device + pending) the rate loop aims at (~70 ms)
-    private const int MaxQueue = Target + 2560;      // playtest fix: above ~128 ms queued the excess is dropped at once (a
-                                                     // catch-up burst used to leave up to 250 ms of delay, drained at 0.5 %)
+    private const int MaxQueue = Rate * 3 / 10;     // last resort: above 300 ms queued the excess is dropped (the rate loop
+                                                     // drains a backlog at up to 2 % before that; a drop is an audible cut)
     /// <summary>T13 CD-quality stereo (CdAudio.cs) instead of the original mono stream</summary>
     public bool Cd { get; private set; }
     public readonly CdMixer Mixer = new();

@@ -159,9 +159,12 @@ internal sealed class CdMixer
         return s;
     }
 
+    private readonly float[] _v4 = new float[4];
+
     private void PushRemaster(float p1, float p2, float tri, float noise, float dmc)
     {
-        float[] v = { PulseCurve(p1), PulseCurve(p2), TndCurve(3 * tri), TndCurve(2 * noise + dmc) };
+        var v = _v4;                                              // no allocation per sample
+        v[0] = PulseCurve(p1); v[1] = PulseCurve(p2); v[2] = TndCurve(3 * tri); v[3] = TndCurve(2 * noise + dmc);
         for (int b = 0; b < 4; b++) _bus[b][_pos] = _bus[b][_pos + Taps] = v[b];
         _pos = (_pos + 1) % Taps;
         if (++_phase < Factor) return;

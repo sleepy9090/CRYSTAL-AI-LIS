@@ -123,8 +123,8 @@ to `re-c.sav` (rename one to `re-c.sav` to go back).
 
 **Video › Widescreen playfield** (16:10, 16:9 or 21:9) shows more of the map on both sides of the screen, in Original
 and HD graphics: the extra columns are drawn from the area's own map, so they line up exactly and scroll with the
-game. They only appear while you are on the map (menus and cut-scenes keep the normal width), and enemies only appear
-once they enter the middle part (the game only draws them on its own 256 columns).
+game. They only appear while you are on the map (menus and cut-scenes keep the normal width). Enemies and other objects
+out there are drawn too (the game itself only draws its own 256 columns; the extra ones are drawn the same way).
 
 **Video › Display** sets brightness (5 steps), Natural or Vivid colour, and a colour-blind assist for protanopia,
 deuteranopia or tritanopia (colours that would look alike are shifted apart), in every graphics mode.

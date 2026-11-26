@@ -191,6 +191,7 @@ internal sealed unsafe partial class Gpu : IDisposable
     private const uint BindSrv = 8, BindRtv = 0x20;
     private const int NSrv = 13, NConst = 24;
     private static readonly Guid IidTex2D = new("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
+    private static readonly Guid IidDxgiDevice1 = new("77db970f-6276-48ba-ba28-070143b4392c");
 
     private static void** Vt(void* o) => *(void***)o;
 
@@ -249,6 +250,14 @@ internal sealed unsafe partial class Gpu : IDisposable
         }
         Check(hr, "D3D11CreateDeviceAndSwapChain");
         _swap = swap; _dev = dev; _ctx = ctx;
+        // playtest fix: at most 1 frame queued ahead of the screen (the default 3 = up to ~50 ms behind the game with VSync)
+        Guid di = IidDxgiDevice1;
+        void* dxgi = null;
+        if (((delegate* unmanaged[Stdcall]<void*, Guid*, void**, int>)Vt(_dev)[0])(_dev, &di, &dxgi) >= 0 && dxgi != null)
+        {
+            ((delegate* unmanaged[Stdcall]<void*, uint, int>)Vt(dxgi)[12])(dxgi, 1);   // IDXGIDevice1::SetMaximumFrameLatency
+            ((delegate* unmanaged[Stdcall]<void*, uint>)Vt(dxgi)[2])(dxgi);            // Release
+        }
         Info = $"Direct3D 11 {kind}, feature level {level >> 12}.{level >> 8 & 15}";
 
         _vs = Compile("VS", "vs_4_0", vertex: true);
@@ -501,7 +510,8 @@ internal sealed unsafe partial class Gpu : IDisposable
                 for (int x = 0; x < w; x++)
                 {
                     int c = r.Fb[y * w + x] & 63;
-                    blk[y * w + x] = (byte)((c & 15) >= 0xD && c != 0x2D && c != 0x3D ? 1 : 0);
+                    bool real = (r.BgTag[y * w + x] & ReC.Nes.Ppu.TagValid) != 0;   // outside the area (no tile): plain black
+                    blk[y * w + x] = (byte)(real && (c & 15) >= 0xD && c != 0x2D && c != 0x3D ? 1 : 0);
                 }
         byte At(byte[] a, int x, int y) => a[Math.Clamp(y, 0, 239) * w + Math.Clamp(x, 0, w - 1)];
         var ero = new byte[w * 240];

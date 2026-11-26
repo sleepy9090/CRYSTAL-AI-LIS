@@ -893,7 +893,10 @@ internal static partial class Program
             Eq(1.0, rc.Ratio(1, 2560, 2560), "on target: ratio 1");
             var hi = new RateControl(); double rh = 0;
             for (int i = 0; i < 200; i++) rh = hi.Ratio(1, 20000, 2560);
-            True(rh > 1 && rh <= 1 + RateControl.MaxAdjust + 1e-12, $"too much queued: faster ({rh:F4}), at most +0.5 %");
+            True(rh > 1 && rh <= 1 + RateControl.MaxAdjust + RateControl.FarAdjust + 1e-12, $"far too much queued: faster ({rh:F4}), at most +2 %");
+            var near = new RateControl(); double rn = 0;
+            for (int i = 0; i < 200; i++) rn = near.Ratio(1, 3000, 2560);
+            True(rn > 1 && rn <= 1 + RateControl.MaxAdjust, $"a little too much: at most +0.5 % ({rn:F4})");
             var lo = new RateControl(); double rl = 0;
             for (int i = 0; i < 200; i++) rl = lo.Ratio(4, 0, 2560);
             True(Math.Abs(rl - 4 * (1 - RateControl.MaxAdjust)) < 1e-9, "starved at 4x: 4 x 0.995");
@@ -989,6 +992,28 @@ internal static partial class Program
             True(peak < 32700, "no clipping");
             True(rc > 0.7, $"the same notes at the same time ({rc:F2})");
             True(sd / (orc.Count / 2) > 100, "seated in stereo");
+            // pops: isolated spikes of the second difference (a step in the waveform) well above its local level; the
+            // orchestra must not click more than the chip path does
+            int Clicks(List<short> s)
+            {
+                int n = 0;
+                var d2 = new double[s.Count / 2];
+                for (int i = 2; i < d2.Length; i++) d2[i] = Math.Abs((s[2 * i] + s[2 * i + 1]) - 2.0 * (s[2 * i - 2] + s[2 * i - 1]) + (s[2 * i - 4] + s[2 * i - 3]));
+                double avg = 0;
+                for (int i = 2; i < d2.Length; i++)
+                {
+                    avg += (d2[i] - avg) * 0.002;
+                    if (i > 2000 && d2[i] > 1500 && d2[i] > avg * 12) { n++; i += 200; }
+                }
+                return n;
+            }
+            var many = new List<short>();               // the drums (noise, DMC samples) left out: percussion is transient by nature
+            foreach (int id in new[] { 0x14, 0x15, 0x1B }) many.AddRange(WavOut.PlayMusicCd(d, id, 20, orchestra: true, mute: 8 | 16));
+            var manyCd = new List<short>();
+            foreach (int id in new[] { 0x14, 0x15, 0x1B }) manyCd.AddRange(WavOut.PlayMusicCd(d, id, 20));
+            int co = Clicks(many), cc = Clicks(manyCd);
+            Console.WriteLine($"  win_orchestra: clicks in 60 s of music: orchestra {co}, CD path {cc}");
+            True(co <= 15, $"orchestra instruments (no drums): almost no clicks ({co} in 60 s; the chip path's square edges count {cc})");
             var v = VideoSettings.Parse("audio=orchestra\n");
             True(v.AudioOrchestra && !v.CdAudio && !v.AudioRemaster && v.Serialize().Contains("audio=orchestra"), "ini audio=orchestra");
             Eq(416, Window.CommandId("audio:orchestra"), "--menu audio:orchestra");
@@ -1303,7 +1328,7 @@ internal static partial class Program
             foreach (var (name, keys) in new[] { ("group09", new[] { "2531:UP:50", "2585:RIGHT:330" }), ("group08", new[] { "2526:UP:84" }), ("town02_enter", Array.Empty<string>()) })
             {
                 var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, name + ".json")));
-                var cache = AreaCache.Build(d, AreaCache.Take(m));
+                var cache = AreaCache.Build(d, AreaCache.Take(m))!;
                 var (w, h, fb) = ReC.Game.World.Bg.RenderArea(m, ReC.Game.World.Bg.Visit.Ram);
                 var pal = Enumerable.Range(0, 32).Select(i => (byte)m.Rd(0x6140 + i)).ToArray();
                 bool same = cache.W == w && cache.H == h && Enumerable.Range(0, w * h).All(i => AreaCache.Color(cache.Px[i], pal) == fb[i]);
@@ -1319,7 +1344,7 @@ internal static partial class Program
                     frames++; if (wide.Match) matched++;
                 }
                 Console.WriteLine($"  win_wide: {name}: area {w}x{h}, playfield matched the area at the camera in {matched} / {frames} frames, sides shown {wide.Show:F2}");
-                True(matched > frames * 0.8, $"{name}: the camera puts the area on the screen");
+                True(matched > frames * 0.7 && wide.Show >= 1, $"{name}: the camera puts the area on the screen (none built during the area load)");
             }
             // HD: the wide raster (SceneRaster.Widen) = the game's raster in the middle, the area at the camera on the sides
             // with valid tags; the layer / info words fill the whole width
@@ -1365,6 +1390,69 @@ internal static partial class Program
             }
             True(VideoSettings.Parse("widescreen=16:9\n").Wide == 2 && new VideoSettings().Serialize().Contains("widescreen=off"), "ini widescreen");
             Eq(662, Window.CommandId("widescreen:16:9"), "--menu widescreen:16:9");
+            // side sprites: the replay of the sprite pass, drawn on the game's own columns too, reproduces the sprite
+            // pixels the PPU shows there (the orbiting sword sprites come from another routine: not all)
+            foreach (var (name, keys) in new[] { ("group09", new[] { "2531:UP:50", "2585:RIGHT:330" }), ("group05", Array.Empty<string>()), ("group18", Array.Empty<string>()) })
+            {
+                var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, name + ".json")));
+                m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+                var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+                var kp = Keys.Parse(keys);
+                var ss = new SideSprites();
+                var spr = new byte[256 * 240]; var tg = new int[256 * 240];
+                var all = Enumerable.Repeat(true, 240).ToArray();
+                long game = 0, same = 0, extra = 0;
+                for (int f = 0; f < 150; f++)
+                {
+                    ss.Snapshot(m);
+                    m.RunFrame(kp.TryGetValue(2506 + m.Frame, out int b) ? b : 0);
+                    r.Build(m.Ppu.Capture);
+                    if (f < 5) continue;
+                    var cap = m.Ppu.Capture;
+                    int my = Enumerable.Range(16, 160).FirstOrDefault(y => cap.SprValid[y], -1);
+                    if (my < 0) continue;
+                    var banks = new int[8];
+                    for (int k = 0; k < 8; k++) banks[k] = cap.Spr[my].Banks[k];
+                    ss.Draw(d, m.Ppu.Chr, banks, cap.Spr[my].Ctrl, 256, 0, spr, tg, all, includeCenter: true);
+                    for (int y = 16; y < 180; y++)
+                        for (int x = 8; x < 248; x++)
+                        {
+                            int i = y * 256 + x;
+                            if (r.Sp[i] != 0) { game++; if (spr[i] != 0 && (spr[i] & 0x0F) == (r.Sp[i] & 0x0F)) same++; }
+                            else if (spr[i] != 0) extra++;
+                        }
+                }
+                Console.WriteLine($"  win_wide: side-sprite replay {name}: {same} / {game} game sprite pixels reproduced ({100.0 * same / Math.Max(1, game):F1} %), {extra} extra");
+                True(same >= game * 0.75, $"{name}: the sprite replay matches the game's sprites");
+            }
+            // playtest: widescreen on from power-on through the title, name entry and into the game (canon keys): no
+            // exception in the cache build, the match test, the wide raster
+            {
+                var m = new Machine(d, _ => { }); m.Reset();
+                m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+                var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+                var wr = new SceneRaster(m.Ppu.Chr, 424);
+                var wide = new Widescreen();
+                var kp = Keys.Parse("1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80".Split(' '));
+                var lines = new bool[240];
+                string? err = null; int shown = 0;
+                for (int f = 0; f < 2600 && err == null; f++)
+                {
+                    try
+                    {
+                        wide.BeforeFrame(m, d, async: false);
+                        m.RunFrame(kp.TryGetValue(214 + m.Frame, out int b) ? b : 0);
+                        r.Build(m.Ppu.Capture);
+                        wide.AfterFrame(r.Fb, m.Ppu.Pal, 190);
+                        wide.MapLines(r.Fb, 190, 0.5f, lines);
+                        wr.Widen(r, wide, lines);
+                        if (wide.Show > 0.5f) shown++;
+                    }
+                    catch (Exception ex) { err = $"frame {f} (main {m.Rd(0x40)} sub {m.Rd(0x41)}): {ex.GetType().Name} {ex.Message}"; }
+                }
+                Console.WriteLine($"  win_wide: power-on run: {(err ?? "no exception")}, sides shown in {shown} frames");
+                True(err == null, "widescreen on through name entry: no exception");
+            }
             // menus / title: no match, no sides
             var mt = new Machine(d, _ => { }); mt.Reset();
             var wt = new Widescreen();

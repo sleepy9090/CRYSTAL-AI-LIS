@@ -127,8 +127,23 @@ internal static unsafe partial class Window
                 Px[row + x] = l; Px[row + e + 256 + x] = r;
             }
         }
+        // the objects in the side columns
+        var banks = _m.Ppu.ChrBanks().Select(b => b * 1024).ToArray();
+        SideSpr.Draw(_m.Data, _m.Data.Chr, banks, _m.Ppu.Ctrl, pw, e, _sSpr, _sTag, _mapLines);
+        if (s > 0)
+            for (int i = 0; i < pw * 240; i++)
+            {
+                int sp = _sSpr[i];
+                if (sp == 0) continue;
+                int x = i % pw, y = i / pw;
+                if ((sp & 0x40) != 0 && Wide.SideOpaque(x, y, e)) continue;
+                Px[i] = Dim(_lut[pal[0x10 | (sp & 0x0F)] & 0x3F], s);
+            }
     }
     private static readonly bool[] _mapLines = new bool[240];
+    private static readonly SideSprites SideSpr = new();
+    private static readonly byte[] _sSpr = new byte[560 * 240];
+    private static readonly int[] _sTag = new int[560 * 240];
     private static int _wideFrame = -1;
     private static SceneRaster? _wideRaster;
     private static int HudTop() => _m != null && _m.IrqSplits.Count > 0 ? Math.Clamp(_m.IrqSplits[0].Latch, 0, 240) : 240;
@@ -213,6 +228,18 @@ internal static unsafe partial class Window
                 if (_wideRaster == null || _wideRaster.W != WideW) _wideRaster = new SceneRaster(_m.Ppu.Chr, WideW);
                 Wide.MapLines(_raster.Fb, HudTop(), 0.5f, _mapLines);
                 _wideRaster.Widen(_raster, Wide, _mapLines);
+                {
+                    var capt = _m.Ppu.Capture;
+                    int my = capt == null ? -1 : Enumerable.Range(16, 160).FirstOrDefault(y => capt.SprValid[y], -1);   // a line's sprite CHR banks + PPUCTRL
+                    if (capt != null && my >= 0)
+                    {
+                        var rg = capt.Spr[my];
+                        var banks = new int[8];
+                        for (int k = 0; k < 8; k++) banks[k] = rg.Banks[k];
+                        SideSpr.Draw(_m.Data, _m.Ppu.Chr, banks, rg.Ctrl, WideW, (WideW - 256) / 2, _sSpr, _sTag, _mapLines);
+                        _wideRaster.ApplySideSprites(_sSpr, _sTag);
+                    }
+                }
                 int bar = Gpu.SplitGap(_raster).To;               // the status bar's first line (the first IRQ split may be higher)
                 _gpu.SideVoidTop = Wide.Show > 0.5f ? (bar > 0 ? bar : HudTop()) : 0;
                 _gpu.Upload(_wideRaster, _scene, _raster);
@@ -520,7 +547,7 @@ internal static unsafe partial class Window
                         }
                         int buttons = _input.Read() | (_scripted ? 0 : _pad.Read(now));
                         if (!_scripted) buttons = VideoSettings.Turbo(buttons, m.Frame, _v.TurboA, _v.TurboB);   // T38
-                        if (_v.Wide > 0) Wide.BeforeFrame(m, data);        // widescreen: the camera of this frame
+                        if (_v.Wide > 0) { Wide.BeforeFrame(m, data); SideSpr.Snapshot(m); }   // widescreen: camera + objects of this frame
                         m.RunFrame(buttons); _acc -= step; ran = true; ranTotal++;
                         _v.Cheats.Apply(m, (buttons & 0x40) != 0);           // T36 cheats (B = bit 6)
                         {

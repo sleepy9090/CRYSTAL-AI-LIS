@@ -490,3 +490,27 @@ CSHARP-WINDOWS/
     cut-scene band) run on the 256 raster, x positions shifted; `WidenInfo` copies the scene info and gives the side
     pixels the void rule (near-black, opened 3×3) above the status bar so chasms continue. Layout uses
     `VideoSettings.PicW` (the window widens). Test `win_wide`.
+    **Playtest round 2 (P2):** (1) **crash** with widescreen on through name entry: `AreaCache.Build` read the
+    uninitialised map grid at new-game init (sub_state 0) and threw on the worker thread; the exception surfaced on the
+    game thread through `Task.Result`. Now builds are bounds-checked (`BuildUnsafe` + catch → null), a failed build is
+    ignored, and none starts in sub_states 0 / 1 (area load) / `$13` (wake-up scene). Test: `win_wide` runs the canon
+    keys from power-on with every widescreen step. (2) **drops / stale sides / artifacts**: the old string key held all
+    of `$67`, whose bits 0-1 count every 4 frames, so the whole area was rebuilt every 4 frames (and could be rebuilt
+    from a half-loaded area); the key is now a hash with `$67 & $FC`, split into an area key (another area: the cache is
+    dropped at once) and a visited-screens key (rebuilt in the background, the old cache stays). The match test has
+    hysteresis: on at 80 %, off only after 8 frames under 60 %. Pixels outside the area are plain black, never void
+    (no chasm effect beyond the area's edge). (3) **sprites in the sides**: `SideSprites` replays `ObjSpriteDraw` /
+    `ObjDrawMeta` (off-screen and vertical tests, overlay, mirroring, frames, tile offset, priority, sinking) from a RAM
+    snapshot taken with the camera before the frame and draws only the pixels outside the game's 256 columns
+    (Original: over `Px`, behind-background rule from the area; HD: `SceneRaster.ApplySideSprites` into the wide
+    raster's sprite layer). On the game's own columns the replay reproduces 96-98.5 % of the PPU's sprite pixels (the
+    rest = orbit sprites, another routine), 0 extra. (4) **orchestra pops**: a commented-out line had disabled the
+    sound-effect detector's period-jump count; a per-sample array allocation (44 100 / s) in the effect square; a
+    hard level reset when switching instrument ↔ chip sound (now two levels crossfading over ~1-2 ms); an instant ×0.7
+    dip on each new note (removed); timpani strokes at full level at any phase (now from phase 0 with a 1 ms attack);
+    the snare's near-instant attack up to 9 kHz (now 1 ms, ≤ 6 kHz, low-passed); DMC samples unfiltered (low-passed
+    ~8 kHz). Clicks in 60 s of music (melodic instruments): 543 → 4. The remaster path's per-sample array is gone too.
+    (5) **cut-outs**: P1's hard drop above ~128 ms queued cut audio on every catch-up burst; now the rate loop drains a
+    backlog at up to +2 % (±0.5 % near the target) and only > 300 ms is dropped. (6) **display lag**: the swap chain let
+    the CPU queue 3 frames ahead with VSync; `IDXGIDevice1::SetMaximumFrameLatency(1)` now. `tools/win_run.py` runs the
+    exe under Wine with any arguments and a long timeout.
