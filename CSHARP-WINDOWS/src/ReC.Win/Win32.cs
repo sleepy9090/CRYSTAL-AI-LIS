@@ -263,6 +263,18 @@ internal static unsafe partial class Win32
     [LibraryImport("gdi32.dll")]
     public static partial int GetDIBits(IntPtr hdc, IntPtr bmp, uint start, uint lines, void* bits, ref BITMAPINFOHEADER bmi, uint usage);
 
+    // ---- user32: mouse capture (mouse control: a release outside the window still counts)
+    [LibraryImport("user32.dll")]
+    public static partial IntPtr SetCapture(IntPtr hwnd);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool ReleaseCapture();
+
+    // ---- dwmapi: playtest 3, the GDI picture paced to the compositor (no tearing)
+    [LibraryImport("dwmapi.dll")]
+    public static partial int DwmFlush();
+
     // ---- gdi32: T59 HD font glyphs (Glyphs.cs)
     [LibraryImport("gdi32.dll", StringMarshalling = StringMarshalling.Utf16)]
     public static partial IntPtr CreateFontW(int height, int width, int escapement, int orientation, int weight, uint italic,
@@ -289,6 +301,8 @@ internal static unsafe partial class Win32
     public const uint MF_STRING = 0x0, MF_GRAYED = 0x1, MF_CHECKED = 0x8, MF_POPUP = 0x10, MF_SEPARATOR = 0x800,
         MF_BYCOMMAND = 0x0, MFT_RADIOCHECK = 0x200;
     public const uint TPM_RIGHTBUTTON = 0x2, TPM_RETURNCMD = 0x100;
+    public const uint WM_MOUSEMOVE = 0x0200, WM_LBUTTONDOWN = 0x0201, WM_LBUTTONUP = 0x0202, WM_RBUTTONDOWN = 0x0204,
+        WM_MBUTTONDOWN = 0x0207, WM_MBUTTONUP = 0x0208;
     public const uint WM_COMMAND = 0x0111, WM_ENTERMENULOOP = 0x0211, WM_EXITMENULOOP = 0x0212, WM_RBUTTONUP = 0x0205,
         WM_ACTIVATEAPP = 0x001C, WM_ENTERSIZEMOVE = 0x0231, WM_EXITSIZEMOVE = 0x0232, WM_CONTEXTMENU = 0x007B;
     public const int SW_MINIMIZE = 6, SW_RESTORE = 9;

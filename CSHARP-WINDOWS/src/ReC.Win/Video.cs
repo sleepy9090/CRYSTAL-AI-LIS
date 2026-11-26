@@ -83,6 +83,8 @@ internal sealed class VideoSettings
     public bool Vivid;
     /// <summary>T57: damage feedback (Game menu; ini feedback=1): HD red flash / low-life pulse, controller rumble</summary>
     public bool Feedback = true;
+    /// <summary>mouse control (Game menu; ini mouse=1): left held = walk toward the cursor, right = sword, middle = A</summary>
+    public bool Mouse = true;
     public static int Turbo(int buttons, int frame, bool a, bool b)
     {
         bool up = frame / 3 % 2 == 1;
@@ -204,6 +206,7 @@ internal sealed class VideoSettings
         $"vivid={(Vivid ? 1 : 0)}",
         $"colorblind={ColorAdjust.BlindNames[ColorBlind]}",
         $"feedback={(Feedback ? 1 : 0)}",
+        $"mouse={(Mouse ? 1 : 0)}",
         $"audio_mute={(AudioMute == 0 ? "none" : string.Join(",", ChannelNames.Where((_, i) => (AudioMute >> i & 1) != 0)))}",
         $"crossfeed={(Crossfeed ? 1 : 0)}",
         $"ambience={(Ambience ? 1 : 0)}",
@@ -294,6 +297,7 @@ internal sealed class VideoSettings
                     break;
                 case "colorblind": { int cb = Array.IndexOf(ColorAdjust.BlindNames, val); if (cb >= 0) v.ColorBlind = cb; break; }
                 case "feedback": v.Feedback = val == "1"; break;
+                case "mouse": v.Mouse = val == "1"; break;
                 case "audio_mute":
                 {
                     var t = val.Split(','); v.AudioMute = 0;

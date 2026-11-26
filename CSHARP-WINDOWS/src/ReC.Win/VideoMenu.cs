@@ -15,7 +15,7 @@ internal static unsafe partial class Window
 {
     // command ids
     private const int IdPause = 100, IdMute = 101, IdExit = 102;
-    private const int IdTurboA = 103, IdTurboB = 104, IdFeedback = 105, IdRemap = 106, IdResetKeys = 107;   // T38, T57, T61
+    private const int IdTurboA = 103, IdTurboB = 104, IdFeedback = 105, IdRemap = 106, IdResetKeys = 107, IdMouse = 108;   // T38, T57, T61
     private const int IdCheat0 = 600, IdCheatsOff = 620;     // T36: + Cheats index (life, magic, gold, status, charge, xp)
     private const int IdFullscreen = 200, IdMenuBar = 201, IdInteger = 202, IdCrop = 203, IdSmooth = 204, IdReset = 205;
     private const int IdScale0 = 210;            // + 1..6
@@ -70,6 +70,7 @@ internal static unsafe partial class Window
             case "turbo:b": return IdTurboB;
             case "feedback": return IdFeedback;
             case "remapkeys": return IdRemap;
+            case "mouse": return IdMouse;
             case "resetkeys": return IdResetKeys;
             case "cheats:off": return IdCheatsOff;
             case "mute": return IdMute;
@@ -185,6 +186,7 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(m, 0, IdTurboA, "Turbo &A (repeats while held)");
         Win32.AppendMenuW(m, 0, IdFeedback, "&Damage feedback (red flash, low-life pulse, rumble)");
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
+        Win32.AppendMenuW(m, 0, IdMouse, "M&ouse control (hold left: walk, right: sword, middle: A)");
         Win32.AppendMenuW(m, 0, IdRemap, "&Remap keys...");
         Win32.AppendMenuW(m, 0, IdResetKeys, "Reset keys to the &defaults");
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
@@ -264,7 +266,7 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(gfx, 0, IdHdLights, "HD: &Local lights (fire, lamps)");
         Win32.AppendMenuW(gfx, 0, IdHdNoFlicker, "HD: &No sprite flicker (all sprites on a line)");
         Win32.AppendMenuW(gfx, 0, IdHdArt, "HD: &Built-in art (starter packs)");
-        Win32.AppendMenuW(gfx, 0, IdHdVsync, "HD: &VSync (no tearing)");
+        Win32.AppendMenuW(gfx, 0, IdHdVsync, "&VSync (no tearing, all graphics modes)");
         Win32.AppendMenuW(gfx, 0, IdHdEdges, "HD: Clean &edges (hide overscan + masked column)");
         Win32.AppendMenuW(gfx, 0, IdHdHud, "HD: &HUD style (smooth bevelled text)");
         Win32.AppendMenuW(gfx, 0, IdHdSharpen, "HD: &Sharpen (contrast adaptive)");
@@ -333,7 +335,7 @@ internal static unsafe partial class Window
         for (int i = 0; i < 4; i++) Check(IdWide0 + i, _v.Wide == i, true);
         Check(IdNatural, !_v.Vivid, true); Check(IdVivid, _v.Vivid, true);
         for (int i = 0; i < 4; i++) Check(IdBlind0 + i, _v.ColorBlind == i, true);
-        for (int i = 0; i < 4; i++) Check(IdVolume0 + i, _v.Volume == 100 - 25 * i); Check(IdTurboA, _v.TurboA); Check(IdTurboB, _v.TurboB); Check(IdFeedback, _v.Feedback);
+        for (int i = 0; i < 4; i++) Check(IdVolume0 + i, _v.Volume == 100 - 25 * i); Check(IdTurboA, _v.TurboA); Check(IdTurboB, _v.TurboB); Check(IdFeedback, _v.Feedback); Check(IdMouse, _v.Mouse);
         for (int i = 0; i < Cheats.Names.Length; i++) Check(IdCheat0 + i, _v.Cheats.Get(i));
         Check(IdFullscreen, _fullscreen); Check(IdMenuBar, _v.MenuBar);
         Check(IdInteger, _v.Integer); Check(IdCrop, _v.CropOverscan); Check(IdSmooth, _v.Smooth);
@@ -394,6 +396,7 @@ internal static unsafe partial class Window
             case IdTurboB: _v.TurboB = !_v.TurboB; Notice(_v.TurboB ? "TURBO B: ON" : "TURBO B: OFF"); SettingsChanged(false); return;
             case IdFeedback: _v.Feedback = !_v.Feedback; Notice(_v.Feedback ? "DAMAGE FEEDBACK: ON" : "DAMAGE FEEDBACK: OFF"); SettingsChanged(false); return;
             case IdRemap: StartRemap(); return;
+            case IdMouse: _v.Mouse = !_v.Mouse; Notice(_v.Mouse ? "MOUSE CONTROL: ON" : "MOUSE CONTROL: OFF"); SettingsChanged(false); return;
             case IdResetKeys: _v.KeyBinds = new int[8]; _input.SetBinds(_v.KeyBinds); Notice("KEYS: DEFAULTS"); SettingsChanged(false); return;
             case >= IdCheat0 and < IdCheat0 + 6:
                 _v.Cheats.Set(id - IdCheat0, !_v.Cheats.Get(id - IdCheat0));

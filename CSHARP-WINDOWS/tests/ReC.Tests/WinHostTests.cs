@@ -889,6 +889,14 @@ internal static partial class Program
             True(Enumerable.Range(0, so.Count / 2).All(k => so[2 * k + 1] == -so[2 * k]), "stereo sides resampled alike");
             var ff = Run(new Resampler(1), Enumerable.Repeat(0.25f, 8000).ToList(), 4, 1024);
             True(Math.Abs(ff.Count - 2000) < 3 && ff.All(v => Math.Abs(v - 0.25f) < 1e-6), $"fast forward 4x: {ff.Count} frames, level kept");
+            // playtest 3: a backlog spliced out with a crossfade: no step in a 440 Hz sine (a plain cut steps by up to the peak)
+            {
+                var sn = Enumerable.Range(0, 8000).Select(i => (short)(12000 * Math.Sin(2 * Math.PI * 440 * i / 44100))).ToArray();
+                var sp2 = AudioOut.Splice(sn, 1, 3000, 256);
+                int maxStep = Enumerable.Range(1, sp2.Length - 1).Max(i => Math.Abs(sp2[i] - sp2[i - 1]));
+                int sineStep = Enumerable.Range(1, sn.Length - 1).Max(i => Math.Abs(sn[i] - sn[i - 1]));
+                True(sp2.Length == 5000 && maxStep <= sineStep * 2, $"splice: 3000 frames out, steps {maxStep} (the sine's own {sineStep})");
+            }
             var rc = new RateControl();
             Eq(1.0, rc.Ratio(1, 2560, 2560), "on target: ratio 1");
             var hi = new RateControl(); double rh = 0;
@@ -1432,6 +1440,83 @@ internal static partial class Program
                 True(cols.All(c => c.ColBad == 0), "scene info colour = the picture at the seams");
                 True(Math.Abs(cols[0].Void - cols[1].Void) <= 8 && Math.Abs(cols[4].Void - cols[5].Void) <= 8, "void mask continuous across both edges");
             }
+            {
+                // playtest 3: the HD widescreen host path per frame: time, and (above all) allocations (large per-frame arrays
+                // went to the large-object heap = blocking full GCs = audio dropouts)
+                var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, "group09.json")));
+                var kp = Keys.Parse(new[] { "2531:UP:50", "2585:RIGHT:330" });
+                m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+                var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+                var wr = new SceneRaster(m.Ppu.Chr, 424);
+                var wide = new Widescreen(); var ss = new SideSprites();
+                var sc = new HdScene(d.NesRgb);
+                var enh = new Enhancer(m.Ppu.Chr, d.NesRgb, record: false);
+                var lines = new bool[240];
+                var info = new byte[424 * 240 * 4]; var lay = new byte[424 * 240 * 4]; var am = new uint[424 * 240 * 2];
+                var spr = new byte[424 * 240]; var tg = new int[424 * 240];
+                var sw = new System.Diagnostics.Stopwatch();
+                var ms = new List<double>(); var al = new List<long>();
+                for (int f = 0; f < 300; f++)
+                {
+                    wide.BeforeFrame(m, d, async: false); ss.Snapshot(m);
+                    m.RunFrame(kp.TryGetValue(2506 + m.Frame, out int b) ? b : 0);
+                    long a0 = GC.GetAllocatedBytesForCurrentThread();
+                    sw.Restart();
+                    r.Build(m.Ppu.Capture);
+                    enh.LiftHd(r.Fb, r.Tags);
+                    sc.Build(r.Fb, r.Tags, r.LinePal[239], enh.HdLift, r.LineScroll, f);
+                    wide.AfterFrame(r.Fb, m.Ppu.Pal, 190);
+                    wide.MapLines(r.Fb, 190, 0.5f, lines);
+                    wr.Widen(r, wide, lines);
+                    var cap = m.Ppu.Capture; var banks = new int[8];
+                    for (int k = 0; k < 8; k++) banks[k] = cap.Spr[100].Banks[k];
+                    ss.Draw(d, m.Ppu.Chr, banks, cap.Spr[100].Ctrl, 424, 84, spr, tg, lines);
+                    wr.ApplySideSprites(spr, tg);
+                    Gpu.WidenInfo(sc.Info, wr, 84, info, 190, r, sc);
+                    Gpu.Layers(wr, sc, new Dictionary<long, int>(), new Dictionary<long, int>(), new bool[8192], lay, am, true, null, info, r);
+                    Gpu.Meters(r, sc.HudFill, 0); Gpu.CineBand(r, sc);
+                    ms.Add(sw.Elapsed.TotalMilliseconds); al.Add(GC.GetAllocatedBytesForCurrentThread() - a0);
+                }
+                var s2 = ms.Skip(20).OrderBy(x => x).ToList();
+                long allocMed = al.Skip(20).OrderBy(x => x).ElementAt(140);
+                Console.WriteLine($"  win_wide: HD wide host path: median {s2[s2.Count / 2]:F2} ms, p99 {s2[(int)(s2.Count * 0.99)]:F2} ms; {allocMed / 1024} KB allocated per frame");
+                True(allocMed < 16 * 1024, "no large per-frame allocations (the test's own 8 KB tables included)");
+            }
+            {
+                // mid-frame scroll splits: every line marked as map really matches the game there with its chosen offset
+                // (the camera, or the line's own scroll), and most playfield lines are map
+                foreach (string name in new[] { "group81", "group2b", "group29", "town02_enter", "group08" })
+                {
+                    var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, name + ".json")));
+                    m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+                    var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+                    var wd = new Widescreen();
+                    long okLines = 0, lines = 0, good = 0, tot = 0;
+                    for (int f = 0; f < 60; f++)
+                    {
+                        wd.BeforeFrame(m, d, async: false);
+                        m.RunFrame(0); r.Build(m.Ppu.Capture);
+                        int bar = Gpu.SplitGap(r).To; if (bar <= 0) bar = 232;
+                        wd.AfterFrame(r.Fb, m.Ppu.Pal, bar, r.LinePal, r.LineScroll, r.Sp);
+                        if (f < 10) continue;
+                        for (int y = 8; y < bar; y++)
+                        {
+                            if (r.Fb.Skip(y * 256 + 8).Take(248).All(c => (c & 63) == 0x0F)) continue;
+                            lines++;
+                            if (!wd.LineOk[y]) continue;
+                            okLines++;
+                            for (int x = 8; x < 256; x += 2)
+                            {
+                                if (r.Sp[y * 256 + x] != 0) continue;
+                                tot++;
+                                if (wd.SideColor(x + 100, y, 100, r.LinePal[y]) == (r.Fb[y * 256 + x] & 63)) good++;
+                            }
+                        }
+                    }
+                    Console.WriteLine($"  win_wide: {name}: {okLines} / {lines} playfield lines verified as map, their pixels match {100.0 * good / Math.Max(1, tot):F1} %");
+                    True(good >= tot * 0.9, $"{name}: verified lines match the game");
+                }
+            }
             // side sprites: the replay of the sprite pass, drawn on the game's own columns too, reproduces the sprite
             // pixels the PPU shows there (the orbiting sword sprites come from another routine: not all)
             foreach (var (name, keys) in new[] { ("group09", new[] { "2531:UP:50", "2585:RIGHT:330" }), ("group05", Array.Empty<string>()), ("group18", Array.Empty<string>()) })
@@ -1500,6 +1585,34 @@ internal static partial class Program
             var wt = new Widescreen();
             for (int f = 0; f < 300; f++) { wt.BeforeFrame(mt, d, async: false); mt.RunFrame(0); wt.AfterFrame(mt.Ppu.Fb, mt.Ppu.Pal, 180); }
             True(!wt.Match && wt.Show == 0, "title / intro: no sides");
+        }),
+        ("win_mouse", () =>
+        {
+            // mouse control: client → NES point, direction toward the cursor, and in the game: holding the "mouse" right
+            // of / above the player walks it there
+            Eq(Btn.Right, MouseControl.Dir(40, 3), "right");
+            Eq(Btn.Up | Btn.Left, MouseControl.Dir(-30, -28), "up-left diagonal");
+            Eq(0, MouseControl.Dir(3, -4), "inside the dead zone: stand");
+            Eq(Btn.Down, MouseControl.Dir(5, 50), "mostly down: straight down");
+            var (nx, ny) = MouseControl.ToNes(512, 240, (0, 0, 1024, 960), 256, 0, 240);
+            True(Math.Abs(nx - 128) < 1e-9 && Math.Abs(ny - 60) < 1e-9, "client centre-top → NES (128, 60)");
+            var (wx, _) = MouseControl.ToNes(0, 0, (0, 0, 848, 480), 424, 0, 240);
+            True(Math.Abs(wx + 84) < 1e-9, "widescreen: the left edge is 84 columns left of the game's");
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { }); m.Reset();
+            m.LoadState(StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", "group09.json")));
+            for (int f = 0; f < 25; f++) m.RunFrame(0);
+            int x0 = m.Rd(0x71) | m.Rd(0x91) << 8, y0 = m.Rd(0xB1);
+            for (int f = 0; f < 30; f++) m.RunFrame(MouseControl.Dir(0, -60));   // the cursor 60 px above the player
+            int y2 = m.Rd(0xB1);
+            for (int f = 0; f < 30; f++) m.RunFrame(MouseControl.Dir(60, 0));    // then 60 px right of it
+            int x1 = m.Rd(0x71) | m.Rd(0x91) << 8;
+            Console.WriteLine($"  win_mouse: player x {x0} → {x1} walking toward a cursor on the right, y {y0} → {y2} toward one above");
+            True(x1 > x0 + 20, "the player walks toward the cursor (right)");
+            True(y2 < y0 - 3, "and up");
+            var v = VideoSettings.Parse("mouse=0\n");
+            True(!v.Mouse && new VideoSettings().Mouse && v.Serialize().Contains("mouse=0"), "ini mouse");
+            Eq(108, Window.CommandId("mouse"), "--menu mouse");
         }),
         ("win_frame_stats", () =>
         {

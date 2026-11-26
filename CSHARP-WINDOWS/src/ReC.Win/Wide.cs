@@ -150,36 +150,77 @@ internal sealed class Widescreen
         else { var c = AreaCache.Build(data, snap); if (c != null) Cache = c; }
     }
 
-    /// <summary>after the frame: share of sampled playfield pixels (lines 8..hudTop-1, every 7th) equal to the area render
-    /// at the camera; the sides show (fading over ~8 frames) while it is at least 85 %</summary>
-    public void AfterFrame(byte[] fb, byte[] pal, int hudTop)
+    // per line: the area offset that matches (0 = the camera, or the line's own scroll after a mid-frame split), whether
+    // the line verifiably shows the map, and its run of failed frames (a line turns off after 3)
+    public readonly int[] LineDx = new int[240], LineDy = new int[240];
+    public readonly bool[] LineOk = new bool[240];
+    private readonly int[] _lineBad = new int[240];
+
+    /// <summary>after the frame, per playfield line (8..hudTop-1): test the camera mapping and, when lineScroll is given and the
+    /// line's scroll differs from the first line's (a mid-frame split), the line's own scroll, on every 3rd pixel (sprite
+    /// pixels skipped when sp is given); a mapping with >= 88 % equal pixels marks the line as map with that offset.
+    /// Show (the fade of all sides) eases in while >= 60 % of the lines are map and out after 8 frames under 30 %.</summary>
+    public void AfterFrame(byte[] fb, byte[] pal, int hudTop, byte[][]? linePal = null, int[]? lineScroll = null, byte[]? sp = null)
     {
         var c = Cache;
-        int same = 0, n = 0;
-        if (c != null)
-            for (int i = 8 * 256 + 3; i < hudTop * 256; i += 7)
+        if (c == null)
+        {
+            Array.Clear(LineOk); Match = false; _bad = 8;
+            Show = Math.Max(0, Show - 0.25f);
+            return;
+        }
+        static int Sx(int v) => ((v >> 10 & 1) << 8) | (v & 31) << 3 | (v >> 16 & 7);
+        static int Sy(int v) => (v >> 11 & 1) * 240 + (v >> 5 & 31) * 8 + (v >> 12 & 7);
+        int y0 = -1;
+        if (lineScroll != null) for (int y = 1; y < 40 && y0 < 0; y++) if (lineScroll[y] >= 0) y0 = y;
+        int lines = 0, ok = 0;
+        for (int y = 0; y < 240; y++)
+        {
+            if (y < 8 || y >= hudTop) { LineOk[y] = false; _lineBad[y] = 0; continue; }
+            var p = linePal?[y] ?? pal;
+            int bestN = 0, bestS = 0, bdx = 0, bdy = 0;
+            for (int cand = 0; cand < 2; cand++)
             {
-                int x = i & 255, y = i >> 8, ax = x + CamX, ay = y + CamY;
-                if (x < 8 || ax < 0 || ay < 0 || ax >= c.W || ay >= c.H) continue;
-                n++;
-                if ((fb[i] & 63) == AreaCache.Color(c.Px[ay * c.W + ax], pal)) same++;
+                int dx = 0, dy = 0;
+                if (cand == 1)
+                {
+                    if (y0 < 0 || lineScroll![y] < 0) break;
+                    int v = lineScroll[y], v0 = lineScroll[y0];
+                    dx = ((Sx(v) - Sx(v0)) % 512 + 768) % 512 - 256;
+                    dy = ((Sy(v) - Sy(v0) - (y - y0)) % 480 + 720) % 480 - 240;
+                    if (dx == 0 && dy == 0) break;
+                }
+                int ay = y + CamY + dy, n = 0, s = 0;
+                if (ay < 0 || ay >= c.H) continue;
+                for (int x = 8; x < 256; x += 3)     // every 3rd: a 2- or 4-pixel pattern cannot fake a match
+                {
+                    int i = y * 256 + x, ax = x + CamX + dx;
+                    if (ax < 0 || ax >= c.W || (sp != null && sp[i] != 0)) continue;
+                    n++;
+                    if ((fb[i] & 63) == AreaCache.Color(c.Px[ay * c.W + ax], p)) s++;
+                }
+                if (n >= 12 && s * bestN >= bestS * n && (bestN == 0 || s * bestN > bestS * n)) { bestN = n; bestS = s; bdx = dx; bdy = dy; }
             }
-        // hysteresis: on at 80 %, off only after 8 frames under 60 % (a sprite crowd, a flash or a text box does not drop
-        // the sides); no cache = off at once
-        int pct = n > 200 ? same * 100 / n : 0;
-        Match = c != null && pct >= 60;
-        if (c == null) { _bad = 8; Show = Math.Max(0, Show - 0.25f); return; }
-        if (pct >= 80) { _bad = 0; Show = Math.Min(1, Show + 0.125f); }
-        else if (pct < 60 && ++_bad >= 8) Show = Math.Max(0, Show - 0.25f);
+            bool now = bestN >= 12 && bestS * 100 >= bestN * 88;
+            if (now) { LineOk[y] = true; _lineBad[y] = 0; LineDx[y] = bdx; LineDy[y] = bdy; }
+            else if (bestN < 12) { }                                        // all sprites / outside: keep the last state
+            else if (bestS * 2 < bestN || ++_lineBad[y] >= 3) LineOk[y] = false;   // clearly wrong: off now; borderline: after 3
+            lines++;
+            if (LineOk[y]) ok++;
+        }
+        int pct = lines > 0 ? ok * 100 / lines : 0;
+        Match = pct >= 50;
+        if (pct >= 60) { _bad = 0; Show = Math.Min(1, Show + 0.125f); }
+        else if (pct < 30 && ++_bad >= 8) Show = Math.Max(0, Show - 0.25f);
     }
 
-    /// <summary>the lines whose sides show the map: shown (fade above `min`), above the status bar, and not a line the game
-    /// leaves black (columns 8-255 all -eF: the unloaded rows above the status bar)</summary>
+    /// <summary>the lines whose sides show the map: shown (fade above `min`), verified (LineOk), above the status bar, and not
+    /// a line the game leaves black (columns 8-255 all $0F: the unloaded rows above the status bar)</summary>
     public void MapLines(byte[] fb, int hudTop, float min, bool[] dst)
     {
         for (int y = 0; y < 240; y++)
         {
-            bool map = Show > min && y < hudTop;
+            bool map = Show > min && y < hudTop && LineOk[y];
             if (map) { map = false; for (int x = 8; x < 256 && !map; x++) map = (fb[y * 256 + x] & 0x3F) != 0x0F; }
             dst[y] = map;
         }
@@ -191,7 +232,7 @@ internal sealed class Widescreen
     public bool SideOpaque(int wx, int y, int e)
     {
         var c = Cache;
-        int ax = wx - e + CamX, ay = y + CamY;
+        int ax = wx - e + CamX + LineDx[y], ay = y + CamY + LineDy[y];
         return c != null && ax >= 0 && ay >= 0 && ax < c.W && ay < c.H && (c.Px[ay * c.W + ax] & 3) != 0;
     }
 
@@ -199,7 +240,7 @@ internal sealed class Widescreen
     {
         var c = Cache;
         if (c == null) return 0x0F;
-        int ax = wx - e + CamX, ay = y + CamY;
+        int ax = wx - e + CamX + LineDx[y], ay = y + CamY + LineDy[y];
         if (ax < 0 || ay < 0 || ax >= c.W || ay >= c.H) return 0x0F;
         return AreaCache.Color(c.Px[ay * c.W + ax], pal);
     }

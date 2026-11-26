@@ -83,7 +83,7 @@ internal sealed class SceneRaster
                 if (!side && !(src.LeftClip[y] && x < e + 8)) continue;
                 int i = d + x;
                 Sp[i] = 0; SpCol[i] = 0; SpTag[i] = 0;
-                int ax = x - e + wide.CamX, ay = y + wide.CamY;
+                int ax = x - e + wide.CamX + wide.LineDx[y], ay = y + wide.CamY + wide.LineDy[y];
                 if (!map || ax < 0 || ay < 0 || ax >= c!.W || ay >= c.H)
                 {
                     Fb[i] = BgCol[i] = 0x0F; Bg[i] = 0; BgTag[i] = Tags[i] = 0;

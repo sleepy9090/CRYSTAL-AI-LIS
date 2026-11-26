@@ -501,52 +501,71 @@ internal sealed unsafe partial class Gpu : IDisposable
     /// fade step << 23 (0 = none)</summary>
     /// <summary>widescreen: HdScene.Info (256 wide) into a W-wide copy; the sides: no lift, the colour, no flags, no void</summary>
     /// (void: HdScene's rule on the sides above voidTop, near-black colours opened 3x3, so chasms continue)</summary>
+    // WidenInfo's work buffers, reused (a new array per frame was ~200 KB on the large-object heap = blocking full GCs)
+    [ThreadStatic] private static byte[]? _wBlk, _wTmp, _wEro, _wDil;
+
     public static void WidenInfo(byte[] info, SceneRaster r, int e, byte[] dst, int voidTop = 240, SceneRaster? rl = null, HdScene? sc = null)
     {
         // (seam fix) one void mask over the whole width with HdScene's own rule, so it does not change at the old edge:
         // near-black colours or the dark backdrop, not sprites, not text lines; the sides only above voidTop and inside
         // the area (a tile there). Pixels the widening changed (the game's masked left column, filled from the map) get
-        // the side info too: their colour, no lift, no flags.
-        int w = r.W, bd = sc?.DarkBackdrop ?? -1;
-        var blk = new byte[w * 240];
-        var ero = new byte[w * 240];
+        // the side info too: their colour, no lift, no flags. Opening = separable 3x3 min then max, edges clamped.
+        int w = r.W, n = w * 240, bd = sc?.DarkBackdrop ?? -1;
+        if (_wBlk == null || _wBlk.Length < n) { _wBlk = new byte[n]; _wTmp = new byte[n]; _wEro = new byte[n]; _wDil = new byte[n]; }
+        byte[] blk = _wBlk, tmp = _wTmp!, ero = _wEro!, dil = _wDil!;
+        var fb = r.Fb; var bgTag = r.BgTag; var tags = r.Tags;
         for (int y = 0; y < 240; y++)
         {
-            bool uiLine = sc != null && sc.Lines[y * 4 + 2] != 0;
+            bool uiLine = sc != null && sc.Lines[y * 4 + 2] != 0, sideOk = y < voidTop;
+            int row = y * w;
             for (int x = 0; x < w; x++)
             {
-                int i = y * w + x, sx = x - e, c = r.Fb[i] & 63, tag = r.Tags[i];
-                bool side = sx < 0 || sx >= 256;
-                bool real = (r.BgTag[i] & ReC.Nes.Ppu.TagValid) != 0;
+                int i = row + x, c = fb[i] & 63, tag = tags[i];
+                bool side = x < e || x >= e + 256;
+                bool ok = side ? sideOk && (bgTag[i] & ReC.Nes.Ppu.TagValid) != 0 : !uiLine;
                 bool spr = (tag & ReC.Nes.Ppu.TagValid) != 0 && (tag >> 19 & 7) >= 4;
-                bool ok = side ? y < voidTop && real : !uiLine;
                 blk[i] = (byte)(ok && !spr && ((c & 15) >= 0xD && c != 0x2D && c != 0x3D || c == bd) ? 1 : 0);
             }
         }
+        Pass3(blk, tmp, ero, w, true);
+        Pass3(ero, tmp, dil, w, false);
         for (int y = 0; y < 240; y++)
         {
-            int u = Math.Max(y - 1, 0) * w, m = y * w, d = Math.Min(y + 1, 239) * w;
+            int row = y * w;
+            // the sides: colour, no lift, no flags; the middle: the scene info as it is
+            for (int x = 0; x < e; x++) { int o = (row + x) * 4; dst[o] = 0; dst[o + 1] = (byte)((fb[row + x] & 63) * 4); dst[o + 2] = 0; }
+            for (int x = e + 256; x < w; x++) { int o = (row + x) * 4; dst[o] = 0; dst[o + 1] = (byte)((fb[row + x] & 63) * 4); dst[o + 2] = 0; }
+            Buffer.BlockCopy(info, y * 1024, dst, (row + e) * 4, 1024);
+            if (rl != null)                                   // the widening only changes the masked left column
+                for (int x = e; x < e + 8; x++)
+                    if (fb[row + x] != rl.Fb[y * 256 + x - e]) { int o = (row + x) * 4; dst[o] = 0; dst[o + 1] = (byte)((fb[row + x] & 63) * 4); dst[o + 2] = 0; }
             for (int x = 0; x < w; x++)
             {
-                int l = Math.Max(x - 1, 0), rr = Math.Min(x + 1, w - 1);
-                ero[m + x] = (byte)(blk[u + l] & blk[u + x] & blk[u + rr] & blk[m + l] & blk[m + x] & blk[m + rr] & blk[d + l] & blk[d + x] & blk[d + rr]);
+                int i = row + x, o = i * 4;
+                bool v = blk[i] != 0 && dil[i] != 0;
+                dst[o + 2] = (byte)((dst[o + 2] & ~HdScene.FVoid) | (v ? HdScene.FVoid : 0));
+                dst[o + 3] = (byte)(v ? 255 : 0);
+            }
+        }
+    }
+
+    /// <summary>3x3 min (and) or max (or) of a 0/1 image, edges clamped: rows into tmp, then columns into dst</summary>
+    private static void Pass3(byte[] src, byte[] tmp, byte[] dst, int w, bool and)
+    {
+        for (int y = 0; y < 240; y++)
+        {
+            int r = y * w;
+            for (int x = 0; x < w; x++)
+            {
+                int a = src[r + (x > 0 ? x - 1 : 0)], b = src[r + x], c = src[r + (x < w - 1 ? x + 1 : x)];
+                tmp[r + x] = (byte)(and ? a & b & c : a | b | c);
             }
         }
         for (int y = 0; y < 240; y++)
         {
-            int u = Math.Max(y - 1, 0) * w, m = y * w, dn = Math.Min(y + 1, 239) * w;
+            int r = y * w, u = (y > 0 ? y - 1 : 0) * w, d = (y < 239 ? y + 1 : 239) * w;
             for (int x = 0; x < w; x++)
-            {
-                int o = (m + x) * 4, sx = x - e, i = m + x;
-                bool side = sx < 0 || sx >= 256 || (rl != null && r.Fb[i] != rl.Fb[y * 256 + sx]);   // filled by the widening
-                if (side) { dst[o] = 0; dst[o + 1] = (byte)((r.Fb[i] & 63) * 4); dst[o + 2] = 0; }
-                else Array.Copy(info, (y * 256 + sx) * 4, dst, o, 4);
-                int l = Math.Max(x - 1, 0), rr = Math.Min(x + 1, w - 1);
-                bool dil = (ero[u + l] | ero[u + x] | ero[u + rr] | ero[m + l] | ero[m + x] | ero[m + rr] | ero[dn + l] | ero[dn + x] | ero[dn + rr]) != 0;
-                bool v = blk[i] != 0 && dil;
-                dst[o + 2] = (byte)((dst[o + 2] & ~HdScene.FVoid) | (v ? HdScene.FVoid : 0));
-                dst[o + 3] = (byte)(v ? 255 : 0);
-            }
+                dst[r + x] = (byte)(and ? tmp[u + x] & tmp[r + x] & tmp[d + x] : tmp[u + x] | tmp[r + x] | tmp[d + x]);
         }
     }
 

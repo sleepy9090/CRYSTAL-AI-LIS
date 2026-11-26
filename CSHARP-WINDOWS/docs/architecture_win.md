@@ -522,3 +522,22 @@ CSHARP-WINDOWS/
     only above the status bar and inside the area) and gives pixels the widening changed the side info. `win_wide`:
     colour off 0 at the seam columns, void lines 100 / 99 across the left edge and 100 / 99 across the right (were 49 /
     163 and 101 / 48). Preview out/wide5/seam_cmp.png (before | after).
+    **Playtest round 3 (P4):** (1) **per-line widescreen**: 11 of 40 test states change the scroll mid-playfield (from
+    line 10 to 177), so one camera did not fit every line (glitches; the old whole-screen match then blacked the sides
+    out). `Widescreen.AfterFrame` now checks each playfield line (every 3rd pixel, sprite pixels skipped) against the
+    area at the camera and, in HD, at the line's own scroll relative to the first line (`LineScroll`); a mapping with
+    ≥ 88 % equal pixels marks the line as map with that offset (`LineDx/LineDy`, used by `SideColor`, `SideOpaque`,
+    `SceneRaster.Widen`). A line clearly wrong (< 50 %) turns off at once, a borderline one after 3 frames; `Show` fades
+    with the share of map lines (in ≥ 60 %, out after 8 frames < 30 %). `win_wide`: on 5 split states every line marked
+    as map matches the game 100 %. Every 3rd pixel, because a 4-pixel pattern let a 2-pixel misalignment pass.
+    (2) **GC stalls**: `WidenInfo` allocated ~200 KB per frame (large-object heap → blocking full GCs → audio
+    dropouts); now reused buffers, separable 3×3 passes, block copies: 2.7 → 1.6 ms, 210 → 11 KB per frame (test:
+    < 16 KB). (3) **audio**: a backlog above ~116 ms is spliced out with a 5.8 ms crossfade (`AudioOut.Splice`, tested on
+    a sine) instead of draining at +2 % (late for seconds) or a plain cut (a click); the rate loop is ±0.5 % only;
+    after an underrun 20 ms of silence (was 50) and a 5.8 ms fade-in. (4) **tearing** in the GDI modes: with VSync on,
+    `DwmFlush` after each picture (the compositor's next frame); the menu item is now "VSync (all graphics modes)".
+    (5) **mouse control** (Game › Mouse control, id 108, ini `mouse=1`, on): left button held = walk toward the
+    cursor (`MouseControl.Dir` from the player, object slot 1, at the screen position the sprite pass stored in
+    `$05C1/$05E1`; 6 px dead zone; diagonals when neither axis dominates by 2.5×), right = B (sword) in play (else
+    the context menu), middle = A; `MouseControl.ToNes` maps client points through the layout, widescreen sides
+    included; mouse capture while held, released with focus. `win_mouse`: the player walks 60 px up, then right.

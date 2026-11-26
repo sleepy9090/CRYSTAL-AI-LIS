@@ -380,3 +380,7 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   (no more drops on catch-up bursts), display lag (1 frame queued instead of 3).
 - [x] P3 (2026-11-26, "fix the HD edge seam too"): the widescreen seam in HD (scene info of the masked column, void
   mask cut at the old edge) fixed; `win_wide` checks the seam columns. Preview out/wide5/seam_cmp.png.
+- [x] P4 (2026-11-26, playtest 3: "tearing, glitching, blacking out in widescreen; orchestra audio delayed, popping"
+  + "add mouse support for moving the character"): per-line verified widescreen mapping (mid-frame scroll splits),
+  no per-frame large allocations (GC stalls), crossfaded backlog splice + fade-in after underruns, DwmFlush VSync
+  for the GDI modes, **mouse control** (hold left to walk, right = sword, middle = A).

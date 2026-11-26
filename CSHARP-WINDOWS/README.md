@@ -41,6 +41,7 @@ anyway**, or right-click the file → Properties → **Unblock**.
 | F2 | FPS counter (frames per second + time per frame; also Video › Show FPS) |
 | Game › Turbo B / Turbo A | a held button repeats (rapid sword with B) |
 | Game › Remap keys... | choose your own key for each button (on-screen prompts; Backspace keeps, Esc cancels); Reset keys to the defaults undoes it |
+| Game › Mouse control | hold the left mouse button to walk toward the cursor; right button = sword, middle button = A (on by default) |
 | Game › Damage feedback | the controller rumbles when you are hit and a heartbeat plays while life is low; in HD the screen edges also flash red and pulse |
 | F9 | graphics: Original → Enhanced (16-bit) → Enhanced (32-bit) → HD engine (GPU) |
 | F5 | reload the graphics pack |

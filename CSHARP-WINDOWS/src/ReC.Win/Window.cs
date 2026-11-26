@@ -142,17 +142,41 @@ internal static unsafe partial class Window
     }
     private static readonly bool[] _mapLines = new bool[240];
     private static readonly SideSprites SideSpr = new();
+    private static bool _dwmOff;
+    // mouse control (Pad.cs MouseControl): cursor in client pixels, buttons held
+    private static int _mx, _my;
+    private static bool _mL, _mR, _mM;
+    private static bool Playing() => _m != null && _m.Rd(0x40) == 1 && _m.Rd(0x41) == 8;
+    /// <summary>the mouse as NES buttons: left held = walk toward the cursor (from the player, object slot 1, at its screen
+    /// position the sprite pass stored: $05C1 / $05E1), right = B, middle = A (play only, except A)</summary>
+    private static int MouseButtons()
+    {
+        if (!_v.Mouse || _m == null || _hwnd == IntPtr.Zero) return 0;
+        bool play = Playing();
+        int b = (_mR && play ? Btn.B : 0) | (_mM ? Btn.A : 0);
+        if (_mL && play)
+        {
+            Win32.GetClientRect(_hwnd, out var rc);
+            var (nx, ny) = MouseControl.ToNes(_mx, _my, Fit(rc.Right, rc.Bottom), _v.PicW, _v.FirstLine, _v.VisibleH);
+            b |= MouseControl.Dir(nx - _m.Rd(0x05C1), ny - (_m.Rd(0x05E1) - 8));
+        }
+        return b;
+    }
     private static readonly byte[] _sSpr = new byte[560 * 240];
     private static readonly int[] _sTag = new int[560 * 240];
     private static int _wideFrame = -1;
     private static SceneRaster? _wideRaster;
-    private static int HudTop() => _m != null && _m.IrqSplits.Count > 0 ? Math.Clamp(_m.IrqSplits[0].Latch, 0, 240) : 240;
+    /// <summary>where the sides stop: the status bar's first line when the HD raster shows it, else 232 (each line is
+    /// verified against the map anyway, so the status bar never gets sides)</summary>
+    private static int HudTop() => _m != null && _m.Ppu.NoPixels && _raster != null && Gpu.SplitGap(_raster).To is > 0 and var t ? t : 232;
     /// <summary>the match test + fade, once per drawn frame (HD does it right after building the raster)</summary>
     private static void WideAfterFrame(byte[] fb)
     {
         if (_wideFrame == _frameNo || _m == null) return;
         _wideFrame = _frameNo;
-        Wide.AfterFrame(fb, _m.Ppu.Pal, HudTop());
+        if (_m.Ppu.NoPixels && _raster != null)               // HD: per-line palettes, scrolls (mid-frame splits), sprite layer
+            Wide.AfterFrame(fb, _m.Ppu.Pal, HudTop(), _raster.LinePal, _raster.LineScroll, _raster.Sp);
+        else Wide.AfterFrame(fb, _m.Ppu.Pal, HudTop());
     }
     private static uint Dim(uint c, float s) => s >= 1 ? c :
         (uint)((int)((c >> 16 & 255) * s) << 16 | (int)((c >> 8 & 255) * s) << 8 | (int)((c & 255) * s));
@@ -511,6 +535,9 @@ internal static unsafe partial class Window
                 AmbienceTargets();                       // T54
                 Compose();
                 Present();
+                if (!(HdEngine && _gpu != null) && _v.HdVsync && !_turbo && !_dwmOff)   // GDI: wait for the compositor's next frame
+                    try { if (Win32.DwmFlush() < 0) _dwmOff = true; }
+                    catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException) { _dwmOff = true; }
                 Stats.Record(t0, Clock.Elapsed.TotalMilliseconds);
                 if (_v.HdQuality == 3 && HdEngine && _gpu != null && !_turbo && !_paused)   // T62 HD quality: Auto
                 {
@@ -545,7 +572,7 @@ internal static unsafe partial class Window
                             scriptMask = want;
                             Pump();
                         }
-                        int buttons = _input.Read() | (_scripted ? 0 : _pad.Read(now));
+                        int buttons = _input.Read() | (_scripted ? 0 : _pad.Read(now) | MouseButtons());
                         if (!_scripted) buttons = VideoSettings.Turbo(buttons, m.Frame, _v.TurboA, _v.TurboB);   // T38
                         if (_v.Wide > 0) { Wide.BeforeFrame(m, data); SideSpr.Snapshot(m); }   // widescreen: camera + objects of this frame
                         m.RunFrame(buttons); _acc -= step; ran = true; ranTotal++;
@@ -826,7 +853,23 @@ internal static unsafe partial class Window
                 case Win32.WM_COMMAND:
                     Command(Win32.LoWord(wParam));
                     return IntPtr.Zero;
+                case Win32.WM_MOUSEMOVE:
+                    _mx = (short)((long)lParam & 0xFFFF); _my = (short)(((long)lParam >> 16) & 0xFFFF);
+                    return IntPtr.Zero;
+                case Win32.WM_LBUTTONDOWN:
+                    _mx = (short)((long)lParam & 0xFFFF); _my = (short)(((long)lParam >> 16) & 0xFFFF);
+                    _mL = true; Win32.SetCapture(hwnd);
+                    return IntPtr.Zero;
+                case Win32.WM_LBUTTONUP:
+                    _mL = false; Win32.ReleaseCapture();
+                    return IntPtr.Zero;
+                case Win32.WM_MBUTTONDOWN: _mM = true; return IntPtr.Zero;
+                case Win32.WM_MBUTTONUP: _mM = false; return IntPtr.Zero;
+                case Win32.WM_RBUTTONDOWN:
+                    if (_v.Mouse && Playing()) { _mR = true; return IntPtr.Zero; }   // mouse control: the sword in play
+                    break;
                 case Win32.WM_RBUTTONUP:
+                    if (_mR) { _mR = false; return IntPtr.Zero; }
                     ContextMenu();
                     return IntPtr.Zero;
                 case Win32.WM_EXITMENULOOP:
@@ -840,7 +883,7 @@ internal static unsafe partial class Window
                     if ((int)wParam == '\r') return IntPtr.Zero;     // no beep for Alt+Enter
                     break;
                 case Win32.WM_KILLFOCUS:
-                    if (!_scripted) _input.Blur();                 // = 'blur'; a --keys run ignores focus changes
+                    if (!_scripted) { _input.Blur(); _mL = _mR = _mM = false; }   // = 'blur' (+ the mouse); a --keys run ignores focus changes
                     break;
                 case Win32.WM_SIZE:
                     // = visibilitychange: a minimised window pauses; the clock restarts on return

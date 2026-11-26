@@ -7,7 +7,7 @@
 //
 // 16-bit mono PCM at 44.1 kHz in Buffers fixed waveOut buffers of BufSamples each (polled through WHDR_DONE, no
 // callback thread). Samples wait in a pending queue until a whole buffer is free; when the game runs ahead of the
-// device (queued > MaxQueue, ~128 ms) the oldest samples are dropped, so latency stays bounded. When every buffer has
+// device (queued > MaxQueue, ~116 ms) the backlog is spliced out with a crossfade, so latency stays bounded. When every buffer has
 // drained (stall, pause, window drag) the next audio starts with Lead seconds of silence, like the JS starting its
 // next buffer LEAD seconds ahead of currentTime. Underruns are only counted (Underruns), never logged per event.
 // Until Resume() succeeds the APU stays headless (no synthesis).
@@ -67,7 +67,7 @@ internal sealed unsafe class AudioOut
     // starves the device (audio.js CHUNK is 1024)
     private const int Chunk = 512;
     private const int Buffers = 8, BufSamples = 512;
-    private const double Lead = 0.05;
+    private const double Lead = 0.02;            // silence before the sound starts again after the device ran dry
     private const float Gain = 1.6f;           // APU mixer peaks near 0.4 after the output filters (apu_check)
     /// <summary>T40: master volume 0..1 (Audio > Volume), both paths</summary>
     public float Volume = 1f;
@@ -90,8 +90,9 @@ internal sealed unsafe class AudioOut
     /// <summary>T54: ambient sounds (Ambience.cs), targets set per frame by the window from the HD scene</summary>
     public readonly Ambience Amb = new();
     private const int Target = 3072;                 // frames queued (device + pending) the rate loop aims at (~70 ms)
-    private const int MaxQueue = Rate * 3 / 10;     // last resort: above 300 ms queued the excess is dropped (the rate loop
-                                                     // drains a backlog at up to 2 % before that; a drop is an audible cut)
+    private const int MaxQueue = Target + 2048;      // above ~116 ms queued the backlog is spliced out with a crossfade
+    private const int Xfade = 256;                   // 5.8 ms: the splice and the fade-in after an underrun (no click)
+    private int _fadeIn;
     /// <summary>T13 CD-quality stereo (CdAudio.cs) instead of the original mono stream</summary>
     public bool Cd { get; private set; }
     public readonly CdMixer Mixer = new();
@@ -198,6 +199,7 @@ internal sealed unsafe class AudioOut
             if (_started) Underruns++;
             _pending.Clear();
             for (int i = 0; i < (int)(Lead * Rate) * Ch; i++) _pending.Enqueue(0);
+            _fadeIn = Xfade;                                  // the sound comes back in a short fade, not a step
         }
         _in.Clear(); _res.Clear();
         if (Cd)
@@ -216,6 +218,8 @@ internal sealed unsafe class AudioOut
         for (int i = 0; i < _res.Count; i += Ch)
         {
             var (al, ar) = Amb.Silent ? (0.0, 0.0) : Amb.Next();   // T54 ambient sounds (16-bit units)
+            float fi = _fadeIn > 0 ? 1f - _fadeIn-- / (float)Xfade : 1f;
+            if (fi < 1f) { _res[i] *= fi; if (Ch == 2) _res[i + 1] *= fi; al *= fi; ar *= fi; }
             if (Ch == 2)
             {
                 _pending.Enqueue((short)Math.Clamp(MathF.Round(_res[i] * g + (float)al * av), -32768f, 32767f));
@@ -225,7 +229,7 @@ internal sealed unsafe class AudioOut
         }
         int busy = 0;
         for (int i = 0; i < Buffers; i++) if (!Free(i)) busy += BufSamples;
-        while (_pending.Count >= Ch && _pending.Count / Ch + busy > MaxQueue) { for (int c = 0; c < Ch; c++) _pending.Dequeue(); Dropped++; }
+        if (_pending.Count / Ch + busy > MaxQueue) SpliceOut(_pending.Count / Ch + busy - Target);
         for (int i = 0; i < Buffers && _pending.Count >= BufSamples * Ch; i++)
         {
             if (!Free(i)) continue;
@@ -238,6 +242,36 @@ internal sealed unsafe class AudioOut
             Win32.waveOutWrite(_hwo, h, (uint)sizeof(Win32.WAVEHDR));
             _started = true;
         }
+    }
+
+    /// <summary>a backlog (a catch-up burst after a stall) cut out of the pending audio: `frames` frames go, the sound on
+    /// either side of the cut is crossfaded over Xfade frames (a plain cut would click; draining it by speeding up would
+    /// keep the sound late for seconds)</summary>
+    private void SpliceOut(int frames)
+    {
+        var a = _pending.ToArray();
+        var b = Splice(a, Ch, frames, Xfade);
+        if (b.Length == a.Length) return;
+        _pending.Clear();
+        foreach (short v in b) _pending.Enqueue(v);
+        Dropped += (a.Length - b.Length) / Ch;
+    }
+
+    /// <summary>interleaved samples with `frames` frames cut out after the first, the two sides crossfaded over xfade frames</summary>
+    public static short[] Splice(short[] a, int ch, int frames, int xfade)
+    {
+        int n = a.Length / ch;
+        frames = Math.Min(frames, n - xfade);
+        if (frames <= 0) return a;
+        var o = new short[(n - frames) * ch];
+        for (int f = 0; f < n - frames; f++)
+            for (int c = 0; c < ch; c++)
+            {
+                float v = a[(f + frames) * ch + c];
+                if (f < xfade) { float t = (f + 0.5f) / xfade; v = a[f * ch + c] * (1 - t) + v * t; }
+                o[f * ch + c] = (short)Math.Clamp(MathF.Round(v), -32768f, 32767f);
+            }
+        return o;
     }
 
     public void Close()

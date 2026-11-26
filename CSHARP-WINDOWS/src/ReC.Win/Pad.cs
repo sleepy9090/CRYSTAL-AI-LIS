@@ -189,3 +189,30 @@ internal sealed unsafe class Pad
         return b;
     }
 }
+
+/// <summary>Mouse control (Game > Mouse control): hold the left button and the character walks toward the cursor; the
+/// right button is the sword (B) during play, the middle button A. Pure parts here (tests); Window.cs feeds it.</summary>
+internal static class MouseControl
+{
+    public const int Dead = 6;     // NES pixels around the character where it stands still (no jitter)
+
+    /// <summary>client point → NES picture point (game columns: 0..255 is the game's own, negative / > 255 the widescreen
+    /// sides): rect = the picture in the client, picW = its width in NES pixels, firstLine / visibleH = the shown lines</summary>
+    public static (double X, double Y) ToNes(int cx, int cy, (int X, int Y, int W, int H) rect, int picW, int firstLine, int visibleH)
+    {
+        double nx = (cx - rect.X) * (double)picW / Math.Max(1, rect.W) - (picW - 256) / 2.0;
+        double ny = (cy - rect.Y) * (double)visibleH / Math.Max(1, rect.H) + firstLine;
+        return (nx, ny);
+    }
+
+    /// <summary>D-pad bits toward (dx, dy) (cursor minus character centre): each axis pressed when outside the dead zone
+    /// and not much smaller than the other (so a mostly-horizontal pull walks straight, a diagonal one diagonally)</summary>
+    public static int Dir(double dx, double dy)
+    {
+        double ax = Math.Abs(dx), ay = Math.Abs(dy);
+        int b = 0;
+        if (ax > Dead && ax * 2.5 >= ay) b |= dx < 0 ? Btn.Left : Btn.Right;
+        if (ay > Dead && ay * 2.5 >= ax) b |= dy < 0 ? Btn.Up : Btn.Down;
+        return b;
+    }
+}

@@ -75,7 +75,7 @@ internal sealed class Resampler
 internal sealed class RateControl
 {
     public const double MaxAdjust = 0.005;
-    public const double FarAdjust = 0.015;
+    public const double FarAdjust = 0;            // playtest 3: a backlog is spliced out instead (AudioOut.SpliceOut)
     private double _avg = -1;
 
     /// <summary>queued = frames waiting (device buffers + pending), target = the latency aimed at, in frames</summary>
