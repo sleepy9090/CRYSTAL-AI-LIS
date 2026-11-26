@@ -364,3 +364,5 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   deuteranopia, tritanopia; daltonize), all graphics modes. Preview: out/hd60/cmp.png.
 - [x] T61 (2026-11-25): **remappable keys** (Game › Remap keys..., an on-screen prompt per button). Preview:
   out/hd61/0_hd.png.
+- [x] T62-T63 (2026-11-26): **HD quality: Auto** (the default; steps down / up with the frame rate) and **save backups**
+  (re-c.sav.1-.3).

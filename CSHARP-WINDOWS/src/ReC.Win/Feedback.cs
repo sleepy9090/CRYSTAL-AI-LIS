@@ -31,3 +31,36 @@ internal sealed class DamageFeedback
         return hit;
     }
 }
+
+/// <summary>T62 HD quality: Auto. Steps the HD quality down (full 2 → balanced 1 → fast 0) when the drawn frame rate
+/// stays under 50 for 3 s, and tries one step up after 20 s at 58+; a step up that has to be undone within 10 s lowers
+/// the ceiling to the level below it, so it does not keep bouncing.</summary>
+internal sealed class AutoQuality
+{
+    public int Level { get; private set; } = 2;
+    public int Ceiling { get; private set; } = 2;
+    private double _lowSince = -1, _goodSince = -1, _upAt = double.NegativeInfinity;
+
+    public int Update(double fps, double nowMs)
+    {
+        if (fps <= 0) return Level;
+        if (fps < 50)
+        {
+            if (_lowSince < 0) _lowSince = nowMs;
+            if (nowMs - _lowSince >= 3000 && Level > 0)
+            {
+                if (nowMs - _upAt < 10000) Ceiling = Level - 1;
+                Level--;
+                _lowSince = -1;
+            }
+        }
+        else _lowSince = -1;
+        if (fps >= 58)
+        {
+            if (_goodSince < 0) _goodSince = nowMs;
+            if (nowMs - _goodSince >= 20000 && Level < Ceiling) { Level++; _upAt = nowMs; _goodSince = -1; }
+        }
+        else _goodSince = -1;
+        return Level;
+    }
+}

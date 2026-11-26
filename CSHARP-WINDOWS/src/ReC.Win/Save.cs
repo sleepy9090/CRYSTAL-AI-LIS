@@ -31,6 +31,26 @@ internal static class Save
 
     // js: save.js saveWram
     /// <summary>Written to PATH.tmp, then moved over PATH, so a crash mid-write never leaves half an image.</summary>
+    /// <summary>T63: keep the last three saves: path.1 (newest) .. path.3, rotated at start when the save differs from
+    /// path.1. Returns the number of backups now on disk.</summary>
+    public static int Backup(string path)
+    {
+        try
+        {
+            if (!File.Exists(path)) return 0;
+            byte[] cur = File.ReadAllBytes(path);
+            string b1 = path + ".1";
+            if (!File.Exists(b1) || !File.ReadAllBytes(b1).AsSpan().SequenceEqual(cur))
+            {
+                if (File.Exists(path + ".2")) File.Copy(path + ".2", path + ".3", overwrite: true);
+                if (File.Exists(b1)) File.Copy(b1, path + ".2", overwrite: true);
+                File.Copy(path, b1, overwrite: true);
+            }
+            return Enumerable.Range(1, 3).Count(i => File.Exists(path + "." + i));
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return 0; }
+    }
+
     public static bool SaveWram(string path, byte[] wram)
     {
         try

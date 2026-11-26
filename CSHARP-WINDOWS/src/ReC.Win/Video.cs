@@ -59,7 +59,7 @@ internal sealed class VideoSettings
     /// <summary>T34: HD HUD style (smooth bevelled text, soft shadows)</summary>
     public bool HdHud = true;
     /// <summary>T31: HD quality 2 full, 1 balanced, 0 fast (Gpu.Quality)</summary>
-    public int HdQuality = 2;
+    public int HdQuality = 3;                 // T62: 3 = auto (default), 2 full, 1 balanced, 0 fast
     /// <summary>T36: cheats (Cheats menu; ini cheats=life,magic,..)</summary>
     public readonly Cheats Cheats = new();
     /// <summary>T38: turbo A / B (Game menu; ini turbo=a,b): a held button repeats, 3 frames down, 3 up</summary>
@@ -186,7 +186,7 @@ internal sealed class VideoSettings
         $"menu_bar={(MenuBar ? 1 : 0)}",
         $"graphics={(!Enhanced ? "original" : Hd ? "hd" : Enhanced32 ? "enhanced32" : "enhanced")}",
         $"hd_effects={HdEffects()}",
-        $"hd_quality={(HdQuality >= 2 ? "full" : HdQuality == 1 ? "balanced" : "fast")}",
+        $"hd_quality={(HdQuality == 3 ? "auto" : HdQuality == 2 ? "full" : HdQuality == 1 ? "balanced" : "fast")}",
         $"audio={(AudioOrchestra ? "orchestra" : AudioRemaster ? "remaster" : CdAudio ? "cd" : "original")}",
         $"audio_stereo={(AudioStereo ? 1 : 0)}",
         $"audio_reverb={(AudioReverb ? 1 : 0)}",
@@ -269,7 +269,7 @@ internal sealed class VideoSettings
                     break;
                 }
                 case "hd_quality":
-                    if (val is "full" or "balanced" or "fast") v.HdQuality = val == "full" ? 2 : val == "balanced" ? 1 : 0;
+                    if (val is "full" or "balanced" or "fast" or "auto") v.HdQuality = val == "auto" ? 3 : val == "full" ? 2 : val == "balanced" ? 1 : 0;
                     break;
                 case "audio_reverb": v.AudioReverb = val == "1"; break;
                 case "volume": if (int.TryParse(val, out int vol)) v.Volume = Math.Clamp(vol, 0, 100); break;

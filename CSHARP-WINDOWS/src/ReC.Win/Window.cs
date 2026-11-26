@@ -204,7 +204,7 @@ internal static unsafe partial class Window
         _gpu.Parallax = _v.HdParallax; _gpu.Shadows = _v.HdShadows; _gpu.Atmosphere = _v.HdAtmosphere; _gpu.Detail = _v.HdDetail;
         _gpu.Reflections = _v.HdReflections; _gpu.Lights = _v.HdLights;
         _gpu.VSync = _v.HdVsync && !_turbo;                  // --turbo runs never wait for the monitor
-        _gpu.Quality = _v.HdQuality;
+        _gpu.Quality = _v.HdQuality == 3 ? Auto.Level : _v.HdQuality;   // T62: 3 = auto
         _gpu.Edges = _v.HdEdges;
         _gpu.HudStyle = _v.HdHud;
         _gpu.Sharpen = _v.HdSharpen;
@@ -311,6 +311,7 @@ internal static unsafe partial class Window
     }
     private static bool _osdShown;
     private static readonly FrameStats Stats = new();          // T49
+    private static readonly AutoQuality Auto = new();          // T62
     // T61 key remap (Game > Controls > Remap keys): the button being asked for (-1 = not remapping) and the new keys
     private static int _remap = -1;
     private static int[] _remapNew = new int[8];
@@ -353,6 +354,7 @@ internal static unsafe partial class Window
             m.LoadState(st);
             if (!o.Frame0Given) frame0 = st.Frame0 ?? st.Frame;
         }
+        if (saving && o.SavePath == null) Save.Backup(savePath);   // T63: the last three saves as re-c.sav.1-.3
         var saver = saving ? new WramSaver(savePath, m.Mem.Wram) : null;
         var keys = Keys.Parse(o.KeySpecs);
         _scripted = o.KeySpecs.Count > 0;
@@ -419,6 +421,11 @@ internal static unsafe partial class Window
                 for (int i = 0; i < fb.Length; i++) Px[i] = _lut[fb[i] & 0x3F];
                 Present();
                 Stats.Record(t0, Clock.Elapsed.TotalMilliseconds);
+                if (_v.HdQuality == 3 && HdEngine && _gpu != null && !_turbo && !_paused)   // T62 HD quality: Auto
+                {
+                    int q = Auto.Update(Stats.Fps, Clock.Elapsed.TotalMilliseconds);
+                    if (q != _gpu.Quality) { _gpu.Quality = q; Notice("HD QUALITY: " + new[] { "FAST", "BALANCED", "FULL" }[q] + " (AUTO)"); }
+                }
             }
 
             double step = 1000.0 / Machine.FrameHz;

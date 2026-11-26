@@ -674,7 +674,7 @@ internal static partial class Program
             Eq(287, Window.CommandId("hd:edges"), "--menu hd:edges");
             Eq(288, Window.CommandId("hd:hud"), "--menu hd:hud");
             Eq(284, Window.CommandId("hd:fast"), "--menu hd:fast");
-            True(VideoSettings.Parse("hd_quality=balanced\n").HdQuality == 1 && new VideoSettings().Serialize().Contains("hd_quality=full"), "ini hd_quality");
+            True(VideoSettings.Parse("hd_quality=balanced\n").HdQuality == 1 && new VideoSettings().Serialize().Contains("hd_quality=auto"), "ini hd_quality (T62: auto by default)");
             Eq(281, Window.CommandId("hd:noflicker"), "--menu hd:noflicker");
             // T22 scene weather: icy / hot / outdoor per scene
             var weather = new Dictionary<string, (float Icy, float Hot, float Out)>();
@@ -1261,6 +1261,38 @@ internal static partial class Program
             True(Osd.Build(false, false, null, new List<string>(), prompt: "PRESS A KEY FOR A\nNOW: SPACE") && (Osd.Pix[200 * Osd.W + 256] >> 24) > 200, "remap prompt drawn");
             Eq(106, Window.CommandId("remapkeys"), "--menu remapkeys");
             Eq(107, Window.CommandId("resetkeys"), "--menu resetkeys");
+        }),
+        ("win_auto_quality", () =>
+        {
+            // T62 HD quality Auto: down after 3 s under 50 fps, up after 20 s at 58+, a failed step up lowers the ceiling
+            var a = new AutoQuality();
+            double t = 0;
+            void Run(double fps, double sec) { for (double e = 0; e < sec * 1000; e += 16.7) { a.Update(fps, t); t += 16.7; } }
+            Run(60, 30); Eq(2, a.Level, "smooth: stays full");
+            Run(40, 2); Eq(2, a.Level, "a short dip: no change");
+            Run(40, 1.5); Eq(1, a.Level, "3 s slow: balanced");
+            Run(40, 3.1); Eq(0, a.Level, "still slow: fast");
+            Run(60, 21); Eq(1, a.Level, "20 s smooth: one step up");
+            Run(40, 3.1); Eq(0, a.Level, "slow again within 10 s: back down");
+            Eq(0, a.Ceiling, "ceiling lowered");
+            Run(60, 60); Eq(0, a.Level, "no more bouncing");
+            True(VideoSettings.Parse("hd_quality=auto\n").HdQuality == 3 && new VideoSettings().Serialize().Contains("hd_quality=auto"), "ini hd_quality=auto (the default)");
+            Eq(297, Window.CommandId("hd:auto"), "--menu hd:auto");
+            // T63 save backups: rotated when the save changed, kept when not
+            string dir = Path.Combine(Path.GetTempPath(), "rec_backup_" + Environment.ProcessId);
+            Directory.CreateDirectory(dir);
+            string p = Path.Combine(dir, "re-c.sav");
+            try
+            {
+                Eq(0, Save.Backup(p), "no save: no backup");
+                File.WriteAllBytes(p, new byte[] { 1 }); Eq(1, Save.Backup(p), "first backup");
+                Eq(1, Save.Backup(p), "unchanged: no new backup");
+                File.WriteAllBytes(p, new byte[] { 2 }); Save.Backup(p);
+                File.WriteAllBytes(p, new byte[] { 3 }); Save.Backup(p);
+                File.WriteAllBytes(p, new byte[] { 4 }); Eq(3, Save.Backup(p), "three kept");
+                True(File.ReadAllBytes(p + ".1")[0] == 4 && File.ReadAllBytes(p + ".2")[0] == 3 && File.ReadAllBytes(p + ".3")[0] == 2, "newest first");
+            }
+            finally { Directory.Delete(dir, true); }
         }),
         ("win_frame_stats", () =>
         {

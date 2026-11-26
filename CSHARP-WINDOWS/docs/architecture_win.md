@@ -459,3 +459,9 @@ CSHARP-WINDOWS/
     scripts are unaffected); a bound key wins over a default meaning of the same key and over the window hotkeys
     (`KeyCommand` is skipped for it). Game › Reset keys to the defaults (107). ini `keybinds=a:20,up:49` (hex VK).
     Test `win_controls`.
+    **HD quality Auto (T62):** HD quality: Auto (id 297, ini `hd_quality=auto`, now the default): `AutoQuality` (in
+    Feedback.cs) after each `Blit`, from `FrameStats.Fps`: < 50 fps for 3 s → one step down (full → balanced → fast),
+    ≥ 58 for 20 s → one step up to the ceiling; a step up undone within 10 s lowers the ceiling. Off while paused and in
+    `--turbo` runs (those stay at full: tests unchanged). A notice names the new level.
+    **Save backups (T63):** at start (the default save only), `Save.Backup` keeps `re-c.sav.1` (newest) .. `.3`,
+    rotated only when the save differs from `.1`.

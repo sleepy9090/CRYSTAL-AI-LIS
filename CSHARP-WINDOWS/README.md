@@ -117,6 +117,10 @@ sound of the port. You can switch at any time, and the choice is saved. CD quali
 `--remaster` through the remastered one (music ids `0x14`, `0x15`, `0x1B` are full songs).
 
 ### Graphics: Original, Enhanced (16-bit), Enhanced (32-bit) or HD
+HD quality: **Auto** (the default) lowers the HD quality when your graphics card cannot keep 50 frames per second and
+raises it again when there is room. Each start also keeps the last three saves as `re-c.sav.1` (newest) to `.3` next
+to `re-c.sav` (rename one to `re-c.sav` to go back).
+
 **Video › Display** sets brightness (5 steps), Natural or Vivid colour, and a colour-blind assist for protanopia,
 deuteranopia or tritanopia (colours that would look alike are shifted apart), in every graphics mode.
 
