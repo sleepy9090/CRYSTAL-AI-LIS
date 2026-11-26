@@ -433,8 +433,10 @@ CSHARP-WINDOWS/
     lub (55 Hz sine) + dub (48 Hz, 0.7) 0.28 s apart every 0.85 s, ~90 ms decay, linear 0.3 s fade in / out, about
     −28 dBFS; mixed like the ambient sounds (any audio mode, any graphics mode). Test in `win_ambience`.
     **Modern font (T59, Glyphs.cs):** HD › Modern font (id 296, `hd_effects` `font`, on). The text font's tiles are
-    ASCII (`$F00` + code in the tags' global numbering, banks `$3C/$3D`; `$40` = the page prompt, kept). At GPU start
-    `GlyphAtlas.Render` draws `$21-$7E` with GDI (Segoe UI semibold, antialiased; Wine substitutes) into 16 × 8 cells of
+    ASCII (`$F00` + code in the tags' global numbering, banks `$3C/$3D`). Only letters, digits and `! " & ' , - . : ; ?` are
+    the ASCII symbols; `_` is the game's ellipsis (drawn as …); the other symbol codes hold custom pieces (arrows,
+    icons, word fragments, the `$40` page prompt) and keep their pixels (`FontInk.Code`). At GPU start
+    `GlyphAtlas.Render` draws those with GDI (Segoe UI semibold, antialiased; Wine substitutes) into 16 × 8 cells of
     64 px (= 8 NES px at the 8x albedo): the em is scaled so 'H' has the game font's cap height (rows 0-6 from
     `FontInk.InkRows`) and placed on its top row; glyphs wider than the cell are squeezed. `Gpu.Layers` (with
     `fontChr`) writes a glyph word into the art map for UI pixels of such tiles: bit 31, code, column / row in the tile,

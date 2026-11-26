@@ -11,12 +11,18 @@ internal static class FontInk
 {
     public const int First = 0xF00;                 // global tile of ASCII 0
     public const int Cell = 64;                      // atlas cell (= 8 NES pixels at the 8x albedo)
+    /// <summary>the punctuation whose game glyph is the ASCII symbol; `_` is the game's ellipsis (drawn as '…'). The other
+    /// symbol codes hold custom pieces (arrows, icons, word fragments) and keep their pixel glyphs</summary>
+    public const string Standard = "!\"&',-.:;?_";
 
-    /// <summary>ASCII code of a global tile, or -1 when it is not a printable glyph of the text font</summary>
+    /// <summary>the text drawn in the atlas for a code</summary>
+    public static string Text(int code) => code == '_' ? "\u2026" : ((char)code).ToString();
+
+    /// <summary>ASCII code of a global tile for a letter, digit or standard punctuation of the text font, else -1</summary>
     public static int Code(int tile)
     {
         int c = tile - First;
-        return c is >= 0x21 and <= 0x7E && c != 0x40 ? c : -1;
+        return c is >= 0x21 and <= 0x7E && (char.IsAsciiLetterOrDigit((char)c) || Standard.Contains((char)c)) ? c : -1;
     }
 
     /// <summary>pixel value 0..3 of (col, row) in an 8x8 2bpp tile</summary>
@@ -106,8 +112,8 @@ internal static unsafe class GlyphAtlas
             int yOff = capTop * 8 - t1;
             for (int code = 0x21; code <= 0x7E; code++)
             {
-                if (code == 0x40) continue;
-                string s = ((char)code).ToString();
+                if (FontInk.Code(FontInk.First + code) < 0) continue;
+                string s = FontInk.Text(code);
                 IntPtr of = Win32.SelectObject(dc, font);
                 Win32.GetTextExtentPoint32W(dc, s, 1, out var sz);
                 Win32.SelectObject(dc, of);

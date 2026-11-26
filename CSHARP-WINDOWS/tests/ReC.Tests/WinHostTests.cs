@@ -1160,10 +1160,13 @@ internal static partial class Program
             Eq(0x41, FontInk.Code(0xF41), "tile $F41 = 'A'");
             Eq(-1, FontInk.Code(0xF40), "$40 is the page prompt, not '@'");
             Eq(-1, FontInk.Code(0xF20), "space has no glyph");
+            Eq(-1, FontInk.Code(0xF7C), "custom symbol tiles keep their pixels ('|' is an arrow piece)");
+            Eq(0x5F, FontInk.Code(0xF5F), "'_' = the game's ellipsis");
+            Eq("\u2026", FontInk.Text(0x5F), "drawn as '…'");
             int glyphs = Enumerable.Range(0x21, 0x5E).Count(c => FontInk.Values(chr, FontInk.First + c).Ink >= 0);
             var (top, bottom) = FontInk.InkRows(chr, FontInk.First + 'H');
             Console.WriteLine($"  win_font: {glyphs} glyph tiles with ink, 'H' rows {top}-{bottom}");
-            True(glyphs >= 90, "the printable ASCII range has ink");
+            True(glyphs == 26 * 2 + 10 + FontInk.Standard.Length, $"letters, digits, standard punctuation have ink ({glyphs})");
             True(top >= 0 && bottom <= 7 && bottom - top >= 4, "'H' cap height");
             string dir = Path.Combine(Data.FindDir(), "..", "test", "states");
             var mt = new Machine(d, _ => { }); mt.Reset(); mt.LoadState(StateFile.Load(Path.Combine(dir, "talk16.json")));
