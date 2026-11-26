@@ -55,18 +55,20 @@ internal sealed class AreaCache
     }
 
     /// <summary>= Bg.RenderArea(m, Visit.Ram), packed, from a snapshot (thread-safe: data files are read-only)</summary>
-    public static AreaCache? Build(Data data, Snapshot s)
+    /// <summary>reuse = a buffer of an older cache (no new ~30 MB array per area: large-object-heap allocations force
+    /// blocking full GCs, which paused the game and its sound right at scene changes)</summary>
+    public static AreaCache? Build(Data data, Snapshot s, uint[]? reuse = null)
     {
-        try { return BuildUnsafe(data, s); }
+        try { return BuildUnsafe(data, s, reuse); }
         catch (Exception e) when (e is IndexOutOfRangeException or ArgumentException) { return null; }   // map memory not valid (yet)
     }
 
-    private static AreaCache? BuildUnsafe(Data data, Snapshot s)
+    private static AreaCache? BuildUnsafe(Data data, Snapshot s, uint[]? reuse)
     {
         if (s.Rd(0x62FC) > 7 || s.Rd(0x62FD) > 15) return null;
         int gw = s.Rd(0x62FC) + 1, gh = s.Rd(0x62FD) + 1;
         int w = gw * 256, h = gh * 240;
-        var px = new uint[w * h];
+        var px = reuse != null && reuse.Length >= w * h ? reuse : new uint[Math.Max(w * h, 1 << 21)];   // every pixel is written below
         byte[] chr = data.Chr, screens = data.BinFile("screens"), screensB10 = data.BinFile("screensB10"), mtb = data.BinFile("metatiles");
         int r0 = s.Rd(0x07F0), r1 = s.Rd(0x07F1), k67 = s.Rd(0x67);
         int Mt(int addr) => mtb[addr - 0x8000];
@@ -121,8 +123,15 @@ internal sealed class Widescreen
     public AreaCache? Cache;
     private System.Threading.Tasks.Task<AreaCache?>? _building;
     private ulong _areaKey, _fullKey;
+    private uint[]? _spare;                                   // the previous cache's pixels, for the next build
     private int _bad;
     public int CamX, CamY;
+    /// <summary>the area pixel at screen (0, 0) used for the sides: the camera + a correction (Search) for areas where the
+    /// camera bytes and the screen disagree (e.g. a scenario or a keep-position map: the screen shows another place)</summary>
+    public int MapX => CamX + _corrX;
+    public int MapY => CamY + _corrY;
+    private int _corrX, _corrY, _poor;
+    private AreaCache? _corrFor;
     /// <summary>0..1: how much of the sides shows (eases with the match test)</summary>
     public float Show;
     public bool Match { get; private set; }
@@ -136,18 +145,20 @@ internal sealed class Widescreen
         {
             var res = b.IsCompletedSuccessfully ? b.Result : null;     // a failed build is ignored (never thrown here)
             _building = null;
-            if (res != null && res.AreaKey == _areaKey) Cache = res;
+            if (res != null && res.AreaKey == _areaKey) { _spare = Cache?.Px; Cache = res; }
+            else _spare ??= res?.Px;
         }
         // gameplay with the area loaded: not new-game init (0), area load (1), the wake-up cut-scene ($13)
         int sub = m.Rd(0x41);
         if (m.Rd(0x40) != 1 || sub is 0 or 1 or 0x13 || m.Rd(0x62FC) > 7 || m.Rd(0x62FD) > 15) return;
         var (area, full) = AreaCache.Keys(m);
-        if (area != _areaKey) { _areaKey = area; Cache = null; Show = 0; _bad = 0; _fullKey = 0; }   // another area: drop at once
+        if (area != _areaKey) { _areaKey = area; _spare ??= Cache?.Px; Cache = null; Show = 0; _bad = 0; _fullKey = 0; }   // another area: drop at once
         if (full == _fullKey || _building != null) return;
         _fullKey = full;
         var snap = AreaCache.Take(m);
-        if (async) _building = System.Threading.Tasks.Task.Run(() => AreaCache.Build(data, snap));
-        else { var c = AreaCache.Build(data, snap); if (c != null) Cache = c; }
+        var buf = _spare; _spare = null;                      // never the current cache's array
+        if (async) _building = System.Threading.Tasks.Task.Run(() => AreaCache.Build(data, snap, buf));
+        else { var c = AreaCache.Build(data, snap, buf); if (c != null) { _spare = Cache?.Px; Cache = c; } else _spare = buf; }
     }
 
     // per line: the area offset that matches (0 = the camera, or the line's own scroll after a mid-frame split), whether
@@ -169,6 +180,7 @@ internal sealed class Widescreen
             Show = Math.Max(0, Show - 0.25f);
             return;
         }
+        if (!ReferenceEquals(_corrFor, c)) { _corrFor = c; if (c.AreaKey != _corrArea) { _corrX = _corrY = 0; _corrArea = c.AreaKey; } _poor = 3; }
         static int Sx(int v) => ((v >> 10 & 1) << 8) | (v & 31) << 3 | (v >> 16 & 7);
         static int Sy(int v) => (v >> 11 & 1) * 240 + (v >> 5 & 31) * 8 + (v >> 12 & 7);
         int y0 = -1;
@@ -179,22 +191,33 @@ internal sealed class Widescreen
             if (y < 8 || y >= hudTop) { LineOk[y] = false; _lineBad[y] = 0; continue; }
             var p = linePal?[y] ?? pal;
             int bestN = 0, bestS = 0, bdx = 0, bdy = 0;
-            for (int cand = 0; cand < 2; cand++)
+            for (int cand = 0; cand < 3; cand++)
             {
+                // 0: the camera; 1: the line's scroll relative to the first line (a mid-frame split); 2: the line's scroll
+                // against the map position, within half a screen (a screen shake moves every line off the camera)
                 int dx = 0, dy = 0;
-                if (cand == 1)
+                if (cand > 0)
                 {
-                    if (y0 < 0 || lineScroll![y] < 0) break;
-                    int v = lineScroll[y], v0 = lineScroll[y0];
-                    dx = ((Sx(v) - Sx(v0)) % 512 + 768) % 512 - 256;
-                    dy = ((Sy(v) - Sy(v0) - (y - y0)) % 480 + 720) % 480 - 240;
-                    if (dx == 0 && dy == 0) break;
+                    if (lineScroll == null || lineScroll[y] < 0 || (cand == 1 && y0 < 0)) continue;
+                    int v = lineScroll[y];
+                    if (cand == 1)
+                    {
+                        int v0 = lineScroll[y0];
+                        dx = ((Sx(v) - Sx(v0)) % 512 + 768) % 512 - 256;
+                        dy = ((Sy(v) - Sy(v0) - (y - y0)) % 480 + 720) % 480 - 240;
+                    }
+                    else
+                    {
+                        dx = ((Sx(v) - MapX) % 256 + 384) % 256 - 128;
+                        dy = ((Sy(v) - y - MapY) % 240 + 360) % 240 - 120;
+                    }
+                    if (dx == 0 && dy == 0) continue;
                 }
-                int ay = y + CamY + dy, n = 0, s = 0;
+                int ay = y + MapY + dy, n = 0, s = 0;
                 if (ay < 0 || ay >= c.H) continue;
                 for (int x = 8; x < 256; x += 3)     // every 3rd: a 2- or 4-pixel pattern cannot fake a match
                 {
-                    int i = y * 256 + x, ax = x + CamX + dx;
+                    int i = y * 256 + x, ax = x + MapX + dx;
                     if (ax < 0 || ax >= c.W || (sp != null && sp[i] != 0)) continue;
                     n++;
                     if ((fb[i] & 63) == AreaCache.Color(c.Px[ay * c.W + ax], p)) s++;
@@ -209,9 +232,60 @@ internal sealed class Widescreen
             if (LineOk[y]) ok++;
         }
         int pct = lines > 0 ? ok * 100 / lines : 0;
+        // many lines fail for 3 frames (or a new cache): look for the place in the area the screen really shows
+        if (pct < 40 && lines > 40 && ++_poor >= 3) { _poor = 0; Search(c, fb, pal, hudTop, linePal, lineScroll, sp); }
+        else if (pct >= 60) _poor = 0;
         Match = pct >= 50;
         if (pct >= 60) { _bad = 0; Show = Math.Min(1, Show + 0.125f); }
         else if (pct < 30 && ++_bad >= 8) Show = Math.Max(0, Show - 0.25f);
+    }
+
+    private ulong _corrArea;
+
+    /// <summary>the correction with the most equal pixels (>= 85 % on a sample of lines): candidates are every screen-sized
+    /// step (256 x 240) of the area that agrees with the PPU scroll of the first line (nametable space repeats every 512 x
+    /// 480, a screen is 256 x 240), or with the camera when there is no scroll; the camera itself first</summary>
+    private void Search(AreaCache c, byte[] fb, byte[] pal, int hudTop, byte[][]? linePal, int[]? lineScroll, byte[]? sp)
+    {
+        int y0 = -1;
+        if (lineScroll != null) for (int y = 1; y < 40 && y0 < 0; y++) if (lineScroll[y] >= 0) y0 = y;
+        int nx = CamX, ny = CamY;
+        if (y0 >= 0)
+        {
+            int v = lineScroll![y0];
+            nx = ((v >> 10 & 1) << 8) | (v & 31) << 3 | (v >> 16 & 7);
+            ny = (v >> 11 & 1) * 240 + (v >> 5 & 31) * 8 + (v >> 12 & 7) - y0;
+        }
+        int bx = ((nx % 256) + 256) % 256, by = ((ny % 240) + 240) % 240;
+        int top = Math.Min(hudTop, 200);
+        double Score(int ox, int oy)
+        {
+            int n = 0, s = 0;
+            for (int y = 12; y < top; y += 9)
+            {
+                var p = linePal?[y] ?? pal;
+                int ay = y + oy;
+                if (ay < 0 || ay >= c.H) continue;
+                for (int x = 8; x < 256; x += 5)
+                {
+                    int i = y * 256 + x, ax = x + ox;
+                    if (ax < 0 || ax >= c.W || (sp != null && sp[i] != 0) || (fb[i] & 63) == 0x0F) continue;
+                    n++;
+                    if ((fb[i] & 63) == AreaCache.Color(c.Px[ay * c.W + ax], p)) s++;
+                }
+            }
+            return n >= 60 ? (double)s / n : 0;
+        }
+        double best = Score(CamX, CamY);
+        int cx = 0, cy = 0;
+        if (best < 0.85)
+            for (int oy = by - 240; oy < c.H; oy += 240)
+                for (int ox = bx - 256; ox < c.W; ox += 256)
+                {
+                    double sc = Score(ox, oy);
+                    if (sc > best + 0.02) { best = sc; cx = ox - CamX; cy = oy - CamY; }
+                }
+        if (best >= 0.85) { _corrX = cx; _corrY = cy; }
     }
 
     /// <summary>the lines whose sides show the map: shown (fade above `min`), verified (LineOk), above the status bar, and not
@@ -232,7 +306,7 @@ internal sealed class Widescreen
     public bool SideOpaque(int wx, int y, int e)
     {
         var c = Cache;
-        int ax = wx - e + CamX + LineDx[y], ay = y + CamY + LineDy[y];
+        int ax = wx - e + MapX + LineDx[y], ay = y + MapY + LineDy[y];
         return c != null && ax >= 0 && ay >= 0 && ax < c.W && ay < c.H && (c.Px[ay * c.W + ax] & 3) != 0;
     }
 
@@ -240,7 +314,7 @@ internal sealed class Widescreen
     {
         var c = Cache;
         if (c == null) return 0x0F;
-        int ax = wx - e + CamX + LineDx[y], ay = y + CamY + LineDy[y];
+        int ax = wx - e + MapX + LineDx[y], ay = y + MapY + LineDy[y];
         if (ax < 0 || ay < 0 || ax >= c.W || ay >= c.H) return 0x0F;
         return AreaCache.Color(c.Px[ay * c.W + ax], pal);
     }

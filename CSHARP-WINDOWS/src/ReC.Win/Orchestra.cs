@@ -26,6 +26,7 @@ internal sealed class Orchestra
     private readonly Perc _pc = new();
     private double _dmcX, _dmcY;
     private double _dmcLp;
+    private double _dmcRamp, _dmcStep;
     private readonly float[] _pre = new float[2048];
     private int _pi;
     private readonly Freeverb _hallL = new(0, 0.86f, 1.45), _hallR = new(23, 0.86f, 1.45);
@@ -41,7 +42,16 @@ internal sealed class Orchestra
         var (b, _) = (mute & 4) != 0 ? (0.0, 0.0) : _bs.Tri(apu.TriCh);
         var (tp, sn) = (mute & 8) != 0 ? (0.0, 0.0) : _pc.Next(apu.NoiseCh);
         double d = (mute & 16) != 0 ? 0 : CdMixer.TndCurve(dmc);
-        _dmcLp += (d - _dmcLp) * 0.68;                               // the samples low-passed ~8 kHz (their 1-bit steps)
+        // a jump larger than sample playback can make in one output sample (a direct $4011 load, e.g. at a scene change)
+        // ramps over ~4 ms instead of stepping (the step is a pop, on the console too)
+        if (Math.Abs(d - _dmcRamp) > 0.03) _dmcStep = (d - _dmcRamp) / 176;
+        if (_dmcStep != 0)
+        {
+            _dmcRamp += _dmcStep;
+            if ((_dmcStep > 0 && _dmcRamp >= d) || (_dmcStep < 0 && _dmcRamp <= d)) { _dmcRamp = d; _dmcStep = 0; }
+        }
+        else _dmcRamp = d;
+        _dmcLp += (_dmcRamp - _dmcLp) * 0.68;                         // the samples low-passed ~8 kHz (their 1-bit steps)
         d = _dmcLp;
         double dy = d - _dmcX + 0.9972 * _dmcY; _dmcX = d; _dmcY = dy;
         // balance: each instrument at about its chip channel's loudness (measured on music $14 solo, CD path)

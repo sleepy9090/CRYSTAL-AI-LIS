@@ -1125,6 +1125,20 @@ float4 PSFinal(V i) : SV_Target
 {
     float3 c = Fxaa(i);
     c = Sharpen(c, i);
+    // widescreen: side pixels with no map data (outside the area, a line that does not show the map) get a dim, blurred
+    // continuation of the picture (SrcC = the lit picture at 1/8, blurred wide), dimmer toward the outer edge
+    if (Scr.z > 0)
+    {
+        float2 np = (Uv.zw + i.uv * Uv.xy) * NES;
+        if ((Flags(InfoPx(np)) & 8) != 0)
+        {
+            // mirrored back across the edge of the game's columns (the scene's colours carry across), dimmer outward
+            float out1 = saturate(max(Scr.z - np.x, np.x - (Scr.z + 256)) / Scr.z);
+            float mx = np.x < Scr.z ? 2 * Scr.z - np.x : np.x > Scr.z + 256 ? 2 * (Scr.z + 256) - np.x : np.x;
+            float2 muv = float2((mx / NES.x - Uv.z) / Uv.x, i.uv.y);
+            c = saturate(SrcC.SampleLevel(Lin, muv, 0).rgb) * (0.8 - 0.5 * out1);
+        }
+    }
     c = saturate(float3(dot(Col0.xyz, c), dot(Col1.xyz, c), dot(Col2.xyz, c)));   // T60
     if (QualC.w > 0.5)
     {

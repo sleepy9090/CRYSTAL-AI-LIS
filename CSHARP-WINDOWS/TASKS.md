@@ -384,3 +384,6 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   + "add mouse support for moving the character"): per-line verified widescreen mapping (mid-frame scroll splits),
   no per-frame large allocations (GC stalls), crossfaded backlog splice + fade-in after underruns, DwmFlush VSync
   for the GDI modes, **mouse control** (hold left to walk, right = sword, middle = A).
+- [x] P5 (2026-11-26, playtest 4: "crackling/popping on scene change; huge black areas on the sides in widescreen HD"):
+  no ~30 MB area allocations per scene change (blocking GCs), DMC level jumps ramped, screen shake kept, camera
+  corrections searched, no-map side pixels filled with a soft mirrored glow instead of black.

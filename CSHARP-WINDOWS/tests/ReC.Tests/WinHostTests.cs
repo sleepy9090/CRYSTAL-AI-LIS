@@ -1022,6 +1022,19 @@ internal static partial class Program
             int co = Clicks(many), cc = Clicks(manyCd);
             Console.WriteLine($"  win_orchestra: clicks in 60 s of music: orchestra {co}, CD path {cc}");
             True(co <= 15, $"orchestra instruments (no drums): almost no clicks ({co} in 60 s; the chip path's square edges count {cc})");
+            // playtest 4: a direct DMC level jump (0 -> 100, e.g. at a scene change) ramps instead of stepping (a pop)
+            {
+                var orch = new Orchestra(); var apu = new ReC.Nes.Apu();
+                double prevL = 0, maxStep = 0;
+                for (int i = 0; i < 4000; i++)
+                {
+                    var (l, _) = orch.Render(apu, i < 2000 ? 0 : 100, 0);
+                    if (i > 10) maxStep = Math.Max(maxStep, Math.Abs(l - prevL));
+                    prevL = l;
+                }
+                Console.WriteLine($"  win_orchestra: DMC jump 0 -> 100: largest step {maxStep:F4} (full scale 1)");
+                True(maxStep < 0.01, "a DMC level jump ramps (no pop)");
+            }
             var v = VideoSettings.Parse("audio=orchestra\n");
             True(v.AudioOrchestra && !v.CdAudio && !v.AudioRemaster && v.Serialize().Contains("audio=orchestra"), "ini audio=orchestra");
             Eq(416, Window.CommandId("audio:orchestra"), "--menu audio:orchestra");
@@ -1516,6 +1529,116 @@ internal static partial class Program
                     Console.WriteLine($"  win_wide: {name}: {okLines} / {lines} playfield lines verified as map, their pixels match {100.0 * good / Math.Max(1, tot):F1} %");
                     True(good >= tot * 0.9, $"{name}: verified lines match the game");
                 }
+            }
+            {
+                // dbg black: on lines not verified as map, is it the tiles (map / scroll) or the pixels (CHR banks) that differ?
+                foreach (string name in new[] { "group81", "group2b", "town02_enter", "group18", "group05", "bosse2" })
+                {
+                    var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, name + ".json")));
+                    m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+                    var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+                    var wd = new Widescreen();
+                    long lines = 0, okL = 0, tileSame = 0, tileTot = 0, pixSameWhenTile = 0;
+                    var gt = new int[16];
+                    for (int f = 0; f < 40; f++)
+                    {
+                        wd.BeforeFrame(m, d, async: false);
+                        m.RunFrame(0); r.Build(m.Ppu.Capture);
+                        int bar = Gpu.SplitGap(r).To; if (bar <= 0) bar = 232;
+                        wd.AfterFrame(r.Fb, m.Ppu.Pal, bar, r.LinePal, r.LineScroll, r.Sp);
+                        var c = wd.Cache;
+                        if (c == null || f < 10) continue;
+                        for (int y = 8; y < bar; y++)
+                        {
+                            if (r.Fb.Skip(y * 256 + 8).Take(248).All(q => (q & 63) == 0x0F)) continue;
+                            lines++; if (wd.LineOk[y]) { okL++; continue; }
+                            int ay = y + wd.CamY;
+                            for (int x = 8; x < 256; x += 3)
+                            {
+                                int ax = x + wd.CamX, i = y * 256 + x;
+                                if (ax < 0 || ay < 0 || ax >= c.W || ay >= c.H || r.Sp[i] != 0 || (r.BgTag[i] & ReC.Nes.Ppu.TagValid) == 0) continue;
+                                tileTot++;
+                                int ct = (int)(c.Px[ay * c.W + ax] >> 4 & 0x1FFF), st = r.BgTag[i] & 0x1FFF;
+                                if (ct == st) { tileSame++; if (AreaCache.Color(c.Px[ay * c.W + ax], r.LinePal[y]) == (r.Fb[i] & 63)) pixSameWhenTile++; }
+                                else if ((ct & 0x3F) == (st & 0x3F)) gt[0]++;                 // same tile in another CHR bank
+                            }
+                        }
+                    }
+                    if (wd.Cache is { } cc)
+                    {
+                        // the best offset of the whole screen against the area (tile numbers, every 8th pixel)
+                        int bestN = -1, bx = 0, by = 0;
+                        for (int oy = -cc.H; oy < cc.H; oy += 8)
+                            for (int ox = -cc.W; ox < cc.W; ox += 8)
+                            {
+                                int n = 0;
+                                for (int y = 12; y < 180; y += 8)
+                                    for (int x = 12; x < 256; x += 8)
+                                    {
+                                        int ax = x + ox, ay = y + oy;
+                                        if (ax < 0 || ay < 0 || ax >= cc.W || ay >= cc.H) continue;
+                                        if ((int)(cc.Px[ay * cc.W + ax] >> 4 & 0x1FFF) == (r.BgTag[y * 256 + x] & 0x1FFF)) n++;
+                                    }
+                                if (n > bestN) { bestN = n; bx = ox; by = oy; }
+                            }
+                        Console.WriteLine($"  dbg black {name}: area {cc.W}x{cc.H}, camera ({wd.CamX},{wd.CamY}), best tile offset ({bx},{by}) with {bestN} / {21 * 31} tiles; area ${m.Rd(0x6C):X2} grid {m.Rd(0x62FC) + 1}x{m.Rd(0x62FD) + 1}");
+                    }
+                    Console.WriteLine($"  dbg black {name}: {okL}/{lines} lines map; on the others: same tile {100.0 * tileSame / Math.Max(1, tileTot):F0} % (pixel then same {100.0 * pixSameWhenTile / Math.Max(1, tileSame):F0} %), same tile number in another bank {100.0 * gt[0] / Math.Max(1, tileTot):F0} %");
+                }
+            }
+            {
+                // playtest 4: a screen shake (every line 3 px off the camera) is still map; area changes do not allocate
+                // new big arrays; side pixels outside the area are flagged "no map" (the HD fill)
+                var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, "group09.json")));
+                var kp = Keys.Parse(new[] { "2531:UP:50", "2585:RIGHT:330" });
+                m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+                var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+                var wd = new Widescreen();
+                for (int f = 0; f < 150; f++) { wd.BeforeFrame(m, d, async: false); m.RunFrame(kp.TryGetValue(2506 + m.Frame, out int b) ? b : 0); }
+                r.Build(m.Ppu.Capture);
+                var shFb = new byte[61440]; var shSc = new int[240];
+                for (int y = 0; y < 240; y++)
+                {
+                    for (int x = 0; x < 256; x++) shFb[y * 256 + x] = r.Fb[y * 256 + Math.Min(255, x + 3)];
+                    int v = r.LineScroll[y];
+                    if (v < 0) { shSc[y] = v; continue; }
+                    int fx = (v >> 16 & 7) + 3, cx = (v & 31) + (fx >> 3), nt = (v >> 10 & 1) ^ (cx >> 5);
+                    shSc[y] = (v & ~0x7041F) | (cx & 31) | nt << 10 | (fx & 7) << 16 | (v & 0x7000);
+                }
+                for (int k = 0; k < 4; k++) wd.AfterFrame(shFb, m.Ppu.Pal, 160, r.LinePal, shSc, r.Sp);
+                int okL = Enumerable.Range(20, 120).Count(y => wd.LineOk[y] && wd.LineDx[y] == 3);
+                Console.WriteLine($"  win_wide: screen shaken 3 px: {okL} / 120 lines verified at offset 3");
+                True(okL > 90, "a screen shake keeps the sides (the line's scroll against the map)");
+                // area changes: walk right through group18's exit and on; after the first build, no big allocations
+                var m2 = new Machine(d, _ => { }); m2.Reset(); m2.LoadState(StateFile.Load(Path.Combine(dir, "group18.json")));
+                var w2 = new Widescreen();
+                for (int f = 0; f < 10; f++) { w2.BeforeFrame(m2, d, async: false); m2.RunFrame(0); }
+                for (int f = 0; f < 200; f++) { w2.BeforeFrame(m2, d, async: false); m2.RunFrame(f < 120 ? Btn.Right : Btn.Up); }   // warm: the pool fills (2 buffers, once)
+                int area0 = m2.Rd(0x6C);
+                long a0 = GC.GetAllocatedBytesForCurrentThread();
+                for (int f = 0; f < 240; f++) { w2.BeforeFrame(m2, d, async: false); m2.RunFrame(f < 80 ? Btn.Down : Btn.Left); }   // back through the exit
+                long alloc = GC.GetAllocatedBytesForCurrentThread() - a0;
+                // the same walk without widescreen: what the game itself allocates
+                var m3 = new Machine(d, _ => { }); m3.Reset(); m3.LoadState(StateFile.Load(Path.Combine(dir, "group18.json")));
+                for (int f = 0; f < 210; f++) m3.RunFrame(f < 10 ? 0 : f < 130 ? Btn.Right : Btn.Up);
+                long b0 = GC.GetAllocatedBytesForCurrentThread();
+                for (int f = 0; f < 240; f++) m3.RunFrame(f < 80 ? Btn.Down : Btn.Left);
+                long game = GC.GetAllocatedBytesForCurrentThread() - b0;
+                Console.WriteLine($"  win_wide: 240 more frames (area ${area0:X2} -> ${m2.Rd(0x6C):X2}): {alloc / 1024} KB allocated with widescreen, {game / 1024} KB by the game alone");
+                True(alloc - game < 1024 * 1024, "widescreen adds no big arrays in steady state");
+                // no-map flag
+                var wr = new SceneRaster(m.Ppu.Chr, 560);
+                var lines = Enumerable.Repeat(true, 240).ToArray();
+                wr.Widen(r, wd, lines);
+                int noMap = Enumerable.Range(0, 560 * 240).Count(i => wr.NoMap[i]), outside = 0;
+                for (int y = 0; y < 240; y++)
+                    for (int x = 0; x < 560; x++)
+                    {
+                        int ax = x - 152 + wd.MapX + wd.LineDx[y], ay = y + wd.MapY + wd.LineDy[y];
+                        bool side = x < 152 || x >= 408;
+                        if (side && (ax < 0 || ay < 0 || ax >= wd.Cache!.W || ay >= wd.Cache.H)) outside++;
+                    }
+                True(noMap == outside && outside > 0, $"outside-area side pixels flagged ({noMap} / {outside})");
             }
             // side sprites: the replay of the sprite pass, drawn on the game's own columns too, reproduces the sprite
             // pixels the PPU shows there (the orbiting sword sprites come from another routine: not all)

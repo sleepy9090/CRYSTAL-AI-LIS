@@ -17,7 +17,7 @@ namespace ReC.Win;
 
 internal sealed class HdScene
 {
-    public const byte FSprite = 1, FVoid = 2, FUi = 4;
+    public const byte FSprite = 1, FVoid = 2, FUi = 4, FNoMap = 8;   // FNoMap: a widescreen side pixel with no map data
     public readonly byte[] Info = new byte[256 * 240 * 4];
     public readonly float[] Lines = new float[240 * 4];
     public float CamX, CamY, Outdoor, VoidGate, Time;

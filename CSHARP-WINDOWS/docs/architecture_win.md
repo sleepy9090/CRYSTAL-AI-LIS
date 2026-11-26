@@ -541,3 +541,18 @@ CSHARP-WINDOWS/
     `$05C1/$05E1`; 6 px dead zone; diagonals when neither axis dominates by 2.5×), right = B (sword) in play (else
     the context menu), middle = A; `MouseControl.ToNes` maps client points through the layout, widescreen sides
     included; mouse capture while held, released with focus. `win_mouse`: the player walks 60 px up, then right.
+    **Playtest round 4 (P5):** reported: crackle / pops at scene changes (Orchestrated + stereo + ambient sounds), large
+    black areas at the sides in HD widescreen. (1) `AreaCache.Build` allocated a new array of the whole area (up to
+    ~30 MB) on every area change and every newly visited screen, on the large-object heap = blocking full GCs that pause
+    every thread (the sound included) right at scene changes. Now two buffers alternate (`Widescreen._spare`,
+    `Build(…, reuse)`): `win_wide` measures what widescreen adds over the game's own allocations across a further area
+    change (~0.4 KB / frame). (2) A direct `$4011` load moves the DMC level by more than sample playback can in one
+    output sample (a step = a pop, on the console too); in the orchestra such jumps (> 0.03) ramp over ~4 ms
+    (`win_orchestra`: largest step 0.002 instead of ~0.37). (3) Black sides: a screen shake moves every line off the
+    camera, so neither earlier candidate matched; a third per-line candidate is the line's scroll against the map
+    position within half a screen (`win_wide`: a 3 px shake keeps 99 / 120 lines). Areas where the screen and the
+    camera disagree get a correction searched over screen-sized steps of the area that agree with the PPU scroll
+    (`Widescreen.Search`, kept while it matches). (4) Side pixels with no map (outside the area, unverified lines) are
+    flagged `HdScene.FNoMap` (`SceneRaster.NoMap` → `WidenInfo`) and `PSFinal` fills them with the blurred lit picture
+    mirrored back across the game's column edge, dimmer outward (the blurred copy is made whenever there are sides),
+    instead of black. Preview out/wide6/0_hd.png (a one-screen corridor at 16:9).

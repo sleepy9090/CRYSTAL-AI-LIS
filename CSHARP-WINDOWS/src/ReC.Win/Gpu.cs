@@ -533,8 +533,8 @@ internal sealed unsafe partial class Gpu : IDisposable
         {
             int row = y * w;
             // the sides: colour, no lift, no flags; the middle: the scene info as it is
-            for (int x = 0; x < e; x++) { int o = (row + x) * 4; dst[o] = 0; dst[o + 1] = (byte)((fb[row + x] & 63) * 4); dst[o + 2] = 0; }
-            for (int x = e + 256; x < w; x++) { int o = (row + x) * 4; dst[o] = 0; dst[o + 1] = (byte)((fb[row + x] & 63) * 4); dst[o + 2] = 0; }
+            for (int x = 0; x < e; x++) { int o = (row + x) * 4; dst[o] = 0; dst[o + 1] = (byte)((fb[row + x] & 63) * 4); dst[o + 2] = (byte)(r.NoMap[row + x] ? HdScene.FNoMap : 0); }
+            for (int x = e + 256; x < w; x++) { int o = (row + x) * 4; dst[o] = 0; dst[o + 1] = (byte)((fb[row + x] & 63) * 4); dst[o + 2] = (byte)(r.NoMap[row + x] ? HdScene.FNoMap : 0); }
             Buffer.BlockCopy(info, y * 1024, dst, (row + e) * 4, 1024);
             if (rl != null)                                   // the widening only changes the masked left column
                 for (int x = e; x < e + 8; x++)
@@ -1017,7 +1017,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         _c[0] = pw; _c[1] = ph; _c[2] = 1f / pw; _c[3] = 1f / ph; SetConstants();
         Pass(_ldrRtv, 0, 0, pw, ph, _psComp, _hdrSrv, _b1Srv, _b3Srv, null);
         bool bars = Ambient && (r.X > 0 || r.Y > 0 || r.W < cw || r.H < ch);
-        if (bars || _osdOn)
+        if (bars || _osdOn || _sideE > 0)
         {
             // T53 / T56: the lit picture at 1/8 (the halo targets are free after the composite), blurred wide (steps of 4
             // texels, twice each way): the ambient bars and the frosted glass under the on-screen display
@@ -1039,7 +1039,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             Pass(_backRtv, 0, 0, cw, ch, _psAmb, _b3Srv, null, null, null);
             _c[0] = pw; _c[1] = ph; _c[2] = 1f / pw; _c[3] = 1f / ph; SetConstants();
         }
-        Pass(_backRtv, r.X, r.Y, pw, ph, _psFinal, _ldrSrv, _oSrv, _osdOn ? _b3Srv : null, null);
+        Pass(_backRtv, r.X, r.Y, pw, ph, _psFinal, _ldrSrv, _oSrv, _osdOn || _sideE > 0 ? _b3Srv : null, null);
         Unbind();
         if (present) ((delegate* unmanaged[Stdcall]<void*, uint, uint, int>)Vt(_swap)[8])(_swap, VSync ? 1u : 0u, 0);
     }

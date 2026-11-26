@@ -24,6 +24,8 @@ internal sealed class SceneRaster
     public readonly int W;
     public readonly byte[] Fb, Bg, BgCol, Sp, SpCol;
     public readonly int[] Tags, BgTag, SpTag;
+    /// <summary>widescreen copy: side pixels with no map data (not a verified map line, or outside the area)</summary>
+    public readonly bool[] NoMap;
     public readonly int[] LineScroll = new int[240];
     public readonly bool[] LeftClip = new bool[240];
     public readonly byte[][] LinePal = Enumerable.Range(0, 240).Select(_ => new byte[32]).ToArray();
@@ -42,6 +44,7 @@ internal sealed class SceneRaster
         _chr = chr; _nChr = chr.Length >> 10; W = w;
         Fb = new byte[w * 240]; Bg = new byte[w * 240]; BgCol = new byte[w * 240]; Sp = new byte[w * 240]; SpCol = new byte[w * 240];
         Tags = new int[w * 240]; BgTag = new int[w * 240]; SpTag = new int[w * 240];
+        NoMap = new bool[w * 240];
     }
 
     /// <summary>widescreen: the side sprites (SideSprites.Draw output) over the widened background, as the PPU composes:
@@ -73,6 +76,7 @@ internal sealed class SceneRaster
             bool map = mapLine[y] && c != null;
             LeftClip[y] = false;                          // the sides and the masked column are filled or black here
             int d = y * W, s = y * 256;
+            Array.Clear(NoMap, d, W);
             Array.Copy(src.Fb, s, Fb, d + e, 256); Array.Copy(src.Bg, s, Bg, d + e, 256); Array.Copy(src.BgCol, s, BgCol, d + e, 256);
             Array.Copy(src.Sp, s, Sp, d + e, 256); Array.Copy(src.SpCol, s, SpCol, d + e, 256);
             Array.Copy(src.Tags, s, Tags, d + e, 256); Array.Copy(src.BgTag, s, BgTag, d + e, 256); Array.Copy(src.SpTag, s, SpTag, d + e, 256);
@@ -83,10 +87,11 @@ internal sealed class SceneRaster
                 if (!side && !(src.LeftClip[y] && x < e + 8)) continue;
                 int i = d + x;
                 Sp[i] = 0; SpCol[i] = 0; SpTag[i] = 0;
-                int ax = x - e + wide.CamX + wide.LineDx[y], ay = y + wide.CamY + wide.LineDy[y];
+                int ax = x - e + wide.MapX + wide.LineDx[y], ay = y + wide.MapY + wide.LineDy[y];
                 if (!map || ax < 0 || ay < 0 || ax >= c!.W || ay >= c.H)
                 {
                     Fb[i] = BgCol[i] = 0x0F; Bg[i] = 0; BgTag[i] = Tags[i] = 0;
+                    NoMap[i] = side;
                     continue;
                 }
                 uint p = c.Px[ay * c.W + ax];
