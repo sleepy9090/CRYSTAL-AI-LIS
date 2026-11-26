@@ -26,6 +26,7 @@ cbuffer C : register(b0)
     float4 MeterF; // T35 FORCE meter: x0, x1, top line; w = the status bar's first line (T43, 0 = none)
     float4 Cine;   // T51 cut-scene: weight, picture y0 * 256 + y1, x0 * 256 + x1, shot start time (s)
     float4 Dmg;    // T57 damage feedback: hit flash 0..1, low life 0 / 1, -, -
+    float4 Col0, Col1, Col2;   // T60 display colour matrix rows (brightness, vivid, colour-blind assist)
 };
 Texture2D SrcA : register(t0);
 Texture2D SrcB : register(t1);
@@ -1123,6 +1124,7 @@ float4 PSFinal(V i) : SV_Target
 {
     float3 c = Fxaa(i);
     c = Sharpen(c, i);
+    c = saturate(float3(dot(Col0.xyz, c), dot(Col1.xyz, c), dot(Col2.xyz, c)));   // T60
     if (QualC.w > 0.5)
     {
         float4 o = SrcB.SampleLevel(Lin, i.uv, 0);

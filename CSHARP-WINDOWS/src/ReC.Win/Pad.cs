@@ -43,8 +43,35 @@ internal sealed class Input
     public static int Vk(int wParam, long lParam) =>
         wParam == Win32.VK_SHIFT && ((lParam >> 16) & 0xFF) == 0x36 ? Win32.VK_RSHIFT : wParam;
 
-    public void KeyDown(int vk) { if (KeyMap.TryGetValue(vk, out int b)) _keys |= b; }
-    public void KeyUp(int vk) { if (KeyMap.TryGetValue(vk, out int b)) _keys &= ~b; }
+    // T61 remapped keys (Game > Controls): one extra key per button on top of the defaults; it wins over a default
+    // meaning of the same key and over the window's hotkeys (Window.KeyCommand is skipped for it)
+    public static readonly int[] Order = { Btn.A, Btn.B, Btn.Select, Btn.Start, Btn.Up, Btn.Down, Btn.Left, Btn.Right };
+    public static readonly string[] Names = { "A", "B", "SELECT", "START", "UP", "DOWN", "LEFT", "RIGHT" };
+    private readonly Dictionary<int, int> _custom = new();
+
+    public void SetBinds(int[] vks)
+    {
+        _custom.Clear();
+        for (int i = 0; i < Order.Length && i < vks.Length; i++) if (vks[i] != 0) _custom[vks[i]] = Order[i];
+    }
+
+    public bool IsBound(int vk) => _custom.ContainsKey(vk);
+
+    private bool Map(int vk, out int b) => _custom.TryGetValue(vk, out b) || KeyMap.TryGetValue(vk, out b);
+
+    /// <summary>a short name for a virtual key (the remap prompt, the ini)</summary>
+    public static string KeyName(int vk) => vk switch
+    {
+        >= '0' and <= '9' or >= 'A' and <= 'Z' => ((char)vk).ToString(),
+        Win32.VK_UP => "UP", Win32.VK_DOWN => "DOWN", Win32.VK_LEFT => "LEFT", Win32.VK_RIGHT => "RIGHT",
+        Win32.VK_RETURN => "ENTER", Win32.VK_TAB => "TAB", Win32.VK_RSHIFT => "RSHIFT", Win32.VK_SHIFT => "SHIFT",
+        0x20 => "SPACE", 0x11 => "CTRL", 0x12 => "ALT", 0x08 => "BACKSPACE",
+        >= 0x70 and <= 0x87 => "F" + (vk - 0x6F),
+        _ => $"KEY {vk:X2}",
+    };
+
+    public void KeyDown(int vk) { if (Map(vk, out int b)) _keys |= b; }
+    public void KeyUp(int vk) { if (Map(vk, out int b)) _keys &= ~b; }
 
     /// <summary>= the 'blur' listener: focus lost releases every key.</summary>
     public void Blur() => _keys = 0;

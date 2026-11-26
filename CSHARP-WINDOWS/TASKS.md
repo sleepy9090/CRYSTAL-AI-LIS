@@ -360,3 +360,7 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] T58 (2026-11-25): **low-life heartbeat** sound (Damage feedback, any mode).
 - [x] T59 (2026-11-25): **HD › Modern font**: dialog / story text drawn from a Windows-font glyph atlas (crisp, sized on
   the game font), in the game's colours. Preview: out/hd59/talk/0_hd.png.
+- [x] T60 (2026-11-25): **Video › Display**: brightness 1-5, Natural / Vivid colour, colour-blind assist (protanopia,
+  deuteranopia, tritanopia; daltonize), all graphics modes. Preview: out/hd60/cmp.png.
+- [x] T61 (2026-11-25): **remappable keys** (Game › Remap keys..., an on-screen prompt per button). Preview:
+  out/hd61/0_hd.png.

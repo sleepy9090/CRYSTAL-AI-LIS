@@ -61,6 +61,8 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool TiltShift = true;
     /// <summary>T59: text from the glyph atlas (SetGlyphs) instead of the game's 8x8 font</summary>
     public bool ModernFont = true;
+    /// <summary>T60: display colour matrix (ColorAdjust, row-major), applied in PSFinal</summary>
+    public float[] ColorM = ColorAdjust.Matrix(2, false, 0);
     /// <summary>T59: the CHR data (font tiles' ink / paper values); null = no modern font</summary>
     public byte[]? Chr;
     private void* _glyTex, _glySrv;
@@ -175,7 +177,7 @@ internal sealed unsafe partial class Gpu : IDisposable
 
     private const uint FmtBgra = 87, FmtRgba8 = 28, FmtRgba8U = 30, FmtRg32U = 17, FmtRgba32F = 2, FmtRgba16F = 10;
     private const uint BindSrv = 8, BindRtv = 0x20;
-    private const int NSrv = 13, NConst = 20;
+    private const int NSrv = 13, NConst = 23;
     private static readonly Guid IidTex2D = new("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
 
     private static void** Vt(void* o) => *(void***)o;
@@ -820,6 +822,9 @@ internal sealed unsafe partial class Gpu : IDisposable
             _meters[4], _meters[5], _meters[6], _meters[7],
             Cinematic ? _cineW : 0, _band.Y0 * 256 + _band.Y1, _band.X0 * 256 + _band.X1, _shotStart,
             Hurt, LowLife ? 1 : 0, 0, 0,
+            ColorM[0], ColorM[1], ColorM[2], 0,
+            ColorM[3], ColorM[4], ColorM[5], 0,
+            ColorM[6], ColorM[7], ColorM[8], 0,
         };
         c.CopyTo(_c, 0);
         SetConstants();

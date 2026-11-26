@@ -140,10 +140,20 @@ internal static class Osd
         ("1 - 6", "WINDOW SIZE"), ("RIGHT CLICK", "MENUS, CHEATS"), ("ESC", "QUIT (SAVES FIRST)"),
     };
 
-    public static bool Build(bool paused, bool fast, string? notice, IReadOnlyList<string> cheats, bool help = false, string? stats = null)
+    public static bool Build(bool paused, bool fast, string? notice, IReadOnlyList<string> cheats, bool help = false, string? stats = null, string? prompt = null)
     {
         Clear();
         bool any = false;
+        if (!string.IsNullOrEmpty(prompt))                   // T61 key remap: one question in the middle
+        {
+            Box(0, 0, W, H, 0.01f, 0.02f, 0.06f, 0.62f);
+            Box(48, 170, W - 96, 120, 0.05f, 0.08f, 0.20f, 0.93f);
+            Box(52, 174, W - 104, 4, 0.55f, 0.7f, 1f, 0.6f);
+            var pl = prompt.Split('\n');
+            Centered(196, pl[0], 3, 1f, 0.95f, 0.75f);
+            for (int i = 1; i < pl.Length; i++) Centered(232 + (i - 1) * 16, pl[i], 1, 0.85f, 0.9f, 1f);
+            return true;
+        }
         if (help)
         {
             Box(0, 0, W, H, 0.01f, 0.02f, 0.06f, 0.7f);

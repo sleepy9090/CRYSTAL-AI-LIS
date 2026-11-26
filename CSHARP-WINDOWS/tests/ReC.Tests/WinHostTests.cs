@@ -1199,6 +1199,69 @@ internal static partial class Program
             True(new VideoSettings().HdFont && !v.HdFont && new VideoSettings().Serialize().Contains("tiltshift,font"), "ini hd_effects font");
             Eq(296, Window.CommandId("hd:font"), "--menu hd:font");
         }),
+        ("win_color", () =>
+        {
+            // T60 display colours: defaults change nothing; brightness / vivid do what they say; each colour-blind
+            // assist leaves fewer NES colour pairs that look alike to that deficiency but differ to normal vision
+            var d = TheData.Value;
+            var pal = d.NesRgb.Select(c => (uint)c & 0xFFFFFF).ToArray();
+            var id0 = ColorAdjust.Matrix(2, false, 0);
+            True(ColorAdjust.IsIdentity(id0) && pal.All(c => ColorAdjust.Apply(id0, c) == c), "defaults: identity, palette unchanged");
+            double Lum(uint c) => (c >> 16 & 255) * 0.299 + (c >> 8 & 255) * 0.587 + (c & 255) * 0.114;
+            double LumAll(float[] m) => pal.Sum(c => Lum(ColorAdjust.Apply(m, c)));
+            True(LumAll(ColorAdjust.Matrix(0, false, 0)) < LumAll(id0) && LumAll(ColorAdjust.Matrix(4, false, 0)) > LumAll(id0), "brightness 1 darker, 5 brighter");
+            double Sat(uint c) { int r = (int)(c >> 16 & 255), g = (int)(c >> 8 & 255), b = (int)(c & 255); return Math.Max(r, Math.Max(g, b)) - Math.Min(r, Math.Min(g, b)); }
+            var viv = ColorAdjust.Matrix(2, true, 0);
+            True(pal.Sum(c => Sat(ColorAdjust.Apply(viv, c))) > pal.Sum(Sat) * 1.1, "vivid: more saturated");
+            True(ColorAdjust.Apply(viv, 0x808080) == 0x808080, "vivid: greys unchanged");
+            (double R, double G, double B) V(uint c) => ((c >> 16 & 255) / 255.0, (c >> 8 & 255) / 255.0, (c & 255) / 255.0);
+            double Dist(uint a, uint b) { var (r1, g1, b1) = V(a); var (r2, g2, b2) = V(b); return Math.Sqrt((r1 - r2) * (r1 - r2) + (g1 - g2) * (g1 - g2) + (b1 - b2) * (b1 - b2)); }
+            var distinct = pal.Distinct().ToArray();
+            for (int k = 1; k <= 3; k++)
+            {
+                var sim = ColorAdjust.Simulate(k);
+                var fix = ColorAdjust.Matrix(2, false, k);
+                int Confusable(float[] m)
+                {
+                    int n = 0;
+                    for (int i = 0; i < distinct.Length; i++)
+                        for (int j = i + 1; j < distinct.Length; j++)
+                            if (Dist(distinct[i], distinct[j]) > 0.25 && Dist(ColorAdjust.Apply(sim, ColorAdjust.Apply(m, distinct[i])), ColorAdjust.Apply(sim, ColorAdjust.Apply(m, distinct[j]))) < 0.1) n++;
+                    return n;
+                }
+                int before = Confusable(id0), after = Confusable(fix);
+                Console.WriteLine($"  win_color: {ColorAdjust.BlindNames[k]}: {before} confusable NES colour pairs -> {after} with the assist");
+                True(after < before * 0.7, $"{ColorAdjust.BlindNames[k]} assist separates confusable colours");
+            }
+            var v = VideoSettings.Parse("brightness=4\nvivid=1\ncolorblind=deutan\n");
+            True(v.Brightness == 4 && v.Vivid && v.ColorBlind == 2 && v.Serialize().Contains("colorblind=deutan"), "ini brightness / vivid / colorblind");
+            True(new VideoSettings().Serialize().Contains("brightness=2") && new VideoSettings().Serialize().Contains("colorblind=off"), "ini defaults");
+            Eq(644, Window.CommandId("brightness:5"), "--menu brightness:5");
+            Eq(649, Window.CommandId("colorblind:deutan"), "--menu colorblind:deutan");
+            Eq(646, Window.CommandId("vivid"), "--menu vivid");
+        }),
+        ("win_controls", () =>
+        {
+            // T61 remapped keys: an extra key per button on top of the defaults; it wins over a default meaning
+            var k = new Input();
+            k.SetBinds(new[] { 0x20, 'L', 0, 0, 'I', 0, 0, 0 });            // A = Space, B = L, Up = I
+            k.KeyDown(0x20); Eq(Btn.A, k.Read(), "Space = A");
+            k.KeyUp(0x20); k.KeyDown('X'); Eq(Btn.A, k.Read(), "default X still A");
+            k.KeyUp('X'); k.KeyDown('L'); Eq(Btn.B, k.Read(), "L = B");
+            k.KeyUp('L'); k.KeyDown('I'); Eq(Btn.Up, k.Read(), "I = Up");
+            k.KeyUp('I');
+            True(k.IsBound(0x20) && !k.IsBound('X'), "bound keys known (no hotkey for them)");
+            k.SetBinds(new[] { 'D', 0, 0, 0, 0, 0, 0, 0 });                // D (default Right) rebound to A
+            k.KeyDown('D'); Eq(Btn.A, k.Read(), "a rebound default key takes its new button");
+            k.KeyUp('D');
+            Eq("SPACE", Input.KeyName(0x20), "key name"); Eq("F5", Input.KeyName(0x74), "F-key name"); Eq("Q", Input.KeyName('Q'), "letter");
+            var v = VideoSettings.Parse("keybinds=a:20,up:49\n");
+            True(v.KeyBinds[0] == 0x20 && v.KeyBinds[4] == 0x49 && v.KeyBinds[1] == 0 && v.Serialize().Contains("keybinds=a:20,up:49"), "ini keybinds");
+            True(new VideoSettings().Serialize().Contains("keybinds=none"), "ini default: none");
+            True(Osd.Build(false, false, null, new List<string>(), prompt: "PRESS A KEY FOR A\nNOW: SPACE") && (Osd.Pix[200 * Osd.W + 256] >> 24) > 200, "remap prompt drawn");
+            Eq(106, Window.CommandId("remapkeys"), "--menu remapkeys");
+            Eq(107, Window.CommandId("resetkeys"), "--menu resetkeys");
+        }),
         ("win_frame_stats", () =>
         {
             // T49 FPS counter: 60 frames per second at 4 ms each, then a slow patch at 30 fps / 20 ms

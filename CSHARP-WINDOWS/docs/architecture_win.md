@@ -444,3 +444,18 @@ CSHARP-WINDOWS/
     `PSAlbedo` draws those pixels from the atlas (t12 `Gly`, 13 SRVs) as paper → ink by coverage; the HUD styling
     (bevel, gloss) then applies as before. The status bar's own tile set ($E00 range) is unchanged. Test `win_font`
     (talk16: 3840 glyph pixels, every one's ink / paper = the colour on screen).
+    **Display colours (T60, ColorAdjust.cs):** Video › Display: brightness 1-5 (ids 640-644, ini `brightness=0..4`,
+    gains 0.80-1.25), Natural / Vivid (645 / 646, ini `vivid=1`, saturation × 1.25 around Rec.601 luma), colour-blind
+    assist Off / Protanopia / Deuteranopia / Tritanopia (647-650, ini `colorblind=off|protan|deutan|tritan`): one 3×3
+    matrix = gain × daltonize × saturation. Daltonize = (I + Shift (I − Sim)) with Sim = Machado 2009 (severity 1);
+    tritan uses the classic shift rows, red-green ones rows searched on the 64 NES colours (pairs > 0.25 apart that the
+    simulated deficiency sees < 0.1 apart: protan 18 → 5, deutan 20 → 4, tritan 14 → 4). Applied to the NES palette
+    lookup (`Window._lut`: Original, CRT, upscale filters), to the 16/32-bit enhanced picture per frame
+    (`ColorAdjust.ApplyAll` into `_hdCol`), and in HD by `PSFinal` (constant rows 21-23 `Col0-2`, before the OSD).
+    Defaults are the identity (the pictures stay exact; `win_video_check` unchanged). Test `win_color`.
+    **Remappable keys (T61):** Game › Remap keys... (id 106, `--menu remapkeys`) asks on the on-screen display for one
+    key per button in `Input.Order` (A, B, Select, Start, Up, Down, Left, Right): Backspace keeps the current one, Esc
+    cancels; play pauses meanwhile (not in a `--frames` run). The keys are extra (the defaults keep working, so `--keys`
+    scripts are unaffected); a bound key wins over a default meaning of the same key and over the window hotkeys
+    (`KeyCommand` is skipped for it). Game › Reset keys to the defaults (107). ini `keybinds=a:20,up:49` (hex VK).
+    Test `win_controls`.

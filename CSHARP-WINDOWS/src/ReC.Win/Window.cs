@@ -83,6 +83,18 @@ internal static unsafe partial class Window
     private static Machine? _m;
     private static Enhancer? _enh;
     private static readonly uint[] _hd = new uint[Enhancer.W * Enhancer.H];
+    // T60 display colours: the NES palette lookup (as loaded / through the matrix), the matrix, the enhanced picture copy
+    private static uint[] _lutBase = new uint[64], _lut = new uint[64], _hdCol = Array.Empty<uint>();
+    private static float[] _colorM = ColorAdjust.Matrix(2, false, 0);
+    private static int _hdColFrame = -1;
+    private static void ApplyColor()
+    {
+        _colorM = ColorAdjust.Matrix(_v.Brightness, _v.Vivid, _v.ColorBlind);
+        for (int i = 0; i < 64; i++) _lut[i] = ColorAdjust.Apply(_colorM, _lutBase[i]);
+        _hdColFrame = -1; _crtFrame = -1; _upFrame = -1;
+        if (_gpu != null) _gpu.ColorM = _colorM;
+        if (_m != null) { var fb = ShownFb; for (int i = 0; i < fb.Length; i++) Px[i] = _lut[fb[i] & 0x3F]; }   // paused: recolour now
+    }
     private static int _hdFrame = -1;
     private static bool _quiet, _exporting;
     private static bool _turbo;
@@ -216,6 +228,7 @@ internal static unsafe partial class Window
         _gpuTried = true;
         Win32.GetClientRect(_hwnd, out var rc);
         _gpu = Gpu.TryCreate(_hwnd, rc.Right, rc.Bottom, _nesRgb, out _gpuError);
+        if (_gpu != null) _gpu.ColorM = _colorM;
         ApplyHdEffects();
         string font = "";
         if (_gpu != null && _m != null)
@@ -290,13 +303,29 @@ internal static unsafe partial class Window
     private static bool BuildOsd()
     {
         if (_notice != null && Clock.Elapsed.TotalMilliseconds > _noticeUntil) _notice = null;
-        if (!_paused && !_fast && _notice == null && !_help && !_osdShown && !_v.ShowFps) return false;
+        if (!_paused && !_fast && _notice == null && !_help && !_osdShown && !_v.ShowFps && _remap < 0) return false;
         var cheats = Enumerable.Range(0, Cheats.Names.Length).Where(_v.Cheats.Get).Select(i => Cheats.Names[i]).ToList();
-        _osdShown = Osd.Build(_paused, _fast, _notice, cheats, _help, _v.ShowFps ? Stats.Text : null);
+        _osdShown = Osd.Build(_paused, _fast, _notice, cheats, _help, _v.ShowFps ? Stats.Text : null,
+            _remap >= 0 ? $"PRESS A KEY FOR {Input.Names[_remap]}\nNOW: {(_v.KeyBinds[_remap] != 0 ? Input.KeyName(_v.KeyBinds[_remap]) : "DEFAULT KEYS ONLY")}\nBACKSPACE KEEPS IT   ESC CANCELS" : null);
         return _osdShown;
     }
     private static bool _osdShown;
     private static readonly FrameStats Stats = new();          // T49
+    // T61 key remap (Game > Controls > Remap keys): the button being asked for (-1 = not remapping) and the new keys
+    private static int _remap = -1;
+    private static int[] _remapNew = new int[8];
+    private static void StartRemap() { _remap = 0; _remapNew = (int[])_v.KeyBinds.Clone(); _input.Blur(); Present(); }
+    private static void RemapKey(int vk)
+    {
+        if (vk == Win32.VK_ESCAPE) { _remap = -1; Notice("REMAP CANCELLED"); Present(); return; }
+        if (vk != 0x08) { for (int i = 0; i < 8; i++) if (_remapNew[i] == vk) _remapNew[i] = 0; _remapNew[_remap] = vk; }
+        if (++_remap < 8) { Present(); return; }
+        _remap = -1;
+        _v.KeyBinds = _remapNew;
+        _input.SetBinds(_v.KeyBinds);
+        Notice("CONTROLS SAVED");
+        SettingsChanged(false);
+    }
     private static uint[] _crt = Array.Empty<uint>();
     private static int _crtFrame = -1;
     private static bool _help;                                 // T44: F1 help panel (the game pauses under it)
@@ -339,13 +368,15 @@ internal static unsafe partial class Window
         foreach (string e in _enh.PackErrors) Console.Error.WriteLine($"[re-c] graphics pack: {e}");
         _videoPath = o.VideoConfig ?? VideoSettings.DefaultPath();
         _v = VideoSettings.Load(_videoPath);
+        _input.SetBinds(_v.KeyBinds);                   // T61
         if (o.ScaleGiven) _v.SetScale(o.Scale);
         EnsureTags();
         _audio = new AudioOut(m);
         _pad = new Pad();
 
         // NES colour index -> 32-bit BI_RGB pixel (B, G, R, x in memory = 0x00RRGGBB): palettes.json nesRgb as is
-        uint[] lut = data.NesRgb.Select(c => (uint)c & 0xFFFFFF).ToArray();
+        _lutBase = data.NesRgb.Select(c => (uint)c & 0xFFFFFF).ToArray();
+        ApplyColor();                                   // T60: brightness / colour / colour-blind assist -> _lut
         _bmi = new Win32.BITMAPINFOHEADER
         {
             Size = (uint)sizeof(Win32.BITMAPINFOHEADER), Width = 256, Height = -240, Planes = 1, BitCount = 32,
@@ -385,7 +416,7 @@ internal static unsafe partial class Window
                 if (NeedRender) RenderHd();
                 AmbienceTargets();                       // T54
                 var fb = ShownFb;
-                for (int i = 0; i < fb.Length; i++) Px[i] = lut[fb[i] & 0x3F];
+                for (int i = 0; i < fb.Length; i++) Px[i] = _lut[fb[i] & 0x3F];
                 Present();
                 Stats.Record(t0, Clock.Elapsed.TotalMilliseconds);
             }
@@ -402,7 +433,7 @@ internal static unsafe partial class Window
             {
                 bool ran = false;
                 if (!_scripted) PadExtras(now);                      // T46: RB = fast forward, LB = pause
-                if (!_paused && !_hidden)
+                if (!_paused && !_hidden && (_remap < 0 || o.Frames >= 0))   // T61: the remap prompt pauses play (not a --frames run)
                 {
                     _acc += Math.Min(now - _last, 250) * (_fast ? 4 : 1);   // never run more than ~15 frames to catch up; T36: Space = 4x
                     if (o.Turbo) _acc = Math.Max(_acc, step);
@@ -586,7 +617,16 @@ internal static unsafe partial class Window
         // upscale filter (Upscale.cs) into Up, re-run only when the frame or the factor changed (WM_PAINT repaints)
         int k = Math.Clamp(_v.Upscale, 1, 4);
         uint[] src = Px;
-        if (_v.Enhanced && _hdFrame == _frameNo) { src = _hd; k = Enhancer.S; }
+        if (_v.Enhanced && _hdFrame == _frameNo)
+        {
+            src = _hd; k = Enhancer.S;
+            if (!ColorAdjust.IsIdentity(_colorM))            // T60: the enhanced picture through the colour matrix
+            {
+                if (_hdCol.Length != _hd.Length) _hdCol = new uint[_hd.Length];
+                if (_hdColFrame != _frameNo) { ColorAdjust.ApplyAll(_colorM, _hd, _hdCol, _hd.Length); _hdColFrame = _frameNo; }
+                src = _hdCol;
+            }
+        }
         else if (_v.Crt)                               // T45: CRT look from the NES frame at 3x
         {
             if (_crt.Length != Px.Length * 9) { _crt = new uint[Px.Length * 9]; _crtFrame = -1; }
@@ -662,8 +702,9 @@ internal static unsafe partial class Window
                 {
                     int vk = Input.Vk((int)wParam, (long)lParam);
                     bool repeat = ((long)lParam & 0x40000000) != 0;
+                    if (_remap >= 0) { if (!repeat) RemapKey(vk); return IntPtr.Zero; }   // T61
                     _input.KeyDown(vk);
-                    if (!repeat) KeyCommand(vk);
+                    if (!repeat && !_input.IsBound(vk)) KeyCommand(vk);
                     return IntPtr.Zero;
                 }
                 case Win32.WM_KEYUP:

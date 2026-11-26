@@ -15,7 +15,7 @@ internal static unsafe partial class Window
 {
     // command ids
     private const int IdPause = 100, IdMute = 101, IdExit = 102;
-    private const int IdTurboA = 103, IdTurboB = 104, IdFeedback = 105;   // T38, T57
+    private const int IdTurboA = 103, IdTurboB = 104, IdFeedback = 105, IdRemap = 106, IdResetKeys = 107;   // T38, T57, T61
     private const int IdCheat0 = 600, IdCheatsOff = 620;     // T36: + Cheats index (life, magic, gold, status, charge, xp)
     private const int IdFullscreen = 200, IdMenuBar = 201, IdInteger = 202, IdCrop = 203, IdSmooth = 204, IdReset = 205;
     private const int IdScale0 = 210;            // + 1..6
@@ -30,6 +30,7 @@ internal static unsafe partial class Window
     private const int IdVolume0 = 420;                      // T40: + 0..3 = 100 / 75 / 50 / 25 %
     private const int IdCrt = 290;                          // T45
     private const int IdFps = 291;                          // T49
+    private const int IdBright0 = 640, IdNatural = 645, IdVivid = 646, IdBlind0 = 647;   // T60: + 0..4, + 0..3
     private const int IdAudioOriginal = 410, IdAudioCd = 411, IdStereo = 412, IdReverb = 413, IdAudioRemaster = 414;
     private const int IdAudioOrchestra = 416, IdAmbience = 417;   // T50, T54
     private const int IdCrossfeed = 415, IdChannel0 = 430;   // T47: + 0..4 = pulse 1, pulse 2, triangle, noise, DMC
@@ -55,6 +56,10 @@ internal static unsafe partial class Window
             case "pause": return IdPause;
             case "crt": return IdCrt;
             case "fps": return IdFps;
+            case "natural": return IdNatural;
+            case "vivid": return IdVivid;
+            case var bs when bs.StartsWith("brightness:") && int.TryParse(bs[11..], out int bl) && bl is >= 1 and <= 5: return IdBright0 + bl - 1;
+            case var cs when cs.StartsWith("colorblind:") && Array.IndexOf(ColorAdjust.BlindNames, cs[11..]) >= 0: return IdBlind0 + Array.IndexOf(ColorAdjust.BlindNames, cs[11..]);
             case "volume:100": return IdVolume0;
             case "volume:75": return IdVolume0 + 1;
             case "volume:50": return IdVolume0 + 2;
@@ -62,6 +67,8 @@ internal static unsafe partial class Window
             case "turbo:a": return IdTurboA;
             case "turbo:b": return IdTurboB;
             case "feedback": return IdFeedback;
+            case "remapkeys": return IdRemap;
+            case "resetkeys": return IdResetKeys;
             case "cheats:off": return IdCheatsOff;
             case "mute": return IdMute;
             case "exit": return IdExit;
@@ -175,6 +182,9 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(m, 0, IdTurboA, "Turbo &A (repeats while held)");
         Win32.AppendMenuW(m, 0, IdFeedback, "&Damage feedback (red flash, low-life pulse, rumble)");
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
+        Win32.AppendMenuW(m, 0, IdRemap, "&Remap keys...");
+        Win32.AppendMenuW(m, 0, IdResetKeys, "Reset keys to the &defaults");
+        Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(m, 0, IdExit, "E&xit\tEsc");
         return m;
     }
@@ -228,6 +238,16 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(gfx, 0, IdHd, "&HD engine (GPU: 8x layers, lighting, shadows, parallax)");
         Win32.AppendMenuW(gfx, 0, IdCrt, "&CRT look (scanlines, Original graphics)");
         Win32.AppendMenuW(gfx, 0, IdFps, "Show &FPS\tF2");
+        var disp = NewMenu();
+        string[] bn = { "Brightness &1 (darker)", "Brightness &2", "Brightness &3 (as is)", "Brightness &4", "Brightness &5 (brighter)" };
+        for (int i = 0; i < 5; i++) Win32.AppendMenuW(disp, 0, (nuint)(IdBright0 + i), bn[i]);
+        Win32.AppendMenuW(disp, Win32.MF_SEPARATOR, 0, null);
+        Win32.AppendMenuW(disp, 0, IdNatural, "Colour: &Natural");
+        Win32.AppendMenuW(disp, 0, IdVivid, "Colour: &Vivid");
+        Win32.AppendMenuW(disp, Win32.MF_SEPARATOR, 0, null);
+        string[] cn2 = { "Colour-blind assist: &Off", "Colour-blind assist: &Protanopia (red)", "Colour-blind assist: &Deuteranopia (green)", "Colour-blind assist: &Tritanopia (blue)" };
+        for (int i = 0; i < 4; i++) Win32.AppendMenuW(disp, 0, (nuint)(IdBlind0 + i), cn2[i]);
+        Win32.AppendMenuW(gfx, Win32.MF_POPUP, (nuint)disp, "&Display (brightness, colour, colour-blind)");
         Win32.AppendMenuW(gfx, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(gfx, 0, IdHdParallax, "HD: &Parallax depth (pits, cliffs, layers)");
         Win32.AppendMenuW(gfx, 0, IdHdShadows, "HD: &Shadows (soft, contact, clouds)");
@@ -301,6 +321,9 @@ internal static unsafe partial class Window
     {
         if (_menus.Count == 0) return;
         Check(IdPause, _paused); Check(IdMute, _muted); Check(IdCrt, _v.Crt); Check(IdFps, _v.ShowFps);
+        for (int i = 0; i < 5; i++) Check(IdBright0 + i, _v.Brightness == i, true);
+        Check(IdNatural, !_v.Vivid, true); Check(IdVivid, _v.Vivid, true);
+        for (int i = 0; i < 4; i++) Check(IdBlind0 + i, _v.ColorBlind == i, true);
         for (int i = 0; i < 4; i++) Check(IdVolume0 + i, _v.Volume == 100 - 25 * i); Check(IdTurboA, _v.TurboA); Check(IdTurboB, _v.TurboB); Check(IdFeedback, _v.Feedback);
         for (int i = 0; i < Cheats.Names.Length; i++) Check(IdCheat0 + i, _v.Cheats.Get(i));
         Check(IdFullscreen, _fullscreen); Check(IdMenuBar, _v.MenuBar);
@@ -343,6 +366,12 @@ internal static unsafe partial class Window
             case IdPause: KeyCommand('P'); return;
             case IdCrt: _v.Crt = !_v.Crt; Notice(_v.Crt ? "CRT LOOK: ON" : "CRT LOOK: OFF"); SettingsChanged(false); Present(); return;
             case IdFps: _v.ShowFps = !_v.ShowFps; SettingsChanged(false); Present(); return;
+            case >= IdBright0 and < IdBright0 + 5: _v.Brightness = id - IdBright0; ApplyColor(); Notice($"BRIGHTNESS {_v.Brightness + 1}"); SettingsChanged(false); return;
+            case IdNatural or IdVivid: _v.Vivid = id == IdVivid; ApplyColor(); Notice(_v.Vivid ? "COLOUR: VIVID" : "COLOUR: NATURAL"); SettingsChanged(false); return;
+            case >= IdBlind0 and < IdBlind0 + 4:
+                _v.ColorBlind = id - IdBlind0; ApplyColor();
+                Notice("COLOUR-BLIND ASSIST: " + new[] { "OFF", "PROTANOPIA", "DEUTERANOPIA", "TRITANOPIA" }[_v.ColorBlind]);
+                SettingsChanged(false); return;
             case >= IdVolume0 and < IdVolume0 + 4:
                 _v.Volume = 100 - 25 * (id - IdVolume0);
                 if (_audio != null) _audio.Volume = _v.Volume / 100f;
@@ -350,6 +379,8 @@ internal static unsafe partial class Window
             case IdTurboA: _v.TurboA = !_v.TurboA; Notice(_v.TurboA ? "TURBO A: ON" : "TURBO A: OFF"); SettingsChanged(false); return;
             case IdTurboB: _v.TurboB = !_v.TurboB; Notice(_v.TurboB ? "TURBO B: ON" : "TURBO B: OFF"); SettingsChanged(false); return;
             case IdFeedback: _v.Feedback = !_v.Feedback; Notice(_v.Feedback ? "DAMAGE FEEDBACK: ON" : "DAMAGE FEEDBACK: OFF"); SettingsChanged(false); return;
+            case IdRemap: StartRemap(); return;
+            case IdResetKeys: _v.KeyBinds = new int[8]; _input.SetBinds(_v.KeyBinds); Notice("KEYS: DEFAULTS"); SettingsChanged(false); return;
             case >= IdCheat0 and < IdCheat0 + 6:
                 _v.Cheats.Set(id - IdCheat0, !_v.Cheats.Get(id - IdCheat0));
                 Notice(Cheats.Labels[id - IdCheat0] + (_v.Cheats.Get(id - IdCheat0) ? ": ON" : ": OFF"));
@@ -372,6 +403,8 @@ internal static unsafe partial class Window
                 bool wasFs = _fullscreen;
                 if (wasFs) ToggleFullscreen();
                 _v = new VideoSettings();
+                ApplyColor();
+                _input.SetBinds(_v.KeyBinds);
                 Win32.SetMenu(_hwnd, _menuBar);
                 SettingsChanged(true);
                 return;

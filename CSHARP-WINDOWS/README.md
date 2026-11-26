@@ -40,6 +40,7 @@ anyway**, or right-click the file → Properties → **Unblock**.
 | F1 | help: every key on screen (the game pauses under it) |
 | F2 | FPS counter (frames per second + time per frame; also Video › Show FPS) |
 | Game › Turbo B / Turbo A | a held button repeats (rapid sword with B) |
+| Game › Remap keys... | choose your own key for each button (on-screen prompts; Backspace keeps, Esc cancels); Reset keys to the defaults undoes it |
 | Game › Damage feedback | the controller rumbles when you are hit and a heartbeat plays while life is low; in HD the screen edges also flash red and pulse |
 | F9 | graphics: Original → Enhanced (16-bit) → Enhanced (32-bit) → HD engine (GPU) |
 | F5 | reload the graphics pack |
@@ -116,6 +117,9 @@ sound of the port. You can switch at any time, and the choice is saved. CD quali
 `--remaster` through the remastered one (music ids `0x14`, `0x15`, `0x1B` are full songs).
 
 ### Graphics: Original, Enhanced (16-bit), Enhanced (32-bit) or HD
+**Video › Display** sets brightness (5 steps), Natural or Vivid colour, and a colour-blind assist for protanopia,
+deuteranopia or tritanopia (colours that would look alike are shifted apart), in every graphics mode.
+
 **Video › CRT look** gives Original graphics the look of a TV: scanlines and an RGB aperture mask.
 
 HD › Smooth outlines (on by default) turns pixel stair-steps into smooth curves (characters, rocks, shores).

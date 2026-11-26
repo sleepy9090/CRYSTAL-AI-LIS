@@ -70,6 +70,12 @@ internal sealed class VideoSettings
     public bool Crt;
     /// <summary>T49: FPS counter on screen (F2 / Video > Show FPS; ini show_fps=1)</summary>
     public bool ShowFps;
+    /// <summary>T60 Video > Display: brightness 0..4 (2 = as is), vivid colour, colour-blind assist (0 off, 1 protan, 2 deutan,
+    /// 3 tritan); ini brightness=, vivid=, colorblind=</summary>
+    public int Brightness = 2, ColorBlind;
+    /// <summary>T61 Game > Controls: one extra key per button (Input.Order; 0 = none); ini keybinds=a:58,b:5A,..</summary>
+    public int[] KeyBinds = new int[8];
+    public bool Vivid;
     /// <summary>T57: damage feedback (Game menu; ini feedback=1): HD red flash / low-life pulse, controller rumble</summary>
     public bool Feedback = true;
     public static int Turbo(int buttons, int frame, bool a, bool b)
@@ -187,6 +193,10 @@ internal sealed class VideoSettings
         $"volume={Volume}",
         $"crt={(Crt ? 1 : 0)}",
         $"show_fps={(ShowFps ? 1 : 0)}",
+        $"brightness={Brightness}",
+        $"keybinds={(KeyBinds.All(k => k == 0) ? "none" : string.Join(",", Enumerable.Range(0, 8).Where(i => KeyBinds[i] != 0).Select(i => $"{Input.Names[i].ToLowerInvariant()}:{KeyBinds[i]:X2}")))}",
+        $"vivid={(Vivid ? 1 : 0)}",
+        $"colorblind={ColorAdjust.BlindNames[ColorBlind]}",
         $"feedback={(Feedback ? 1 : 0)}",
         $"audio_mute={(AudioMute == 0 ? "none" : string.Join(",", ChannelNames.Where((_, i) => (AudioMute >> i & 1) != 0)))}",
         $"crossfeed={(Crossfeed ? 1 : 0)}",
@@ -265,6 +275,17 @@ internal sealed class VideoSettings
                 case "volume": if (int.TryParse(val, out int vol)) v.Volume = Math.Clamp(vol, 0, 100); break;
                 case "crt": v.Crt = val == "1"; break;
                 case "show_fps": v.ShowFps = val == "1"; break;
+                case "brightness": if (int.TryParse(val, out int br)) v.Brightness = Math.Clamp(br, 0, 4); break;
+                case "vivid": v.Vivid = val == "1"; break;
+                case "keybinds":
+                    foreach (var kb in val.Split(','))
+                    {
+                        var kp = kb.Split(':');
+                        int bi = kp.Length == 2 ? Array.IndexOf(Input.Names, kp[0].ToUpperInvariant()) : -1;
+                        if (bi >= 0 && int.TryParse(kp[1], System.Globalization.NumberStyles.HexNumber, null, out int vk) && vk is > 0 and < 256) v.KeyBinds[bi] = vk;
+                    }
+                    break;
+                case "colorblind": { int cb = Array.IndexOf(ColorAdjust.BlindNames, val); if (cb >= 0) v.ColorBlind = cb; break; }
                 case "feedback": v.Feedback = val == "1"; break;
                 case "audio_mute":
                 {
