@@ -559,3 +559,20 @@ CSHARP-WINDOWS/
     **Screenshot menu (P6):** Game › Take screenshot (id 109, `--menu screenshot`, = F12) and Game › Open screenshots
     folder (id 110, `ShellExecuteW` "open" on `Pictures\re-c`). `Window.ShotPath` adds `_2`, `_3` .. so shots in the same
     second do not overwrite each other. Test `win_screenshot`. (Under Wine "My Pictures" is the Linux ~/Pictures.)
+    **Playtest recordings (P7):** the user's two screen recordings (`issues/*.mp4`, Win 11 / GTX 1080, 57-60 FPS at
+    5-12 ms per frame) were decoded (GStreamer / ffmpeg) into `out/issues/` and measured with new tools:
+    `tools/wav_events.py` (clipping, clicks = second-difference spikes, dropouts, with times), `tools/wav_dc.py` (mean /
+    AC per window), `tools/wav_dump.py` (samples around a time). **The crackle was a DC offset**: seconds-long constant
+    levels of −23 000 to −32 700 (pinned at the limiter), jumping = pops. Reproduced offline with the test runner's new
+    `--playwav STATE OUT SECONDS [mode] [KEYS]` (the game from a state through the mixer + ambience; `PLAY_MUTE` /
+    `PLAY_AMB` to isolate): every melodic voice produced it. `Orchestra.Saw` / `Square` wrapped the phase with a single
+    `-= 1`, so a step > 1 (a frequency above the output rate: a triangle period near 0 ≈ 56 kHz, effect sweeps) left
+    the phase growing forever = a huge constant on every later note. Now: step clamped to 0.45, `ph -= floor(ph)`, NaN
+    reset; voices track 20 Hz-12 kHz and keep their pitch while silent; a 15 Hz DC blocker + NaN guard on the
+    orchestra's output. `win_orchestra`: the 20 s group09 fight that pinned at −32 700 now has a largest 1 s mean of 4
+    and no clipped samples. The fire ambience's crackle was raw high-passed steps (408 "clicks" in 30 s of a lava cave):
+    now soft band-passed pops (1 click left, as with no ambience). **Widescreen**: the recordings showed sides on the
+    title / name-entry screens (black pixels matched any dark map) and wrong strips on plain lines; per-line checks now
+    ignore black-on-black samples (24 real samples needed), accept the split / shake offsets only at 93 % on lines with
+    detail (4+ colour changes), lines without evidence turn off after 3 frames, and the sides only exist in gameplay
+    (`Widescreen.Active`: main_state 1, not sub_state 0 / 1 / `$13`).

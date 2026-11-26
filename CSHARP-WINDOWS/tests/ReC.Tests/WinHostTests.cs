@@ -24,6 +24,40 @@ internal static partial class Program
     }
 
     /// <summary>--cdwav ID OUT.wav SECONDS [cd|remaster|orchestra] [MUTE]: a music id through the CD path (T50 listening / analysis)</summary>
+    /// <summary>--playwav STATE OUT.wav SECONDS [orchestra|cd|remaster] [KEYS..]: the game itself from a state (music, effects,
+    /// scene changes) through the CD mixer + ambient sounds (fire + cave + outdoor beds on), mixed as AudioOut does</summary>
+    private static int WinTests_PlayWav(string[] a)
+    {
+        var d = TheData.Value;
+        string mode = a.Length > 4 ? a[4] : "orchestra";
+        var m = new Machine(d, _ => { }); m.Reset();
+        var st = StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", a[1] + ".json"));
+        m.LoadState(st);
+        var mix = new CdMixer { Remaster = mode == "remaster", Orchestra = mode == "orchestra", Mute = int.Parse(Environment.GetEnvironmentVariable("PLAY_MUTE") ?? "0") };
+        mix.Chip = () => m.Apu;
+        m.Apu.SetOutput(CdMixer.InRate, null);
+        m.Apu.OutChannels = mix.Push;
+        var amb = Environment.GetEnvironmentVariable("PLAY_AMB") == "0" ? new Ambience() : new Ambience { Hot = 1, Cave = 0.5f, Outdoor = 0.3f };
+        var keys = Keys.Parse(a.Skip(5));
+        int f0 = st.Frame0 ?? st.Frame;
+        var pcm = new List<short>(); var tmp = new List<short>();
+        double sec = double.Parse(a[3], System.Globalization.CultureInfo.InvariantCulture);
+        for (int f = 0; f < (int)(sec * 60.0988); f++)
+        {
+            m.RunFrame(keys.TryGetValue(f0 + m.Frame, out int b) ? b : 0);
+            tmp.Clear(); mix.Take(tmp);
+            for (int i = 0; i + 1 < tmp.Count; i += 2)
+            {
+                var (al, ar) = amb.Next();
+                pcm.Add((short)Math.Clamp(Math.Round(tmp[i] + al), -32768, 32767));
+                pcm.Add((short)Math.Clamp(Math.Round(tmp[i + 1] + ar), -32768, 32767));
+            }
+        }
+        File.WriteAllBytes(a[2], WavOut.WavBytes(pcm, 2, CdMixer.OutRate));
+        Console.WriteLine($"wrote {a[2]}: {pcm.Count / 2.0 / CdMixer.OutRate:F1} s ({mode} + ambience)");
+        return 0;
+    }
+
     private static int WinTests_CdWav(string[] a)
     {
         int id = a[1].StartsWith("0x") ? Convert.ToInt32(a[1][2..], 16) : int.Parse(a[1]);
@@ -1022,6 +1056,34 @@ internal static partial class Program
             int co = Clicks(many), cc = Clicks(manyCd);
             Console.WriteLine($"  win_orchestra: clicks in 60 s of music: orchestra {co}, CD path {cc}");
             True(co <= 15, $"orchestra instruments (no drums): almost no clicks ({co} in 60 s; the chip path's square edges count {cc})");
+            // playtest 5 (from the recordings): the oscillators' phase grew forever when a step exceeded 1 (frequency above
+            // the output rate: a triangle period near 0, effect sweeps) = a huge DC offset on every later note, pinned at
+            // the limiter, popping whenever it changed
+            {
+                double ph = 0, mx = 0;
+                for (int i = 0; i < 10000; i++) mx = Math.Max(mx, Math.Abs(Orchestra.Saw(ref ph, 1.7 + i * 0.001)));
+                True(mx <= 2.5 && ph >= 0 && ph < 1, $"saw bounded at any step (max {mx:F2})");
+                var orch2 = new Orchestra(); var apu2 = new ReC.Nes.Apu();
+                apu2.Write(0x4015, 0x0F); apu2.Write(0x4008, 0xFF); apu2.Write(0x400A, 1); apu2.Write(0x400B, 0x08);
+                double sum = 0; int n2 = 0;
+                for (int i = 0; i < 44100; i++) { var (l, _) = orch2.Render(apu2, 0, 0); if (i > 22050) { sum += l; n2++; } }
+                True(Math.Abs(sum / n2) < 0.005, $"a triangle at period 1 (56 kHz): no DC ({sum / n2:F4})");
+                var mf = new Machine(d, _ => { }); mf.Reset();
+                var stf = StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", "group09.json"));
+                mf.LoadState(stf);
+                var mixf = new CdMixer { Orchestra = true };
+                mixf.Chip = () => mf.Apu;
+                mf.Apu.SetOutput(CdMixer.InRate, null);
+                mf.Apu.OutChannels = mixf.Push;
+                var kf = Keys.Parse("2531:UP:50 2585:RIGHT:330 2931:B:4 2951:B:4 2971:B:4 2990:RIGHT:21 3022:B:3 3040:B:5 3061:RIGHT:29 3101:B:4 3121:B:4 3141:B:4 3161:B:4".Split(' '));
+                var fight = new List<short>();
+                for (int f = 0; f < 60 * 20; f++) { mf.RunFrame(kf.TryGetValue(2506 + mf.Frame, out int b) ? b : 0); mixf.Take(fight); }
+                double worst = 0;
+                for (int k = 0; k + 88200 <= fight.Count; k += 88200) worst = Math.Max(worst, Math.Abs(fight.Skip(k).Take(88200).Average(x => (double)x)));
+                int clipped = fight.Count(x => Math.Abs((int)x) >= 32700);
+                Console.WriteLine($"  win_orchestra: 20 s fight (group09): largest 1 s mean {worst:F0}, {clipped} clipped samples");
+                True(worst < 500 && clipped == 0, "the fight that pinned the output at -32700 now stays centred");
+            }
             // playtest 4: a direct DMC level jump (0 -> 100, e.g. at a scene change) ramps instead of stepping (a pop)
             {
                 var orch = new Orchestra(); var apu = new ReC.Nes.Apu();
@@ -1134,7 +1196,8 @@ internal static partial class Program
                 inDrip = loud;
             }
             True(drips >= 3, $"cave drips ({drips} in 12 s)");
-            True(Kurt(h.L) > 4, $"fire crackles (kurtosis {Kurt(h.L):F1})");
+            double maxD2 = Enumerable.Range(2, h.L.Length - 2).Max(i => Math.Abs(h.L[i] - 2 * h.L[i - 1] + h.L[i - 2]));
+            True(Kurt(h.L) > 3.1 && maxD2 < 3000, $"fire pops: present (kurtosis {Kurt(h.L):F1}) but soft (largest step {maxD2:F0}, no clicks)");
             var f = new Ambience { Outdoor = 1, Cave = 1 };
             for (int i = 0; i < 44100 * 3; i++) f.Next();
             f.Outdoor = f.Cave = 0;
@@ -1531,62 +1594,6 @@ internal static partial class Program
                 }
             }
             {
-                // dbg black: on lines not verified as map, is it the tiles (map / scroll) or the pixels (CHR banks) that differ?
-                foreach (string name in new[] { "group81", "group2b", "town02_enter", "group18", "group05", "bosse2" })
-                {
-                    var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, name + ".json")));
-                    m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
-                    var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
-                    var wd = new Widescreen();
-                    long lines = 0, okL = 0, tileSame = 0, tileTot = 0, pixSameWhenTile = 0;
-                    var gt = new int[16];
-                    for (int f = 0; f < 40; f++)
-                    {
-                        wd.BeforeFrame(m, d, async: false);
-                        m.RunFrame(0); r.Build(m.Ppu.Capture);
-                        int bar = Gpu.SplitGap(r).To; if (bar <= 0) bar = 232;
-                        wd.AfterFrame(r.Fb, m.Ppu.Pal, bar, r.LinePal, r.LineScroll, r.Sp);
-                        var c = wd.Cache;
-                        if (c == null || f < 10) continue;
-                        for (int y = 8; y < bar; y++)
-                        {
-                            if (r.Fb.Skip(y * 256 + 8).Take(248).All(q => (q & 63) == 0x0F)) continue;
-                            lines++; if (wd.LineOk[y]) { okL++; continue; }
-                            int ay = y + wd.CamY;
-                            for (int x = 8; x < 256; x += 3)
-                            {
-                                int ax = x + wd.CamX, i = y * 256 + x;
-                                if (ax < 0 || ay < 0 || ax >= c.W || ay >= c.H || r.Sp[i] != 0 || (r.BgTag[i] & ReC.Nes.Ppu.TagValid) == 0) continue;
-                                tileTot++;
-                                int ct = (int)(c.Px[ay * c.W + ax] >> 4 & 0x1FFF), st = r.BgTag[i] & 0x1FFF;
-                                if (ct == st) { tileSame++; if (AreaCache.Color(c.Px[ay * c.W + ax], r.LinePal[y]) == (r.Fb[i] & 63)) pixSameWhenTile++; }
-                                else if ((ct & 0x3F) == (st & 0x3F)) gt[0]++;                 // same tile in another CHR bank
-                            }
-                        }
-                    }
-                    if (wd.Cache is { } cc)
-                    {
-                        // the best offset of the whole screen against the area (tile numbers, every 8th pixel)
-                        int bestN = -1, bx = 0, by = 0;
-                        for (int oy = -cc.H; oy < cc.H; oy += 8)
-                            for (int ox = -cc.W; ox < cc.W; ox += 8)
-                            {
-                                int n = 0;
-                                for (int y = 12; y < 180; y += 8)
-                                    for (int x = 12; x < 256; x += 8)
-                                    {
-                                        int ax = x + ox, ay = y + oy;
-                                        if (ax < 0 || ay < 0 || ax >= cc.W || ay >= cc.H) continue;
-                                        if ((int)(cc.Px[ay * cc.W + ax] >> 4 & 0x1FFF) == (r.BgTag[y * 256 + x] & 0x1FFF)) n++;
-                                    }
-                                if (n > bestN) { bestN = n; bx = ox; by = oy; }
-                            }
-                        Console.WriteLine($"  dbg black {name}: area {cc.W}x{cc.H}, camera ({wd.CamX},{wd.CamY}), best tile offset ({bx},{by}) with {bestN} / {21 * 31} tiles; area ${m.Rd(0x6C):X2} grid {m.Rd(0x62FC) + 1}x{m.Rd(0x62FD) + 1}");
-                    }
-                    Console.WriteLine($"  dbg black {name}: {okL}/{lines} lines map; on the others: same tile {100.0 * tileSame / Math.Max(1, tileTot):F0} % (pixel then same {100.0 * pixSameWhenTile / Math.Max(1, tileSame):F0} %), same tile number in another bank {100.0 * gt[0] / Math.Max(1, tileTot):F0} %");
-                }
-            }
-            {
                 // playtest 4: a screen shake (every line 3 px off the camera) is still map; area changes do not allocate
                 // new big arrays; side pixels outside the area are flagged "no map" (the HD fill)
                 var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, "group09.json")));
@@ -1608,7 +1615,7 @@ internal static partial class Program
                 for (int k = 0; k < 4; k++) wd.AfterFrame(shFb, m.Ppu.Pal, 160, r.LinePal, shSc, r.Sp);
                 int okL = Enumerable.Range(20, 120).Count(y => wd.LineOk[y] && wd.LineDx[y] == 3);
                 Console.WriteLine($"  win_wide: screen shaken 3 px: {okL} / 120 lines verified at offset 3");
-                True(okL > 90, "a screen shake keeps the sides (the line's scroll against the map)");
+                True(okL >= 80, "a screen shake keeps the sides on most lines (the line's scroll against the map; plain lines need more proof)");
                 // area changes: walk right through group18's exit and on; after the first build, no big allocations
                 var m2 = new Machine(d, _ => { }); m2.Reset(); m2.LoadState(StateFile.Load(Path.Combine(dir, "group18.json")));
                 var w2 = new Widescreen();
@@ -1685,7 +1692,7 @@ internal static partial class Program
                 var wide = new Widescreen();
                 var kp = Keys.Parse("1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80".Split(' '));
                 var lines = new bool[240];
-                string? err = null; int shown = 0;
+                string? err = null; int shown = 0, outsidePlay = 0;
                 for (int f = 0; f < 2600 && err == null; f++)
                 {
                     try
@@ -1697,11 +1704,13 @@ internal static partial class Program
                         wide.MapLines(r.Fb, 190, 0.5f, lines);
                         wr.Widen(r, wide, lines);
                         if (wide.Show > 0.5f) shown++;
+                        if (wide.LineOk.Any(o => o) && !(m.Rd(0x40) == 1)) outsidePlay++;
                     }
                     catch (Exception ex) { err = $"frame {f} (main {m.Rd(0x40)} sub {m.Rd(0x41)}): {ex.GetType().Name} {ex.Message}"; }
                 }
                 Console.WriteLine($"  win_wide: power-on run: {(err ?? "no exception")}, sides shown in {shown} frames");
                 True(err == null, "widescreen on through name entry: no exception");
+                True(outsidePlay == 0, $"no sides on title / intro / name entry ({outsidePlay} frames)");
             }
             // menus / title: no match, no sides
             var mt = new Machine(d, _ => { }); mt.Reset();

@@ -27,6 +27,7 @@ internal sealed class Orchestra
     private double _dmcX, _dmcY;
     private double _dmcLp;
     private double _dmcRamp, _dmcStep;
+    private double _oxL, _oyL, _oxR, _oyR;
     private readonly float[] _pre = new float[2048];
     private int _pi;
     private readonly Freeverb _hallL = new(0, 0.86f, 1.45), _hallR = new(23, 0.86f, 1.45);
@@ -68,7 +69,11 @@ internal sealed class Orchestra
         r += _hallR.Process(ds) * 0.55;
         l = _hsL.Process(_lsL.Process(l));
         r = _hsR.Process(_lsR.Process(r));
-        return (l * Level, r * Level);
+        // a 15 Hz DC blocker on both sides, and a guard: any non-finite value resets the orchestra's output stage
+        if (!double.IsFinite(l) || !double.IsFinite(r)) { l = r = 0; _oxL = _oyL = _oxR = _oyR = 0; }
+        double ol = l - _oxL + 0.99786 * _oyL; _oxL = l; _oyL = ol;
+        double orr = r - _oxR + 0.99786 * _oyR; _oxR = r; _oyR = orr;
+        return (ol * Level, orr * Level);
     }
 
     public enum Kind { Violins, Horns, Bass }
@@ -98,16 +103,20 @@ internal sealed class Orchestra
     /// <summary>band-limited saw, phase in [0, 1)</summary>
     public static double Saw(ref double ph, double dt)
     {
+        dt = Math.Clamp(dt, 0, 0.45);                       // never at or above the Nyquist frequency
         ph += dt;
-        if (ph >= 1) ph -= 1;
+        if (ph >= 1) ph -= Math.Floor(ph);
+        if (!(ph >= 0 && ph < 1)) ph = 0;                  // NaN / infinity: start over
         return 2 * ph - 1 - PolyBlep(ph, dt);
     }
 
     /// <summary>band-limited pulse of the given duty</summary>
     public static double Square(ref double ph, double dt, double duty)
     {
+        dt = Math.Clamp(dt, 0, 0.45);
         ph += dt;
-        if (ph >= 1) ph -= 1;
+        if (ph >= 1) ph -= Math.Floor(ph);
+        if (!(ph >= 0 && ph < 1)) ph = 0;
         double t2 = ph + 1 - duty; if (t2 >= 1) t2 -= 1;
         return (ph < duty ? 1 : -1) + PolyBlep(ph, dt) - PolyBlep(t2, dt) - (2 * duty - 1);
     }
@@ -137,7 +146,9 @@ internal sealed class Orchestra
         /// <summary>follow the target pitch / loudness; note = a new note started</summary>
         private void Track(bool on, double hz, double vol, bool note)
         {
+            hz = Math.Clamp(hz, 20, 12000);                     // an orchestra voice: 20 Hz - 12 kHz
             double lf = Math.Log(hz);
+            if (!on && !note && _logF > 0) lf = _logF;           // silent: keep the last pitch for the release
             if (note || _logF < 0) { _logF = lf; _age = 0; }
             else _logF += (lf - _logF) * Coef(0.003);
             _age += 1 / Fs;

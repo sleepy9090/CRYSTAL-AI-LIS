@@ -7,3 +7,5 @@ re-c.sav
 __pycache__/
 # stray icon preview from the first make_icon.py run (previews now go to out/)
 src/ReC.Win/app_256.png
+# playtest recordings from the user (large videos, not part of the project)
+issues/

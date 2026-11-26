@@ -126,6 +126,8 @@ internal sealed class Widescreen
     private uint[]? _spare;                                   // the previous cache's pixels, for the next build
     private int _bad;
     public int CamX, CamY;
+    /// <summary>gameplay with an area loaded (main_state 1, not new-game init / area load / the wake-up scene): sides only then</summary>
+    public bool Active;
     /// <summary>the area pixel at screen (0, 0) used for the sides: the camera + a correction (Search) for areas where the
     /// camera bytes and the screen disagree (e.g. a scenario or a keep-position map: the screen shows another place)</summary>
     public int MapX => CamX + _corrX;
@@ -150,7 +152,8 @@ internal sealed class Widescreen
         }
         // gameplay with the area loaded: not new-game init (0), area load (1), the wake-up cut-scene ($13)
         int sub = m.Rd(0x41);
-        if (m.Rd(0x40) != 1 || sub is 0 or 1 or 0x13 || m.Rd(0x62FC) > 7 || m.Rd(0x62FD) > 15) return;
+        Active = m.Rd(0x40) == 1 && sub is not (0 or 1 or 0x13);
+        if (!Active || m.Rd(0x62FC) > 7 || m.Rd(0x62FD) > 15) return;
         var (area, full) = AreaCache.Keys(m);
         if (area != _areaKey) { _areaKey = area; _spare ??= Cache?.Px; Cache = null; Show = 0; _bad = 0; _fullKey = 0; }   // another area: drop at once
         if (full == _fullKey || _building != null) return;
@@ -174,7 +177,7 @@ internal sealed class Widescreen
     public void AfterFrame(byte[] fb, byte[] pal, int hudTop, byte[][]? linePal = null, int[]? lineScroll = null, byte[]? sp = null)
     {
         var c = Cache;
-        if (c == null)
+        if (c == null || !Active)
         {
             Array.Clear(LineOk); Match = false; _bad = 8;
             Show = Math.Max(0, Show - 0.25f);
@@ -190,7 +193,7 @@ internal sealed class Widescreen
         {
             if (y < 8 || y >= hudTop) { LineOk[y] = false; _lineBad[y] = 0; continue; }
             var p = linePal?[y] ?? pal;
-            int bestN = 0, bestS = 0, bdx = 0, bdy = 0;
+            int bestN = 0, bestS = 0, bdx = 0, bdy = 0, worstN = 0, worstS = 0;
             for (int cand = 0; cand < 3; cand++)
             {
                 // 0: the camera; 1: the line's scroll relative to the first line (a mid-frame split); 2: the line's scroll
@@ -213,21 +216,29 @@ internal sealed class Widescreen
                     }
                     if (dx == 0 && dy == 0) continue;
                 }
-                int ay = y + MapY + dy, n = 0, s = 0;
+                int ay = y + MapY + dy, n = 0, s = 0, changes = 0, last = -1;
                 if (ay < 0 || ay >= c.H) continue;
                 for (int x = 8; x < 256; x += 3)     // every 3rd: a 2- or 4-pixel pattern cannot fake a match
                 {
                     int i = y * 256 + x, ax = x + MapX + dx;
                     if (ax < 0 || ax >= c.W || (sp != null && sp[i] != 0)) continue;
+                    int fc = fb[i] & 63, mc = AreaCache.Color(c.Px[ay * c.W + ax], p);
+                    if (fc == 0x0F && mc == 0x0F) continue;          // black on both: no evidence (a menu's black matches any dark map)
+                    if (last >= 0 && fc != last) changes++;
+                    last = fc;
                     n++;
-                    if ((fb[i] & 63) == AreaCache.Color(c.Px[ay * c.W + ax], p)) s++;
+                    if (fc == mc) s++;
                 }
-                if (n >= 12 && s * bestN >= bestS * n && (bestN == 0 || s * bestN > bestS * n)) { bestN = n; bestS = s; bdx = dx; bdy = dy; }
+                // the camera needs 24 samples at 88 %; the other offsets (split, shake) 93 % on a line with detail (4+ colour
+                // changes), or a plain line (grass, sand) could match some other place by chance
+                bool okCand = n >= 24 && (cand == 0 ? s * 100 >= n * 88 : s * 100 >= n * 93 && changes >= 4);
+                if (okCand && (bestN == 0 || s * bestN > bestS * n)) { bestN = n; bestS = s; bdx = dx; bdy = dy; }
+                else if (bestN == 0 && cand == 0 && n >= 24) { worstN = n; worstS = s; }
             }
-            bool now = bestN >= 12 && bestS * 100 >= bestN * 88;
+            bool now = bestN > 0;
+            if (!now && worstN > 0) { bestN = worstN; bestS = worstS; }     // for the "clearly wrong" test below
             if (now) { LineOk[y] = true; _lineBad[y] = 0; LineDx[y] = bdx; LineDy[y] = bdy; }
-            else if (bestN < 12) { }                                        // all sprites / outside: keep the last state
-            else if (bestS * 2 < bestN || ++_lineBad[y] >= 3) LineOk[y] = false;   // clearly wrong: off now; borderline: after 3
+            else if ((bestN >= 24 && bestS * 2 < bestN) || ++_lineBad[y] >= 3) LineOk[y] = false;   // clearly wrong: off now; borderline / no evidence: after 3
             lines++;
             if (LineOk[y]) ok++;
         }

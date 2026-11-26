@@ -19,7 +19,8 @@ internal sealed class Ambience
     private uint _rng = 0x9E3779B9;
     private double _gust, _gustT, _gustTo;
     private Bp _wl, _wr, _whl, _whr;
-    private double _lpl, _lpr, _ru1, _ru2, _roar, _crk, _crkHp;
+    private double _lpl, _lpr, _ru1, _ru2, _roar, _crk, _crkT;
+    private Bp _crb;
     // birds
     private int _birdWait = 44100 * 3, _notes, _noteT, _noteLen, _gap;
     private double _bf, _bdf, _bph, _bpan;
@@ -139,14 +140,16 @@ internal sealed class Ambience
         _echo[_ei] = (float)(drip + (e1 + e2) * 0.3);
         _ei = (_ei + 1) & 16383;
         l += drip + e1 * 0.7; r += drip * 0.8 + e2 * 0.7;
-        // fire: random crackles (high-passed clicks) over a low roar
+        // fire: soft wood pops (a noise burst rising over ~1 ms and dying over ~6 ms, band-passed ~1.6 kHz) over a low roar.
+        // playtest 4: raw high-passed clicks read as the audio crackling (408 steps in 30 s of a lava cave)
         if (_wh > 1e-4)
         {
-            if (Uni() < 22 / Fs) _crk = (Uni() - 0.5) * 9000;
-            _crk *= 0.93;
-            double hp = _crk - _crkHp; _crkHp = _crk;
+            if (Uni() < 9 / Fs) { _crkT = 0.4 + 0.6 * Uni(); }
+            if (_crkT > 0) { _crk += (_crkT - _crk) * 0.03; if (_crk >= _crkT * 0.97) _crkT = 0; }
+            else _crk *= 0.996;
+            double pop = _crb.Run(White(), 1600, 1.4) * _crk * 2600;
             _roar += (White() - _roar) * 0.03;
-            double f = (hp * 1.3 + _roar * 4800) * _wh;
+            double f = (pop + _roar * 4800) * _wh;
             l += f * (0.8 + 0.4 * _gust); r += f * (1.2 - 0.4 * _gust);
         }
         return (l, r);
