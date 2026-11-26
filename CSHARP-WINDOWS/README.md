@@ -40,6 +40,7 @@ anyway**, or right-click the file → Properties → **Unblock**.
 | F1 | help: every key on screen (the game pauses under it) |
 | F2 | FPS counter (frames per second + time per frame; also Video › Show FPS) |
 | Game › Turbo B / Turbo A | a held button repeats (rapid sword with B) |
+| Game › Damage feedback | the controller rumbles when you are hit and a heartbeat plays while life is low; in HD the screen edges also flash red and pulse |
 | F9 | graphics: Original → Enhanced (16-bit) → Enhanced (32-bit) → HD engine (GPU) |
 | F5 | reload the graphics pack |
 | M | mute |
@@ -118,6 +119,8 @@ sound of the port. You can switch at any time, and the choice is saved. CD quali
 **Video › CRT look** gives Original graphics the look of a TV: scanlines and an RGB aperture mask.
 
 HD › Smooth outlines (on by default) turns pixel stair-steps into smooth curves (characters, rocks, shores).
+
+HD › Modern font (on by default) draws the dialog and story text with a crisp modern font instead of the 8×8 pixel font.
 
 HD › Tilt-shift depth of field (on by default) softens the top and bottom of the playfield like a miniature diorama
 (the "HD-2D" look); the middle, where you play, stays sharp.

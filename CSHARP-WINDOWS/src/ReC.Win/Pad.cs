@@ -85,6 +85,8 @@ internal sealed unsafe class Pad
     ];
 
     private readonly delegate* unmanaged<uint, XInputState*, uint> _getState;
+    private readonly delegate* unmanaged<uint, ushort*, uint> _setState;   // T57: XInputSetState (XINPUT_VIBRATION = 2 ushorts)
+    private double _rumbleUntil;
     private int _slot = -1;                  // connected controller slot, -1 = none
     private double _nextPoll;                // ms (Window clock) of the next scan while none is connected
 
@@ -99,6 +101,8 @@ internal sealed unsafe class Pad
             if (!System.Runtime.InteropServices.NativeLibrary.TryLoad(dll, out IntPtr lib)) continue;
             if (!System.Runtime.InteropServices.NativeLibrary.TryGetExport(lib, "XInputGetState", out IntPtr fn)) continue;
             _getState = (delegate* unmanaged<uint, XInputState*, uint>)fn;
+            if (System.Runtime.InteropServices.NativeLibrary.TryGetExport(lib, "XInputSetState", out IntPtr sf))
+                _setState = (delegate* unmanaged<uint, ushort*, uint>)sf;
             Api = dll;
             break;
         }
@@ -128,7 +132,24 @@ internal sealed unsafe class Pad
             return 0;
         }
         Raw = s.Buttons;
+        if (_rumbleUntil > 0 && nowMs >= _rumbleUntil) { _rumbleUntil = 0; SetMotors(0, 0); }
         return Buttons(s.Buttons, s.ThumbLX, s.ThumbLY);
+    }
+
+    /// <summary>T57: rumble the connected controller (low / high frequency motor 0..1) for `ms`; stopped by a later Read</summary>
+    public void Rumble(double low, double high, double ms, double nowMs)
+    {
+        if (_slot < 0 || _setState == null) return;
+        SetMotors(low, high);
+        _rumbleUntil = nowMs + ms;
+    }
+
+    private void SetMotors(double low, double high)
+    {
+        if (_slot < 0 || _setState == null) return;
+        ushort* v = stackalloc ushort[2];
+        v[0] = (ushort)(Math.Clamp(low, 0, 1) * 65535); v[1] = (ushort)(Math.Clamp(high, 0, 1) * 65535);
+        _setState((uint)_slot, v);
     }
 
     /// <summary>XInput buttons + left stick -> NES byte (stick Y is positive = up in XInput).</summary>

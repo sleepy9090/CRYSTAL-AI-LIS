@@ -140,6 +140,7 @@ internal static unsafe partial class Window
             _scene ??= new HdScene(_nesRgb);
             _scene.Build(fb, tags, pal, _enh.HdLift, _raster!.LineScroll, _frameNo);
             _gpu.Hp = _m.Mem.RamBytes[0x03C1];               // T35: LIFE meter fill (HudHpBar draws from it)
+            _gpu.Hurt = _v.Feedback ? Damage.Hurt : 0; _gpu.LowLife = _v.Feedback && Damage.Low;   // T57
             _gpu.Upload(_raster, _scene);
         }
         else
@@ -167,11 +168,13 @@ internal static unsafe partial class Window
     // T18 HD graphics (Gpu.cs): created when HD is chosen, released when another look is (GDI draws again)
     private static Gpu? _gpu;
     private static HdScene? _scene;
+    private static readonly DamageFeedback Damage = new();     // T57
     /// <summary>T54: what the ambient sounds play, from the HD scene (gameplay only; nothing without the HD engine)</summary>
     private static void AmbienceTargets()
     {
         if (_audio == null) return;
         var a = _audio.Amb;
+        a.Heartbeat = _v.Feedback && Damage.Low && !_paused;      // T58
         if (_v.Ambience && HdEngine && _gpu != null && _scene is { } s)
         {
             float lum = s.Mean.R * 0.299f + s.Mean.G * 0.587f + s.Mean.B * 0.114f;
@@ -197,6 +200,7 @@ internal static unsafe partial class Window
         _gpu.SmoothOutlines = _v.HdSmooth;
         _gpu.Ambient = _v.HdAmbient;
         _gpu.TiltShift = _v.HdTilt;
+        _gpu.ModernFont = _v.HdFont;
     }
     private static string _gpuError = "";
     private static bool _gpuTried;
@@ -213,9 +217,18 @@ internal static unsafe partial class Window
         Win32.GetClientRect(_hwnd, out var rc);
         _gpu = Gpu.TryCreate(_hwnd, rc.Right, rc.Bottom, _nesRgb, out _gpuError);
         ApplyHdEffects();
+        string font = "";
+        if (_gpu != null && _m != null)
+        {
+            // T59 modern font: glyphs sized on the game font's 'H' (cap height, top row)
+            var chr = _m.Ppu.Chr;
+            var (top, bottom) = FontInk.InkRows(chr, FontInk.First + 'H');
+            var atlas = top >= 0 ? GlyphAtlas.Render(top, bottom) : null;
+            if (atlas != null) { _gpu.Chr = chr; _gpu.SetGlyphs(atlas); font = $", modern font (caps rows {top}-{bottom})"; }
+        }
         int left = GpuArt();
         if (!_quiet)
-            Console.Error.WriteLine(_gpu != null ? $"[re-c] HD engine: {_gpu.Info}, {_gpu.Slots} pack tiles in the atlas" +
+            Console.Error.WriteLine(_gpu != null ? $"[re-c] HD engine: {_gpu.Info}, {_gpu.Slots} pack tiles in the atlas{font}" +
                                                    (left > 0 ? $" ({left} left out: atlas full)" : "")
                                                  : $"[re-c] HD graphics not available ({_gpuError}): using the 32-bit look");
         _hdFrame = -1;
@@ -407,6 +420,12 @@ internal static unsafe partial class Window
                         if (!_scripted) buttons = VideoSettings.Turbo(buttons, m.Frame, _v.TurboA, _v.TurboB);   // T38
                         m.RunFrame(buttons); _acc -= step; ran = true; ranTotal++;
                         _v.Cheats.Apply(m, (buttons & 0x40) != 0);           // T36 cheats (B = bit 6)
+                        {
+                            var ram = m.Mem.RamBytes;                        // T57 damage feedback: a life drop in SubstPlay
+                            bool playing = ram[0x40] == 1 && ram[0x41] == 8;
+                            if (Damage.Update(ram[0x03C1], ram[0x03C0], playing, m.Frame) && _v.Feedback && !_scripted)
+                                _pad.Rumble(0.35 + 0.65 * Damage.LastHit, 0.25 + 0.5 * Damage.LastHit, 160 + 240 * Damage.LastHit, now);
+                        }
                         rows?.Add(string.Join(',', Csv.CompareRow(m, f)));
                         if (saver != null && m.Frame % 300 == 0) saver.Poll();     // ~5 s
                         if (o.Frames >= 0 && ranTotal >= o.Frames) { _quit = true; break; }

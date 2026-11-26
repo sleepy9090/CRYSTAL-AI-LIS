@@ -422,3 +422,23 @@ CSHARP-WINDOWS/
     **Frosted glass (T56):** while the on-screen display shows (pause, help, notices, FPS), `Draw` also makes the blurred
     1/8 picture (the T53 passes) and binds it to `PSFinal` as t2: under overlay alpha a (×1.6, saturated) the picture
     blends 90 % toward the blur before the overlay is composited — the game behind the pause / help panels is frosted.
+    **Damage feedback (T57, Feedback.cs):** Game › Damage feedback (id 105, ini `feedback=1`, on): after each frame
+    `DamageFeedback.Update(player_hp $03C1, player_hp_max $03C0, SubstPlay ($40 = 1, $41 = 8), frame)`: a drop = a hit
+    (refills never count; the first frame after leaving play is skipped). HD: constant row 20 `Dmg` = (hit flash 1 → 0
+    over 27 frames, low life = hp ≤ max / 4 and > 0): `PSComp` mixes the screen edges toward dark red (flash × 0.65,
+    low life a heartbeat pulse 0.15-0.40 at 1.2 Hz); HUD untouched. Controller: `Pad.Rumble` (XInputSetState, bound
+    with XInputGetState) 160-400 ms, stronger for bigger hits; stopped by a later `Read`. Not when keys are scripted.
+    Test `win_feedback`: group09_check's keys give exactly its 7 contact hits (HitPlayerDamage 26:9410).
+    **Heartbeat (T58):** with Damage feedback on and life low (`DamageFeedback.Low`, not paused), `Ambience.Heartbeat`:
+    lub (55 Hz sine) + dub (48 Hz, 0.7) 0.28 s apart every 0.85 s, ~90 ms decay, linear 0.3 s fade in / out, about
+    −28 dBFS; mixed like the ambient sounds (any audio mode, any graphics mode). Test in `win_ambience`.
+    **Modern font (T59, Glyphs.cs):** HD › Modern font (id 296, `hd_effects` `font`, on). The text font's tiles are
+    ASCII (`$F00` + code in the tags' global numbering, banks `$3C/$3D`; `$40` = the page prompt, kept). At GPU start
+    `GlyphAtlas.Render` draws `$21-$7E` with GDI (Segoe UI semibold, antialiased; Wine substitutes) into 16 × 8 cells of
+    64 px (= 8 NES px at the 8x albedo): the em is scaled so 'H' has the game font's cap height (rows 0-6 from
+    `FontInk.InkRows`) and placed on its top row; glyphs wider than the cell are squeezed. `Gpu.Layers` (with
+    `fontChr`) writes a glyph word into the art map for UI pixels of such tiles: bit 31, code, column / row in the tile,
+    ink / paper colours (`FontInk.Values`: the tile's two most frequent pixel values through the line's palette).
+    `PSAlbedo` draws those pixels from the atlas (t12 `Gly`, 13 SRVs) as paper → ink by coverage; the HUD styling
+    (bevel, gloss) then applies as before. The status bar's own tile set ($E00 range) is unchanged. Test `win_font`
+    (talk16: 3840 glyph pixels, every one's ink / paper = the colour on screen).

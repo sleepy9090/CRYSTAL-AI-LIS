@@ -5,7 +5,7 @@
  "confidence": "observed",
  "environment": null,
  "evidence_format": 2,
- "evidence_id": "ev_3c99cd5e13c9f075c135d3a20d9c5f301746be5336c85acc4ab5402e43d5da00",
+ "evidence_id": "ev_c7678112bf2caa6461a70e81c5cceb153fdb2a219755ccecb4f6d9d3ff3afa4e",
  "evidence_links": [],
  "limitations": [
   "This inspection reads headers, program tables, dynamic symbols, and imports. It does not execute the image or assess exploitability.",
@@ -68,9 +68,9 @@
  ],
  "normalized_result": {
   "artifact": {
-   "bytes": 12636871,
+   "bytes": 12642327,
    "path": "./dist/ReC.exe",
-   "sha256": "47fbb0e2ce3d6b4b039a93cdcc98fef0aa0b684bf74dd72c176e95bec5275f0b"
+   "sha256": "1c97fef8a9451cb41350478915ae6d26e7ea14c0909ebadda56d95dc53c09b2b"
   },
   "format": "pe",
   "images": [
@@ -223,7 +223,7 @@
    "format": "pe",
    "kind": "file",
    "selection": null,
-   "sha256": "47fbb0e2ce3d6b4b039a93cdcc98fef0aa0b684bf74dd72c176e95bec5275f0b"
+   "sha256": "1c97fef8a9451cb41350478915ae6d26e7ea14c0909ebadda56d95dc53c09b2b"
   },
   "local_path": "./dist/ReC.exe",
   "name": "ReC.exe"

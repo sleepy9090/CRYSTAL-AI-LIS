@@ -12,6 +12,9 @@ internal sealed class Ambience
     private const double Fs = 44100;
     /// <summary>targets 0..1, set once per video frame</summary>
     public float Outdoor, Hot, Icy, Cave;
+    /// <summary>T58: a heartbeat while life is low (Damage feedback), any graphics mode</summary>
+    public bool Heartbeat;
+    private double _hbT, _hbA, _hbPh, _hbW;
     private double _wo, _wh, _wi, _wc;
     private uint _rng = 0x9E3779B9;
     private double _gust, _gustT, _gustTo;
@@ -46,15 +49,28 @@ internal sealed class Ambience
 
     private double Uni() => (White() + 1) * 0.5;
 
-    public bool Silent => _wo + _wh + _wi + _wc < 1e-4 && Outdoor + Hot + Icy + Cave <= 0;
+    public bool Silent => _wo + _wh + _wi + _wc < 1e-4 && Outdoor + Hot + Icy + Cave <= 0 && !Heartbeat && _hbW < 1e-4;
 
     /// <summary>one stereo sample (16-bit units)</summary>
     public (double L, double R) Next()
     {
         const double k = 1 / (1.5 * Fs);
         _wo += (Outdoor - _wo) * k * 3; _wh += (Hot - _wh) * k * 3; _wi += (Icy - _wi) * k * 3; _wc += (Cave - _wc) * k * 3;
-        if (_wo + _wh + _wi + _wc < 1e-4 && _da < 1e-3) return (0, 0);
         double l = 0, r = 0;
+        // T58 heartbeat: lub (55 Hz) and dub (48 Hz, softer) 0.28 s apart, every 0.85 s; fades in / out over 0.3 s
+        _hbW = Math.Clamp(_hbW + (Heartbeat ? 1 : -1) / (0.3 * Fs), 0, 1);   // linear: silent again after 0.3 s
+        if (_hbW > 1e-4)
+        {
+            double t0 = _hbT / Fs;
+            if (Math.Abs(t0) < 0.5 / Fs || Math.Abs(t0 - 0.28) < 0.5 / Fs) { _hbA = t0 < 0.1 ? 1 : 0.7; _hbPh = 0; }
+            _hbT = (_hbT + 1) % (0.85 * Fs);
+            double f = t0 < 0.28 ? 55 : 48;
+            _hbPh += f / Fs; if (_hbPh >= 1) _hbPh -= 1;
+            double hb = Math.Sin(2 * Math.PI * _hbPh) * _hbA * 6500 * _hbW;
+            _hbA *= 0.99975;                                       // ~90 ms
+            l += hb; r += hb;
+        }
+        if (_wo + _wh + _wi + _wc < 1e-4 && _da < 1e-3) return (l, r);
         // gusts: a new target every 0.6-2 s, eased
         if (--_gustT <= 0) { _gustTo = Uni(); _gustT = (0.6 + 1.4 * Uni()) * Fs; }
         _gust += (_gustTo - _gust) * (1 / (0.8 * Fs));

@@ -59,6 +59,23 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool Ambient = true;
     /// <summary>T55: tilt-shift depth of field in gameplay (Mat.w)</summary>
     public bool TiltShift = true;
+    /// <summary>T59: text from the glyph atlas (SetGlyphs) instead of the game's 8x8 font</summary>
+    public bool ModernFont = true;
+    /// <summary>T59: the CHR data (font tiles' ink / paper values); null = no modern font</summary>
+    public byte[]? Chr;
+    private void* _glyTex, _glySrv;
+    public bool HasGlyphs => _glySrv != null;
+
+    /// <summary>T59: the glyph atlas (GlyphAtlas.Render) to the GPU</summary>
+    public void SetGlyphs(uint[] atlas)
+    {
+        Release(ref _glySrv); Release(ref _glyTex);
+        MakeTex(GlyphAtlas.W, GlyphAtlas.H, FmtBgra, out _glyTex, out _glySrv);
+        fixed (uint* p = atlas) Update(_glyTex, p, GlyphAtlas.W * 4);
+    }
+    /// <summary>T57: damage feedback from the window (DamageFeedback): hit flash 0..1, low life</summary>
+    public float Hurt;
+    public bool LowLife;
     private float _cineW, _shotStart;
     private (int Y0, int Y1, int X0, int X1) _band;
     private int _cineHold;
@@ -158,7 +175,7 @@ internal sealed unsafe partial class Gpu : IDisposable
 
     private const uint FmtBgra = 87, FmtRgba8 = 28, FmtRgba8U = 30, FmtRg32U = 17, FmtRgba32F = 2, FmtRgba16F = 10;
     private const uint BindSrv = 8, BindRtv = 0x20;
-    private const int NSrv = 12, NConst = 19;
+    private const int NSrv = 13, NConst = 20;
     private static readonly Guid IidTex2D = new("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
 
     private static void** Vt(void* o) => *(void***)o;
@@ -427,9 +444,12 @@ internal sealed unsafe partial class Gpu : IDisposable
     /// ArtMap per pixel: [background, sprite] = atlas slot + 1 (15 bits) | col << 15 | row << 18 | flipH << 21 | flipV << 22 |
     /// fade step << 23 (0 = none)</summary>
     public static void Layers(SceneRaster r, HdScene sc, IReadOnlyDictionary<long, int> slots, IReadOnlyDictionary<long, int> fades,
-        bool[] tileArt, byte[] lay, uint[] artMap, bool edges = false)
+        bool[] tileArt, byte[] lay, uint[] artMap, bool edges = false, byte[]? fontChr = null)
     {
         var fb = r.Fb;
+        // T59: ink / paper pixel values of the text font's glyph tiles (FontInk), when the modern font is on
+        var ink = new (int Ink, int Paper)[0x80];
+        if (fontChr != null) for (int c = 0; c < 0x80; c++) ink[c] = FontInk.Values(fontChr, FontInk.First + c);
         int band = edges ? EdgeBand(r, sc) : 240;
         var (gap0, gap1) = edges ? SplitGap(r) : (0, 0);
         var menuRows = edges ? MenuRows(r, sc) : null;
@@ -475,6 +495,14 @@ internal sealed unsafe partial class Gpu : IDisposable
                 int bt = r.BgTag[i], bkey = bt & (ReC.Nes.Ppu.TagValid | 7 << 19 | 0x1FFF);
                 if (bkey != bk) { bk = bkey; bw = ArtWord(bkey, pal, slots, fades, tileArt); }
                 artMap[i * 2] = bw == 0 ? 0 : bw | PosBits(bt);
+                if (fontChr != null && ui && (bt & ReC.Nes.Ppu.TagValid) != 0 && FontInk.Code(bt & 0x1FFF) is int code and >= 0 && ink[code].Ink >= 0)
+                {
+                    // T59 glyph word: bit 31, ASCII code, column / row in the tile, ink / paper colours
+                    int g = bt >> 19 & 7, pb = g < 4 ? g * 4 : 0x10 + (g - 4) * 4;
+                    int Col(int v) => (v == 0 ? pal[0] : pal[pb + v]) & 63;
+                    artMap[i * 2] = 1u << 31 | (uint)code | (uint)(bt >> 13 & 7) << 7 | (uint)(bt >> 16 & 7) << 10 |
+                                    (uint)Col(ink[code].Ink) << 13 | (uint)Col(ink[code].Paper) << 19;
+                }
                 if (sp != 0)
                 {
                     int st = r.SpTag[i], skey = st & (ReC.Nes.Ppu.TagValid | 7 << 19 | 0x1FFF);
@@ -700,7 +728,7 @@ internal sealed unsafe partial class Gpu : IDisposable
     /// <summary>this frame: layers + art + scene to the GPU, then the frame passes (rounding, albedo, height, light map)</summary>
     public void Upload(SceneRaster r, HdScene sc)
     {
-        Layers(r, sc, _slots, _fades, _tileArt, Lay, ArtMap, Edges);
+        Layers(r, sc, _slots, _fades, _tileArt, Lay, ArtMap, Edges, ModernFont && HasGlyphs ? Chr : null);
         fixed (byte* p = Lay) Update(_layTex, p, 256 * 4);
         fixed (uint* p = ArtMap) Update(_artTex, p, 256 * 8);
         fixed (byte* p = sc.Info) Update(_iTex, p, 256 * 4);
@@ -791,6 +819,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             _meters[0], _meters[1], _meters[2], _meters[3],
             _meters[4], _meters[5], _meters[6], _meters[7],
             Cinematic ? _cineW : 0, _band.Y0 * 256 + _band.Y1, _band.X0 * 256 + _band.X1, _shotStart,
+            Hurt, LowLife ? 1 : 0, 0, 0,
         };
         c.CopyTo(_c, 0);
         SetConstants();
@@ -888,7 +917,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         ((delegate* unmanaged[Stdcall]<void*, uint, void**, void*, void>)Vt(_ctx)[33])(_ctx, 1, &rtv, null);
         var vp = new Viewport { X = x, Y = y, W = w, H = h, MaxZ = 1 };
         ((delegate* unmanaged[Stdcall]<void*, uint, Viewport*, void>)Vt(_ctx)[44])(_ctx, 1, &vp);
-        void** srv = stackalloc void*[] { t0, t1, t2, t3, _iSrv, _lnSrv, _mSrv, _rgbSrv, _laySrv, _artSrv, _atlSrv, t11 };
+        void** srv = stackalloc void*[] { t0, t1, t2, t3, _iSrv, _lnSrv, _mSrv, _rgbSrv, _laySrv, _artSrv, _atlSrv, t11, _glySrv };
         ((delegate* unmanaged[Stdcall]<void*, uint, uint, void**, void>)Vt(_ctx)[8])(_ctx, 0, NSrv, srv);
         ((delegate* unmanaged[Stdcall]<void*, void*, void**, uint, void>)Vt(_ctx)[9])(_ctx, ps, null, 0);
         ((delegate* unmanaged[Stdcall]<void*, uint, uint, void>)Vt(_ctx)[13])(_ctx, 3, 0);
@@ -953,7 +982,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         Release(ref _psBounce); Release(ref _oSrv); Release(ref _oTex);
         Release(ref _laySrv); Release(ref _layTex); Release(ref _artSrv); Release(ref _artTex);
         Release(ref _iSrv); Release(ref _iTex); Release(ref _lnSrv); Release(ref _lnTex); Release(ref _mSrv); Release(ref _mTex);
-        Release(ref _rgbSrv); Release(ref _rgbTex); Release(ref _atlSrv); Release(ref _atlTex);
+        Release(ref _rgbSrv); Release(ref _rgbTex); Release(ref _atlSrv); Release(ref _atlTex); Release(ref _glySrv); Release(ref _glyTex);
         Release(ref _vs); Release(ref _psScale); Release(ref _psAlbedo); Release(ref _psSeed); Release(ref _psJfa);
         Release(ref _psHeight); Release(ref _psEmit); Release(ref _psLight); Release(ref _psBright); Release(ref _psBlur); Release(ref _psComp); Release(ref _psFinal); Release(ref _psAmb);
         Release(ref _sampLin); Release(ref _cb);

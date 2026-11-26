@@ -25,6 +25,7 @@ cbuffer C : register(b0)
     float4 MeterL; // T35 LIFE meter: x0, x1 (frame), fill end, top line (x1 = 0: none)
     float4 MeterF; // T35 FORCE meter: x0, x1, top line; w = the status bar's first line (T43, 0 = none)
     float4 Cine;   // T51 cut-scene: weight, picture y0 * 256 + y1, x0 * 256 + x1, shot start time (s)
+    float4 Dmg;    // T57 damage feedback: hit flash 0..1, low life 0 / 1, -, -
 };
 Texture2D SrcA : register(t0);
 Texture2D SrcB : register(t1);
@@ -38,6 +39,7 @@ Texture2D<uint4> Lay : register(t8);
 Texture2D<uint2> ArtM : register(t9);
 Texture2D Atlas : register(t10);
 Texture2D Bnc : register(t11);   // bounce light: rgb = albedo sum, a = weight (blurred)
+Texture2D Gly : register(t12);   // T59 glyph atlas: 16 x 8 cells of 64 px, cell = ASCII code, coverage in r
 SamplerState Lin : register(s0);
 
 static const float2 NES = float2(256, 240);
@@ -207,6 +209,14 @@ float4 PSAlbedo(V i) : SV_Target
     float3 bg = NesRgb(k.r);
     if (k.b != 0) bg = (bg + NesRgb(k.b - 1)) * 0.5;
     uint2 art = ArtM.Load(int3(n, 0));
+    // T59 modern font: a text-font glyph (art word bit 31) from the atlas, in the tile's ink / paper colours
+    if ((art.x >> 31) != 0)
+    {
+        float2 gp = (float2((art.x >> 7) & 7, (art.x >> 10) & 7) + sub) / 8;
+        uint code = art.x & 127;
+        float cov = Gly.SampleLevel(Lin, (float2(code % 16, code / 16) + gp) / float2(16, 8), 0).r;
+        bg = lerp(NesRgb((art.x >> 19) & 63), NesRgb((art.x >> 13) & 63), cov);
+    }
     if (!ui && (art.x & 0x7FFF) != 0)
     {
         float4 a = ArtSample(art.x, sub);
@@ -1035,6 +1045,13 @@ float4 PSComp(V i) : SV_Target
     c *= lerp(1, float3(1.04, 1.0, 0.94), Scn.x * 0.7) * lerp(1, float3(0.93, 0.97, 1.07), Scn.w * 0.7);
     float2 d = i.uv - 0.5;
     c *= 1 - Grade.w * dot(d, d) * 2;
+    // T57 damage feedback: a red vignette flash on a hit, a heartbeat pulse at the edges while life is low
+    if (Dmg.x > 0 || Dmg.y > 0)
+    {
+        float e = smoothstep(0.08, 0.32, dot(d, d));
+        float beat = pow(0.5 + 0.5 * sin(Cam.z * 7.5), 6);
+        c = lerp(c, float3(0.55, 0.02, 0.03), saturate(e * (Dmg.x * 0.65 + Dmg.y * (0.15 + 0.25 * beat))));
+    }
     if (Cine.x > 0)
     {
         // film: teal shadows / warm highlights, a deeper vignette, moving grain

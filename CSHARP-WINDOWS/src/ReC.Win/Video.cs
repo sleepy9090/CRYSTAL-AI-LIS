@@ -54,6 +54,8 @@ internal sealed class VideoSettings
     public bool HdAmbient = true;
     /// <summary>T55: tilt-shift (hd_effects tiltshift)</summary>
     public bool HdTilt = true;
+    /// <summary>T59: modern font (hd_effects font)</summary>
+    public bool HdFont = true;
     /// <summary>T34: HD HUD style (smooth bevelled text, soft shadows)</summary>
     public bool HdHud = true;
     /// <summary>T31: HD quality 2 full, 1 balanced, 0 fast (Gpu.Quality)</summary>
@@ -68,6 +70,8 @@ internal sealed class VideoSettings
     public bool Crt;
     /// <summary>T49: FPS counter on screen (F2 / Video > Show FPS; ini show_fps=1)</summary>
     public bool ShowFps;
+    /// <summary>T57: damage feedback (Game menu; ini feedback=1): HD red flash / low-life pulse, controller rumble</summary>
+    public bool Feedback = true;
     public static int Turbo(int buttons, int frame, bool a, bool b)
     {
         bool up = frame / 3 % 2 == 1;
@@ -183,6 +187,7 @@ internal sealed class VideoSettings
         $"volume={Volume}",
         $"crt={(Crt ? 1 : 0)}",
         $"show_fps={(ShowFps ? 1 : 0)}",
+        $"feedback={(Feedback ? 1 : 0)}",
         $"audio_mute={(AudioMute == 0 ? "none" : string.Join(",", ChannelNames.Where((_, i) => (AudioMute >> i & 1) != 0)))}",
         $"crossfeed={(Crossfeed ? 1 : 0)}",
         $"ambience={(Ambience ? 1 : 0)}",
@@ -210,6 +215,7 @@ internal sealed class VideoSettings
         if (HdSmooth) e.Add("outlines");
         if (HdAmbient) e.Add("ambient");
         if (HdTilt) e.Add("tiltshift");
+        if (HdFont) e.Add("font");
         return e.Count > 0 ? string.Join(",", e) : "none";
     }
 
@@ -249,7 +255,7 @@ internal sealed class VideoSettings
                     var e = val.Split(',', StringSplitOptions.TrimEntries);
                     v.HdParallax = e.Contains("parallax"); v.HdShadows = e.Contains("shadows");
                     v.HdAtmosphere = e.Contains("atmosphere"); v.HdDetail = e.Contains("detail");
-                    v.HdReflections = e.Contains("reflections"); v.HdLights = e.Contains("lights"); v.HdNoFlicker = e.Contains("noflicker"); v.HdArt = e.Contains("art"); v.HdVsync = e.Contains("vsync"); v.HdEdges = e.Contains("edges"); v.HdHud = e.Contains("hud"); v.HdSharpen = e.Contains("sharpen"); v.HdCinematic = e.Contains("cinematic"); v.HdSmooth = e.Contains("outlines"); v.HdAmbient = e.Contains("ambient"); v.HdTilt = e.Contains("tiltshift");
+                    v.HdReflections = e.Contains("reflections"); v.HdLights = e.Contains("lights"); v.HdNoFlicker = e.Contains("noflicker"); v.HdArt = e.Contains("art"); v.HdVsync = e.Contains("vsync"); v.HdEdges = e.Contains("edges"); v.HdHud = e.Contains("hud"); v.HdSharpen = e.Contains("sharpen"); v.HdCinematic = e.Contains("cinematic"); v.HdSmooth = e.Contains("outlines"); v.HdAmbient = e.Contains("ambient"); v.HdTilt = e.Contains("tiltshift"); v.HdFont = e.Contains("font");
                     break;
                 }
                 case "hd_quality":
@@ -259,6 +265,7 @@ internal sealed class VideoSettings
                 case "volume": if (int.TryParse(val, out int vol)) v.Volume = Math.Clamp(vol, 0, 100); break;
                 case "crt": v.Crt = val == "1"; break;
                 case "show_fps": v.ShowFps = val == "1"; break;
+                case "feedback": v.Feedback = val == "1"; break;
                 case "audio_mute":
                 {
                     var t = val.Split(','); v.AudioMute = 0;

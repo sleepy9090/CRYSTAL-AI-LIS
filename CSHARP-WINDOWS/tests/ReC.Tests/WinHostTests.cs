@@ -1096,9 +1096,105 @@ internal static partial class Program
             for (int i = 0; i < 44100 * 4; i++) { var (l, r) = f.Next(); if (i > 44100 * 3) tail = Math.Max(tail, Math.Abs(l) + Math.Abs(r)); }
             True(tail < 30, $"fades out in a few seconds ({tail:F1})");
             True(Bed(a => a.Outdoor = 1, 2).L.SequenceEqual(Bed(a => a.Outdoor = 1, 2).L), "deterministic");
+            // T58 heartbeat: two thumps per 0.85 s (lub, dub), low and soft; silent again after it stops
+            var hbA = new Ambience { Heartbeat = true };
+            var hbs = Enumerable.Range(0, 44100 * 4).Select(_ => hbA.Next().L).ToArray();
+            var env = Enumerable.Range(0, 40).Select(q => hbs.Skip(q * 4410).Take(4410).Max(x => Math.Abs(x))).ToArray();
+            int thumps = Enumerable.Range(1, 38).Count(q => env[q] > 3000 && env[q] > env[q - 1] && env[q] >= env[q + 1]);   // peaks of the 0.1 s envelope
+            double hbDb = 20 * Math.Log10(Math.Sqrt(hbs.Skip(44100).Average(x => x * x)) / 32768);
+            Console.WriteLine($"  win_ambience: heartbeat {thumps} thumps in 4 s, {hbDb:F1} dBFS");
+            True(thumps >= 8 && thumps <= 10, "lub-dub every 0.85 s");
+            True(hbDb > -45 && hbDb < -24, "heartbeat level under the music");
+            hbA.Heartbeat = false;
+            for (int i = 0; i < 44100 * 2; i++) hbA.Next();
+            True(hbA.Silent, "silent once the heartbeat stops");
             var v = VideoSettings.Parse("ambience=0\n");
             True(!v.Ambience && new VideoSettings().Ambience && v.Serialize().Contains("ambience=0"), "ini ambience");
             Eq(417, Window.CommandId("ambience"), "--menu ambience");
+        }),
+        ("win_feedback", () =>
+        {
+            // T57 damage feedback: drops in life during play are hits, refills / menus are not; low life at <= 1/4
+            var f = new DamageFeedback();
+            False(f.Update(40, 80, true, 0), "first frame: no hit");
+            True(f.Update(32, 80, true, 1), "life drop = hit");
+            True(Math.Abs(f.LastHit - 0.1) < 1e-9 && f.Hurt == 1, "hit size, flash at full");
+            f.Update(32, 80, true, 1 + 13);
+            True(Math.Abs(f.Hurt - 0.52) < 0.01, "flash about halved after 13 frames");
+            f.Update(32, 80, true, 60);
+            True(f.Hurt == 0, "flash over");
+            False(f.Update(80, 80, true, 61), "refill (cheat / herb) is no hit");
+            False(f.Update(10, 80, false, 62), "outside play no hit");
+            False(f.Update(5, 80, true, 63), "first play frame after a menu: no hit");
+            True(f.Low, "life <= 1/4: low");
+            f.Update(0, 80, true, 64);
+            False(f.Low, "dead is not 'low'");
+            // a real fight: area $09's chasers, group09_check's keys (frame0 2506): 7 contact hits, the last one to 0
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { }); m.Reset();
+            m.LoadState(StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", "group09.json")));
+            var g = new DamageFeedback();
+            int hits = 0, low = 0, gf0 = 2506;
+            var gk = Keys.Parse(new[] { "2531:UP:50", "2585:RIGHT:330", "2931:B:4", "2951:B:4", "2971:B:4", "2990:RIGHT:21", "3022:B:3", "3040:B:5", "3061:RIGHT:29", "3101:B:4", "3121:B:4", "3141:B:4", "3161:B:4" });
+            for (int i = 0; gf0 + m.Frame <= 3268; i++)
+            {
+                m.RunFrame(gk.TryGetValue(gf0 + m.Frame, out int kb) ? kb : 0);
+                var ram = m.Mem.RamBytes;
+                if (g.Update(ram[0x03C1], ram[0x03C0], ram[0x40] == 1 && ram[0x41] == 8, m.Frame)) { hits++; if (hits == 1) Console.WriteLine($"  win_feedback: first hit after {m.Frame} frames (f{gf0 + m.Frame - 1})"); }
+                if (g.Low) low++;
+            }
+            Console.WriteLine($"  win_feedback: group09 scripted fight to f3268: {hits} hits, {low} low-life frames");
+            Eq(7, hits, "the 7 contact hits group09_check lists (HitPlayerDamage 26:9410), from the life byte");
+            True(low > 0, "low life before the last hits");
+            var v = VideoSettings.Parse("feedback=0\n");
+            True(!v.Feedback && new VideoSettings().Feedback && v.Serialize().Contains("feedback=0"), "ini feedback");
+            Eq(105, Window.CommandId("feedback"), "--menu feedback");
+        }),
+        ("win_font", () =>
+        {
+            // T59 modern font: ASCII tiles $F21-$F7E (not $F40), ink / paper per tile from CHR, glyph words on text pixels
+            // whose ink / paper colours are the ones the game drew
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { }); m.Reset();
+            var chr = m.Ppu.Chr;
+            Eq(0x41, FontInk.Code(0xF41), "tile $F41 = 'A'");
+            Eq(-1, FontInk.Code(0xF40), "$40 is the page prompt, not '@'");
+            Eq(-1, FontInk.Code(0xF20), "space has no glyph");
+            int glyphs = Enumerable.Range(0x21, 0x5E).Count(c => FontInk.Values(chr, FontInk.First + c).Ink >= 0);
+            var (top, bottom) = FontInk.InkRows(chr, FontInk.First + 'H');
+            Console.WriteLine($"  win_font: {glyphs} glyph tiles with ink, 'H' rows {top}-{bottom}");
+            True(glyphs >= 90, "the printable ASCII range has ink");
+            True(top >= 0 && bottom <= 7 && bottom - top >= 4, "'H' cap height");
+            string dir = Path.Combine(Data.FindDir(), "..", "test", "states");
+            var mt = new Machine(d, _ => { }); mt.Reset(); mt.LoadState(StateFile.Load(Path.Combine(dir, "talk16.json")));
+            mt.Ppu.Capture = new VideoCapture(); mt.Ppu.NoPixels = true;
+            var r = new SceneRaster(mt.Ppu.Chr) { SpriteLimit = false };
+            int words = 0, right = 0, frames = 0;
+            for (int f = 0; f < 30; f++) { mt.RunFrame(0); frames++; }
+            {
+                int f = 30;
+                mt.RunFrame(0); r.Build(mt.Ppu.Capture); frames++;
+                var sc = new HdScene(d.NesRgb);
+                sc.Build(r.Fb, r.Tags, r.LinePal[239], new byte[61440], r.LineScroll, f);
+                var lay = new byte[256 * 240 * 4]; var am = new uint[256 * 240 * 2];
+                Gpu.Layers(r, sc, new Dictionary<long, int>(), new Dictionary<long, int>(), new bool[8192], lay, am, false, mt.Ppu.Chr);
+                for (int i = 0; i < 232 * 256; i++)
+                {
+                    uint w = am[i * 2];
+                    if ((w >> 31) == 0) continue;
+                    words++;
+                    int tile = FontInk.First + (int)(w & 127), col = (int)(w >> 7 & 7), row = (int)(w >> 10 & 7);
+                    var (ink, _) = FontInk.Values(mt.Ppu.Chr, tile);
+                    int want = FontInk.Px(mt.Ppu.Chr, tile, col, row) == ink ? (int)(w >> 13 & 63) : (int)(w >> 19 & 63);
+                    if ((r.Fb[i] & 63) == want) right++;
+                }
+            }
+            Console.WriteLine($"  win_font: talk16 after {frames} frames: {words} glyph pixels, {right} with the drawn colour");
+            True(words > 2000, "the message box gives glyph words");
+            True(right == words, "ink / paper colours = the colours on screen");
+            var v = VideoSettings.Parse("hd_effects=edges\n");
+            True(new VideoSettings().HdFont && !v.HdFont && new VideoSettings().Serialize().Contains("tiltshift,font"), "ini hd_effects font");
+            Eq(296, Window.CommandId("hd:font"), "--menu hd:font");
         }),
         ("win_frame_stats", () =>
         {

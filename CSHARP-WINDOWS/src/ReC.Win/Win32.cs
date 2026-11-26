@@ -263,6 +263,28 @@ internal static unsafe partial class Win32
     [LibraryImport("gdi32.dll")]
     public static partial int GetDIBits(IntPtr hdc, IntPtr bmp, uint start, uint lines, void* bits, ref BITMAPINFOHEADER bmi, uint usage);
 
+    // ---- gdi32: T59 HD font glyphs (Glyphs.cs)
+    [LibraryImport("gdi32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial IntPtr CreateFontW(int height, int width, int escapement, int orientation, int weight, uint italic,
+        uint underline, uint strikeOut, uint charSet, uint outPrecision, uint clipPrecision, uint quality, uint pitchAndFamily, string face);
+
+    [LibraryImport("gdi32.dll")]
+    public static partial uint SetTextColor(IntPtr hdc, uint color);
+
+    [LibraryImport("gdi32.dll")]
+    public static partial int SetBkMode(IntPtr hdc, int mode);
+
+    [LibraryImport("gdi32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool TextOutW(IntPtr hdc, int x, int y, string text, int count);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SIZE { public int Cx, Cy; }
+
+    [LibraryImport("gdi32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetTextExtentPoint32W(IntPtr hdc, string text, int count, out SIZE size);
+
     // ---- user32: menus (Video menu, VideoMenu.cs)
     public const uint MF_STRING = 0x0, MF_GRAYED = 0x1, MF_CHECKED = 0x8, MF_POPUP = 0x10, MF_SEPARATOR = 0x800,
         MF_BYCOMMAND = 0x0, MFT_RADIOCHECK = 0x200;

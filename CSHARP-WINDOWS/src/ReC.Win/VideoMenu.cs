@@ -15,7 +15,7 @@ internal static unsafe partial class Window
 {
     // command ids
     private const int IdPause = 100, IdMute = 101, IdExit = 102;
-    private const int IdTurboA = 103, IdTurboB = 104;       // T38
+    private const int IdTurboA = 103, IdTurboB = 104, IdFeedback = 105;   // T38, T57
     private const int IdCheat0 = 600, IdCheatsOff = 620;     // T36: + Cheats index (life, magic, gold, status, charge, xp)
     private const int IdFullscreen = 200, IdMenuBar = 201, IdInteger = 202, IdCrop = 203, IdSmooth = 204, IdReset = 205;
     private const int IdScale0 = 210;            // + 1..6
@@ -26,7 +26,7 @@ internal static unsafe partial class Window
     private const int IdOriginal = 270, IdEnhanced = 271, IdReloadPack = 272, IdEnhanced32 = 273, IdHd = 274,
         IdHdParallax = 275, IdHdShadows = 276, IdHdAtmosphere = 277, IdHdDetail = 278,
         IdHdReflections = 279, IdHdLights = 280, IdHdNoFlicker = 281, IdHdArt = 282, IdHdVsync = 283, IdHdQuality0 = 284,   // + 0 fast, 1 balanced, 2 full
-        IdHdEdges = 287, IdHdHud = 288, IdHdSharpen = 289, IdHdCinematic = 292, IdHdSmooth = 293, IdHdAmbient = 294, IdHdTilt = 295;
+        IdHdEdges = 287, IdHdHud = 288, IdHdSharpen = 289, IdHdCinematic = 292, IdHdSmooth = 293, IdHdAmbient = 294, IdHdTilt = 295, IdHdFont = 296;
     private const int IdVolume0 = 420;                      // T40: + 0..3 = 100 / 75 / 50 / 25 %
     private const int IdCrt = 290;                          // T45
     private const int IdFps = 291;                          // T49
@@ -61,6 +61,7 @@ internal static unsafe partial class Window
             case "volume:25": return IdVolume0 + 3;
             case "turbo:a": return IdTurboA;
             case "turbo:b": return IdTurboB;
+            case "feedback": return IdFeedback;
             case "cheats:off": return IdCheatsOff;
             case "mute": return IdMute;
             case "exit": return IdExit;
@@ -91,6 +92,7 @@ internal static unsafe partial class Window
             case "hd:outlines": return IdHdSmooth;
             case "hd:ambient": return IdHdAmbient;
             case "hd:tiltshift": return IdHdTilt;
+            case "hd:font": return IdHdFont;
             case "hd:fast": return IdHdQuality0;
             case "hd:balanced": return IdHdQuality0 + 1;
             case "hd:full": return IdHdQuality0 + 2;
@@ -171,6 +173,7 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(m, 0, IdTurboB, "Turbo &B (rapid sword while held)");
         Win32.AppendMenuW(m, 0, IdTurboA, "Turbo &A (repeats while held)");
+        Win32.AppendMenuW(m, 0, IdFeedback, "&Damage feedback (red flash, low-life pulse, rumble)");
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(m, 0, IdExit, "E&xit\tEsc");
         return m;
@@ -242,6 +245,7 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(gfx, 0, IdHdSmooth, "HD: Smooth &outlines (curves instead of pixel steps)");
         Win32.AppendMenuW(gfx, 0, IdHdAmbient, "HD: &Ambient bars (a soft glow of the picture instead of black bars)");
         Win32.AppendMenuW(gfx, 0, IdHdTilt, "HD: &Tilt-shift depth of field (diorama look)");
+        Win32.AppendMenuW(gfx, 0, IdHdFont, "HD: Modern &font (crisp text)");
         Win32.AppendMenuW(gfx, 0, IdHdQuality0 + 2, "HD quality: F&ull");
         Win32.AppendMenuW(gfx, 0, IdHdQuality0 + 1, "HD quality: Ba&lanced (slower graphics)");
         Win32.AppendMenuW(gfx, 0, IdHdQuality0, "HD quality: Fa&st (integrated graphics)");
@@ -297,7 +301,7 @@ internal static unsafe partial class Window
     {
         if (_menus.Count == 0) return;
         Check(IdPause, _paused); Check(IdMute, _muted); Check(IdCrt, _v.Crt); Check(IdFps, _v.ShowFps);
-        for (int i = 0; i < 4; i++) Check(IdVolume0 + i, _v.Volume == 100 - 25 * i); Check(IdTurboA, _v.TurboA); Check(IdTurboB, _v.TurboB);
+        for (int i = 0; i < 4; i++) Check(IdVolume0 + i, _v.Volume == 100 - 25 * i); Check(IdTurboA, _v.TurboA); Check(IdTurboB, _v.TurboB); Check(IdFeedback, _v.Feedback);
         for (int i = 0; i < Cheats.Names.Length; i++) Check(IdCheat0 + i, _v.Cheats.Get(i));
         Check(IdFullscreen, _fullscreen); Check(IdMenuBar, _v.MenuBar);
         Check(IdInteger, _v.Integer); Check(IdCrop, _v.CropOverscan); Check(IdSmooth, _v.Smooth);
@@ -310,7 +314,7 @@ internal static unsafe partial class Window
         Check(IdEnhanced32, GraphicsMode == 2, true); Check(IdHd, GraphicsMode == 3, true);
         Check(IdHdParallax, _v.HdParallax); Check(IdHdShadows, _v.HdShadows);
         Check(IdHdAtmosphere, _v.HdAtmosphere); Check(IdHdDetail, _v.HdDetail);
-        Check(IdHdReflections, _v.HdReflections); Check(IdHdLights, _v.HdLights); Check(IdHdNoFlicker, _v.HdNoFlicker); Check(IdHdArt, _v.HdArt); Check(IdHdVsync, _v.HdVsync); Check(IdHdEdges, _v.HdEdges); Check(IdHdHud, _v.HdHud); Check(IdHdSharpen, _v.HdSharpen); Check(IdHdCinematic, _v.HdCinematic); Check(IdHdSmooth, _v.HdSmooth); Check(IdHdAmbient, _v.HdAmbient); Check(IdHdTilt, _v.HdTilt);
+        Check(IdHdReflections, _v.HdReflections); Check(IdHdLights, _v.HdLights); Check(IdHdNoFlicker, _v.HdNoFlicker); Check(IdHdArt, _v.HdArt); Check(IdHdVsync, _v.HdVsync); Check(IdHdEdges, _v.HdEdges); Check(IdHdHud, _v.HdHud); Check(IdHdSharpen, _v.HdSharpen); Check(IdHdCinematic, _v.HdCinematic); Check(IdHdSmooth, _v.HdSmooth); Check(IdHdAmbient, _v.HdAmbient); Check(IdHdTilt, _v.HdTilt); Check(IdHdFont, _v.HdFont);
         for (int q = 0; q < 3; q++) Check(IdHdQuality0 + q, _v.HdQuality == q, true);
         Check(IdAudioOriginal, !_v.CdAudio && !_v.AudioRemaster && !_v.AudioOrchestra, true); Check(IdAudioOrchestra, _v.AudioOrchestra, true); Check(IdAudioCd, _v.CdAudio, true);
         Check(IdAudioRemaster, _v.AudioRemaster, true);
@@ -345,6 +349,7 @@ internal static unsafe partial class Window
                 Notice($"VOLUME {_v.Volume}%"); SettingsChanged(false); return;
             case IdTurboA: _v.TurboA = !_v.TurboA; Notice(_v.TurboA ? "TURBO A: ON" : "TURBO A: OFF"); SettingsChanged(false); return;
             case IdTurboB: _v.TurboB = !_v.TurboB; Notice(_v.TurboB ? "TURBO B: ON" : "TURBO B: OFF"); SettingsChanged(false); return;
+            case IdFeedback: _v.Feedback = !_v.Feedback; Notice(_v.Feedback ? "DAMAGE FEEDBACK: ON" : "DAMAGE FEEDBACK: OFF"); SettingsChanged(false); return;
             case >= IdCheat0 and < IdCheat0 + 6:
                 _v.Cheats.Set(id - IdCheat0, !_v.Cheats.Get(id - IdCheat0));
                 Notice(Cheats.Labels[id - IdCheat0] + (_v.Cheats.Get(id - IdCheat0) ? ": ON" : ": OFF"));
@@ -391,6 +396,7 @@ internal static unsafe partial class Window
             case IdHdSmooth: _v.HdSmooth = !_v.HdSmooth; HdEffectsChanged(); return;
             case IdHdAmbient: _v.HdAmbient = !_v.HdAmbient; HdEffectsChanged(); return;
             case IdHdTilt: _v.HdTilt = !_v.HdTilt; HdEffectsChanged(); return;
+            case IdHdFont: _v.HdFont = !_v.HdFont; HdEffectsChanged(); return;
             case IdHdHud: _v.HdHud = !_v.HdHud; HdEffectsChanged(); return;
             case IdHdArt: _v.HdArt = !_v.HdArt; HdEffectsChanged(); GpuArt(); if (NeedRender) RenderHd(); Present(); return;
             case IdReloadPack: ReloadPack(); return;

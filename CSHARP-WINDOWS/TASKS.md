@@ -355,3 +355,8 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] T55 (2026-11-25): **HD › Tilt-shift depth of field** (gameplay: the top and bottom of the playfield soften, the
   middle stays sharp; the HD-2D diorama look).
 - [x] T56 (2026-11-25): **frosted-glass pause / help screens** in HD (the game behind the overlay is blurred).
+- [x] T57 (2026-11-25): **damage feedback** (Game menu): HD red vignette flash on a hit, heartbeat pulse at low life,
+  controller rumble. Preview: out/hd57/hit/0_hd.png.
+- [x] T58 (2026-11-25): **low-life heartbeat** sound (Damage feedback, any mode).
+- [x] T59 (2026-11-25): **HD › Modern font**: dialog / story text drawn from a Windows-font glyph atlas (crisp, sized on
+  the game font), in the game's colours. Preview: out/hd59/talk/0_hd.png.
