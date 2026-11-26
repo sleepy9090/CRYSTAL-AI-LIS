@@ -34,7 +34,7 @@ anyway**, or right-click the file → Properties → **Unblock**.
 | Z / J | B |
 | Enter | Start |
 | Right Shift / Tab | Select |
-| P | pause: the game dims and a pause panel shows the keys and the active cheats |
+| P | pause: the game dims and a pause panel shows the keys and the active cheats (in HD the game behind it is frosted glass) |
 | Space (hold) | fast forward (4×) |
 | F12 | screenshot (the picture as shown, HD included) to `Pictures\re-c` |
 | F1 | help: every key on screen (the game pauses under it) |
@@ -83,6 +83,12 @@ The choices are saved in `%APPDATA%\re-c\video.ini` (delete it to get the defaul
 ### Audio menu: Original or CD quality
 **Audio › Volume** sets the master volume (100 / 75 / 50 / 25 %).
 
+**Audio › Orchestrated** replays the music on an orchestra: violins carry the melody, french horns the harmony,
+string basses the bass line, timpani and snare the drums, in a concert hall. Sound effects keep their original sound.
+
+**Audio › Ambient sounds** (with HD graphics) adds a soundscape under the music: wind and birds outdoors, dripping
+caves, crackling fire, whistling ice.
+
 **Audio › Channels** mutes single sound channels (melody, harmony, bass, drums, samples) and **Audio › Headphone
 crossfeed** blends a little of each side into the other so hard-panned voices sound natural on headphones (both for CD
 quality and Remastered). The sound now follows the sound card's clock smoothly (no clicks from dropped blocks), and
@@ -110,6 +116,16 @@ sound of the port. You can switch at any time, and the choice is saved. CD quali
 
 ### Graphics: Original, Enhanced (16-bit), Enhanced (32-bit) or HD
 **Video › CRT look** gives Original graphics the look of a TV: scanlines and an RGB aperture mask.
+
+HD › Smooth outlines (on by default) turns pixel stair-steps into smooth curves (characters, rocks, shores).
+
+HD › Tilt-shift depth of field (on by default) softens the top and bottom of the playfield like a miniature diorama
+(the "HD-2D" look); the middle, where you play, stays sharp.
+
+HD › Ambient bars (on by default) fills the bars beside the picture with a soft glow of it, as modern players do.
+
+HD › Cinematic cut-scenes (on by default) plays the story pictures like film shots: a slow camera push-in with
+depth, drifting embers or dust, light rays, lens streaks, film colour and grain; the text stays sharp.
 
 HD › Sharpen (on by default) makes the HD picture crisper without halos; deep water shows moving light caustics.
 

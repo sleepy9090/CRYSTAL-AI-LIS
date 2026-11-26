@@ -10,20 +10,21 @@ cbuffer C : register(b0)
     float4 Uv;     // source uv = Uv.zw + uv * Uv.xy (overscan crop)
     float4 Lgt;    // direction to the sun (screen x right, y down, z out), bump
     float4 Hlf;    // half vector, flat diffuse
-    float4 Mat;    // ambient, diffuse, specular strength, -
+    float4 Mat;    // ambient, diffuse, specular strength, tilt-shift (T55, 0 = off)
     float4 Fx;     // sprite lift, AO strength, shadow strength, contact shadow strength
     float4 Fx2;    // shadow slope, albedo sharpness, bloom threshold, bloom strength
     float4 Blur;   // blur step (uv), jump-flood step (pixels), -
     float4 Cam;    // camera x, y (NES pixels, unwrapped), time (s), sharpening (T48, 0 = off)
     float4 Opt;    // parallax, shadows, atmosphere, material detail (0 / 1)
     float4 Scn;    // outdoor, void gate, gameplay, darkness
-    float4 MeanC;  // mean playfield colour
+    float4 MeanC;  // mean playfield colour; w = smooth outlines (T52)
     float4 Grade;  // exposure (eye adaptation), saturation, contrast, vignette
     float4 Opt2;   // reflection strength, local light strength, icy scene (snow), hot scene (embers)
     float4 HudC;   // HUD panel: fill colour (-1 = none), first line, last line + 1, -
     float4 QualC;  // shadow steps, extras (reflections, fine relief) 0 / 1, albedo scale (8 / 4), on-screen display 0 / 1
     float4 MeterL; // T35 LIFE meter: x0, x1 (frame), fill end, top line (x1 = 0: none)
     float4 MeterF; // T35 FORCE meter: x0, x1, top line; w = the status bar's first line (T43, 0 = none)
+    float4 Cine;   // T51 cut-scene: weight, picture y0 * 256 + y1, x0 * 256 + x1, shot start time (s)
 };
 Texture2D SrcA : register(t0);
 Texture2D SrcB : register(t1);
@@ -76,7 +77,54 @@ uint4 Scale2(int2 o)
     return r;
 }
 
-uint4 PSScale(V i) : SV_Target { return Scale2(int2(i.p.xy)); }
+uint4 Vote(int2 o);
+uint4 PSScale(V i) : SV_Target
+{
+    uint w, h;
+    Keys.GetDimensions(w, h);
+    return MeanC.w > 0.5 && w >= 512 ? Vote(int2(i.p.xy)) : Scale2(int2(i.p.xy));   // T52: 2x -> 4x voted too
+}
+
+// T52 smooth outlines (MeanC.w): the last 2x step as a vote instead of Scale2x. Each output pixel weighs the 4x4 key
+// texels around its centre with a Gaussian (sigma 0.8 texel) and takes, separately for the background key (colour +
+// dither partner + HUD bit) and the sprite key, the one with the most weight: the stair steps of Scale2x become smooth
+// curves and diagonals; features a texel or more wide stay
+uint4 Vote(int2 o)
+{
+    uint w, h;
+    Keys.GetDimensions(w, h);
+    int2 sz = int2(w, h);
+    float2 c = (float2(o) + 0.5) * 0.5 - 0.5;
+    int2 b = int2(floor(c)) - 1;
+    uint bk[16], sk[16];
+    float wt[16];
+    uint4 E = KeyAt(o / 2, sz);
+    if ((E.r & 0x80) != 0) return Scale2(o);                       // HUD / text: as before
+    [loop] for (int i = 0; i < 16; i++)
+    {
+        int2 q = b + int2(i & 3, i >> 2);
+        uint4 k = KeyAt(q, sz);
+        float2 d = c - float2(q);
+        wt[i] = exp(-dot(d, d) * 0.78);
+        bk[i] = k.r | k.b << 8;
+        sk[i] = k.g;
+    }
+    uint bb = E.r | E.b << 8, bs = E.g;
+    float bw = -1, sw = -1;
+    [loop] for (int j = 0; j < 16; j++)
+    {
+        float vb = 0, vs = 0;
+        [loop] for (int m = 0; m < 16; m++)
+        {
+            vb += bk[m] == bk[j] ? wt[m] : 0;
+            vs += sk[m] == sk[j] ? wt[m] : 0;
+        }
+        if (vb > bw) { bw = vb; bb = bk[j]; }
+        if (vs > sw) { sw = vs; bs = sk[j]; }
+    }
+    if ((E.r & 0x80) != (bb & 0x80)) bb = E.r | E.b << 8;          // never move the HUD edge
+    return uint4(bb & 0xFF, bs, bb >> 8, E.a);
+}
 
 float3 NesRgb(uint c) { return Rgb.Load(int3(c & 63, 0, 0)).rgb; }
 bool SprFront(uint4 k) { return (k.g & 0x40) != 0 && !((k.g & 0x80) != 0 && (k.r & 0x40) != 0); }
@@ -154,7 +202,7 @@ float4 PSAlbedo(V i) : SV_Target
     int2 o = int2(i.p.xy), n = o / sc;
     uint4 L = Lay.Load(int3(n, 0));
     bool ui = (L.r & 0x80) != 0;
-    uint4 k = ui && HudC.w < 0.5 ? L : Scale2(o);
+    uint4 k = ui && HudC.w < 0.5 ? L : MeanC.w > 0.5 ? Vote(o) : Scale2(o);
     float2 sub = (float2(o - n * sc) + 0.5) / sc;
     float3 bg = NesRgb(k.r);
     if (k.b != 0) bg = (bg + NesRgb(k.b - 1)) * 0.5;
@@ -696,9 +744,52 @@ float BarShadow(float2 p)
     return u * u * (3 - 2 * u);
 }
 
+
+// T51 cut-scenes as film shots: is this NES pixel inside the picture (y0, y1, x0, x1)?
+float4 CineRect()
+{
+    float y0 = floor(Cine.y / 256), x0 = floor(Cine.z / 256);
+    return float4(y0, Cine.y - y0 * 256, x0, Cine.z - x0 * 256);
+}
+bool InCine(float2 p)
+{
+    float4 b = CineRect();
+    return Cine.x > 0 && p.y >= b.x && p.y < b.y && p.x >= b.z && p.x < b.w;
+}
+
+// the camera: a slow push-in (zoom 1 -> 1.10 over 10 s, eased) drifting toward one side (per shot), and 2.5D parallax:
+// higher ground (the engine's height field) moves more than the background as the camera travels
+float2 CineCam(float2 p)
+{
+    float4 b = CineRect();
+    float u = Cam.z - Cine.w, e = smoothstep(0, 10, u) * Cine.x;
+    float dir = Hash(float2(Cine.w, 3.7)) > 0.5 ? 1 : -1, dv = Hash(float2(Cine.w, 9.1)) > 0.5 ? 1 : -1;
+    float2 c = float2(b.z + b.w, b.x + b.y) * 0.5, hs = float2(b.w - b.z, b.y - b.x) * 0.5;
+    float zoom = 1 + 0.10 * e;
+    float2 m = hs * (1 - 1 / zoom);
+    float2 q = c + (p - c) / zoom + float2(m.x * 0.85 * dir, m.y * 0.5 * dv);
+    q.x += (H(q / NES) - 0.5) * 5 * e * dir;
+    return clamp(q, float2(b.z, b.x) + 0.5, float2(b.w, b.y) - 0.5);
+}
+
+// drifting embers (warm pictures) or dust in the light, and slow light rays sweeping the picture
+float3 CineFx(float2 p, float t)
+{
+    bool warm = MeanC.r > MeanC.b * 1.25;
+    float2 e1 = Particle(p, 0, 16, warm ? float2(3, -16) : float2(5, 2), t, warm ? 1.7 : 1.1, 3);
+    float2 e2 = Particle(p + 7, 0, 11, warm ? float2(-2, -25) : float2(8, 3), t, 1.0, 2);
+    float tw = 0.6 + 0.4 * sin(t * 7 + e1.y * 30);
+    float3 c = warm ? float3(1.0, 0.55, 0.18) * (e1.x * tw * 2.2 + e2.x * 1.4) : float3(0.9, 0.92, 1.0) * (e1.x * 0.6 + e2.x * 0.35);
+    float ray = smoothstep(0.55, 1, sin((p.x * 0.8 + p.y * 0.6) * 0.045 - t * 0.35)) * (0.5 + 0.5 * FN(p + float2(t * 6, 0), 30));
+    c += (warm ? float3(1.0, 0.75, 0.45) : float3(0.8, 0.88, 1.0)) * ray * 0.10;
+    return c * Cine.x;
+}
+
 float4 PSLight(V i) : SV_Target
 {
     float2 s = Uv.zw + i.uv * Uv.xy;
+    bool cine = InCine(s * NES);
+    if (cine) s = CineCam(s * NES) / NES;
     float3 a = Albedo(s);
     float2 p = s * NES;
     float4 inf = InfoPx(p);
@@ -872,6 +963,7 @@ float4 PSLight(V i) : SV_Target
     c = lerp(c, lerp(float3(0.30, 0.50, 0.12), float3(0.75, 0.45, 0.12), frac(lf.y * 7)), lf.x * step(0.82, lf.y) * 0.8 * Scn.x * Opt.z * Scn.z);
     // T43: the status bar casts a soft shadow up onto the map: from the last tile row above the panel (the row the game
     // has not loaded yet under the split) black, fading in over 4 lines; MeterF.w = status-bar line * 256 + row start
+    if (cine) c += CineFx(i.uv * float2(256, 240), Cam.z);   // T51: in screen space (they do not ride the dolly)
     c *= BarShadow(p);
     return float4(c, 1);
 }
@@ -907,8 +999,35 @@ float4 PSComp(V i) : SV_Target
 {
     float4 h = SrcA.SampleLevel(Lin, i.uv, 0);
     if (h.a < 0.5) return float4(saturate(h.rgb), 0);                   // HUD: untouched (alpha 0: no AA either)
+    // T55 tilt-shift (Mat.w): in gameplay the playfield's top and bottom soften, the middle stays sharp (HD-2D diorama
+    // look); a 12-tap golden-angle disc up to 1.3 NES pixels, HUD samples left out
+    if (Mat.w > 0 && Scn.z > 0.5 && Cine.x <= 0)
+    {
+        float ny = (Uv.w + i.uv.y * Uv.y) * 240;
+        float bot = HudC.x >= 0 && HudC.y > 100 ? HudC.y : 240;
+        float rr = saturate((abs(ny - bot * 0.55) - bot * 0.22) / (bot * 0.25)) * Mat.w * Out.y / 240 * 1.3;
+        if (rr > 0.3)
+        {
+            float4 acc = float4(h.rgb, 1);
+            [unroll] for (int k = 0; k < 12; k++)
+            {
+                float an = k * 2.39996, rad = sqrt((k + 0.5) / 12) * rr;
+                float4 sm = SrcA.SampleLevel(Lin, i.uv + float2(cos(an), sin(an)) * rad * Out.zw, 0);
+                acc += float4(sm.rgb, 1) * step(0.5, sm.a);              // no branch: Wine cannot unroll one
+            }
+            h.rgb = acc.rgb / acc.w;
+        }
+    }
     // two bloom sizes: a tight glow (1/4) and a wide halo (1/8)
     float3 bl = SrcB.SampleLevel(Lin, i.uv, 0).rgb * 0.75 + SrcC.SampleLevel(Lin, i.uv, 0).rgb * 0.55;
+    // T51 cut-scenes: an anamorphic lens streak (the tight bloom stretched sideways, blue)
+    if (Cine.x > 0)
+    {
+        float3 st = 0;
+        [unroll] for (int k = 1; k <= 6; k++)
+            st += (SrcB.SampleLevel(Lin, i.uv + float2(k * 0.02, 0), 0).rgb + SrcB.SampleLevel(Lin, i.uv - float2(k * 0.02, 0), 0).rgb) * (1 - k / 7.0);
+        bl += st * float3(0.30, 0.50, 1.0) * 0.22 * Cine.x;
+    }
     float3 c = Tone(h.rgb * Grade.x + bl * Fx2.w);
     c = lerp(dot(c, LUM).xxx, c, Grade.y);
     c = lerp(c, c * c * (3 - 2 * c), Grade.z);
@@ -916,6 +1035,14 @@ float4 PSComp(V i) : SV_Target
     c *= lerp(1, float3(1.04, 1.0, 0.94), Scn.x * 0.7) * lerp(1, float3(0.93, 0.97, 1.07), Scn.w * 0.7);
     float2 d = i.uv - 0.5;
     c *= 1 - Grade.w * dot(d, d) * 2;
+    if (Cine.x > 0)
+    {
+        // film: teal shadows / warm highlights, a deeper vignette, moving grain
+        float l = dot(c, LUM);
+        c = saturate(c + (float3(-0.03, 0.0, 0.035) * (1 - l) + float3(0.035, 0.012, -0.03) * l) * Cine.x);
+        c *= 1 - Cine.x * 0.6 * dot(d, d);
+        c += (Hash(i.p.xy * 0.5 + frac(Cam.z * 24) * 731) - 0.5) * 0.045 * Cine.x;
+    }
     c += (Hash(i.p.xy + frac(Cam.z) * 517) - 0.5) / 255;               // dither: no banding in smooth gradients
     return float4(saturate(c), 1);
 }
@@ -956,6 +1083,24 @@ float3 Sharpen(float3 c, V i)
     return saturate((c + (n + s + e + w) * wt) / (1 + 4 * wt));
 }
 
+// T53 ambient bars: Blur.xy = the picture's origin, Blur.zw its size (client uv). A bar pixel shows the lit picture
+// (SrcA = the picture already blurred at 1/8) mirrored at the nearest edge, 9 more taps over ~10 %, dimmed, fading out
+float4 PSAmbient(V i) : SV_Target
+{
+    float2 q = (i.uv - Blur.xy) / Blur.zw;
+    float2 m = q < 0 ? -q : q > 1 ? 2 - q : q;
+    m = clamp(m, 0.02, 0.98);
+    float2 d = max(max(-q, q - 1), 0) * Blur.zw;
+    float dist = length(d);
+    float3 c = 0;
+    [unroll] for (int k = 0; k < 9; k++)                             // one loop: Wine cannot unroll nested ones
+        c += SrcA.SampleLevel(Lin, clamp(m + float2(k % 3 - 1, k / 3 - 1) * 0.05, 0.01, 0.99), 0).rgb;
+    c /= 9;
+    c = saturate(c) * 0.42 * exp(-dist * 4.5);
+    c += (Hash(i.p.xy + frac(Cam.z) * 517) - 0.5) / 255;
+    return float4(saturate(c), 1);
+}
+
 // T37: the on-screen display (Osd, premultiplied) over the anti-aliased picture
 float4 PSFinal(V i) : SV_Target
 {
@@ -964,6 +1109,10 @@ float4 PSFinal(V i) : SV_Target
     if (QualC.w > 0.5)
     {
         float4 o = SrcB.SampleLevel(Lin, i.uv, 0);
+        // T56 frosted glass: under the overlay (the pause / help dim, panels, notices) the game shows blurred (SrcC = the
+        // picture at 1/8, blurred wide)
+        float fr = saturate(o.a * 1.6);
+        if (fr > 0.01) c = lerp(c, saturate(SrcC.SampleLevel(Lin, i.uv, 0).rgb), fr * 0.9);
         c = c * (1 - o.a) + o.rgb;
     }
     return float4(c, 1);

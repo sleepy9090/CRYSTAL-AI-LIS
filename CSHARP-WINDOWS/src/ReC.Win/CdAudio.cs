@@ -31,6 +31,12 @@ internal sealed class CdMixer
     /// <summary>T47: headphone crossfeed (AudioFx.cs)</summary>
     public bool Crossfeed;
     private readonly Crossfeed _xf = new();
+    /// <summary>T50: Audio > Orchestrated (Orchestra.cs): instruments played from the chip state Chip() returns</summary>
+    public bool Orchestra;
+    public Func<ReC.Nes.Apu?>? Chip;
+    private Orchestra _orc = new();
+    private float _dmcAcc;
+    private int _oph;
 
     // pan gains (left, right) per channel; the two sides add up to 2 so mono balance is unchanged
     private static readonly (float L, float R) PanP1 = (1.25f, 0.75f), PanP2 = (0.75f, 1.25f), PanNoise = (0.85f, 1.15f);
@@ -91,6 +97,16 @@ internal sealed class CdMixer
             if ((Mute & 4) != 0) tri = 0;
             if ((Mute & 8) != 0) noise = 0;
             if ((Mute & 16) != 0) dmc = 0;
+        }
+        if (Orchestra && Chip?.Invoke() is { } apu)
+        {
+            _dmcAcc += dmc;
+            if (++_oph < Factor) return;
+            _oph = 0;
+            var (ol, or) = _orc.Render(apu, _dmcAcc / Factor, Mute);
+            _dmcAcc = 0;
+            Emit(ol * Gain, or * Gain);
+            return;
         }
         if (Remaster) { PushRemaster(p1, p2, tri, noise, dmc); return; }
         float l, r;
@@ -214,6 +230,7 @@ internal sealed class CdMixer
         _pos = _phase = 0;
         _dcxl = _dcyl = _dcxr = _dcyr = 0;
         _xf.Clear();
+        _orc = new Orchestra(); _dmcAcc = 0; _oph = 0;
         _out.Clear();
     }
 }
@@ -265,12 +282,15 @@ internal sealed class Freeverb
     private readonly float[][] _comb, _ap;
     private readonly int[] _ci, _ai;
     private readonly float[] _store;
-    private const float Feedback = 0.80f, Damp = 0.35f, ApFeedback = 0.5f;
+    private readonly float Feedback, Damp;
+    private const float ApFeedback = 0.5f;
 
-    public Freeverb(int spread)
+    /// <summary>size scales the comb lengths (T50 hall: 1.45 with feedback 0.86)</summary>
+    public Freeverb(int spread, float feedback = 0.80f, double size = 1.0, float damp = 0.35f)
     {
+        Feedback = feedback; Damp = damp;
         int[] cl = { 1116, 1188, 1277, 1356 }, al = { 556, 441 };
-        _comb = cl.Select(n => new float[n + spread]).ToArray();
+        _comb = cl.Select(n => new float[(int)(n * size) + spread]).ToArray();
         _ap = al.Select(n => new float[n + spread]).ToArray();
         _ci = new int[_comb.Length]; _ai = new int[_ap.Length]; _store = new float[_comb.Length];
     }

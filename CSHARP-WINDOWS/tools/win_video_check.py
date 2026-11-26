@@ -242,7 +242,7 @@ def main(argv):
             print(f'ok   {name:10s} {msg_ok}', flush=True)
     if not names or 'enhanced' in names:
         fails += enhanced_checks(exe, timeout, hpng, frame)
-    if not names or any(n in names for n in ('hd', 'hdfull', 'hdoff', 'hdfx', 'hdart')):
+    if not names or any(n in names for n in ('hd', 'hdfull', 'hdoff', 'hdfx', 'hdart', 'hdamb')):
         fails += hd_checks(exe, timeout, hpng, frame, names)
     if not names or 'heropack' in names:
         fails += hero_check(exe, timeout)
@@ -350,7 +350,7 @@ def hd_checks(exe, timeout, hpng, frame, names):
     fails = 0
     ini = os.path.join(OUT, 'hd.ini')
     orig = {c for row in frame for c in row}
-    cases = [('hd', ['--menu', 'graphics:hd,size:4x']), ('hdfull', ['--menu', 'graphics:hd', '--fullscreen']),
+    cases = [('hd', ['--menu', 'graphics:hd,size:4x']), ('hdfull', ['--menu', 'graphics:hd,hd:ambient', '--fullscreen']),
              ('hdoff', ['--menu', 'graphics:hd,size:4x,graphics:original'])]
     for name, extra in cases:
         if names and name not in names:
@@ -404,8 +404,43 @@ def hd_checks(exe, timeout, hpng, frame, names):
         fails += hdfx_check(exe, timeout)
     if not names or 'hdart' in names:
         fails += hdart_check(exe, timeout)
+    if not names or 'hdamb' in names:
+        fails += hdamb_check(exe, timeout)
     return fails
 
+
+def hdamb_check(exe, timeout):
+    """T53 HD ambient bars (default on): a gameplay frame fullscreen (1920x1080, picture 1024x960 at 448,60): the side
+    bars are lit (a dim, blurred mirror of the picture), dimmer than the picture, darker toward the screen edge"""
+    state = os.path.join(cv.ROOT, '..', 'web', 'test', 'states', 'group29.json')
+    ini, png = os.path.join(OUT, 'hdamb.ini'), os.path.join(OUT, 'hdamb.png')
+    if os.path.exists(ini):
+        os.remove(ini)
+    rc, out = run(exe, ['--load-state', winpath(state), '--frames', '60', '--turbo', '--no-audio', '--fullscreen',
+                        '--video-config', winpath(ini), '--save', winpath(os.path.join(OUT, 'video.sav')),
+                        '--menu', 'graphics:hd', '--dump-window', winpath(png)], timeout)
+    if rc or not os.path.exists(png) or 'HD engine: Direct3D 11' not in out:
+        print(f'FAIL hdamb      rc={rc}')
+        print('     ' + '\n     '.join(out.strip().splitlines()[-8:]))
+        return 1
+    cw, ch, rows = png_decode(open(png, 'rb').read())
+    def lum(p):
+        return sum(p) / 3
+    bar = [rows[y][x] for y in range(60, 1020, 4) for x in list(range(0, 448, 4)) + list(range(1472, 1920, 4))]
+    lit = sum(lum(p) > 3 for p in bar)
+    pic = sum(lum(rows[y][x]) for y in range(60, 700, 4) for x in range(448, 1472, 4)) / (160 * 256)
+    near = sum(lum(rows[y][440]) for y in range(60, 700, 4)) / 160
+    far = sum(lum(rows[y][8]) for y in range(60, 700, 4)) / 160
+    if (cw, ch) != SCREEN:
+        msg = f'client {cw}x{ch}'
+    elif lit < 0.8 * len(bar):
+        msg = f'only {lit} / {len(bar)} bar samples lit'
+    elif not (near < 0.6 * pic and far < near):
+        msg = f'bars not dim / fading: picture {pic:.0f}, bar near {near:.0f}, far {far:.0f}'
+    else:
+        msg = f'ok: {lit} / {len(bar)} bar samples lit, picture {pic:.0f}, bar near the picture {near:.0f}, at the edge {far:.0f}'
+    print(('ok   hdamb      ' + msg[4:]) if msg.startswith('ok:') else f'FAIL hdamb      {msg}', flush=True)
+    return 0 if msg.startswith('ok:') else 1
 
 def hdfx_check(exe, timeout):
     """T19 HD effects on a group-29 gameplay frame (ice cave with dark pits): all four effects (parallax, shadows,
@@ -433,14 +468,14 @@ def hdfx_check(exe, timeout):
     hud = sum(on[y][x] != off[y][x] for y in range(780, 890) for x in range(1024))
     play = sum(on[y][x] != off[y][x] for y in range(0, 720) for x in range(32, 1024))
     total = 720 * 992
-    if 'hd_effects=noflicker,art,vsync,edges,hud,sharpen' not in lines:
-        msg = 'settings file lacks hd_effects=noflicker,art,vsync,edges,hud,sharpen'
+    if 'hd_effects=noflicker,art,vsync,edges,hud,sharpen,cinematic,outlines,ambient,tiltshift' not in lines:
+        msg = 'settings file lacks hd_effects=noflicker,art,vsync,edges,hud,sharpen,cinematic,outlines,ambient,tiltshift'
     elif hud:
         msg = f'{hud} HUD pixels change with the effects (HUD must stay unlit)'
     elif play < 0.3 * total:
         msg = f'only {play} / {total} playfield pixels change with the effects'
     else:
-        msg = f'ok: effects change {play} / {total} playfield pixels, HUD identical, hd_effects=noflicker,art,vsync,edges,hud,sharpen saved'
+        msg = f'ok: effects change {play} / {total} playfield pixels, HUD identical, hd_effects=noflicker,art,vsync,edges,hud,sharpen,cinematic,outlines,ambient,tiltshift saved'
     print(f'{"ok  " if msg.startswith("ok:") else "FAIL"} {"hdfx":10s} {msg[4:] if msg.startswith("ok:") else msg}', flush=True)
     return 0 if msg.startswith('ok:') else 1
 

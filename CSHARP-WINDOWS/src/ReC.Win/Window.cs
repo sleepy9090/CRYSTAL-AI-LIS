@@ -167,6 +167,19 @@ internal static unsafe partial class Window
     // T18 HD graphics (Gpu.cs): created when HD is chosen, released when another look is (GDI draws again)
     private static Gpu? _gpu;
     private static HdScene? _scene;
+    /// <summary>T54: what the ambient sounds play, from the HD scene (gameplay only; nothing without the HD engine)</summary>
+    private static void AmbienceTargets()
+    {
+        if (_audio == null) return;
+        var a = _audio.Amb;
+        if (_v.Ambience && HdEngine && _gpu != null && _scene is { } s)
+        {
+            float lum = s.Mean.R * 0.299f + s.Mean.G * 0.587f + s.Mean.B * 0.114f;
+            a.Outdoor = s.Outdoor; a.Hot = s.Hot; a.Icy = s.Icy;
+            a.Cave = s.Play * (1 - s.Outdoor) * (1 - s.Hot) * (1 - s.Icy) * Math.Clamp((0.32f - lum) / 0.15f, 0, 1);
+        }
+        else a.Outdoor = a.Hot = a.Icy = a.Cave = 0;
+    }
     private static int[] _nesRgb = Array.Empty<int>();
 
     /// <summary>T19: the Video > Graphics > HD effect switches -> the renderer</summary>
@@ -180,6 +193,10 @@ internal static unsafe partial class Window
         _gpu.Edges = _v.HdEdges;
         _gpu.HudStyle = _v.HdHud;
         _gpu.Sharpen = _v.HdSharpen;
+        _gpu.Cinematic = _v.HdCinematic;
+        _gpu.SmoothOutlines = _v.HdSmooth;
+        _gpu.Ambient = _v.HdAmbient;
+        _gpu.TiltShift = _v.HdTilt;
     }
     private static string _gpuError = "";
     private static bool _gpuTried;
@@ -353,6 +370,7 @@ internal static unsafe partial class Window
                 double t0 = Clock.Elapsed.TotalMilliseconds;
                 // every line of a frame run with Tags / Capture set is recorded -> the enhanced / HD picture (+ --export-tiles)
                 if (NeedRender) RenderHd();
+                AmbienceTargets();                       // T54
                 var fb = ShownFb;
                 for (int i = 0; i < fb.Length; i++) Px[i] = lut[fb[i] & 0x3F];
                 Present();

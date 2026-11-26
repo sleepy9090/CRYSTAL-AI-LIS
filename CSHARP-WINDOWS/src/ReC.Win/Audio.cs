@@ -86,6 +86,8 @@ internal sealed unsafe class AudioOut
     private readonly List<float> _in = new(), _res = new();
     /// <summary>T47: game speed (4 while fast forward): the stream is resampled by it, so the sound stays continuous</summary>
     public double Speed = 1;
+    /// <summary>T54: ambient sounds (Ambience.cs), targets set per frame by the window from the HD scene</summary>
+    public readonly Ambience Amb = new();
     private const int Target = BufSamples * 5 / 2;   // frames queued (device + pending) the rate loop aims at
     /// <summary>T13 CD-quality stereo (CdAudio.cs) instead of the original mono stream</summary>
     public bool Cd { get; private set; }
@@ -100,6 +102,7 @@ internal sealed unsafe class AudioOut
     public AudioOut(Machine machine)
     {
         _m = machine;
+        Mixer.Chip = () => _m.Apu;                     // T50: the orchestra reads the notes (Machine.Reset makes a new Apu)
         _hwo = IntPtr.Zero;
         _buf = new float[Chunk * 8];
         _n = 0;
@@ -206,7 +209,17 @@ internal sealed unsafe class AudioOut
         int queued = _pending.Count / Ch;
         for (int i = 0; i < Buffers; i++) if (!Free(i)) queued += BufSamples;
         _rs.Process(_in, _rc.Ratio(Speed, queued, Target), _res);
-        foreach (float v in _res) _pending.Enqueue((short)Math.Clamp(MathF.Round(v * g), -32768f, 32767f));
+        float av = Muted ? 0 : Volume;
+        for (int i = 0; i < _res.Count; i += Ch)
+        {
+            var (al, ar) = Amb.Silent ? (0.0, 0.0) : Amb.Next();   // T54 ambient sounds (16-bit units)
+            if (Ch == 2)
+            {
+                _pending.Enqueue((short)Math.Clamp(MathF.Round(_res[i] * g + (float)al * av), -32768f, 32767f));
+                _pending.Enqueue((short)Math.Clamp(MathF.Round(_res[i + 1] * g + (float)ar * av), -32768f, 32767f));
+            }
+            else _pending.Enqueue((short)Math.Clamp(MathF.Round(_res[i] * g + (float)(al + ar) * 0.5f * av), -32768f, 32767f));
+        }
         while (_pending.Count > MaxPending * Ch) { for (int c = 0; c < Ch; c++) _pending.Dequeue(); Dropped++; }
         for (int i = 0; i < Buffers && _pending.Count >= BufSamples * Ch; i++)
         {

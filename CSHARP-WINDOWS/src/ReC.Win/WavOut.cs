@@ -33,10 +33,11 @@ internal static class WavOut
     }
 
     /// <summary>T13: the same music through Apu.OutChannels + CdMixer -> interleaved stereo 16-bit</summary>
-    public static List<short> PlayMusicCd(Data data, int id, double seconds, bool stereo = true, bool reverb = false, bool remaster = false)
+    public static List<short> PlayMusicCd(Data data, int id, double seconds, bool stereo = true, bool reverb = false, bool remaster = false, bool orchestra = false, int mute = 0)
     {
         var m = new Machine(data);
-        var mix = new CdMixer { Stereo = stereo, Reverb = reverb, Remaster = remaster };
+        var mix = new CdMixer { Stereo = stereo, Reverb = reverb, Remaster = remaster, Orchestra = orchestra, Mute = mute };
+        mix.Chip = () => m.Apu;
         m.Apu.SetOutput(CdMixer.InRate, null);
         m.Apu.OutChannels = mix.Push;
         m.Reset();
@@ -60,23 +61,23 @@ internal static class WavOut
         return b;
     }
 
-    /// <summary>args = ID OUT.wav [SECONDS] [--data DIR] [--cd [--mono] [--reverb] | --remaster]; ID decimal or 0x-hex</summary>
+    /// <summary>args = ID OUT.wav [SECONDS] [--data DIR] [--cd [--mono] [--reverb] | --remaster | --orchestra]; ID decimal or 0x-hex</summary>
     public static int Run(string[] args)
     {
         var rest = args.ToList();
-        bool remaster = rest.Remove("--remaster"), cd = rest.Remove("--cd") || remaster, mono = rest.Remove("--mono"), reverb = rest.Remove("--reverb");
+        bool remaster = rest.Remove("--remaster"), orchestra = rest.Remove("--orchestra"), cd = rest.Remove("--cd") || remaster || orchestra, mono = rest.Remove("--mono"), reverb = rest.Remove("--reverb");
         string? dataDir = null;
         int di = rest.IndexOf("--data");
         if (di >= 0 && di + 1 < rest.Count) { dataDir = rest[di + 1]; rest.RemoveRange(di, 2); }
-        if (rest.Count < 2) { Console.Error.WriteLine("usage: ReC.exe --wav ID OUT.wav [SECONDS] [--data DIR] [--cd [--mono] [--reverb] | --remaster]"); return 2; }
+        if (rest.Count < 2) { Console.Error.WriteLine("usage: ReC.exe --wav ID OUT.wav [SECONDS] [--data DIR] [--cd [--mono] [--reverb] | --remaster | --orchestra]"); return 2; }
         string s = rest[0];
         int id = s.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? Convert.ToInt32(s[2..], 16) : int.Parse(s, CultureInfo.InvariantCulture);
         double seconds = rest.Count > 2 ? double.Parse(rest[2], CultureInfo.InvariantCulture) : 30;
         if (cd)
         {
-            var st = PlayMusicCd(Data.LoadDefault(dataDir), id, seconds, !mono, reverb, remaster);
+            var st = PlayMusicCd(Data.LoadDefault(dataDir), id, seconds, !mono, reverb, remaster, orchestra);
             File.WriteAllBytes(rest[1], WavBytes(st, 2, CdMixer.OutRate));
-            Console.WriteLine($"wrote {rest[1]}: {st.Count / 2.0 / CdMixer.OutRate:F1} s, 44.1 kHz 16-bit stereo ({(remaster ? "remastered" : "CD quality")})");
+            Console.WriteLine($"wrote {rest[1]}: {st.Count / 2.0 / CdMixer.OutRate:F1} s, 44.1 kHz 16-bit stereo ({(orchestra ? "orchestrated" : remaster ? "remastered" : "CD quality")})");
             return 0;
         }
         var pcm = PlayMusic(Data.LoadDefault(dataDir), id, seconds);

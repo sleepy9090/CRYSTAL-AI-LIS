@@ -51,6 +51,17 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool HudStyle = true;
     /// <summary>T48: contrast-adaptive sharpening after the anti-aliasing (Cam.w = strength)</summary>
     public bool Sharpen = true;
+    /// <summary>T51: cut-scenes play like film shots (CineBand: camera dolly + parallax, particles, lens streaks, grain)</summary>
+    public bool Cinematic = true;
+    /// <summary>T52: smooth outlines (Vote: the last 2x step of the albedo as a Gaussian key vote instead of Scale2x)</summary>
+    public bool SmoothOutlines = true;
+    /// <summary>T53: the bars beside / above the picture show a soft, dim, mirrored blur of it (PSAmbient) instead of black</summary>
+    public bool Ambient = true;
+    /// <summary>T55: tilt-shift depth of field in gameplay (Mat.w)</summary>
+    public bool TiltShift = true;
+    private float _cineW, _shotStart;
+    private (int Y0, int Y1, int X0, int X1) _band;
+    private int _cineHold;
     public const float SharpenK = 0.6f;
     /// <summary>T35: the player's HP (RAM $03C1) for the LIFE meter's fill (set before Upload)</summary>
     public int Hp;
@@ -87,7 +98,7 @@ internal sealed unsafe partial class Gpu : IDisposable
     // draw targets
     private void* _hdrTex, _hdrRtv, _hdrSrv, _b1Tex, _b1Rtv, _b1Srv, _b2Tex, _b2Rtv, _b2Srv;
     private void* _b3Tex, _b3Rtv, _b3Srv, _b4Tex, _b4Rtv, _b4Srv, _ldrTex, _ldrRtv, _ldrSrv;
-    private void* _vs, _psScale, _psAlbedo, _psSeed, _psJfa, _psHeight, _psEmit, _psLight, _psBright, _psBlur, _psComp, _psFinal, _sampLin, _cb;
+    private void* _vs, _psScale, _psAlbedo, _psSeed, _psJfa, _psHeight, _psEmit, _psLight, _psBright, _psBlur, _psComp, _psFinal, _psAmb, _sampLin, _cb;
     private int _bw, _bh, _pw, _ph;
     private float _camX, _camY, _time, _outdoor, _voidGate, _mr = 0.3f, _mg = 0.3f, _mb = 0.3f, _play, _icy, _hot, _hudFill = -1, _hudTop, _hudBottom;
     private readonly float[] _c = new float[NConst * 4];
@@ -147,7 +158,7 @@ internal sealed unsafe partial class Gpu : IDisposable
 
     private const uint FmtBgra = 87, FmtRgba8 = 28, FmtRgba8U = 30, FmtRg32U = 17, FmtRgba32F = 2, FmtRgba16F = 10;
     private const uint BindSrv = 8, BindRtv = 0x20;
-    private const int NSrv = 12, NConst = 18;
+    private const int NSrv = 12, NConst = 19;
     private static readonly Guid IidTex2D = new("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
 
     private static void** Vt(void* o) => *(void***)o;
@@ -222,6 +233,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         _psBlur = Compile("PSBlur", "ps_4_0");
         _psComp = Compile("PSComp", "ps_4_0");
         _psFinal = Compile("PSFinal", "ps_4_0");
+        _psAmb = Compile("PSAmbient", "ps_4_0");
 
         MakeTex(256, 240, FmtRgba8U, out _layTex, out _laySrv);
         MakeTex(256, 240, FmtRg32U, out _artTex, out _artSrv);
@@ -515,6 +527,61 @@ internal sealed unsafe partial class Gpu : IDisposable
         return rows;
     }
 
+    /// <summary>T51: the picture of a cut-scene (story screens, the title): no HUD split; the longest run
+    /// of lines (black gaps without text bridged, up to 64 lines) with at least 8 pixels that are neither black nor font, at least 24 lines
+    /// high and 64 pixels wide. Returns (first line, last line + 1, first x, last x + 1) or null.</summary>
+    public static (int Y0, int Y1, int X0, int X1)? CineBand(SceneRaster r, HdScene sc)
+    {
+        if (SplitGap(r) != (0, 0) || sc.Play > 0.5f) return null;
+        bool[] art = new bool[240], text = new bool[240];
+        for (int y = 0; y < 240; y++)
+        {
+            int n = 0;
+            for (int x = 0; x < 256; x++)
+            {
+                bool lit = (r.Fb[y * 256 + x] & 63) != 0x0F, ui = (sc.Info[(y * 256 + x) * 4 + 2] & HdScene.FUi) != 0;
+                if (lit && !ui) n++;
+                if (lit && ui) text[y] = true;
+            }
+            art[y] = n >= 8;
+        }
+        int best0 = 0, best1 = 0;
+        for (int y = 0; y < 240;)
+        {
+            if (!art[y]) { y++; continue; }
+            int e = y + 1, gap = 0;
+            for (; e < 240; e++)
+            {
+                if (art[e]) gap = 0;
+                else if (text[e] || ++gap > 64) break;     // black gaps inside one picture are bridged, text ends it
+            }
+            e -= gap;
+            if (e - y > best1 - best0) (best0, best1) = (y, e);
+            y = e + 1;
+        }
+        if (best1 - best0 < 24) return null;
+        int x0 = 256, x1 = 0;
+        for (int y = best0; y < best1; y++)
+            for (int x = 0; x < 256; x++)
+                if ((r.Fb[y * 256 + x] & 63) != 0x0F && (sc.Info[(y * 256 + x) * 4 + 2] & HdScene.FUi) == 0) { x0 = Math.Min(x0, x); x1 = Math.Max(x1, x + 1); }
+        return x1 - x0 < 64 ? null : (best0, best1, x0, x1);
+    }
+
+    /// <summary>T51: weight eases in over half a second per shot (a new band = a new shot: the dolly starts over); a lost
+    /// band (fade to black) is held 20 frames; a HUD on screen ends it at once</summary>
+    private void CineUpdate((int Y0, int Y1, int X0, int X1)? b)
+    {
+        if (b is { } nb)
+        {
+            bool shot = _cineW <= 0 || Math.Abs(nb.Y0 - _band.Y0) > 4 || Math.Abs(nb.Y1 - _band.Y1) > 4;
+            if (shot) { _shotStart = _time; _cineW = 0; }
+            _band = nb; _cineHold = 20;
+            _cineW = Math.Min(1, _cineW + 1 / 30f);
+        }
+        else if (_cineHold > 0 && _play < 0.5f) _cineHold--;
+        else _cineW = 0;
+    }
+
     /// <summary>T33: the black band at the HUD split, [from, to): the gameplay HUD's scroll is fixed (nametable 2, row 24:
     /// v & $0FE0 = $0B00), and the IRQ at line 190 that sets it leaves a seam line above it (half the HUD's top row, stray
     /// tiles). Above the seam, a band the game scrolled to on purpose (a scroll that does not follow the PPU's own line
@@ -642,6 +709,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         _icy = sc.Icy; _hot = sc.Hot;
         _hudFill = sc.HudFill; _hudTop = sc.HudTop; _hudBottom = sc.HudBottom;
         _meters = Meters(r, sc.HudFill, Hp);
+        CineUpdate(CineBand(r, sc));
         // eye adaptation (gameplay only): dark scenes a little brighter, bright ones a little darker, eased over ~1 s
         float lum = Math.Max(_mr * 0.299f + _mg * 0.587f + _mb * 0.114f, 0.05f);
         float want = 1 + (Math.Clamp(MathF.Sqrt(0.42f / lum), 0.9f, 1.22f) - 1) * _play;
@@ -708,20 +776,21 @@ internal sealed unsafe partial class Gpu : IDisposable
             1, lines / 240f, 0, firstLine / 240f,
             Light.X, Light.Y, Light.Z, Bump,
             hx, hy, hz, Light.Z,
-            Amb, Kd, SpecK, 0,
+            Amb, Kd, SpecK, TiltShift ? 1 : 0,
             LiftH, AoK, Shadows ? ShadowK : 0, Shadows ? ContactK : 0,
             ShadowSlope, sharp, BloomThreshold, BloomK,
             0, 0, 0, 0,
             _camX, _camY, _time, Sharpen ? SharpenK : 0,
             Parallax ? 1 : 0, Shadows ? 1 : 0, Atmosphere ? 1 : 0, Detail ? 1 : 0,
             _outdoor, _voidGate, _play, dark * dark * (3 - 2 * dark),
-            _mr, _mg, _mb, 0,
+            _mr, _mg, _mb, SmoothOutlines ? 1 : 0,
             _exposure, Saturation, Contrast, Vignette,
             Reflections ? ReflectK : 0, Lights ? LightK : 0, Atmosphere ? _icy : 0, Atmosphere ? _hot : 0,
             _hudFill, _hudTop, _hudBottom + 1, HudStyle ? 1 : 0,
             Quality >= 2 ? 24 : Quality == 1 ? 16 : 10, Quality >= 1 ? 1 : 0, _albScale, _osdOn ? 1 : 0,
             _meters[0], _meters[1], _meters[2], _meters[3],
             _meters[4], _meters[5], _meters[6], _meters[7],
+            Cinematic ? _cineW : 0, _band.Y0 * 256 + _band.Y1, _band.X0 * 256 + _band.X1, _shotStart,
         };
         c.CopyTo(_c, 0);
         SetConstants();
@@ -775,7 +844,30 @@ internal sealed unsafe partial class Gpu : IDisposable
         // 7. composite (tone, grade), then 8. edge anti-aliasing into the picture rectangle
         _c[0] = pw; _c[1] = ph; _c[2] = 1f / pw; _c[3] = 1f / ph; SetConstants();
         Pass(_ldrRtv, 0, 0, pw, ph, _psComp, _hdrSrv, _b1Srv, _b3Srv, null);
-        Pass(_backRtv, r.X, r.Y, pw, ph, _psFinal, _ldrSrv, _oSrv, null, null);
+        bool bars = Ambient && (r.X > 0 || r.Y > 0 || r.W < cw || r.H < ch);
+        if (bars || _osdOn)
+        {
+            // T53 / T56: the lit picture at 1/8 (the halo targets are free after the composite), blurred wide (steps of 4
+            // texels, twice each way): the ambient bars and the frosted glass under the on-screen display
+            _c[28] = 0.5f / cw8; _c[29] = 0.5f / ch8; SetConstants();
+            Pass(_b3Rtv, 0, 0, cw8, ch8, _psBlur, _hdrSrv, null, null, null);
+            for (int k = 0; k < 2; k++)
+            {
+                _c[28] = 4f / cw8; _c[29] = 0; SetConstants();
+                Pass(_b4Rtv, 0, 0, cw8, ch8, _psBlur, _b3Srv, null, null, null);
+                _c[28] = 0; _c[29] = 4f / ch8; SetConstants();
+                Pass(_b3Rtv, 0, 0, cw8, ch8, _psBlur, _b4Srv, null, null, null);
+            }
+        }
+        if (bars)
+        {
+            // T53 ambient bars: the whole client area first (the picture pass then draws over its rectangle)
+            _c[0] = cw; _c[1] = ch; _c[2] = 1f / cw; _c[3] = 1f / ch;
+            _c[28] = (float)r.X / cw; _c[29] = (float)r.Y / ch; _c[30] = (float)pw / cw; _c[31] = (float)ph / ch; SetConstants();
+            Pass(_backRtv, 0, 0, cw, ch, _psAmb, _b3Srv, null, null, null);
+            _c[0] = pw; _c[1] = ph; _c[2] = 1f / pw; _c[3] = 1f / ph; SetConstants();
+        }
+        Pass(_backRtv, r.X, r.Y, pw, ph, _psFinal, _ldrSrv, _oSrv, _osdOn ? _b3Srv : null, null);
         Unbind();
         if (present) ((delegate* unmanaged[Stdcall]<void*, uint, uint, int>)Vt(_swap)[8])(_swap, VSync ? 1u : 0u, 0);
     }
@@ -863,7 +955,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         Release(ref _iSrv); Release(ref _iTex); Release(ref _lnSrv); Release(ref _lnTex); Release(ref _mSrv); Release(ref _mTex);
         Release(ref _rgbSrv); Release(ref _rgbTex); Release(ref _atlSrv); Release(ref _atlTex);
         Release(ref _vs); Release(ref _psScale); Release(ref _psAlbedo); Release(ref _psSeed); Release(ref _psJfa);
-        Release(ref _psHeight); Release(ref _psEmit); Release(ref _psLight); Release(ref _psBright); Release(ref _psBlur); Release(ref _psComp); Release(ref _psFinal);
+        Release(ref _psHeight); Release(ref _psEmit); Release(ref _psLight); Release(ref _psBright); Release(ref _psBlur); Release(ref _psComp); Release(ref _psFinal); Release(ref _psAmb);
         Release(ref _sampLin); Release(ref _cb);
         Release(ref _swap); Release(ref _ctx); Release(ref _dev);
     }

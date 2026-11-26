@@ -163,6 +163,8 @@ internal static partial class Program
     private static int Main(string[] args)
     {
         if (args.Length >= 3 && args[0] == "--wav") return WriteWav(args);
+        if (args.Length >= 4 && args[0] == "--cdwav") return WinTests_CdWav(args);
+        if (args.Length >= 3 && args[0] == "--ambwav") return WinTests_AmbWav(args);
         foreach (var (name, fn) in Tests.Concat(SoundTests).Concat(WinTests))
         {
             if (args.Length > 0 && !args.Any(name.Contains)) continue;

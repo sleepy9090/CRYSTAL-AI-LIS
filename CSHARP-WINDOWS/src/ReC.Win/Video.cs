@@ -46,6 +46,14 @@ internal sealed class VideoSettings
     public bool HdEdges = true;
     /// <summary>T48: HD sharpening (hd_effects sharpen)</summary>
     public bool HdSharpen = true;
+    /// <summary>T51: cinematic cut-scenes (hd_effects cinematic)</summary>
+    public bool HdCinematic = true;
+    /// <summary>T52: smooth outlines (hd_effects outlines)</summary>
+    public bool HdSmooth = true;
+    /// <summary>T53: ambient bars (hd_effects ambient)</summary>
+    public bool HdAmbient = true;
+    /// <summary>T55: tilt-shift (hd_effects tiltshift)</summary>
+    public bool HdTilt = true;
     /// <summary>T34: HD HUD style (smooth bevelled text, soft shadows)</summary>
     public bool HdHud = true;
     /// <summary>T31: HD quality 2 full, 1 balanced, 0 fast (Gpu.Quality)</summary>
@@ -71,11 +79,15 @@ internal sealed class VideoSettings
     public bool CdAudio, AudioStereo = true, AudioReverb;
     /// <summary>T28: Audio > Remastered (CdMixer.Remaster: chorus, smooth bass, room, EQ); implies the CD device path</summary>
     public bool AudioRemaster;
+    /// <summary>T50: Audio > Orchestrated (Orchestra.cs); implies the CD device path</summary>
+    public bool AudioOrchestra;
     /// <summary>T47: muted channels for CD / Remastered (Audio > Channels; ini audio_mute=pulse1,..), CdMixer.Mute bits</summary>
     public int AudioMute;
     public static readonly string[] ChannelNames = { "pulse1", "pulse2", "triangle", "noise", "dmc" };
     /// <summary>T47: headphone crossfeed (ini crossfeed=1)</summary>
     public bool Crossfeed;
+    /// <summary>T54: ambient sounds (Audio > Ambient sounds; ini ambience=1, HD graphics only)</summary>
+    public bool Ambience = true;
 
     public static readonly (Aspect A, string Key, string Label)[] Aspects =
     {
@@ -165,7 +177,7 @@ internal sealed class VideoSettings
         $"graphics={(!Enhanced ? "original" : Hd ? "hd" : Enhanced32 ? "enhanced32" : "enhanced")}",
         $"hd_effects={HdEffects()}",
         $"hd_quality={(HdQuality >= 2 ? "full" : HdQuality == 1 ? "balanced" : "fast")}",
-        $"audio={(AudioRemaster ? "remaster" : CdAudio ? "cd" : "original")}",
+        $"audio={(AudioOrchestra ? "orchestra" : AudioRemaster ? "remaster" : CdAudio ? "cd" : "original")}",
         $"audio_stereo={(AudioStereo ? 1 : 0)}",
         $"audio_reverb={(AudioReverb ? 1 : 0)}",
         $"volume={Volume}",
@@ -173,6 +185,7 @@ internal sealed class VideoSettings
         $"show_fps={(ShowFps ? 1 : 0)}",
         $"audio_mute={(AudioMute == 0 ? "none" : string.Join(",", ChannelNames.Where((_, i) => (AudioMute >> i & 1) != 0)))}",
         $"crossfeed={(Crossfeed ? 1 : 0)}",
+        $"ambience={(Ambience ? 1 : 0)}",
         $"upscale={ReC.Win.Upscale.Filters.First(f => f.K == Upscale).Key}",
         $"cheats={Cheats.Serialize()}",
         $"turbo={(TurboA && TurboB ? "a,b" : TurboA ? "a" : TurboB ? "b" : "none")}",
@@ -193,6 +206,10 @@ internal sealed class VideoSettings
         if (HdEdges) e.Add("edges");
         if (HdHud) e.Add("hud");
         if (HdSharpen) e.Add("sharpen");
+        if (HdCinematic) e.Add("cinematic");
+        if (HdSmooth) e.Add("outlines");
+        if (HdAmbient) e.Add("ambient");
+        if (HdTilt) e.Add("tiltshift");
         return e.Count > 0 ? string.Join(",", e) : "none";
     }
 
@@ -224,7 +241,7 @@ internal sealed class VideoSettings
                     break;
                 case "menu_bar": v.MenuBar = val != "0"; break;
                 case "audio":
-                    if (val is "original" or "cd" or "remaster") { v.CdAudio = val == "cd"; v.AudioRemaster = val == "remaster"; }
+                    if (val is "original" or "cd" or "remaster" or "orchestra") { v.CdAudio = val == "cd"; v.AudioRemaster = val == "remaster"; v.AudioOrchestra = val == "orchestra"; }
                     break;
                 case "audio_stereo": v.AudioStereo = val != "0"; break;
                 case "hd_effects":
@@ -232,7 +249,7 @@ internal sealed class VideoSettings
                     var e = val.Split(',', StringSplitOptions.TrimEntries);
                     v.HdParallax = e.Contains("parallax"); v.HdShadows = e.Contains("shadows");
                     v.HdAtmosphere = e.Contains("atmosphere"); v.HdDetail = e.Contains("detail");
-                    v.HdReflections = e.Contains("reflections"); v.HdLights = e.Contains("lights"); v.HdNoFlicker = e.Contains("noflicker"); v.HdArt = e.Contains("art"); v.HdVsync = e.Contains("vsync"); v.HdEdges = e.Contains("edges"); v.HdHud = e.Contains("hud"); v.HdSharpen = e.Contains("sharpen");
+                    v.HdReflections = e.Contains("reflections"); v.HdLights = e.Contains("lights"); v.HdNoFlicker = e.Contains("noflicker"); v.HdArt = e.Contains("art"); v.HdVsync = e.Contains("vsync"); v.HdEdges = e.Contains("edges"); v.HdHud = e.Contains("hud"); v.HdSharpen = e.Contains("sharpen"); v.HdCinematic = e.Contains("cinematic"); v.HdSmooth = e.Contains("outlines"); v.HdAmbient = e.Contains("ambient"); v.HdTilt = e.Contains("tiltshift");
                     break;
                 }
                 case "hd_quality":
@@ -249,6 +266,7 @@ internal sealed class VideoSettings
                     break;
                 }
                 case "crossfeed": v.Crossfeed = val == "1"; break;
+                case "ambience": v.Ambience = val == "1"; break;
                 case "cheats": v.Cheats.Parse(val); break;
                 case "turbo": { var t = val.Split(','); v.TurboA = t.Contains("a"); v.TurboB = t.Contains("b"); break; }
                 case "graphics":

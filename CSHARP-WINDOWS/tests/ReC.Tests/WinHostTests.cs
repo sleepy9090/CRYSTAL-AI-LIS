@@ -10,6 +10,45 @@ namespace ReC.Tests;
 
 internal static partial class Program
 {
+    /// <summary>--ambwav outdoor|cave|hot|icy OUT.wav [SECONDS]: one ambient bed (T54) as a stereo WAV</summary>
+    private static int WinTests_AmbWav(string[] a)
+    {
+        var amb = new Ambience();
+        switch (a[1]) { case "outdoor": amb.Outdoor = 1; break; case "cave": amb.Cave = 1; break; case "hot": amb.Hot = 1; break; default: amb.Icy = 1; break; }
+        int n = (int)((a.Length > 3 ? double.Parse(a[3], System.Globalization.CultureInfo.InvariantCulture) : 20) * 44100);
+        var pcm = new List<short>(n * 2);
+        for (int i = 0; i < n; i++) { var (l, r) = amb.Next(); pcm.Add((short)Math.Clamp(l, -32768, 32767)); pcm.Add((short)Math.Clamp(r, -32768, 32767)); }
+        File.WriteAllBytes(a[2], WavOut.WavBytes(pcm, 2, 44100));
+        Console.WriteLine($"wrote {a[2]}");
+        return 0;
+    }
+
+    /// <summary>--cdwav ID OUT.wav SECONDS [cd|remaster|orchestra] [MUTE]: a music id through the CD path (T50 listening / analysis)</summary>
+    private static int WinTests_CdWav(string[] a)
+    {
+        int id = a[1].StartsWith("0x") ? Convert.ToInt32(a[1][2..], 16) : int.Parse(a[1]);
+        double sec = double.Parse(a[3], System.Globalization.CultureInfo.InvariantCulture);
+        string mode = a.Length > 4 ? a[4] : "orchestra";
+        int mute = a.Length > 5 ? int.Parse(a[5]) : 0;
+        var m = new Machine(TheData.Value);
+        var mix = new CdMixer { Remaster = mode == "remaster", Orchestra = mode == "orchestra", Mute = mute };
+        mix.Chip = () => m.Apu;
+        m.Apu.SetOutput(CdMixer.InRate, null);
+        m.Apu.OutChannels = mix.Push;
+        m.Reset();
+        PlaySound.Play(m, id);
+        var pcm = new List<short>();
+        for (int f = 0; f < (int)(sec * 60.0988); f++)
+        {
+            m.SoundUpdate(m); m.Apu.Run(29781); mix.Take(pcm);
+            if (Environment.GetEnvironmentVariable("CDWAV_TRACE") == "1")
+                Console.WriteLine($"f{f} {f / 60.0988:F2}s p1 per {m.Apu.P1.Period} vol {m.Apu.P1.Env.Out} len {m.Apu.P1.Len} duty {m.Apu.P1.Duty} sw {m.Apu.P1.SwEn}");
+        }
+        File.WriteAllBytes(a[2], WavOut.WavBytes(pcm, 2, CdMixer.OutRate));
+        Console.WriteLine($"wrote {a[2]}: {pcm.Count / 2.0 / CdMixer.OutRate:F1} s ({mode}, mute {mute})");
+        return 0;
+    }
+
     private static readonly (string Name, Action Fn)[] WinTests =
     {
         ("win_input", () =>
@@ -887,6 +926,179 @@ internal static partial class Program
             True(new VideoSettings().Serialize().Contains("audio_mute=none"), "ini default: nothing muted");
             Eq(415, Window.CommandId("crossfeed"), "--menu crossfeed");
             Eq(433, Window.CommandId("channel:noise"), "--menu channel:noise");
+        }),
+        ("win_orchestra", () =>
+        {
+            // T50 Audio > Orchestrated: instruments played from the APU state
+            // 1. pitch: pulse 1 at period 253 (A4 = 440 Hz) -> energy at 440 Hz, not a semitone away
+            List<short> Drive(Action<ReC.Nes.Apu> setup, double sec)
+            {
+                var apu = new ReC.Nes.Apu();
+                var mx = new CdMixer { Orchestra = true };
+                mx.Chip = () => apu;
+                apu.SetOutput(CdMixer.InRate, null);
+                apu.OutChannels = mx.Push;
+                setup(apu);
+                var o = new List<short>();
+                for (int i = 0; i < (int)(sec * 60); i++) { apu.Run(29830); mx.Take(o); }
+                return o;
+            }
+            double Goertzel(List<short> s, double hz, int from)
+            {
+                double w = 2 * Math.Cos(2 * Math.PI * hz / 44100), a = 0, b = 0;
+                for (int i = from; i < s.Count; i += 2) { double x = s[i] + s[i + 1]; double c = x + w * a - b; b = a; a = c; }
+                return a * a + b * b - w * a * b;
+            }
+            var a4 = Drive(apu => { apu.Write(0x4015, 0x0F); apu.Write(0x4000, 0xBF); apu.Write(0x4002, 253); apu.Write(0x4003, 0x08); }, 1.0);
+            double e440 = Goertzel(a4, 440, 8820), e466 = Goertzel(a4, 466.2, 8820), e415 = Goertzel(a4, 415.3, 8820);
+            True(e440 > 20 * e466 && e440 > 20 * e415, $"pulse 1 A4 plays at 440 Hz ({e440:E1} vs {e466:E1} / {e415:E1})");
+            // 2. a pulse with the sweep on (a sound effect) keeps the chip's square: odd harmonics dominate
+            var fx = Drive(apu => { apu.Write(0x4015, 0x0F); apu.Write(0x4000, 0xBF); apu.Write(0x4001, 0x89); apu.Write(0x4002, 253); apu.Write(0x4003, 0x08); }, 0.05);
+            True(fx.Any(v => Math.Abs((int)v) > 2000), "a sweeping pulse (sound effect) still sounds");
+            // 3. triangle at period 126 -> 440 Hz as a bass
+            var tri = Drive(apu => { apu.Write(0x4015, 0x0F); apu.Write(0x4008, 0xFF); apu.Write(0x400A, 126); apu.Write(0x400B, 0x08); }, 1.0);
+            True(Goertzel(tri, 440.4, 8820) > 10 * Goertzel(tri, 466, 8820), "triangle pitch kept");
+            // 4. a real song: as loud as CD quality (+-4 dB), no clipping, the same rhythm, deterministic, stereo
+            var d = TheData.Value;
+            var cd = WavOut.PlayMusicCd(d, 0x14, 10);
+            var orc = WavOut.PlayMusicCd(d, 0x14, 10, orchestra: true);
+            True(orc.SequenceEqual(WavOut.PlayMusicCd(d, 0x14, 10, orchestra: true)), "deterministic");
+            double Rms(List<short> s) => Math.Sqrt(s.Average(v => (double)v * v));
+            double db = 20 * Math.Log10(Rms(orc) / Rms(cd));
+            int peak = orc.Max(v => Math.Abs((int)v));
+            // the same notes at the same time: the melody alone (pulse 1), per 100 ms the energy at 48 semitones (C3-B6),
+            // chip vs violins, cosine similarity averaged over windows with sound
+            double[] Notes(List<short> s, int k)
+            {
+                var seg = s.Skip(k * 8820).Take(8820).ToList();
+                return Enumerable.Range(0, 48).Select(n => Goertzel(seg, 130.81 * Math.Pow(2, n / 12.0), 0)).ToArray();
+            }
+            var chipM = WavOut.PlayMusicCd(d, 0x14, 10, mute: 30);
+            var orcM = WavOut.PlayMusicCd(d, 0x14, 10, orchestra: true, mute: 30);
+            var sims = new List<double>();
+            for (int k = 0; k < chipM.Count / 8820; k++)
+            {
+                double[] x = Notes(chipM, k), y = Notes(orcM, k);
+                double xy = x.Zip(y, (p, q) => p * q).Sum(), xx = x.Sum(p => p * p), yy = y.Sum(q => q * q);
+                if (xx > 0 && yy > 0) sims.Add(xy / Math.Sqrt(xx * yy));
+            }
+            double rc = sims.Average();
+            double sd = 0; for (int i = 0; i + 1 < orc.Count; i += 2) sd += Math.Abs(orc[i] - orc[i + 1]);
+            Console.WriteLine($"  win_orchestra: music $14 {db:+0.0;-0.0} dB vs CD, peak {peak}, melody notes match {rc:F2} (cosine over {sims.Count} windows), mean |L-R| {sd / (orc.Count / 2):F0}");
+            True(Math.Abs(db) < 4, $"loudness within 4 dB of CD ({db:F1})");
+            True(peak < 32700, "no clipping");
+            True(rc > 0.7, $"the same notes at the same time ({rc:F2})");
+            True(sd / (orc.Count / 2) > 100, "seated in stereo");
+            var v = VideoSettings.Parse("audio=orchestra\n");
+            True(v.AudioOrchestra && !v.CdAudio && !v.AudioRemaster && v.Serialize().Contains("audio=orchestra"), "ini audio=orchestra");
+            Eq(416, Window.CommandId("audio:orchestra"), "--menu audio:orchestra");
+        }),
+        ("win_cinematic", () =>
+        {
+            // T51 cinematic cut-scenes: the intro's picture is found as a band (text and black excluded); gameplay and
+            // menu screens never are
+            var d = TheData.Value;
+            (SceneRaster R, HdScene S) Scene(Machine m, int frames)
+            {
+                m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+                var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+                for (int f = 0; f < frames; f++) { m.RunFrame(0); if (f >= frames - 2) r.Build(m.Ppu.Capture); }
+                var sc = new HdScene(d.NesRgb);
+                for (int k = 0; k < 2; k++) sc.Build(r.Fb, r.Tags, r.LinePal[239], new byte[61440], r.LineScroll, k);
+                return (r, sc);
+            }
+            var mi = new Machine(d, _ => { }); mi.Reset();
+            var (ri, si) = Scene(mi, 900);
+            var band = Gpu.CineBand(ri, si);
+            Console.WriteLine($"  win_cinematic: intro frame 900 picture band {band}");
+            True(band is { } b && b.Y0 >= 8 && b.Y1 <= 135 && b.Y1 - b.Y0 >= 60 && b.X0 <= 20 && b.X1 >= 236, "intro picture found, the text under it left out");
+            if (band is { } bb)
+            {
+                bool noText = true;
+                for (int y = bb.Y0; y < bb.Y1; y++)
+                    for (int x = 0; x < 256; x++) noText &= (si.Info[(y * 256 + x) * 4 + 2] & HdScene.FUi) == 0 || (ri.Fb[y * 256 + x] & 63) == 0x0F;
+                True(noText, "no lit font (text) pixel inside the picture");
+            }
+            string dir = Path.Combine(Data.FindDir(), "..", "test", "states");
+            foreach (string name in new[] { "town02_enter", "group29", "equip", "shopmenu" })
+            {
+                var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, name + ".json")));
+                var (r, s) = Scene(m, 10);
+                Console.WriteLine($"  win_cinematic: {name} band {Gpu.CineBand(r, s)}");
+                True(Gpu.CineBand(r, s) == null, $"{name}: not a cut-scene");
+            }
+            foreach (string name in new[] { "ending", "finalscene", "death", "mesia", "swordraise" })
+            {
+                var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, name + ".json")));
+                var (r, s) = Scene(m, 10);
+                Console.WriteLine($"  win_cinematic: {name}: {(Gpu.CineBand(r, s) is { } cb ? $"picture lines {cb.Y0}-{cb.Y1 - 1}" : "no picture band")}");
+            }
+            var v = VideoSettings.Parse("hd_effects=edges\n");
+            True(new VideoSettings().HdCinematic && !v.HdCinematic, "ini hd_effects cinematic");
+            Eq(292, Window.CommandId("hd:cinematic"), "--menu hd:cinematic");
+            True(new VideoSettings().HdSmooth && new VideoSettings().Serialize().Contains("cinematic,outlines") && !v.HdSmooth, "ini hd_effects outlines (T52)");
+            Eq(293, Window.CommandId("hd:outlines"), "--menu hd:outlines");
+            True(new VideoSettings().HdAmbient && new VideoSettings().Serialize().Contains("outlines,ambient") && !v.HdAmbient, "ini hd_effects ambient (T53)");
+            Eq(294, Window.CommandId("hd:ambient"), "--menu hd:ambient");
+            True(new VideoSettings().HdTilt && new VideoSettings().Serialize().Contains("ambient,tiltshift") && !v.HdTilt, "ini hd_effects tiltshift (T55)");
+            Eq(295, Window.CommandId("hd:tiltshift"), "--menu hd:tiltshift");
+        }),
+        ("win_ambience", () =>
+        {
+            // T54 ambient sounds: silent until a scene asks; per bed a sensible level, birds / drips / crackles present,
+            // fade out, deterministic
+            var off = new Ambience();
+            True(Enumerable.Range(0, 44100).All(_ => off.Next() == (0, 0)) && off.Silent, "nothing until a scene asks");
+            (double Db, double[] L, double[] R) Bed(Action<Ambience> set, double sec)
+            {
+                var a = new Ambience(); set(a);
+                int n = (int)(sec * 44100);
+                var l = new double[n]; var r = new double[n];
+                for (int i = 0; i < n; i++) (l[i], r[i]) = a.Next();
+                double rms = Math.Sqrt(l.Skip(n / 4).Concat(r.Skip(n / 4)).Average(v => v * v));
+                return (20 * Math.Log10(Math.Max(rms, 1e-9) / 32768), l, r);
+            }
+            double Kurt(double[] x)
+            {
+                double m = x.Average(), v = x.Average(e => (e - m) * (e - m)), k4 = x.Average(e => Math.Pow(e - m, 4));
+                return k4 / (v * v);
+            }
+            double HighBand(double[] x, int from, int len)
+            {
+                // energy of the second difference (~ above 4 kHz) in a window
+                double s = 0;
+                for (int i = from + 2; i < from + len; i++) { double d = x[i] - 2 * x[i - 1] + x[i - 2]; s += d * d; }
+                return s / len;
+            }
+            var o = Bed(a => a.Outdoor = 1, 12);
+            var c = Bed(a => a.Cave = 1, 12);
+            var h = Bed(a => a.Hot = 1, 12);
+            var ic = Bed(a => a.Icy = 1, 12);
+            Console.WriteLine($"  win_ambience: outdoor {o.Db:F1} dBFS, cave {c.Db:F1}, fire {h.Db:F1}, ice {ic.Db:F1}");
+            True(new[] { o.Db, c.Db, h.Db, ic.Db }.All(db => db > -50 && db < -24), "every bed under the music (-50 .. -24 dBFS)");
+            True(o.L.Zip(o.R).Count(p => Math.Abs(p.First - p.Second) > 1) > o.L.Length / 2, "wind in stereo");
+            var hb = Enumerable.Range(0, o.L.Length / 4410).Select(k => HighBand(o.L, k * 4410, 4410) + HighBand(o.R, k * 4410, 4410)).ToArray();
+            double med = hb.OrderBy(x => x).ElementAt(hb.Length / 2);
+            True(hb.Count(x => x > med * 8) >= 2, "birds chirp now and then (high-band bursts)");
+            int drips = 0; bool inDrip = false;
+            for (int i = 0; i < c.L.Length; i += 64)
+            {
+                bool loud = Math.Abs(c.L[i] - c.R[i]) > 300;          // the drip echo is uneven between the sides
+                if (loud && !inDrip) drips++;
+                inDrip = loud;
+            }
+            True(drips >= 3, $"cave drips ({drips} in 12 s)");
+            True(Kurt(h.L) > 4, $"fire crackles (kurtosis {Kurt(h.L):F1})");
+            var f = new Ambience { Outdoor = 1, Cave = 1 };
+            for (int i = 0; i < 44100 * 3; i++) f.Next();
+            f.Outdoor = f.Cave = 0;
+            double tail = 0;
+            for (int i = 0; i < 44100 * 4; i++) { var (l, r) = f.Next(); if (i > 44100 * 3) tail = Math.Max(tail, Math.Abs(l) + Math.Abs(r)); }
+            True(tail < 30, $"fades out in a few seconds ({tail:F1})");
+            True(Bed(a => a.Outdoor = 1, 2).L.SequenceEqual(Bed(a => a.Outdoor = 1, 2).L), "deterministic");
+            var v = VideoSettings.Parse("ambience=0\n");
+            True(!v.Ambience && new VideoSettings().Ambience && v.Serialize().Contains("ambience=0"), "ini ambience");
+            Eq(417, Window.CommandId("ambience"), "--menu ambience");
         }),
         ("win_frame_stats", () =>
         {

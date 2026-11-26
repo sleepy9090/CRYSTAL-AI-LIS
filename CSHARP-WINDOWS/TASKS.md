@@ -342,3 +342,16 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   (AudioFx.cs: resampler + rate control instead of dropped blocks, continuous fast-forward sound, Audio › Channels
   mutes, Audio › Headphone crossfeed), **HD sharpening** (contrast adaptive, HD › Sharpen) + **water caustics**,
   **FPS counter** (F2). 379 tests. Preview: out/hd48/sharpen_cmp.png (off | on).
+- [x] T50-T51 (2026-11-25, request "orchestrated audio option, movie-type cut-scenes"): **Audio › Orchestrated**
+  (Orchestra.cs: violins, horns, string basses, timpani / snare from the chip's notes, concert hall; sound effects keep
+  the chip sound) and **cinematic cut-scenes** (story / ending pictures: camera push-in with height parallax, embers or
+  dust, light rays, lens streaks, film grade and grain). Demo WAVs: out/audio50/ (music_0x14/15/1B, cd vs orchestra).
+  Previews: out/hd51/.
+- [x] T52 (2026-11-25): **HD › Smooth outlines**: the 2x→4x and 4x→8x upscaling steps vote (Gaussian key vote) instead of
+  Scale2x: curves instead of pixel steps (characters, crystals, shores). Preview: out/hd52/cmp29.png.
+- [x] T53-T54 (2026-11-25): **HD › Ambient bars** (the bars beside the picture glow with a dim, blurred mirror of it)
+  and **Audio › Ambient sounds** (wind + birds outdoors, cave rumble + drips, fire crackle, ice whistle; from the HD
+  scene). Demo WAVs: out/audio50/ambience_*.wav.
+- [x] T55 (2026-11-25): **HD › Tilt-shift depth of field** (gameplay: the top and bottom of the playfield soften, the
+  middle stays sharp; the HD-2D diorama look).
+- [x] T56 (2026-11-25): **frosted-glass pause / help screens** in HD (the game behind the overlay is blurred).

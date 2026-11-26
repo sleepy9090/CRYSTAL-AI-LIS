@@ -374,3 +374,51 @@ CSHARP-WINDOWS/
     **FPS counter (T49):** F2 / Video › Show FPS (id 291, ini `show_fps=1`, `--menu fps`): `FrameStats` (frames in the
     last second, mean `Blit` time incl. HD render + present) as a line on the on-screen display (top left, under a
     notice). Test `win_frame_stats`.
+    **Orchestrated audio (T50, Orchestra.cs):** Audio › Orchestrated (id 416, ini `audio=orchestra`, `--menu
+    audio:orchestra`, `--wav ID OUT --orchestra`): `CdMixer.Orchestra` + `CdMixer.Chip` (= `() => machine.Apu`; the APU
+    channel classes are public, read only, no core change). Every 4th `OutChannels` call (= 44.1 kHz) renders one sample
+    from the channel state: pulse 1 → violins (3 PolyBLEP saws ±7 cents, TPT SVF low-pass following pitch, 25 ms / 180 ms,
+    delayed 5.6 Hz vibrato), pulse 2 → horns (saw + square, darker), triangle → string basses (saw + sub sine), noise →
+    timpani (period index ≥ 8: decaying sine 58-120 Hz + low rumble) / snare-cymbal (band-passed noise, envelope from the
+    game), DMC as is. Note starts = `Env.Start` rising, the channel turning on, or a pitch jump > 4 %. A pulse with its
+    sweep on or a period jumping > 4.5 % several times within ~50 ms (sound effects, arpeggios) plays as a band-limited
+    square at its duty. Seating (violins left, horns right), hall reverb (Freeverb size 1.45, feedback 0.86, 20 ms
+    pre-delay), shelves +2 dB @ 150 Hz / −1.5 dB @ 6 kHz; per-instrument gains measured against each chip channel solo.
+    Test `win_orchestra` (A4 at 440 Hz, triangle pitch, music `$14`: +2.6 dB vs CD, melody semitone match 0.78).
+    The test runner's `--cdwav ID OUT SECONDS [cd|remaster|orchestra] [MUTE]` writes WAVs on Linux (`CDWAV_TRACE=1`:
+    pulse 1 state per frame); `tools/wav_env.py` prints loudness per window.
+    **Cinematic cut-scenes (T51):** `Gpu.CineBand` finds a cut-scene picture: no HUD split, `Play` < 0.5, the longest run
+    of lines with ≥ 8 lit non-font pixels (black gaps without text bridged up to 64 lines, text ends it), ≥ 24 lines,
+    ≥ 64 px wide. `CineUpdate`: a new band = a new shot (start time), weight eases in over 30 frames, held 20 frames
+    through fades, 0 at once with a HUD. Constant row 19 `Cine` = (weight, y0·256+y1, x0·256+x1, shot start). In
+    `PSLight` pixels inside the band are remapped by `CineCam` before everything else: a push-in to zoom 1.10 over 10 s
+    toward a per-shot side, plus parallax from the height field (higher = moves more); `CineFx` adds embers (warm mean
+    colour) or dust and slow light rays in screen space. `PSComp`: an anamorphic streak (tight bloom stretched sideways,
+    blue), teal-shadow / warm-highlight grade, deeper vignette, 24 fps grain. Text / HUD (alpha 0) untouched. HD ›
+    Cinematic cut-scenes (id 292, `hd_effects` `cinematic`, on). Test `win_cinematic` (intro band, no text inside,
+    gameplay / menus / shops never).
+    **Smooth outlines (T52):** HD › Smooth outlines (id 293, `hd_effects` `outlines`, on; `MeanC.w`): the 2x → 4x
+    (`PSScale` when the source keys are ≥ 512 wide) and 4x → 8x (`PSAlbedo`) steps use `Vote` instead of Scale2x: per
+    output pixel a Gaussian (σ 0.8 texel) weight over the 4×4 source key texels, the background key (colour + dither
+    partner + HUD bit) and the sprite key each take the key with the most weight; HUD / text keep Scale2x and the HUD
+    edge never moves. The 1x → 2x step stays Scale2x (pixel-art aware). Stair steps become curves at any window size;
+    painted pack tiles are not affected. Previews: out/hd52/cmp29.png (off | on).
+    **Ambient bars (T53):** HD › Ambient bars (id 294, `hd_effects` `ambient`, on): when the picture does not fill the
+    client area, `PSAmbient` draws the whole back buffer first (the picture pass then covers its rectangle): the lit HDR
+    picture mirrored at the nearest edge, 5×5 taps 3 % apart, × 0.42, fading `exp(−4.5 · distance)` (client uv).
+    `Blur` = picture origin / size, `Out` = client size for that pass only. `win_video_check` `hdfull` turns it off
+    (black-bar layout check); `hdamb` = group29 fullscreen: bars lit, dimmer than the picture, darker at the screen edge.
+    **Ambient sounds (T54, Ambience.cs):** Audio › Ambient sounds (id 417, ini `ambience=1`, default on): `Window.
+    AmbienceTargets` per frame from `HdScene` (HD engine only, else silent): Outdoor, Hot, Icy, and Cave = Play × not
+    outdoor / hot / icy × darkness (mean playfield luminance < 0.32). Beds fade over ~1.5 s: wind (band-passed noise
+    320-700 Hz, gusts), birds (3-6 sine chirps 2.8-4.4 kHz every 3-10 s), cave rumble (two one-poles) + drips (rising
+    sine, 65 ms) through a two-tap echo (210 / 300 ms), fire crackles (Poisson clicks, high-passed) + roar, ice whistle
+    (Q 14 bands). `AudioOut.Flush` adds `Amb.Next()` per output frame after the resampler (any mode), × volume.
+    Levels −35 .. −40 dBFS. Test `win_ambience`; test runner `--ambwav outdoor|cave|hot|icy OUT [SECONDS]`.
+    **Tilt-shift (T55):** HD › Tilt-shift depth of field (id 295, `hd_effects` `tiltshift`, on; `Mat.w`): in `PSComp`,
+    gameplay only (`Scn.z` > 0.5, no cut-scene), the playfield (line 0 to the HUD's first line) keeps a sharp band
+    centred at 55 % ± 22 %; beyond it a 12-tap golden-angle disc blur grows to 1.3 NES pixels over the next 25 %
+    (HUD samples excluded, HUD pixels untouched) — the "HD-2D" diorama look.
+    **Frosted glass (T56):** while the on-screen display shows (pause, help, notices, FPS), `Draw` also makes the blurred
+    1/8 picture (the T53 passes) and binds it to `PSFinal` as t2: under overlay alpha a (×1.6, saturated) the picture
+    blends 90 % toward the blur before the overlay is composited — the game behind the pause / help panels is frosted.
