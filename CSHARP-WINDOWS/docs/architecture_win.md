@@ -514,3 +514,11 @@ CSHARP-WINDOWS/
     backlog at up to +2 % (±0.5 % near the target) and only > 300 ms is dropped. (6) **display lag**: the swap chain let
     the CPU queue 3 frames ahead with VSync; `IDXGIDevice1::SetMaximumFrameLatency(1)` now. `tools/win_run.py` runs the
     exe under Wine with any arguments and a long timeout.
+    **HD seam (P3):** the 1-2 px step at the edges of the game's 256 columns came from the scene info, not the map: the
+    game's masked left column (filled from the area by `Widen`) kept HdScene's info for the black strip (backdrop colour,
+    void on 163 of 190 lines), and the void mask changed at the old edge (HdScene's rule also counts the dark backdrop,
+    the side rule did not; its 3×3 opening was clamped at x 0 / 255). `WidenInfo(…, rl, sc)` now recomputes one void
+    mask over the whole width with HdScene's rule (`HdScene.DarkBackdrop`, sprites and text lines excluded, the sides
+    only above the status bar and inside the area) and gives pixels the widening changed the side info. `win_wide`:
+    colour off 0 at the seam columns, void lines 100 / 99 across the left edge and 100 / 99 across the right (were 49 /
+    163 and 101 / 48). Preview out/wide5/seam_cmp.png (before | after).

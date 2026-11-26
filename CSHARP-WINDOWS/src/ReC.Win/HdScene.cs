@@ -29,6 +29,8 @@ internal sealed class HdScene
     public int HudFill = -1, HudTop, HudBottom;
     /// <summary>1 = gameplay (a HUD split with text is on screen): world effects on; 0 = title, cut-scenes, menus</summary>
     public float Play;
+    /// <summary>the backdrop colour when it counts as void (dark), else -1 (widescreen: the same void rule on the sides)</summary>
+    public int DarkBackdrop = -1;
     public (float R, float G, float B) Mean = (0.3f, 0.3f, 0.3f);
     private int _ox = -1, _oy = -1, _frames;
     private readonly uint[] _rgb;
@@ -197,6 +199,7 @@ internal sealed class HdScene
         int nPlay = 0, nSolid = 0, nLeaf = 0, nIce = 0, nHot = 0;
         double mr = 0, mg = 0, mb = 0;
         bool darkBack = Luma(_rgb[bd]) < 0.25f;
+        DarkBackdrop = darkBack ? bd : -1;
         // void: background blacks, opened (erode + dilate 3x3)
         for (int i = 0; i < 256 * 240; i++)
         {

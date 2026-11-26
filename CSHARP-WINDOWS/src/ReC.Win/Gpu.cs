@@ -501,38 +501,53 @@ internal sealed unsafe partial class Gpu : IDisposable
     /// fade step << 23 (0 = none)</summary>
     /// <summary>widescreen: HdScene.Info (256 wide) into a W-wide copy; the sides: no lift, the colour, no flags, no void</summary>
     /// (void: HdScene's rule on the sides above voidTop, near-black colours opened 3x3, so chasms continue)</summary>
-    public static void WidenInfo(byte[] info, SceneRaster r, int e, byte[] dst, int voidTop = 240)
+    public static void WidenInfo(byte[] info, SceneRaster r, int e, byte[] dst, int voidTop = 240, SceneRaster? rl = null, HdScene? sc = null)
     {
-        int w = r.W;
+        // (seam fix) one void mask over the whole width with HdScene's own rule, so it does not change at the old edge:
+        // near-black colours or the dark backdrop, not sprites, not text lines; the sides only above voidTop and inside
+        // the area (a tile there). Pixels the widening changed (the game's masked left column, filled from the map) get
+        // the side info too: their colour, no lift, no flags.
+        int w = r.W, bd = sc?.DarkBackdrop ?? -1;
         var blk = new byte[w * 240];
-        for (int y = 0; y < 240; y++)
-            if (y < voidTop)
-                for (int x = 0; x < w; x++)
-                {
-                    int c = r.Fb[y * w + x] & 63;
-                    bool real = (r.BgTag[y * w + x] & ReC.Nes.Ppu.TagValid) != 0;   // outside the area (no tile): plain black
-                    blk[y * w + x] = (byte)(real && (c & 15) >= 0xD && c != 0x2D && c != 0x3D ? 1 : 0);
-                }
-        byte At(byte[] a, int x, int y) => a[Math.Clamp(y, 0, 239) * w + Math.Clamp(x, 0, w - 1)];
         var ero = new byte[w * 240];
         for (int y = 0; y < 240; y++)
+        {
+            bool uiLine = sc != null && sc.Lines[y * 4 + 2] != 0;
             for (int x = 0; x < w; x++)
             {
-                if (x > e && x < e + 255) continue;           // only the sides (+ the next column) are used
-                byte v = 1;
-                for (int dy = -1; dy <= 1 && v != 0; dy++) for (int dx = -1; dx <= 1; dx++) v &= At(blk, x + dx, y + dy);
-                ero[y * w + x] = v;
+                int i = y * w + x, sx = x - e, c = r.Fb[i] & 63, tag = r.Tags[i];
+                bool side = sx < 0 || sx >= 256;
+                bool real = (r.BgTag[i] & ReC.Nes.Ppu.TagValid) != 0;
+                bool spr = (tag & ReC.Nes.Ppu.TagValid) != 0 && (tag >> 19 & 7) >= 4;
+                bool ok = side ? y < voidTop && real : !uiLine;
+                blk[i] = (byte)(ok && !spr && ((c & 15) >= 0xD && c != 0x2D && c != 0x3D || c == bd) ? 1 : 0);
             }
+        }
         for (int y = 0; y < 240; y++)
+        {
+            int u = Math.Max(y - 1, 0) * w, m = y * w, d = Math.Min(y + 1, 239) * w;
             for (int x = 0; x < w; x++)
             {
-                int o = (y * w + x) * 4, sx = x - e;
-                if (sx >= 0 && sx < 256) { Array.Copy(info, (y * 256 + sx) * 4, dst, o, 4); continue; }
-                byte dil = 0;
-                for (int dy = -1; dy <= 1 && dil == 0; dy++) for (int dx = -1; dx <= 1; dx++) dil |= At(ero, x + dx, y + dy);
-                bool v = blk[y * w + x] != 0 && dil != 0;
-                dst[o] = 0; dst[o + 1] = (byte)((r.Fb[y * w + x] & 63) * 4); dst[o + 2] = (byte)(v ? HdScene.FVoid : 0); dst[o + 3] = (byte)(v ? 255 : 0);
+                int l = Math.Max(x - 1, 0), rr = Math.Min(x + 1, w - 1);
+                ero[m + x] = (byte)(blk[u + l] & blk[u + x] & blk[u + rr] & blk[m + l] & blk[m + x] & blk[m + rr] & blk[d + l] & blk[d + x] & blk[d + rr]);
             }
+        }
+        for (int y = 0; y < 240; y++)
+        {
+            int u = Math.Max(y - 1, 0) * w, m = y * w, dn = Math.Min(y + 1, 239) * w;
+            for (int x = 0; x < w; x++)
+            {
+                int o = (m + x) * 4, sx = x - e, i = m + x;
+                bool side = sx < 0 || sx >= 256 || (rl != null && r.Fb[i] != rl.Fb[y * 256 + sx]);   // filled by the widening
+                if (side) { dst[o] = 0; dst[o + 1] = (byte)((r.Fb[i] & 63) * 4); dst[o + 2] = 0; }
+                else Array.Copy(info, (y * 256 + sx) * 4, dst, o, 4);
+                int l = Math.Max(x - 1, 0), rr = Math.Min(x + 1, w - 1);
+                bool dil = (ero[u + l] | ero[u + x] | ero[u + rr] | ero[m + l] | ero[m + x] | ero[m + rr] | ero[dn + l] | ero[dn + x] | ero[dn + rr]) != 0;
+                bool v = blk[i] != 0 && dil;
+                dst[o + 2] = (byte)((dst[o + 2] & ~HdScene.FVoid) | (v ? HdScene.FVoid : 0));
+                dst[o + 3] = (byte)(v ? 255 : 0);
+            }
+        }
     }
 
     public static void Layers(SceneRaster r, HdScene sc, IReadOnlyDictionary<long, int> slots, IReadOnlyDictionary<long, int> fades,
@@ -830,7 +845,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         _sideE = e;
         SetWidth(r.W);
         byte[] info = sc.Info;
-        if (e > 0) { WidenInfo(sc.Info, r, e, _wInfo, SideVoidTop); info = _wInfo; }
+        if (e > 0) { WidenInfo(sc.Info, r, e, _wInfo, SideVoidTop, rl, sc); info = _wInfo; }
         Layers(r, sc, _slots, _fades, _tileArt, Lay, ArtMap, Edges, ModernFont && HasGlyphs ? Chr : null, info, rl);
         fixed (byte* p = Lay) Update(_layTex, p, NesW * 4);
         fixed (uint* p = ArtMap) Update(_artTex, p, NesW * 8);

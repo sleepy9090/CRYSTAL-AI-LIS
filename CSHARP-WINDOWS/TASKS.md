@@ -378,3 +378,5 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   area), **objects drawn in the side columns** (replay of the game's sprite pass), orchestra pops (543 → 4 clicks per
   minute on the instruments; a disabled effect detector, per-sample allocation, hard level switches), audio cut-outs
   (no more drops on catch-up bursts), display lag (1 frame queued instead of 3).
+- [x] P3 (2026-11-26, "fix the HD edge seam too"): the widescreen seam in HD (scene info of the masked column, void
+  mask cut at the old edge) fixed; `win_wide` checks the seam columns. Preview out/wide5/seam_cmp.png.

@@ -1383,13 +1383,55 @@ internal static partial class Program
                 var sc = new HdScene(d.NesRgb);
                 sc.Build(r.Fb, r.Tags, r.LinePal[239], new byte[61440], r.LineScroll, 0);
                 var info = new byte[424 * 240 * 4];
-                Gpu.WidenInfo(sc.Info, wr, e, info, 190);
+                Gpu.WidenInfo(sc.Info, wr, e, info, 190, r, sc);
                 var lay = new byte[424 * 240 * 4]; var am = new uint[424 * 240 * 2];
                 Gpu.Layers(wr, sc, new Dictionary<long, int>(), new Dictionary<long, int>(), new bool[8192], lay, am, true, null, info, r);
                 True(Enumerable.Range(0, 424 * 180).Count(i => (lay[i * 4] & 63) != 0x0F) > 424 * 100, "wide layer words cover the sides");
             }
             True(VideoSettings.Parse("widescreen=16:9\n").Wide == 2 && new VideoSettings().Serialize().Contains("widescreen=off"), "ini widescreen");
             Eq(662, Window.CommandId("widescreen:16:9"), "--menu widescreen:16:9");
+            {
+                // HD seam: the scene info of the wide picture is continuous across the edges of the game's columns (colour
+                // = the picture, the void mask the same on both sides)
+                var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, "group09.json")));
+                var kp = Keys.Parse(new[] { "2531:UP:50", "2585:RIGHT:330" });
+                m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+                var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+                var wide = new Widescreen();
+                for (int f = 0; f < 200; f++)
+                {
+                    wide.BeforeFrame(m, d, async: false);
+                    m.RunFrame(kp.TryGetValue(2506 + m.Frame, out int b) ? b : 0);
+                    r.Build(m.Ppu.Capture);
+                    wide.AfterFrame(r.Fb, m.Ppu.Pal, 190);
+                }
+                var lines = new bool[240];
+                wide.MapLines(r.Fb, 190, 0.5f, lines);
+                var wr = new SceneRaster(m.Ppu.Chr, 424);
+                wr.Widen(r, wide, lines);
+                var sc = new HdScene(d.NesRgb);
+                sc.Build(r.Fb, r.Tags, r.LinePal[239], new byte[61440], r.LineScroll, 0);
+                var info = new byte[424 * 240 * 4];
+                Gpu.WidenInfo(sc.Info, wr, 84, info, 190, r, sc);
+                int e = 84;
+                (int ColBad, int Void) Col(int x)
+                {
+                    int colBad = 0, voidN = 0, cacheBad = 0;
+                    for (int y = 0; y < 180; y++)
+                    {
+                        if (!lines[y]) continue;
+                        int i = y * 424 + x;
+                        if (info[i * 4 + 1] / 4 != (wr.Fb[i] & 63)) colBad++;
+                        if ((info[i * 4 + 2] & HdScene.FVoid) != 0) voidN++;
+                        if (wide.SideColor(x, y, e, r.LinePal[y]) != (wr.Fb[i] & 63) && wr.Sp[i] == 0) cacheBad++;
+                    }
+                    return (colBad + cacheBad, voidN);
+                }
+                var cols = new[] { e - 1, e, e + 7, e + 8, e + 255, e + 256 }.Select(Col).ToArray();
+                Console.WriteLine($"  win_wide: seam columns (left side, masked 0, 7, 8, 255, right side): void lines {string.Join(" ", cols.Select(c => c.Void))}");
+                True(cols.All(c => c.ColBad == 0), "scene info colour = the picture at the seams");
+                True(Math.Abs(cols[0].Void - cols[1].Void) <= 8 && Math.Abs(cols[4].Void - cols[5].Void) <= 8, "void mask continuous across both edges");
+            }
             // side sprites: the replay of the sprite pass, drawn on the game's own columns too, reproduces the sprite
             // pixels the PPU shows there (the orbiting sword sprites come from another routine: not all)
             foreach (var (name, keys) in new[] { ("group09", new[] { "2531:UP:50", "2585:RIGHT:330" }), ("group05", Array.Empty<string>()), ("group18", Array.Empty<string>()) })
