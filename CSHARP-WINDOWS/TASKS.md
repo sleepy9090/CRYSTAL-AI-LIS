@@ -366,3 +366,10 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   out/hd61/0_hd.png.
 - [x] T62-T63 (2026-11-26): **HD quality: Auto** (the default; steps down / up with the frame rate) and **save backups**
   (re-c.sav.1-.3).
+- [x] P1 (2026-11-26, playtest: "audio delayed and choppy, especially entering a new area; graphics take a little to
+  fill in while moving"): ReadyToRun exe (no JIT stalls on new game routines), audio flushed before drawing, 8 × 512
+  sample buffers, queued audio capped at ~128 ms, low-latency GC. The fill-in could not be reproduced in the game's
+  own output (scrolling frames fill correctly); the JIT stalls are the likely cause (frames shown late).
+- [x] W1-W2 (2026-11-26, request "add widescreen playfield"): **Video › Widescreen playfield** 16:10 / 16:9 / 21:9 in
+  Original and HD graphics: the columns beside the screen are drawn from the area's own map (exact, the camera of
+  each frame), fade in only while the screen shows the map. Previews: out/wide1/ (Original), out/wide2/ (HD 16:9).

@@ -205,17 +205,21 @@ internal static class Osd
     }
 
     /// <summary>the overlay blended into a picture of w x h pixels (0x00RRGGBB), nearest sample</summary>
-    public static void Blend(uint[] dst, int w, int h, int offset = 0)
+    /// <summary>widescreen: the overlay covers w columns from xoff in rows of `stride` pixels; the columns outside get the
+    /// overlay's left edge (the pause / help dim) so the whole picture dims</summary>
+    public static void Blend(uint[] dst, int w, int h, int xoff = 0, int stride = 0)
     {
+        if (stride <= 0) stride = w;
         for (int y = 0; y < h; y++)
         {
             int oy = y * H / h;
-            for (int x = 0; x < w; x++)
+            for (int sx = 0; sx < stride; sx++)
             {
-                uint o = Pix[oy * W + x * W / w];
+                int x = sx - xoff;
+                uint o = x >= 0 && x < w ? Pix[oy * W + x * W / w] : Pix[oy * W];
                 uint a = o >> 24;
                 if (a == 0) continue;
-                int i = offset + y * w + x;
+                int i = y * stride + sx;
                 uint d = dst[i];
                 uint k = 255 - a;
                 uint r = Math.Min(255u, (o & 255) + ((d >> 16 & 255) * k + 127) / 255);

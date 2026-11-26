@@ -35,9 +35,18 @@ namespace ReC.Win;
 
 internal sealed unsafe partial class Gpu : IDisposable
 {
-    public const int AW = 2048, AH = 1920;            // albedo: 8x
-    public const int KW = 512, KH = 480;              // height field: 2x
-    public const int LW = 128, LH = 120;              // light map
+    // sizes follow the picture width NesW (256; wider with the widescreen playfield)
+    public int NesW { get; private set; } = 256;
+    private int _sideE;
+    /// <summary>widescreen: black side pixels above this line are void (chasm look like the middle); 0 = none</summary>
+    public int SideVoidTop;
+    private int AW => NesW * 8;                       // albedo: 8x
+    public const int AH = 1920;
+    private int KW => NesW * 2;                       // height field: 2x
+    public const int KH = 480;
+    private int LW => NesW / 2;                       // light map
+    public const int LH = 120;
+    public const int MaxW = 560;
     public const int AtlasN = 128, MaxSlots = AtlasN * AtlasN;  // T27: 128 x 128 pack tiles of 32x32 (4096x4096; fades)
     public string Info { get; private set; } = "";
 
@@ -61,6 +70,8 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool TiltShift = true;
     /// <summary>T59: text from the glyph atlas (SetGlyphs) instead of the game's 8x8 font</summary>
     public bool ModernFont = true;
+    /// <summary>widescreen: the engine can draw a wide picture (W2); false = the window keeps HD at 256 columns</summary>
+    public bool WideOk => true;
     /// <summary>T60: display colour matrix (ColorAdjust, row-major), applied in PSFinal</summary>
     public float[] ColorM = ColorAdjust.Matrix(2, false, 0);
     /// <summary>T59: the CHR data (font tiles' ink / paper values); null = no modern font</summary>
@@ -130,8 +141,9 @@ internal sealed unsafe partial class Gpu : IDisposable
     public int Slots => _slots.Count;
 
     // CPU side of the uploads
-    public readonly byte[] Lay = new byte[256 * 240 * 4];
-    public readonly uint[] ArtMap = new uint[256 * 240 * 2];
+    public readonly byte[] Lay = new byte[MaxW * 240 * 4];
+    public readonly uint[] ArtMap = new uint[MaxW * 240 * 2];
+    private readonly byte[] _wInfo = new byte[MaxW * 240 * 4];   // widescreen: HdScene.Info widened
 
     [LibraryImport("d3d11.dll")]
     private static partial int D3D11CreateDeviceAndSwapChain(void* adapter, int driverType, IntPtr software, uint flags,
@@ -177,7 +189,7 @@ internal sealed unsafe partial class Gpu : IDisposable
 
     private const uint FmtBgra = 87, FmtRgba8 = 28, FmtRgba8U = 30, FmtRg32U = 17, FmtRgba32F = 2, FmtRgba16F = 10;
     private const uint BindSrv = 8, BindRtv = 0x20;
-    private const int NSrv = 13, NConst = 23;
+    private const int NSrv = 13, NConst = 24;
     private static readonly Guid IidTex2D = new("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
 
     private static void** Vt(void* o) => *(void***)o;
@@ -254,9 +266,6 @@ internal sealed unsafe partial class Gpu : IDisposable
         _psFinal = Compile("PSFinal", "ps_4_0");
         _psAmb = Compile("PSAmbient", "ps_4_0");
 
-        MakeTex(256, 240, FmtRgba8U, out _layTex, out _laySrv);
-        MakeTex(256, 240, FmtRg32U, out _artTex, out _artSrv);
-        MakeTex(256, 240, FmtRgba8, out _iTex, out _iSrv);
         MakeTex(240, 1, FmtRgba32F, out _lnTex, out _lnSrv);
         MakeTex(64, 1, FmtRgba8, out _mTex, out _mSrv);
         MakeTex(64, 1, FmtRgba8, out _rgbTex, out _rgbSrv);
@@ -270,18 +279,8 @@ internal sealed unsafe partial class Gpu : IDisposable
         }
         fixed (byte* p = rgb) Update(_rgbTex, p, 64 * 4);
 
-        MakeTarget(KW, KH, FmtRgba8U, out _k1Tex, out _k1Rtv, out _k1Srv);
-        MakeTarget(KW * 2, KH * 2, FmtRgba8U, out _k2Tex, out _k2Rtv, out _k2Srv);
-        MakeTarget(AW, AH, FmtRgba8, out _albTex, out _albRtv, out _albSrv);
-        MakeTarget(AW / 2, AH / 2, FmtRgba8, out _a4Tex, out _a4Rtv, out _a4Srv);
-        MakeTarget(KW, KH, FmtRgba16F, out _jaTex, out _jaRtv, out _jaSrv);
-        MakeTarget(KW, KH, FmtRgba16F, out _jbTex, out _jbRtv, out _jbSrv);
-        MakeTarget(KW, KH, FmtRgba16F, out _hTex, out _hRtv, out _hSrv);
-        MakeTarget(LW, LH, FmtRgba16F, out _l1Tex, out _l1Rtv, out _l1Srv);
-        MakeTarget(LW, LH, FmtRgba16F, out _l2Tex, out _l2Rtv, out _l2Srv);
+        MakeWidthResources();
         MakeTex(Osd.W, Osd.H, FmtRgba8, out _oTex, out _oSrv);
-        MakeTarget(LW, LH, FmtRgba16F, out _g1Tex, out _g1Rtv, out _g1Srv);
-        MakeTarget(LW, LH, FmtRgba16F, out _g2Tex, out _g2Rtv, out _g2Srv);
 
         var samp = new SampDesc { Filter = 0x15 /* MIN_MAG_MIP_LINEAR */, U = 3, V = 3, W = 3, MaxAniso = 1, MaxLod = float.MaxValue };
         void* s;
@@ -292,6 +291,52 @@ internal sealed unsafe partial class Gpu : IDisposable
         Check(((delegate* unmanaged[Stdcall]<void*, BufDesc*, void*, void**, int>)Vt(_dev)[3])(_dev, &bd, null, &b), "CreateBuffer");
         _cb = b;
         Resize(cw, ch);
+    }
+
+    /// <summary>the per-frame inputs and targets whose size follows the picture width</summary>
+    private void MakeWidthResources()
+    {
+        MakeTex(NesW, 240, FmtRgba8U, out _layTex, out _laySrv);
+        MakeTex(NesW, 240, FmtRg32U, out _artTex, out _artSrv);
+        MakeTex(NesW, 240, FmtRgba8, out _iTex, out _iSrv);
+        MakeTarget(KW, KH, FmtRgba8U, out _k1Tex, out _k1Rtv, out _k1Srv);
+        MakeTarget(KW * 2, KH * 2, FmtRgba8U, out _k2Tex, out _k2Rtv, out _k2Srv);
+        MakeTarget(AW, AH, FmtRgba8, out _albTex, out _albRtv, out _albSrv);
+        MakeTarget(AW / 2, AH / 2, FmtRgba8, out _a4Tex, out _a4Rtv, out _a4Srv);
+        MakeTarget(KW, KH, FmtRgba16F, out _jaTex, out _jaRtv, out _jaSrv);
+        MakeTarget(KW, KH, FmtRgba16F, out _jbTex, out _jbRtv, out _jbSrv);
+        MakeTarget(KW, KH, FmtRgba16F, out _hTex, out _hRtv, out _hSrv);
+        MakeTarget(LW, LH, FmtRgba16F, out _l1Tex, out _l1Rtv, out _l1Srv);
+        MakeTarget(LW, LH, FmtRgba16F, out _l2Tex, out _l2Rtv, out _l2Srv);
+        MakeTarget(LW, LH, FmtRgba16F, out _g1Tex, out _g1Rtv, out _g1Srv);
+        MakeTarget(LW, LH, FmtRgba16F, out _g2Tex, out _g2Rtv, out _g2Srv);
+    }
+
+    private void ReleaseWidthResources()
+    {
+        Unbind();
+        Release(ref _laySrv); Release(ref _layTex); Release(ref _artSrv); Release(ref _artTex); Release(ref _iSrv); Release(ref _iTex);
+        Release(ref _k1Srv); Release(ref _k1Rtv); Release(ref _k1Tex);
+        Release(ref _k2Srv); Release(ref _k2Rtv); Release(ref _k2Tex);
+        Release(ref _albSrv); Release(ref _albRtv); Release(ref _albTex);
+        Release(ref _a4Srv); Release(ref _a4Rtv); Release(ref _a4Tex);
+        Release(ref _jaSrv); Release(ref _jaRtv); Release(ref _jaTex);
+        Release(ref _jbSrv); Release(ref _jbRtv); Release(ref _jbTex);
+        Release(ref _hSrv); Release(ref _hRtv); Release(ref _hTex);
+        Release(ref _l1Srv); Release(ref _l1Rtv); Release(ref _l1Tex);
+        Release(ref _l2Srv); Release(ref _l2Rtv); Release(ref _l2Tex);
+        Release(ref _g1Srv); Release(ref _g1Rtv); Release(ref _g1Tex); Release(ref _g2Srv); Release(ref _g2Rtv); Release(ref _g2Tex);
+    }
+
+    /// <summary>widescreen: rebuild the width-dependent resources for w columns</summary>
+    public void SetWidth(int w)
+    {
+        w = Math.Clamp(w, 256, MaxW);
+        if (w == NesW) return;
+        ReleaseWidthResources();
+        NesW = w;
+        MakeWidthResources();
+        _albCur = null;
     }
 
     private void Update(void* tex, void* data, int pitch) =>
@@ -445,24 +490,62 @@ internal sealed unsafe partial class Gpu : IDisposable
     /// 0x80 behind the background, b = dither partner colour + 1 (0 = none), a = 0.
     /// ArtMap per pixel: [background, sprite] = atlas slot + 1 (15 bits) | col << 15 | row << 18 | flipH << 21 | flipV << 22 |
     /// fade step << 23 (0 = none)</summary>
+    /// <summary>widescreen: HdScene.Info (256 wide) into a W-wide copy; the sides: no lift, the colour, no flags, no void</summary>
+    /// (void: HdScene's rule on the sides above voidTop, near-black colours opened 3x3, so chasms continue)</summary>
+    public static void WidenInfo(byte[] info, SceneRaster r, int e, byte[] dst, int voidTop = 240)
+    {
+        int w = r.W;
+        var blk = new byte[w * 240];
+        for (int y = 0; y < 240; y++)
+            if (y < voidTop)
+                for (int x = 0; x < w; x++)
+                {
+                    int c = r.Fb[y * w + x] & 63;
+                    blk[y * w + x] = (byte)((c & 15) >= 0xD && c != 0x2D && c != 0x3D ? 1 : 0);
+                }
+        byte At(byte[] a, int x, int y) => a[Math.Clamp(y, 0, 239) * w + Math.Clamp(x, 0, w - 1)];
+        var ero = new byte[w * 240];
+        for (int y = 0; y < 240; y++)
+            for (int x = 0; x < w; x++)
+            {
+                if (x > e && x < e + 255) continue;           // only the sides (+ the next column) are used
+                byte v = 1;
+                for (int dy = -1; dy <= 1 && v != 0; dy++) for (int dx = -1; dx <= 1; dx++) v &= At(blk, x + dx, y + dy);
+                ero[y * w + x] = v;
+            }
+        for (int y = 0; y < 240; y++)
+            for (int x = 0; x < w; x++)
+            {
+                int o = (y * w + x) * 4, sx = x - e;
+                if (sx >= 0 && sx < 256) { Array.Copy(info, (y * 256 + sx) * 4, dst, o, 4); continue; }
+                byte dil = 0;
+                for (int dy = -1; dy <= 1 && dil == 0; dy++) for (int dx = -1; dx <= 1; dx++) dil |= At(ero, x + dx, y + dy);
+                bool v = blk[y * w + x] != 0 && dil != 0;
+                dst[o] = 0; dst[o + 1] = (byte)((r.Fb[y * w + x] & 63) * 4); dst[o + 2] = (byte)(v ? HdScene.FVoid : 0); dst[o + 3] = (byte)(v ? 255 : 0);
+            }
+    }
+
     public static void Layers(SceneRaster r, HdScene sc, IReadOnlyDictionary<long, int> slots, IReadOnlyDictionary<long, int> fades,
-        bool[] tileArt, byte[] lay, uint[] artMap, bool edges = false, byte[]? fontChr = null)
+        bool[] tileArt, byte[] lay, uint[] artMap, bool edges = false, byte[]? fontChr = null, byte[]? info = null, SceneRaster? rl = null)
     {
         var fb = r.Fb;
+        info ??= sc.Info;
+        rl ??= r;
+        int W = r.W, e = (W - rl.W) / 2;
         // T59: ink / paper pixel values of the text font's glyph tiles (FontInk), when the modern font is on
         var ink = new (int Ink, int Paper)[0x80];
         if (fontChr != null) for (int c = 0; c < 0x80; c++) ink[c] = FontInk.Values(fontChr, FontInk.First + c);
-        int band = edges ? EdgeBand(r, sc) : 240;
-        var (gap0, gap1) = edges ? SplitGap(r) : (0, 0);
-        var menuRows = edges ? MenuRows(r, sc) : null;
+        int band = edges ? EdgeBand(rl, sc) : 240;
+        var (gap0, gap1) = edges ? SplitGap(rl) : (0, 0);
+        var menuRows = edges ? MenuRows(rl, sc) : null;
         for (int y = 0; y < 240; y++)
         {
             // T32 clean edges: the lines a TV hid (232-239, where the game leaves stray tiles) and the left column the game
             // masks (backdrop colour), the backdrop rows under a bottom HUD panel and the HUD split seam (SplitGap) are exact black: HUD bit, no sprite, no art
-            int ex = !edges ? 0 : y >= band || (y >= gap0 && y < gap1) || (menuRows != null && menuRows[y]) ? 256 : r.LeftClip[y] ? 8 : 0;
+            int ex = !edges ? 0 : y >= band || (y >= gap0 && y < gap1) || (menuRows != null && menuRows[y]) ? W : r.LeftClip[y] ? e + 8 : 0;
             for (int x = 0; x < ex; x++)
             {
-                int i = y * 256 + x, o = i * 4;
+                int i = y * W + x, o = i * 4;
                 lay[o] = 0x0F | 0x80; lay[o + 1] = 0; lay[o + 2] = 0; lay[o + 3] = 0;
                 artMap[i * 2] = 0; artMap[i * 2 + 1] = 0;
             }
@@ -471,20 +554,20 @@ internal sealed unsafe partial class Gpu : IDisposable
             // run of equal keys (tiles repeat for 8 pixels); the pixel's column / row / flips are added per pixel
             int bk = -1, sk = -1;
             uint bw = 0, sw = 0;
-            for (int x = ex; x < 256; x++)
+            for (int x = ex; x < W; x++)
             {
-                int i = y * 256 + x, o = i * 4;
-                bool ui = (sc.Info[o + 2] & HdScene.FUi) != 0;
+                int i = y * W + x, o = i * 4;
+                bool ui = (info[o + 2] & HdScene.FUi) != 0;
                 int sp = r.Sp[i];
                 int bgc = r.BgCol[i] & 63, partner = 0;
                 // checkerboard dither: the 4 neighbours share one other colour and >= 2 diagonals have this one. Both
                 // cells of a dither get the same key (the lower colour + the higher one as partner), so the rounding
                 // sees one flat area (no diagonal stripes) and the albedo shows the 50/50 mix
-                if (x > 0 && y > 0 && x < 255 && y < 239 && !ui && sp == 0)
+                if (x > 0 && y > 0 && x < W - 1 && y < 239 && !ui && sp == 0)
                 {
                     int p = fb[i], q = fb[i - 1];
-                    if (q != p && fb[i + 1] == q && fb[i - 256] == q && fb[i + 256] == q &&
-                        (fb[i - 257] == p ? 1 : 0) + (fb[i - 255] == p ? 1 : 0) + (fb[i + 255] == p ? 1 : 0) + (fb[i + 257] == p ? 1 : 0) >= 2)
+                    if (q != p && fb[i + 1] == q && fb[i - W] == q && fb[i + W] == q &&
+                        (fb[i - W - 1] == p ? 1 : 0) + (fb[i - W + 1] == p ? 1 : 0) + (fb[i + W - 1] == p ? 1 : 0) + (fb[i + W + 1] == p ? 1 : 0) >= 2)
                     {
                         bgc = Math.Min(p & 63, q & 63);
                         partner = Math.Max(p & 63, q & 63) + 1;
@@ -728,18 +811,28 @@ internal sealed unsafe partial class Gpu : IDisposable
     }
 
     /// <summary>this frame: layers + art + scene to the GPU, then the frame passes (rounding, albedo, height, light map)</summary>
-    public void Upload(SceneRaster r, HdScene sc)
+    /// <summary>r256 = the game's 256-column raster when r is its widescreen copy (SceneRaster.Widen): line analyses (status
+    /// bar, edges, meters, cut-scene band) run on it, x positions shifted by the side width</summary>
+    public void Upload(SceneRaster r, HdScene sc, SceneRaster? r256 = null)
     {
-        Layers(r, sc, _slots, _fades, _tileArt, Lay, ArtMap, Edges, ModernFont && HasGlyphs ? Chr : null);
-        fixed (byte* p = Lay) Update(_layTex, p, 256 * 4);
-        fixed (uint* p = ArtMap) Update(_artTex, p, 256 * 8);
-        fixed (byte* p = sc.Info) Update(_iTex, p, 256 * 4);
+        var rl = r256 ?? r;
+        int e = (r.W - rl.W) / 2;
+        _sideE = e;
+        SetWidth(r.W);
+        byte[] info = sc.Info;
+        if (e > 0) { WidenInfo(sc.Info, r, e, _wInfo, SideVoidTop); info = _wInfo; }
+        Layers(r, sc, _slots, _fades, _tileArt, Lay, ArtMap, Edges, ModernFont && HasGlyphs ? Chr : null, info, rl);
+        fixed (byte* p = Lay) Update(_layTex, p, NesW * 4);
+        fixed (uint* p = ArtMap) Update(_artTex, p, NesW * 8);
+        fixed (byte* p = info) Update(_iTex, p, NesW * 4);
         fixed (float* p = sc.Lines) Update(_lnTex, p, 240 * 16);
         _camX = sc.CamX; _camY = sc.CamY; _time = sc.Time; _outdoor = sc.Outdoor; _voidGate = sc.VoidGate; _play = sc.Play;
         _icy = sc.Icy; _hot = sc.Hot;
         _hudFill = sc.HudFill; _hudTop = sc.HudTop; _hudBottom = sc.HudBottom;
-        _meters = Meters(r, sc.HudFill, Hp);
-        CineUpdate(CineBand(r, sc));
+        _meters = Meters(rl, sc.HudFill, Hp);
+        if (e > 0) foreach (int k in new[] { 0, 1, 2, 4, 5 }) if (_meters[k] > 0) _meters[k] += e;
+        var cb = CineBand(rl, sc);
+        CineUpdate(cb is { } b0 && e > 0 ? (b0.Y0, b0.Y1, b0.X0 + e, b0.X1 + e) : cb);
         // eye adaptation (gameplay only): dark scenes a little brighter, bright ones a little darker, eased over ~1 s
         float lum = Math.Max(_mr * 0.299f + _mg * 0.587f + _mb * 0.114f, 0.05f);
         float want = 1 + (Math.Clamp(MathF.Sqrt(0.42f / lum), 0.9f, 1.22f) - 1) * _play;
@@ -820,11 +913,12 @@ internal sealed unsafe partial class Gpu : IDisposable
             Quality >= 2 ? 24 : Quality == 1 ? 16 : 10, Quality >= 1 ? 1 : 0, _albScale, _osdOn ? 1 : 0,
             _meters[0], _meters[1], _meters[2], _meters[3],
             _meters[4], _meters[5], _meters[6], _meters[7],
-            Cinematic ? _cineW : 0, _band.Y0 * 256 + _band.Y1, _band.X0 * 256 + _band.X1, _shotStart,
+            Cinematic ? _cineW : 0, _band.Y0 * 256 + _band.Y1, _band.X0 * 1024 + _band.X1, _shotStart,
             Hurt, LowLife ? 1 : 0, 0, 0,
             ColorM[0], ColorM[1], ColorM[2], 0,
             ColorM[3], ColorM[4], ColorM[5], 0,
             ColorM[6], ColorM[7], ColorM[8], 0,
+            NesW, 240, _sideE, 0,
         };
         c.CopyTo(_c, 0);
         SetConstants();

@@ -5,12 +5,13 @@
  "confidence": "observed",
  "environment": null,
  "evidence_format": 2,
- "evidence_id": "ev_8eb04b957f4d5b3dd604009c0c422b74ff6ea52b54ce20ddf001adda0d0f6383",
+ "evidence_id": "ev_beb7ef65a91e7e6884c10f37a0b65db7e6f966c620f84a7faa1c06ee3efe8ecc",
  "evidence_links": [],
  "limitations": [
   "This report states what static analysis of the selected artifact recovered. It does not establish that the application is secure.",
   "Did not examine PE debug records in ReC.Core.dll.",
   "Did not examine PE debug records in ReC.dll.",
+  "Did not examine PE debug records in ReC.r2r.dll.",
   "Did not examine PE debug records in System.Private.CoreLib.dll."
  ],
  "locations": [
@@ -169,6 +170,10 @@
      },
      {
       "kind": "artifact-path",
+      "path": "ReC.r2r.dll"
+     },
+     {
+      "kind": "artifact-path",
       "path": "ReC.runtimeconfig.json"
      },
      {
@@ -182,17 +187,13 @@
      {
       "kind": "artifact-path",
       "path": "System.Console.dll"
-     },
-     {
-      "kind": "artifact-path",
-      "path": "System.Diagnostics.StackTrace.dll"
      }
     ],
     "next_probe": "inspect_artifact",
     "observation": {
      "counts": {
       "formats": 1,
-      "readable_members": 19,
+      "readable_members": 20,
       "unreadable_members": 0
      },
      "samples": [
@@ -200,10 +201,10 @@
       "ReC.Core.dll",
       "ReC.deps.json",
       "ReC.dll",
+      "ReC.r2r.dll",
       "ReC.runtimeconfig.json",
       "System.Collections.Immutable.dll",
-      "System.Collections.dll",
-      "System.Console.dll"
+      "System.Collections.dll"
      ]
     },
     "remediation": "Readable members are part of this package format. Treat packaged sources as public. This check does not rewrite the artifact.",
@@ -244,7 +245,7 @@
     "observation": {
      "counts": {
       "examined": 15,
-      "failed": 3,
+      "failed": 4,
       "paths": 1
      },
      "samples": [
@@ -393,7 +394,7 @@
    ],
    "omitted": [
     {
-     "count": 17,
+     "count": 18,
      "reason": "Go, Rust, and Electron fuse readers run on files on disk, not on images stored inside a package.",
      "subject": "packaged native images"
     }
@@ -403,6 +404,7 @@
    "This report states what static analysis of the selected artifact recovered. It does not establish that the application is secure.",
    "Did not examine PE debug records in ReC.Core.dll.",
    "Did not examine PE debug records in ReC.dll.",
+   "Did not examine PE debug records in ReC.r2r.dll.",
    "Did not examine PE debug records in System.Private.CoreLib.dll."
   ],
   "summary": {
@@ -426,7 +428,7 @@
    "format": "dotnet-bundle",
    "kind": "executable",
    "selected_path": "./dist/ReC.exe",
-   "sha256": "677b79d4726946ae00f130841d4ab0b236421a849604dea56dc20bdc5a100eca"
+   "sha256": "728f88839b2f1b30de4cf7d7cadfcc6b44e5bdfac3953328f1d41ac089c5bba6"
   }
  },
  "operation": "audit_release_exposure",
@@ -448,7 +450,7 @@
    "format": "dotnet-bundle",
    "kind": "file",
    "selection": null,
-   "sha256": "677b79d4726946ae00f130841d4ab0b236421a849604dea56dc20bdc5a100eca"
+   "sha256": "728f88839b2f1b30de4cf7d7cadfcc6b44e5bdfac3953328f1d41ac089c5bba6"
   },
   "local_path": "./dist/ReC.exe",
   "name": "ReC.exe"

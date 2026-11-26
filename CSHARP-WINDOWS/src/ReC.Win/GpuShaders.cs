@@ -24,9 +24,10 @@ cbuffer C : register(b0)
     float4 QualC;  // shadow steps, extras (reflections, fine relief) 0 / 1, albedo scale (8 / 4), on-screen display 0 / 1
     float4 MeterL; // T35 LIFE meter: x0, x1 (frame), fill end, top line (x1 = 0: none)
     float4 MeterF; // T35 FORCE meter: x0, x1, top line; w = the status bar's first line (T43, 0 = none)
-    float4 Cine;   // T51 cut-scene: weight, picture y0 * 256 + y1, x0 * 256 + x1, shot start time (s)
+    float4 Cine;   // T51 cut-scene: weight, picture y0 * 256 + y1, x0 * 1024 + x1, shot start time (s)
     float4 Dmg;    // T57 damage feedback: hit flash 0..1, low life 0 / 1, -, -
     float4 Col0, Col1, Col2;   // T60 display colour matrix rows (brightness, vivid, colour-blind assist)
+    float4 Scr;    // widescreen: picture columns (256 or wider), lines (240), side width, -
 };
 Texture2D SrcA : register(t0);
 Texture2D SrcB : register(t1);
@@ -43,7 +44,7 @@ Texture2D Bnc : register(t11);   // bounce light: rgb = albedo sum, a = weight (
 Texture2D Gly : register(t12);   // T59 glyph atlas: 16 x 8 cells of 64 px, cell = ASCII code, coverage in r
 SamplerState Lin : register(s0);
 
-static const float2 NES = float2(256, 240);
+#define NES (Scr.xy)                 // the picture in NES pixels: 256 x 240, wider with the widescreen playfield
 static const float3 LUM = float3(0.299, 0.587, 0.114);
 #define ALB (NES * QualC.z)    // albedo size: 8x (2048x1920), 4x in fast quality
 
@@ -85,7 +86,7 @@ uint4 PSScale(V i) : SV_Target
 {
     uint w, h;
     Keys.GetDimensions(w, h);
-    return MeanC.w > 0.5 && w >= 512 ? Vote(int2(i.p.xy)) : Scale2(int2(i.p.xy));   // T52: 2x -> 4x voted too
+    return MeanC.w > 0.5 && w >= (uint)(NES.x * 2) ? Vote(int2(i.p.xy)) : Scale2(int2(i.p.xy));   // T52: 2x -> 4x voted too
 }
 
 // T52 smooth outlines (MeanC.w): the last 2x step as a vote instead of Scale2x. Each output pixel weighs the 4x4 key
@@ -184,7 +185,7 @@ float3 Seams(float3 c, int2 n, float2 sub, uint a, uint layer, uint col)
     {
         if (dist[k] >= 1) continue;
         int2 m = n + dirs[k];
-        if (m.x < 0 || m.y < 0 || m.x > 255 || m.y > 239) continue;
+        if (m.x < 0 || m.y < 0 || m.x > (int)NES.x - 1 || m.y > 239) continue;
         uint4 L = Lay.Load(int3(m, 0));
         if ((L.r & 0x80) != 0) continue;
         uint mc = layer == 0 ? (L.r & 63) : ((L.g & 0x40) != 0 ? (L.g & 63) : 999);
@@ -259,7 +260,7 @@ float4 PSJfa(V i) : SV_Target
         [loop] for (int x = -1; x <= 1; x++)
         {
             float2 q = o + float2(x, y) * Blur.z;
-            bool inside = q.x >= 0 && q.y >= 0 && q.x < 512 && q.y < 480;
+            bool inside = q.x >= 0 && q.y >= 0 && q.x < NES.x * 2 && q.y < 480;
             float2 s = SrcA.Load(int3(clamp(q, float2(0, 0), float2(511, 479)), 0)).xy;
             float d = dot(o - s, o - s);
             bool take = inside && s.x > -1000 && d < bd;          // selects, no branches (unrolled loop)
@@ -329,7 +330,7 @@ float4 PSEmit(V i) : SV_Target
 }
 
 // ================================================================ draw passes
-float4 InfoPx(float2 p) { return Inf.Load(int3(clamp(int2(floor(p)), int2(0, 0), int2(255, 239)), 0)); }
+float4 InfoPx(float2 p) { return Inf.Load(int3(clamp(int2(floor(p)), int2(0, 0), int2((int)NES.x - 1, 239)), 0)); }
 uint Flags(float4 i) { return (uint)round(i.b * 255); }
 // void (pits, darkness): bilinear, so its edge follows the rounded albedo instead of NES pixel steps
 float VoidS(float2 p) { return Inf.SampleLevel(Lin, p / NES, 0).a; }
@@ -359,7 +360,7 @@ float3 Albedo(float2 s)
 // local lights come from a direction: toward where the light map gets brighter, so bumps facing a fire are lit
 float LocalDiffuse(float2 s, float3 n, float3 lm)
 {
-    float2 le = float2(2.0 / 128, 2.0 / 120);
+    float2 le = float2(2.0 / (NES.x / 2), 2.0 / 120);
     float gx = dot(SrcC.SampleLevel(Lin, s + float2(le.x, 0), 0).rgb - SrcC.SampleLevel(Lin, s - float2(le.x, 0), 0).rgb, LUM);
     float gy = dot(SrcC.SampleLevel(Lin, s + float2(0, le.y), 0).rgb - SrcC.SampleLevel(Lin, s - float2(0, le.y), 0).rgb, LUM);
     float3 l = normalize(float3(gx, gy, 0.08 + dot(lm, LUM) * 0.5));
@@ -414,13 +415,13 @@ float Detail(float2 w, int kind, float t)
 // from the sun. World-anchored like the rest of the detail. PlainW: 1 off pack tiles, in a pack tile only near its NES colour
 float PlainW(float2 s, int col)
 {
-    if (ArtM.Load(int3(clamp(int2(s * NES), int2(0, 0), int2(255, 239)), 0)).x == 0) return 1;
+    if (ArtM.Load(int3(clamp(int2(s * NES), int2(0, 0), int2((int)NES.x - 1, 239)), 0)).x == 0) return 1;
     return 1 - smoothstep(0.06, 0.16, length(Albedo(s) - NesRgb(col)));
 }
 float3 Ground(float3 a, float2 s, float2 w, int kind, int col)
 {
     // only the game's own plain tiles: painted pack tiles keep their colours (ice highlights are NES white = "plaster")
-    if (ArtM.Load(int3(clamp(int2(s * NES), int2(0, 0), int2(255, 239)), 0)).x != 0) return a;
+    if (ArtM.Load(int3(clamp(int2(s * NES), int2(0, 0), int2((int)NES.x - 1, 239)), 0)).x != 0) return a;
     float wl = kind == 3 && col >= 0x30 && Opt2.z > 0.3 ? 0.3 : 1;   // snow in icy places: only a trace
     // very saturated fills (NES magenta, red) a little less neon
     float3 g = a;
@@ -759,8 +760,8 @@ float BarShadow(float2 p)
 // T51 cut-scenes as film shots: is this NES pixel inside the picture (y0, y1, x0, x1)?
 float4 CineRect()
 {
-    float y0 = floor(Cine.y / 256), x0 = floor(Cine.z / 256);
-    return float4(y0, Cine.y - y0 * 256, x0, Cine.z - x0 * 256);
+    float y0 = floor(Cine.y / 256), x0 = floor(Cine.z / 1024);
+    return float4(y0, Cine.y - y0 * 256, x0, Cine.z - x0 * 1024);
 }
 bool InCine(float2 p)
 {
@@ -806,7 +807,7 @@ float4 PSLight(V i) : SV_Target
     float4 inf = InfoPx(p);
     uint fl = Flags(inf);
     float4 ln = Lne.Load(int3(clamp(int(p.y), 0, 239), 0, 0));
-    if (ln.z > 0.5 || (fl & 4) != 0 || (Lay.Load(int3(clamp(int2(p), int2(0, 0), int2(255, 239)), 0)).r & 0x80) != 0)
+    if (ln.z > 0.5 || (fl & 4) != 0 || (Lay.Load(int3(clamp(int2(p), int2(0, 0), int2((int)NES.x - 1, 239)), 0)).r & 0x80) != 0)
         return float4(HudPanel(a, p, s, inf) * BarShadow(p), 0);   // HUD / text + clean edges (Layers HUD bit): unlit (panel gloss only)
     float t = Cam.z;
     bool spr = (fl & 1) != 0;
@@ -880,7 +881,7 @@ float4 PSLight(V i) : SV_Target
             a += float3(0.55, 0.8, 0.9) * pow(saturate(r1 * r2), 8) * 0.22 * (0.4 + 0.6 * Scn.x);
         }
         // macro normal from the height model
-        float2 dxs = float2(1.0 / 512, 0), dys = float2(0, 1.0 / 480);
+        float2 dxs = float2(1.0 / (2 * NES.x), 0), dys = float2(0, 1.0 / 480);
         float h = H(s);
         float gx = (H(s + dxs) - H(s - dxs)) * Lgt.w, gy = (H(s + dys) - H(s - dys)) * Lgt.w;
         float3 n = normalize(float3(-gx - gd.x, -gy - gd.y, 1));
@@ -889,8 +890,8 @@ float4 PSLight(V i) : SV_Target
         [unroll] for (int k = 0; k < 6; k++)
         {
             float an = k * 1.047198, an2 = an + 0.523599;
-            occ += saturate(H(s + float2(cos(an), sin(an)) * float2(3.0 / 512, 3.0 / 480)) - h);
-            occ += 0.6 * saturate(H(s + float2(cos(an2), sin(an2)) * float2(8.0 / 512, 8.0 / 480)) - h);
+            occ += saturate(H(s + float2(cos(an), sin(an)) * float2(3.0 / (2 * NES.x), 3.0 / 480)) - h);
+            occ += 0.6 * saturate(H(s + float2(cos(an2), sin(an2)) * float2(8.0 / (2 * NES.x), 8.0 / 480)) - h);
         }
         float ao = 1 - Fx.y * saturate(occ / 7.5);
         // soft shadow toward the sun; the penumbra widens with the distance to the caster
@@ -900,7 +901,7 @@ float4 PSLight(V i) : SV_Target
         {
             if (j > (int)QualC.x) break;
             float d = j;
-            float hq = H(s + float2(ld.x / 512, ld.y / 480) * d);
+            float hq = H(s + float2(ld.x / (2 * NES.x), ld.y / 480) * d);
             sh = max(sh, saturate((hq - h - d * Fx2.x) * 2 / (0.4 + 0.06 * d)) * (1 - j / 25.0));
         }
         float shade = 1 - Fx.z * sh;
@@ -974,7 +975,7 @@ float4 PSLight(V i) : SV_Target
     c = lerp(c, lerp(float3(0.30, 0.50, 0.12), float3(0.75, 0.45, 0.12), frac(lf.y * 7)), lf.x * step(0.82, lf.y) * 0.8 * Scn.x * Opt.z * Scn.z);
     // T43: the status bar casts a soft shadow up onto the map: from the last tile row above the panel (the row the game
     // has not loaded yet under the split) black, fading in over 4 lines; MeterF.w = status-bar line * 256 + row start
-    if (cine) c += CineFx(i.uv * float2(256, 240), Cam.z);   // T51: in screen space (they do not ride the dolly)
+    if (cine) c += CineFx(i.uv * NES, Cam.z);   // T51: in screen space (they do not ride the dolly)
     c *= BarShadow(p);
     return float4(c, 1);
 }

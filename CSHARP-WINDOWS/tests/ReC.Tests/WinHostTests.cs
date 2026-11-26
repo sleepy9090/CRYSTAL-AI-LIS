@@ -1294,6 +1294,83 @@ internal static partial class Program
             }
             finally { Directory.Delete(dir, true); }
         }),
+        ("win_wide", () =>
+        {
+            // widescreen playfield: the area cache = Bg.RenderArea (visited bitmap); the camera before a frame puts the
+            // cache on the frame (match test on); the sides continue the playfield
+            var d = TheData.Value;
+            string dir = Path.Combine(Data.FindDir(), "..", "test", "states");
+            foreach (var (name, keys) in new[] { ("group09", new[] { "2531:UP:50", "2585:RIGHT:330" }), ("group08", new[] { "2526:UP:84" }), ("town02_enter", Array.Empty<string>()) })
+            {
+                var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, name + ".json")));
+                var cache = AreaCache.Build(d, AreaCache.Take(m));
+                var (w, h, fb) = ReC.Game.World.Bg.RenderArea(m, ReC.Game.World.Bg.Visit.Ram);
+                var pal = Enumerable.Range(0, 32).Select(i => (byte)m.Rd(0x6140 + i)).ToArray();
+                bool same = cache.W == w && cache.H == h && Enumerable.Range(0, w * h).All(i => AreaCache.Color(cache.Px[i], pal) == fb[i]);
+                True(same, $"{name}: area cache = Bg.RenderArea ({w}x{h})");
+                var wide = new Widescreen();
+                var kp = Keys.Parse(keys);
+                int matched = 0, frames = 0;
+                for (int f = 0; f < 200; f++)
+                {
+                    wide.BeforeFrame(m, d, async: false);
+                    m.RunFrame(kp.TryGetValue(2506 + m.Frame, out int b) ? b : 0);
+                    wide.AfterFrame(m.Ppu.Fb, m.Ppu.Pal, 180);
+                    frames++; if (wide.Match) matched++;
+                }
+                Console.WriteLine($"  win_wide: {name}: area {w}x{h}, playfield matched the area at the camera in {matched} / {frames} frames, sides shown {wide.Show:F2}");
+                True(matched > frames * 0.8, $"{name}: the camera puts the area on the screen");
+            }
+            // HD: the wide raster (SceneRaster.Widen) = the game's raster in the middle, the area at the camera on the sides
+            // with valid tags; the layer / info words fill the whole width
+            {
+                var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, "group09.json")));
+                var kp = Keys.Parse(new[] { "2531:UP:50", "2585:RIGHT:330" });
+                m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+                var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+                var wide = new Widescreen();
+                for (int f = 0; f < 200; f++)
+                {
+                    wide.BeforeFrame(m, d, async: false);
+                    m.RunFrame(kp.TryGetValue(2506 + m.Frame, out int b) ? b : 0);
+                    r.Build(m.Ppu.Capture);
+                    wide.AfterFrame(r.Fb, m.Ppu.Pal, 190);
+                }
+                var lines = new bool[240];
+                wide.MapLines(r.Fb, 190, 0.5f, lines);
+                var wr = new SceneRaster(m.Ppu.Chr, 424);
+                wr.Widen(r, wide, lines);
+                int e = 84, side = 0, sideOk = 0;
+                bool mid = true;
+                for (int y = 0; y < 240; y++)
+                    for (int x = 0; x < 424; x++)
+                    {
+                        int i = y * 424 + x;
+                        if (x >= e + 8 && x < e + 256) { mid &= wr.Fb[i] == r.Fb[y * 256 + x - e] && wr.SpTag[i] == r.SpTag[y * 256 + x - e]; continue; }
+                        if (x >= e) continue;
+                        if (!lines[y]) continue;
+                        side++;
+                        if (wr.Fb[i] == wide.SideColor(x, y, e, r.LinePal[y]) && (wr.BgTag[i] & ReC.Nes.Ppu.TagValid) != 0) sideOk++;
+                    }
+                Console.WriteLine($"  win_wide: HD wide raster 424: {lines.Count(l => l)} map lines, {sideOk} / {side} left-side pixels = the area with tags");
+                True(mid, "middle = the game's raster");
+                True(side > 10000 && sideOk == side, "sides = the area at the camera, tagged");
+                var sc = new HdScene(d.NesRgb);
+                sc.Build(r.Fb, r.Tags, r.LinePal[239], new byte[61440], r.LineScroll, 0);
+                var info = new byte[424 * 240 * 4];
+                Gpu.WidenInfo(sc.Info, wr, e, info, 190);
+                var lay = new byte[424 * 240 * 4]; var am = new uint[424 * 240 * 2];
+                Gpu.Layers(wr, sc, new Dictionary<long, int>(), new Dictionary<long, int>(), new bool[8192], lay, am, true, null, info, r);
+                True(Enumerable.Range(0, 424 * 180).Count(i => (lay[i * 4] & 63) != 0x0F) > 424 * 100, "wide layer words cover the sides");
+            }
+            True(VideoSettings.Parse("widescreen=16:9\n").Wide == 2 && new VideoSettings().Serialize().Contains("widescreen=off"), "ini widescreen");
+            Eq(662, Window.CommandId("widescreen:16:9"), "--menu widescreen:16:9");
+            // menus / title: no match, no sides
+            var mt = new Machine(d, _ => { }); mt.Reset();
+            var wt = new Widescreen();
+            for (int f = 0; f < 300; f++) { wt.BeforeFrame(mt, d, async: false); mt.RunFrame(0); wt.AfterFrame(mt.Ppu.Fb, mt.Ppu.Pal, 180); }
+            True(!wt.Match && wt.Show == 0, "title / intro: no sides");
+        }),
         ("win_frame_stats", () =>
         {
             // T49 FPS counter: 60 frames per second at 4 ms each, then a slow patch at 30 fps / 20 ms

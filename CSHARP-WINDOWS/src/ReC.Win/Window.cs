@@ -75,9 +75,9 @@ internal static unsafe partial class Window
     private static bool _muted;
     private static double _last, _acc;
     private static readonly Stopwatch Clock = new();
-    private static readonly uint[] Px = new uint[256 * 240];
+    private static readonly uint[] Px = new uint[560 * 240];   // widescreen: up to 560 columns (_pw wide)
     private static uint[] _up = Array.Empty<uint>();
-    private static readonly uint[] _upTmp = new uint[256 * 240 * 4];
+    private static readonly uint[] _upTmp = new uint[560 * 240 * 4];
     private static int _frameNo, _upFrame = -1, _upK;
     // T10 enhanced graphics (Enhance.cs): the 1024x960 picture, made once per new frame from Fb + Ppu.Tags
     private static Machine? _m;
@@ -87,13 +87,67 @@ internal static unsafe partial class Window
     private static uint[] _lutBase = new uint[64], _lut = new uint[64], _hdCol = Array.Empty<uint>();
     private static float[] _colorM = ColorAdjust.Matrix(2, false, 0);
     private static int _hdColFrame = -1;
+    // widescreen playfield (Wide.cs): the picture is _pw columns; the game's 256 in the middle
+    private static readonly Widescreen Wide = new();
+    private static int _pw = 256;
+    /// <summary>picture width for the current mode: wide in Original graphics (and HD, W2) when on</summary>
+    private static int WideW => _v.Wide > 0 && (!_v.Enhanced || (HdEngine && _gpu != null && _gpu.WideOk)) ? Widescreen.Widths[_v.Wide] : 256;
+    /// <summary>the NES frame (+ the area at the sides) through the palette lookup into Px</summary>
+    private static void Compose()
+    {
+        if (_m == null) return;
+        var fb = ShownFb;
+        int pw = WideW;
+        if (pw != _pw) { _pw = pw; _v.PicW = pw; _crtFrame = _upFrame = -1; ApplyWindowSize(); }
+        if (pw == 256) { for (int i = 0; i < fb.Length; i++) Px[i] = _lut[fb[i] & 0x3F]; return; }
+        int e = (pw - 256) / 2, hudTop = HudTop();
+        var pal = _m.Ppu.Pal;
+        WideAfterFrame(fb);
+        float s = Wide.Show;
+        Wide.MapLines(fb, hudTop, 0, _mapLines);
+        for (int y = 0; y < 240; y++)
+        {
+            int row = y * pw;
+            for (int x = 0; x < 256; x++) Px[row + e + x] = _lut[fb[y * 256 + x] & 0x3F];
+            // the sides only beside map lines: not the status bar, not a line the game leaves black (the unloaded rows
+            // above the status bar)
+            bool map = _mapLines[y];
+            if (map && Wide.Match)                        // the game's masked left column (backdrop): the map instead
+                for (int x = 0; x < 8; x++) Px[row + e + x] = _lut[Wide.SideColor(e + x, y, e, pal)];
+            else if (s > 0 && y < hudTop && Wide.Match)  // a black line: its masked column black too
+                for (int x = 0; x < 8; x++) Px[row + e + x] = 0;
+            for (int x = 0; x < e; x++)
+            {
+                uint l = 0, r = 0;
+                if (map)
+                {
+                    l = Dim(_lut[Wide.SideColor(x, y, e, pal)], s);
+                    r = Dim(_lut[Wide.SideColor(e + 256 + x, y, e, pal)], s);
+                }
+                Px[row + x] = l; Px[row + e + 256 + x] = r;
+            }
+        }
+    }
+    private static readonly bool[] _mapLines = new bool[240];
+    private static int _wideFrame = -1;
+    private static SceneRaster? _wideRaster;
+    private static int HudTop() => _m != null && _m.IrqSplits.Count > 0 ? Math.Clamp(_m.IrqSplits[0].Latch, 0, 240) : 240;
+    /// <summary>the match test + fade, once per drawn frame (HD does it right after building the raster)</summary>
+    private static void WideAfterFrame(byte[] fb)
+    {
+        if (_wideFrame == _frameNo || _m == null) return;
+        _wideFrame = _frameNo;
+        Wide.AfterFrame(fb, _m.Ppu.Pal, HudTop());
+    }
+    private static uint Dim(uint c, float s) => s >= 1 ? c :
+        (uint)((int)((c >> 16 & 255) * s) << 16 | (int)((c >> 8 & 255) * s) << 8 | (int)((c & 255) * s));
     private static void ApplyColor()
     {
         _colorM = ColorAdjust.Matrix(_v.Brightness, _v.Vivid, _v.ColorBlind);
         for (int i = 0; i < 64; i++) _lut[i] = ColorAdjust.Apply(_colorM, _lutBase[i]);
         _hdColFrame = -1; _crtFrame = -1; _upFrame = -1;
         if (_gpu != null) _gpu.ColorM = _colorM;
-        if (_m != null) { var fb = ShownFb; for (int i = 0; i < fb.Length; i++) Px[i] = _lut[fb[i] & 0x3F]; }   // paused: recolour now
+        Compose();                                      // paused: recolour now
     }
     private static int _hdFrame = -1;
     private static bool _quiet, _exporting;
@@ -153,7 +207,17 @@ internal static unsafe partial class Window
             _scene.Build(fb, tags, pal, _enh.HdLift, _raster!.LineScroll, _frameNo);
             _gpu.Hp = _m.Mem.RamBytes[0x03C1];               // T35: LIFE meter fill (HudHpBar draws from it)
             _gpu.Hurt = _v.Feedback ? Damage.Hurt : 0; _gpu.LowLife = _v.Feedback && Damage.Low;   // T57
-            _gpu.Upload(_raster, _scene);
+            if (WideW > 256)                                 // widescreen: the wide copy of the raster, the sides from the area
+            {
+                WideAfterFrame(_raster!.Fb);
+                if (_wideRaster == null || _wideRaster.W != WideW) _wideRaster = new SceneRaster(_m.Ppu.Chr, WideW);
+                Wide.MapLines(_raster.Fb, HudTop(), 0.5f, _mapLines);
+                _wideRaster.Widen(_raster, Wide, _mapLines);
+                int bar = Gpu.SplitGap(_raster).To;               // the status bar's first line (the first IRQ split may be higher)
+                _gpu.SideVoidTop = Wide.Show > 0.5f ? (bar > 0 ? bar : HudTop()) : 0;
+                _gpu.Upload(_wideRaster, _scene, _raster);
+            }
+            else _gpu.Upload(_raster, _scene);
         }
         else
         {
@@ -385,6 +449,7 @@ internal static unsafe partial class Window
         };
 
         Win32.timeBeginPeriod(1);
+        System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.SustainedLowLatency;   // playtest fix: no blocking GCs mid-game
         int ranTotal = 0;
         try
         {
@@ -417,8 +482,7 @@ internal static unsafe partial class Window
                 // every line of a frame run with Tags / Capture set is recorded -> the enhanced / HD picture (+ --export-tiles)
                 if (NeedRender) RenderHd();
                 AmbienceTargets();                       // T54
-                var fb = ShownFb;
-                for (int i = 0; i < fb.Length; i++) Px[i] = _lut[fb[i] & 0x3F];
+                Compose();
                 Present();
                 Stats.Record(t0, Clock.Elapsed.TotalMilliseconds);
                 if (_v.HdQuality == 3 && HdEngine && _gpu != null && !_turbo && !_paused)   // T62 HD quality: Auto
@@ -456,6 +520,7 @@ internal static unsafe partial class Window
                         }
                         int buttons = _input.Read() | (_scripted ? 0 : _pad.Read(now));
                         if (!_scripted) buttons = VideoSettings.Turbo(buttons, m.Frame, _v.TurboA, _v.TurboB);   // T38
+                        if (_v.Wide > 0) Wide.BeforeFrame(m, data);        // widescreen: the camera of this frame
                         m.RunFrame(buttons); _acc -= step; ran = true; ranTotal++;
                         _v.Cheats.Apply(m, (buttons & 0x40) != 0);           // T36 cheats (B = bit 6)
                         {
@@ -469,7 +534,7 @@ internal static unsafe partial class Window
                         if (o.Frames >= 0 && ranTotal >= o.Frames) { _quit = true; break; }
                         if (o.Turbo) _acc = 0;
                     }
-                    if (ran) { Blit(); _audio.Speed = _fast ? 4 : 1; _audio.Flush(); }
+                    if (ran) { _audio.Speed = _fast ? 4 : 1; _audio.Flush(); Blit(); }   // playtest fix: audio first (rendering may be slow)
                 }
                 _last = now;
             }
@@ -636,31 +701,32 @@ internal static unsafe partial class Window
         }
         else if (_v.Crt)                               // T45: CRT look from the NES frame at 3x
         {
-            if (_crt.Length != Px.Length * 9) { _crt = new uint[Px.Length * 9]; _crtFrame = -1; }
-            if (_crtFrame != _frameNo) { Crt.Apply(Px, 256, 240, _crt); _crtFrame = _frameNo; }
+            if (_crt.Length != _pw * 240 * 9) { _crt = new uint[_pw * 240 * 9]; _crtFrame = -1; }
+            if (_crtFrame != _frameNo) { Crt.Apply(Px, _pw, 240, _crt); _crtFrame = _frameNo; }
             src = _crt; k = 3;
         }
         else if (k > 1)
         {
-            if (_up.Length != Px.Length * k * k) { _up = new uint[Px.Length * k * k]; _upFrame = -1; }
-            if (_upFrame != _frameNo || _upK != k) { Upscale.Apply(Px, 256, 240, k, _up, _upTmp); _upFrame = _frameNo; _upK = k; }
+            if (_up.Length != _pw * 240 * k * k) { _up = new uint[_pw * 240 * k * k]; _upFrame = -1; }
+            if (_upFrame != _frameNo || _upK != k) { Upscale.Apply(Px, _pw, 240, k, _up, _upTmp); _upFrame = _frameNo; _upK = k; }
             src = _up;
         }
         // overscan crop: start the top-down DIB 8 lines in (no source-rectangle origin quirks)
         var bmi = _bmi;
-        bmi.Width = 256 * k;
+        int sw = src == _hd || src == _hdCol ? 256 : _pw;    // the enhanced looks stay 256 wide
+        bmi.Width = sw * k;
         bmi.Height = -_v.VisibleH * k;
-        int first = _v.FirstLine * k * 256 * k;
+        int first = _v.FirstLine * k * sw * k;
         if (osd)                                       // T37: the overlay blended into a copy of the visible picture
         {
-            int n = 256 * k * _v.VisibleH * k;
+            int n = sw * k * _v.VisibleH * k;
             if (_osdBuf.Length != n) _osdBuf = new uint[n];
             Array.Copy(src, first, _osdBuf, 0, n);
-            Osd.Blend(_osdBuf, 256 * k, _v.VisibleH * k);
+            Osd.Blend(_osdBuf, 256 * k, _v.VisibleH * k, (sw - 256) / 2 * k, sw * k);   // centred on the game's columns
             src = _osdBuf; first = 0;
         }
         fixed (uint* p = src)
-            Win32.StretchDIBits(hdc, x, y, w, h, 0, 0, 256 * k, _v.VisibleH * k, p + first, bmi,
+            Win32.StretchDIBits(hdc, x, y, w, h, 0, 0, sw * k, _v.VisibleH * k, p + first, bmi,
                 Win32.DIB_RGB_COLORS, Win32.SRCCOPY);
     }
 

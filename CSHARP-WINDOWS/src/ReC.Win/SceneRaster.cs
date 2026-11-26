@@ -20,9 +20,10 @@ namespace ReC.Win;
 
 internal sealed class SceneRaster
 {
-    public readonly byte[] Fb = new byte[256 * 240], Bg = new byte[256 * 240], BgCol = new byte[256 * 240];
-    public readonly byte[] Sp = new byte[256 * 240], SpCol = new byte[256 * 240];
-    public readonly int[] Tags = new int[256 * 240], BgTag = new int[256 * 240], SpTag = new int[256 * 240];
+    /// <summary>columns (256; a widescreen copy made by Widen is wider)</summary>
+    public readonly int W;
+    public readonly byte[] Fb, Bg, BgCol, Sp, SpCol;
+    public readonly int[] Tags, BgTag, SpTag;
     public readonly int[] LineScroll = new int[240];
     public readonly bool[] LeftClip = new bool[240];
     public readonly byte[][] LinePal = Enumerable.Range(0, 240).Select(_ => new byte[32]).ToArray();
@@ -36,7 +37,51 @@ internal sealed class SceneRaster
     private readonly byte[] _spr = new byte[256];
     private readonly int[] _sprTag = new int[256];
 
-    public SceneRaster(byte[] chr) { _chr = chr; _nChr = chr.Length >> 10; }
+    public SceneRaster(byte[] chr, int w = 256)
+    {
+        _chr = chr; _nChr = chr.Length >> 10; W = w;
+        Fb = new byte[w * 240]; Bg = new byte[w * 240]; BgCol = new byte[w * 240]; Sp = new byte[w * 240]; SpCol = new byte[w * 240];
+        Tags = new int[w * 240]; BgTag = new int[w * 240]; SpTag = new int[w * 240];
+    }
+
+    /// <summary>widescreen (Wide.cs): this (W wide) = src (256) in the middle, the area at the camera on the sides of the
+    /// lines that show the map (and in src's masked left column there): background only, tags with the area's tiles
+    /// (pack art / materials work there too). mapLine[y] = the line shows the map (Window.Compose's rule).</summary>
+    public void Widen(SceneRaster src, Widescreen wide, bool[] mapLine)
+    {
+        int e = (W - 256) / 2;
+        var c = wide.Cache;
+        for (int y = 0; y < 240; y++)
+        {
+            LineScroll[y] = src.LineScroll[y];
+            Array.Copy(src.LinePal[y], LinePal[y], 32);
+            bool map = mapLine[y] && c != null;
+            LeftClip[y] = false;                          // the sides and the masked column are filled or black here
+            int d = y * W, s = y * 256;
+            Array.Copy(src.Fb, s, Fb, d + e, 256); Array.Copy(src.Bg, s, Bg, d + e, 256); Array.Copy(src.BgCol, s, BgCol, d + e, 256);
+            Array.Copy(src.Sp, s, Sp, d + e, 256); Array.Copy(src.SpCol, s, SpCol, d + e, 256);
+            Array.Copy(src.Tags, s, Tags, d + e, 256); Array.Copy(src.BgTag, s, BgTag, d + e, 256); Array.Copy(src.SpTag, s, SpTag, d + e, 256);
+            var pal = src.LinePal[y];
+            for (int x = 0; x < W; x++)
+            {
+                bool side = x < e || x >= e + 256;
+                if (!side && !(src.LeftClip[y] && x < e + 8)) continue;
+                int i = d + x;
+                Sp[i] = 0; SpCol[i] = 0; SpTag[i] = 0;
+                int ax = x - e + wide.CamX, ay = y + wide.CamY;
+                if (!map || ax < 0 || ay < 0 || ax >= c!.W || ay >= c.H)
+                {
+                    Fb[i] = BgCol[i] = 0x0F; Bg[i] = 0; BgTag[i] = Tags[i] = 0;
+                    continue;
+                }
+                uint p = c.Px[ay * c.W + ax];
+                int v = (int)(p & 3), g = (int)(p >> 2 & 3), col = AreaCache.Color(p, pal);
+                Fb[i] = BgCol[i] = (byte)col;
+                Bg[i] = (byte)(v == 0 ? 0 : g << 2 | v);
+                BgTag[i] = Tags[i] = Ppu.TagValid | g << 19 | (ay & 7) << 16 | (ax & 7) << 13 | (int)(p >> 4 & 0x1FFF);
+            }
+        }
+    }
 
     private static int PalMirror(int a)
     {

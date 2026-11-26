@@ -31,6 +31,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(_IsPublishing)' == 'true'">
     <PublishSingleFile>true</PublishSingleFile>
+    <!-- playtest fix: precompiled (ReadyToRun) so entering a new area does not JIT the game routines it runs first
+         (10-40 ms stalls that underran the audio) -->
+    <PublishReadyToRun>true</PublishReadyToRun>
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>full</TrimMode>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>

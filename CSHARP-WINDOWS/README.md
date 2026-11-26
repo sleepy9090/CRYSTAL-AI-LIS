@@ -121,6 +121,11 @@ HD quality: **Auto** (the default) lowers the HD quality when your graphics card
 raises it again when there is room. Each start also keeps the last three saves as `re-c.sav.1` (newest) to `.3` next
 to `re-c.sav` (rename one to `re-c.sav` to go back).
 
+**Video › Widescreen playfield** (16:10, 16:9 or 21:9) shows more of the map on both sides of the screen, in Original
+and HD graphics: the extra columns are drawn from the area's own map, so they line up exactly and scroll with the
+game. They only appear while you are on the map (menus and cut-scenes keep the normal width), and enemies only appear
+once they enter the middle part (the game only draws them on its own 256 columns).
+
 **Video › Display** sets brightness (5 steps), Natural or Vivid colour, and a colour-blind assist for protanopia,
 deuteranopia or tritanopia (colours that would look alike are shifted apart), in every graphics mode.
 

@@ -7,7 +7,7 @@
 //
 // 16-bit mono PCM at 44.1 kHz in Buffers fixed waveOut buffers of BufSamples each (polled through WHDR_DONE, no
 // callback thread). Samples wait in a pending queue until a whole buffer is free; when the game runs ahead of the
-// device (pending > MaxPending) the oldest samples are dropped, so latency stays bounded. When every buffer has
+// device (queued > MaxQueue, ~128 ms) the oldest samples are dropped, so latency stays bounded. When every buffer has
 // drained (stall, pause, window drag) the next audio starts with Lead seconds of silence, like the JS starting its
 // next buffer LEAD seconds ahead of currentTime. Underruns are only counted (Underruns), never logged per event.
 // Until Resume() succeeds the APU stays headless (no synthesis).
@@ -63,13 +63,14 @@ internal static unsafe partial class Win32
 internal sealed unsafe class AudioOut
 {
     public const int Rate = 44100;
-    private const int Chunk = 1024;            // = audio.js CHUNK: flush waits for at least this many samples
-    private const int Buffers = 4, BufSamples = 1024;
+    // playtest fix: smaller blocks (512 = 11.6 ms) in 8 device buffers: refilled more often, so a slow frame no longer
+    // starves the device (audio.js CHUNK is 1024)
+    private const int Chunk = 512;
+    private const int Buffers = 8, BufSamples = 512;
     private const double Lead = 0.05;
     private const float Gain = 1.6f;           // APU mixer peaks near 0.4 after the output filters (apu_check)
     /// <summary>T40: master volume 0..1 (Audio > Volume), both paths</summary>
     public float Volume = 1f;
-    private const int MaxPending = Rate / 4;   // drop the oldest samples rather than let latency grow past 0.25 s
 
     private readonly Machine _m;
     private IntPtr _hwo;
@@ -88,7 +89,9 @@ internal sealed unsafe class AudioOut
     public double Speed = 1;
     /// <summary>T54: ambient sounds (Ambience.cs), targets set per frame by the window from the HD scene</summary>
     public readonly Ambience Amb = new();
-    private const int Target = BufSamples * 5 / 2;   // frames queued (device + pending) the rate loop aims at
+    private const int Target = 3072;                 // frames queued (device + pending) the rate loop aims at (~70 ms)
+    private const int MaxQueue = Target + 2560;      // playtest fix: above ~128 ms queued the excess is dropped at once (a
+                                                     // catch-up burst used to leave up to 250 ms of delay, drained at 0.5 %)
     /// <summary>T13 CD-quality stereo (CdAudio.cs) instead of the original mono stream</summary>
     public bool Cd { get; private set; }
     public readonly CdMixer Mixer = new();
@@ -220,7 +223,9 @@ internal sealed unsafe class AudioOut
             }
             else _pending.Enqueue((short)Math.Clamp(MathF.Round(_res[i] * g + (float)(al + ar) * 0.5f * av), -32768f, 32767f));
         }
-        while (_pending.Count > MaxPending * Ch) { for (int c = 0; c < Ch; c++) _pending.Dequeue(); Dropped++; }
+        int busy = 0;
+        for (int i = 0; i < Buffers; i++) if (!Free(i)) busy += BufSamples;
+        while (_pending.Count >= Ch && _pending.Count / Ch + busy > MaxQueue) { for (int c = 0; c < Ch; c++) _pending.Dequeue(); Dropped++; }
         for (int i = 0; i < Buffers && _pending.Count >= BufSamples * Ch; i++)
         {
             if (!Free(i)) continue;

@@ -31,6 +31,7 @@ internal static unsafe partial class Window
     private const int IdCrt = 290;                          // T45
     private const int IdFps = 291;                          // T49
     private const int IdBright0 = 640, IdNatural = 645, IdVivid = 646, IdBlind0 = 647;   // T60: + 0..4, + 0..3
+    private const int IdWide0 = 660;                        // widescreen: + 0..3 = off, 16:10, 16:9, 21:9
     private const int IdAudioOriginal = 410, IdAudioCd = 411, IdStereo = 412, IdReverb = 413, IdAudioRemaster = 414;
     private const int IdAudioOrchestra = 416, IdAmbience = 417;   // T50, T54
     private const int IdCrossfeed = 415, IdChannel0 = 430;   // T47: + 0..4 = pulse 1, pulse 2, triangle, noise, DMC
@@ -57,6 +58,7 @@ internal static unsafe partial class Window
             case "crt": return IdCrt;
             case "fps": return IdFps;
             case "natural": return IdNatural;
+            case var ws when ws.StartsWith("widescreen:") && Array.IndexOf(VideoSettings.WideNames, ws[11..]) >= 0: return IdWide0 + Array.IndexOf(VideoSettings.WideNames, ws[11..]);
             case "vivid": return IdVivid;
             case var bs when bs.StartsWith("brightness:") && int.TryParse(bs[11..], out int bl) && bl is >= 1 and <= 5: return IdBright0 + bl - 1;
             case var cs when cs.StartsWith("colorblind:") && Array.IndexOf(ColorAdjust.BlindNames, cs[11..]) >= 0: return IdBlind0 + Array.IndexOf(ColorAdjust.BlindNames, cs[11..]);
@@ -249,6 +251,10 @@ internal static unsafe partial class Window
         string[] cn2 = { "Colour-blind assist: &Off", "Colour-blind assist: &Protanopia (red)", "Colour-blind assist: &Deuteranopia (green)", "Colour-blind assist: &Tritanopia (blue)" };
         for (int i = 0; i < 4; i++) Win32.AppendMenuW(disp, 0, (nuint)(IdBlind0 + i), cn2[i]);
         Win32.AppendMenuW(gfx, Win32.MF_POPUP, (nuint)disp, "&Display (brightness, colour, colour-blind)");
+        var wm = NewMenu();
+        string[] wn = { "&Off (256 columns, as the NES)", "16:&10 (384 columns)", "16:&9 (424 columns)", "&21:9 (560 columns)" };
+        for (int i = 0; i < 4; i++) Win32.AppendMenuW(wm, 0, (nuint)(IdWide0 + i), wn[i]);
+        Win32.AppendMenuW(gfx, Win32.MF_POPUP, (nuint)wm, "&Widescreen playfield (Original + HD graphics)");
         Win32.AppendMenuW(gfx, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(gfx, 0, IdHdParallax, "HD: &Parallax depth (pits, cliffs, layers)");
         Win32.AppendMenuW(gfx, 0, IdHdShadows, "HD: &Shadows (soft, contact, clouds)");
@@ -324,6 +330,7 @@ internal static unsafe partial class Window
         if (_menus.Count == 0) return;
         Check(IdPause, _paused); Check(IdMute, _muted); Check(IdCrt, _v.Crt); Check(IdFps, _v.ShowFps);
         for (int i = 0; i < 5; i++) Check(IdBright0 + i, _v.Brightness == i, true);
+        for (int i = 0; i < 4; i++) Check(IdWide0 + i, _v.Wide == i, true);
         Check(IdNatural, !_v.Vivid, true); Check(IdVivid, _v.Vivid, true);
         for (int i = 0; i < 4; i++) Check(IdBlind0 + i, _v.ColorBlind == i, true);
         for (int i = 0; i < 4; i++) Check(IdVolume0 + i, _v.Volume == 100 - 25 * i); Check(IdTurboA, _v.TurboA); Check(IdTurboB, _v.TurboB); Check(IdFeedback, _v.Feedback);
@@ -371,6 +378,10 @@ internal static unsafe partial class Window
             case IdFps: _v.ShowFps = !_v.ShowFps; SettingsChanged(false); Present(); return;
             case >= IdBright0 and < IdBright0 + 5: _v.Brightness = id - IdBright0; ApplyColor(); Notice($"BRIGHTNESS {_v.Brightness + 1}"); SettingsChanged(false); return;
             case IdNatural or IdVivid: _v.Vivid = id == IdVivid; ApplyColor(); Notice(_v.Vivid ? "COLOUR: VIVID" : "COLOUR: NATURAL"); SettingsChanged(false); return;
+            case >= IdWide0 and < IdWide0 + 4:
+                _v.Wide = id - IdWide0;
+                Notice("WIDESCREEN: " + VideoSettings.WideNames[_v.Wide].ToUpperInvariant());
+                Compose(); SettingsChanged(true); return;
             case >= IdBlind0 and < IdBlind0 + 4:
                 _v.ColorBlind = id - IdBlind0; ApplyColor();
                 Notice("COLOUR-BLIND ASSIST: " + new[] { "OFF", "PROTANOPIA", "DEUTERANOPIA", "TRITANOPIA" }[_v.ColorBlind]);

@@ -465,3 +465,28 @@ CSHARP-WINDOWS/
     `--turbo` runs (those stay at full: tests unchanged). A notice names the new level.
     **Save backups (T63):** at start (the default save only), `Save.Backup` keeps `re-c.sav.1` (newest) .. `.3`,
     rotated only when the save differs from `.1`.
+    **Playtest fixes (P1):** delayed / choppy sound, worst when entering an area. Causes found: (1) the exe JIT-compiled
+    each game routine on its first call (a new area runs new routines: 10-40 ms stalls measured on Linux) → the publish
+    is now ReadyToRun (`PublishReadyToRun`, exe 12.6 → 15.1 MB); (2) samples reached the device only after the frame
+    was drawn and presented → `AudioOut.Flush` now runs before `Blit`; (3) a catch-up burst after a stall left up to
+    250 ms queued, drained at the rate loop's 0.5 % → above ~128 ms queued (`MaxQueue`) the excess is dropped at once;
+    (4) the device buffers are 8 × 512 samples (11.6 ms each, refilled more often) with a 70 ms target; (5)
+    `GCLatencyMode.SustainedLowLatency` while running.
+    **Widescreen playfield (W1-W2, Wide.cs):** Video › Widescreen playfield Off / 16:10 / 16:9 / 21:9 (ids 660-663, ini
+    `widescreen=`, `--menu widescreen:16:9`): 384 / 424 / 560 columns, square pixels; Original (+ CRT / upscale filters)
+    and HD (the 16/32-bit looks stay 256). The columns beside the game's 256 come from the loaded area: `AreaCache`
+    (= `Bg.RenderArea` with the visited bitmap, packed pixel value / palette group / global CHR tile, built on a worker
+    thread from a RAM snapshot taken before a frame when the area key changes; `win_wide`: identical to RenderArea);
+    `Widescreen` takes the camera before each frame (`$02/$03`, `s8($05)·240+$04`: 98-100 % of the playfield equals
+    the area there), tests a sample of playfield pixels against the area each drawn frame (≥ 85 % = the screen shows
+    the map; the sides fade in over 8 frames and out over 4, so menus, cut-scenes and transitions keep black sides),
+    and colours the sides with the current palette (fades follow). `Wide.MapLines`: only lines above the status bar
+    that the game does not leave black; the game's masked left column is filled from the area too. Sprites exist only
+    in the middle. Original: `Window.Compose` builds the wide `Px`; the overlay stays on the middle 256 columns
+    (`Osd.Blend` x offset + stride; the pause dim covers the sides). HD: `SceneRaster.Widen` makes a W-wide raster
+    (middle = the game's raster, sides = area pixels with tile tags, so pack art, materials and the font path apply);
+    `Gpu.Upload(wide, scene, r256)` sizes its inputs and targets from the width (`NesW`, `SetWidth` rebuilds them;
+    shaders read `Scr` = width, 240, side width; `#define NES`); line analyses (status bar, edges, menus, meters,
+    cut-scene band) run on the 256 raster, x positions shifted; `WidenInfo` copies the scene info and gives the side
+    pixels the void rule (near-black, opened 3×3) above the status bar so chasms continue. Layout uses
+    `VideoSettings.PicW` (the window widens). Test `win_wide`.

@@ -12,6 +12,11 @@ internal enum Aspect { Square, Tv, FourThree, SixteenTen, SixteenNine, Fill }
 internal sealed class VideoSettings
 {
     public const int SrcW = 256, SrcH = 240, Overscan = 8;
+    /// <summary>widescreen: the picture's width now (runtime, set by the window: 256, or a Widescreen width)</summary>
+    public int PicW = SrcW;
+    /// <summary>Video > Widescreen playfield: 0 off, 1 16:10, 2 16:9, 3 21:9 (ini widescreen=off|16:10|16:9|21:9)</summary>
+    public int Wide;
+    public static readonly string[] WideNames = { "off", "16:10", "16:9", "21:9" };
 
     public Aspect Aspect = Aspect.Square;
     /// <summary>true = whole-number vertical scale (sharp, black bars); false = as large as the window allows.</summary>
@@ -123,11 +128,11 @@ internal sealed class VideoSettings
     /// <summary>shown width / height of the picture (Fill: the window decides; square pixels used for sizing)</summary>
     public double Ratio => Aspect switch
     {
-        Aspect.Tv => SrcW * 8.0 / 7.0 / VisibleH,
+        Aspect.Tv => PicW * 8.0 / 7.0 / VisibleH,
         Aspect.FourThree => 4.0 / 3.0,
         Aspect.SixteenTen => 16.0 / 10.0,
         Aspect.SixteenNine => 16.0 / 9.0,
-        _ => (double)SrcW / VisibleH,
+        _ => (double)PicW / VisibleH,
     };
 
     /// <summary>
@@ -162,7 +167,7 @@ internal sealed class VideoSettings
     public (int W, int H) ClientSizeAt(int scale)
     {
         int h = scale * VisibleH;
-        double r = Aspect == Aspect.Fill ? (double)SrcW / VisibleH : Ratio;
+        double r = Aspect == Aspect.Fill ? (double)PicW / VisibleH : Ratio;
         return ((int)Math.Round(h * r), h);
     }
 
@@ -194,6 +199,7 @@ internal sealed class VideoSettings
         $"crt={(Crt ? 1 : 0)}",
         $"show_fps={(ShowFps ? 1 : 0)}",
         $"brightness={Brightness}",
+        $"widescreen={WideNames[Wide]}",
         $"keybinds={(KeyBinds.All(k => k == 0) ? "none" : string.Join(",", Enumerable.Range(0, 8).Where(i => KeyBinds[i] != 0).Select(i => $"{Input.Names[i].ToLowerInvariant()}:{KeyBinds[i]:X2}")))}",
         $"vivid={(Vivid ? 1 : 0)}",
         $"colorblind={ColorAdjust.BlindNames[ColorBlind]}",
@@ -277,6 +283,7 @@ internal sealed class VideoSettings
                 case "show_fps": v.ShowFps = val == "1"; break;
                 case "brightness": if (int.TryParse(val, out int br)) v.Brightness = Math.Clamp(br, 0, 4); break;
                 case "vivid": v.Vivid = val == "1"; break;
+                case "widescreen": { int wi = Array.IndexOf(WideNames, val); if (wi >= 0) v.Wide = wi; break; }
                 case "keybinds":
                     foreach (var kb in val.Split(','))
                     {
