@@ -36,6 +36,7 @@ internal static unsafe partial class Window
     private const int IdAudioOriginal = 410, IdAudioCd = 411, IdStereo = 412, IdReverb = 413, IdAudioRemaster = 414;
     private const int IdAudioOrchestra = 416, IdAmbience = 417;   // T50, T54
     private const int IdVoice = 418;                               // playtest 6: spoken dialogue
+    private const int IdVoiceEngine0 = 980;                       // playtest 9: + VideoSettings.VoiceEngines index
     private const int IdCrossfeed = 415, IdChannel0 = 430;   // T47: + 0..4 = pulse 1, pulse 2, triangle, noise, DMC
 
     private static VideoSettings _v = new();
@@ -174,6 +175,7 @@ internal static unsafe partial class Window
         {
             "Infinite &life (energy always full)", "Infinite &magic (MP always full)", "&Max gold (60000)",
             "&No paralysis / poison", "Instant sword &charge (hold B)", "&Quick level-up (next kill levels up)",
+            "All &items (the game's own debug item set)", "Max le&vel (level 15, MP 255)", "&Fast walk (speed 9)",
         };
         for (int i = 0; i < text.Length; i++) Win32.AppendMenuW(m, 0, (nuint)(IdCheat0 + i), text[i]);
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
@@ -228,7 +230,13 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(m, 0, IdReverb, "&Reverb (CD quality)");
         Win32.AppendMenuW(m, 0, IdCrossfeed, "&Headphone crossfeed (CD quality / Remastered)");
         Win32.AppendMenuW(m, 0, IdAmbience, "&Ambient sounds (wind, birds, caves, fire; HD graphics)");
-        Win32.AppendMenuW(m, 0, IdVoice, "Spoken &dialogue (Windows text-to-speech)");
+        Win32.AppendMenuW(m, 0, IdVoice, "Spoken &dialogue");
+        {
+            var vm2 = NewMenu();                           // playtest 9: pick the voice (auto = Kokoro, then Piper, then Windows)
+            string[] vl = { "&Auto (best available)", "&Kokoro (most natural)", "&Piper", "&Windows voice" };
+            for (int i = 0; i < vl.Length; i++) Win32.AppendMenuW(vm2, 0, (nuint)(IdVoiceEngine0 + i), vl[i]);
+            Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)vm2, "Voice &engine");
+        }
         var cm = NewMenu();
         string[] cn = { "Pulse &1 (melody)", "Pulse &2 (harmony)", "&Triangle (bass)", "&Noise (drums)", "&DMC (samples)" };
         for (int i = 0; i < 5; i++) Win32.AppendMenuW(cm, 0, (nuint)(IdChannel0 + i), cn[i]);
@@ -383,6 +391,7 @@ internal static unsafe partial class Window
         Check(IdCrossfeed, _v.Crossfeed);
         Check(IdAmbience, _v.Ambience);
         Check(IdVoice, _v.Voice);
+        for (int i = 0; i < VideoSettings.VoiceEngines.Length; i++) Check(IdVoiceEngine0 + i, _v.VoiceEngine == VideoSettings.VoiceEngines[i]);
         for (int i = 0; i < 5; i++) Check(IdChannel0 + i, (_v.AudioMute >> i & 1) == 0);
         Check(IdFsDesktop, _v.FsW == 0, true);
         for (int i = 0; i < _modes.Count; i++) Check(IdFsMode0 + i, (_v.FsW, _v.FsH) == _modes[i], true);
@@ -408,7 +417,7 @@ internal static unsafe partial class Window
             case >= IdWarp0 and < IdWarp0 + 256:
                 Notice(_m != null && Warp.To(_m, id - IdWarp0) ? $"WARP TO AREA {id - IdWarp0:X2}" : "WARP: ONLY FROM NORMAL PLAY");
                 return;
-            case >= IdDebug0 and < IdDebug0 + 6:
+            case >= IdDebug0 and < IdDebug0 + 10:
                 { string k = VideoSettings.DebugNames[id - IdDebug0]; if (!_v.Debug.Remove(k)) _v.Debug.Add(k); }
                 SettingsChanged(false); Present(); return;
             case >= IdBright0 and < IdBright0 + 5: _v.Brightness = id - IdBright0; ApplyColor(); Notice($"BRIGHTNESS {_v.Brightness + 1}"); SettingsChanged(false); return;
@@ -433,7 +442,7 @@ internal static unsafe partial class Window
             case IdShot: Screenshot(); return;
             case IdShotFolder: OpenShotFolder(); return;
             case IdResetKeys: _v.KeyBinds = new int[8]; _input.SetBinds(_v.KeyBinds); Notice("KEYS: DEFAULTS"); SettingsChanged(false); return;
-            case >= IdCheat0 and < IdCheat0 + 6:
+            case >= IdCheat0 and < IdCheat0 + 9:
                 _v.Cheats.Set(id - IdCheat0, !_v.Cheats.Get(id - IdCheat0));
                 Notice(Cheats.Labels[id - IdCheat0] + (_v.Cheats.Get(id - IdCheat0) ? ": ON" : ": OFF"));
                 if (id == IdCheat0 && _v.Cheats.Life && _m != null) _v.Cheats.Apply(_m, false);
@@ -493,6 +502,9 @@ internal static unsafe partial class Window
             case IdStereo: _v.AudioStereo = !_v.AudioStereo; ApplyAudio(); SettingsChanged(false); return;
             case IdReverb: _v.AudioReverb = !_v.AudioReverb; ApplyAudio(); SettingsChanged(false); return;
             case IdAmbience: _v.Ambience = !_v.Ambience; Notice(_v.Ambience ? "AMBIENT SOUNDS: ON" : "AMBIENT SOUNDS: OFF"); SettingsChanged(false); return;
+            case >= IdVoiceEngine0 and < IdVoiceEngine0 + 4:
+                _v.VoiceEngine = VideoSettings.VoiceEngines[id - IdVoiceEngine0];
+                RestartVoice(); Notice("VOICE: " + _v.VoiceEngine.ToUpperInvariant()); SettingsChanged(false); return;
             case IdVoice: _v.Voice = !_v.Voice; if (!_v.Voice) { _speech?.Stop(); _neural?.Stop(); } Notice(_v.Voice ? "SPOKEN DIALOGUE: ON" : "SPOKEN DIALOGUE: OFF"); SettingsChanged(false); return;
             case IdCrossfeed:
                 _v.Crossfeed = !_v.Crossfeed;

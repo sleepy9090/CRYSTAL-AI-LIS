@@ -399,3 +399,4 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] P15 (2026-11-26, playtest 7): build time in the title; no side line drop-outs (FrameGood); NPCs whole at the game-column edge.
 - [x] P16 (2026-11-26, playtest 7): remade intro jungle (StoryDino, GPU-painted over the whole width); other story scenes next.
 - [x] P17 (2026-11-27, playtest 8): story text kept, jungle only on its page, no title streaks, softer character shadows, smooth heat shimmer, masked-column sprites, Debug info, Warp cheat, Kokoro voice.
+- [x] P18 (2026-11-27, playtest 9): pod silhouette recoloured, no title relief lines, softer character halo/shadow, smooth no-map fill, Kokoro fallback + full log + Voice engine menu, debug HD/sprites/input/audio, cheats items/level/speed.

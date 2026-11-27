@@ -68,6 +68,8 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool CineAllowed = true;
     /// <summary>playtest 7: a remade story scene to paint over the picture band (0 = none; 1 = the intro's prehistoric jungle)</summary>
     public int StoryScene;
+    /// <summary>playtest 9: Video > Debug info > HD scene</summary>
+    public string DebugText => FormattableString.Invariant($"HD PLAY {_play:0.00}  OUTDOOR {_outdoor:0.00}  STORY {StoryScene}/{(_storyOn ? 1 : 0)} {_storyFade:0.00}  FILM {(Cinematic && CineAllowed ? _cineW : 0):0.00}  Q {Quality}");
     private bool _storyOn;
     private float _storyFade, _storyMax;
     private int _storyKey;
@@ -185,9 +187,9 @@ internal sealed unsafe partial class Gpu : IDisposable
 
     // ---- tunables (cbuffer)
     private static readonly (float X, float Y, float Z) Light = Norm(-0.45f, -0.62f, 0.64f);
-    private const float Bump = 1.8f, Amb = 0.50f, Kd = 0.50f, SpecK = 0.55f, LiftH = 1.1f,   // playtest 7: 2.2 cast a dark silhouette beside each character
+    private const float Bump = 1.8f, Amb = 0.50f, Kd = 0.50f, SpecK = 0.55f, LiftH = 0.8f,   // playtest 7/9: 2.2 cast a dark silhouette beside each character
         AoK = 0.45f, ShadowK = 0.60f, ShadowSlope = 0.16f, BloomThreshold = 0.95f, BloomK = 0.45f,
-        Saturation = 1.08f, Contrast = 0.12f, Vignette = 0.22f, ReflectK = 0.30f, LightK = 2.2f, ContactK = 0.18f;
+        Saturation = 1.08f, Contrast = 0.12f, Vignette = 0.22f, ReflectK = 0.30f, LightK = 2.2f, ContactK = 0.12f;
 
     private void* _dev, _ctx, _swap, _backRtv;
     // uploads
@@ -1024,7 +1026,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         {
             pw, ph, 1f / pw, 1f / ph,
             1, lines / 240f, 0, firstLine / 240f,
-            Light.X, Light.Y, Light.Z, Bump,
+            Light.X, Light.Y, Light.Z, Bump * _play,              // playtest 9: no relief on title / story screens (ridges along text rows)
             hx, hy, hz, Light.Z,
             Amb, Kd, SpecK, TiltShift ? 1 : 0,
             LiftH, AoK * _play, Shadows ? ShadowK * _play : 0, Shadows ? ContactK * _play : 0,   // playtest 7: no cast shadows on the title / story screens (text streaks)

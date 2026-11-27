@@ -13,13 +13,13 @@ namespace ReC.Win;
 
 internal sealed class Cheats
 {
-    public bool Life, Magic, Gold, Status, Charge, Xp;
-    public bool Any => Life || Magic || Gold || Status || Charge || Xp;
+    public bool Life, Magic, Gold, Status, Charge, Xp, Items, Level, Speed;
+    public bool Any => Life || Magic || Gold || Status || Charge || Xp || Items || Level || Speed;
 
-    public static readonly string[] Names = { "life", "magic", "gold", "status", "charge", "xp" };
-    public static readonly string[] Labels = { "INFINITE LIFE", "INFINITE MAGIC", "MAX GOLD", "NO PARALYSIS / POISON", "INSTANT CHARGE", "QUICK LEVEL-UP" };
+    public static readonly string[] Names = { "life", "magic", "gold", "status", "charge", "xp", "items", "level", "speed" };
+    public static readonly string[] Labels = { "INFINITE LIFE", "INFINITE MAGIC", "MAX GOLD", "NO PARALYSIS / POISON", "INSTANT CHARGE", "QUICK LEVEL-UP", "ALL ITEMS", "MAX LEVEL", "FAST WALK" };
 
-    public bool Get(int i) => i switch { 0 => Life, 1 => Magic, 2 => Gold, 3 => Status, 4 => Charge, _ => Xp };
+    public bool Get(int i) => i switch { 0 => Life, 1 => Magic, 2 => Gold, 3 => Status, 4 => Charge, 5 => Xp, 6 => Items, 7 => Level, _ => Speed };
     public void Set(int i, bool v)
     {
         switch (i)
@@ -29,7 +29,10 @@ internal sealed class Cheats
             case 2: Gold = v; break;
             case 3: Status = v; break;
             case 4: Charge = v; break;
-            default: Xp = v; break;
+            case 5: Xp = v; break;
+            case 6: Items = v; break;
+            case 7: Level = v; break;
+            default: Speed = v; break;
         }
     }
 
@@ -64,6 +67,14 @@ internal sealed class Cheats
             int xp = ram[0x0704] | ram[0x0705] << 8, next = ram[0x0706] | ram[0x0707] << 8;
             if (next > 0 && xp < next - 1) { ram[0x0704] = (byte)((next - 1) & 0xFF); ram[0x0705] = (byte)((next - 1) >> 8); }
         }
+        // playtest 9: the game's own dead debug cheat DebugPauseCheat 15:BF47 (switched off by one byte: its JSR targets the
+        // RTS before it): empty inventory slots (b7 set) filled from DebugItemTable 15:BF7F (24 ids), level $0F + MP $FF,
+        // and on pad-2 A the speed of slots 0 / 1 ($0340 / $0341) = 9
+        if (Items)
+            for (int x = 0x17; x >= 0; x--)
+                if ((m.Rd(0x6430 + x) & 0x80) != 0) m.Wr(0x6430 + x, Prg.PrgByte(m, 15, 0xBF7F + x));
+        if (Level && (ram[0x0421] != 0x0F || ram[0x0709] != 0xFF)) { ram[0x0421] = 0x0F; ram[0x0709] = 0xFF; ram[0x0708] = 0xFF; }
+        if (Speed && ram[0x41] == 8) { ram[0x0340] = 9; ram[0x0341] = 9; }
     }
 
     /// <summary>the 17 HP-bar tiles from $2B26 as HudHpBar 26:8CC0 draws them</summary>

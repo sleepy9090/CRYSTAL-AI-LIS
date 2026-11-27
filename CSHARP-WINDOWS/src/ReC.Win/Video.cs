@@ -77,8 +77,8 @@ internal sealed class VideoSettings
     public bool ShowFps;
     /// <summary>playtest 7: debug lines on screen (Video > Debug info; ini debug=area,pos,..)</summary>
     public readonly HashSet<string> Debug = new();
-    public static readonly string[] DebugNames = { "area", "pos", "state", "objects", "wide", "voice" };
-    public static readonly string[] DebugLabels = { "Current &area", "Player &position + camera", "Game &state (main / sub / IRQ / frame)", "&Objects (active, flicker fill)", "&Widescreen (map lines, offset)", "&Voice (engine, speaker)" };
+    public static readonly string[] DebugNames = { "area", "pos", "state", "objects", "wide", "voice", "hd", "sprites", "input", "audio" };
+    public static readonly string[] DebugLabels = { "Current &area", "Player &position + camera", "Game &state (main / sub / IRQ / frame)", "&Objects (active, flicker fill)", "&Widescreen (map lines, offset)", "&Voice (engine, speaker)", "&HD scene (play, story art, film look)", "&Sprites (visible, behind the scenery)", "&Input (pad bytes)", "A&udio (mode, dropouts)" };
     /// <summary>T60 Video > Display: brightness 0..4 (2 = as is), vivid colour, colour-blind assist (0 off, 1 protan, 2 deutan,
     /// 3 tritan); ini brightness=, vivid=, colorblind=</summary>
     public int Brightness = 2, ColorBlind;
@@ -111,6 +111,9 @@ internal sealed class VideoSettings
     public bool Ambience = true;
     /// <summary>playtest 6: NPC dialogue read aloud (Audio > Spoken dialogue; ini voice=1; Windows text-to-speech)</summary>
     public bool Voice = true;
+    /// <summary>playtest 9: which voice speaks (Audio > Voice engine; ini voice_engine=auto|kokoro|piper|windows)</summary>
+    public string VoiceEngine = "auto";
+    public static readonly string[] VoiceEngines = { "auto", "kokoro", "piper", "windows" };
 
     public static readonly (Aspect A, string Key, string Label)[] Aspects =
     {
@@ -218,6 +221,7 @@ internal sealed class VideoSettings
         $"crossfeed={(Crossfeed ? 1 : 0)}",
         $"ambience={(Ambience ? 1 : 0)}",
         $"voice={(Voice ? 1 : 0)}",
+        $"voice_engine={VoiceEngine}",
         $"upscale={ReC.Win.Upscale.Filters.First(f => f.K == Upscale).Key}",
         $"cheats={Cheats.Serialize()}",
         $"turbo={(TurboA && TurboB ? "a,b" : TurboA ? "a" : TurboB ? "b" : "none")}",
@@ -316,6 +320,7 @@ internal sealed class VideoSettings
                 case "crossfeed": v.Crossfeed = val == "1"; break;
                 case "ambience": v.Ambience = val == "1"; break;
                 case "voice": v.Voice = val == "1"; break;
+                case "voice_engine": if (VoiceEngines.Contains(val)) v.VoiceEngine = val; break;
                 case "cheats": v.Cheats.Parse(val); break;
                 case "turbo": { var t = val.Split(','); v.TurboA = t.Contains("a"); v.TurboB = t.Contains("b"); break; }
                 case "graphics":

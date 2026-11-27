@@ -955,7 +955,7 @@ float4 PSLight(V i) : SV_Target
             glint = sunC * step(0.985, hg) * tw * smoothstep(0.35, 0.0, length(gf - 0.5)) * 2.5 * shade * Opt.w;
         }
         // rim light on sprites (their lifted edges catch the sky)
-        float rim = spr ? pow(saturate(1 - n.z), 1.5) * 0.7 : 0;
+        float rim = spr ? pow(saturate(1 - n.z), 1.5) * 0.2 : 0;   // playtest 9: 0.7 = a bright halo around every character
         c = a * lightC + sp * sunC + glint + rim * sky * (0.4 + 0.6 * lum) + sky * sheen * Opt.w;
         // emissive colours glow a little themselves in the dark
         c += a * Emissive((uint)col) * Scn.w * Opt2.y * 0.25;
@@ -1306,7 +1306,10 @@ float4 PSFinal(V i) : SV_Target
             float out1 = saturate(max(Scr.z - np.x, np.x - (Scr.z + 256)) / Scr.z);
             float mx = np.x < Scr.z ? 2 * Scr.z - np.x : np.x > Scr.z + 256 ? 2 * (Scr.z + 256) - np.x : np.x;
             float2 muv = float2((mx / NES.x - Uv.z) / Uv.x, i.uv.y);
-            c = saturate(SrcC.SampleLevel(Lin, muv, 0).rgb) * (0.8 - 0.5 * out1);
+            // playtest 9: a 2D 9-tap average over a wide area (the single tap smeared rows sideways = "line drags")
+            float3 acc = 0;
+            [unroll] for (int k = 0; k < 9; k++) acc += SrcC.SampleLevel(Lin, saturate(muv + float2(k % 3 - 1, k / 3 - 1) * float2(0.04, 0.07)), 0).rgb;
+            c = saturate(acc / 9) * (0.7 - 0.45 * out1);
         }
     }
     c = saturate(float3(dot(Col0.xyz, c), dot(Col1.xyz, c), dot(Col2.xyz, c)));   // T60

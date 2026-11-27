@@ -1292,6 +1292,43 @@ internal static partial class Program
             True(Math.Abs(playerAdded - inv / 2) <= inv / 6, $"the player is filled in on the blink frames the game skips ({playerAdded} of {inv})");
             Eq(0, dup, "the player is only added while blinking (never drawn twice)");
         }),
+        ("win_hidden_sprites", () =>
+        {
+            // playtest 9: after the cryo chamber (area 00, sub_state 8) the player stands in the pod behind the background
+            // (sprite priority): hidden on the NES, but the HD info must not lift / shade him either (a black ghost)
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { }); m.Reset();
+            m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+            var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+            var keys = Keys.Parse("1250:START 1400:START 1600:START 1700:START 2301:START".Split(' '));
+            var enh = new Enhancer(m.Ppu.Chr, d.NesRgb);
+            int frames = 0, hiddenPx = 0, liftedHidden = 0, recoloured = 0, blackBody = 0;
+            while (214 + m.Frame < 3400)
+            {
+                m.RunFrame(keys.TryGetValue(214 + m.Frame, out int b) ? b : 0);
+                if (m.Rd(0x40) != 1 || m.Rd(0x41) != 8 || m.Rd(0x6C) != 0) continue;
+                r.Build(m.Ppu.Capture);
+                enh.LiftHd(r.Fb, r.Tags);
+                if (r.PodSilhouette(m.Rd(0x6C), m.Rd(0x40), m.Rd(0x41))) recoloured++;
+                for (int i = 0; i < 256 * 232; i++)
+                    if (r.Sp[i] != 0 && (r.Sp[i] & 0x0C) == 0 && (r.Sp[i] & 3) is 1 or 2 && ((r.Sp[i] & 0x40) == 0 || r.Bg[i] == 0) && r.Fb[i] == 0x0F) blackBody++;
+                var sc = new HdScene(d.NesRgb);
+                sc.Build(r.Fb, r.Tags, r.LinePal[239], enh.HdLift, r.LineScroll, 0);
+                frames++;
+                for (int i = 0; i < 256 * 232; i++)
+                {
+                    if (r.Sp[i] == 0 || (r.Sp[i] & 0x40) == 0 || r.Bg[i] == 0) continue;   // a behind-BG sprite pixel the BG covers
+                    hiddenPx++;
+                    if (sc.Info[i * 4] > 8 || (sc.Info[i * 4 + 2] & HdScene.FSprite) != 0) liftedHidden++;
+                }
+            }
+            Console.WriteLine($"  win_hidden_sprites: {frames} play frames in area 00: {hiddenPx} hidden sprite pixels, {liftedHidden} of them lifted / flagged as sprite");
+            Console.WriteLine($"  win_hidden_sprites: pod silhouette recoloured in {recoloured} frames, player body pixels left black {blackBody}");
+            True(frames > 100, "the run reaches play after the chamber");
+            True(recoloured > 100 && recoloured < frames, "the black pod silhouette is recoloured, and only until the game fades him in");
+            Eq(0, blackBody, "no black player body in the pod (only his outline stays dark)");
+            Eq(0, liftedHidden, "hidden sprite pixels have no HD lift / sprite flag (no ghost)");
+        }),
         ("win_warp_debug", () =>
         {
             // playtest 7: Cheats > Warp to area, Video > Debug info
@@ -1317,6 +1354,22 @@ internal static partial class Program
             var lines = Window.DebugLines(m, v);
             Console.WriteLine("  win_warp_debug: " + string.Join(" | ", lines));
             True(lines.Count == 2 && lines[0].StartsWith("AREA 02") && lines[1].StartsWith("MAIN 01  SUB 08"), "debug lines from RAM");
+            // playtest 9: more debug lines, and the cheats from the game's dead debug cheat (DebugPauseCheat 15:BF47)
+            var v2 = VideoSettings.Parse("debug=sprites,input,hd\n");
+            var l2 = Window.DebugLines(m, v2);
+            Console.WriteLine("  win_warp_debug: " + string.Join(" | ", l2));
+            True(l2.Count == 3 && l2[0].StartsWith("HD OFF") && l2[1].StartsWith("SPRITES") && l2[2].StartsWith("PAD"), "hd / sprites / input lines");
+            int empty = Enumerable.Range(0, 24).Count(x => (m.Rd(0x6430 + x) & 0x80) != 0);
+            var ch = new Cheats(); ch.Parse("items,level,speed");
+            True(ch.Items && ch.Level && ch.Speed && ch.Serialize() == "items,level,speed", "cheats ini");
+            ch.Apply(m, false);
+            int filled = Enumerable.Range(0, 24).Count(x => m.Rd(0x6430 + x) == Prg.PrgByte(m, 15, 0xBF7F + x));
+            Console.WriteLine($"  win_warp_debug: items cheat filled {empty} empty slots; level {m.Rd(0x421):X2} MP {m.Rd(0x708)}/{m.Rd(0x709)} speed {m.Rd(0x340)}/{m.Rd(0x341)}");
+            True(empty > 0 && Enumerable.Range(0, 24).All(x => (m.Rd(0x6430 + x) & 0x80) == 0) && filled >= empty, "every empty slot holds the debug table's item");
+            True(m.Rd(0x421) == 0x0F && m.Rd(0x709) == 0xFF && m.Rd(0x340) == 9 && m.Rd(0x341) == 9, "level 15, MP 255, speed 9");
+            for (int f = 0; f < 120; f++) { m.RunFrame(f < 60 ? 0x01 : 0x02); ch.Apply(m, false); }
+            True(m.Rd(0x40) == 1 && m.Rd(0x41) == 8, "the game plays on with the cheats");
+            Eq(9, Cheats.Names.Length, "nine cheats");
         }),
         ("win_story", () =>
         {

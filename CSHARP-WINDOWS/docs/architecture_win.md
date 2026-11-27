@@ -679,3 +679,17 @@ CSHARP-WINDOWS/
     when `dist\voice\kokoro` exists (`tools/kokoro_pack.py`; model in two < 100 MB parts joined into %LOCALAPPDATA%);
     not run here (downloaded programs are not executed in this sandbox). The pod's black figure could not be reproduced
     with the user's settings (an HD render at f3099 shows the player in colour).
+    **Playtest 9 (recordings 1108 / 1109 / 1111, voice.log):** (1) The black figure after the cryo chamber is the original
+    game's: in area 00 (normal play) it draws the player with sprite palette 0 all `$0F` until it fades him in
+    (`$26 $04` → `$36 $14`, one colour at a time; reproduced in an HD render at frame 2700 with the user's settings).
+    `SceneRaster.PodSilhouette` gives the still-black colours `$16` / `$04` (dimmed, "behind the glass") in the HD raster,
+    so the game's fade carries on from there (`win_hidden_sprites`: 217 frames recoloured, no black body pixel). (2) The
+    title lines along START / CONTINUE were the relief lighting's ridges along the text rows on the flat backdrop: `Bump`
+    now scales with the gameplay weight (HD render of the title with the user's settings: clean). (3) Characters: sprite
+    rim light 0.7 → 0.2 (the bright halo), lift 1.1 → 0.8, contact shadow 0.18 → 0.12. (4) "Line drags" beside small
+    areas: the widescreen no-map fill was a single tap of the wide blur (rows smeared sideways); now a 9-tap 2D average.
+    (5) Voice: Kokoro exited 0xFFFFFFFF on the user's PC (the log kept only the echoed command line); now the whole
+    output is logged, Kokoro retries once with the basic options, and on failure Piper takes over and says the page
+    (Audio > Voice engine: auto / kokoro / piper / windows, ini `voice_engine`). New debug lines: HD scene, sprites,
+    input, audio; new cheats from the game's own dead `DebugPauseCheat` 15:BF47: all items (`DebugItemTable` 15:BF7F into
+    empty inventory slots), max level (`$0421` = `$0F`, MP 255), fast walk (`$0340` / `$0341` = 9).

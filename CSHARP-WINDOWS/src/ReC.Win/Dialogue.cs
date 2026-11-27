@@ -18,6 +18,8 @@ internal sealed class DialogueReader
     private string _pending = "", _said = "";
     private int _stable;
     private bool _open;
+    /// <summary>a message window is open (the page last read is still on screen)</summary>
+    public bool Showing => _open;
 
     /// <summary>the page in the text buffer as words, or "" when the buffer is not a text page</summary>
     public static string Page(Func<int, int> rd)

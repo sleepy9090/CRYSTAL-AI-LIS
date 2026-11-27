@@ -103,6 +103,30 @@ internal sealed class KokoroVoice : IVoice
         };
     }
 
+    /// <summary>playtest 9: Kokoro failed on this PC (both argument sets): the window switches to Piper for good</summary>
+    public volatile bool Failed;
+    /// <summary>the page that failed, for the voice taking over: (npc, text)</summary>
+    public (int Npc, string Text)? FailedPage;
+    private bool _minimal;                                // the plain argument set worked better (retry succeeded)
+
+    private ProcessStartInfo Args(int spk, double len, string wav, string text, bool minimal)
+    {
+        var psi = new ProcessStartInfo(_exe)
+        {
+            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
+            WorkingDirectory = _dir,
+        };
+        var a = new List<string>
+        {
+            "--kokoro-model=" + _model, "--kokoro-voices=" + Path.Combine(_dir, "voices.bin"),
+            "--kokoro-tokens=" + Path.Combine(_dir, "tokens.txt"), "--kokoro-data-dir=" + Path.Combine(_dir, "espeak-ng-data"),
+        };
+        if (!minimal) { a.Add(FormattableString.Invariant($"--kokoro-length-scale={len:0.00}")); a.Add("--num-threads=2"); }
+        a.Add($"--sid={spk}"); a.Add("--output-filename=" + wav); a.Add(text);
+        foreach (var s in a) psi.ArgumentList.Add(s);
+        return psi;
+    }
+
     public void Say(int npc, string text)
     {
         var (spk, len, pitch) = Pick(npc);
@@ -111,43 +135,47 @@ internal sealed class KokoroVoice : IVoice
         lock (_lk) { seq = ++_seq; _next = null; _clear = true; old = _running; _running = null; }
         try { if (old != null && !old.HasExited) old.Kill(); } catch (Exception) { }
         string wav = Path.Combine(_tmp, $"k{seq}.wav");
-        var psi = new ProcessStartInfo(_exe)
+        var t = new Thread(() =>
         {
-            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
-            WorkingDirectory = _dir,
-        };
-        foreach (var a in new[]
-        {
-            "--kokoro-model=" + _model, "--kokoro-voices=" + Path.Combine(_dir, "voices.bin"),
-            "--kokoro-tokens=" + Path.Combine(_dir, "tokens.txt"), "--kokoro-data-dir=" + Path.Combine(_dir, "espeak-ng-data"),
-            FormattableString.Invariant($"--kokoro-length-scale={len:0.00}"), "--num-threads=2", $"--sid={spk}",
-            "--output-filename=" + wav, text,
-        }) psi.ArgumentList.Add(a);
-        var t = new Thread(() => Run(psi, seq, wav, pitch)) { IsBackground = true, Name = "kokoro" };
+            int r = Run(Args(spk, len, wav, text, _minimal), seq, wav, pitch);
+            if (r == 1 && !_minimal)                      // retry once with only the basic options
+            {
+                NeuralVoice.Log("kokoro: retry with the basic options");
+                r = Run(Args(spk, len, wav, text, true), seq, wav, pitch);
+                if (r == 0) _minimal = true;
+            }
+            if (r == 1) { FailedPage = (npc, text); Failed = true; }
+        }) { IsBackground = true, Name = "kokoro" };
         t.Start();
     }
 
-    private void Run(ProcessStartInfo psi, int seq, string wav, double pitch)
+    /// <summary>0 = spoken (or superseded), 1 = the program failed</summary>
+    private int Run(ProcessStartInfo psi, int seq, string wav, double pitch)
     {
         try
         {
             using var p = Process.Start(psi);
-            if (p == null) { NeuralVoice.Log("kokoro: Process.Start returned null"); return; }
-            lock (_lk) { if (seq != _seq) { try { p.Kill(); } catch (Exception) { } return; } _running = p; }
-            string err = p.StandardError.ReadToEnd();
-            p.StandardOutput.ReadToEnd();
+            if (p == null) { NeuralVoice.Log("kokoro: Process.Start returned null"); return 1; }
+            lock (_lk) { if (seq != _seq) { try { p.Kill(); } catch (Exception) { } return 0; } _running = p; }
+            var errTask = p.StandardError.ReadToEndAsync();
+            string outText = p.StandardOutput.ReadToEnd();
             p.WaitForExit();
-            lock (_lk) if (_running == p) _running = null;
+            string err = errTask.Result;
+            bool killed;
+            lock (_lk) { killed = _running != p; if (_running == p) _running = null; }
+            if (killed || seq != _seq) return 0;          // a newer page / Stop() ended it
             if (p.ExitCode != 0 || !File.Exists(wav))
             {
-                NeuralVoice.Log($"kokoro: exit 0x{p.ExitCode:X8} " + err.Trim().Split('\n').LastOrDefault());
-                return;
+                // the whole output (the program echoes its command line last, the reason comes before it)
+                NeuralVoice.Log($"kokoro: exit 0x{p.ExitCode:X8}\n--- stderr ---\n{err.Trim()}\n--- stdout ---\n{outText.Trim()}\n---");
+                return 1;
             }
             float[] pcm = NeuralVoice.Render(File.ReadAllBytes(wav), pitch, AudioOut.Rate);
             try { File.Delete(wav); } catch (Exception) { }
             lock (_lk) if (seq == _seq) _next = pcm;
+            return 0;
         }
-        catch (Exception e) { NeuralVoice.Log("kokoro: " + e.Message); }
+        catch (Exception e) { NeuralVoice.Log("kokoro: " + e.Message); return 1; }
     }
 
     public void Stop()

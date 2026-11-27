@@ -266,6 +266,7 @@ internal static unsafe partial class Window
             _raster.SpriteLimit = !_v.HdNoFlicker;
             _raster.Build(cap);
             if (_v.HdNoFlicker) FillFlicker(cap);               // playtest 6: objects the game skipped this frame
+            _raster.PodSilhouette(_m.Rd(0x6C), _m.Rd(0x40), _m.Rd(0x41));   // playtest 9: no black figure in the cryo pod
             (fb, tags, pal) = (_raster.Fb, _raster.Tags, _raster.LinePal[239]);
         }
         else if (_m.Ppu.Tags is { } t) (fb, tags, pal) = (_m.Ppu.Fb, t, _m.Ppu.Pal);
@@ -350,17 +351,54 @@ internal static unsafe partial class Window
         NeuralVoice.LogPath = Path.Combine(cfg, "voice.log");
         try { File.WriteAllText(NeuralVoice.LogPath, ""); } catch (Exception) { }
         Cast.LoadOverrides(Path.Combine(cfg, "voices.ini"));
-        // playtest 7: Kokoro (voice\kokoro) first, the more natural voice; then Piper (voice\piper); then Windows
-        if (KokoroVoice.Folder() is string kd && KokoroVoice.TryStart(kd) is { } kv) { _neural = kv; NeuralVoice.Log("using Kokoro (voice\\kokoro)"); }
-        string? vd = _neural == null ? NeuralVoice.Folder() : null;
-        if (_neural == null && vd == null) NeuralVoice.Log($"no neural voice: {Path.Combine(AppContext.BaseDirectory, "voice")} must hold kokoro\\ or piper\\piper.exe, {NeuralVoice.ModelName} (+ .json) and speakers.txt");
-        else if (_neural == null) _neural = NeuralVoice.TryStart(vd!);
+        // playtest 7: Kokoro (voice\kokoro) first, the more natural voice; then Piper (voice\piper); then Windows.
+        // playtest 9: Audio > Voice engine picks one (auto = that order)
+        string eng = _v.VoiceEngine;
+        NeuralVoice.Log($"voice engine setting: {eng}");
+        if (eng is "auto" or "kokoro")
+        {
+            if (KokoroVoice.Folder() is string kd && KokoroVoice.TryStart(kd) is { } kv) { _neural = kv; NeuralVoice.Log("using Kokoro (voice\\kokoro)"); }
+            else NeuralVoice.Log("no Kokoro: voice\\kokoro must hold sherpa-onnx-offline-tts.exe, the model, voices.bin, tokens.txt, espeak-ng-data");
+        }
+        if (_neural == null && eng is "auto" or "kokoro" or "piper")
+        {
+            string? vd = NeuralVoice.Folder();
+            if (vd == null) NeuralVoice.Log($"no Piper: {Path.Combine(AppContext.BaseDirectory, "voice")} must hold piper\\piper.exe, {NeuralVoice.ModelName} (+ .json) and speakers.txt");
+            else _neural = NeuralVoice.TryStart(vd);
+        }
         if (_neural == null) { _speech = Speech.TryCreate(); NeuralVoice.Log(_speech != null ? "using the Windows voice" : "no Windows voice either"); }
         _audio.Voice = _neural;
     }
 
+    /// <summary>playtest 9: a new voice engine choice: stop and start the voice again</summary>
+    private static void RestartVoice()
+    {
+        _audio.Voice = null;
+        _neural?.Dispose(); _neural = null;
+        _speech?.Dispose(); _speech = null;
+        _speechTried = false;
+        StartVoice();
+    }
+
     private static void Speak(Machine m)
     {
+        // playtest 9: Kokoro failed on this PC (voice.log has its whole output): Piper (or Windows) takes over, and says
+        // the page that failed
+        if (_neural is KokoroVoice kf && kf.Failed)
+        {
+            var page = kf.FailedPage;
+            kf.Dispose();
+            _neural = NeuralVoice.Folder() is string pd ? NeuralVoice.TryStart(pd) : null;
+            if (_neural == null) _speech ??= Speech.TryCreate();
+            _audio.Voice = _neural;
+            NeuralVoice.Log("kokoro failed: now " + (_neural?.Name ?? (_speech != null ? "WINDOWS" : "no voice")));
+            Notice("KOKORO VOICE FAILED - " + (_neural?.Name ?? "WINDOWS") + " VOICE (SEE VOICE.LOG)");
+            if (page is { } pg && _dialogue.Showing)
+            {
+                if (_neural != null) _neural.Say(pg.Npc, pg.Text);
+                else _speech?.SayXml(Cast.Xml(pg.Npc, pg.Text));
+            }
+        }
         var (say, stop) = _dialogue.Update(m.Rd(0x40), m.Rd(0x51), a => m.Rd(a));
         if (stop) { _speech?.Stop(); _neural?.Stop(); }
         if (say == null || !_v.Voice || _muted || _fast) return;
@@ -554,6 +592,19 @@ internal static unsafe partial class Window
             l.Add($"VOICE {(_neural != null ? _neural.Name : _speech != null ? "WINDOWS" : v.Voice ? "NOT STARTED" : "OFF")}"
                   + (npc >= 0 ? $"  NPC {npc:X2} {Cast.Of(npc).ToString().ToUpperInvariant()}" : ""));
         }
+        if (v.Debug.Contains("hd"))
+            l.Add(_gpu != null && HdEngine ? _gpu.DebugText : "HD OFF");
+        if (v.Debug.Contains("sprites"))
+        {
+            // the game's sprite list $0200 (Y >= $EF = hidden), attribute b5 = behind the background
+            int vis = 0, behind = 0;
+            for (int k = 0; k < 64; k++) { if (m.Rd(0x200 + k * 4) >= 0xEF) continue; vis++; if ((m.Rd(0x202 + k * 4) & 0x20) != 0) behind++; }
+            l.Add($"SPRITES {vis} OF 64  BEHIND {behind}  FLICKER FILL {SideSpr.Added.Count}");
+        }
+        if (v.Debug.Contains("input"))
+            l.Add($"PAD {m.Rd(0x4F):X2}  NEW {m.Rd(0x4B):X2}  ACT {m.Rd(0x4D):X2}  DIR {m.Rd(0x49):X2}");
+        if (v.Debug.Contains("audio") && _audio != null)
+            l.Add($"AUDIO {(v.AudioOrchestra ? "ORCHESTRA" : v.AudioRemaster ? "REMASTER" : v.CdAudio ? "CD" : "ORIGINAL")}  UNDERRUNS {_audio.Underruns}  DROPPED {_audio.Dropped}" + (v.Ambience ? "  AMBIENCE" : ""));
         return l;
     }
     private static readonly FrameStats Stats = new();          // T49

@@ -71,6 +71,34 @@ internal sealed class SceneRaster
 
     /// <summary>widescreen: the side sprites (SideSprites.Draw output) over the widened background, as the PPU composes:
     /// a sprite pixel behind an opaque background pixel stays hidden</summary>
+    /// <summary>playtest 9: the player in the cryo pod (area 00, normal play) is drawn with sprite palette 0 all black ($0F x3)
+    /// until the game fades him in ($26 $04 -> $36 $14): a black silhouette. This remake shows him dimmed in his own colours
+    /// ($16 $04 $0F) instead; true when it recoloured</summary>
+    public bool PodSilhouette(int area, int mainState, int subState)
+    {
+        if (area != 0 || mainState != 1 || subState != 8) return false;
+        bool any = false;
+        for (int y = 0; y < 240; y++)
+        {
+            var p = LinePal[y];
+            if ((p[0x11] != 0x0F && p[0x12] != 0x0F) || p[0x13] != 0x0F || p[1] == 0x0F) continue;   // not black, or a dark scene
+            if (p[0x11] == 0x0F) p[0x11] = 0x16;                   // each colour still black (the fade-in comes one at a time)
+            if (p[0x12] == 0x0F) p[0x12] = 0x04;
+            any = true;
+        }
+        if (!any) return false;
+        for (int i = 0; i < W * 240; i++)
+        {
+            int sp = Sp[i];
+            if (sp == 0 || (sp & 0x0C) != 0) continue;            // sprite palette 0 only
+            var p = LinePal[i / W];
+            byte c = (byte)(p[0x10 | (sp & 0x0F)] & 0x3F);
+            if ((sp & 0x40) == 0 || Bg[i] == 0) Fb[i] = c;          // in front (as SceneRaster.Build composes)
+            SpCol[i] = c;
+        }
+        return true;
+    }
+
     public void ApplySideSprites(byte[] spr, int[] tag)
     {
         for (int i = 0; i < W * 240; i++)
