@@ -277,7 +277,10 @@ internal static unsafe partial class Window
                 WideAfterFrame(_raster!.Fb);
                 if (_wideRaster == null || _wideRaster.W != WideW) _wideRaster = new SceneRaster(_m.Ppu.Chr, WideW);
                 Wide.MapLines(_raster.Fb, HudTop(), 0.5f, _mapLines);
-                _wideRaster.Widen(_raster, Wide, _mapLines);
+                // playtest 6: the map continues behind the status bar (the HUD panel floats over it) while the sides show
+                var gap = Gpu.SplitGap(_raster);
+                int hudFrom = Wide.Show > 0.5f && Wide.Active ? (gap.From > 0 ? gap.From : HudTop()) : 240;
+                _wideRaster.Widen(_raster, Wide, _mapLines, hudFrom, gap.To > 0 ? gap.To : hudFrom, Gpu.EdgeBand(_raster, _scene));
                 {
                     var capt = _m.Ppu.Capture;
                     int my = capt == null ? -1 : Enumerable.Range(16, 160).FirstOrDefault(y => capt.SprValid[y], -1);   // a line's sprite CHR banks + PPUCTRL
@@ -291,10 +294,11 @@ internal static unsafe partial class Window
                     }
                 }
                 int bar = Gpu.SplitGap(_raster).To;               // the status bar's first line (the first IRQ split may be higher)
-                _gpu.SideVoidTop = Wide.Show > 0.5f ? (bar > 0 ? bar : HudTop()) : 0;
+                _gpu.HudOverlay = hudFrom < 240;
+                _gpu.SideVoidTop = Wide.Show > 0.5f ? (hudFrom < 240 ? 240 : bar > 0 ? bar : HudTop()) : 0;
                 _gpu.Upload(_wideRaster, _scene, _raster);
             }
-            else _gpu.Upload(_raster, _scene);
+            else { _gpu.HudOverlay = false; _gpu.Upload(_raster, _scene); }
         }
         else
         {
@@ -326,19 +330,38 @@ internal static unsafe partial class Window
     private static Speech? _speech;
     private static NeuralVoice? _neural;
     private static bool _speechTried;
+    private static bool _automated;
     /// <summary>playtest 6: says each message page as it appears (DialogueReader); the voice starts on first use</summary>
+    /// <summary>playtest 6: the dialogue voice, started with the game (the model loads in the background): Piper from the
+    /// voice folder next to the exe, else the Windows voice; %APPDATA%\re-c\voice.log says which and why</summary>
+    private static void StartVoice()
+    {
+        if (_speechTried || !_v.Voice || _scripted || _automated) return;
+        _speechTried = true;
+        string cfg = Path.GetDirectoryName(VideoSettings.DefaultPath())!;
+        NeuralVoice.LogPath = Path.Combine(cfg, "voice.log");
+        try { File.WriteAllText(NeuralVoice.LogPath, ""); } catch (Exception) { }
+        Cast.LoadOverrides(Path.Combine(cfg, "voices.ini"));
+        string? vd = NeuralVoice.Folder();
+        if (vd == null) NeuralVoice.Log($"no neural voice: {Path.Combine(AppContext.BaseDirectory, "voice")} must hold piper\\piper.exe, {NeuralVoice.ModelName} (+ .json) and speakers.txt");
+        else _neural = NeuralVoice.TryStart(vd);
+        if (_neural == null) { _speech = Speech.TryCreate(); NeuralVoice.Log(_speech != null ? "using the Windows voice" : "no Windows voice either"); }
+        _audio.Voice = _neural;
+    }
+
     private static void Speak(Machine m)
     {
         var (say, stop) = _dialogue.Update(m.Rd(0x40), m.Rd(0x51), a => m.Rd(a));
         if (stop) { _speech?.Stop(); _neural?.Stop(); }
         if (say == null || !_v.Voice || _muted || _fast) return;
-        if (!_speechTried)
+        StartVoice();
+        if (_neural != null && !_neural.Alive)
         {
-            _speechTried = true;
-            Cast.LoadOverrides(Path.Combine(Path.GetDirectoryName(VideoSettings.DefaultPath())!, "voices.ini"));
-            if (NeuralVoice.Folder() is string vd) _neural = NeuralVoice.TryStart(vd);   // Piper next to the exe
-            if (_neural == null) _speech = Speech.TryCreate();                          // else Windows text-to-speech
-            _audio.Voice = _neural;
+            // Piper ended (a missing DLL, a broken model): the Windows voice from now on, and say why
+            NeuralVoice.Log("piper stopped: " + _neural.ExitInfo);
+            _audio.Voice = null; _neural.Dispose(); _neural = null;
+            _speech ??= Speech.TryCreate();
+            Notice("NEURAL VOICE STOPPED - WINDOWS VOICE (SEE VOICE.LOG)");
         }
         int npc = Cast.Speaker(a => m.Rd(a));
         if (_neural != null) _neural.Say(npc, say);
@@ -539,6 +562,7 @@ internal static unsafe partial class Window
         var saver = saving ? new WramSaver(savePath, m.Mem.Wram) : null;
         var keys = Keys.Parse(o.KeySpecs);
         _scripted = o.KeySpecs.Count > 0;
+        _automated = o.Frames >= 0;                      // test runs (--frames N): no dialogue voice process
         var rows = o.Compare != null ? new List<string> { string.Join(',', Csv.CompareColumns()) } : null;
         _muted = o.Mute;
         _m = m;
@@ -556,6 +580,7 @@ internal static unsafe partial class Window
         EnsureTags();
         _audio = new AudioOut(m);
         _pad = new Pad();
+        StartVoice();                                    // playtest 6: Piper loads its model while the title plays
 
         // NES colour index -> 32-bit BI_RGB pixel (B, G, R, x in memory = 0x00RRGGBB): palettes.json nesRgb as is
         _lutBase = data.NesRgb.Select(c => (uint)c & 0xFFFFFF).ToArray();

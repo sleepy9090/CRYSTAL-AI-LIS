@@ -237,6 +237,8 @@ internal sealed class NeuralVoice : IDisposable
     private int _pos;
     private bool _clear;
     private float _duck = 1;
+    /// <summary>a page came back from Piper at least once</summary>
+    public bool Said;
 
     private NeuralVoice(System.Diagnostics.Process p, string tmp, int[] male, int[] female)
     {
@@ -288,6 +290,20 @@ internal sealed class NeuralVoice : IDisposable
         return (spk, pitch * spread);
     }
 
+    /// <summary>%APPDATA%\re-c\voice.log: why the neural voice did or did not start (playtest 6: it fell back silently)</summary>
+    public static string? LogPath;
+    private static int _logLines;
+
+    public static void Log(string s)
+    {
+        if (LogPath == null || _logLines++ > 400) return;
+        try { File.AppendAllText(LogPath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {s}{Environment.NewLine}"); } catch (Exception) { }
+    }
+
+    /// <summary>whether the Piper process is still running (it exits at once when a DLL is missing)</summary>
+    public bool Alive { get { try { return !_p.HasExited; } catch (Exception) { return false; } } }
+    public string ExitInfo { get { try { return _p.HasExited ? $"exit code 0x{_p.ExitCode:X8}" : "running"; } catch (Exception e) { return e.Message; } } }
+
     /// <summary>starts Piper hidden (null when the folder is missing or the process fails)</summary>
     public static NeuralVoice? TryStart(string dir)
     {
@@ -305,13 +321,14 @@ internal sealed class NeuralVoice : IDisposable
             };
             foreach (var a in new[] { "--model", Path.Combine(dir, ModelName), "--json-input", "--output_dir", tmp, "--quiet" })
                 psi.ArgumentList.Add(a);
+            Log($"start {psi.FileName} model {ModelName}, {male.Length} male + {female.Length} female speakers");
             var p = System.Diagnostics.Process.Start(psi);
-            if (p == null) return null;
-            p.ErrorDataReceived += (_, _) => { };
+            if (p == null) { Log("Process.Start returned null"); return null; }
+            p.ErrorDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) Log("piper: " + e.Data); };
             p.BeginErrorReadLine();
             return new NeuralVoice(p, tmp, male, female);
         }
-        catch (Exception) { return null; }
+        catch (Exception e) { Log("start failed: " + e.Message); return null; }
     }
 
     /// <summary>JSON string literal (quotes, backslashes, control characters escaped)</summary>
@@ -353,7 +370,8 @@ internal sealed class NeuralVoice : IDisposable
                 if (parts.Length != 2 || !int.TryParse(parts[0], out int seq) || !int.TryParse(parts[1], out int pm)) continue;
                 float[]? pcm = null;
                 lock (_lk) if (seq != _seq) { TryDelete(path); continue; }
-                try { pcm = Render(File.ReadAllBytes(path), pm / 1000.0, AudioOut.Rate); } catch (Exception) { }
+                try { pcm = Render(File.ReadAllBytes(path), pm / 1000.0, AudioOut.Rate); } catch (Exception e) { Log("wav: " + e.Message); }
+                if (!Said) { Said = true; Log($"first page spoken ({pcm?.Length ?? 0} samples)"); }
                 TryDelete(path);
                 lock (_lk) if (seq == _seq && pcm != null) _next = pcm;
             }

@@ -1557,6 +1557,57 @@ internal static partial class Program
                 Console.WriteLine($"  win_wide: {name}: area {w}x{h}, playfield matched the area at the camera in {matched} / {frames} frames, sides shown {wide.Show:F2}");
                 True(matched > frames * 0.7 && wide.Show >= 1, $"{name}: the camera puts the area on the screen (none built during the area load)");
             }
+            {
+                // playtest 6: the map continues behind the status bar; the HUD panel stays on top, unchanged
+                var m = new Machine(d, _ => { }); m.Reset(); m.LoadState(StateFile.Load(Path.Combine(dir, "group09.json")));
+                var kp = Keys.Parse(new[] { "2531:UP:50" });
+                m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+                var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+                var wide = new Widescreen();
+                for (int f = 0; f < 90; f++)
+                {
+                    wide.BeforeFrame(m, d, async: false);
+                    m.RunFrame(kp.TryGetValue(2506 + m.Frame, out int b) ? b : 0);
+                    r.Build(m.Ppu.Capture);
+                    wide.AfterFrame(r.Fb, m.Ppu.Pal, Gpu.SplitGap(r).To is > 0 and var t ? t : 232, r.LinePal, r.LineScroll, r.Sp);
+                }
+                var gap = Gpu.SplitGap(r);
+                int hudFrom = gap.From > 0 ? gap.From : 232;
+                var lines = new bool[240];
+                wide.MapLines(r.Fb, hudFrom, 0.5f, lines);
+                var wr = new SceneRaster(m.Ppu.Chr, 424);
+                var scn = new HdScene(d.NesRgb);
+                scn.Build(r.Fb, r.Tags, r.LinePal[239], new byte[61440], r.LineScroll, 0);
+                int panelTo = Gpu.EdgeBand(r, scn);
+                wr.Widen(r, wide, lines, hudFrom, gap.To > 0 ? gap.To : hudFrom, panelTo);
+                int e = 84, under = 0, sideMap = 0, panelKept = 0, panelPx = 0, aboveUnder = 0;
+                for (int y = 0; y < 240; y++)
+                    for (int x = 0; x < 424; x++)
+                    {
+                        int i = y * 424 + x;
+                        if (y < hudFrom) { if (wr.Under[i] && x - e >= 8 && x - e < 248) aboveUnder++; continue; }   // only the stale edge columns may change
+                        if (wr.Under[i]) under++;
+                        bool side = x < e || x >= e + 256;
+                        if (side && (wr.BgTag[i] & Ppu.TagValid) != 0) sideMap++;
+                        if (!side && !wr.Under[i]) { panelPx++; if (wr.Fb[i] == r.Fb[y * 256 + x - e]) panelKept++; }
+                    }
+                {
+                    int diffR = 0, diffL = 0, tagR = 0;
+                    for (int yy = 10; yy < 170; yy++)
+                    {
+                        int i0 = yy * 424;
+                        if (wr.Fb[i0 + e + 255] != wr.Fb[i0 + e + 256] && wr.Fb[i0 + e + 254] == wr.Fb[i0 + e + 255]) diffR++;
+                        if (wr.Fb[i0 + e - 1] != wr.Fb[i0 + e] && wr.Fb[i0 + e] == wr.Fb[i0 + e + 1]) diffL++;
+                        if (((wr.BgTag[i0 + e + 256] >> 13) & 7) != ((((wr.BgTag[i0 + e + 255] >> 13) & 7) + 1) & 7)) tagR++;
+                    }
+                    Console.WriteLine($"  win_wide: scroll edge: {wr.EdgeFixed} stale edge-column pixels replaced by the map; colour steps at the edges right {diffR} left {diffL} of 160 rows, tile phase breaks {tagR}");
+                    True(wr.EdgeFixed > 0 && tagR == 0, "playtest 6: stale scroll-edge tiles replaced by the map, tile phase continuous across the edge");
+                }
+                Console.WriteLine($"  win_wide: HUD overlay: rows {hudFrom}-239, panel {gap.To}-{panelTo - 1}, {under} game-column pixels + {sideMap} side pixels show the map, panel {panelKept} / {panelPx} pixels unchanged");
+                int sideNo = Enumerable.Range(hudFrom * 424, (240 - hudFrom) * 424).Count(i => (i % 424 < e || i % 424 >= e + 256) && wr.NoMap[i]);
+                True(under > 1000 && sideMap + sideNo == (240 - hudFrom) * 168 && sideMap > sideNo, $"the map continues behind the status bar across the width ({sideNo} side pixels past the area's edge: glow)");
+                True(panelPx > 0 && panelKept == panelPx && aboveUnder == 0, "the HUD panel stays exactly as the game draws it; the playfield is untouched");
+            }
             // HD: the wide raster (SceneRaster.Widen) = the game's raster in the middle, the area at the camera on the sides
             // with valid tags; the layer / info words fill the whole width
             {

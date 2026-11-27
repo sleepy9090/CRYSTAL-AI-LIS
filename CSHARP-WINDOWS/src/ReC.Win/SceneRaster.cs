@@ -26,6 +26,10 @@ internal sealed class SceneRaster
     public readonly int[] Tags, BgTag, SpTag;
     /// <summary>widescreen copy: side pixels with no map data (not a verified map line, or outside the area)</summary>
     public readonly bool[] NoMap;
+    /// <summary>game-column pixels the widening replaced with map behind the HUD (Widen hudFrom)</summary>
+    public readonly bool[] Under;
+    /// <summary>pixels of the game's outer columns the last Widen replaced with the map (stale scroll-edge tiles)</summary>
+    public int EdgeFixed;
     public readonly int[] LineScroll = new int[240];
     public readonly bool[] LeftClip = new bool[240];
     public readonly byte[][] LinePal = Enumerable.Range(0, 240).Select(_ => new byte[32]).ToArray();
@@ -45,6 +49,7 @@ internal sealed class SceneRaster
         Fb = new byte[w * 240]; Bg = new byte[w * 240]; BgCol = new byte[w * 240]; Sp = new byte[w * 240]; SpCol = new byte[w * 240];
         Tags = new int[w * 240]; BgTag = new int[w * 240]; SpTag = new int[w * 240];
         NoMap = new bool[w * 240];
+        Under = new bool[w * 240];
     }
 
     /// <summary>playtest 6, no flicker: the objects the game left out this frame (SideSprites.Draw missingOnly) where no
@@ -82,10 +87,23 @@ internal sealed class SceneRaster
     /// <summary>widescreen (Wide.cs): this (W wide) = src (256) in the middle, the area at the camera on the sides of the
     /// lines that show the map (and in src's masked left column there): background only, tags with the area's tiles
     /// (pack art / materials work there too). mapLine[y] = the line shows the map (Window.Compose's rule).</summary>
-    public void Widen(SceneRaster src, Widescreen wide, bool[] mapLine)
+    /// <remarks>hudFrom < 240 (playtest 6, "the HUD should just overlay it"): from that line down the map continues behind
+    /// the status bar over the whole width (at the last verified playfield line's offset); in the game's columns only the
+    /// panel stays: per line, from its first to its last non-black pixel; black margins and gap rows become map
+    /// (Under = true: world pixels for the HD info, not HUD). Rows hudFrom..panelFrom-1 (the split seam) and panelTo.. (the
+    /// backdrop / stray rows under the panel, Gpu.EdgeBand) are map over the whole width; the masked left column is not panel
+    /// (Under = true: world pixels for the HD info, not HUD)</remarks>
+    public void Widen(SceneRaster src, Widescreen wide, bool[] mapLine, int hudFrom = 240, int panelFrom = 240, int panelTo = 240)
     {
         int e = (W - 256) / 2;
         var c = wide.Cache;
+        Array.Clear(Under);
+        EdgeFixed = 0;
+        int hdx = 0, hdy = 0;
+        bool hud = false;
+        if (c != null && hudFrom < 240)
+            for (int y = hudFrom - 1; y >= Math.Max(8, hudFrom - 24); y--)
+                if (wide.LineOk[y]) { hdx = wide.LineDx[y]; hdy = wide.LineDy[y]; hud = true; break; }
         for (int y = 0; y < 240; y++)
         {
             LineScroll[y] = src.LineScroll[y];
@@ -98,13 +116,66 @@ internal sealed class SceneRaster
             Array.Copy(src.Sp, s, Sp, d + e, 256); Array.Copy(src.SpCol, s, SpCol, d + e, 256);
             Array.Copy(src.Tags, s, Tags, d + e, 256); Array.Copy(src.BgTag, s, BgTag, d + e, 256); Array.Copy(src.SpTag, s, SpTag, d + e, 256);
             var pal = src.LinePal[y];
+            if (hud && y >= hudFrom)
+            {
+                int pl = 256, pr = -1;                    // the panel: first .. last non-black pixel of the line
+                bool panelRow = y >= panelFrom && y < panelTo;
+                for (int x = src.LeftClip[y] ? 8 : 0; x < 256 && panelRow; x++)
+                {
+                    int col = src.Fb[s + x] & 0x3F;
+                    if (!((col & 15) >= 0xD && col != 0x2D && col != 0x3D)) { if (pl > x) pl = x; pr = x; }
+                }
+                for (int x = 0; x < W; x++)
+                {
+                    int gx = x - e;
+                    if (gx >= pl && gx <= pr) continue;    // the panel stays on top
+                    int i = d + x, ax = gx + wide.MapX + hdx, ay = y + wide.MapY + hdy;
+                    bool side = gx < 0 || gx > 255;
+                    Sp[i] = 0; SpCol[i] = 0; SpTag[i] = 0;
+                    if (ax < 0 || ay < 0 || ax >= c!.W || ay >= c.H)
+                    {
+                        if (!side) continue;                  // outside the area: the game's black stays
+                        Fb[i] = BgCol[i] = 0x0F; Bg[i] = 0; BgTag[i] = Tags[i] = 0; NoMap[i] = true;
+                        continue;
+                    }
+                    uint p = c.Px[ay * c.W + ax];
+                    int v = (int)(p & 3), g = (int)(p >> 2 & 3);
+                    Fb[i] = BgCol[i] = (byte)AreaCache.Color(p, pal);
+                    Bg[i] = (byte)(v == 0 ? 0 : g << 2 | v);
+                    BgTag[i] = Tags[i] = Ppu.TagValid | g << 19 | (ay & 7) << 16 | (ax & 7) << 13 | (int)(p >> 4 & 0x1FFF);
+                    Under[i] = !side;
+                }
+                continue;
+            }
+            // playtest 6: the top 8 lines (TV overscan, never verified) take line 8's mapping on the sides
+            int ldx = wide.LineDx[y], ldy = wide.LineDy[y];
+            if (y < 8 && c != null && mapLine[8] && wide.LineOk[8]) { map = true; ldx = wide.LineDx[8]; ldy = wide.LineDy[8]; }
+            bool verified = map && y >= 8 && wide.LineOk[y];
             for (int x = 0; x < W; x++)
             {
                 bool side = x < e || x >= e + 256;
-                if (!side && !(src.LeftClip[y] && x < e + 8)) continue;
+                int gx = x - e;
+                if (!side && !(src.LeftClip[y] && x < e + 8))
+                {
+                    // playtest 6: the game's outer 8 columns show stale tiles while it scrolls (the column it is still
+                    // rewriting, hidden by a TV's frame): on a verified line the map's pixel where they differ (no sprite)
+                    if (!verified || (gx >= 8 && gx < 248) || src.Sp[s + gx] != 0) continue;
+                    int bx = gx + wide.MapX + ldx, by = y + wide.MapY + ldy;
+                    if (bx < 0 || by < 0 || bx >= c!.W || by >= c.H) continue;
+                    uint q = c.Px[by * c.W + bx];
+                    int qc = AreaCache.Color(q, pal);
+                    if (qc == (src.Fb[s + gx] & 0x3F)) continue;
+                    int k = d + x, qv = (int)(q & 3), qg = (int)(q >> 2 & 3);
+                    Fb[k] = BgCol[k] = (byte)qc;
+                    Bg[k] = (byte)(qv == 0 ? 0 : qg << 2 | qv);
+                    BgTag[k] = Tags[k] = Ppu.TagValid | qg << 19 | (by & 7) << 16 | (bx & 7) << 13 | (int)(q >> 4 & 0x1FFF);
+                    Under[k] = true;                              // world info, like the map behind the HUD
+                    EdgeFixed++;
+                    continue;
+                }
                 int i = d + x;
                 Sp[i] = 0; SpCol[i] = 0; SpTag[i] = 0;
-                int ax = x - e + wide.MapX + wide.LineDx[y], ay = y + wide.MapY + wide.LineDy[y];
+                int ax = x - e + wide.MapX + ldx, ay = y + wide.MapY + ldy;
                 if (!map || ax < 0 || ay < 0 || ax >= c!.W || ay >= c.H)
                 {
                     Fb[i] = BgCol[i] = 0x0F; Bg[i] = 0; BgTag[i] = Tags[i] = 0;

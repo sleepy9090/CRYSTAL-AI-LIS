@@ -394,3 +394,4 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] P10 (2026-11-26, playtest 6): spoken NPC dialogue (Windows text-to-speech), Audio menu toggle.
 - [x] P11 (2026-11-26, playtest 6): per-NPC voices by sex and age (125 NPCs classified), neural Piper voice in dist\voice (fallback: Windows voice).
 - [x] P12 (2026-11-26, playtest 6): no game sprite flicker in HD (objects the sprite pass skipped are drawn from object RAM).
+- [x] P13 (2026-11-26, playtest 6): widescreen map continues behind the HUD (panel overlays it), scroll-edge seam fixed; Piper ships the VC++ runtime, voice.log + fallback notice.

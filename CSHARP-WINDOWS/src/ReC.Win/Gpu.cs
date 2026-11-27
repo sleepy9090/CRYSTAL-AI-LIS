@@ -40,6 +40,8 @@ internal sealed unsafe partial class Gpu : IDisposable
     private int _sideE;
     /// <summary>widescreen: black side pixels above this line are void (chasm look like the middle); 0 = none</summary>
     public int SideVoidTop;
+    /// <summary>playtest 6: widescreen map behind the status bar (the HUD floats over it; set per frame by the window)</summary>
+    public bool HudOverlay;
     private int AW => NesW * 8;                       // albedo: 8x
     public const int AH = 1920;
     private int KW => NesW * 2;                       // height field: 2x
@@ -523,7 +525,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             for (int x = 0; x < w; x++)
             {
                 int i = row + x, c = fb[i] & 63, tag = tags[i];
-                bool side = x < e || x >= e + 256;
+                bool side = x < e || x >= e + 256 || r.Under[i];       // map behind the HUD counts as side
                 bool ok = side ? sideOk && (bgTag[i] & ReC.Nes.Ppu.TagValid) != 0 : !uiLine;
                 bool spr = (tag & ReC.Nes.Ppu.TagValid) != 0 && (tag >> 19 & 7) >= 4;
                 blk[i] = (byte)(ok && !spr && ((c & 15) >= 0xD && c != 0x2D && c != 0x3D || c == bd) ? 1 : 0);
@@ -538,6 +540,8 @@ internal sealed unsafe partial class Gpu : IDisposable
             for (int x = 0; x < e; x++) { int o = (row + x) * 4; dst[o] = 0; dst[o + 1] = (byte)((fb[row + x] & 63) * 4); dst[o + 2] = (byte)(r.NoMap[row + x] ? HdScene.FNoMap : 0); }
             for (int x = e + 256; x < w; x++) { int o = (row + x) * 4; dst[o] = 0; dst[o + 1] = (byte)((fb[row + x] & 63) * 4); dst[o + 2] = (byte)(r.NoMap[row + x] ? HdScene.FNoMap : 0); }
             Buffer.BlockCopy(info, y * 1024, dst, (row + e) * 4, 1024);
+            for (int x = e; x < e + 256; x++)                 // map behind the HUD: world pixels (colour, no lift, no flags)
+                if (r.Under[row + x]) { int o = (row + x) * 4; dst[o] = 0; dst[o + 1] = (byte)((fb[row + x] & 63) * 4); dst[o + 2] = 0; }
             if (rl != null)                                   // the widening only changes the masked left column
                 for (int x = e; x < e + 8; x++)
                     if (fb[row + x] != rl.Fb[y * 256 + x - e]) { int o = (row + x) * 4; dst[o] = 0; dst[o + 1] = (byte)((fb[row + x] & 63) * 4); dst[o + 2] = 0; }
@@ -550,6 +554,11 @@ internal sealed unsafe partial class Gpu : IDisposable
             }
         }
     }
+
+    /// <summary>playtest 6: a pixel the widening filled with map in a row clean edges would paint black (the HUD seam, the rows
+    /// under the panel): the map behind the HUD, kept</summary>
+    private static bool MapUnderHud(SceneRaster r, int i, int x, int e, int gameW) =>
+        r.Under[i] || ((x < e || x >= e + gameW) && (r.BgTag[i] & ReC.Nes.Ppu.TagValid) != 0);
 
     /// <summary>3x3 min (and) or max (or) of a 0/1 image, edges clamped: rows into tmp, then columns into dst</summary>
     private static void Pass3(byte[] src, byte[] tmp, byte[] dst, int w, bool and)
@@ -592,6 +601,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             for (int x = 0; x < ex; x++)
             {
                 int i = y * W + x, o = i * 4;
+                if (MapUnderHud(r, i, x, e, rl.W)) continue;   // playtest 6: map behind the HUD (drawn by the loop below)
                 lay[o] = 0x0F | 0x80; lay[o + 1] = 0; lay[o + 2] = 0; lay[o + 3] = 0;
                 artMap[i * 2] = 0; artMap[i * 2 + 1] = 0;
             }
@@ -600,9 +610,10 @@ internal sealed unsafe partial class Gpu : IDisposable
             // run of equal keys (tiles repeat for 8 pixels); the pixel's column / row / flips are added per pixel
             int bk = -1, sk = -1;
             uint bw = 0, sw = 0;
-            for (int x = ex; x < W; x++)
+            for (int x = 0; x < W; x++)
             {
                 int i = y * W + x, o = i * 4;
+                if (x < ex && !MapUnderHud(r, i, x, e, rl.W)) continue;   // painted black by clean edges above
                 bool ui = (info[o + 2] & HdScene.FUi) != 0;
                 int sp = r.Sp[i];
                 int bgc = r.BgCol[i] & 63, partner = 0;
@@ -876,6 +887,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         _icy = sc.Icy; _hot = sc.Hot;
         _hudFill = sc.HudFill; _hudTop = sc.HudTop; _hudBottom = sc.HudBottom;
         _meters = Meters(rl, sc.HudFill, Hp);
+        if (HudOverlay) _meters[7] = 0;                    // playtest 6: the map continues behind the HUD: no bar shadow on it
         if (e > 0) foreach (int k in new[] { 0, 1, 2, 4, 5 }) if (_meters[k] > 0) _meters[k] += e;
         var cb = CineBand(rl, sc);
         CineUpdate(cb is { } b0 && e > 0 ? (b0.Y0, b0.Y1, b0.X0 + e, b0.X1 + e) : cb);

@@ -621,3 +621,20 @@ CSHARP-WINDOWS/
     by the game and is skipped, the rest are drawn whole where the game has no sprite pixel
     (`SceneRaster.ApplyMissing`). `win_noflicker`: group09's fight has 188 blink frames, the game skips 90, the fill adds
     exactly the player on those 90 and nothing else.
+    **Widescreen HUD overlay (playtest 6, "the HUD should just overlay it"):** while the sides show in gameplay,
+    `SceneRaster.Widen(hudFrom = SplitGap.From, panelFrom = SplitGap.To, panelTo = Gpu.EdgeBand)` continues the map below
+    the playfield over the whole width (offset of the last verified line); in the game's columns only the status panel
+    stays (per line its first .. last non-black pixel, the masked left column ignored; the seam rows and the stray /
+    backdrop rows under the panel are all map). Those pixels are `Under` = world: `WidenInfo` gives them side info,
+    `Layers` keeps them out of clean edges (the main loop now also covers exempted pixels: before, a pixel skipped by
+    the clean-edge loop was never written = black), `PSLight` treats a UI line's pixels without the UI flag as world in
+    widescreen (`Scr.z > 0`), `HudPanel` leaves them alone, and `Gpu.HudOverlay` drops the bar's drop shadow (`m[7]`),
+    which painted the last tile row above the bar black. **Scroll edge:** the game's outer 8 columns show stale tiles
+    while it scrolls (the column it is still rewriting, hidden by a TV): on verified lines `Widen` takes the map's pixel
+    there when it differs (no sprite), which removed the seam at the edge of the game's columns; the sides of the top 8
+    lines (overscan, never verified) take line 8's mapping. `win_wide`: rows 191-239 behind the HUD, panel unchanged
+    pixel for pixel, 126 stale edge pixels replaced, the playfield's inner columns untouched.
+    **Voice start (playtest 6):** piper.exe needs the VC++ 2015-2022 runtime; `tools/voice_pack.py --vcrt` copies
+    Microsoft's MSVCP140 / VCRUNTIME140 / VCRUNTIME140_1 (PyPI `msvc-runtime` 14.51) next to it. Piper starts with the game
+    (`Window.StartVoice`; not in `--frames` / `--keys` runs), `%APPDATA%\re-c\voice.log` records the start, Piper's
+    stderr, the first page and why it fell back; a Piper that exits switches to the Windows voice with a notice.

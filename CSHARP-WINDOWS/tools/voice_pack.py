@@ -1,11 +1,15 @@
 """Assemble dist/voice/ (the neural dialogue voice next to ReC.exe, Dialogue.cs NeuralVoice) from the downloads.
 
-usage: python3 tools/voice_pack.py PIPER_WINDOWS.zip MODEL.onnx MODEL.onnx.json [OUT_DIR=dist/voice]
+usage: python3 tools/voice_pack.py PIPER_WINDOWS.zip MODEL.onnx MODEL.onnx.json [OUT_DIR=dist/voice] [--vcrt MSVC_RUNTIME.whl]
   downloads (2026-11-26):
     https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip   (Piper, MIT; espeak-ng, GPL-3)
     https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts_r/medium/en_US-libritts_r-medium.onnx(.json)
       (LibriTTS-R, CC BY 4.0)
   voice/speakers.txt (tools/voice_speakers.py) is copied too.
+  --vcrt: piper.exe needs the Visual C++ 2015-2022 runtime (MSVCP140, VCRUNTIME140, VCRUNTIME140_1), missing on PCs
+  without the VC++ redistributable; copied app-local into piper/ from the PyPI wheel msvc-runtime (Microsoft's
+  unmodified, signed DLLs; VS 2022 "Distributable Code" REDIST list), e.g.
+    https://files.pythonhosted.org/packages/57/99/0571bb13baed5596b7b941254a51ed1bb70fa81e6f8d2bac25b104a84aa3/msvc_runtime-14.51.36231-cp314-cp314-win_amd64.whl
 Writes OUT_DIR/piper/* (the zip's piper/ folder), OUT_DIR/<model>, OUT_DIR/<model>.json, OUT_DIR/speakers.txt and
 OUT_DIR/CREDITS.txt.
 """
@@ -25,12 +29,17 @@ piper/      Piper text-to-speech 2023.11.14-2, https://github.com/rhasspy/piper 
 {model}  Piper voice libritts_r (medium), https://huggingface.co/rhasspy/piper-voices, trained on
             LibriTTS-R (http://www.openslr.org/141/, CC BY 4.0), from LibriVox recordings (public domain).
 speakers.txt  speaker sex from LibriSpeech SPEAKERS.TXT (http://www.openslr.org/12/, CC BY 4.0).
+piper/msvcp140.dll, vcruntime140.dll, vcruntime140_1.dll  Microsoft Visual C++ 2015-2022 runtime 14.51, unmodified,
+            redistributable under the Visual Studio 2022 "Distributable Code" terms.
 """
 
 
 def main(argv):
     if len(argv) < 3:
         print(__doc__); return 2
+    vcrt = None
+    if '--vcrt' in argv:
+        i = argv.index('--vcrt'); vcrt = argv[i + 1]; argv = argv[:i] + argv[i + 2:]
     zpath, model, cfg = argv[:3]
     out = argv[3] if len(argv) > 3 else os.path.join(ROOT, 'dist', 'voice')
     if os.path.basename(model) != MODEL:
@@ -52,6 +61,18 @@ def main(argv):
     shutil.copyfile(os.path.join(ROOT, 'voice', 'speakers.txt'), os.path.join(out, 'speakers.txt'))
     with open(os.path.join(out, 'CREDITS.txt'), 'w', encoding='utf-8') as f:
         f.write(CREDITS.format(model=MODEL))
+    if vcrt:
+        want = {'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll'}
+        with zipfile.ZipFile(vcrt) as z:
+            for info in z.infolist():
+                base = info.filename.rsplit('/', 1)[-1].lower()
+                if base in want and '/Scripts/' in info.filename:
+                    with z.open(info) as src, open(os.path.join(out, 'piper', base), 'wb') as f:
+                        shutil.copyfileobj(src, f)
+                    want.discard(base)
+        if want:
+            print('missing from the wheel: ' + ', '.join(sorted(want))); return 1
+        print('VC++ runtime copied into piper/')
     ok = os.path.exists(os.path.join(out, 'piper', 'piper.exe'))
     print(f'{n} Piper files + model + speakers -> {out} (piper.exe {"present" if ok else "MISSING"})')
     return 0 if ok else 1

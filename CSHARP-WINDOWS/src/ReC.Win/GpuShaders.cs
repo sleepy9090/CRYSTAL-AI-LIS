@@ -697,6 +697,7 @@ float3 HudPanel(float3 a, float2 p, float2 s, float4 inf)
     if (fill < 0) return a;
     // T39: with HUD style, font tiles anywhere (menu windows: equipment, status, shops) get the same look
     if (!rows && (HudC.w < 0.5 || (Flags(inf) & 4) == 0)) return a;
+    if (rows && Scr.z > 0 && (Flags(inf) & 4) == 0) return a;   // playtest 6: widescreen map behind the HUD is world
     float3 fc = NesRgb((uint)fill);
     float t = rows ? saturate((p.y - HudC.y) / max(HudC.z - HudC.y, 1)) : 0.15 + 0.6 * saturate(p.y / 240);
     bool isFill = length(a - fc) < 0.1;
@@ -807,7 +808,8 @@ float4 PSLight(V i) : SV_Target
     float4 inf = InfoPx(p);
     uint fl = Flags(inf);
     float4 ln = Lne.Load(int3(clamp(int(p.y), 0, 239), 0, 0));
-    if (ln.z > 0.5 || (fl & 4) != 0 || (Lay.Load(int3(clamp(int2(p), int2(0, 0), int2((int)NES.x - 1, 239)), 0)).r & 0x80) != 0)
+    bool hudPx = (fl & 4) != 0 || (Lay.Load(int3(clamp(int2(p), int2(0, 0), int2((int)NES.x - 1, 239)), 0)).r & 0x80) != 0;
+    if ((ln.z > 0.5 && (Scr.z <= 0 || hudPx)) || hudPx)   // playtest 6: in widescreen the map behind the HUD (no UI flag) is lit world
         return float4(HudPanel(a, p, s, inf) * BarShadow(p), 0);   // HUD / text + clean edges (Layers HUD bit): unlit (panel gloss only)
     float t = Cam.z;
     bool spr = (fl & 1) != 0;
