@@ -469,7 +469,7 @@ internal static unsafe partial class Window
             case IdStereo: _v.AudioStereo = !_v.AudioStereo; ApplyAudio(); SettingsChanged(false); return;
             case IdReverb: _v.AudioReverb = !_v.AudioReverb; ApplyAudio(); SettingsChanged(false); return;
             case IdAmbience: _v.Ambience = !_v.Ambience; Notice(_v.Ambience ? "AMBIENT SOUNDS: ON" : "AMBIENT SOUNDS: OFF"); SettingsChanged(false); return;
-            case IdVoice: _v.Voice = !_v.Voice; if (!_v.Voice) _speech?.Stop(); Notice(_v.Voice ? "SPOKEN DIALOGUE: ON" : "SPOKEN DIALOGUE: OFF"); SettingsChanged(false); return;
+            case IdVoice: _v.Voice = !_v.Voice; if (!_v.Voice) { _speech?.Stop(); _neural?.Stop(); } Notice(_v.Voice ? "SPOKEN DIALOGUE: ON" : "SPOKEN DIALOGUE: OFF"); SettingsChanged(false); return;
             case IdCrossfeed:
                 _v.Crossfeed = !_v.Crossfeed;
                 if (_audio != null) _audio.Mixer.Crossfeed = _v.Crossfeed;

@@ -47,6 +47,23 @@ internal sealed class SceneRaster
         NoMap = new bool[w * 240];
     }
 
+    /// <summary>playtest 6, no flicker: the objects the game left out this frame (SideSprites.Draw missingOnly) where no
+    /// sprite of the game is, composed like the PPU (behind-BG pixels stay hidden)</summary>
+    public int ApplyMissing(byte[] spr, int[] tag)
+    {
+        int n = 0;
+        for (int i = 0; i < W * 240; i++)
+        {
+            int sp = spr[i];
+            if (sp == 0 || Sp[i] != 0) continue;
+            var pal = LinePal[i / W];
+            Sp[i] = (byte)sp; SpCol[i] = (byte)(pal[0x10 | (sp & 0x0F)] & 0x3F); SpTag[i] = tag[i];
+            if ((sp & 0x40) == 0 || Bg[i] == 0) { Fb[i] = SpCol[i]; Tags[i] = tag[i]; }
+            n++;
+        }
+        return n;
+    }
+
     /// <summary>widescreen: the side sprites (SideSprites.Draw output) over the widened background, as the PPU composes:
     /// a sprite pixel behind an opaque background pixel stays hidden</summary>
     public void ApplySideSprites(byte[] spr, int[] tag)

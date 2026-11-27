@@ -227,6 +227,27 @@ internal static unsafe partial class Window
         _hdFrame = -1;
     }
 
+    private static readonly byte[] _fSpr = new byte[256 * 240];
+    private static readonly int[] _fTag = new int[256 * 240];
+    private static readonly bool[] _fLines = new bool[240];
+
+    /// <summary>playtest 6 ("NES flicker"): in gameplay (main_state 1, no message window: irq_mode 0) the objects the
+    /// game left out of this frame's sprite list are drawn from object RAM, so nothing blinks at 30 Hz</summary>
+    public static int FillFlicker(ReC.Nes.VideoCapture cap, SceneRaster raster, SideSprites ss, Machine m, int hudTop)
+    {
+        if (!ss.Valid || ss.Ram[0x40] != 1 || ss.Ram[0x51] != 0) return 0;
+        int my = Enumerable.Range(16, 160).FirstOrDefault(y => cap.SprValid[y], -1);
+        if (my < 0) return 0;
+        var rg = cap.Spr[my];
+        var banks = new int[8];
+        for (int k = 0; k < 8; k++) banks[k] = rg.Banks[k];
+        for (int y = 0; y < 240; y++) _fLines[y] = y >= 8 && y < hudTop;
+        ss.Draw(m.Data, m.Ppu.Chr, banks, rg.Ctrl, 256, 0, _fSpr, _fTag, _fLines, missingOnly: true);
+        return raster.ApplyMissing(_fSpr, _fTag);
+    }
+
+    private static void FillFlicker(ReC.Nes.VideoCapture cap) => FillFlicker(cap, _raster!, SideSpr, _m!, HudTop());
+
     private static void RenderHd()
     {
         if (_m == null || _enh == null) return;
@@ -237,6 +258,7 @@ internal static unsafe partial class Window
             if (cap.Frames == 0 || _raster == null) return;  // nothing captured yet (HD was just chosen)
             _raster.SpriteLimit = !_v.HdNoFlicker;
             _raster.Build(cap);
+            if (_v.HdNoFlicker) FillFlicker(cap);               // playtest 6: objects the game skipped this frame
             (fb, tags, pal) = (_raster.Fb, _raster.Tags, _raster.LinePal[239]);
         }
         else if (_m.Ppu.Tags is { } t) (fb, tags, pal) = (_m.Ppu.Fb, t, _m.Ppu.Pal);
@@ -302,15 +324,25 @@ internal static unsafe partial class Window
     private static readonly DamageFeedback Damage = new();     // T57
     private static readonly DialogueReader _dialogue = new();
     private static Speech? _speech;
+    private static NeuralVoice? _neural;
     private static bool _speechTried;
     /// <summary>playtest 6: says each message page as it appears (DialogueReader); the voice starts on first use</summary>
     private static void Speak(Machine m)
     {
         var (say, stop) = _dialogue.Update(m.Rd(0x40), m.Rd(0x51), a => m.Rd(a));
-        if (stop) _speech?.Stop();
+        if (stop) { _speech?.Stop(); _neural?.Stop(); }
         if (say == null || !_v.Voice || _muted || _fast) return;
-        if (!_speechTried) { _speechTried = true; _speech = Speech.TryCreate(); }
-        _speech?.Say(say);
+        if (!_speechTried)
+        {
+            _speechTried = true;
+            Cast.LoadOverrides(Path.Combine(Path.GetDirectoryName(VideoSettings.DefaultPath())!, "voices.ini"));
+            if (NeuralVoice.Folder() is string vd) _neural = NeuralVoice.TryStart(vd);   // Piper next to the exe
+            if (_neural == null) _speech = Speech.TryCreate();                          // else Windows text-to-speech
+            _audio.Voice = _neural;
+        }
+        int npc = Cast.Speaker(a => m.Rd(a));
+        if (_neural != null) _neural.Say(npc, say);
+        else _speech?.SayXml(Cast.Xml(npc, say));   // each NPC its own voice (gender, age)
     }
     /// <summary>T54: what the ambient sounds play, from the HD scene (gameplay only; nothing without the HD engine)</summary>
     private static void AmbienceTargets()
@@ -608,7 +640,8 @@ internal static unsafe partial class Window
                         }
                         int buttons = _input.Read() | (_scripted ? 0 : _pad.Read(now) | MouseButtons());
                         if (!_scripted) buttons = VideoSettings.Turbo(buttons, m.Frame, _v.TurboA, _v.TurboB);   // T38
-                        if (_v.Wide > 0) { Wide.BeforeFrame(m, data); SideSpr.Snapshot(m); }   // widescreen: camera + objects of this frame
+                        if (_v.Wide > 0) Wide.BeforeFrame(m, data);
+                        if (_v.Wide > 0 || (HdEngine && _v.HdNoFlicker)) SideSpr.Snapshot(m);   // objects + sprite list shown this frame   // widescreen: camera + objects of this frame
                         m.RunFrame(buttons); _acc -= step; ran = true; ranTotal++;
                         _v.Cheats.Apply(m, (buttons & 0x40) != 0);           // T36 cheats (B = bit 6)
                         if (!_scripted) Speak(m);                            // playtest 6: spoken dialogue
@@ -667,6 +700,7 @@ internal static unsafe partial class Window
         {
             RestoreDisplayMode();
             _audio.Close();
+            _neural?.Dispose(); _speech?.Dispose();          // the Piper child process ends with the game
             if (saving) Save.SaveWram(savePath, m.Mem.Wram);   // always, on leaving (= 'pagehide')
             if (_hwnd != IntPtr.Zero) { Win32.DestroyWindow(_hwnd); _hwnd = IntPtr.Zero; }
             if (_menuBar != IntPtr.Zero && !MenuShown) Win32.DestroyMenu(_menuBar);   // an attached one goes with the window

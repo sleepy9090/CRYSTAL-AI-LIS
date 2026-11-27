@@ -89,6 +89,8 @@ internal sealed unsafe class AudioOut
     public double Speed = 1;
     /// <summary>T54: ambient sounds (Ambience.cs), targets set per frame by the window from the HD scene</summary>
     public readonly Ambience Amb = new();
+    /// <summary>playtest 6: the neural dialogue voice (Dialogue.cs), mixed in the centre with the game ducked under it</summary>
+    public NeuralVoice? Voice;
     private const int Target = 3072;                 // frames queued (device + pending) the rate loop aims at (~70 ms)
     private const int MaxQueue = Target + 2048;      // above ~116 ms queued the backlog is spliced out with a crossfade
     private const int Xfade = 256;                   // 5.8 ms: the splice and the fade-in after an underrun (no click)
@@ -215,9 +217,17 @@ internal sealed unsafe class AudioOut
         for (int i = 0; i < Buffers; i++) if (!Free(i)) queued += BufSamples;
         _rs.Process(_in, _rc.Ratio(Speed, queued, Target), _res);
         float av = Muted ? 0 : Volume;
+        var vo = Voice;
+        vo?.BeginBlock();
         for (int i = 0; i < _res.Count; i += Ch)
         {
             var (al, ar) = Amb.Silent ? (0.0, 0.0) : Amb.Next();   // T54 ambient sounds (16-bit units)
+            if (vo != null)
+            {
+                var (vs, duck) = vo.Next();
+                _res[i] *= duck; if (Ch == 2) _res[i + 1] *= duck; al *= duck; ar *= duck;
+                al += vs * 26000; ar += vs * 26000;
+            }
             float fi = _fadeIn > 0 ? 1f - _fadeIn-- / (float)Xfade : 1f;
             if (fi < 1f) { _res[i] *= fi; if (Ch == 2) _res[i + 1] *= fi; al *= fi; ar *= fi; }
             if (Ch == 2)

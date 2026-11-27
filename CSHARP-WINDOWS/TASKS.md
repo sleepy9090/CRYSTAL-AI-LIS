@@ -392,3 +392,5 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] P8 (2026-11-26, playtest 6): no dolly zoom / film look on the title, status and name-entry screens; name-entry glyphs B D Q 0 no longer inverted.
 - [x] P9 (2026-11-26, playtest 6 recordings 3-5): widescreen cave bands no longer black, one offset per frame (no tears).
 - [x] P10 (2026-11-26, playtest 6): spoken NPC dialogue (Windows text-to-speech), Audio menu toggle.
+- [x] P11 (2026-11-26, playtest 6): per-NPC voices by sex and age (125 NPCs classified), neural Piper voice in dist\voice (fallback: Windows voice).
+- [x] P12 (2026-11-26, playtest 6): no game sprite flicker in HD (objects the sprite pass skipped are drawn from object RAM).

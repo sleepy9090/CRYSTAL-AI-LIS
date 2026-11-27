@@ -5,7 +5,7 @@
  "confidence": "observed",
  "environment": null,
  "evidence_format": 2,
- "evidence_id": "ev_42480fe61b42f5381113317e3c618006fce9ae9476b778c6517155fc54c88d3d",
+ "evidence_id": "ev_dfe4db600f65eaa6e06728418d266bf11fcb24d27e1cb8983149fab9fb794102",
  "evidence_links": [],
  "limitations": [
   "This report states what static analysis of the selected artifact recovered. It does not establish that the application is secure.",
@@ -158,6 +158,10 @@
     "locations": [
      {
       "kind": "artifact-path",
+      "path": "Microsoft.Win32.Registry.dll"
+     },
+     {
+      "kind": "artifact-path",
       "path": "ReC.Core.dll"
      },
      {
@@ -183,28 +187,24 @@
      {
       "kind": "artifact-path",
       "path": "System.Collections.Immutable.dll"
-     },
-     {
-      "kind": "artifact-path",
-      "path": "System.Collections.dll"
      }
     ],
     "next_probe": "inspect_artifact",
     "observation": {
      "counts": {
       "formats": 1,
-      "readable_members": 22,
+      "readable_members": 29,
       "unreadable_members": 0
      },
      "samples": [
       "dotnet-bundle",
+      "Microsoft.Win32.Registry.dll",
       "ReC.Core.dll",
       "ReC.deps.json",
       "ReC.dll",
       "ReC.r2r.dll",
       "ReC.runtimeconfig.json",
-      "System.Collections.Concurrent.dll",
-      "System.Collections.Immutable.dll"
+      "System.Collections.Concurrent.dll"
      ]
     },
     "remediation": "Readable members are part of this package format. Treat packaged sources as public. This check does not rewrite the artifact.",
@@ -244,7 +244,7 @@
     "next_probe": null,
     "observation": {
      "counts": {
-      "examined": 17,
+      "examined": 24,
       "failed": 4,
       "paths": 1
      },
@@ -394,7 +394,7 @@
    ],
    "omitted": [
     {
-     "count": 20,
+     "count": 27,
      "reason": "Go, Rust, and Electron fuse readers run on files on disk, not on images stored inside a package.",
      "subject": "packaged native images"
     }
@@ -428,7 +428,7 @@
    "format": "dotnet-bundle",
    "kind": "executable",
    "selected_path": "./dist/ReC.exe",
-   "sha256": "cc7a43d1d97d5d4015e15483910e784f02f9c9d16ca7b0566c8c7042e2e8e75d"
+   "sha256": "aa640a22631e47e9d6b78b26565e36fd862a57fb8c188f0997e2c97ef7453d36"
   }
  },
  "operation": "audit_release_exposure",
@@ -450,7 +450,7 @@
    "format": "dotnet-bundle",
    "kind": "file",
    "selection": null,
-   "sha256": "cc7a43d1d97d5d4015e15483910e784f02f9c9d16ca7b0566c8c7042e2e8e75d"
+   "sha256": "aa640a22631e47e9d6b78b26565e36fd862a57fb8c188f0997e2c97ef7453d36"
   },
   "local_path": "./dist/ReC.exe",
   "name": "ReC.exe"

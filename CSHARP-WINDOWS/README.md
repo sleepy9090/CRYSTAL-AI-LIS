@@ -92,9 +92,11 @@ string basses the bass line, timpani and snare the drums, in a concert hall. Sou
 **Audio › Ambient sounds** (with HD graphics) adds a soundscape under the music: wind and birds outdoors, dripping
 caves, crackling fire, whistling ice.
 
-**Audio › Spoken dialogue** (on by default) reads what people say aloud with the Windows text-to-speech voice as each
-message page appears; the next page or closing the window cuts it off. The voice is the one chosen in Windows Settings ›
-Time & language › Speech.
+**Audio › Spoken dialogue** (on by default) reads what people say aloud as each message page appears: every NPC has
+its own voice matching their sex and age (children higher, elders lower and slower). With the `voice` folder next to
+ReC.exe it uses Piper, a natural-sounding offline neural voice (904 real speakers); without it, the Windows voice.
+The next page or closing the window cuts it off. Correct a voice in `%APPDATA%\re-c\voices.ini`, e.g. `npc_16=oldman`
+(man, woman, oldman, oldwoman, boy, girl, creature, narrator).
 
 **Audio › Channels** mutes single sound channels (melody, harmony, bass, drums, samples) and **Audio › Headphone
 crossfeed** blends a little of each side into the other so hard-panned voices sound natural on headphones (both for CD

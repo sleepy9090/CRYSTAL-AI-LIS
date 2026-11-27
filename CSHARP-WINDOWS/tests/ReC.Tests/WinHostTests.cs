@@ -1259,6 +1259,39 @@ internal static partial class Program
             True(!v.Feedback && new VideoSettings().Feedback && v.Serialize().Contains("feedback=0"), "ini feedback");
             Eq(105, Window.CommandId("feedback"), "--menu feedback");
         }),
+        ("win_noflicker", () =>
+        {
+            // playtest 6 "NES flicker": group09 (4 chasers, 7 contact hits = 7 x 30 frames of the player's half-rate draw,
+            // $0380 b2). Per frame: on-screen active objects with no sprite pixel in the picture, game vs filled
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { }); m.Reset();
+            m.LoadState(StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", "group09.json")));
+            m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+            var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+            var ss = new SideSprites();
+            var keys = Keys.Parse("2531:UP:50 2585:RIGHT:330 2931:B:4 2951:B:4 2971:B:4 2990:RIGHT:21 3022:B:3 3040:B:5 3061:RIGHT:29 3101:B:4 3121:B:4 3141:B:4 3161:B:4".Split(' '));
+            int frames = 0, playerAdded = 0, otherAdded = 0, inv = 0, dup = 0;
+            var slots = new SortedDictionary<int, int>();
+            for (int f = 0; f < 760; f++)
+            {
+                ss.Snapshot(m);
+                m.RunFrame(keys.TryGetValue(2506 + m.Frame, out int b) ? b : 0);
+                r.Build(m.Ppu.Capture);
+                if (f < 20) continue;
+                Window.FillFlicker(m.Ppu.Capture, r, ss, m, 232);
+                if (ss.Ram[0x40] != 1 || ss.Ram[0x51] != 0) continue;
+                frames++;
+                bool blink = (ss.Ram[0x381] & 4) != 0;               // the player's half-rate draw flag
+                if (blink) inv++;
+                foreach (int s in ss.Added) slots[s] = slots.GetValueOrDefault(s) + 1;
+                if (ss.Added.Contains(1)) { playerAdded++; if (!blink) dup++; }
+                if (ss.Added.Any(s => s != 1)) otherAdded++;
+            }
+            Console.WriteLine($"  win_noflicker: group09 {frames} play frames, player blinking in {inv}: player added in {playerAdded}, other objects in {otherAdded}; slots {string.Join(" ", slots.Select(kv => kv.Key.ToString("X2") + "x" + kv.Value))}");
+            True(inv >= 100, $"the fight has the player's half-rate blink ({inv} frames)");
+            True(Math.Abs(playerAdded - inv / 2) <= inv / 6, $"the player is filled in on the blink frames the game skips ({playerAdded} of {inv})");
+            Eq(0, dup, "the player is only added while blinking (never drawn twice)");
+        }),
         ("win_dialogue", () =>
         {
             // playtest 6: NPC text read aloud. group18 walks into Akahana (TalkStart f2562), 2 pages closed by A x2 (f2769)
@@ -1268,12 +1301,14 @@ internal static partial class Program
             var keys = Keys.Parse("2527:LEFT:47 2701:A:4 2761:A:9 2801:UP:34 2841:LEFT:80".Split(' '));
             var dr = new DialogueReader();
             var said = new List<(int F, string T)>(); var stops = new List<int>();
+            var speakers = new List<int>();
             for (int f = 0; f < 480; f++)
             {
                 int fn = 2506 + m.Frame;
                 m.RunFrame(keys.TryGetValue(fn, out int b) ? b : 0);
                 var (say, stop) = dr.Update(m.Rd(0x40), m.Rd(0x51), a => m.Rd(a));
                 if (say != null) said.Add((fn, say));
+                if (say != null) speakers.Add(Cast.Speaker(a => m.Rd(a)));
                 if (stop) stops.Add(fn);
             }
             foreach (var (f, t) in said) Console.WriteLine($"  win_dialogue: f{f} say \"{t}\"");
@@ -1293,6 +1328,40 @@ internal static partial class Program
             var v = VideoSettings.Parse("voice=0\n");
             True(!v.Voice && new VideoSettings().Voice && v.Serialize().Contains("voice=0"), "ini voice");
             Eq(418, Window.CommandId("voice"), "--menu voice");
+            // who speaks: Akahana = NPC $16 (bald elder), the next NPC = $08
+            Eq("22,22,8", string.Join(",", speakers), "speaker NPC ids from the talk slot");
+            Eq(VoiceClass.OldMan, Cast.Of(0x16), "Akahana sounds old");
+            Eq(-1, Cast.Speaker(a => a == 0x41 ? 8 : 0x0D), "no conversation (sub_state 8): the narrator");
+            True(Cast.Count == 125, $"every talking NPC classified ({Cast.Count})");
+            // Windows voice XML: gender + age, text escaped
+            string xml = Cast.Xml(0x16, "Tom & <Jerry>");
+            True(xml.Contains("Gender=Male") && xml.Contains("absmiddle=\"-") && xml.Contains("Tom &amp; &lt;Jerry&gt;"), $"SAPI xml: {xml}");
+            True(Cast.Xml(0x12, "hi").Contains("Gender=Female") && !Cast.Xml(-1, "hi").Contains("<voice"), "girl female, narrator default");
+            // neural voice: speakers by sex, each NPC its own reader + pitch, ages by pitch
+            string sp = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "voice", "speakers.txt");
+            var (male, female) = NeuralVoice.Speakers(sp);
+            True(male.Length == 474 && female.Length == 430, $"speakers.txt: {male.Length} male, {female.Length} female");
+            var picks = new HashSet<(int, int)>(); int wrong = 0;
+            foreach (int npc in Enumerable.Range(0, 256).Where(n => Cast.Of(n) != VoiceClass.Narrator))
+            {
+                var (s, pch) = NeuralVoice.Pick(npc, male, female);
+                var c = Cast.Of(npc);
+                bool isMale = male.Contains(s);
+                if (c is VoiceClass.Man or VoiceClass.OldMan && !isMale) wrong++;
+                if (c is VoiceClass.Woman or VoiceClass.OldWoman or VoiceClass.Girl or VoiceClass.Boy && isMale) wrong++;
+                if (c is VoiceClass.OldMan or VoiceClass.OldWoman && pch > 0.92) wrong++;
+                if (c is VoiceClass.Girl or VoiceClass.Boy && pch < 1.15) wrong++;
+                if (c is VoiceClass.Man or VoiceClass.Woman && Math.Abs(pch - 1) > 0.04) wrong++;
+                picks.Add((s, (int)Math.Round(pch * 100)));
+            }
+            Eq(0, wrong, "readers match sex, pitches match age");
+            True(picks.Count >= 120, $"NPCs sound different from each other ({picks.Count} distinct voices for 125)");
+            // the WAV replay: a 22050 Hz tone at speed 1.2 -> 44100 Hz, shorter, faded ends
+            var wav = WavOut.WavBytes(Enumerable.Range(0, 22050).Select(i => (short)(10000 * Math.Sin(i * 0.1))).ToList(), 1, 22050);
+            var pcm = NeuralVoice.Render(wav, 1.2, 44100);
+            True(Math.Abs(pcm.Length - 44100 / 1.2) < 3 && pcm[0] == 0 && pcm.Max() > 0.29, $"replay: {pcm.Length} samples");
+            Eq("\"a \\\"b\\\" c\\\\d\\u000a\"", NeuralVoice.Json("a \"b\" c\\d\n"), "json escaping");
+            True(NeuralVoice.Folder(Path.GetTempPath()) == null, "no voice folder: Windows voice fallback");
         }),
         ("win_cine_gate", () =>
         {

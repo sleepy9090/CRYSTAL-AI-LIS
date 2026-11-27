@@ -597,3 +597,27 @@ CSHARP-WINDOWS/
     ISpVoice vtable 20 Speak async + purge, 28 SetRate, 30 SetVolume), created on the first page; none on a PC without
     a speech engine. Not used in scripted (`--keys`) runs, fast forward or mute. `win_dialogue`: group18's walk-in talk
     says Akahana's 2 pages before / after the first A and stops on close (f2769), then the next NPC.
+    **Voices per NPC (playtest 6):** `Cast` classifies the 125 talking NPCs (spawn handler 1, type `$30`, NPC id p =
+    `$0560`+slot = the NpcScript index) as man / woman / old man / old woman / boy / girl / creature, by eye from
+    `tools/npc_sheet.py` contact sheets (both facings, own area CHR + palettes); `%APPDATA%\re-c\voices.ini`
+    (`npc_16=oldman`) overrides. The speaker is the talk slot `$0623` while sub_state = `$11` (NpcTalk), else the
+    narrator. **Neural voice** (`NeuralVoice`): Piper 2023.11.14-2 (MIT; espeak-ng GPL-3, ONNX Runtime) as a hidden child
+    process in JSON mode with the multi-speaker `en_US-libritts_r-medium` model (904 LibriTTS-R readers, CC BY 4.0) in
+    `dist\voice\` (`tools/voice_pack.py` from the downloads; `voice/speakers.txt` = reader sex from LibriSpeech
+    SPEAKERS.TXT via `tools/voice_speakers.py`: 474 male, 430 female). Each NPC: a reader of its sex (hash of p), age by
+    replay speed (elders 0.88, boys 1.20, girls 1.28, creatures 1.45 / 0.72, ±3 % per NPC); the WAV is resampled to
+    44.1 kHz and mixed after the resampler with the game ducked to 0.5. Without `dist\voice\` the SAPI voice is used
+    with the same cast (`Cast.Xml`: `<voice required="Gender=..">` + pitch / rate by age). Piper itself could not be run
+    in this sandbox (blocked), so the neural path is untested end to end; `win_dialogue` covers the cast, speaker
+    picks, WAV replay and JSON.
+    **No sprite flicker, the game's own (playtest 6):** besides the 8-per-line limit (SpriteLimit off), the sprite pass
+    ObjSpriteDraw 28:800E drops objects itself: the `$07FF` rotation picks a different start slot each frame, so with
+    the 64-entry list `$0200` full other objects drop out each frame, and `$0380` b2 objects (the player's 30-frame
+    invulnerability after a hit) are drawn every other frame. With HD "No sprite flicker" on, `Window.FillFlicker` (HD
+    path, right after `SceneRaster.Build`, gameplay only: main_state 1, `irq_mode` 0, so message windows / menus keep
+    their hidden sprites) replays the pass from the RAM snapshot taken before the frame (= the objects and the list
+    `$0200` the NMI copied for this frame): `SideSprites.Draw(missingOnly)` keeps the pass's exact on-screen tests
+    (active, X hi / Y hi, sy range) and drops only the two flicker skips; an object with any entry in `$0200` was drawn
+    by the game and is skipped, the rest are drawn whole where the game has no sprite pixel
+    (`SceneRaster.ApplyMissing`). `win_noflicker`: group09's fight has 188 blink frames, the game skips 90, the fill adds
+    exactly the player on those 90 and nothing else.

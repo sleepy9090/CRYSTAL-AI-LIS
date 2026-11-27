@@ -363,6 +363,9 @@ internal sealed class Widescreen
 internal sealed class SideSprites
 {
     public readonly byte[] Ram = new byte[0x800];
+    private readonly List<(int Px, int Oy, int Tile, int Attr)> _ents = new();
+    /// <summary>missingOnly: the object slots drawn by the last Draw (the ones the game left out)</summary>
+    public readonly List<int> Added = new();
     public bool Valid;
 
     /// <summary>before RunFrame, with the camera</summary>
@@ -374,8 +377,15 @@ internal sealed class SideSprites
 
     /// <summary>draws into spr / tag (W wide, 240 lines; only where empty and outside columns e..e+255, plus the masked
     /// left column 0-7 of the game when fillLeft): banks = the 8 CHR byte offsets for PPU $0000-$1FFF, ctrl = PPUCTRL</summary>
-    public void Draw(Data data, byte[] chr, int[] banks, int ctrl, int w, int e, byte[] spr, int[] tag, bool[] lines, bool includeCenter = false)
+    /// <remarks>oam (playtest 6, no flicker): the game's columns only (w 256, e 0), objects the game placed on screen
+    /// (ObjSpriteDraw 800E: active, X / Y on screen) but left out of this sprite list $0200 (the 64-sprite list full: the
+    /// $07FF rotation drops different objects each frame; $0380 b2 half-rate objects on their off frame) are drawn whole,
+    /// objects with any entry in the list are skipped (never twice)</remarks>
+    public void Draw(Data data, byte[] chr, int[] banks, int ctrl, int w, int e, byte[] spr, int[] tag, bool[] lines, bool includeCenter = false, bool missingOnly = false)
     {
+        if (missingOnly) includeCenter = true;
+        Added.Clear();
+        var ents = _ents; ents.Clear();
         Array.Clear(spr, 0, w * 240);
         Array.Clear(tag, 0, w * 240);
         if (!Valid) return;
@@ -388,13 +398,14 @@ internal sealed class SideSprites
             if (Ram[0x4A0 + x] == 0) continue;
             int objX = Ram[0x70 + x] | Ram[0x90 + x] << 8;
             int sx = objX - camX;                                       // screen x, may be outside 0..255
-            if (sx < -e - 64 || sx > 255 + e + 64) continue;
+            if (missingOnly ? sx is < 0 or > 255 : sx < -e - 64 || sx > 255 + e + 64) continue;
             // vertical: ObjSpriteDraw 804D-8060
             int ylo = Ram[0xB0 + x], cyl = Ram[4];
             if (((Ram[0xD0 + x] - Ram[5] - (ylo < cyl ? 1 : 0)) & 0xFF) != 0) continue;
             int d = ylo - cyl, sy = d & 0xFF;
             if (d < 0) sy = (sy - 0x10) & 0xFF;
             if (sy >= 0xE8 || sy < 0x10) continue;
+            if (missingOnly && ((Ram[0x90 + x] - Ram[3] - ((Ram[0x70 + x] < Ram[2]) ? 1 : 0)) & 0xFF) != 0) continue;   // 8030 X hi
             int fl = Ram[0x380 + x] & 0x7F;
             if ((fl << 1 & 0x80) != 0) sy += 3;                         // sinking: DrawMeta 8230
             if ((fl & 2) != 0) Meta(x, Ram[0x580 + x], (fl & 0xDF) | 1, sx, sy);   // overlay first
@@ -403,6 +414,7 @@ internal sealed class SideSprites
 
         void Meta(int x, int id, int fl, int sx, int sy)
         {
+            ents.Clear();
             if ((fl & 1) == 0) id = (id + Ram[0x360 + x]) & 0xFF;
             int tab = (id & 0x80) != 0 ? 0x855C : 0x845C, yi = (id << 1) & 0xFF;
             int ptr = Rom(tab + yi) | Rom(tab + yi + 1) << 8;
@@ -435,11 +447,25 @@ internal sealed class SideSprites
                 if ((attr & 4) != 0 && (t18 & 0x80) != 0) break;        // the sunk lower part
                 int tile = (Rom(ptr + y + 3) + tileAdd) & 0xFF;
                 // the game emits it when it does not wrap (0..255); we add what lies outside its columns
-                Entry(px, oy, tile, attr, px < 0 || px > 248);
+                ents.Add((px, oy, tile, attr));
                 y += 4;
                 left = (left - 1) & 0xFF;
                 if (left == 0) break;
             }
+            if (missingOnly)
+            {
+                foreach (var (px, oy, tile, attr) in ents)
+                    if (px is >= 0 and <= 248 && InOam(px, oy, tile, attr)) return;   // the game drew it
+                if (ents.Count > 0 && !Added.Contains(x)) Added.Add(x);
+            }
+            foreach (var (px, oy, tile, attr) in ents) Entry(px, oy, tile, attr, px < 0 || px > 248);
+        }
+
+        bool InOam(int px, int oy, int tile, int attr)
+        {
+            for (int k = 0; k < 256; k += 4)
+                if (Ram[0x200 + k] == oy && Ram[0x201 + k] == tile && (Ram[0x202 + k] & 0xE3) == (attr & 0xE3) && Ram[0x203 + k] == px) return true;
+            return false;
         }
 
         void Entry(int px, int oy, int tile, int attr, bool any)
