@@ -397,7 +397,7 @@ internal sealed class SideSprites
     /// (ObjSpriteDraw 800E: active, X / Y on screen) but left out of this sprite list $0200 (the 64-sprite list full: the
     /// $07FF rotation drops different objects each frame; $0380 b2 half-rate objects on their off frame) are drawn whole,
     /// objects with any entry in the list are skipped (never twice)</remarks>
-    public void Draw(Data data, byte[] chr, int[] banks, int ctrl, int w, int e, byte[] spr, int[] tag, bool[] lines, bool includeCenter = false, bool missingOnly = false)
+    public void Draw(Data data, byte[] chr, int[] banks, int ctrl, int w, int e, byte[] spr, int[] tag, bool[] lines, bool includeCenter = false, bool missingOnly = false, bool[]? leftMask = null)
     {
         if (missingOnly) includeCenter = true;
         Added.Clear();
@@ -490,7 +490,7 @@ internal sealed class SideSprites
 
         void Entry(int px, int oy, int tile, int attr, bool any)
         {
-            if (!any && !includeCenter && !offGame) return;
+            if (!any && !includeCenter && !offGame && !(leftMask != null && px < 8)) return;
             for (int row = 0; row < h; row++)
             {
                 int yy = oy + 1 + row;
@@ -505,7 +505,7 @@ internal sealed class SideSprites
                 for (int k = 0; k < 8; k++)
                 {
                     int sxk = px + k, wx = sxk + e;
-                    if (wx < 0 || wx >= w || (!includeCenter && !offGame && sxk >= 0 && sxk <= 255)) continue;   // the game's own columns: its pixels (unless it skipped the object)
+                    if (wx < 0 || wx >= w || (!includeCenter && !offGame && sxk >= 0 && sxk <= 255 && !(sxk < 8 && leftMask != null && leftMask[yy]))) continue;   // the game's own columns: its pixels (unless it skipped the object, or the PPU masks the left 8 columns there)
                     int b = fh ? 7 - k : k;
                     int c = (lo >> (7 - b) & 1) | (hi >> (7 - b) & 1) << 1;
                     int i = yy * w + wx;

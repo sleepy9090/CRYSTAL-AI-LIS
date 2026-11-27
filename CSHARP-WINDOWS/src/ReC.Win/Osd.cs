@@ -140,7 +140,7 @@ internal static class Osd
         ("1 - 6", "WINDOW SIZE"), ("RIGHT CLICK", "MENUS, CHEATS"), ("ESC", "QUIT (SAVES FIRST)"),
     };
 
-    public static bool Build(bool paused, bool fast, string? notice, IReadOnlyList<string> cheats, bool help = false, string? stats = null, string? prompt = null)
+    public static bool Build(bool paused, bool fast, string? notice, IReadOnlyList<string> cheats, bool help = false, string? stats = null, string? prompt = null, IReadOnlyList<string>? debug = null)
     {
         Clear();
         bool any = false;
@@ -199,6 +199,14 @@ internal static class Osd
             int y = !string.IsNullOrEmpty(notice) && !paused ? 46 : 10;
             Box(10, y, TextWidth(stats, 1) + 16, 18, 0.02f, 0.04f, 0.1f, 0.6f);
             Text(18, y + 6, stats, 1, 0.7f, 1f, 0.7f);
+            any = true;
+        }
+        if (debug is { Count: > 0 })                         // playtest 7: debug lines under the FPS line
+        {
+            int y = (!string.IsNullOrEmpty(notice) && !paused ? 46 : 10) + (string.IsNullOrEmpty(stats) ? 0 : 22);
+            int w = debug.Max(s => TextWidth(s, 1)) + 16;
+            Box(10, y, w, 8 + 12 * debug.Count, 0.02f, 0.04f, 0.1f, 0.6f);
+            for (int k = 0; k < debug.Count; k++) Text(18, y + 6 + 12 * k, debug[k], 1, 0.75f, 0.9f, 1f);
             any = true;
         }
         return any;

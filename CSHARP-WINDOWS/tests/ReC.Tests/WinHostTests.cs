@@ -1292,6 +1292,32 @@ internal static partial class Program
             True(Math.Abs(playerAdded - inv / 2) <= inv / 6, $"the player is filled in on the blink frames the game skips ({playerAdded} of {inv})");
             Eq(0, dup, "the player is only added while blinking (never drawn twice)");
         }),
+        ("win_warp_debug", () =>
+        {
+            // playtest 7: Cheats > Warp to area, Video > Debug info
+            var d = TheData.Value;
+            var areas = Warp.Areas(d);
+            Console.WriteLine($"  win_warp_debug: {areas.Count(a => a)} areas with a record");
+            True(areas.Count(a => a) >= 200 && areas[0x02] && areas[0x09], "the area list (AreaPtrTable 12:9201)");
+            var m = new Machine(d, _ => { }); m.Reset();
+            m.LoadState(StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", "group08.json")));
+            for (int f = 0; f < 30; f++) m.RunFrame(0);
+            int from = m.Rd(0x6C);
+            True(m.Rd(0x41) == 8, $"normal play in area {from:X2}");
+            True(Warp.To(m, 0x02), "warp accepted in normal play");
+            int f2 = 0;
+            for (; f2 < 900 && !(m.Rd(0x41) == 8 && m.Rd(0x6C) == 0x02); f2++) m.RunFrame(f2 % 40 == 20 ? 0x80 : 0);   // A closes an entry message
+            Console.WriteLine($"  win_warp_debug: warp {from:X2} -> 02: normal play in area {m.Rd(0x6C):X2} after {f2} frames");
+            True(m.Rd(0x6C) == 0x02 && m.Rd(0x41) == 8 && m.Rd(0x40) == 1, "the game loaded area 02 (the village) and plays on");
+            m.Wr(0x41, 0x11);
+            True(!Warp.To(m, 0x02), "no warp outside normal play (a talk)");
+            var v = VideoSettings.Parse("debug=area,state,bogus\n");
+            True(v.Debug.SetEquals(new[] { "area", "state" }) && v.Serialize().Contains("debug=area,state"), "ini debug");
+            m.Wr(0x41, 8);
+            var lines = Window.DebugLines(m, v);
+            Console.WriteLine("  win_warp_debug: " + string.Join(" | ", lines));
+            True(lines.Count == 2 && lines[0].StartsWith("AREA 02") && lines[1].StartsWith("MAIN 01  SUB 08"), "debug lines from RAM");
+        }),
         ("win_story", () =>
         {
             // playtest 7: the remade story scenes need the picture band of the intro story (title_mode 2, the jungle)
@@ -1300,8 +1326,8 @@ internal static partial class Program
             m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
             var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
             var keys = Keys.Parse("1250:START 1400:START 1600:START".Split(' '));
-            int bands = 0, story = 0;
-            while (214 + m.Frame < 1720)
+            int bands = 0, story = 0, other = 0, textOnly = 0, jungleSeen = 0, villageAsJungle = 0;
+            while (214 + m.Frame < 2420)
             {
                 m.RunFrame(keys.TryGetValue(214 + m.Frame, out int b) ? b : 0);
                 if (Window.StoryScene(m.Rd(0x40), m.Rd(0x6F0)) != 1) continue;
@@ -1309,11 +1335,18 @@ internal static partial class Program
                 r.Build(m.Ppu.Capture);
                 var sc = new HdScene(d.NesRgb);
                 sc.Build(r.Fb, r.Tags, r.LinePal[239], new byte[61440], r.LineScroll, 0);
-                var cb = Gpu.StoryBand(r);
-                if (cb != null) bands++;
+                var cb = Gpu.StoryBand(r, sc);
+                if (cb != null && Gpu.JunglePicture(r, cb.Value)) bands++;
+                if (cb != null && !Gpu.JunglePicture(r, cb.Value)) other++;
+                int f = 214 + m.Frame;
+                if (f >= 2000 && f < 2200 && cb == null) textOnly++;              // the "100 years have passed" text page
+                if (f >= 1660 && f < 1800 && cb != null && Gpu.JunglePicture(r, cb.Value)) jungleSeen++;
+                if (f >= 2300 && cb != null && Gpu.JunglePicture(r, cb.Value)) villageAsJungle++;
             }
-            Console.WriteLine($"  win_story: {story} intro story frames, picture band found in {bands}");
-            True(story > 50 && bands > story / 2, "the remade jungle has the game's picture band to paint over");
+            Console.WriteLine($"  win_story: {story} story frames: jungle art in {bands}, other pictures {other}, text-only page frames {textOnly}, village taken for the jungle {villageAsJungle}");
+            True(jungleSeen > 120, $"the jungle is recognised while it shows ({jungleSeen} of 140)");
+            True(textOnly > 150, "the text page has no picture band (its text is never painted over)");
+            Eq(0, villageAsJungle, "the village picture is not painted as the jungle");
         }),
         ("win_wide_holes", () =>
         {
@@ -1361,6 +1394,14 @@ internal static partial class Program
                 for (int y = 0; y < 240; y++) for (int x = 84 - 16; x < 84 + 16; x++) if (sSpr[y * 424 + x] != 0) { if (x >= 84) inside++; else outside++; }
                 Console.WriteLine($"  win_wide_holes: NPC slot {npc:X2} 4 px left of the game's columns: {outside} side pixels + {inside} pixels inside the game's columns drawn");
                 True(outside > 0 && inside > 0, "an NPC crossing the edge of the game's columns is drawn whole (no clipping)");
+                // playtest 7: at x 2 on lines where the PPU masks the left 8 columns the game's sprite is hidden there
+                ox = cam + 2; ss.Ram[0x70 + npc] = (byte)ox; ss.Ram[0x90 + npc] = (byte)(ox >> 8);
+                Array.Clear(sSpr);
+                ss.Draw(d, m.Ppu.Chr, banks, capt.Spr[my].Ctrl, 424, 84, sSpr, sTag, all, leftMask: all);
+                int masked = 0;
+                for (int y = 0; y < 240; y++) for (int x = 84; x < 84 + 8; x++) if (sSpr[y * 424 + x] != 0) masked++;
+                Console.WriteLine($"  win_wide_holes: NPC at x 2 under the left mask: {masked} pixels drawn in the masked columns");
+                True(masked > 0, "the masked left column shows the NPC standing in it");
             }
             Console.WriteLine($"  win_wide_holes: village (area $02), {frames} mapped play frames: {holes} line holes in {holeFrames} frames");
             True(frames > 200, "the walk shows the map on the sides");
@@ -1465,6 +1506,38 @@ internal static partial class Program
             True(Math.Abs(pcm.Length - 44100 / 1.2) < 3 && pcm[0] == 0 && pcm.Max() > 0.29, $"replay: {pcm.Length} samples");
             Eq("\"a \\\"b\\\" c\\\\d\\u000a\"", NeuralVoice.Json("a \"b\" c\\d\n"), "json escaping");
             True(NeuralVoice.Folder(Path.GetTempPath()) == null, "no voice folder: Windows voice fallback");
+            // playtest 7: the Kokoro voice (dist\voice\kokoro): found, the model parts join back exactly, speakers by sex
+            string dist = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "dist");
+            string? kd = KokoroVoice.Folder(dist);
+            if (kd != null)
+            {
+                string cache = Path.Combine(Path.GetTempPath(), "rec-kokoro-test");
+                if (Directory.Exists(cache)) Directory.Delete(cache, true);
+                string? model = KokoroVoice.Model(kd, cache);
+                long parts = Directory.GetFiles(kd, "model.int8.onnx.part*").Sum(p => new FileInfo(p).Length);
+                True(model != null && new FileInfo(model).Length == parts && parts > 100_000_000, $"model joined ({parts} bytes)");
+                using (var a = File.OpenRead(model!)) using (var b = File.OpenRead(Path.Combine(kd, "model.int8.onnx.part2")))
+                {
+                    a.Seek(95_000_000, SeekOrigin.Begin);
+                    var x = new byte[4096]; var y = new byte[4096];
+                    a.ReadExactly(x); b.ReadExactly(y);
+                    True(x.SequenceEqual(y), "part 2 lands right after part 1");
+                }
+                Directory.Delete(cache, true);
+            }
+            else Console.WriteLine("  win_dialogue: no dist\\voice\\kokoro (run tools/kokoro_pack.py): join check skipped");
+            int bad = 0;
+            foreach (int npc in Enumerable.Range(0, 256).Where(n => Cast.Of(n) != VoiceClass.Narrator))
+            {
+                var (spk, len, pch) = KokoroVoice.Pick(npc);
+                var c = Cast.Of(npc);
+                bool man = KokoroVoice.Male.Contains(spk);
+                if (c is VoiceClass.Man or VoiceClass.OldMan && !man) bad++;
+                if (c is VoiceClass.Woman or VoiceClass.OldWoman or VoiceClass.Girl or VoiceClass.Boy && man) bad++;
+                if (c is VoiceClass.OldMan or VoiceClass.OldWoman && (len < 1.1 || pch > 0.95)) bad++;
+                if (c is VoiceClass.Girl or VoiceClass.Boy && pch < 1.1) bad++;
+            }
+            Eq(0, bad, "Kokoro speakers match sex, speed and pitch match age");
         }),
         ("win_cine_gate", () =>
         {

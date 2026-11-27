@@ -17,6 +17,7 @@ internal static unsafe partial class Window
     private const int IdPause = 100, IdMute = 101, IdExit = 102;
     private const int IdTurboA = 103, IdTurboB = 104, IdFeedback = 105, IdRemap = 106, IdResetKeys = 107, IdMouse = 108, IdShot = 109, IdShotFolder = 110;   // T38, T57, T61
     private const int IdCheat0 = 600, IdCheatsOff = 620;     // T36: + Cheats index (life, magic, gold, status, charge, xp)
+    private const int IdWarp0 = 700, IdDebug0 = 960;            // playtest 7: + area id; + DebugInfo index
     private const int IdFullscreen = 200, IdMenuBar = 201, IdInteger = 202, IdCrop = 203, IdSmooth = 204, IdReset = 205;
     private const int IdScale0 = 210;            // + 1..6
     private const int IdPreset0 = 220;           // + index in VideoSettings.Presets
@@ -176,6 +177,17 @@ internal static unsafe partial class Window
         };
         for (int i = 0; i < text.Length; i++) Win32.AppendMenuW(m, 0, (nuint)(IdCheat0 + i), text[i]);
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
+        var wm = NewMenu();                                // playtest 7: warp to any area (groups of 16)
+        var areas = _m != null ? Warp.Areas(_m.Data) : new bool[256];
+        for (int g = 0; g < 16; g++)
+        {
+            if (!Enumerable.Range(g * 16, 16).Any(a => areas[a])) continue;
+            var gm = NewMenu();
+            for (int a = g * 16; a < g * 16 + 16; a++) if (areas[a]) Win32.AppendMenuW(gm, 0, (nuint)(IdWarp0 + a), $"Area {a:X2}");
+            Win32.AppendMenuW(wm, Win32.MF_POPUP, (nuint)gm, $"Areas {g * 16:X2}-{g * 16 + 15:X2}");
+        }
+        Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)wm, "&Warp to area (from normal play)");
+        Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(m, 0, IdCheatsOff, "&All cheats off");
         return m;
     }
@@ -251,6 +263,11 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(gfx, 0, IdHd, "&HD engine (GPU: 8x layers, lighting, shadows, parallax)");
         Win32.AppendMenuW(gfx, 0, IdCrt, "&CRT look (scanlines, Original graphics)");
         Win32.AppendMenuW(gfx, 0, IdFps, "Show &FPS\tF2");
+        {
+            var dm = NewMenu();                            // playtest 7: debug data on screen (under the FPS line)
+            for (int i = 0; i < VideoSettings.DebugNames.Length; i++) Win32.AppendMenuW(dm, 0, (nuint)(IdDebug0 + i), VideoSettings.DebugLabels[i]);
+            Win32.AppendMenuW(gfx, Win32.MF_POPUP, (nuint)dm, "&Debug info");
+        }
         var disp = NewMenu();
         string[] bn = { "Brightness &1 (darker)", "Brightness &2", "Brightness &3 (as is)", "Brightness &4", "Brightness &5 (brighter)" };
         for (int i = 0; i < 5; i++) Win32.AppendMenuW(disp, 0, (nuint)(IdBright0 + i), bn[i]);
@@ -339,6 +356,7 @@ internal static unsafe partial class Window
     {
         if (_menus.Count == 0) return;
         Check(IdPause, _paused); Check(IdMute, _muted); Check(IdCrt, _v.Crt); Check(IdFps, _v.ShowFps);
+        for (int i = 0; i < VideoSettings.DebugNames.Length; i++) Check(IdDebug0 + i, _v.Debug.Contains(VideoSettings.DebugNames[i]));
         for (int i = 0; i < 5; i++) Check(IdBright0 + i, _v.Brightness == i, true);
         for (int i = 0; i < 4; i++) Check(IdWide0 + i, _v.Wide == i, true);
         Check(IdNatural, !_v.Vivid, true); Check(IdVivid, _v.Vivid, true);
@@ -387,6 +405,12 @@ internal static unsafe partial class Window
             case IdPause: KeyCommand('P'); return;
             case IdCrt: _v.Crt = !_v.Crt; Notice(_v.Crt ? "CRT LOOK: ON" : "CRT LOOK: OFF"); SettingsChanged(false); Present(); return;
             case IdFps: _v.ShowFps = !_v.ShowFps; SettingsChanged(false); Present(); return;
+            case >= IdWarp0 and < IdWarp0 + 256:
+                Notice(_m != null && Warp.To(_m, id - IdWarp0) ? $"WARP TO AREA {id - IdWarp0:X2}" : "WARP: ONLY FROM NORMAL PLAY");
+                return;
+            case >= IdDebug0 and < IdDebug0 + 6:
+                { string k = VideoSettings.DebugNames[id - IdDebug0]; if (!_v.Debug.Remove(k)) _v.Debug.Add(k); }
+                SettingsChanged(false); Present(); return;
             case >= IdBright0 and < IdBright0 + 5: _v.Brightness = id - IdBright0; ApplyColor(); Notice($"BRIGHTNESS {_v.Brightness + 1}"); SettingsChanged(false); return;
             case IdNatural or IdVivid: _v.Vivid = id == IdVivid; ApplyColor(); Notice(_v.Vivid ? "COLOUR: VIVID" : "COLOUR: NATURAL"); SettingsChanged(false); return;
             case >= IdWide0 and < IdWide0 + 4:

@@ -662,3 +662,20 @@ CSHARP-WINDOWS/
     and rim light, fliers, ground mist, chevron-leaved ferns framing both sides, sunlit motes; SDF shapes, branch-free
     loops for Wine). `win_story`: the band is found in 107 of 118 story frames. The other story pictures and cut-scenes
     are next (same mechanism, one scene function each).
+    **Playtest 8 (recordings 0720 / 0729 / 0730, voice.log):** Piper ran but sounded generic; title and story text
+    problems; streaks; characters with a dark silhouette. Fixed: (1) the intro story is a sequence of pages (the jungle,
+    a text page, a village under a purple sky): `Gpu.StoryBand(r, sc)` counts only non-text pixels, `JunglePicture`
+    (browns / greens, almost no blue / purple) picks the jungle, the band is fixed (lines 0 .. the split), and `PSFinal`
+    keeps text pixels on top (`win_story`: the text page never gets a band, the village is never taken for the jungle).
+    (2) Title-screen streaks from "CONTINUE" and the logo = the letters' cast shadows on the flat backdrop: AO, sun and
+    contact shadows now scale with the gameplay weight (`_play`). (3) The silhouette beside characters = their sun
+    shadow: sprite lift 2.2 → 1.1, contact shadow 0.30 → 0.18. (4) Torn rows over lava = heat shimmer with 2.5 px noise
+    cells per row: now 9 px cells, slower, a third of the amplitude. (5) Widescreen: sprites in the PPU-masked left 8
+    columns (hidden by the NES, then cleared by the widening) are drawn by the side-sprite replay (`leftMask`).
+    New: Video > Debug info (area / entrance / map size, player + camera, main / sub / IRQ / frame, objects + flicker
+    fill, widescreen, voice engine + speaker; ini `debug=`), Cheats > Warp to area (areas with an AreaPtrTable record,
+    `$6C` / `$6D` = 0 / sub_state 1 from normal play: `win_warp_debug` warps 08 → 02 in 44 frames). Voice: Kokoro-82M
+    (Kokoro.cs, `IVoice`) through sherpa-onnx 1.13.8's offline TTS program, one process per page, preferred over Piper
+    when `dist\voice\kokoro` exists (`tools/kokoro_pack.py`; model in two < 100 MB parts joined into %LOCALAPPDATA%);
+    not run here (downloaded programs are not executed in this sandbox). The pod's black figure could not be reproduced
+    with the user's settings (an HD render at f3099 shows the player in colour).

@@ -5,7 +5,7 @@
  "confidence": "observed",
  "environment": null,
  "evidence_format": 2,
- "evidence_id": "ev_654f7e73210deca51d5b0b5b69252afe4ba05bebcf23b0bf8a149263714a28f5",
+ "evidence_id": "ev_e18502f171d5e847737867d3dc365e857dc8b903e3409fa64fc71aae307c5bc4",
  "evidence_links": [],
  "limitations": [
   "This report states what static analysis of the selected artifact recovered. It does not establish that the application is secure.",
@@ -428,7 +428,7 @@
    "format": "dotnet-bundle",
    "kind": "executable",
    "selected_path": "./dist/ReC.exe",
-   "sha256": "d1735d4121990f27b74773480ce80ad74fd14bb73b128a0f0f44bc448a6ce72a"
+   "sha256": "966b8fabcae6bdb995a360587efe4aa8db1463726fb36c237062bc9465e8e7d1"
   }
  },
  "operation": "audit_release_exposure",
@@ -450,7 +450,7 @@
    "format": "dotnet-bundle",
    "kind": "file",
    "selection": null,
-   "sha256": "d1735d4121990f27b74773480ce80ad74fd14bb73b128a0f0f44bc448a6ce72a"
+   "sha256": "966b8fabcae6bdb995a360587efe4aa8db1463726fb36c237062bc9465e8e7d1"
   },
   "local_path": "./dist/ReC.exe",
   "name": "ReC.exe"

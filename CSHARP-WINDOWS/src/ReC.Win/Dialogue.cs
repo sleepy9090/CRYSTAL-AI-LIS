@@ -224,7 +224,7 @@ internal sealed unsafe class Speech : IDisposable
 /// Every NPC gets a reader of the right sex (voice\speakers.txt, from LibriSpeech SPEAKERS.TXT) and an age by pitch:
 /// the WAV is replayed faster / slower (children up, elders down). Mixed into AudioOut after the resampler, with the
 /// game ducked while someone speaks. A newer page or Stop() drops what is playing or still being made.</summary>
-internal sealed class NeuralVoice : IDisposable
+internal sealed class NeuralVoice : IVoice
 {
     public const string ModelName = "en_US-libritts_r-medium.onnx";
     private readonly System.Diagnostics.Process _p;
@@ -239,6 +239,7 @@ internal sealed class NeuralVoice : IDisposable
     private float _duck = 1;
     /// <summary>a page came back from Piper at least once</summary>
     public bool Said;
+    public string Name => "PIPER";
 
     private NeuralVoice(System.Diagnostics.Process p, string tmp, int[] male, int[] female)
     {

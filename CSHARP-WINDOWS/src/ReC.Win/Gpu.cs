@@ -75,7 +75,7 @@ internal sealed unsafe partial class Gpu : IDisposable
 
     /// <summary>the story picture: the lit lines above the story screen's raster split (the picture band detection skips
     /// split screens), at least 24 lines; (first line, last line + 1, first x, last x + 1)</summary>
-    public static (int Y0, int Y1, int X0, int X1)? StoryBand(SceneRaster r)
+    public static (int Y0, int Y1, int X0, int X1)? StoryBand(SceneRaster r, HdScene? sc = null)
     {
         var (from, _) = SplitGap(r);
         int end = from > 0 ? from : 232, y0 = -1, y1 = -1, x0 = 256, x1 = 0;
@@ -83,20 +83,41 @@ internal sealed unsafe partial class Gpu : IDisposable
         {
             int n = 0;
             for (int x = 0; x < 256; x++)
-                if ((r.Fb[y * 256 + x] & 63) != 0x0F) { n++; x0 = Math.Min(x0, x); x1 = Math.Max(x1, x + 1); }
+            {
+                int i = y * 256 + x;
+                if ((r.Fb[i] & 63) == 0x0F || (sc != null && (sc.Info[i * 4 + 2] & HdScene.FUi) != 0)) continue;   // text is not picture
+                n++; x0 = Math.Min(x0, x); x1 = Math.Max(x1, x + 1);
+            }
             if (n >= 8) { if (y0 < 0) y0 = y; y1 = y + 1; }
         }
         return y0 < 0 || y1 - y0 < 24 ? null : (y0, y1, x0, x1);
     }
 
+    /// <summary>playtest 7: the intro story shows several pictures (the jungle, later a village under a purple sky); the
+    /// jungle is the one of browns and greens (NES hues 7-A) with almost no blue / purple (hues 1-4)</summary>
+    public static bool JunglePicture(SceneRaster r, (int Y0, int Y1, int X0, int X1) b)
+    {
+        int warm = 0, cool = 0;
+        for (int y = b.Y0; y < b.Y1; y++)
+            for (int x = b.X0; x < b.X1; x++)
+            {
+                int v = r.Fb[y * 256 + x] & 63, h = v & 15;
+                if (v == 0x0F || h >= 0xD || h == 0) continue;
+                if (h >= 7 && h <= 0xA) warm++; else if (h >= 1 && h <= 4) cool++;
+            }
+        return warm > 200 && cool * 4 < warm;
+    }
+
     /// <summary>the remade scene follows the game's own fades: the brightness of the original picture (NES colour rows)
     /// against the picture at full light (at least 1.8)</summary>
-    private void StoryUpdate(SceneRaster rl)
+    private void StoryUpdate(SceneRaster rl, HdScene sc)
     {
         if (StoryScene != _storyKey) { _storyKey = StoryScene; _storyMax = 0; }
-        var found = StoryBand(rl);
-        _storyOn = StoryScene > 0 && found != null;
-        _storyBand = found is { } sb ? sb.Y0 * 256 + sb.Y1 : 0;
+        var found = StoryBand(rl, sc);
+        _storyOn = StoryScene > 0 && found != null && JunglePicture(rl, found.Value);
+        // the jungle fills the lines above the story screen's split: a fixed band, so the art never squeezes or slides
+        int split = SplitGap(rl).From;
+        _storyBand = _storyOn ? 0 * 256 + (split > 24 ? split : 192) : 0;
         if (!_storyOn) { _storyFade = 0; return; }
         var b = found!.Value;
         double sum = 0; int n = 0;
@@ -164,9 +185,9 @@ internal sealed unsafe partial class Gpu : IDisposable
 
     // ---- tunables (cbuffer)
     private static readonly (float X, float Y, float Z) Light = Norm(-0.45f, -0.62f, 0.64f);
-    private const float Bump = 1.8f, Amb = 0.50f, Kd = 0.50f, SpecK = 0.55f, LiftH = 2.2f,
+    private const float Bump = 1.8f, Amb = 0.50f, Kd = 0.50f, SpecK = 0.55f, LiftH = 1.1f,   // playtest 7: 2.2 cast a dark silhouette beside each character
         AoK = 0.45f, ShadowK = 0.60f, ShadowSlope = 0.16f, BloomThreshold = 0.95f, BloomK = 0.45f,
-        Saturation = 1.08f, Contrast = 0.12f, Vignette = 0.22f, ReflectK = 0.30f, LightK = 2.2f, ContactK = 0.30f;
+        Saturation = 1.08f, Contrast = 0.12f, Vignette = 0.22f, ReflectK = 0.30f, LightK = 2.2f, ContactK = 0.18f;
 
     private void* _dev, _ctx, _swap, _backRtv;
     // uploads
@@ -937,7 +958,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         if (HudOverlay) _meters[7] = 0;                    // playtest 6: the map continues behind the HUD: no bar shadow on it
         if (e > 0) foreach (int k in new[] { 0, 1, 2, 4, 5 }) if (_meters[k] > 0) _meters[k] += e;
         var cb = CineBand(rl, sc);
-        StoryUpdate(rl);
+        StoryUpdate(rl, sc);
         CineUpdate(cb is { } b0 && e > 0 ? (b0.Y0, b0.Y1, b0.X0 + e, b0.X1 + e) : cb);
         // eye adaptation (gameplay only): dark scenes a little brighter, bright ones a little darker, eased over ~1 s
         float lum = Math.Max(_mr * 0.299f + _mg * 0.587f + _mb * 0.114f, 0.05f);
@@ -1006,7 +1027,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             Light.X, Light.Y, Light.Z, Bump,
             hx, hy, hz, Light.Z,
             Amb, Kd, SpecK, TiltShift ? 1 : 0,
-            LiftH, AoK, Shadows ? ShadowK : 0, Shadows ? ContactK : 0,
+            LiftH, AoK * _play, Shadows ? ShadowK * _play : 0, Shadows ? ContactK * _play : 0,   // playtest 7: no cast shadows on the title / story screens (text streaks)
             ShadowSlope, sharp, BloomThreshold, BloomK,
             0, 0, 0, 0,
             _camX, _camY, _time, Sharpen ? SharpenK : 0,

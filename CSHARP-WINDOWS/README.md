@@ -97,6 +97,10 @@ its own voice matching their sex and age (children higher, elders lower and slow
 ReC.exe it uses Piper, a natural-sounding offline neural voice (904 real speakers); without it, the Windows voice.
 The next page or closing the window cuts it off. Correct a voice in `%APPDATA%\re-c\voices.ini`, e.g. `npc_16=oldman`
 (man, woman, oldman, oldwoman, boy, girl, creature, narrator).
+With the `voice\kokoro` folder the game uses Kokoro, a more natural neural voice (11 expressive speakers), ahead of Piper.
+
+**Video › Debug info** shows the current area, the player and camera position, the game state and more under the FPS
+line. **Cheats › Warp to area** jumps to any area from normal play.
 
 **Audio › Channels** mutes single sound channels (melody, harmony, bass, drums, samples) and **Audio › Headphone
 crossfeed** blends a little of each side into the other so hard-panned voices sound natural on headphones (both for CD

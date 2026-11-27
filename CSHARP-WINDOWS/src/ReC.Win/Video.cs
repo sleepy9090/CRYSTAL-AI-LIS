@@ -75,6 +75,10 @@ internal sealed class VideoSettings
     public bool Crt;
     /// <summary>T49: FPS counter on screen (F2 / Video > Show FPS; ini show_fps=1)</summary>
     public bool ShowFps;
+    /// <summary>playtest 7: debug lines on screen (Video > Debug info; ini debug=area,pos,..)</summary>
+    public readonly HashSet<string> Debug = new();
+    public static readonly string[] DebugNames = { "area", "pos", "state", "objects", "wide", "voice" };
+    public static readonly string[] DebugLabels = { "Current &area", "Player &position + camera", "Game &state (main / sub / IRQ / frame)", "&Objects (active, flicker fill)", "&Widescreen (map lines, offset)", "&Voice (engine, speaker)" };
     /// <summary>T60 Video > Display: brightness 0..4 (2 = as is), vivid colour, colour-blind assist (0 off, 1 protan, 2 deutan,
     /// 3 tritan); ini brightness=, vivid=, colorblind=</summary>
     public int Brightness = 2, ColorBlind;
@@ -202,6 +206,7 @@ internal sealed class VideoSettings
         $"volume={Volume}",
         $"crt={(Crt ? 1 : 0)}",
         $"show_fps={(ShowFps ? 1 : 0)}",
+        $"debug={string.Join(",", DebugNames.Where(Debug.Contains))}",
         $"brightness={Brightness}",
         $"widescreen={WideNames[Wide]}",
         $"keybinds={(KeyBinds.All(k => k == 0) ? "none" : string.Join(",", Enumerable.Range(0, 8).Where(i => KeyBinds[i] != 0).Select(i => $"{Input.Names[i].ToLowerInvariant()}:{KeyBinds[i]:X2}")))}",
@@ -287,6 +292,7 @@ internal sealed class VideoSettings
                 case "volume": if (int.TryParse(val, out int vol)) v.Volume = Math.Clamp(vol, 0, 100); break;
                 case "crt": v.Crt = val == "1"; break;
                 case "show_fps": v.ShowFps = val == "1"; break;
+                case "debug": foreach (var dk in val.Split(',', StringSplitOptions.RemoveEmptyEntries)) if (DebugNames.Contains(dk.Trim())) v.Debug.Add(dk.Trim()); break;
                 case "brightness": if (int.TryParse(val, out int br)) v.Brightness = Math.Clamp(br, 0, 4); break;
                 case "vivid": v.Vivid = val == "1"; break;
                 case "widescreen": { int wi = Array.IndexOf(WideNames, val); if (wi >= 0) v.Wide = wi; break; }

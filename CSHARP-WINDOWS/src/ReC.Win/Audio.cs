@@ -90,7 +90,7 @@ internal sealed unsafe class AudioOut
     /// <summary>T54: ambient sounds (Ambience.cs), targets set per frame by the window from the HD scene</summary>
     public readonly Ambience Amb = new();
     /// <summary>playtest 6: the neural dialogue voice (Dialogue.cs), mixed in the centre with the game ducked under it</summary>
-    public NeuralVoice? Voice;
+    public IVoice? Voice;
     private const int Target = 3072;                 // frames queued (device + pending) the rate loop aims at (~70 ms)
     private const int MaxQueue = Target + 2048;      // above ~116 ms queued the backlog is spliced out with a crossfade
     private const int Xfade = 256;                   // 5.8 ms: the splice and the fade-in after an underrun (no click)

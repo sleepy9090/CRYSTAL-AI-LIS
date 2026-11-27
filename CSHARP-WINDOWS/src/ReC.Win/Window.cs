@@ -297,7 +297,7 @@ internal static unsafe partial class Window
                         var rg = capt.Spr[my];
                         var banks = new int[8];
                         for (int k = 0; k < 8; k++) banks[k] = rg.Banks[k];
-                        SideSpr.Draw(_m.Data, _m.Ppu.Chr, banks, rg.Ctrl, WideW, (WideW - 256) / 2, _sSpr, _sTag, _mapLines);
+                        SideSpr.Draw(_m.Data, _m.Ppu.Chr, banks, rg.Ctrl, WideW, (WideW - 256) / 2, _sSpr, _sTag, _mapLines, leftMask: _raster!.LeftClip);   // playtest 7: the masked left column hid sprites
                         _wideRaster.ApplySideSprites(_sSpr, _sTag);
                     }
                 }
@@ -336,7 +336,7 @@ internal static unsafe partial class Window
     private static readonly DamageFeedback Damage = new();     // T57
     private static readonly DialogueReader _dialogue = new();
     private static Speech? _speech;
-    private static NeuralVoice? _neural;
+    private static IVoice? _neural;
     private static bool _speechTried;
     private static bool _automated;
     /// <summary>playtest 6: says each message page as it appears (DialogueReader); the voice starts on first use</summary>
@@ -350,9 +350,11 @@ internal static unsafe partial class Window
         NeuralVoice.LogPath = Path.Combine(cfg, "voice.log");
         try { File.WriteAllText(NeuralVoice.LogPath, ""); } catch (Exception) { }
         Cast.LoadOverrides(Path.Combine(cfg, "voices.ini"));
-        string? vd = NeuralVoice.Folder();
-        if (vd == null) NeuralVoice.Log($"no neural voice: {Path.Combine(AppContext.BaseDirectory, "voice")} must hold piper\\piper.exe, {NeuralVoice.ModelName} (+ .json) and speakers.txt");
-        else _neural = NeuralVoice.TryStart(vd);
+        // playtest 7: Kokoro (voice\kokoro) first, the more natural voice; then Piper (voice\piper); then Windows
+        if (KokoroVoice.Folder() is string kd && KokoroVoice.TryStart(kd) is { } kv) { _neural = kv; NeuralVoice.Log("using Kokoro (voice\\kokoro)"); }
+        string? vd = _neural == null ? NeuralVoice.Folder() : null;
+        if (_neural == null && vd == null) NeuralVoice.Log($"no neural voice: {Path.Combine(AppContext.BaseDirectory, "voice")} must hold kokoro\\ or piper\\piper.exe, {NeuralVoice.ModelName} (+ .json) and speakers.txt");
+        else if (_neural == null) _neural = NeuralVoice.TryStart(vd!);
         if (_neural == null) { _speech = Speech.TryCreate(); NeuralVoice.Log(_speech != null ? "using the Windows voice" : "no Windows voice either"); }
         _audio.Voice = _neural;
     }
@@ -366,7 +368,7 @@ internal static unsafe partial class Window
         if (_neural != null && !_neural.Alive)
         {
             // Piper ended (a missing DLL, a broken model): the Windows voice from now on, and say why
-            NeuralVoice.Log("piper stopped: " + _neural.ExitInfo);
+            NeuralVoice.Log("piper stopped: " + ((_neural as NeuralVoice)?.ExitInfo ?? "?"));
             _audio.Voice = null; _neural.Dispose(); _neural = null;
             _speech ??= Speech.TryCreate();
             Notice("NEURAL VOICE STOPPED - WINDOWS VOICE (SEE VOICE.LOG)");
@@ -515,13 +517,45 @@ internal static unsafe partial class Window
     private static bool BuildOsd()
     {
         if (_notice != null && Clock.Elapsed.TotalMilliseconds > _noticeUntil) _notice = null;
-        if (!_paused && !_fast && _notice == null && !_help && !_osdShown && !_v.ShowFps && _remap < 0) return false;
+        if (!_paused && !_fast && _notice == null && !_help && !_osdShown && !_v.ShowFps && _v.Debug.Count == 0 && _remap < 0) return false;
         var cheats = Enumerable.Range(0, Cheats.Names.Length).Where(_v.Cheats.Get).Select(i => Cheats.Names[i]).ToList();
         _osdShown = Osd.Build(_paused, _fast, _notice, cheats, _help, _v.ShowFps ? Stats.Text : null,
-            _remap >= 0 ? $"PRESS A KEY FOR {Input.Names[_remap]}\nNOW: {(_v.KeyBinds[_remap] != 0 ? Input.KeyName(_v.KeyBinds[_remap]) : "DEFAULT KEYS ONLY")}\nBACKSPACE KEEPS IT   ESC CANCELS" : null);
+            _remap >= 0 ? $"PRESS A KEY FOR {Input.Names[_remap]}\nNOW: {(_v.KeyBinds[_remap] != 0 ? Input.KeyName(_v.KeyBinds[_remap]) : "DEFAULT KEYS ONLY")}\nBACKSPACE KEEPS IT   ESC CANCELS" : null,
+            DebugLines());
         return _osdShown;
     }
     private static bool _osdShown;
+
+    /// <summary>playtest 7: the Video > Debug info lines, from game RAM: area_id $6C / entrance $6D, player slot 1
+    /// position ($71/$91, $B1/$D1), camera ($02-$05), main_state $40, sub_state $41, irq_mode $51, active object slots
+    /// ($04A0); the widescreen and voice state</summary>
+    public static List<string> DebugLines(Machine? mm = null, VideoSettings? vs = null)
+    {
+        var l = new List<string>();
+        var m = mm ?? _m;
+        var v = vs ?? _v;
+        if (m == null || v == null || v.Debug.Count == 0) return l;
+        if (v.Debug.Contains("area"))
+        {
+            var c = Wide.Cache;
+            l.Add($"AREA {m.Rd(0x6C):X2}  ENTRANCE {m.Rd(0x6D):X2}" + (c != null ? $"  MAP {c.W}x{c.H}" : ""));
+        }
+        if (v.Debug.Contains("pos"))
+            l.Add($"PLAYER {m.Rd(0x71) | m.Rd(0x91) << 8} {m.Rd(0xB1) | m.Rd(0xD1) << 8}  CAMERA {m.Rd(2) | m.Rd(3) << 8} {m.Rd(4) | m.Rd(5) << 8}");
+        if (v.Debug.Contains("state"))
+            l.Add($"MAIN {m.Rd(0x40):X2}  SUB {m.Rd(0x41):X2}  IRQ {m.Rd(0x51):X2}  FRAME {m.Frame}");
+        if (v.Debug.Contains("objects"))
+            l.Add($"OBJECTS {Enumerable.Range(0, 32).Count(s => m.Rd(0x4A0 + s) != 0)} ACTIVE  FLICKER FILL {SideSpr.Added.Count}");
+        if (v.Debug.Contains("wide"))
+            l.Add(v.Wide > 0 ? $"WIDE SHOW {Wide.Show:0.00}  LINES {Wide.LineOk.Count(o => o)}  OFFSET {Wide.MapX} {Wide.MapY}" + (Wide.FrameGood ? "  GOOD" : "") : "WIDE OFF");
+        if (v.Debug.Contains("voice"))
+        {
+            int npc = Cast.Speaker(a => m.Rd(a));
+            l.Add($"VOICE {(_neural != null ? _neural.Name : _speech != null ? "WINDOWS" : v.Voice ? "NOT STARTED" : "OFF")}"
+                  + (npc >= 0 ? $"  NPC {npc:X2} {Cast.Of(npc).ToString().ToUpperInvariant()}" : ""));
+        }
+        return l;
+    }
     private static readonly FrameStats Stats = new();          // T49
     private static readonly AutoQuality Auto = new();          // T62
     // T61 key remap (Game > Controls > Remap keys): the button being asked for (-1 = not remapping) and the new keys

@@ -89,3 +89,24 @@ internal sealed class Cheats
         return t;
     }
 }
+
+/// <summary>playtest 7: Cheats > Warp to area. The game's own way into an area (what the exits do and the test tools'
+/// area scenarios poke): area_id $6C, entrance $6D = 0, sub_state $41 = 1 (SubstAreaEnter, AreaLoad 31:E14A).
+/// Only from plain play (main_state 1, sub_state 8); only areas with a record in AreaPtrTable 12:9201 (252 entries,
+/// pointer high byte bit 7 set)</summary>
+internal static class Warp
+{
+    public static bool[] Areas(ReC.Data d)
+    {
+        var a = new bool[256];
+        for (int i = 0; i < 252; i++) a[i] = (d.Prg[12 * 0x2000 + 0x1202 + i * 2] & 0x80) != 0;
+        return a;
+    }
+
+    public static bool To(Machine m, int area)
+    {
+        if (m.Rd(0x40) != 1 || m.Rd(0x41) != 8) return false;
+        m.Wr(0x6C, area & 0xFF); m.Wr(0x6D, 0); m.Wr(0x41, 1);
+        return true;
+    }
+}

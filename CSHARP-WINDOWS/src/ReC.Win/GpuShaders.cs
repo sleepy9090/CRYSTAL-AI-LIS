@@ -827,7 +827,8 @@ float4 PSLight(V i) : SV_Target
         // heat shimmer: only just above a light source (the light map is brighter a few pixels below)
         float lh = dot(SrcC.SampleLevel(Lin, s, 0).rgb, LUM), lb = dot(SrcC.SampleLevel(Lin, s + float2(0, 6.0 / 240), 0).rgb, LUM);
         float heat = saturate((lb - lh) * 12) * saturate(lb * 4);
-        off += float2(FN(p * 0.9 + float2(0, t * 14), 2.5) - 0.5, (FN(p * 0.9 + float2(t * 5, t * 14) + 31, 2.5) - 0.5) * 0.5) * heat * 1.2;
+        // playtest 7: smooth, slow and small (fine 2.5 px cells shifted each row on its own = torn rows over a lava floor)
+        off += float2(FN(p * 0.5 + float2(0, t * 5), 9) - 0.5, (FN(p * 0.5 + float2(t * 2, t * 5) + 31, 9) - 0.5) * 0.5) * heat * 0.35;
         a = Albedo(s + off / NES);
     }
     float3 c = a;
@@ -1290,7 +1291,8 @@ float4 PSFinal(V i) : SV_Target
         if (y1 > y0 + 8 && sp2.y >= y0 && sp2.y < y1)
         {
             float h = y1 - y0;
-            c = StoryDino(float2(sp2.x / h, (sp2.y - y0) / h), NES.x / h, Cam.z) * Dmg.w;
+            if ((Flags(InfoPx(sp2)) & 4) == 0)                      // the game's text stays on top
+                c = StoryDino(float2(sp2.x / h, (sp2.y - y0) / h), NES.x / h, Cam.z) * Dmg.w;
         }
     }
     // widescreen: side pixels with no map data (outside the area, a line that does not show the map) get a dim, blurred
