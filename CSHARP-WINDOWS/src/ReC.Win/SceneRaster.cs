@@ -77,6 +77,7 @@ internal sealed class SceneRaster
         {
             int sp = spr[i];
             if (sp == 0) continue;
+            if (Sp[i] != 0) continue;                    // the game's own sprite there wins (edge objects reach in)
             var pal = LinePal[i / W];
             Sp[i] = (byte)sp; SpCol[i] = (byte)(pal[0x10 | (sp & 0x0F)] & 0x3F); SpTag[i] = tag[i];
             bool front = (sp & 0x40) == 0 || Bg[i] == 0;

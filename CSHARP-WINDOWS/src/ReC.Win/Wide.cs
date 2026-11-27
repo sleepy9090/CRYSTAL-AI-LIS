@@ -170,6 +170,9 @@ internal sealed class Widescreen
     public readonly bool[] LineOk = new bool[240];
     private readonly int[] _lineBad = new int[240];
     private readonly int[] _altDx = new int[240], _altDy = new int[240], _lineState = new int[240];
+    private readonly int[] _camN = new int[240], _camS = new int[240];
+    /// <summary>the last frame matched the area at the camera on 70 %+ of its lines (every playfield line then shows the map)</summary>
+    public bool FrameGood;
 
     /// <summary>after the frame, per playfield line (8..hudTop-1): test the camera mapping and, when lineScroll is given and the
     /// line's scroll differs from the first line's (a mid-frame split), the line's own scroll, on every 3rd pixel (sprite
@@ -194,6 +197,7 @@ internal sealed class Widescreen
         // skipped as evidence) switched whole bands off. Now the camera wins whenever it matches (black counts there);
         // another offset only when the camera fails and at least 8 lines this frame agree on that same offset
         Array.Clear(_altDx); Array.Clear(_altDy); Array.Clear(_lineState);
+        Array.Clear(_camN); Array.Clear(_camS);
         for (int y = 0; y < 240; y++)
         {
             if (y < 8 || y >= hudTop) continue;
@@ -237,6 +241,7 @@ internal sealed class Widescreen
                 // the camera needs 24 samples at 88 %; the other offsets (split, shake) 93 % on a line with detail (4+ colour
                 // changes), or a plain line (grass, sand) could match some other place by chance
                 bool okCand = n >= 24 && (cand == 0 ? s * 100 >= n * 88 : s * 100 >= n * 93 && changes >= 4);
+                if (cand == 0) { _camN[y] = n; _camS[y] = s; }
                 if (okCand && cand == 0) { bestN = n; bestS = s; bdx = 0; bdy = 0; break; }   // the camera matches: done
                 if (okCand && (bestN == 0 || s * bestN > bestS * n)) { bestN = n; bestS = s; bdx = dx; bdy = dy; }
                 else if (bestN == 0 && cand == 0 && n >= 24) { worstN = n; worstS = s; }
@@ -266,6 +271,17 @@ internal sealed class Widescreen
             if (LineOk[y]) ok++;
         }
         int pct = lines > 0 ? ok * 100 / lines : 0;
+        // playtest 6 ("line drags", NPCs clipping in the sides): lines that failed alone (animated tiles the cached map
+        // does not have, sprite-covered or plain rows) dropped their sides for a few frames = dim smeared rows, and side
+        // sprites lost those rows. When the frame as a whole matches at the camera, every playfield line follows it unless
+        // its own camera match is clearly wrong (24+ samples, under 60 %)
+        FrameGood = pct >= 70;
+        if (FrameGood)
+            for (int y = 8; y < hudTop && y < 240; y++)
+            {
+                if (LineOk[y] || (_camN[y] >= 24 && _camS[y] * 100 < _camN[y] * 60)) continue;
+                LineOk[y] = true; LineDx[y] = 0; LineDy[y] = 0; _lineBad[y] = 0;
+            }
         // many lines fail for 3 frames (or a new cache): look for the place in the area the screen really shows
         if (pct < 40 && lines > 40 && ++_poor >= 3) { _poor = 0; Search(c, fb, pal, hudTop, linePal, lineScroll, sp); }
         else if (pct >= 60) _poor = 0;
@@ -329,7 +345,7 @@ internal sealed class Widescreen
         for (int y = 0; y < 240; y++)
         {
             bool map = Show > min && y < hudTop && LineOk[y];
-            if (map) { map = false; for (int x = 8; x < 256 && !map; x++) map = (fb[y * 256 + x] & 0x3F) != 0x0F; }
+            if (map && !FrameGood) { map = false; for (int x = 8; x < 256 && !map; x++) map = (fb[y * 256 + x] & 0x3F) != 0x0F; }
             dst[y] = map;
         }
     }
@@ -386,6 +402,7 @@ internal sealed class SideSprites
         if (missingOnly) includeCenter = true;
         Added.Clear();
         var ents = _ents; ents.Clear();
+        bool offGame = false;
         Array.Clear(spr, 0, w * 240);
         Array.Clear(tag, 0, w * 240);
         if (!Valid) return;
@@ -408,6 +425,9 @@ internal sealed class SideSprites
             if (missingOnly && ((Ram[0x90 + x] - Ram[3] - ((Ram[0x70 + x] < Ram[2]) ? 1 : 0)) & 0xFF) != 0) continue;   // 8030 X hi
             int fl = Ram[0x380 + x] & 0x7F;
             if ((fl << 1 & 0x80) != 0) sy += 3;                         // sinking: DrawMeta 8230
+            // playtest 6 (NPCs clipping at the edge): the game only draws an object whose X is in its 256 columns
+            // (ObjSpriteDraw 8030); one just outside still reaches into them, and nobody drew that part
+            offGame = sx is < 0 or > 255;
             if ((fl & 2) != 0) Meta(x, Ram[0x580 + x], (fl & 0xDF) | 1, sx, sy);   // overlay first
             Meta(x, Ram[0x300 + x], fl, sx, sy);
         }
@@ -470,7 +490,7 @@ internal sealed class SideSprites
 
         void Entry(int px, int oy, int tile, int attr, bool any)
         {
-            if (!any && !includeCenter) return;
+            if (!any && !includeCenter && !offGame) return;
             for (int row = 0; row < h; row++)
             {
                 int yy = oy + 1 + row;
@@ -485,7 +505,7 @@ internal sealed class SideSprites
                 for (int k = 0; k < 8; k++)
                 {
                     int sxk = px + k, wx = sxk + e;
-                    if (wx < 0 || wx >= w || (!includeCenter && sxk >= 0 && sxk <= 255)) continue;   // the game's own columns: its pixels
+                    if (wx < 0 || wx >= w || (!includeCenter && !offGame && sxk >= 0 && sxk <= 255)) continue;   // the game's own columns: its pixels (unless it skipped the object)
                     int b = fh ? 7 - k : k;
                     int c = (lo >> (7 - b) & 1) | (hi >> (7 - b) & 1) << 1;
                     int i = yy * w + wx;

@@ -396,3 +396,5 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] P12 (2026-11-26, playtest 6): no game sprite flicker in HD (objects the sprite pass skipped are drawn from object RAM).
 - [x] P13 (2026-11-26, playtest 6): widescreen map continues behind the HUD (panel overlays it), scroll-edge seam fixed; Piper ships the VC++ runtime, voice.log + fallback notice.
 - [x] P14 (2026-11-26, playtest 6): no ghost of the player in the wake-up cut-scene (no-flicker fill only in SubstPlay).
+- [x] P15 (2026-11-26, playtest 7): build time in the title; no side line drop-outs (FrameGood); NPCs whole at the game-column edge.
+- [x] P16 (2026-11-26, playtest 7): remade intro jungle (StoryDino, GPU-painted over the whole width); other story scenes next.

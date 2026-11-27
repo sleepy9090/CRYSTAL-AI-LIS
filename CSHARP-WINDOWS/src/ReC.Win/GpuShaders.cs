@@ -1122,17 +1122,183 @@ float4 PSAmbient(V i) : SV_Target
     return float4(saturate(c), 1);
 }
 
+// ---- playtest 7: remade story art (Dmg.z = scene, Dmg.w = fade). The game's picture band is repainted at the output
+// resolution over the whole width. Scene 1: the prehistoric jungle of the intro (the game draws it as a narrow column).
+// Loops are branch-free (Wine's compiler cannot unroll a loop with a branch).
+float SN(float2 p)
+{
+    float2 i = floor(p), f = frac(p);
+    f = f * f * (3 - 2 * f);
+    float a = Hash(i), b = Hash(i + float2(1, 0)), c = Hash(i + float2(0, 1)), d = Hash(i + float2(1, 1));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+float SFbm(float2 p)
+{
+    float s = 0, a = 0.5;
+    [unroll] for (int k = 0; k < 5; k++) { s += a * SN(p); p = p * 2.03 + float2(17.1, 9.3); a *= 0.5; }
+    return s;
+}
+float SdCap(float2 p, float2 a, float2 b, float r)
+{
+    float2 pa = p - a, ba = b - a;
+    float h = saturate(dot(pa, ba) / dot(ba, ba));
+    return length(pa - ba * h) - r;
+}
+float SdEll(float2 p, float2 c, float2 r)
+{
+    float2 q = (p - c) / r;
+    return (length(q) - 1) * min(r.x, r.y);
+}
+float SMin(float a, float b, float k) { float h = saturate(0.5 + 0.5 * (b - a) / k); return lerp(b, a, h) - k * h * (1 - h); }
+// a long-necked giant facing right: body, curved neck, small head, tapering tail, four legs (signed distance)
+float SdSauropod(float2 p, float2 g, float s, float t)
+{
+    float bob = 0.012 * sin(t * 0.7 + g.x * 3);
+    float2 b = g + float2(0, -0.085) * s;
+    float d = SdEll(p, b, float2(0.115, 0.052) * s);
+    float2 n0 = b + float2(0.085, -0.02) * s, n1 = b + float2(0.15, -0.12) * s, n2 = b + float2(0.17, -0.22 + bob) * s, n3 = b + float2(0.2, -0.25 + bob) * s;
+    d = SMin(d, SdCap(p, n0, n1, 0.026 * s), 0.03 * s);
+    d = SMin(d, SdCap(p, n1, n2, 0.018 * s), 0.02 * s);
+    d = SMin(d, SdCap(p, n2 + float2(0.005, -0.006) * s, n3 + float2(0.018, 0.004) * s, 0.013 * s), 0.01 * s);
+    float2 t0 = b + float2(-0.1, 0.0) * s, t1 = b + float2(-0.2, 0.03) * s, t2 = b + float2(-0.29, 0.05 + 0.006 * sin(t * 0.9)) * s;
+    d = SMin(d, SdCap(p, t0, t1, 0.02 * s), 0.02 * s);
+    d = SMin(d, SdCap(p, t1, t2, 0.008 * s), 0.01 * s);
+    [unroll] for (int k = 0; k < 4; k++)
+    {
+        float lx = (-0.07 + 0.045 * k + (k > 1 ? 0.03 : 0)) * s;
+        d = min(d, SdCap(p, b + float2(lx, 0.02 * s), float2(b.x + lx + 0.004 * s, g.y), 0.017 * s));
+    }
+    return d;
+}
+// a gliding flier, wings beating
+float SdFlier(float2 p, float2 c, float s, float ph)
+{
+    float w = sin(ph) * 0.5;
+    float d = SdEll(p, c, float2(0.02, 0.006) * s);
+    d = min(d, SdCap(p, c, c + float2(-0.045, -0.02 - w * 0.03) * s, 0.004 * s));
+    d = min(d, SdCap(p, c, c + float2(0.045, -0.02 - w * 0.03) * s, 0.004 * s));
+    return d;
+}
+// a fern frond: a curved spine from base with leaflets (stripes across the spine), dark against the light
+float FernMask(float2 p, float2 base, float ang, float len, float sway)
+{
+    float2 d = p - base;
+    float a = ang + sway;
+    float2 dir = float2(cos(a), sin(a)), nrm = float2(-dir.y, dir.x);
+    float u = dot(d, dir), v = dot(d, nrm);
+    float s = saturate(u / len);
+    v -= 0.25 * len * s * s;                                        // the frond bends downward toward its tip
+    float width = 0.2 * len * (1 - s * 0.8) * sin(3.14159 * min(s * 1.2 + 0.08, 1));
+    float chev = frac((u - abs(v) * 0.9) / (len * 0.055));            // chevron leaflets slanting toward the tip
+    float leaf = step(0.28, chev) * step(abs(v), width) + step(abs(v), width * 0.25);
+    float inside = step(0, u) * step(u, len) * saturate(leaf);
+    float spine = step(0, u) * step(u, len) * step(abs(v), 0.004);
+    return max(inside, spine);
+}
+float3 StoryDino(float2 q, float aspect, float t)
+{
+    float cx = aspect * 0.5;
+    float y = q.y;
+    // sky: deep teal above a hot amber horizon, the sun low on the right
+    float3 sky = lerp(float3(0.2, 0.4, 0.55), float3(1.0, 0.7, 0.38), smoothstep(0.0, 0.65, y));
+    float2 sun = float2(cx + aspect * 0.22, 0.34);
+    float sd = length(q - sun);
+    sky += float3(1.0, 0.8, 0.5) * (exp(-sd * 9) * 0.9 + exp(-sd * 2.5) * 0.25);
+    // drifting cloud banks lit from below
+    float cl = SFbm(float2(q.x * 2.2 + t * 0.008, y * 5));
+    float cm = smoothstep(0.55, 0.78, cl) * smoothstep(0.5, 0.1, y) * smoothstep(0.08, 0.25, sd);
+    sky = lerp(sky, lerp(float3(1.0, 0.72, 0.5), float3(0.45, 0.36, 0.42), smoothstep(0.05, 0.4, y)), cm * 0.55);
+    sky = lerp(sky, float3(1.0, 0.98, 0.9), smoothstep(0.05, 0.03, sd));
+    sky += float3(1.0, 0.85, 0.55) * exp(-sd * 14) * 0.6;
+    // god rays from the sun
+    float ang = atan2(q.y - sun.y, q.x - sun.x);
+    float rays = pow(SN(float2(ang * 9, t * 0.05)), 3) * exp(-sd * 1.6) * 0.35;
+    float3 c = sky + float3(1.0, 0.8, 0.5) * rays;
+    // a smoking volcano far away
+    float vx = cx - aspect * 0.28;
+    float vol = 0.6 - 0.2 * exp(-pow((q.x - vx) / 0.22, 2)) + 0.025 * SFbm(float2(q.x * 7, 3));
+    vol = max(vol, 0.47 + 0.02 * sin(q.x * 3));
+    float smoke = SFbm(float2((q.x - vx) * 3 - y * 1.5 + t * 0.03, y * 3 + t * 0.06)) * smoothstep(0.42, 0.05, y) * exp(-pow((q.x - vx - (0.42 - y) * 0.5) / (0.06 + (0.42 - y) * 0.35), 2));
+    c = lerp(c, float3(0.36, 0.3, 0.33), saturate(smoke * 1.6));
+    c = lerp(c, lerp(float3(0.42, 0.36, 0.45), sky, 0.45), step(vol, y));
+    c += float3(1.0, 0.35, 0.1) * exp(-pow((q.x - vx) / 0.03, 2)) * exp(-abs(y - 0.41) * 40) * 0.8;   // lava glow at the rim
+    // far jungle line
+    float j1 = 0.64 + 0.035 * SFbm(float2(q.x * 9, 1)) - 0.02 * abs(sin(q.x * 23));
+    float3 far = lerp(float3(0.3, 0.46, 0.42), sky, 0.42);
+    c = lerp(c, far, step(j1, y));
+    float palm = 1;
+    [unroll] for (int pi = 0; pi < 54; pi++)             // 9 palms x 6 fronds in one loop (Wine: no nested loops)
+    {
+        int k = pi / 6, f = pi % 6;
+        float px = (k + 0.3 + 0.4 * Hash(float2(k, 7))) * aspect / 9, ph = 0.1 + 0.08 * Hash(float2(k, 3));
+        float2 pb = float2(px, j1 + 0.01), top = pb + float2(0.02 * sin(k * 1.3), -ph);
+        palm = min(palm, SdCap(q, pb, top, 0.004));
+        float a = -2.9 + f * 0.55 + 0.05 * sin(t * 0.8 + k);
+        float2 tip = top + float2(cos(a), sin(a) + 0.55) * 0.045;
+        palm = min(palm, SdCap(q, top, tip, 0.005));
+    }
+    c = lerp(c, far * 0.8, smoothstep(0.002, -0.001, palm));
+    // ground mist between the layers
+    c = lerp(c, float3(1.0, 0.8, 0.6), 0.35 * exp(-pow((y - 0.72) / 0.05, 2)) * (0.7 + 0.3 * SN(float2(q.x * 3 + t * 0.05, 0))));
+    // two giants in the middle distance, rim-lit by the sun
+    float gy = 0.8;
+    float d1 = SdSauropod(q, float2(cx - aspect * 0.12, gy), 1.0, t);
+    float d2 = SdSauropod(q, float2(cx + aspect * 0.05, gy + 0.03), 0.72, t + 2);
+    float dd = min(d1, d2);
+    float3 beast = float3(0.22, 0.25, 0.2);
+    float rim = smoothstep(0.006, 0.0, abs(dd + 0.003)) * saturate(dot(normalize(sun - q), float2(1, -0.3)));
+    c = lerp(c, beast + float3(1.0, 0.75, 0.45) * rim * 0.6, smoothstep(0.002, -0.002, dd));
+    // mid jungle and the ground in front of them
+    float j2 = 0.79 + 0.045 * SFbm(float2(q.x * 4 + 5, 2)) + 0.012 * sin(q.x * 40);
+    c = lerp(c, float3(0.16, 0.27, 0.16) + float3(0.35, 0.25, 0.08) * exp(-abs(y - j2) * 50), step(j2, y));
+    // fliers crossing the sky
+    float fl = 1;
+    [unroll] for (int k = 0; k < 3; k++)
+    {
+        float2 pc = float2(frac(t * 0.012 + k * 0.37) * (aspect + 0.4) - 0.2, 0.16 + 0.07 * k + 0.015 * sin(t * 0.5 + k));
+        fl = min(fl, SdFlier(q, pc, 1.0 - 0.2 * k, t * 4.5 + k * 2));
+    }
+    c = lerp(c, float3(0.12, 0.1, 0.13), smoothstep(0.002, -0.001, fl) * 0.9);
+    // foreground ferns framing both sides, swaying
+    float fern = 0;
+    [unroll] for (int k = 0; k < 7; k++)
+    {
+        float sw = 0.04 * sin(t * 0.9 + k * 1.7);
+        fern = max(fern, FernMask(q, float2(0.0 + k * 0.035, 1.04), -1.15 + k * 0.17, 0.5 + 0.1 * (k % 3), sw));
+        fern = max(fern, FernMask(q, float2(aspect - k * 0.035, 1.04), -2.0 - k * 0.17, 0.48 + 0.1 * ((k + 1) % 3), -sw));
+    }
+    c = lerp(c, float3(0.03, 0.07, 0.04), fern);
+    // sunlit motes
+    float2 mp = q * float2(40, 40) + float2(0, -t * 0.6);
+    float2 mi = floor(mp), mf = frac(mp) - 0.5;
+    float mh = Hash(mi);
+    c += float3(1.0, 0.85, 0.55) * step(0.97, mh) * smoothstep(0.1, 0.0, length(mf - (Hash(mi + 3) - 0.5) * 0.6)) * 0.7 * smoothstep(0.5, 0.65, y) * smoothstep(0.98, 0.8, y);
+    // grade: warm, a soft vignette across the wide picture
+    float vg = 1 - 0.35 * pow(abs(q.x - cx) / (cx + 0.001), 2) - 0.2 * pow(abs(y - 0.5) * 2, 2);
+    return saturate(c * vg * 1.15);
+}
 // T37: the on-screen display (Osd, premultiplied) over the anti-aliased picture
 float4 PSFinal(V i) : SV_Target
 {
     float3 c = Fxaa(i);
     c = Sharpen(c, i);
+    // playtest 7: remade story art over the game's picture band (Scr.w = band lines), the whole width, faded with the game
+    if (Dmg.z > 0.5)
+    {
+        float2 sp2 = (Uv.zw + i.uv * Uv.xy) * NES;
+        float y0 = floor(Scr.w / 256), y1 = Scr.w - y0 * 256;      // the story band (Gpu.StoryBand)
+        if (y1 > y0 + 8 && sp2.y >= y0 && sp2.y < y1)
+        {
+            float h = y1 - y0;
+            c = StoryDino(float2(sp2.x / h, (sp2.y - y0) / h), NES.x / h, Cam.z) * Dmg.w;
+        }
+    }
     // widescreen: side pixels with no map data (outside the area, a line that does not show the map) get a dim, blurred
     // continuation of the picture (SrcC = the lit picture at 1/8, blurred wide), dimmer toward the outer edge
     if (Scr.z > 0)
     {
         float2 np = (Uv.zw + i.uv * Uv.xy) * NES;
-        if ((Flags(InfoPx(np)) & 8) != 0)
+        if ((Flags(InfoPx(np)) & 8) != 0 && Dmg.z < 0.5)                  // (not under remade story art)
         {
             // mirrored back across the edge of the game's columns (the scene's colours carry across), dimmer outward
             float out1 = saturate(max(Scr.z - np.x, np.x - (Scr.z + 256)) / Scr.z);

@@ -1292,6 +1292,80 @@ internal static partial class Program
             True(Math.Abs(playerAdded - inv / 2) <= inv / 6, $"the player is filled in on the blink frames the game skips ({playerAdded} of {inv})");
             Eq(0, dup, "the player is only added while blinking (never drawn twice)");
         }),
+        ("win_story", () =>
+        {
+            // playtest 7: the remade story scenes need the picture band of the intro story (title_mode 2, the jungle)
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { }); m.Reset();
+            m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+            var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+            var keys = Keys.Parse("1250:START 1400:START 1600:START".Split(' '));
+            int bands = 0, story = 0;
+            while (214 + m.Frame < 1720)
+            {
+                m.RunFrame(keys.TryGetValue(214 + m.Frame, out int b) ? b : 0);
+                if (Window.StoryScene(m.Rd(0x40), m.Rd(0x6F0)) != 1) continue;
+                story++;
+                r.Build(m.Ppu.Capture);
+                var sc = new HdScene(d.NesRgb);
+                sc.Build(r.Fb, r.Tags, r.LinePal[239], new byte[61440], r.LineScroll, 0);
+                var cb = Gpu.StoryBand(r);
+                if (cb != null) bands++;
+            }
+            Console.WriteLine($"  win_story: {story} intro story frames, picture band found in {bands}");
+            True(story > 50 && bands > story / 2, "the remade jungle has the game's picture band to paint over");
+        }),
+        ("win_wide_holes", () =>
+        {
+            // playtest 6 ("line drags", NPCs clipping in and out in the sides): group18's town with 6 walking NPCs; per frame
+            // the playfield lines without map while the frame shows the map (dim smeared rows; side sprites lose them)
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { }); m.Reset();
+            m.LoadState(StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", "town02_enter.json")));
+            m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+            var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+            var wide = new Widescreen();
+            var keys = Keys.Parse("2460:DOWN:60 2530:LEFT:90 2630:DOWN:40 2680:RIGHT:120 2810:UP:60".Split(' '));
+            int frames = 0, holes = 0, holeFrames = 0;
+            var lines = new bool[240];
+            for (int f = 0; f < 470; f++)
+            {
+                wide.BeforeFrame(m, d, async: false);
+                m.RunFrame(keys.TryGetValue(2451 + m.Frame, out int b) ? b : 0);
+                r.Build(m.Ppu.Capture);
+                int bar = Gpu.SplitGap(r).To is > 0 and var t ? t : 232;
+                wide.AfterFrame(r.Fb, m.Ppu.Pal, bar, r.LinePal, r.LineScroll, r.Sp);
+                if (f < 30 || m.Rd(0x41) != 8 || wide.Show < 1) continue;
+                wide.MapLines(r.Fb, bar, 0.5f, lines);
+                int top = Gpu.SplitGap(r).From is > 0 and var g0 ? g0 : bar;   // the split seam belongs to the HUD overlay
+                int on = Enumerable.Range(8, top - 8).Count(y => lines[y]);
+                if (on < (top - 8) * 7 / 10) continue;                      // a frame that shows the map
+                frames++;
+                int h = top - 8 - on;
+                holes += h; if (h > 0) holeFrames++;
+            }
+            {
+                // an NPC 4 pixels left of the game's columns: the game skips it (X outside 0..255), its right part reaches
+                // into the game's columns and must still be drawn
+                var ss = new SideSprites(); ss.Snapshot(m);
+                int npc = Enumerable.Range(0x0D, 0x13).First(s => ss.Ram[0x4A0 + s] != 0 && ss.Ram[0x300 + s] != 0);
+                int cam = ss.Ram[2] | ss.Ram[3] << 8, ox = cam - 4;
+                ss.Ram[0x70 + npc] = (byte)ox; ss.Ram[0x90 + npc] = (byte)(ox >> 8);
+                ss.Ram[0xB0 + npc] = (byte)(ss.Ram[4] + 100); ss.Ram[0xD0 + npc] = (byte)(ss.Ram[5] + (ss.Ram[4] + 100 > 255 ? 1 : 0));
+                var capt = m.Ppu.Capture!;
+                int my = Enumerable.Range(16, 160).First(y => capt.SprValid[y]);
+                var banks = new int[8]; for (int k = 0; k < 8; k++) banks[k] = capt.Spr[my].Banks[k];
+                var sSpr = new byte[424 * 240]; var sTag = new int[424 * 240]; var all = Enumerable.Repeat(true, 240).ToArray();
+                ss.Draw(d, m.Ppu.Chr, banks, capt.Spr[my].Ctrl, 424, 84, sSpr, sTag, all);
+                int inside = 0, outside = 0;
+                for (int y = 0; y < 240; y++) for (int x = 84 - 16; x < 84 + 16; x++) if (sSpr[y * 424 + x] != 0) { if (x >= 84) inside++; else outside++; }
+                Console.WriteLine($"  win_wide_holes: NPC slot {npc:X2} 4 px left of the game's columns: {outside} side pixels + {inside} pixels inside the game's columns drawn");
+                True(outside > 0 && inside > 0, "an NPC crossing the edge of the game's columns is drawn whole (no clipping)");
+            }
+            Console.WriteLine($"  win_wide_holes: village (area $02), {frames} mapped play frames: {holes} line holes in {holeFrames} frames");
+            True(frames > 200, "the walk shows the map on the sides");
+            Eq(0, holeFrames, "every playfield line keeps its sides (no dim rows, side NPCs whole)");
+        }),
         ("win_noflicker_wake", () =>
         {
             // playtest 6: "when the player comes out of the first chamber a shadow of him shows before he comes out": the

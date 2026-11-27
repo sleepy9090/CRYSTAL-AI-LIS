@@ -63,7 +63,9 @@ internal sealed class WindowOptions
 
 internal static unsafe partial class Window
 {
-    private const string Title = "re-c";
+    /// <summary>playtest 6: the title carries the build time (UTC, from the csproj), so a recording shows which build it is</summary>
+    private static readonly string Title = "re-c  [build " + (System.Reflection.Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false)
+        .OfType<System.Reflection.AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == "BuildTime")?.Value ?? "dev") + "]";
     private const string ClassName = "ReCWindow";
 
     private static IntPtr _hwnd, _hdc;
@@ -169,6 +171,9 @@ internal static unsafe partial class Window
     /// <summary>playtest 6: the film look (dolly zoom, grain, streaks) is for the story pages and in-game cut-scenes, not the
     /// title / status / name-entry screens: main_state 3 with title_mode 3-6 (status, name entry, title menu); the opening (0) and the story (1 / 2) are pictures</summary>
     public static bool CineAllowed(int mainState, int titleMode) => mainState != 3 || titleMode is 0 or 1 or 2;
+    /// <summary>playtest 7: which remade story scene the game shows (main_state 3, title_mode 2 = the intro story: the
+    /// prehistoric jungle; the text pages have no picture band, so nothing is painted there)</summary>
+    public static int StoryScene(int mainState, int titleMode) => mainState == 3 && titleMode == 2 ? 1 : 0;
     /// <summary>where the sides stop: the status bar's first line when the HD raster shows it, else 232 (each line is
     /// verified against the map anyway, so the status bar never gets sides)</summary>
     private static int HudTop() => _m != null && _m.Ppu.NoPixels && _raster != null && Gpu.SplitGap(_raster).To is > 0 and var t ? t : 232;
@@ -274,6 +279,7 @@ internal static unsafe partial class Window
             _gpu.Hp = _m.Mem.RamBytes[0x03C1];               // T35: LIFE meter fill (HudHpBar draws from it)
             _gpu.Hurt = _v.Feedback ? Damage.Hurt : 0; _gpu.LowLife = _v.Feedback && Damage.Low;   // T57
             _gpu.CineAllowed = CineAllowed(_m.Mem.RamBytes[0x40], _m.Mem.RamBytes[0x6F0]);
+            _gpu.StoryScene = StoryScene(_m.Mem.RamBytes[0x40], _m.Mem.RamBytes[0x6F0]);   // playtest 7: remade story art
             if (WideW > 256)                                 // widescreen: the wide copy of the raster, the sides from the area
             {
                 WideAfterFrame(_raster!.Fb);

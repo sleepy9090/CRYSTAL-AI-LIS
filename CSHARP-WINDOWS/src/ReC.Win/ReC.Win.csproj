@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- re-c Windows host (architecture_win.md §1 rules 2-3): raw Win32 P/Invoke, single-file self-contained trimmed exe.
        Publish: dotnet publish src/ReC.Win -c Release -r win-x64 -o dist  → dist/ReC.exe -->
+  <ItemGroup>
+    <!-- playtest 6: build time in the window title (Window.Title) -->
+    <AssemblyMetadata Include="BuildTime" Value="$([System.DateTime]::UtcNow.ToString('yyyy-MM-dd HH:mm')) UTC" />
+  </ItemGroup>
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>

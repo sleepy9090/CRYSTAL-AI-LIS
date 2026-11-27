@@ -66,6 +66,53 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool Cinematic = true;
     /// <summary>playtest 6: false on the title / status / name-entry screens (their pictures are not cut-scenes: no dolly zoom)</summary>
     public bool CineAllowed = true;
+    /// <summary>playtest 7: a remade story scene to paint over the picture band (0 = none; 1 = the intro's prehistoric jungle)</summary>
+    public int StoryScene;
+    private bool _storyOn;
+    private float _storyFade, _storyMax;
+    private int _storyKey;
+    private int _storyBand;
+
+    /// <summary>the story picture: the lit lines above the story screen's raster split (the picture band detection skips
+    /// split screens), at least 24 lines; (first line, last line + 1, first x, last x + 1)</summary>
+    public static (int Y0, int Y1, int X0, int X1)? StoryBand(SceneRaster r)
+    {
+        var (from, _) = SplitGap(r);
+        int end = from > 0 ? from : 232, y0 = -1, y1 = -1, x0 = 256, x1 = 0;
+        for (int y = 0; y < end; y++)
+        {
+            int n = 0;
+            for (int x = 0; x < 256; x++)
+                if ((r.Fb[y * 256 + x] & 63) != 0x0F) { n++; x0 = Math.Min(x0, x); x1 = Math.Max(x1, x + 1); }
+            if (n >= 8) { if (y0 < 0) y0 = y; y1 = y + 1; }
+        }
+        return y0 < 0 || y1 - y0 < 24 ? null : (y0, y1, x0, x1);
+    }
+
+    /// <summary>the remade scene follows the game's own fades: the brightness of the original picture (NES colour rows)
+    /// against the picture at full light (at least 1.8)</summary>
+    private void StoryUpdate(SceneRaster rl)
+    {
+        if (StoryScene != _storyKey) { _storyKey = StoryScene; _storyMax = 0; }
+        var found = StoryBand(rl);
+        _storyOn = StoryScene > 0 && found != null;
+        _storyBand = found is { } sb ? sb.Y0 * 256 + sb.Y1 : 0;
+        if (!_storyOn) { _storyFade = 0; return; }
+        var b = found!.Value;
+        double sum = 0; int n = 0;
+        for (int y = b.Y0; y < b.Y1; y++)
+            for (int x = b.X0; x < b.X1; x++)
+            {
+                int v = rl.Fb[y * 256 + x] & 63;
+                if (v == 0x0F || (v & 15) >= 0xD) continue;
+                n++; sum += (v >> 4 & 3) + 1;
+            }
+        float lv = n > 0 ? (float)(sum / n) : 0;
+        _storyMax = Math.Max(Math.Max(_storyMax, lv), 1.8f);
+        float fr = Math.Clamp(lv / _storyMax, 0, 1);
+        float u = Math.Clamp((fr - 0.2f) / 0.55f, 0, 1);
+        _storyFade = u * u * (3 - 2 * u);                     // full light from 75 % of the brightest frame: only real fades dim it
+    }
     /// <summary>T52: smooth outlines (Vote: the last 2x step of the albedo as a Gaussian key vote instead of Scale2x)</summary>
     public bool SmoothOutlines = true;
     /// <summary>T53: the bars beside / above the picture show a soft, dim, mirrored blur of it (PSAmbient) instead of black</summary>
@@ -890,6 +937,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         if (HudOverlay) _meters[7] = 0;                    // playtest 6: the map continues behind the HUD: no bar shadow on it
         if (e > 0) foreach (int k in new[] { 0, 1, 2, 4, 5 }) if (_meters[k] > 0) _meters[k] += e;
         var cb = CineBand(rl, sc);
+        StoryUpdate(rl);
         CineUpdate(cb is { } b0 && e > 0 ? (b0.Y0, b0.Y1, b0.X0 + e, b0.X1 + e) : cb);
         // eye adaptation (gameplay only): dark scenes a little brighter, bright ones a little darker, eased over ~1 s
         float lum = Math.Max(_mr * 0.299f + _mg * 0.587f + _mb * 0.114f, 0.05f);
@@ -972,11 +1020,11 @@ internal sealed unsafe partial class Gpu : IDisposable
             _meters[0], _meters[1], _meters[2], _meters[3],
             _meters[4], _meters[5], _meters[6], _meters[7],
             Cinematic && CineAllowed ? _cineW : 0, _band.Y0 * 256 + _band.Y1, _band.X0 * 1024 + _band.X1, _shotStart,
-            Hurt, LowLife ? 1 : 0, 0, 0,
+            Hurt, LowLife ? 1 : 0, Cinematic && _storyOn ? StoryScene : 0, _storyFade,
             ColorM[0], ColorM[1], ColorM[2], 0,
             ColorM[3], ColorM[4], ColorM[5], 0,
             ColorM[6], ColorM[7], ColorM[8], 0,
-            NesW, 240, _sideE, 0,
+            NesW, 240, _sideE, _storyBand,
         };
         c.CopyTo(_c, 0);
         SetConstants();

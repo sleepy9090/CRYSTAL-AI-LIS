@@ -643,3 +643,22 @@ CSHARP-WINDOWS/
     player object but does not draw it, and the fill drew it from object RAM. `FillFlicker` now runs only in sub_state 8
     (SubstPlay); cut-scenes, area loads, talks and menus show exactly what the game draws. `win_noflicker_wake`
     (power-on, new game without a held button, f2300-3399): 505 cut-scene frames, objects added in 504 before, 0 now.
+    **Playtest 7 (recordings 212411 / 212539):** the recordings came from a build before the HUD overlay and the wake-up
+    ghost fix (the window title now carries the build time, `AssemblyMetadata BuildTime` → `Window.Title`). Fixed on top:
+    side rows dropping out alone (animated tiles, plain or sprite-covered rows) = dim smeared "line drags" and side NPCs
+    losing those rows: `Widescreen.FrameGood` (70 %+ of the lines match at the camera) puts every playfield line on the
+    camera mapping unless its own camera match is clearly wrong (24+ samples, < 60 %), and `MapLines` then keeps all-black
+    rows too (`win_wide_holes`: the village walk, 0 holes in 300 frames). NPCs clipping at the edge of the game's columns:
+    the game only draws objects whose X is in its 256 columns, so an NPC just outside lost the part reaching in;
+    `SideSprites.Draw` draws those objects' pixels inside the columns too (`offGame`), under the game's own sprites
+    (`ApplySideSprites` skips game sprite pixels). Checked in an HD render of f2760 (the pod's white flash): no silhouette.
+    **Remade story art (playtest 7, "modernize the intro / cut scenes"):** no hand-painted assets can be made here, so the
+    story pictures are repainted live on the GPU at the output resolution: `PSFinal` replaces the picture band (`Scr.w` =
+    first line * 256 + last line + 1, from `Gpu.StoryBand`: the lit lines above the story screen's raster split; the T51
+    band detection skips split screens) over the whole width with scene `Dmg.z`, faded with the game (`Dmg.w`: the
+    original picture's brightness against its brightest frame; full light from 75 %). Scene 1 (`Window.StoryScene`:
+    main_state 3, title_mode 2) = the intro's prehistoric jungle, which the game draws as a narrow column: `StoryDino`
+    (dusk sky, sun + god rays, drifting clouds, a smoking volcano, palm line, two long-necked giants with bobbing necks
+    and rim light, fliers, ground mist, chevron-leaved ferns framing both sides, sunlit motes; SDF shapes, branch-free
+    loops for Wine). `win_story`: the band is found in 107 of 118 story frames. The other story pictures and cut-scenes
+    are next (same mechanism, one scene function each).
