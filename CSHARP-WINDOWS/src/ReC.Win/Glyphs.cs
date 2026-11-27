@@ -33,14 +33,15 @@ internal static class FontInk
         return (chr[a] >> (7 - col) & 1) | (chr[a + 8] >> (7 - col) & 1) << 1;
     }
 
-    /// <summary>(ink value, paper value) of a font tile: the most and second most frequent pixel values (paper = the
-    /// most frequent); (-1, -1) if the tile is not a glyph or has a single value</summary>
+    /// <summary>(ink value, paper value) of a font tile: paper = the most frequent value with the border ring weighted 4x
+    /// (playtest 6: heavy glyphs B D Q 0 have more ink than paper and came out inverted, white boxes), ink = the next;
+    /// (-1, -1) if the tile is not a glyph or has a single value</summary>
     public static (int Ink, int Paper) Values(byte[] chr, int tile)
     {
         if (Code(tile) < 0) return (-1, -1);
         var n = new int[4];
         for (int r = 0; r < 8; r++)
-            for (int c = 0; c < 8; c++) n[Px(chr, tile, c, r)]++;
+            for (int c = 0; c < 8; c++) n[Px(chr, tile, c, r)] += r is 0 or 7 || c is 0 or 7 ? 4 : 1;
         int paper = Array.IndexOf(n, n.Max());
         int ink = -1;
         for (int v = 0; v < 4; v++) if (v != paper && n[v] > 0 && (ink < 0 || n[v] > n[ink])) ink = v;

@@ -166,6 +166,9 @@ internal static unsafe partial class Window
     private static readonly int[] _sTag = new int[560 * 240];
     private static int _wideFrame = -1;
     private static SceneRaster? _wideRaster;
+    /// <summary>playtest 6: the film look (dolly zoom, grain, streaks) is for the story pages and in-game cut-scenes, not the
+    /// title / status / name-entry screens: main_state 3 with title_mode 3-6 (status, name entry, title menu); the opening (0) and the story (1 / 2) are pictures</summary>
+    public static bool CineAllowed(int mainState, int titleMode) => mainState != 3 || titleMode is 0 or 1 or 2;
     /// <summary>where the sides stop: the status bar's first line when the HD raster shows it, else 232 (each line is
     /// verified against the map anyway, so the status bar never gets sides)</summary>
     private static int HudTop() => _m != null && _m.Ppu.NoPixels && _raster != null && Gpu.SplitGap(_raster).To is > 0 and var t ? t : 232;
@@ -246,6 +249,7 @@ internal static unsafe partial class Window
             _scene.Build(fb, tags, pal, _enh.HdLift, _raster!.LineScroll, _frameNo);
             _gpu.Hp = _m.Mem.RamBytes[0x03C1];               // T35: LIFE meter fill (HudHpBar draws from it)
             _gpu.Hurt = _v.Feedback ? Damage.Hurt : 0; _gpu.LowLife = _v.Feedback && Damage.Low;   // T57
+            _gpu.CineAllowed = CineAllowed(_m.Mem.RamBytes[0x40], _m.Mem.RamBytes[0x6F0]);
             if (WideW > 256)                                 // widescreen: the wide copy of the raster, the sides from the area
             {
                 WideAfterFrame(_raster!.Fb);
@@ -296,6 +300,18 @@ internal static unsafe partial class Window
     private static Gpu? _gpu;
     private static HdScene? _scene;
     private static readonly DamageFeedback Damage = new();     // T57
+    private static readonly DialogueReader _dialogue = new();
+    private static Speech? _speech;
+    private static bool _speechTried;
+    /// <summary>playtest 6: says each message page as it appears (DialogueReader); the voice starts on first use</summary>
+    private static void Speak(Machine m)
+    {
+        var (say, stop) = _dialogue.Update(m.Rd(0x40), m.Rd(0x51), a => m.Rd(a));
+        if (stop) _speech?.Stop();
+        if (say == null || !_v.Voice || _muted || _fast) return;
+        if (!_speechTried) { _speechTried = true; _speech = Speech.TryCreate(); }
+        _speech?.Say(say);
+    }
     /// <summary>T54: what the ambient sounds play, from the HD scene (gameplay only; nothing without the HD engine)</summary>
     private static void AmbienceTargets()
     {
@@ -595,6 +611,7 @@ internal static unsafe partial class Window
                         if (_v.Wide > 0) { Wide.BeforeFrame(m, data); SideSpr.Snapshot(m); }   // widescreen: camera + objects of this frame
                         m.RunFrame(buttons); _acc -= step; ran = true; ranTotal++;
                         _v.Cheats.Apply(m, (buttons & 0x40) != 0);           // T36 cheats (B = bit 6)
+                        if (!_scripted) Speak(m);                            // playtest 6: spoken dialogue
                         {
                             var ram = m.Mem.RamBytes;                        // T57 damage feedback: a life drop in SubstPlay
                             bool playing = ram[0x40] == 1 && ram[0x41] == 8;

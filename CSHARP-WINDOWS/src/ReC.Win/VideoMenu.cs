@@ -34,6 +34,7 @@ internal static unsafe partial class Window
     private const int IdWide0 = 660;                        // widescreen: + 0..3 = off, 16:10, 16:9, 21:9
     private const int IdAudioOriginal = 410, IdAudioCd = 411, IdStereo = 412, IdReverb = 413, IdAudioRemaster = 414;
     private const int IdAudioOrchestra = 416, IdAmbience = 417;   // T50, T54
+    private const int IdVoice = 418;                               // playtest 6: spoken dialogue
     private const int IdCrossfeed = 415, IdChannel0 = 430;   // T47: + 0..4 = pulse 1, pulse 2, triangle, noise, DMC
 
     private static VideoSettings _v = new();
@@ -118,6 +119,7 @@ internal static unsafe partial class Window
             case "audio:orchestra": return IdAudioOrchestra;
             case "crossfeed": return IdCrossfeed;
             case "ambience": return IdAmbience;
+            case "voice": return IdVoice;
             case var ch when ch.StartsWith("channel:") && Array.IndexOf(VideoSettings.ChannelNames, ch[8..]) >= 0:
                 return IdChannel0 + Array.IndexOf(VideoSettings.ChannelNames, ch[8..]);
         }
@@ -214,6 +216,7 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(m, 0, IdReverb, "&Reverb (CD quality)");
         Win32.AppendMenuW(m, 0, IdCrossfeed, "&Headphone crossfeed (CD quality / Remastered)");
         Win32.AppendMenuW(m, 0, IdAmbience, "&Ambient sounds (wind, birds, caves, fire; HD graphics)");
+        Win32.AppendMenuW(m, 0, IdVoice, "Spoken &dialogue (Windows text-to-speech)");
         var cm = NewMenu();
         string[] cn = { "Pulse &1 (melody)", "Pulse &2 (harmony)", "&Triangle (bass)", "&Noise (drums)", "&DMC (samples)" };
         for (int i = 0; i < 5; i++) Win32.AppendMenuW(cm, 0, (nuint)(IdChannel0 + i), cn[i]);
@@ -361,6 +364,7 @@ internal static unsafe partial class Window
         Check(IdStereo, _v.AudioStereo); Check(IdReverb, _v.AudioReverb);
         Check(IdCrossfeed, _v.Crossfeed);
         Check(IdAmbience, _v.Ambience);
+        Check(IdVoice, _v.Voice);
         for (int i = 0; i < 5; i++) Check(IdChannel0 + i, (_v.AudioMute >> i & 1) == 0);
         Check(IdFsDesktop, _v.FsW == 0, true);
         for (int i = 0; i < _modes.Count; i++) Check(IdFsMode0 + i, (_v.FsW, _v.FsH) == _modes[i], true);
@@ -465,6 +469,7 @@ internal static unsafe partial class Window
             case IdStereo: _v.AudioStereo = !_v.AudioStereo; ApplyAudio(); SettingsChanged(false); return;
             case IdReverb: _v.AudioReverb = !_v.AudioReverb; ApplyAudio(); SettingsChanged(false); return;
             case IdAmbience: _v.Ambience = !_v.Ambience; Notice(_v.Ambience ? "AMBIENT SOUNDS: ON" : "AMBIENT SOUNDS: OFF"); SettingsChanged(false); return;
+            case IdVoice: _v.Voice = !_v.Voice; if (!_v.Voice) _speech?.Stop(); Notice(_v.Voice ? "SPOKEN DIALOGUE: ON" : "SPOKEN DIALOGUE: OFF"); SettingsChanged(false); return;
             case IdCrossfeed:
                 _v.Crossfeed = !_v.Crossfeed;
                 if (_audio != null) _audio.Mixer.Crossfeed = _v.Crossfeed;

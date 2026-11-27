@@ -105,6 +105,8 @@ internal sealed class VideoSettings
     public bool Crossfeed;
     /// <summary>T54: ambient sounds (Audio > Ambient sounds; ini ambience=1, HD graphics only)</summary>
     public bool Ambience = true;
+    /// <summary>playtest 6: NPC dialogue read aloud (Audio > Spoken dialogue; ini voice=1; Windows text-to-speech)</summary>
+    public bool Voice = true;
 
     public static readonly (Aspect A, string Key, string Label)[] Aspects =
     {
@@ -210,6 +212,7 @@ internal sealed class VideoSettings
         $"audio_mute={(AudioMute == 0 ? "none" : string.Join(",", ChannelNames.Where((_, i) => (AudioMute >> i & 1) != 0)))}",
         $"crossfeed={(Crossfeed ? 1 : 0)}",
         $"ambience={(Ambience ? 1 : 0)}",
+        $"voice={(Voice ? 1 : 0)}",
         $"upscale={ReC.Win.Upscale.Filters.First(f => f.K == Upscale).Key}",
         $"cheats={Cheats.Serialize()}",
         $"turbo={(TurboA && TurboB ? "a,b" : TurboA ? "a" : TurboB ? "b" : "none")}",
@@ -306,6 +309,7 @@ internal sealed class VideoSettings
                 }
                 case "crossfeed": v.Crossfeed = val == "1"; break;
                 case "ambience": v.Ambience = val == "1"; break;
+                case "voice": v.Voice = val == "1"; break;
                 case "cheats": v.Cheats.Parse(val); break;
                 case "turbo": { var t = val.Split(','); v.TurboA = t.Contains("a"); v.TurboB = t.Contains("b"); break; }
                 case "graphics":

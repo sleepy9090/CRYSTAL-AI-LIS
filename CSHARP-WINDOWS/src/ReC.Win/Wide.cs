@@ -169,6 +169,7 @@ internal sealed class Widescreen
     public readonly int[] LineDx = new int[240], LineDy = new int[240];
     public readonly bool[] LineOk = new bool[240];
     private readonly int[] _lineBad = new int[240];
+    private readonly int[] _altDx = new int[240], _altDy = new int[240], _lineState = new int[240];
 
     /// <summary>after the frame, per playfield line (8..hudTop-1): test the camera mapping and, when lineScroll is given and the
     /// line's scroll differs from the first line's (a mid-frame split), the line's own scroll, on every 3rd pixel (sprite
@@ -189,9 +190,13 @@ internal sealed class Widescreen
         int y0 = -1;
         if (lineScroll != null) for (int y = 1; y < 40 && y0 < 0; y++) if (lineScroll[y] >= 0) y0 = y;
         int lines = 0, ok = 0;
+        // playtest 6 (recordings 3-5): lines picking different offsets tore the sides apart, and dark cave lines (black
+        // skipped as evidence) switched whole bands off. Now the camera wins whenever it matches (black counts there);
+        // another offset only when the camera fails and at least 8 lines this frame agree on that same offset
+        Array.Clear(_altDx); Array.Clear(_altDy); Array.Clear(_lineState);
         for (int y = 0; y < 240; y++)
         {
-            if (y < 8 || y >= hudTop) { LineOk[y] = false; _lineBad[y] = 0; continue; }
+            if (y < 8 || y >= hudTop) continue;
             var p = linePal?[y] ?? pal;
             int bestN = 0, bestS = 0, bdx = 0, bdy = 0, worstN = 0, worstS = 0;
             for (int cand = 0; cand < 3; cand++)
@@ -223,7 +228,7 @@ internal sealed class Widescreen
                     int i = y * 256 + x, ax = x + MapX + dx;
                     if (ax < 0 || ax >= c.W || (sp != null && sp[i] != 0)) continue;
                     int fc = fb[i] & 63, mc = AreaCache.Color(c.Px[ay * c.W + ax], p);
-                    if (fc == 0x0F && mc == 0x0F) continue;          // black on both: no evidence (a menu's black matches any dark map)
+                    if (cand > 0 && fc == 0x0F && mc == 0x0F) continue;   // black on both: no evidence for a moved offset
                     if (last >= 0 && fc != last) changes++;
                     last = fc;
                     n++;
@@ -232,13 +237,31 @@ internal sealed class Widescreen
                 // the camera needs 24 samples at 88 %; the other offsets (split, shake) 93 % on a line with detail (4+ colour
                 // changes), or a plain line (grass, sand) could match some other place by chance
                 bool okCand = n >= 24 && (cand == 0 ? s * 100 >= n * 88 : s * 100 >= n * 93 && changes >= 4);
+                if (okCand && cand == 0) { bestN = n; bestS = s; bdx = 0; bdy = 0; break; }   // the camera matches: done
                 if (okCand && (bestN == 0 || s * bestN > bestS * n)) { bestN = n; bestS = s; bdx = dx; bdy = dy; }
                 else if (bestN == 0 && cand == 0 && n >= 24) { worstN = n; worstS = s; }
             }
-            bool now = bestN > 0;
-            if (!now && worstN > 0) { bestN = worstN; bestS = worstS; }     // for the "clearly wrong" test below
-            if (now) { LineOk[y] = true; _lineBad[y] = 0; LineDx[y] = bdx; LineDy[y] = bdy; }
-            else if ((bestN >= 24 && bestS * 2 < bestN) || ++_lineBad[y] >= 3) LineOk[y] = false;   // clearly wrong: off now; borderline / no evidence: after 3
+            // state: 1 = camera, 2 = another offset (_altDx / _altDy, decided below), 3 = clearly wrong, 0 = no evidence
+            if (bestN > 0 && bdx == 0 && bdy == 0) _lineState[y] = 1;
+            else if (bestN > 0) { _lineState[y] = 2; _altDx[y] = bdx; _altDy[y] = bdy; }
+            else if (worstN >= 24 && worstS * 2 < worstN) _lineState[y] = 3;
+        }
+        // the offset most "other offset" lines share; only it is accepted
+        int votes = 0, vdx = 0, vdy = 0;
+        for (int y = 8; y < hudTop && y < 240; y++)
+        {
+            if (_lineState[y] != 2) continue;
+            int k = 0;
+            for (int z = 8; z < hudTop && z < 240; z++) if (_lineState[z] == 2 && _altDx[z] == _altDx[y] && _altDy[z] == _altDy[y]) k++;
+            if (k > votes) { votes = k; vdx = _altDx[y]; vdy = _altDy[y]; }
+        }
+        for (int y = 0; y < 240; y++)
+        {
+            if (y < 8 || y >= hudTop) { LineOk[y] = false; _lineBad[y] = 0; continue; }
+            int st = _lineState[y];
+            if (st == 2 && (votes < 8 || _altDx[y] != vdx || _altDy[y] != vdy)) st = 0;   // a lone offset: no evidence
+            if (st == 1 || st == 2) { LineOk[y] = true; _lineBad[y] = 0; LineDx[y] = st == 1 ? 0 : vdx; LineDy[y] = st == 1 ? 0 : vdy; }
+            else if (st == 3 || ++_lineBad[y] >= 3) LineOk[y] = false;   // clearly wrong: off now; borderline / no evidence: after 3
             lines++;
             if (LineOk[y]) ok++;
         }

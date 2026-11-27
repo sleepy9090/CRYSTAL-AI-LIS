@@ -389,3 +389,6 @@ write them into the same task and leave it unchecked (no follow-up tasks).
   corrections searched, no-map side pixels filled with a soft mirrored glow instead of black.
 - [x] P6 (2026-11-26, "add an option to take a screenshot"): Game › Take screenshot (F12) + Open screenshots folder; unique names.
 - [x] P7 (2026-11-26, playtest recordings in `issues/`): the crackle = a DC offset from oscillator phase run-away (fixed + DC blocker); soft fire ambience; widescreen sides only in gameplay, stricter line proof.
+- [x] P8 (2026-11-26, playtest 6): no dolly zoom / film look on the title, status and name-entry screens; name-entry glyphs B D Q 0 no longer inverted.
+- [x] P9 (2026-11-26, playtest 6 recordings 3-5): widescreen cave bands no longer black, one offset per frame (no tears).
+- [x] P10 (2026-11-26, playtest 6): spoken NPC dialogue (Windows text-to-speech), Audio menu toggle.

@@ -1259,6 +1259,62 @@ internal static partial class Program
             True(!v.Feedback && new VideoSettings().Feedback && v.Serialize().Contains("feedback=0"), "ini feedback");
             Eq(105, Window.CommandId("feedback"), "--menu feedback");
         }),
+        ("win_dialogue", () =>
+        {
+            // playtest 6: NPC text read aloud. group18 walks into Akahana (TalkStart f2562), 2 pages closed by A x2 (f2769)
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { }); m.Reset();
+            m.LoadState(StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", "group18.json")));
+            var keys = Keys.Parse("2527:LEFT:47 2701:A:4 2761:A:9 2801:UP:34 2841:LEFT:80".Split(' '));
+            var dr = new DialogueReader();
+            var said = new List<(int F, string T)>(); var stops = new List<int>();
+            for (int f = 0; f < 480; f++)
+            {
+                int fn = 2506 + m.Frame;
+                m.RunFrame(keys.TryGetValue(fn, out int b) ? b : 0);
+                var (say, stop) = dr.Update(m.Rd(0x40), m.Rd(0x51), a => m.Rd(a));
+                if (say != null) said.Add((fn, say));
+                if (stop) stops.Add(fn);
+            }
+            foreach (var (f, t) in said) Console.WriteLine($"  win_dialogue: f{f} say \"{t}\"");
+            Console.WriteLine($"  win_dialogue: stop at {string.Join(",", stops)}");
+            True(said.Count == 3 && said[2].T.StartsWith("This town"), $"Akahana's 2 pages + the next NPC (UP), each said once ({said.Count})");
+            True(said.Count > 0 && said[0].T.Contains("Akahana") && said[0].F < 2701, "page 1 (Akahana) before the first A");
+            True(said.Count > 1 && said[1].F > 2701 && said[1].F < 2761 && said[1].T != said[0].T, "page 2 after the first A");
+            True(stops.Count >= 1 && stops[0] > 2761 && stops[0] < 2800, "the voice stops when the window closes");
+            // a buffer that is not a text page (map rows) is never read
+            var junk = new byte[256]; new Random(5).NextBytes(junk);
+            Eq("", DialogueReader.Page(a => junk[a - DialogueReader.Buf]), "random buffer: nothing to say");
+            var page = new int[256];
+            for (int r = 0; r < 8; r++) { page[r * 32] = 0xFE; page[r * 32 + 1] = 0x1E; for (int x = 2; x < 31; x++) page[r * 32 + x] = 0x20; page[r * 32 + 31] = 0x1F; }
+            void Put(int r, string s) { for (int i = 0; i < s.Length; i++) page[r * 32 + 4 + i] = s[i]; }
+            Put(1, "The wind is cold, but some-"); Put(3, "times we like it_"); page[3 * 32 + 26] = 0x7C;
+            Eq("The wind is cold, but sometimes we like it...", DialogueReader.Page(a => page[a - DialogueReader.Buf]), "joins lines, word breaks, ellipsis, skips icons");
+            var v = VideoSettings.Parse("voice=0\n");
+            True(!v.Voice && new VideoSettings().Voice && v.Serialize().Contains("voice=0"), "ini voice");
+            Eq(418, Window.CommandId("voice"), "--menu voice");
+        }),
+        ("win_cine_gate", () =>
+        {
+            // playtest 6: the title screen "zoomed in" (the cut-scene dolly on the logo); the gate allows the film look only
+            // in the opening and story pages (title_mode 0-2) and outside main_state 3
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { }); m.Reset();
+            var keys = Keys.Parse("1250:START 1400:START 1600:START 1700:START".Split(' '));
+            var runs = new List<string>(); int lastKey = -1, from = 0, storyFrames = 0, titleFrames = 0;
+            for (int f = 0; f < 1900; f++)
+            {
+                m.RunFrame(keys.TryGetValue(214 + m.Frame, out int b) ? b : 0);
+                int ms = m.Rd(0x40), tm = m.Rd(0x6F0), key = ms * 16 + tm + (tm == 0 ? m.Rd(0x6F1) << 8 : 0);
+                if (Window.CineAllowed(ms, tm) && ms == 3) storyFrames++;
+                if (ms == 3 && tm is 5 or 6 && !Window.CineAllowed(ms, tm)) titleFrames++;
+                if (key != lastKey) { if (lastKey >= 0) runs.Add($"{lastKey >> 4 & 15}/{lastKey & 15}.{lastKey >> 8}@{from}"); lastKey = key; from = 214 + m.Frame; }
+            }
+            runs.Add($"{lastKey >> 4 & 15}/{lastKey & 15}.{lastKey >> 8}@{from}");
+            Console.WriteLine($"  win_cine_gate: main/title_mode from power-on: {string.Join(" ", runs)}");
+            True(storyFrames > 1000 && titleFrames > 100, $"opening + story pages ({storyFrames} frames) keep the film look, title ({titleFrames}) does not");
+            True(!Window.CineAllowed(3, 6) && !Window.CineAllowed(3, 5) && !Window.CineAllowed(3, 4) && Window.CineAllowed(3, 0) && Window.CineAllowed(3, 2) && Window.CineAllowed(1, 0), "gate");
+        }),
         ("win_font", () =>
         {
             // T59 modern font: ASCII tiles $F21-$F7E (not $F40), ink / paper per tile from CHR, glyph words on text pixels
@@ -1276,6 +1332,8 @@ internal static partial class Program
             var (top, bottom) = FontInk.InkRows(chr, FontInk.First + 'H');
             Console.WriteLine($"  win_font: {glyphs} glyph tiles with ink, 'H' rows {top}-{bottom}");
             True(glyphs == 26 * 2 + 10 + FontInk.Standard.Length, $"letters, digits, standard punctuation have ink ({glyphs})");
+            var inverted = Enumerable.Range(0x21, 0x5E).Where(c => FontInk.Code(FontInk.First + c) >= 0 && FontInk.Values(chr, FontInk.First + c).Paper != FontInk.Values(chr, FontInk.First + 'A').Paper).Select(c => (char)c);
+            True(!inverted.Any(), $"playtest 6: every glyph has the same paper as 'A' (heavy B D Q 0 were inverted: {string.Concat(inverted)})");
             True(top >= 0 && bottom <= 7 && bottom - top >= 4, "'H' cap height");
             string dir = Path.Combine(Data.FindDir(), "..", "test", "states");
             var mt = new Machine(d, _ => { }); mt.Reset(); mt.LoadState(StateFile.Load(Path.Combine(dir, "talk16.json")));
@@ -1567,7 +1625,7 @@ internal static partial class Program
                     m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
                     var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
                     var wd = new Widescreen();
-                    long okLines = 0, lines = 0, good = 0, tot = 0;
+                    long okLines = 0, lines = 0, good = 0, tot = 0, mixed = 0;
                     for (int f = 0; f < 60; f++)
                     {
                         wd.BeforeFrame(m, d, async: false);
@@ -1575,6 +1633,7 @@ internal static partial class Program
                         int bar = Gpu.SplitGap(r).To; if (bar <= 0) bar = 232;
                         wd.AfterFrame(r.Fb, m.Ppu.Pal, bar, r.LinePal, r.LineScroll, r.Sp);
                         if (f < 10) continue;
+                        if (Enumerable.Range(8, bar - 8).Where(y => wd.LineOk[y]).Select(y => (wd.LineDx[y], wd.LineDy[y])).Distinct().Count() > 1) mixed++;
                         for (int y = 8; y < bar; y++)
                         {
                             if (r.Fb.Skip(y * 256 + 8).Take(248).All(c => (c & 63) == 0x0F)) continue;
@@ -1591,6 +1650,7 @@ internal static partial class Program
                     }
                     Console.WriteLine($"  win_wide: {name}: {okLines} / {lines} playfield lines verified as map, their pixels match {100.0 * good / Math.Max(1, tot):F1} %");
                     True(good >= tot * 0.9, $"{name}: verified lines match the game");
+                    Eq(0L, mixed, $"playtest 6: {name}: no frame shows the sides at two different offsets (tears)");
                 }
             }
             {

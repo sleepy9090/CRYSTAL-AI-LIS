@@ -92,6 +92,10 @@ string basses the bass line, timpani and snare the drums, in a concert hall. Sou
 **Audio › Ambient sounds** (with HD graphics) adds a soundscape under the music: wind and birds outdoors, dripping
 caves, crackling fire, whistling ice.
 
+**Audio › Spoken dialogue** (on by default) reads what people say aloud with the Windows text-to-speech voice as each
+message page appears; the next page or closing the window cuts it off. The voice is the one chosen in Windows Settings ›
+Time & language › Speech.
+
 **Audio › Channels** mutes single sound channels (melody, harmony, bass, drums, samples) and **Audio › Headphone
 crossfeed** blends a little of each side into the other so hard-panned voices sound natural on headphones (both for CD
 quality and Remastered). The sound now follows the sound card's clock smoothly (no clicks from dropped blocks), and

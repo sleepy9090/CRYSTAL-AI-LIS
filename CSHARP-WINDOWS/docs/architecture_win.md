@@ -576,3 +576,24 @@ CSHARP-WINDOWS/
     ignore black-on-black samples (24 real samples needed), accept the split / shake offsets only at 93 % on lines with
     detail (4+ colour changes), lines without evidence turn off after 3 frames, and the sides only exist in gameplay
     (`Widescreen.Active`: main_state 1, not sub_state 0 / 1 / `$13`).
+    **Playtest 6:** the title screen "zoomed in": the T51 cut-scene dolly found a picture band on the logo. `Gpu.CineAllowed`
+    (set per frame from `Window.CineAllowed(main_state, title_mode)`) keeps the film look for the opening and story pages
+    (main_state 3, `title_mode` 0-2) and the in-game cut-scenes, and turns it off on the title menu (5 / 6), the status and
+    name-entry screens (3 / 4), where the parallax also split the letters into slices (`win_cine_gate`). The name-entry
+    letters B, D, Q, 0 showed as white boxes: `FontInk.Values` took the most frequent pixel value as paper, and these
+    heavy glyphs have more ink than background; the border ring now counts 4x (`win_font`: every glyph's paper = 'A''s).
+    **Playtest 6 recordings 3-5 (widescreen):** in dark caves whole bands of side lines went black (the P7 rule skipped
+    black-on-black samples, so mostly black lines had "no evidence" and turned off), and neighbouring lines could pick
+    different offsets (camera / split / shake), tearing the sides. `Widescreen.AfterFrame` now decides in two passes:
+    the camera wins whenever it matches (black counts for it); a split / shake offset only when the camera fails and
+    at least 8 lines of the frame agree on that one offset (`_lineState`, `_altDx/_altDy`); lone offsets count as no
+    evidence. group08 (cave): 7250 / 7300 lines verified (was 5500); `win_wide` asserts no frame mixes offsets.
+    **Spoken dialogue (playtest 6, `Dialogue.cs`, Audio > Spoken dialogue, ini `voice=1`, on by default):**
+    `DialogueReader` reads the page the text printer built in WRAM `$6000` (TextPrint 20:853A / TextClearBuf 20:8720:
+    8 rows × 32 tiles, `FE 1E` + 29 characters + `1F`; anything else = not a page) while a message window is open in
+    gameplay (main_state 1, `irq_mode` 1 / 9, ShowMessage 30:D354). A page counts after 4 unchanged frames and is said
+    once; the next page cuts it off, closing the window stops it. Lines are joined (a trailing `-` joins the word),
+    `_` = ellipsis, icon / arrow tiles are skipped. `Speech` = SAPI 5 `SpVoice` over raw COM (`CoCreateInstance`,
+    ISpVoice vtable 20 Speak async + purge, 28 SetRate, 30 SetVolume), created on the first page; none on a PC without
+    a speech engine. Not used in scripted (`--keys`) runs, fast forward or mute. `win_dialogue`: group18's walk-in talk
+    says Akahana's 2 pages before / after the first A and stops on close (f2769), then the next NPC.

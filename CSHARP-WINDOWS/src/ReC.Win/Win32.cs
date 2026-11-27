@@ -275,6 +275,12 @@ internal static unsafe partial class Win32
     [LibraryImport("shell32.dll", StringMarshalling = StringMarshalling.Utf16)]
     public static partial IntPtr ShellExecuteW(IntPtr hwnd, string? op, string file, string? args, string? dir, int show);
 
+    // ---- ole32: playtest 6, spoken dialogue (SAPI SpVoice, Dialogue.cs)
+    [LibraryImport("ole32.dll")]
+    public static partial int CoInitializeEx(void* reserved, uint coInit);
+    [LibraryImport("ole32.dll")]
+    public static partial int CoCreateInstance(Guid* clsid, void* outer, uint ctx, Guid* iid, void** obj);
+
     // ---- dwmapi: playtest 3, the GDI picture paced to the compositor (no tearing)
     [LibraryImport("dwmapi.dll")]
     public static partial int DwmFlush();

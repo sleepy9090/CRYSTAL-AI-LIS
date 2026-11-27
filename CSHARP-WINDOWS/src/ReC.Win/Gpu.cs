@@ -62,6 +62,8 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool Sharpen = true;
     /// <summary>T51: cut-scenes play like film shots (CineBand: camera dolly + parallax, particles, lens streaks, grain)</summary>
     public bool Cinematic = true;
+    /// <summary>playtest 6: false on the title / status / name-entry screens (their pictures are not cut-scenes: no dolly zoom)</summary>
+    public bool CineAllowed = true;
     /// <summary>T52: smooth outlines (Vote: the last 2x step of the albedo as a Gaussian key vote instead of Scale2x)</summary>
     public bool SmoothOutlines = true;
     /// <summary>T53: the bars beside / above the picture show a soft, dim, mirrored blur of it (PSAmbient) instead of black</summary>
@@ -957,7 +959,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             Quality >= 2 ? 24 : Quality == 1 ? 16 : 10, Quality >= 1 ? 1 : 0, _albScale, _osdOn ? 1 : 0,
             _meters[0], _meters[1], _meters[2], _meters[3],
             _meters[4], _meters[5], _meters[6], _meters[7],
-            Cinematic ? _cineW : 0, _band.Y0 * 256 + _band.Y1, _band.X0 * 1024 + _band.X1, _shotStart,
+            Cinematic && CineAllowed ? _cineW : 0, _band.Y0 * 256 + _band.Y1, _band.X0 * 1024 + _band.X1, _shotStart,
             Hurt, LowLife ? 1 : 0, 0, 0,
             ColorM[0], ColorM[1], ColorM[2], 0,
             ColorM[3], ColorM[4], ColorM[5], 0,
