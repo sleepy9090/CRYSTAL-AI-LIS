@@ -31,12 +31,12 @@ internal sealed class KokoroVoice : IVoice
     private readonly object _lk = new();
     private int _seq;
     private Process? _running;
-    private float[]? _next;
+    private readonly Queue<float[]> _queue = new();        // sentences ready to play, in order
     private float[] _cur = Array.Empty<float>();
     private int _pos;
     private bool _clear;
     private float _duck = 1;
-    public string Name => "KOKORO";
+    public string Name => _serverDead ? "KOKORO (PER PAGE)" : "KOKORO (SERVER)";
     public bool Alive => true;                         // a process per page: a failure is logged and that page stays silent
 
     private KokoroVoice(string exe, string dir, string model, string tmp) { _exe = exe; _dir = dir; _model = model; _tmp = tmp; }
@@ -77,7 +77,9 @@ internal sealed class KokoroVoice : IVoice
             string tmp = Path.Combine(Path.GetTempPath(), "re-c-voice");
             Directory.CreateDirectory(tmp);
             NeuralVoice.Log($"kokoro: model {model}");
-            return new KokoroVoice(Path.Combine(dir, "sherpa-onnx-offline-tts.exe"), dir, model, tmp);
+            var kv = new KokoroVoice(Path.Combine(dir, "sherpa-onnx-offline-tts.exe"), dir, model, tmp);
+            kv.StartServer();                          // playtest 10: the model loads now, while the intro plays
+            return kv;
         }
         catch (Exception e) { NeuralVoice.Log("kokoro start failed: " + e.Message); return null; }
     }
@@ -127,21 +129,116 @@ internal sealed class KokoroVoice : IVoice
         return psi;
     }
 
+    // ---- playtest 10: the server (`ReC.exe --tts-server`, KokoroServer) keeps the model loaded; each page is split into
+    // sentences, so the first one plays while the rest are made. Fallback: one sherpa-onnx-offline-tts.exe per page.
+    private Process? _server;
+    private StreamWriter? _serverIn;
+    private volatile bool _serverDead;
+    private readonly Dictionary<string, (int Seq, double Pitch)> _pending = new();
+    private (int Npc, string Text, int Seq)? _lastPage;
+
+    /// <summary>the C API DLLs for the server are in the voice folder (shared build)</summary>
+    public static bool ServerFiles(string dir) =>
+        File.Exists(Path.Combine(dir, "sherpa-onnx-c-api.dll")) && File.Exists(Path.Combine(dir, "onnxruntime.dll"));
+
+    private void StartServer()
+    {
+        try
+        {
+            if (!ServerFiles(_dir) || Environment.ProcessPath is not string self) { _serverDead = true; return; }
+            var psi = new ProcessStartInfo(self)
+            {
+                UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true,
+                RedirectStandardError = true, WorkingDirectory = _dir,
+            };
+            foreach (var a in new[] { "--tts-server", _dir, _model }) psi.ArgumentList.Add(a);
+            var p = Process.Start(psi);
+            if (p == null) { _serverDead = true; return; }
+            p.StandardInput.AutoFlush = true;
+            _server = p; _serverIn = p.StandardInput;
+            p.ErrorDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) NeuralVoice.Log("kokoro server: " + e.Data); };
+            p.BeginErrorReadLine();
+            new Thread(ServerLoop) { IsBackground = true, Name = "kokoro-server" }.Start();
+            NeuralVoice.Log("kokoro: server started (the model stays loaded)");
+        }
+        catch (Exception e) { NeuralVoice.Log("kokoro server start: " + e.Message); _serverDead = true; }
+    }
+
+    private void ServerLoop()
+    {
+        try
+        {
+            string? line;
+            while (_server != null && (line = _server.StandardOutput.ReadLine()) != null)
+            {
+                if (line.StartsWith("READY")) { NeuralVoice.Log("kokoro server: " + line); continue; }
+                if (line.StartsWith("ERR") && !line.Contains(".wav")) { NeuralVoice.Log("kokoro server: " + line); break; }
+                int sp = line.IndexOf(' ');
+                if (sp < 0) continue;
+                string rest = line[(sp + 1)..], wav = rest.Contains(".wav") ? rest[..(rest.IndexOf(".wav") + 4)] : rest;
+                (int Seq, double Pitch) req;
+                lock (_lk) { if (!_pending.Remove(wav, out req)) continue; }
+                if (line.StartsWith("OK"))
+                {
+                    float[] pcm = NeuralVoice.Render(File.ReadAllBytes(wav), req.Pitch, AudioOut.Rate);
+                    try { File.Delete(wav); } catch (Exception) { }
+                    lock (_lk) if (req.Seq == _seq) _queue.Enqueue(pcm);
+                }
+                else if (line.StartsWith("ERR")) NeuralVoice.Log("kokoro server: " + line);
+            }
+        }
+        catch (Exception e) { NeuralVoice.Log("kokoro server read: " + e.Message); }
+        _serverDead = true;
+        NeuralVoice.Log("kokoro: the server stopped; one program per page from now on");
+        // the page still being made is said again the old way
+        (int Npc, string Text, int Seq)? last;
+        lock (_lk) last = _lastPage;
+        if (last is { } lp && lp.Seq == _seq) Say(lp.Npc, lp.Text);
+    }
+
+    /// <summary>a page split after . ! ? (and the game's ellipsis), so speech starts after the first sentence</summary>
+    public static List<string> Sentences(string text)
+    {
+        var parts = System.Text.RegularExpressions.Regex.Split(text.Trim(), @"(?<=[.!?])\s+")
+            .Select(s => s.Trim()).Where(s => s.Length > 0).ToList();
+        // very short pieces ride along with the next one ("Hey!!" "There's a guy ...")
+        var o = new List<string>();
+        foreach (var s in parts)
+            if (o.Count > 0 && o[^1].Length < 12) o[^1] += " " + s; else o.Add(s);
+        return o.Count > 0 ? o : new List<string> { text };
+    }
+
     public void Say(int npc, string text)
     {
         var (spk, len, pitch) = Pick(npc);
         int seq;
         Process? old;
-        lock (_lk) { seq = ++_seq; _next = null; _clear = true; old = _running; _running = null; }
+        lock (_lk) { seq = ++_seq; _queue.Clear(); _clear = true; old = _running; _running = null; _lastPage = (npc, text, seq); }
         try { if (old != null && !old.HasExited) old.Kill(); } catch (Exception) { }
-        string wav = Path.Combine(_tmp, $"k{seq}.wav");
+        if (_server == null && !_serverDead) StartServer();
+        if (!_serverDead && _serverIn != null)
+        {
+            try
+            {
+                var ss = Sentences(text);
+                for (int i = 0; i < ss.Count; i++)
+                {
+                    string wav = Path.Combine(_tmp, $"k{seq}_{i}.wav");
+                    lock (_lk) _pending[wav] = (seq, pitch);
+                    _serverIn.WriteLine(FormattableString.Invariant($"{seq}\t{spk}\t{1 / len:0.000}\t{wav}\t{ss[i].Replace('\t', ' ')}"));
+                }
+                return;
+            }
+            catch (Exception e) { NeuralVoice.Log("kokoro server write: " + e.Message); _serverDead = true; }
+        }
+        string wav1 = Path.Combine(_tmp, $"k{seq}.wav");
         var t = new Thread(() =>
         {
-            int r = Run(Args(spk, len, wav, text, _minimal), seq, wav, pitch);
+            int r = Run(Args(spk, len, wav1, text, _minimal), seq, wav1, pitch);
             if (r == 1 && !_minimal)                      // retry once with only the basic options
             {
                 NeuralVoice.Log("kokoro: retry with the basic options");
-                r = Run(Args(spk, len, wav, text, true), seq, wav, pitch);
+                r = Run(Args(spk, len, wav1, text, true), seq, wav1, pitch);
                 if (r == 0) _minimal = true;
             }
             if (r == 1) { FailedPage = (npc, text); Failed = true; }
@@ -172,7 +269,7 @@ internal sealed class KokoroVoice : IVoice
             }
             float[] pcm = NeuralVoice.Render(File.ReadAllBytes(wav), pitch, AudioOut.Rate);
             try { File.Delete(wav); } catch (Exception) { }
-            lock (_lk) if (seq == _seq) _next = pcm;
+            lock (_lk) if (seq == _seq) _queue.Enqueue(pcm);
             return 0;
         }
         catch (Exception e) { NeuralVoice.Log("kokoro: " + e.Message); return 1; }
@@ -181,7 +278,7 @@ internal sealed class KokoroVoice : IVoice
     public void Stop()
     {
         Process? old;
-        lock (_lk) { _seq++; _next = null; _clear = true; old = _running; _running = null; }
+        lock (_lk) { _seq++; _queue.Clear(); _clear = true; old = _running; _running = null; }
         try { if (old != null && !old.HasExited) old.Kill(); } catch (Exception) { }
     }
 
@@ -190,16 +287,22 @@ internal sealed class KokoroVoice : IVoice
         lock (_lk)
         {
             if (_clear) { _cur = Array.Empty<float>(); _pos = 0; _clear = false; }
-            if (_next != null) { _cur = _next; _pos = 0; _next = null; }
+            if (_pos >= _cur.Length && _queue.Count > 0) { _cur = _queue.Dequeue(); _pos = 0; }
         }
     }
 
     public (float V, float Duck) Next()
     {
+        if (_pos >= _cur.Length) lock (_lk) if (!_clear && _queue.Count > 0) { _cur = _queue.Dequeue(); _pos = 0; }   // the next sentence
         bool on = _pos < _cur.Length;
         _duck += ((on ? 0.5f : 1f) - _duck) * (on ? 0.002f : 0.0005f);
         return (on ? _cur[_pos++] * 1.15f : 0f, _duck);
     }
 
-    public void Dispose() => Stop();
+    public void Dispose()
+    {
+        Stop();
+        try { _serverIn?.Close(); if (_server != null && !_server.WaitForExit(500)) _server.Kill(); } catch (Exception) { }
+        _server?.Dispose(); _server = null;
+    }
 }

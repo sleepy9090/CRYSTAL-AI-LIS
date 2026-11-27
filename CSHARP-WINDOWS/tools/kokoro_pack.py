@@ -1,11 +1,13 @@
 """Assemble dist/voice/kokoro/ (the Kokoro dialogue voice, Kokoro.cs KokoroVoice) from the downloads.
 
-usage: python3 tools/kokoro_pack.py SHERPA_WIN.tar.bz2 KOKORO_MODEL.tar.bz2 [OUT_DIR=dist/voice/kokoro]
+usage: python3 tools/kokoro_pack.py SHERPA_WIN.tar.bz2 KOKORO_MODEL.tar.bz2 [OUT_DIR=dist/voice/kokoro] [--lib SHERPA_LIB.tar.bz2]
   downloads (2026-11-27):
     https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.8/sherpa-onnx-v1.13.8-win-x64-static-MT-Release.tar.bz2
       (sherpa-onnx, Apache-2.0; v1.13.8 = the last line that phonemises Kokoro v0.19 with espeak-ng; 2.x needs a lexicon)
     https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-int8-en-v0_19.tar.bz2
       (Kokoro-82M v0.19 int8, Apache-2.0; espeak-ng data, GPL-3)
+  --lib: the C API DLLs for the voice server (ReC.exe --tts-server, keeps the model loaded), from
+    https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.8/sherpa-onnx-v1.13.8-win-x64-shared-MT-Release-lib.tar.bz2
 Writes OUT_DIR/sherpa-onnx-offline-tts.exe, voices.bin, tokens.txt, espeak-ng-data/, LICENSE-kokoro, CREDITS.txt and the
 model as model.int8.onnx.part1, .part2, ... (< 95 MB each: GitHub refuses files over 100 MB; the game joins them once).
 """
@@ -22,6 +24,8 @@ CREDITS = """re-c spoken dialogue: the Kokoro voice (preferred over Piper when t
 
 sherpa-onnx-offline-tts.exe  sherpa-onnx v1.13.8, https://github.com/k2-fsa/sherpa-onnx (Apache-2.0), static build
                              (ONNX Runtime, MIT). Run as a separate program, one process per message page.
+sherpa-onnx-c-api.dll, onnxruntime*.dll  the same release as DLLs (Apache-2.0 / MIT), loaded by ReC.exe --tts-server,
+                             which keeps the model loaded (the per-page program is the fallback).
 model.int8.onnx.part*        Kokoro-82M v0.19 (int8 export by sherpa-onnx), https://huggingface.co/hexgrad/Kokoro-82M
 voices.bin, tokens.txt       (Apache-2.0, see LICENSE-kokoro). The parts are joined into %LOCALAPPDATA%\\re-c\\kokoro.
 espeak-ng-data/              espeak-ng (GPL-3.0, https://github.com/espeak-ng/espeak-ng), phoneme data.
@@ -39,6 +43,9 @@ def safe_members(t, prefix):
 
 
 def main(argv):
+    lib = None
+    if '--lib' in argv:
+        i = argv.index('--lib'); lib = argv[i + 1]; argv = argv[:i] + argv[i + 2:]
     if len(argv) < 2:
         print(__doc__); return 2
     sherpa, model = argv[:2]
@@ -75,6 +82,18 @@ def main(argv):
             with t.extractfile(m) as src, open(dst, 'wb') as f:
                 shutil.copyfileobj(src, f)
             n += 1
+    if lib:
+        want = {'sherpa-onnx-c-api.dll', 'onnxruntime.dll', 'onnxruntime_providers_shared.dll'}
+        with tarfile.open(lib, 'r:bz2') as t:
+            for m in t.getmembers():
+                base = m.name.replace('\\', '/').rsplit('/', 1)[-1]
+                if m.isfile() and base in want and '/lib/' in m.name:
+                    with t.extractfile(m) as src, open(os.path.join(out, base), 'wb') as f:
+                        shutil.copyfileobj(src, f)
+                    want.discard(base)
+        if want:
+            print('missing from the lib archive: ' + ', '.join(sorted(want))); return 1
+        print('C API DLLs copied (voice server)')
     with open(os.path.join(out, 'CREDITS.txt'), 'w', encoding='utf-8') as f:
         f.write(CREDITS)
     print(f'{n} model files + the TTS program -> {out}')

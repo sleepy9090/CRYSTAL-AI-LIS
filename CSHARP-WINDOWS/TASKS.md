@@ -400,3 +400,5 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] P16 (2026-11-26, playtest 7): remade intro jungle (StoryDino, GPU-painted over the whole width); other story scenes next.
 - [x] P17 (2026-11-27, playtest 8): story text kept, jungle only on its page, no title streaks, softer character shadows, smooth heat shimmer, masked-column sprites, Debug info, Warp cheat, Kokoro voice.
 - [x] P18 (2026-11-27, playtest 9): pod silhouette recoloured, no title relief lines, softer character halo/shadow, smooth no-map fill, Kokoro fallback + full log + Voice engine menu, debug HD/sprites/input/audio, cheats items/level/speed.
+- [x] P19 (2026-11-27, playtest 10): Kokoro voice server (model loaded once) + sentence streaming; per-page program as fallback.
+- [x] P20 (2026-11-27, playtest 10): widescreen sides no longer fade with animated tiles / scrolling (area key).

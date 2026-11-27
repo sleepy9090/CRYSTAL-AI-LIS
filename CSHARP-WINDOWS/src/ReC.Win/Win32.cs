@@ -275,6 +275,11 @@ internal static unsafe partial class Win32
     [LibraryImport("shell32.dll", StringMarshalling = StringMarshalling.Utf16)]
     public static partial IntPtr ShellExecuteW(IntPtr hwnd, string? op, string file, string? args, string? dir, int show);
 
+    // ---- kernel32: playtest 10, the Kokoro server loads sherpa-onnx-c-api.dll + onnxruntime.dll from the voice folder
+    [LibraryImport("kernel32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetDllDirectoryW(string? path);
+
     // ---- ole32: playtest 6, spoken dialogue (SAPI SpVoice, Dialogue.cs)
     [LibraryImport("ole32.dll")]
     public static partial int CoInitializeEx(void* reserved, uint coInit);

@@ -20,6 +20,7 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length >= 3 && args[0] == "--tts-server") return KokoroServer.Run(args);   // playtest 10: the Kokoro voice server (stdio pipes)
         AttachParentConsole();
         if (args.Length > 0 && args[0] == "--wav") return WavOut.Run(args[1..]);
         if (IsHeadless(args))

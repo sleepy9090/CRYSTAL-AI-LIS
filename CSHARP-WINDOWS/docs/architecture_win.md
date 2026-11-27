@@ -693,3 +693,18 @@ CSHARP-WINDOWS/
     (Audio > Voice engine: auto / kokoro / piper / windows, ini `voice_engine`). New debug lines: HD scene, sprites,
     input, audio; new cheats from the game's own dead `DebugPauseCheat` 15:BF47: all items (`DebugItemTable` 15:BF7F into
     empty inventory slots), max level (`$0421` = `$0F`, MP 255), fast walk (`$0340` / `$0341` = 9).
+    **Kokoro latency (playtest 10: "several seconds to start"):** one sherpa-onnx-offline-tts.exe per page reloaded the
+    model each time. Now `ReC.exe --tts-server DIR MODEL` (KokoroServer.cs, started hidden when Kokoro is chosen, while the
+    intro plays) loads sherpa-onnx's C API (`sherpa-onnx-c-api.dll` + `onnxruntime.dll`, v1.13.8 shared MT build, packed by
+    `tools/kokoro_pack.py --lib`) and the model once, then answers stdin requests (seq, speaker, speed, wav, text) with
+    WAVs; requests of an older page are skipped. Pages are split into sentences (`KokoroVoice.Sentences`; pieces under
+    12 characters ride with the next), so the first sentence plays while the rest are made, queued back to back. The
+    structs follow c-api.h (`win_dialogue` checks the x64 sizes 56 / 64 / 416 / 448). If the server cannot start or dies,
+    the per-page program is used again (and the page being made is said again). Debug > Voice shows SERVER / PER PAGE.
+    **Widescreen sides fading in and out (playtest 10, debug overlay: WIDE SHOW cycling with LINES 183 GOOD):** the area
+    key held two bytes that change inside one area: `$07F0/$07F1` (CHR banks the game swaps every few frames to animate
+    water and grass) and `$67` (MetatileExpand 31:EDBA's scratch while scrolling). Each change looked like a new area:
+    cache dropped, sides faded to 0 and back. The CHR banks moved to the full key (a background refresh, sides stay);
+    the tile set comes from `$6A/$6B` (`AreaCache.Tileset`: $BE00 + ($67 & $3C) * 8 from AreaLoadGfx; every area's $67
+    is $80-$AC). `win_wide_steady`: walks in the recorded areas $60 / $14 / $A9 / $02 / $04 by warp: sides below full in
+    445 / 376 / 445 of ~500 frames before, 0 / 8 / 0 now.

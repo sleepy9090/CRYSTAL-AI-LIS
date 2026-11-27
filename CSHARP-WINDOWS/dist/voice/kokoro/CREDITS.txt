@@ -2,6 +2,8 @@ re-c spoken dialogue: the Kokoro voice (preferred over Piper when this folder is
 
 sherpa-onnx-offline-tts.exe  sherpa-onnx v1.13.8, https://github.com/k2-fsa/sherpa-onnx (Apache-2.0), static build
                              (ONNX Runtime, MIT). Run as a separate program, one process per message page.
+sherpa-onnx-c-api.dll, onnxruntime*.dll  the same release as DLLs (Apache-2.0 / MIT), loaded by ReC.exe --tts-server,
+                             which keeps the model loaded (the per-page program is the fallback).
 model.int8.onnx.part*        Kokoro-82M v0.19 (int8 export by sherpa-onnx), https://huggingface.co/hexgrad/Kokoro-82M
 voices.bin, tokens.txt       (Apache-2.0, see LICENSE-kokoro). The parts are joined into %LOCALAPPDATA%\re-c\kokoro.
 espeak-ng-data/              espeak-ng (GPL-3.0, https://github.com/espeak-ng/espeak-ng), phoneme data.

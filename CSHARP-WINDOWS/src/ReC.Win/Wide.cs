@@ -42,14 +42,27 @@ internal sealed class AreaCache
 
     /// <summary>(area key, area + visited-screens key) as hashes: a new area drops the cache, a new visited screen only
     /// rebuilds it (the old one stays up meanwhile)</summary>
+    /// <summary>playtest 10: the area's metatile set ($67 & $FC) as AreaLoadGfx 31:E6B9 set it. $67 itself is scratch for
+    /// MetatileExpand 31:EDBA while the screen scrolls (($67 & $FC) | $12, + $13: attribute masks up to $C0), so it
+    /// changed under the camera = the cache dropped (sides fading out) or built from a wrong set. $6A/$6B = $BE00 +
+    /// ($67 & $3C) * 8 from the same load are never touched, and every area's $67 is $80-$AC (areas.json k1.v67)</summary>
+    public static int Tileset(Func<int, int> rd)
+    {
+        int sub = (rd(0x6B) << 8 | rd(0x6A)) - 0xBE00;
+        return sub >= 0 && sub < 0x200 && (sub & 0x1F) == 0 ? 0x80 | (sub >> 3 & 0x3C) : rd(0x67) & 0xFC;
+    }
+
     public static (ulong Area, ulong Full) Keys(Machine m)
     {
         ulong h = 1469598103934665603;
         void Mix(int v) { h ^= (ulong)(v & 0xFF); h *= 1099511628211; }
-        foreach (int a in new[] { 0x6C, 0x62FC, 0x62FD, 0x07F0, 0x07F1, 0x62FF, 0x6A, 0x6B }) Mix(m.Rd(a));
-        Mix(m.Rd(0x67) & 0xFC);                  // $67 b0-1 count every 4 frames; the map only uses &$FC / &$3C
+        foreach (int a in new[] { 0x6C, 0x62FC, 0x62FD, 0x62FF, 0x6A, 0x6B }) Mix(m.Rd(a));
+        Mix(Tileset(m.Rd));                       // playtest 10: not $67 itself (scrolling uses it as scratch)
         for (int a = 0x6300; a < 0x6380; a++) Mix(m.Rd(a));
         ulong area = h;
+        // playtest 10: the CHR banks $07F0/$07F1 animate water and grass every few frames: a refresh of the map (full key),
+        // never a new area (that dropped the cache and faded the sides out)
+        Mix(m.Rd(0x07F0)); Mix(m.Rd(0x07F1));
         for (int a = 0x62F0; a < 0x6300; a++) Mix(m.Rd(a));
         return (area, h);
     }
@@ -70,7 +83,7 @@ internal sealed class AreaCache
         int w = gw * 256, h = gh * 240;
         var px = reuse != null && reuse.Length >= w * h ? reuse : new uint[Math.Max(w * h, 1 << 21)];   // every pixel is written below
         byte[] chr = data.Chr, screens = data.BinFile("screens"), screensB10 = data.BinFile("screensB10"), mtb = data.BinFile("metatiles");
-        int r0 = s.Rd(0x07F0), r1 = s.Rd(0x07F1), k67 = s.Rd(0x67);
+        int r0 = s.Rd(0x07F0), r1 = s.Rd(0x07F1), k67 = Tileset(s.Rd);
         int Mt(int addr) => mtb[addr - 0x8000];
         int nChr = chr.Length >> 10;
         for (int gy = 0; gy < gh; gy++)

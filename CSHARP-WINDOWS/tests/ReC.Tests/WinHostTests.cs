@@ -1292,6 +1292,77 @@ internal static partial class Program
             True(Math.Abs(playerAdded - inv / 2) <= inv / 6, $"the player is filled in on the blink frames the game skips ({playerAdded} of {inv})");
             Eq(0, dup, "the player is only added while blinking (never drawn twice)");
         }),
+        ("win_wide_steady", () =>
+        {
+            // playtest 10: the sides faded in and out while walking (debug: WIDE SHOW 0.75 / 0.13 / 0 with LINES 183 GOOD):
+            // $67 is MetatileExpand's scratch while scrolling, and the area key used it
+            var d = TheData.Value;
+            foreach (var (st, keySpec, f0) in new[]
+            {
+                ("group09.json", "2531:UP:50 2585:RIGHT:330 2931:B:4 2990:RIGHT:21 3061:RIGHT:29", 2506),
+                ("town02_enter.json", "2460:DOWN:60 2530:LEFT:90 2630:DOWN:40 2680:RIGHT:120 2810:UP:60", 2451),
+            })
+            {
+                var m = new Machine(d, _ => { }); m.Reset();
+                m.LoadState(StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", st)));
+                var keys = Keys.Parse(keySpec.Split(' '));
+                var wide = new Widescreen();
+                int keyChanges = 0, raw67Changes = 0, fades = 0, frames = 0;
+                ulong lastKey = 0; int last67 = -1;
+                for (int f = 0; f < 480; f++)
+                {
+                    wide.BeforeFrame(m, d, async: false);
+                    m.RunFrame(keys.TryGetValue(f0 + m.Frame, out int b) ? b : 0);
+                    wide.AfterFrame(m.Ppu.Fb, m.Ppu.Pal, 190);
+                    if (m.Rd(0x40) != 1 || m.Rd(0x41) != 8) continue;
+                    var (area, _) = AreaCache.Keys(m);
+                    if (lastKey != 0 && area != lastKey) keyChanges++;
+                    lastKey = area;
+                    int r67 = m.Rd(0x67) & 0xFC;
+                    if (last67 >= 0 && r67 != last67) raw67Changes++;
+                    last67 = r67;
+                    if (f > 60) { frames++; if (wide.Show < 1) fades++; }
+                }
+                int set = AreaCache.Tileset(a => m.Rd(a));
+                Console.WriteLine($"  win_wide_steady: {st}: raw $67 changed {raw67Changes}x, area key {keyChanges}x, sides below full {fades} of {frames} frames, tile set ${set:X2}");
+                Eq(0, keyChanges, $"{st}: the area key holds while scrolling");
+                Eq(0, fades, $"{st}: the sides never fade out in the same area");
+                True(set is >= 0x80 and <= 0xAC && (set & 3) == 0, "tile set from $6A/$6B");
+            }
+            // the areas of the recordings, by warp from group08; walking around, which key bytes change
+            foreach (int target in new[] { 0x60, 0x14, 0xA9, 0x03, 0x04 })
+            {
+                var m = new Machine(d, _ => { }); m.Reset();
+                m.LoadState(StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", "group08.json")));
+                for (int f = 0; f < 30; f++) m.RunFrame(0);
+                Warp.To(m, target);
+                for (int f = 0; f < 400 && !(m.Rd(0x41) == 8 && m.Rd(0x6C) == target); f++) m.RunFrame(f % 40 == 20 ? 0x80 : 0);
+                var wide = new Widescreen();
+                var changed = new SortedDictionary<string, int>();
+                int[] watch = { 0x6C, 0x62FC, 0x62FD, 0x07F0, 0x07F1, 0x62FF, 0x6A, 0x6B, 0x67 };
+                var prev = watch.Select(a => m.Rd(a)).ToArray();
+                var gridPrev = Enumerable.Range(0x6300, 0x80).Select(a => m.Rd(a)).ToArray();
+                int fades = 0, frames = 0;
+                int[] dirs = { 0x08, 0x01, 0x04, 0x02 };
+                for (int f = 0; f < 600; f++)
+                {
+                    wide.BeforeFrame(m, d, async: false);
+                    m.RunFrame(dirs[f / 60 % 4]);
+                    wide.AfterFrame(m.Ppu.Fb, m.Ppu.Pal, 190);
+                    if (m.Rd(0x40) != 1 || m.Rd(0x41) != 8 || m.Rd(0x6C) != target) continue;
+                    for (int k = 0; k < watch.Length; k++)
+                    {
+                        int v = m.Rd(watch[k]);
+                        if (v != prev[k]) { string n = watch[k].ToString("X4"); changed[n] = changed.GetValueOrDefault(n) + 1; prev[k] = v; }
+                    }
+                    var grid = Enumerable.Range(0x6300, 0x80).Select(a => m.Rd(a)).ToArray();
+                    if (!grid.SequenceEqual(gridPrev)) { changed["grid"] = changed.GetValueOrDefault("grid") + 1; gridPrev = grid; }
+                    if (f > 90) { frames++; if (wide.Show < 1) fades++; }
+                }
+                Console.WriteLine($"  win_wide_steady: area {target:X2} walk: changes {string.Join(" ", changed.Select(kv => kv.Key + "x" + kv.Value))}; sides below full {fades} of {frames}");
+                True(fades * 20 <= frames, $"area {target:X2}: animated tiles / scrolling do not fade the sides ({fades} of {frames})");
+            }
+        }),
         ("win_hidden_sprites", () =>
         {
             // playtest 9: after the cryo chamber (area 00, sub_state 8) the player stands in the pod behind the background
@@ -1591,6 +1662,12 @@ internal static partial class Program
                 if (c is VoiceClass.Girl or VoiceClass.Boy && pch < 1.1) bad++;
             }
             Eq(0, bad, "Kokoro speakers match sex, speed and pitch match age");
+            // playtest 10: the server's structs = sherpa-onnx v1.13.8 c-api.h on x64 (8-byte pointers, natural alignment)
+            Eq((56, 64, 416, 448), KokoroServer.Sizes(), "SherpaOnnxOfflineTts* config layouts");
+            var sents = KokoroVoice.Sentences("Hey!! There's a guy coming out of the cave! This is the village of Leaf. Please be careful.");
+            Console.WriteLine("  win_dialogue: sentences: " + string.Join(" | ", sents));
+            True(sents.Count == 3 && sents[0].StartsWith("Hey!! There's") && sents[2] == "Please be careful.", "pages split into sentences (short ones joined)");
+            if (kd != null) True(KokoroVoice.ServerFiles(kd), "dist\\voice\\kokoro has the C API DLLs for the server");
         }),
         ("win_cine_gate", () =>
         {
