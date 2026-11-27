@@ -399,7 +399,7 @@ internal static unsafe partial class Window
                 else _speech?.SayXml(Cast.Xml(pg.Npc, pg.Text));
             }
         }
-        var (say, stop) = _dialogue.Update(m.Rd(0x40), m.Rd(0x51), a => m.Rd(a));
+        var (say, stop) = _dialogue.Update(m.Rd(0x40), m.Rd(0x51), a => m.Rd(a), m.Ppu.VramRead);
         if (stop) { _speech?.Stop(); _neural?.Stop(); }
         if (say == null || !_v.Voice || _muted || _fast) return;
         StartVoice();

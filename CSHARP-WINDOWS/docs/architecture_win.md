@@ -708,3 +708,9 @@ CSHARP-WINDOWS/
     the tile set comes from `$6A/$6B` (`AreaCache.Tileset`: $BE00 + ($67 & $3C) * 8 from AreaLoadGfx; every area's $67
     is $80-$AC). `win_wide_steady`: walks in the recorded areas $60 / $14 / $A9 / $02 / $04 by warp: sides below full in
     445 / 376 / 445 of ~500 frames before, 0 / 8 / 0 now.
+    **Shop / inn voices (playtest 11):** sub_states $20 armor / $21 tool / $22 inn / $23 pawn (16:9509 ff.) print their
+    words with menuPrint straight into nametable $2800, not the $6000 page, so nothing was said. `DialogueReader.ShopPage`
+    reads rows 0-12 of $2800 (VramRead), drops all-caps words (title, YES / NO) and keeps only whole sentences (item names
+    and "It will cost you $.." are skipped). The keeper slot is not kept ($0623 = 0), so each shop type has a fixed
+    keeper voice (`Cast.Speaker` = 0x100 | sub_state: armor man, tool woman, inn woman, pawn old man; voices.ini
+    `npc_120..123` overrides). `win_shop_voice`: the four shop states.

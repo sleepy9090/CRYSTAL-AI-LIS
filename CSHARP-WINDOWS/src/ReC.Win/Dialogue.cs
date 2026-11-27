@@ -52,8 +52,35 @@ internal sealed class DialogueReader
     }
 
     /// <summary>after a frame: (text to say now or null, whether to stop the voice)</summary>
-    public (string? Say, bool Stop) Update(int mainState, int irqMode, Func<int, int> rd)
+    /// <summary>playtest 11: shops and the inn (sub_states $20 armor, $21 tool, $22 inn, $23 pawn; 16:9509 ff.) print their
+    /// words straight into the window in nametable $2800 (ASCII tiles, menuPrint), not the $6000 page: rows 0-12 joined,
+    /// only complete sentences kept (the title, YES / NO, item names and "It will cost you $.." are not said)</summary>
+    public static string ShopPage(Func<int, int> vram)
     {
+        var sb = new StringBuilder();
+        for (int row = 0; row < 13; row++)
+        {
+            var line = new StringBuilder();
+            for (int col = 0; col < 32; col++)
+            {
+                int c = vram(0x2800 + row * 32 + col);
+                line.Append(c is >= 0x20 and < 0x7F && (char.IsAsciiLetterOrDigit((char)c) || " !\"&',-.:;?".Contains((char)c)) ? (char)c : ' ');
+            }
+            string t = line.ToString().Trim();
+            if (t.Length > 0) sb.Append(t).Append(' ');
+        }
+        string all = System.Text.RegularExpressions.Regex.Replace(sb.ToString(), @"\b[A-Z]{2,}\b", " ");   // titles, YES / NO (all caps)
+        all = System.Text.RegularExpressions.Regex.Replace(all, " {2,}", " ").Trim();
+        var keep = System.Text.RegularExpressions.Regex.Matches(all, @"[A-Z][^.!?]*?[a-z][^.!?]*[.!?]+")
+            .Select(x => x.Value.Trim()).Where(s => s.Count(char.IsLetter) >= 4);
+        return string.Join(" ", keep);
+    }
+
+    public static bool InShop(int mainState, int subState) => mainState == 1 && subState is >= 0x20 and <= 0x23;
+
+    public (string? Say, bool Stop) Update(int mainState, int irqMode, Func<int, int> rd, Func<int, int>? vram = null)
+    {
+        bool shop = vram != null && InShop(mainState, rd(0x41));
         bool open = mainState == 1 && irqMode is 1 or 9;
         if (!open)
         {
@@ -62,7 +89,7 @@ internal sealed class DialogueReader
             return (null, stop);
         }
         _open = true;
-        string page = Page(rd);
+        string page = shop ? ShopPage(vram!) : Page(rd);
         if (page != _pending) { _pending = page; _stable = 0; return (null, false); }
         if (page.Length == 0 || page == _said || ++_stable < Settle) return (null, false);
         _said = page;
@@ -89,11 +116,13 @@ internal static class Cast
         "83O 84F 85M 88M 8EF";
 
     private static readonly Dictionary<int, VoiceClass> Npcs = Parse();
-    public static int Count => Npcs.Count;
+    public static int Count => Npcs.Keys.Count(k => k < 0x100);   // talking NPCs (shopkeepers are 0x120-0x123)
 
     private static Dictionary<int, VoiceClass> Parse()
     {
         var d = new Dictionary<int, VoiceClass>();
+        // playtest 11: shopkeepers (Speaker: 0x100 | sub_state): armor shop, tool shop, inn, pawn shop
+        d[0x120] = VoiceClass.Man; d[0x121] = VoiceClass.Woman; d[0x122] = VoiceClass.Woman; d[0x123] = VoiceClass.OldMan;
         foreach (var e in Table.Split(' ', StringSplitOptions.RemoveEmptyEntries))
             d[Convert.ToInt32(e[..2], 16)] = e[2] switch
             {
@@ -116,7 +145,7 @@ internal static class Cast
                 if (kv.Length != 2 || !kv[0].Trim().StartsWith("npc_", StringComparison.OrdinalIgnoreCase)) continue;
                 if (!int.TryParse(kv[0].Trim()[4..], System.Globalization.NumberStyles.HexNumber, null, out int id)) continue;
                 if (!Enum.TryParse(kv[1].Trim(), true, out VoiceClass c)) continue;
-                Npcs[id & 0xFF] = c; n++;
+                Npcs[id & 0x1FF] = c; n++;
             }
         }
         catch (Exception) { }
@@ -128,6 +157,7 @@ internal static class Cast
     /// <summary>the speaker's NPC id after a frame, or -1 (not a conversation with a talking NPC)</summary>
     public static int Speaker(Func<int, int> rd)
     {
+        if (rd(0x40) == 1 && rd(0x41) is >= 0x20 and <= 0x23) return 0x100 | rd(0x41);   // playtest 11: the shopkeeper
         if (rd(0x41) != 0x11) return -1;                     // sub_state $11: NpcTalk
         int slot = rd(0x623);
         if (slot is < 0x0D or >= 0x20 || (rd(0x540 + slot) & 3) != 1) return -1;

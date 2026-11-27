@@ -1,6 +1,6 @@
 {
  "evidence_bundle": {
-  "bytes": 10103229,
+  "bytes": 10148533,
   "path": "./out/rea_members_win.json"
  },
  "summary": {
@@ -10,9 +10,9 @@
   "confidence": "derived",
   "environment": null,
   "evidence_format": 2,
-  "evidence_id": "ev_aa0e187cf7767a3149ed2d48880d5374da54a69220111876809e5c2a09a0bea2",
+  "evidence_id": "ev_636255b84250201f18830f64e416eb3caa23918f50b804960333887f0bb4c15b",
   "evidence_links": [
-   "ev_b795cd83a77f147d3501f8ce2ef385fed5beac7fe7c1c6a7dbb652f7a7f9517f"
+   "ev_4b9bc7b7190e60b90accd269c5d252a3ead94dbebc4f43243206e2f8129d7b15"
   ],
   "limitations": [
    "CIL instruction anchors are decoded from file-backed method bodies only; no target assembly is loaded or executed.",
@@ -31,14 +31,14 @@
   "normalized_result": {
    "artifact": {
     "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.dll",
-    "sha256": "d2ed19050f7d1cb1f49b9befadf15b68fbc79ae4623f15c36573b15624b45a22"
+    "sha256": "5310896fc1664871465f1f2b427a16a9b3dd1e13765d4b65cdf665f745ab66b2"
    },
    "coverage": {
-    "examined": 14948,
+    "examined": 15017,
     "exhausted": true,
     "next_offset": null,
     "status": "complete-within-view",
-    "total": 14948
+    "total": 15017
    },
    "kind": "summary",
    "limitations": [
@@ -49,15 +49,15 @@
     "Metadata tokens are build-local coordinates and are only meaningful with the reported artifact SHA-256 and MVID.",
     "User strings are the #US literals loaded by ldstr in the inspected method bodies, with their own coverage; instruction anchors and normalized CIL digests keep their build-local tokens."
    ],
-   "parent_digest": "b795cd83a77f147d3501f8ce2ef385fed5beac7fe7c1c6a7dbb652f7a7f9517f",
-   "parent_evidence_id": "ev_b795cd83a77f147d3501f8ce2ef385fed5beac7fe7c1c6a7dbb652f7a7f9517f",
+   "parent_digest": "4b9bc7b7190e60b90accd269c5d252a3ead94dbebc4f43243206e2f8129d7b15",
+   "parent_evidence_id": "ev_4b9bc7b7190e60b90accd269c5d252a3ead94dbebc4f43243206e2f8129d7b15",
    "parent_operation": "inspect_managed_members",
    "summary": {
     "artifact": {
-     "byte_length": 1865216,
+     "byte_length": 1866240,
      "format": "pe",
      "path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.dll",
-     "sha256": "d2ed19050f7d1cb1f49b9befadf15b68fbc79ae4623f15c36573b15624b45a22"
+     "sha256": "5310896fc1664871465f1f2b427a16a9b3dd1e13765d4b65cdf665f745ab66b2"
     },
     "assembly": {
      "culture": null,
@@ -70,7 +70,7 @@
       "sha256": null,
       "token": null
      },
-     "row_offset": 1439902,
+     "row_offset": 1440746,
      "token": "0x20000001",
      "version": "1.0.0.0"
     },
@@ -79,8 +79,8 @@
      "state": "complete"
     },
     "identity_scope": {
-     "requires_artifact_sha256": "d2ed19050f7d1cb1f49b9befadf15b68fbc79ae4623f15c36573b15624b45a22",
-     "requires_mvid": "e3871e7c-aef4-4cca-8e1d-14d7a1b054b0",
+     "requires_artifact_sha256": "5310896fc1664871465f1f2b427a16a9b3dd1e13765d4b65cdf665f745ab66b2",
+     "requires_mvid": "d2c63997-ca6c-4a20-aa12-3527838327b3",
      "token_identity": "build-local"
     },
     "limitations": [
@@ -97,57 +97,57 @@
       "Assembly": 1,
       "AssemblyRef": 10,
       "ClassLayout": 15,
-      "Constant": 67,
-      "CustomAttribute": 897,
-      "Field": 1226,
+      "Constant": 68,
+      "CustomAttribute": 904,
+      "Field": 1229,
       "FieldMarshal": 34,
       "FieldRVA": 23,
       "GenericParam": 4,
       "ImplMap": 76,
       "InterfaceImpl": 7,
       "ManifestResource": 5342,
-      "MemberRef": 706,
-      "MethodDef": 756,
+      "MemberRef": 710,
+      "MethodDef": 762,
       "MethodSemantics": 66,
-      "MethodSpec": 88,
+      "MethodSpec": 90,
       "Module": 1,
       "ModuleRef": 9,
-      "NestedClass": 113,
-      "Param": 264,
+      "NestedClass": 114,
+      "Param": 267,
       "Property": 51,
       "PropertyMap": 18,
-      "StandAloneSig": 298,
-      "TypeDef": 165,
-      "TypeRef": 180,
-      "TypeSpec": 128
+      "StandAloneSig": 300,
+      "TypeDef": 166,
+      "TypeRef": 183,
+      "TypeSpec": 129
      },
      "version": "v4.0.30319"
     },
     "method_rows": {
-     "count": 756,
+     "count": 762,
      "offset": 0,
-     "total": 756
+     "total": 762
     },
     "module": {
      "enc_base_id": null,
      "enc_id": null,
      "generation": 0,
-     "mvid": "e3871e7c-aef4-4cca-8e1d-14d7a1b054b0",
+     "mvid": "d2c63997-ca6c-4a20-aa12-3527838327b3",
      "name": "ReC.dll",
-     "row_offset": 1394932,
+     "row_offset": 1395484,
      "token": "0x00000001"
     },
     "nesting_read": true,
     "reported_counts": {
-     "call_edges": 5242,
+     "call_edges": 5284,
      "exported_types": 0,
-     "field_accesses": 5954,
-     "fields": 1226,
-     "member_refs": 706,
-     "methods": 756,
-     "types": 165,
+     "field_accesses": 5965,
+     "fields": 1229,
+     "member_refs": 710,
+     "methods": 762,
+     "types": 166,
      "unresolved_definitions": 0,
-     "user_strings": 899
+     "user_strings": 901
     },
     "selection": null,
     "signature_resolution": "type-names-v2",
@@ -157,746 +157,758 @@
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1678975,
+       "offset": 1679923,
        "scope": "metadata.#US:0x70000011"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1678993,
+       "offset": 1679941,
        "scope": "metadata.#US:0x70000394"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679011,
+       "offset": 1679959,
        "scope": "metadata.#US:0x700003a6"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679025,
+       "offset": 1679973,
        "scope": "metadata.#US:0x700003b8"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679039,
+       "offset": 1679987,
        "scope": "metadata.#US:0x700003c6"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679053,
+       "offset": 1680001,
        "scope": "metadata.#US:0x700003d4"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679081,
+       "offset": 1680029,
        "scope": "metadata.#US:0x700003e2"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679097,
+       "offset": 1680045,
        "scope": "metadata.#US:0x700003fe"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679113,
+       "offset": 1680061,
        "scope": "metadata.#US:0x7000040e"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679129,
+       "offset": 1680077,
        "scope": "metadata.#US:0x7000041e"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679151,
+       "offset": 1680099,
        "scope": "metadata.#US:0x7000042e"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679175,
+       "offset": 1680123,
        "scope": "metadata.#US:0x70000444"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679199,
+       "offset": 1680147,
        "scope": "metadata.#US:0x7000045c"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679225,
+       "offset": 1680173,
        "scope": "metadata.#US:0x70000474"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679251,
+       "offset": 1680199,
        "scope": "metadata.#US:0x7000048e"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679277,
+       "offset": 1680225,
        "scope": "metadata.#US:0x700004a8"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679297,
+       "offset": 1680245,
        "scope": "metadata.#US:0x700004c2"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679303,
+       "offset": 1680251,
        "scope": "metadata.#US:0x700004d6"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679309,
+       "offset": 1680257,
        "scope": "metadata.#US:0x700004dc"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679361,
+       "offset": 1680309,
        "scope": "metadata.#US:0x70000502"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679653,
+       "offset": 1680601,
        "scope": "metadata.#US:0x70000636"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679845,
+       "offset": 1680793,
        "scope": "metadata.#US:0x700006ea"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1679971,
+       "offset": 1680919,
        "scope": "metadata.#US:0x70000762"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1680267,
+       "offset": 1681215,
        "scope": "metadata.#US:0x70000882"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1680411,
+       "offset": 1681359,
        "scope": "metadata.#US:0x70000918"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1681998,
-       "scope": "metadata.#US:0x70000f19"
+       "offset": 1681399,
+       "scope": "metadata.#US:0x7000093c"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1682072,
-       "scope": "metadata.#US:0x70000f63"
+       "offset": 1681463,
+       "scope": "metadata.#US:0x70000958"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1682186,
-       "scope": "metadata.#US:0x70000fe5"
+       "offset": 1683038,
+       "scope": "metadata.#US:0x70000f75"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1682254,
-       "scope": "metadata.#US:0x7000101f"
+       "offset": 1683112,
+       "scope": "metadata.#US:0x70000fbf"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1682324,
-       "scope": "metadata.#US:0x70001081"
+       "offset": 1683226,
+       "scope": "metadata.#US:0x70001041"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1682400,
-       "scope": "metadata.#US:0x700010df"
+       "offset": 1683294,
+       "scope": "metadata.#US:0x7000107b"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1682428,
-       "scope": "metadata.#US:0x70001101"
+       "offset": 1683364,
+       "scope": "metadata.#US:0x700010dd"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1682454,
-       "scope": "metadata.#US:0x70001111"
+       "offset": 1683440,
+       "scope": "metadata.#US:0x7000113b"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1682480,
-       "scope": "metadata.#US:0x7000112b"
+       "offset": 1683468,
+       "scope": "metadata.#US:0x7000115d"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1682998,
-       "scope": "metadata.#US:0x70001333"
+       "offset": 1683494,
+       "scope": "metadata.#US:0x7000116d"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1818996,
-       "scope": "metadata.#US:0x700015ea"
+       "offset": 1683520,
+       "scope": "metadata.#US:0x70001187"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1819018,
-       "scope": "metadata.#US:0x7002268d"
+       "offset": 1684038,
+       "scope": "metadata.#US:0x7000138f"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1819624,
-       "scope": "metadata.#US:0x700228b3"
+       "offset": 1820036,
+       "scope": "metadata.#US:0x70001646"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1819698,
-       "scope": "metadata.#US:0x700228fd"
+       "offset": 1820058,
+       "scope": "metadata.#US:0x700226e9"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1819912,
-       "scope": "metadata.#US:0x700229e5"
+       "offset": 1820664,
+       "scope": "metadata.#US:0x7002290f"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1819986,
-       "scope": "metadata.#US:0x70022a49"
+       "offset": 1820738,
+       "scope": "metadata.#US:0x70022959"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1820006,
-       "scope": "metadata.#US:0x70022a71"
+       "offset": 1820952,
+       "scope": "metadata.#US:0x70022a41"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1820146,
-       "scope": "metadata.#US:0x70022ae7"
+       "offset": 1821026,
+       "scope": "metadata.#US:0x70022aa5"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1820180,
-       "scope": "metadata.#US:0x70022b07"
+       "offset": 1821046,
+       "scope": "metadata.#US:0x70022acd"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1820214,
-       "scope": "metadata.#US:0x70022b29"
+       "offset": 1821186,
+       "scope": "metadata.#US:0x70022b43"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1820252,
-       "scope": "metadata.#US:0x70022b4b"
+       "offset": 1821220,
+       "scope": "metadata.#US:0x70022b63"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1820314,
-       "scope": "metadata.#US:0x70022b71"
+       "offset": 1821254,
+       "scope": "metadata.#US:0x70022b85"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1820346,
-       "scope": "metadata.#US:0x70022baf"
+       "offset": 1821292,
+       "scope": "metadata.#US:0x70022ba7"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1820360,
-       "scope": "metadata.#US:0x70022bcf"
+       "offset": 1821354,
+       "scope": "metadata.#US:0x70022bcd"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1820398,
-       "scope": "metadata.#US:0x70022bdd"
+       "offset": 1821386,
+       "scope": "metadata.#US:0x70022c0b"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1820442,
-       "scope": "metadata.#US:0x70022c03"
+       "offset": 1821400,
+       "scope": "metadata.#US:0x70022c2b"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1820500,
-       "scope": "metadata.#US:0x70022c4f"
+       "offset": 1821438,
+       "scope": "metadata.#US:0x70022c39"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1820528,
-       "scope": "metadata.#US:0x70022c69"
+       "offset": 1821482,
+       "scope": "metadata.#US:0x70022c5f"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1821156,
-       "scope": "metadata.#US:0x70022ed7"
+       "offset": 1821540,
+       "scope": "metadata.#US:0x70022cab"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1821190,
-       "scope": "metadata.#US:0x70022ef9"
+       "offset": 1821568,
+       "scope": "metadata.#US:0x70022cc5"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1821200,
-       "scope": "metadata.#US:0x70022f1b"
+       "offset": 1822196,
+       "scope": "metadata.#US:0x70022f33"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1822380,
-       "scope": "metadata.#US:0x700233a5"
+       "offset": 1822230,
+       "scope": "metadata.#US:0x70022f55"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1822640,
-       "scope": "metadata.#US:0x700234b9"
+       "offset": 1822240,
+       "scope": "metadata.#US:0x70022f77"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1823180,
-       "scope": "metadata.#US:0x700236a3"
+       "offset": 1823420,
+       "scope": "metadata.#US:0x70023401"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1823426,
-       "scope": "metadata.#US:0x700237c1"
+       "offset": 1823680,
+       "scope": "metadata.#US:0x70023515"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1823444,
-       "scope": "metadata.#US:0x700237d7"
+       "offset": 1824220,
+       "scope": "metadata.#US:0x700236ff"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1823456,
-       "scope": "metadata.#US:0x700237e9"
+       "offset": 1824466,
+       "scope": "metadata.#US:0x7002381d"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1823494,
-       "scope": "metadata.#US:0x700237f5"
+       "offset": 1824484,
+       "scope": "metadata.#US:0x70023833"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1824623,
-       "scope": "metadata.#US:0x7002381b"
+       "offset": 1824496,
+       "scope": "metadata.#US:0x70023845"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1825232,
-       "scope": "metadata.#US:0x70023c84"
+       "offset": 1824534,
+       "scope": "metadata.#US:0x70023851"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1825250,
-       "scope": "metadata.#US:0x70023ee5"
+       "offset": 1825663,
+       "scope": "metadata.#US:0x70023877"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1825589,
-       "scope": "metadata.#US:0x70023fad"
+       "offset": 1826272,
+       "scope": "metadata.#US:0x70023ce0"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1829661,
-       "scope": "metadata.#US:0x70025002"
+       "offset": 1826290,
+       "scope": "metadata.#US:0x70023f41"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1830075,
-       "scope": "metadata.#US:0x70025184"
+       "offset": 1826629,
+       "scope": "metadata.#US:0x70024009"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1830161,
-       "scope": "metadata.#US:0x700251d0"
+       "offset": 1830701,
+       "scope": "metadata.#US:0x7002505e"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1830655,
-       "scope": "metadata.#US:0x700253aa"
+       "offset": 1831115,
+       "scope": "metadata.#US:0x700251e0"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1831087,
-       "scope": "metadata.#US:0x7002557a"
+       "offset": 1831201,
+       "scope": "metadata.#US:0x7002522c"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1832191,
-       "scope": "metadata.#US:0x700259ee"
+       "offset": 1831695,
+       "scope": "metadata.#US:0x70025406"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1832229,
-       "scope": "metadata.#US:0x70025a14"
+       "offset": 1832127,
+       "scope": "metadata.#US:0x700255d6"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1832787,
-       "scope": "metadata.#US:0x70025c34"
+       "offset": 1833231,
+       "scope": "metadata.#US:0x70025a4a"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1832865,
-       "scope": "metadata.#US:0x70025c68"
+       "offset": 1833269,
+       "scope": "metadata.#US:0x70025a70"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1832951,
-       "scope": "metadata.#US:0x70025cb6"
+       "offset": 1833827,
+       "scope": "metadata.#US:0x70025c90"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1833031,
-       "scope": "metadata.#US:0x70025d0c"
+       "offset": 1833905,
+       "scope": "metadata.#US:0x70025cc4"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1833119,
-       "scope": "metadata.#US:0x70025d5c"
+       "offset": 1833991,
+       "scope": "metadata.#US:0x70025d12"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1833989,
-       "scope": "metadata.#US:0x700260d6"
+       "offset": 1834071,
+       "scope": "metadata.#US:0x70025d68"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1834423,
-       "scope": "metadata.#US:0x7002625a"
+       "offset": 1834159,
+       "scope": "metadata.#US:0x70025db8"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1834760,
-       "scope": "metadata.#US:0x700263c1"
+       "offset": 1835029,
+       "scope": "metadata.#US:0x70026132"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1835684,
-       "scope": "metadata.#US:0x70026761"
+       "offset": 1835463,
+       "scope": "metadata.#US:0x700262b6"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1836020,
-       "scope": "metadata.#US:0x700268dd"
+       "offset": 1835800,
+       "scope": "metadata.#US:0x7002641d"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1836866,
-       "scope": "metadata.#US:0x70026c21"
+       "offset": 1836724,
+       "scope": "metadata.#US:0x700267bd"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1836932,
-       "scope": "metadata.#US:0x70026c63"
+       "offset": 1837060,
+       "scope": "metadata.#US:0x70026939"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1837000,
+       "offset": 1837906,
+       "scope": "metadata.#US:0x70026c7d"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 1837972,
        "scope": "metadata.#US:0x70026cbf"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1837070,
-       "scope": "metadata.#US:0x70026cf5"
+       "offset": 1838040,
+       "scope": "metadata.#US:0x70026d1b"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1837114,
-       "scope": "metadata.#US:0x70026d23"
+       "offset": 1838110,
+       "scope": "metadata.#US:0x70026d51"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1837322,
-       "scope": "metadata.#US:0x70026df3"
+       "offset": 1838154,
+       "scope": "metadata.#US:0x70026d7f"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1837693,
-       "scope": "metadata.#US:0x70026eaf"
-      },
-      {
-       "code": "invalid-string",
-       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1838045,
-       "scope": "metadata.#US:0x700270c4"
-      },
-      {
-       "code": "invalid-string",
-       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1838233,
-       "scope": "metadata.#US:0x70027144"
-      },
-      {
-       "code": "invalid-string",
-       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1838373,
-       "scope": "metadata.#US:0x700271f4"
-      },
-      {
-       "code": "invalid-string",
-       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1838423,
-       "scope": "metadata.#US:0x7002723a"
-      },
-      {
-       "code": "invalid-string",
-       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1838461,
-       "scope": "metadata.#US:0x7002726c"
-      },
-      {
-       "code": "invalid-string",
-       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1838575,
-       "scope": "metadata.#US:0x700272f8"
+       "offset": 1838362,
+       "scope": "metadata.#US:0x70026e4f"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
        "offset": 1838733,
-       "scope": "metadata.#US:0x70027362"
+       "scope": "metadata.#US:0x70026f0b"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1839803,
-       "scope": "metadata.#US:0x7002779a"
+       "offset": 1839085,
+       "scope": "metadata.#US:0x70027120"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1839915,
-       "scope": "metadata.#US:0x70027824"
+       "offset": 1839273,
+       "scope": "metadata.#US:0x700271a0"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1840123,
-       "scope": "metadata.#US:0x700278cc"
+       "offset": 1839413,
+       "scope": "metadata.#US:0x70027250"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1840183,
-       "scope": "metadata.#US:0x7002792a"
+       "offset": 1839463,
+       "scope": "metadata.#US:0x70027296"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1840279,
-       "scope": "metadata.#US:0x7002798e"
+       "offset": 1839501,
+       "scope": "metadata.#US:0x700272c8"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1840483,
-       "scope": "metadata.#US:0x70027a58"
+       "offset": 1839615,
+       "scope": "metadata.#US:0x70027354"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1840515,
-       "scope": "metadata.#US:0x70027a78"
+       "offset": 1839773,
+       "scope": "metadata.#US:0x700273be"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1840583,
-       "scope": "metadata.#US:0x70027ac0"
+       "offset": 1840843,
+       "scope": "metadata.#US:0x700277f6"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1840745,
-       "scope": "metadata.#US:0x70027b68"
+       "offset": 1840955,
+       "scope": "metadata.#US:0x70027880"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1840769,
-       "scope": "metadata.#US:0x70027b7e"
+       "offset": 1841163,
+       "scope": "metadata.#US:0x70027928"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1840779,
-       "scope": "metadata.#US:0x70027b96"
+       "offset": 1841223,
+       "scope": "metadata.#US:0x70027986"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1840793,
-       "scope": "metadata.#US:0x70027ba0"
+       "offset": 1841319,
+       "scope": "metadata.#US:0x700279ea"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1840811,
-       "scope": "metadata.#US:0x70027bae"
+       "offset": 1841523,
+       "scope": "metadata.#US:0x70027ab4"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1841030,
-       "scope": "metadata.#US:0x70027bc0"
+       "offset": 1841555,
+       "scope": "metadata.#US:0x70027ad4"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1841108,
-       "scope": "metadata.#US:0x70027caf"
+       "offset": 1841623,
+       "scope": "metadata.#US:0x70027b1c"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1841280,
-       "scope": "metadata.#US:0x70027d85"
+       "offset": 1841785,
+       "scope": "metadata.#US:0x70027bc4"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1841306,
-       "scope": "metadata.#US:0x70027d95"
+       "offset": 1841809,
+       "scope": "metadata.#US:0x70027bda"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1841336,
-       "scope": "metadata.#US:0x70027daf"
+       "offset": 1841819,
+       "scope": "metadata.#US:0x70027bf2"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1841366,
-       "scope": "metadata.#US:0x70027dcd"
+       "offset": 1841833,
+       "scope": "metadata.#US:0x70027bfc"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1841380,
-       "scope": "metadata.#US:0x70027deb"
+       "offset": 1841851,
+       "scope": "metadata.#US:0x70027c0a"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1841394,
-       "scope": "metadata.#US:0x70027df9"
+       "offset": 1842070,
+       "scope": "metadata.#US:0x70027c1c"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1841408,
-       "scope": "metadata.#US:0x70027e07"
+       "offset": 1842148,
+       "scope": "metadata.#US:0x70027d0b"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1841422,
-       "scope": "metadata.#US:0x70027e15"
+       "offset": 1842320,
+       "scope": "metadata.#US:0x70027de1"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1841450,
-       "scope": "metadata.#US:0x70027e23"
+       "offset": 1842346,
+       "scope": "metadata.#US:0x70027df1"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1841462,
-       "scope": "metadata.#US:0x70027e3f"
+       "offset": 1842376,
+       "scope": "metadata.#US:0x70027e0b"
       },
       {
        "code": "invalid-string",
        "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
-       "offset": 1841484,
-       "scope": "metadata.#US:0x70027e4b"
+       "offset": 1842406,
+       "scope": "metadata.#US:0x70027e29"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 1842420,
+       "scope": "metadata.#US:0x70027e47"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 1842434,
+       "scope": "metadata.#US:0x70027e55"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 1842448,
+       "scope": "metadata.#US:0x70027e63"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 1842462,
+       "scope": "metadata.#US:0x70027e71"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 1842490,
+       "scope": "metadata.#US:0x70027e7f"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 1842502,
+       "scope": "metadata.#US:0x70027e9b"
+      },
+      {
+       "code": "invalid-string",
+       "detail": "User string terminal flag 0 differs from ECMA-335 II.24.2.4 value 1; readable UTF-16 is preserved and runtime acceptance is not assessed",
+       "offset": 1842524,
+       "scope": "metadata.#US:0x70027ea7"
       }
      ],
      "state": "partial"
@@ -911,11 +923,11 @@
    "view": {
     "kind": "summary"
    },
-   "view_digest": "522b98aa205a1281100a381b39aba855c9b42ef42359f7be21e8798643a19049"
+   "view_digest": "34ffaf156733e24f71c3a089f50eef547d05924dc3208dd89d44d9f2cc82cc97"
   },
   "operation": "inspect_analysis_view",
   "parameters": {
-   "parent_evidence_id": "ev_b795cd83a77f147d3501f8ce2ef385fed5beac7fe7c1c6a7dbb652f7a7f9517f",
+   "parent_evidence_id": "ev_4b9bc7b7190e60b90accd269c5d252a3ead94dbebc4f43243206e2f8129d7b15",
    "view": {
     "kind": "summary"
    }
@@ -934,7 +946,7 @@
     "format": "pe",
     "kind": "file",
     "selection": null,
-    "sha256": "d2ed19050f7d1cb1f49b9befadf15b68fbc79ae4623f15c36573b15624b45a22"
+    "sha256": "5310896fc1664871465f1f2b427a16a9b3dd1e13765d4b65cdf665f745ab66b2"
    },
    "local_path": "./src/ReC.Win/obj/Release/net10.0-windows/win-x64/linked/ReC.dll",
    "name": "ReC.dll"

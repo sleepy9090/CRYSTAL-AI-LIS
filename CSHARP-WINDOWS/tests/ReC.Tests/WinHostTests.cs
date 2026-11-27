@@ -485,7 +485,7 @@ internal static partial class Program
             var m2 = new Machine(d, _ => { });
             m2.Reset();
             m2.Ppu.Capture = new VideoCapture();
-            for (int f = 0; f < 400; f++) m2.RunFrame(0);
+            for (int f = 0; f < 340; f++) m2.RunFrame(0);
             var sr = new SceneRaster(m2.Ppu.Chr);
             sr.Build(m2.Ppu.Capture);
             True(sr.LineScroll.Any(v => v != 0), "line scroll recorded");
@@ -1291,6 +1291,36 @@ internal static partial class Program
             True(inv >= 100, $"the fight has the player's half-rate blink ({inv} frames)");
             True(Math.Abs(playerAdded - inv / 2) <= inv / 6, $"the player is filled in on the blink frames the game skips ({playerAdded} of {inv})");
             Eq(0, dup, "the player is only added while blinking (never drawn twice)");
+        }),
+        ("win_shop_voice", () =>
+        {
+            // playtest 11: "the shops and inns need NPC audio": the shop screens print to nametable $2800, not the $6000 page
+            var d = TheData.Value;
+            var want = new Dictionary<string, string[]>
+            {
+                ["toolshop"] = new[] { "Do you wish to buy?", "Anything else?" },
+                ["inn"] = new[] { "Need to rest? Please stay.", "How do feel today? Please come again." },
+                ["pawnshop"] = new[] { "Is there anything you wish to sell?" },
+                ["armorshop"] = new[] { "Do you wish to buy?" },
+            };
+            foreach (var (st, lines) in want)
+            {
+                var m = new Machine(d, _ => { }); m.Reset();
+                m.LoadState(StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", st + ".json")));
+                var dr = new DialogueReader();
+                var said = new List<string>(); var who = new HashSet<int>();
+                for (int f = 0; f < 340; f++)
+                {
+                    m.RunFrame(st is "inn" or "pawnshop" ? (f == 59 ? 0x02 : f == 70 ? 0x80 : 0) : (f == 59 ? 0x02 : f == 70 ? 0x80 : f == 260 ? 0x40 : 0));
+                    var (say, _) = dr.Update(m.Rd(0x40), m.Rd(0x51), a => m.Rd(a), m.Ppu.VramRead);
+                    if (say != null) { said.Add(say); who.Add(Cast.Speaker(a => m.Rd(a))); }
+                }
+                Console.WriteLine($"  win_shop_voice: {st}: {string.Join(" | ", said)}  (speaker {string.Join(",", who.Select(w => $"{w:X3} {Cast.Of(w)}"))})");
+                foreach (var l in lines) True(said.Contains(l), $"{st} says \"{l}\"");
+                True(said.All(s => !s.Contains("YES") && !s.Contains("SHOP") && !s.Contains("INN ")), $"{st}: no titles / menu words");
+                True(who.All(w => w >= 0x120 && Cast.Of(w) != VoiceClass.Narrator), $"{st}: a shopkeeper voice");
+            }
+            Eq(125, Cast.Count, "talking NPC count unchanged");
         }),
         ("win_wide_steady", () =>
         {
