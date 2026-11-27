@@ -77,24 +77,24 @@ internal sealed class SceneRaster
     public bool PodSilhouette(int area, int mainState, int subState)
     {
         if (area != 0 || mainState != 1 || subState != 8) return false;
+        // playtest 11: recolouring (playtest 9) made the stand-in visible, then the game's own player stepped out above it
+        // ("he appears above and drops onto himself"). On the NES the all-black stand-in vanishes into the black doorway, so
+        // it is removed: its sprite pixels show the background. Lines where the game has begun its fade-in are left alone.
         bool any = false;
+        var black = new bool[240];
         for (int y = 0; y < 240; y++)
         {
             var p = LinePal[y];
-            if ((p[0x11] != 0x0F && p[0x12] != 0x0F) || p[0x13] != 0x0F || p[1] == 0x0F) continue;   // not black, or a dark scene
-            if (p[0x11] == 0x0F) p[0x11] = 0x16;                   // each colour still black (the fade-in comes one at a time)
-            if (p[0x12] == 0x0F) p[0x12] = 0x04;
-            any = true;
+            black[y] = p[0x11] == 0x0F && p[0x12] == 0x0F && p[0x13] == 0x0F && p[1] != 0x0F;
+            any |= black[y];
         }
         if (!any) return false;
         for (int i = 0; i < W * 240; i++)
         {
             int sp = Sp[i];
-            if (sp == 0 || (sp & 0x0C) != 0) continue;            // sprite palette 0 only
-            var p = LinePal[i / W];
-            byte c = (byte)(p[0x10 | (sp & 0x0F)] & 0x3F);
-            if ((sp & 0x40) == 0 || Bg[i] == 0) Fb[i] = c;          // in front (as SceneRaster.Build composes)
-            SpCol[i] = c;
+            if (sp == 0 || (sp & 0x0C) != 0 || !black[i / W]) continue;   // sprite palette 0 only, on all-black lines
+            Sp[i] = 0; SpCol[i] = 0; SpTag[i] = 0;
+            Fb[i] = BgCol[i]; Tags[i] = BgTag[i];
         }
         return true;
     }

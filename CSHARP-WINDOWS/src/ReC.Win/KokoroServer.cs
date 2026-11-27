@@ -70,6 +70,8 @@ internal static unsafe class KokoroServer
             c.SilenceScale = 0.2f;
             IntPtr tts = create(&c);
             if (tts == IntPtr.Zero) { o.WriteLine("ERR create"); o.Flush(); return 1; }
+            // playtest 11: one throwaway sentence first: ONNX Runtime's first run is several times slower than the next ones
+            { IntPtr w = U8("Hello there."); Audio* wa = gen(tts, w, 0, 1f); Marshal.FreeCoTaskMem(w); if (wa != null) free(wa); }
             o.WriteLine($"READY {rate(tts)}"); o.Flush();
             // a reader thread keeps the newest seq, so queued requests of an older page are skipped
             var q = new System.Collections.Concurrent.BlockingCollection<string>();

@@ -14,7 +14,7 @@ namespace ReC.Win;
 internal static unsafe partial class Window
 {
     // command ids
-    private const int IdPause = 100, IdMute = 101, IdExit = 102;
+    private const int IdPause = 100, IdMute = 101, IdExit = 102, IdResetGame = 111;   // playtest 11: reset (F8)
     private const int IdTurboA = 103, IdTurboB = 104, IdFeedback = 105, IdRemap = 106, IdResetKeys = 107, IdMouse = 108, IdShot = 109, IdShotFolder = 110;   // T38, T57, T61
     private const int IdCheat0 = 600, IdCheatsOff = 620;     // T36: + Cheats index (life, magic, gold, status, charge, xp)
     private const int IdWarp0 = 700, IdDebug0 = 960;            // playtest 7: + area id; + DebugInfo index
@@ -58,6 +58,7 @@ internal static unsafe partial class Window
         switch (n)
         {
             case "pause": return IdPause;
+            case "resetgame": return IdResetGame;
             case "crt": return IdCrt;
             case "fps": return IdFps;
             case "natural": return IdNatural;
@@ -199,6 +200,7 @@ internal static unsafe partial class Window
         var m = NewMenu();
         Win32.AppendMenuW(m, 0, IdPause, "&Pause\tP");
         Win32.AppendMenuW(m, 0, IdMute, "&Mute\tM");
+        Win32.AppendMenuW(m, 0, IdResetGame, "R&eset game (back to the title, save kept)\tF8");
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(m, 0, IdTurboB, "Turbo &B (rapid sword while held)");
         Win32.AppendMenuW(m, 0, IdTurboA, "Turbo &A (repeats while held)");
@@ -412,6 +414,7 @@ internal static unsafe partial class Window
         switch (id)
         {
             case IdPause: KeyCommand('P'); return;
+            case IdResetGame: ResetGame(ask: !_scripted); return;
             case IdCrt: _v.Crt = !_v.Crt; Notice(_v.Crt ? "CRT LOOK: ON" : "CRT LOOK: OFF"); SettingsChanged(false); Present(); return;
             case IdFps: _v.ShowFps = !_v.ShowFps; SettingsChanged(false); Present(); return;
             case >= IdWarp0 and < IdWarp0 + 256:

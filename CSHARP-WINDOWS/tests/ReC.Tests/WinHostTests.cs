@@ -1292,6 +1292,30 @@ internal static partial class Program
             True(Math.Abs(playerAdded - inv / 2) <= inv / 6, $"the player is filled in on the blink frames the game skips ({playerAdded} of {inv})");
             Eq(0, dup, "the player is only added while blinking (never drawn twice)");
         }),
+        ("win_reset_game", () =>
+        {
+            // playtest 11: Game > Reset game (F8): back to the title, the battery save area kept. Power on, start a new game
+            // (the canonical keys), play, reset, compare $7000-$7FFF, and start again
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { }); m.Reset();
+            var keys = Keys.Parse("1250:START 1400:START 1600:START 1700:START 2300:START 2340:DOWN:80".Split(' '));
+            while (214 + m.Frame < 2600) m.RunFrame(keys.TryGetValue(214 + m.Frame, out int b) ? b : 0);
+            True(m.Rd(0x40) == 1, "in gameplay before the reset");
+            var save = m.Mem.Wram.Skip(0x1000).ToArray();
+            Window.ResetMachineForTest(m);
+            var modes = new HashSet<int>();
+            for (int f = 0; f < 600; f++) { m.RunFrame(0); modes.Add(m.Rd(0x40)); }
+            // the save slots $7100 / $7700 + backups $7400 / $7A00 and their checksums $70F0-$70F5 (the working copy $7D00 and
+            // the scratch $7001 are the boot code's, as on the console)
+            int changed = save.Where((v, i) => m.Mem.Wram[0x1000 + i] != v && (i is >= 0x100 and < 0xD00 || i is >= 0xF0 and < 0xF6)).Count();
+            Console.WriteLine($"  win_reset_game: main_states after the reset {string.Join(",", modes.Select(x => x.ToString("X2")))}, save slot bytes changed {changed}");
+            True(!modes.Contains(1) && m.Rd(0x40) == 3, "the game restarts at the title / opening (main_state 3)");
+            Eq(0, changed, "the save slots, backups and checksums are kept");
+            int f0 = m.Frame;
+            while (m.Frame - f0 < 2600 && m.Rd(0x40) != 1) m.RunFrame(keys.TryGetValue(214 + m.Frame - f0, out int b2) ? b2 : 0);
+            True(m.Rd(0x40) == 1, "a new game can be started after the reset");
+            Eq(111, Window.CommandId("resetgame"), "--menu resetgame");
+        }),
         ("win_shop_voice", () =>
         {
             // playtest 11: "the shops and inns need NPC audio": the shop screens print to nametable $2800, not the $6000 page
@@ -1403,7 +1427,7 @@ internal static partial class Program
             var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
             var keys = Keys.Parse("1250:START 1400:START 1600:START 1700:START 2301:START".Split(' '));
             var enh = new Enhancer(m.Ppu.Chr, d.NesRgb);
-            int frames = 0, hiddenPx = 0, liftedHidden = 0, recoloured = 0, blackBody = 0;
+            int frames = 0, hiddenPx = 0, liftedHidden = 0, recoloured = 0, blackBody = 0, playerShown = 0;
             while (214 + m.Frame < 3400)
             {
                 m.RunFrame(keys.TryGetValue(214 + m.Frame, out int b) ? b : 0);
@@ -1412,7 +1436,8 @@ internal static partial class Program
                 enh.LiftHd(r.Fb, r.Tags);
                 if (r.PodSilhouette(m.Rd(0x6C), m.Rd(0x40), m.Rd(0x41))) recoloured++;
                 for (int i = 0; i < 256 * 232; i++)
-                    if (r.Sp[i] != 0 && (r.Sp[i] & 0x0C) == 0 && (r.Sp[i] & 3) is 1 or 2 && ((r.Sp[i] & 0x40) == 0 || r.Bg[i] == 0) && r.Fb[i] == 0x0F) blackBody++;
+                    if (r.Sp[i] != 0 && (r.Sp[i] & 0x0C) == 0 && r.LinePal[i / 256][0x11] == 0x0F && r.LinePal[i / 256][0x12] == 0x0F) blackBody++;
+                if (r.Sp.Any(v => v != 0 && (v & 0x0C) == 0)) playerShown++;
                 var sc = new HdScene(d.NesRgb);
                 sc.Build(r.Fb, r.Tags, r.LinePal[239], enh.HdLift, r.LineScroll, 0);
                 frames++;
@@ -1424,10 +1449,10 @@ internal static partial class Program
                 }
             }
             Console.WriteLine($"  win_hidden_sprites: {frames} play frames in area 00: {hiddenPx} hidden sprite pixels, {liftedHidden} of them lifted / flagged as sprite");
-            Console.WriteLine($"  win_hidden_sprites: pod silhouette recoloured in {recoloured} frames, player body pixels left black {blackBody}");
+            Console.WriteLine($"  win_hidden_sprites: black stand-in removed in {recoloured} frames, stand-in pixels left {blackBody}, frames with the player shown {playerShown}");
             True(frames > 100, "the run reaches play after the chamber");
-            True(recoloured > 100 && recoloured < frames, "the black pod silhouette is recoloured, and only until the game fades him in");
-            Eq(0, blackBody, "no black player body in the pod (only his outline stays dark)");
+            True(recoloured > 100 && recoloured < frames && playerShown > 100, "the stand-in is removed, and only until the game fades the player in");
+            Eq(0, blackBody, "no black stand-in in the pod doorway");
             Eq(0, liftedHidden, "hidden sprite pixels have no HD lift / sprite flag (no ghost)");
         }),
         ("win_warp_debug", () =>
@@ -1697,6 +1722,9 @@ internal static partial class Program
             var sents = KokoroVoice.Sentences("Hey!! There's a guy coming out of the cave! This is the village of Leaf. Please be careful.");
             Console.WriteLine("  win_dialogue: sentences: " + string.Join(" | ", sents));
             True(sents.Count == 3 && sents[0].StartsWith("Hey!! There's") && sents[2] == "Please be careful.", "pages split into sentences (short ones joined)");
+            var s2 = KokoroVoice.Sentences("I used to have an unusual statue, but I dropped it near the river. Have you seen it?");
+            True(s2.Count == 3 && s2[0] == "I used to have an unusual statue," && s2[1].StartsWith("but I dropped"), "a long first sentence starts at its comma: " + string.Join(" | ", s2));
+            True(KokoroVoice.CachePath(5, 1.0, "Hi there.") == KokoroVoice.CachePath(5, 1.0, "Hi there.") && KokoroVoice.CachePath(5, 1.0, "Hi there.") != KokoroVoice.CachePath(6, 1.0, "Hi there."), "cache key per voice and text");
             if (kd != null) True(KokoroVoice.ServerFiles(kd), "dist\\voice\\kokoro has the C API DLLs for the server");
         }),
         ("win_cine_gate", () =>

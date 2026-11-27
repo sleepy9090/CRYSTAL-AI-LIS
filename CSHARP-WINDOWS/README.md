@@ -99,6 +99,8 @@ The next page or closing the window cuts it off. Correct a voice in `%APPDATA%\r
 (man, woman, oldman, oldwoman, boy, girl, creature, narrator).
 With the `voice\kokoro` folder the game uses Kokoro, a more natural neural voice (11 expressive speakers), ahead of Piper.
 
+**Game › Reset game** (F8) goes back to the title screen like the console's Reset button; your saved games are kept.
+
 **Video › Debug info** shows the current area, the player and camera position, the game state and more under the FPS
 line. **Cheats › Warp to area** jumps to any area from normal play.
 

@@ -403,3 +403,5 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] P19 (2026-11-27, playtest 10): Kokoro voice server (model loaded once) + sentence streaming; per-page program as fallback.
 - [x] P20 (2026-11-27, playtest 10): widescreen sides no longer fade with animated tiles / scrolling (area key).
 - [x] P21 (2026-11-27, playtest 11): shop and inn dialogue spoken (nametable reader, keeper voices).
+- [x] P22 (2026-11-27, playtest 11): Game > Reset game (F8, confirmation, save kept).
+- [x] P23 (2026-11-27, playtest 12): no relief lines on sand / earth, painted steel spikes, pod stand-in hidden, voice warm-up / comma split / cache.

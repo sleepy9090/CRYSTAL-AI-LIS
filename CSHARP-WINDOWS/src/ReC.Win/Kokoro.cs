@@ -134,7 +134,26 @@ internal sealed class KokoroVoice : IVoice
     private Process? _server;
     private StreamWriter? _serverIn;
     private volatile bool _serverDead;
-    private readonly Dictionary<string, (int Seq, double Pitch)> _pending = new();
+    private readonly Dictionary<string, (int Seq, double Pitch, int Idx, string Cache)> _pending = new();
+    // playtest 11: sentences of the current page by index, played in order as they come in (cache hits are instant)
+    private readonly Dictionary<int, float[]> _ready = new();
+    private int _nextIdx;
+    private static string CacheDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "re-c", "voicecache");
+
+    /// <summary>the cache file of one sentence in one voice (speaker, speed); the pitch is applied on playback</summary>
+    public static string CachePath(int spk, double len, string text)
+    {
+        ulong h = 1469598103934665603;
+        foreach (char c in FormattableString.Invariant($"{spk}|{len:0.000}|{text}")) { h ^= c; h *= 1099511628211; }
+        return Path.Combine(CacheDir, $"{h:x16}.wav");
+    }
+
+    /// <summary>(lock held) a sentence is ready: queue it and any that follow it in order</summary>
+    private void Ready(int idx, float[] pcm)
+    {
+        _ready[idx] = pcm;
+        while (_ready.Remove(_nextIdx, out var p)) { _queue.Enqueue(p); _nextIdx++; }
+    }
     private (int Npc, string Text, int Seq)? _lastPage;
 
     /// <summary>the C API DLLs for the server are in the voice folder (shared build)</summary>
@@ -176,13 +195,14 @@ internal sealed class KokoroVoice : IVoice
                 int sp = line.IndexOf(' ');
                 if (sp < 0) continue;
                 string rest = line[(sp + 1)..], wav = rest.Contains(".wav") ? rest[..(rest.IndexOf(".wav") + 4)] : rest;
-                (int Seq, double Pitch) req;
+                (int Seq, double Pitch, int Idx, string Cache) req;
                 lock (_lk) { if (!_pending.Remove(wav, out req)) continue; }
                 if (line.StartsWith("OK"))
                 {
-                    float[] pcm = NeuralVoice.Render(File.ReadAllBytes(wav), req.Pitch, AudioOut.Rate);
-                    try { File.Delete(wav); } catch (Exception) { }
-                    lock (_lk) if (req.Seq == _seq) _queue.Enqueue(pcm);
+                    byte[] bytes = File.ReadAllBytes(wav);
+                    float[] pcm = NeuralVoice.Render(bytes, req.Pitch, AudioOut.Rate);
+                    try { Directory.CreateDirectory(CacheDir); File.Move(wav, req.Cache, true); } catch (Exception) { try { File.Delete(wav); } catch (Exception) { } }
+                    lock (_lk) if (req.Seq == _seq) Ready(req.Idx, pcm);
                 }
                 else if (line.StartsWith("ERR")) NeuralVoice.Log("kokoro server: " + line);
             }
@@ -205,7 +225,11 @@ internal sealed class KokoroVoice : IVoice
         var o = new List<string>();
         foreach (var s in parts)
             if (o.Count > 0 && o[^1].Length < 12) o[^1] += " " + s; else o.Add(s);
-        return o.Count > 0 ? o : new List<string> { text };
+        if (o.Count == 0) o.Add(text);
+        // playtest 11: a long first sentence starts at its first comma, so the voice is heard sooner
+        int cm = o[0].IndexOf(", ");
+        if (o[0].Length > 45 && cm >= 12 && cm < o[0].Length - 12) { string a = o[0][..(cm + 1)], b = o[0][(cm + 2)..]; o[0] = a; o.Insert(1, b); }
+        return o;
     }
 
     public void Say(int npc, string text)
@@ -221,10 +245,17 @@ internal sealed class KokoroVoice : IVoice
             try
             {
                 var ss = Sentences(text);
+                lock (_lk) { _ready.Clear(); _nextIdx = 0; }
                 for (int i = 0; i < ss.Count; i++)
                 {
+                    string cache = CachePath(spk, len, ss[i]);
+                    if (File.Exists(cache))
+                    {
+                        try { var pc = NeuralVoice.Render(File.ReadAllBytes(cache), pitch, AudioOut.Rate); lock (_lk) Ready(i, pc); continue; }
+                        catch (Exception) { }
+                    }
                     string wav = Path.Combine(_tmp, $"k{seq}_{i}.wav");
-                    lock (_lk) _pending[wav] = (seq, pitch);
+                    lock (_lk) _pending[wav] = (seq, pitch, i, cache);
                     _serverIn.WriteLine(FormattableString.Invariant($"{seq}\t{spk}\t{1 / len:0.000}\t{wav}\t{ss[i].Replace('\t', ' ')}"));
                 }
                 return;

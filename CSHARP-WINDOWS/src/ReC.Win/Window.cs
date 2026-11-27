@@ -971,6 +971,26 @@ internal static unsafe partial class Window
                 Win32.DIB_RGB_COLORS, Win32.SRCCOPY);
     }
 
+    /// <summary>playtest 11: Game > Reset game (F8): like the console's Reset button. Machine.Reset clears RAM and restarts at
+    /// the title; the battery WRAM (the save) is kept. The voice stops, the widescreen map is dropped</summary>
+    /// <summary>the machine part of ResetGame (tests)</summary>
+    public static void ResetMachineForTest(Machine m) => m.Reset();
+
+    public static bool ResetGame(bool ask)
+    {
+        if (_m == null) return false;
+        if (ask && Win32.MessageBoxW(_hwnd, "Reset the game and go back to the title screen?\n\nYour save is kept; progress since the last save is lost.",
+                "re-c", 0x21 /* OKCANCEL | QUESTION */) != 1) return false;
+        _speech?.Stop(); _neural?.Stop();
+        _dialogue.Update(0, 0, _ => 0);                    // closes the open page
+        _m.Reset();
+        Wide.Drop();
+        _paused = false; _help = false; _acc = 0;
+        Notice("GAME RESET");
+        StatusLine(); Present();
+        return true;
+    }
+
     private static void KeyCommand(int vk)
     {
         switch (vk)
@@ -993,6 +1013,7 @@ internal static unsafe partial class Window
             case 0x74 /* F5 */: ReloadPack(); break;
             case 0x20 /* Space */: _fastKey = _fast = true; StatusLine(); if (_paused) Present(); break;
             case 0x7B /* F12 */: Screenshot(); break;                     // T42
+            case 0x77 /* F8 */: Command(IdResetGame); break;              // playtest 11: reset game
             case 0x71 /* F2 */: Command(IdFps); break;                    // T49
             case 0x70 /* F1 */:
                 _help = !_help; _paused = _help;

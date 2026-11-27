@@ -886,7 +886,9 @@ float4 PSLight(V i) : SV_Target
         // macro normal from the height model
         float2 dxs = float2(1.0 / (2 * NES.x), 0), dys = float2(0, 1.0 / 480);
         float h = H(s);
-        float gx = (H(s + dxs) - H(s - dxs)) * Lgt.w, gy = (H(s + dys) - H(s - dys)) * Lgt.w;
+        // playtest 11: on sand / earth / plaster the game's dither dots made rows of lit ridges = horizontal lines: a quarter
+        float rel = (kind == 4 || kind == 3) ? 0.25 : 1;
+        float gx = (H(s + dxs) - H(s - dxs)) * Lgt.w * rel, gy = (H(s + dys) - H(s - dys)) * Lgt.w * rel;
         float3 n = normalize(float3(-gx - gd.x, -gy - gd.y, 1));
         // ambient occlusion: higher ground close by darkens
         float occ = 0;
@@ -896,6 +898,7 @@ float4 PSLight(V i) : SV_Target
             occ += saturate(H(s + float2(cos(an), sin(an)) * float2(3.0 / (2 * NES.x), 3.0 / 480)) - h);
             occ += 0.6 * saturate(H(s + float2(cos(an2), sin(an2)) * float2(8.0 / (2 * NES.x), 8.0 / 480)) - h);
         }
+        occ *= rel;
         float ao = 1 - Fx.y * saturate(occ / 7.5);
         // soft shadow toward the sun; the penumbra widens with the distance to the caster
         float2 ld = normalize(Lgt.xy);
@@ -907,6 +910,7 @@ float4 PSLight(V i) : SV_Target
             float hq = H(s + float2(ld.x / (2 * NES.x), ld.y / 480) * d);
             sh = max(sh, saturate((hq - h - d * Fx2.x) * 2 / (0.4 + 0.06 * d)) * (1 - j / 25.0));
         }
+        sh *= rel;
         float shade = 1 - Fx.z * sh;
         // contact shadow under sprites (they stand on the ground: a soft dark patch just below and behind them)
         if (!spr)

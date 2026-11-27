@@ -714,3 +714,20 @@ CSHARP-WINDOWS/
     and "It will cost you $.." are skipped). The keeper slot is not kept ($0623 = 0), so each shop type has a fixed
     keeper voice (`Cast.Speaker` = 0x100 | sub_state: armor man, tool woman, inn woman, pawn old man; voices.ini
     `npc_120..123` overrides). `win_shop_voice`: the four shop states.
+    **Game > Reset game (F8, playtest 11; `--menu resetgame`):** the console's Reset button: a confirmation box, then
+    `Machine.Reset` (RAM cleared, boot again: title / opening). WRAM is not cleared: the boot code keeps the save slots
+    `$7100` / `$7700`, backups `$7400` / `$7A00` and checksums `$70F0-$70F5`, and checks / re-initialises only its working
+    copy `$7D00-$7FFF` and the scratch `$7001`, as on the console. The voice stops, the widescreen map is dropped
+    (`Widescreen.Drop`). `win_reset_game`: power-on new game, reset, save slots unchanged, a new game starts again.
+    **Playtest 12 (recordings 1626-1636):** (1) Horizontal lines over sand / earth: the game's sand tiles are rows of
+    dither dots, and the relief (height → normal, sun shadow, occlusion) made every dot row a lit ridge with a shadow =
+    lines. On material kinds 4 (earth / sand / wood) and 3 (plaster) the relief, sun shadow and AO from that height are a
+    quarter now (`rel` in PSLight); walls, cliffs, trees and sprites keep theirs. HD renders of the village before / after.
+    (2) Spikes: `tools/spike_art.py` paints tiles $0842 / $0843 (key 1B0C0F, the spike floors of area $AD and others) as
+    steel cones (cylinder shading, specular streak, socket ring, cast shadow, dark stone) into packs/backgrounds,
+    seamless (each tile painted from the whole field: its row, the base of the row above, the neighbours).
+    (3) Pod: the playtest-9 recolouring made the all-black stand-in visible, then the game's player stepped out above it;
+    `PodSilhouette` now removes the stand-in's pixels while sprite palette 0 is all black (the NES look: black on the
+    black doorway), the game's fade-in is untouched. (4) Voice latency: the Kokoro server runs one throwaway sentence
+    after loading (ONNX Runtime's first run), a long first sentence is split at its comma, and every spoken sentence is
+    cached per voice in %LOCALAPPDATA%\re-c\voicecache (repeats are instant), played back in sentence order.

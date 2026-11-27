@@ -286,6 +286,10 @@ internal static unsafe partial class Win32
     [LibraryImport("ole32.dll")]
     public static partial int CoCreateInstance(Guid* clsid, void* outer, uint ctx, Guid* iid, void** obj);
 
+    // ---- user32: playtest 11, the reset confirmation
+    [LibraryImport("user32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial int MessageBoxW(IntPtr hwnd, string text, string caption, uint type);
+
     // ---- dwmapi: playtest 3, the GDI picture paced to the compositor (no tearing)
     [LibraryImport("dwmapi.dll")]
     public static partial int DwmFlush();

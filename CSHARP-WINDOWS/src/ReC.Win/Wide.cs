@@ -141,6 +141,8 @@ internal sealed class Widescreen
     public int CamX, CamY;
     /// <summary>gameplay with an area loaded (main_state 1, not new-game init / area load / the wake-up scene): sides only then</summary>
     public bool Active;
+    /// <summary>playtest 11: forget the area (a game reset): the next gameplay frame builds it again</summary>
+    public void Drop() { Cache = null; _areaKey = 0; _fullKey = 0; Show = 0; Array.Clear(LineOk); }
     /// <summary>the area pixel at screen (0, 0) used for the sides: the camera + a correction (Search) for areas where the
     /// camera bytes and the screen disagree (e.g. a scenario or a keep-position map: the screen shows another place)</summary>
     public int MapX => CamX + _corrX;
