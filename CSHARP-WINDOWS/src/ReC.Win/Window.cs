@@ -231,11 +231,13 @@ internal static unsafe partial class Window
     private static readonly int[] _fTag = new int[256 * 240];
     private static readonly bool[] _fLines = new bool[240];
 
-    /// <summary>playtest 6 ("NES flicker"): in gameplay (main_state 1, no message window: irq_mode 0) the objects the
+    /// <summary>playtest 6 ("NES flicker"): in plain play (main_state 1, sub_state 8 SubstPlay, no message window: irq_mode 0) the objects the
     /// game left out of this frame's sprite list are drawn from object RAM, so nothing blinks at 30 Hz</summary>
     public static int FillFlicker(ReC.Nes.VideoCapture cap, SceneRaster raster, SideSprites ss, Machine m, int hudTop)
     {
-        if (!ss.Valid || ss.Ram[0x40] != 1 || ss.Ram[0x51] != 0) return 0;
+        // SubstPlay only (sub_state 8): cut-scenes (the wake-up scene $13 keeps the player object undrawn until he climbs out
+        // of the chamber), area loads, talks and menus draw what they mean to
+        if (!ss.Valid || ss.Ram[0x40] != 1 || ss.Ram[0x41] != 8 || ss.Ram[0x51] != 0) return 0;
         int my = Enumerable.Range(16, 160).FirstOrDefault(y => cap.SprValid[y], -1);
         if (my < 0) return 0;
         var rg = cap.Spr[my];

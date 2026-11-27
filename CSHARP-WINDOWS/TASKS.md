@@ -395,3 +395,4 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] P11 (2026-11-26, playtest 6): per-NPC voices by sex and age (125 NPCs classified), neural Piper voice in dist\voice (fallback: Windows voice).
 - [x] P12 (2026-11-26, playtest 6): no game sprite flicker in HD (objects the sprite pass skipped are drawn from object RAM).
 - [x] P13 (2026-11-26, playtest 6): widescreen map continues behind the HUD (panel overlays it), scroll-edge seam fixed; Piper ships the VC++ runtime, voice.log + fallback notice.
+- [x] P14 (2026-11-26, playtest 6): no ghost of the player in the wake-up cut-scene (no-flicker fill only in SubstPlay).

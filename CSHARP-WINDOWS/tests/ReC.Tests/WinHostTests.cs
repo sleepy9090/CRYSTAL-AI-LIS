@@ -1292,6 +1292,35 @@ internal static partial class Program
             True(Math.Abs(playerAdded - inv / 2) <= inv / 6, $"the player is filled in on the blink frames the game skips ({playerAdded} of {inv})");
             Eq(0, dup, "the player is only added while blinking (never drawn twice)");
         }),
+        ("win_noflicker_wake", () =>
+        {
+            // playtest 6: "when the player comes out of the first chamber a shadow of him shows before he comes out": the
+            // wake-up cut-scene (sub_state $13, WakeCutscene 20:9400) keeps the player object but does not draw it; the
+            // no-flicker fill must only add objects in SubstPlay (sub_state 8)
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { }); m.Reset();
+            m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+            var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+            var ss = new SideSprites();
+            var keys = Keys.Parse("1250:START 1400:START 1600:START 1700:START 2301:START".Split(' '));
+            int cut = 0, addedInCut = 0, play = 0;
+            var subs = new SortedSet<int>();
+            while (214 + m.Frame < 3400)
+            {
+                ss.Snapshot(m);
+                m.RunFrame(keys.TryGetValue(214 + m.Frame, out int b) ? b : 0);
+                if (214 + m.Frame < 2300) continue;
+                r.Build(m.Ppu.Capture);
+                Window.FillFlicker(m.Ppu.Capture, r, ss, m, 232);
+                int sub = ss.Ram[0x41];
+                if (ss.Ram[0x40] == 1) subs.Add(sub);
+                if (ss.Ram[0x40] == 1 && sub == 0x13) { cut++; if (ss.Added.Count > 0) addedInCut++; }
+                if (ss.Ram[0x40] == 1 && sub == 8) play++;
+            }
+            Console.WriteLine($"  win_noflicker_wake: f2300-3399: {cut} wake-up cut-scene frames ({addedInCut} with objects added), {play} play frames; sub_states {string.Join(",", subs.Select(s => s.ToString("X2")))}");
+            True(cut > 100 && play > 100, "the run covers the cut-scene and play after it");
+            Eq(0, addedInCut, "nothing is added during the wake-up cut-scene (the player comes out of the chamber as the game draws him)");
+        }),
         ("win_dialogue", () =>
         {
             // playtest 6: NPC text read aloud. group18 walks into Akahana (TalkStart f2562), 2 pages closed by A x2 (f2769)

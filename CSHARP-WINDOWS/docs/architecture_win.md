@@ -638,3 +638,8 @@ CSHARP-WINDOWS/
     Microsoft's MSVCP140 / VCRUNTIME140 / VCRUNTIME140_1 (PyPI `msvc-runtime` 14.51) next to it. Piper starts with the game
     (`Window.StartVoice`; not in `--frames` / `--keys` runs), `%APPDATA%\re-c\voice.log` records the start, Piper's
     stderr, the first page and why it fell back; a Piper that exits switches to the Windows voice with a notice.
+    **No-flicker fill only in SubstPlay (playtest 6 bug):** coming out of the first chamber, a ghost of the player (and its
+    HD shadow) showed before he climbed out: the wake-up cut-scene (sub_state `$13`, WakeCutscene 20:9400) keeps the
+    player object but does not draw it, and the fill drew it from object RAM. `FillFlicker` now runs only in sub_state 8
+    (SubstPlay); cut-scenes, area loads, talks and menus show exactly what the game draws. `win_noflicker_wake`
+    (power-on, new game without a held button, f2300-3399): 505 cut-scene frames, objects added in 504 before, 0 now.
