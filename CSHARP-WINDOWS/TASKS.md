@@ -405,3 +405,5 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] P21 (2026-11-27, playtest 11): shop and inn dialogue spoken (nametable reader, keeper voices).
 - [x] P22 (2026-11-27, playtest 11): Game > Reset game (F8, confirmation, save kept).
 - [x] P23 (2026-11-27, playtest 12): no relief lines on sand / earth, painted steel spikes, pod stand-in hidden, voice warm-up / comma split / cache.
+- [x] P24 (2026-11-27, playtest 12): glowing enemy / boss / player shots and explosions that light their surroundings.
+- [x] P25 (2026-11-27, playtest 12): weather-driven wind (trees sway, leaves, wind sound), lit shop / inn interiors.

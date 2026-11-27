@@ -28,6 +28,7 @@ cbuffer C : register(b0)
     float4 Dmg;    // T57 damage feedback: hit flash 0..1, low life 0 / 1, -, -
     float4 Col0, Col1, Col2;   // T60 display colour matrix rows (brightness, vivid, colour-blind assist)
     float4 Scr;    // widescreen: picture columns (256 or wider), lines (240), side width, -
+    float4 Room;   // playtest 12: x = shop / inn interior (1)
 };
 Texture2D SrcA : register(t0);
 Texture2D SrcB : register(t1);
@@ -325,6 +326,9 @@ float4 PSEmit(V i) : SV_Target
             acc += (L.r & 0x80) != 0 ? 0 : NesRgb(c) * Emissive(c);
             // characters carry a little warm light (visible in dark places; hidden sprites have no lift)
             acc += float3(1.0, 0.8, 0.55) * Inf.Load(int3(o + int2(x, y), 0)).r * 0.35;
+            // playtest 12: shots and explosions light up the floor and walls around them in their colour
+            uint ff = (uint)round(Inf.Load(int3(o + int2(x, y), 0)).b * 255) & 0x70;
+            acc += ff == 0 ? float3(0, 0, 0) : (ff & 0x20) != 0 ? float3(0.5, 0.8, 1.0) * 2.4 : (ff & 0x40) != 0 ? float3(1.0, 0.55, 0.2) * 3.2 : float3(1.0, 0.3, 0.55) * 2.6;
         }
     return float4(acc / 4, 1);
 }
@@ -823,7 +827,16 @@ float4 PSLight(V i) : SV_Target
         if (k0 == 2 && c0 < 0x20)                                      // dark (deep) water, not ice
             off = float2(WN(w0 + float2(t * 2, 0), float2(6, 6)) - 0.5, WN(w0 + float2(0, t * 1.5), float2(6, 6)) - 0.5) * 0.7;
         if (k0 == 5 && Scn.x > 0.3)
-            off.x = sin(t * 1.4 + w0.x * 0.045 + w0.y * 0.07) * 0.3 * WN(w0 + float2(t * 6, 0), float2(48, 48));
+        {
+            // playtest 12: the weather's wind (Col0.w strength, Col1.w gust, Col2.w direction): tree canopies (tall in the
+            // height model) sway more than flat grass, faster and further in a storm, leaning downwind, gust waves roll across
+            float ws = Col0.w, wg = Col1.w, wd = Col2.w;
+            float hgt = saturate(H(s) * 1.3);
+            float wave = WN(w0 + float2(-t * (6 + 14 * ws) * (wd >= 0 ? 1 : -1), 0), float2(56, 56));
+            float sway = sin(t * (1.2 + 2.2 * ws) + w0.x * 0.045 + w0.y * 0.07);
+            float amp = (0.18 + 1.0 * ws) * (0.45 + 0.55 * wg) * (0.35 + 0.65 * wave) * (0.35 + 0.95 * hgt);
+            off = float2(sway * 0.7 + wd * 0.45 * ws, sin(t * 2.3 + w0.x * 0.09) * 0.18 * ws) * amp;
+        }
         // heat shimmer: only just above a light source (the light map is brighter a few pixels below)
         float lh = dot(SrcC.SampleLevel(Lin, s, 0).rgb, LUM), lb = dot(SrcC.SampleLevel(Lin, s + float2(0, 6.0 / 240), 0).rgb, LUM);
         float heat = saturate((lb - lh) * 12) * saturate(lb * 4);
@@ -979,9 +992,42 @@ float4 PSLight(V i) : SV_Target
     // weather by scene: snow / ice crystals, rising embers (additive, they glow), falling leaves outdoors
     c += Weather(p, t) * Scn.z;
     float2 lf = Particle(p, 1.3, 26, float2(14, 9), t, 1.2, 2);
-    c = lerp(c, lerp(float3(0.30, 0.50, 0.12), float3(0.75, 0.45, 0.12), frac(lf.y * 7)), lf.x * step(0.82, lf.y) * 0.8 * Scn.x * Opt.z * Scn.z);
+    c = lerp(c, lerp(float3(0.30, 0.50, 0.12), float3(0.75, 0.45, 0.12), frac(lf.y * 7)), lf.x * step(0.82, lf.y) * 0.8 * Scn.x * Opt.z * Scn.z * (0.35 + 1.3 * Col0.w));   // more leaves in the wind
     // T43: the status bar casts a soft shadow up onto the map: from the last tile row above the panel (the row the game
     // has not loaded yet under the split) black, fading in over 4 lines; MeterF.w = status-bar line * 256 + row start
+    // playtest 12: shop / inn interiors (Room.x): a warm lamp light over the room with a gentle flicker, cooler corners;
+    // wood (browns / oranges) gets grain and a sheen, the curtains (purples) soft folds, the plaster (whites) a mottled
+    // finish darker toward the ceiling; dust motes in the lamp light
+    if (Room.x > 0.5 && !spr)
+    {
+        int ci = (int)round(inf.g * 255 / 4) & 63, hue = ci & 15, lv = ci >> 4;
+        float2 lamp = float2(NES.x * 0.5, 96);
+        float ld = length((p - lamp) * float2(1, 1.35)) / 125;
+        float flick = 0.95 + 0.04 * sin(t * 7.3) + 0.025 * sin(t * 13.1 + 1.7);
+        c *= lerp(float3(0.58, 0.58, 0.70), float3(1.22, 1.05, 0.82) * flick, saturate(1.25 - ld));
+        if (hue >= 6 && hue <= 8 && lv >= 1)
+        {
+            float grain = WN(p * float2(0.35, 3.0) + float2(floor(p.y / 4) * 13.7, 0), float2(6, 1)) - 0.5;
+            float sheen = exp(-pow((p.x - lamp.x) / 40, 2)) * smoothstep(0.4, 1.0, dot(a, LUM));
+            c *= 1 + grain * 0.4;
+            c += float3(1.0, 0.85, 0.6) * sheen * 0.22 * flick;
+        }
+        else if (hue >= 3 && hue <= 5)
+            c *= 0.82 + 0.3 * (0.5 + 0.5 * sin(p.x * 0.85 + sin(p.y * 0.06 + t * 0.4) * 0.9));
+        else if (ci == 0x30 || ci == 0x20 || ci == 0x3D || ci == 0x10)
+            c *= 0.93 + 0.09 * WN(p, float2(7, 7)) - 0.14 * saturate((110 - p.y) / 50);
+        c += float3(1.0, 0.9, 0.7) * Motes(p, t) * 0.8 * saturate(1.2 - ld);
+    }
+    // playtest 12: shots and explosions (Window.FxMark flags 16 / 32 / 64) glow: their own colours pushed past white so the
+    // bloom haloes them, a hot core, a fast shimmer; enemy / boss shots red-violet, player shots ice blue, explosions orange
+    uint fx = fl & 0x70;
+    if (fx != 0)
+    {
+        float3 tint = (fx & 0x20) != 0 ? float3(0.55, 0.85, 1.0) : (fx & 0x40) != 0 ? float3(1.0, 0.62, 0.22) : float3(1.0, 0.35, 0.6);
+        float shim = 0.5 + 0.5 * sin(t * 21 + p.x * 0.7 + p.y * 0.4);
+        float core = dot(a, LUM);
+        c = a * (1.45 + 0.3 * shim) + tint * (0.3 + 0.55 * core) + 0.25 * core * core;
+    }
     if (cine) c += CineFx(i.uv * NES, Cam.z);   // T51: in screen space (they do not ride the dolly)
     c *= BarShadow(p);
     return float4(c, 1);

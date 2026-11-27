@@ -68,10 +68,13 @@ internal sealed unsafe partial class Gpu : IDisposable
     public bool CineAllowed = true;
     /// <summary>playtest 7: a remade story scene to paint over the picture band (0 = none; 1 = the intro's prehistoric jungle)</summary>
     public int StoryScene;
+    /// <summary>playtest 12: a shop or inn interior is on screen (warm lamp light, wood grain, curtain folds, plaster)</summary>
+    public bool Room;
     /// <summary>playtest 9: Video > Debug info > HD scene</summary>
     public string DebugText => FormattableString.Invariant($"HD PLAY {_play:0.00}  OUTDOOR {_outdoor:0.00}  STORY {StoryScene}/{(_storyOn ? 1 : 0)} {_storyFade:0.00}  FILM {(Cinematic && CineAllowed ? _cineW : 0):0.00}  Q {Quality}");
     private bool _storyOn;
     private float _storyFade, _storyMax;
+    private (double Strength, double Gust, double Dir) _wind;
     private int _storyKey;
     private int _storyBand;
 
@@ -263,7 +266,7 @@ internal sealed unsafe partial class Gpu : IDisposable
 
     private const uint FmtBgra = 87, FmtRgba8 = 28, FmtRgba8U = 30, FmtRg32U = 17, FmtRgba32F = 2, FmtRgba16F = 10;
     private const uint BindSrv = 8, BindRtv = 0x20;
-    private const int NSrv = 13, NConst = 24;
+    private const int NSrv = 13, NConst = 25;   // playtest 12: + Room
     private static readonly Guid IidTex2D = new("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
     private static readonly Guid IidDxgiDevice1 = new("77db970f-6276-48ba-ba28-070143b4392c");
 
@@ -955,6 +958,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         fixed (float* p = sc.Lines) Update(_lnTex, p, 240 * 16);
         _camX = sc.CamX; _camY = sc.CamY; _time = sc.Time; _outdoor = sc.Outdoor; _voidGate = sc.VoidGate; _play = sc.Play;
         _icy = sc.Icy; _hot = sc.Hot;
+        _wind = Weather.Wind(_time);
         _hudFill = sc.HudFill; _hudTop = sc.HudTop; _hudBottom = sc.HudBottom;
         _meters = Meters(rl, sc.HudFill, Hp);
         if (HudOverlay) _meters[7] = 0;                    // playtest 6: the map continues behind the HUD: no bar shadow on it
@@ -1044,10 +1048,11 @@ internal sealed unsafe partial class Gpu : IDisposable
             _meters[4], _meters[5], _meters[6], _meters[7],
             Cinematic && CineAllowed ? _cineW : 0, _band.Y0 * 256 + _band.Y1, _band.X0 * 1024 + _band.X1, _shotStart,
             Hurt, LowLife ? 1 : 0, Cinematic && _storyOn ? StoryScene : 0, _storyFade,
-            ColorM[0], ColorM[1], ColorM[2], 0,
-            ColorM[3], ColorM[4], ColorM[5], 0,
-            ColorM[6], ColorM[7], ColorM[8], 0,
+            ColorM[0], ColorM[1], ColorM[2], (float)_wind.Strength,                // playtest 12: the weather's wind (Weather.cs)
+            ColorM[3], ColorM[4], ColorM[5], (float)_wind.Gust,
+            ColorM[6], ColorM[7], ColorM[8], (float)_wind.Dir,
             NesW, 240, _sideE, _storyBand,
+            Room ? 1 : 0, 0, 0, 0,                                          // playtest 12: shop / inn interior
         };
         c.CopyTo(_c, 0);
         SetConstants();

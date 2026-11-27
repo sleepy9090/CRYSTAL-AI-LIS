@@ -18,6 +18,8 @@ internal sealed class Ambience
     private double _wo, _wh, _wi, _wc;
     private uint _rng = 0x9E3779B9;
     private double _gust, _gustT, _gustTo;
+    /// <summary>playtest 12: the weather's wind strength 0..1 (Weather.Wind, set per frame by the window)</summary>
+    public double WeatherWind = 0.4;
     private Bp _wl, _wr, _whl, _whr;
     private double _lpl, _lpr, _ru1, _ru2, _roar, _crk, _crkT;
     private Bp _crb;
@@ -80,7 +82,7 @@ internal sealed class Ambience
         {
             _lpl += (White() - _lpl) * 0.15; _lpr += (White() - _lpr) * 0.15;
             double c = 320 + 380 * _gust;
-            double a = 7800 * (0.35 + 0.65 * _gust) * wind;
+            double a = 7800 * (0.35 + 0.65 * _gust) * wind * (0.45 + 1.1 * WeatherWind);   // playtest 12: the weather (Weather.cs)
             l += _wl.Run(_lpl, c, 0.9) * a;
             r += _wr.Run(_lpr, c * 1.07, 0.9) * a;
         }

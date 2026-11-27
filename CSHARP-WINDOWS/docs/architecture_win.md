@@ -731,3 +731,22 @@ CSHARP-WINDOWS/
     black doorway), the game's fade-in is untouched. (4) Voice latency: the Kokoro server runs one throwaway sentence
     after loading (ONNX Runtime's first run), a long first sentence is split at its comma, and every spoken sentence is
     cached per voice in %LOCALAPPDATA%\re-c\voicecache (repeats are instant), played back in sentence order.
+    **Glowing shots and effects (playtest 12: "enhance the boss lasers and bullets, all the boss effects"):**
+    `Window.FxMark` (HD path, after HdScene.Build) flags the shown sprite pixels of three classes in the scene info:
+    enemy / boss shots (spawn byte `$0540` = `$FF`, IsEnemyShot 26:907C) → `FShotEnemy` 16, explosions / puffs (AI `$74`
+    boss explosion, `$08` its shared step, `$7D` death puff) → `FBoom` 64, both by replaying those slots' sprites
+    (`SideSprites.Draw(slotOnly)`); and player sword shots / charge / magic → `FShotPlayer` 32 by their tiles: the sword's
+    CHR bank R3 (`$41-$46`) minus the pixels of world objects (slots $0D-$1F replayed: items share the bank) and the box
+    around the player (the sword in his hand). PSLight pushes their colours past white with a tint (enemy red-violet,
+    player ice blue, explosions orange) and a shimmer, so the bloom haloes them; PSEmit adds them to the light map in that
+    tint (they light the floor and walls). `win_fx_glow`: boss E2 / final boss shots, the charged sword shot, a kill's
+    death puff; nothing glows in a run where nothing is fired. HD render of the E2 boss fight: glowing shots.
+    **Weather and wind (playtest 12: "make the trees move depending on weather patterns"):** `Weather.Wind(seconds)`
+    (Weather.cs, from the clock only): calm / breezy / stormy spells of 1-3 minutes (smooth value noise), gusts over
+    seconds, a direction drifting left / right. Passed as `Col0.w` / `Col1.w` / `Col2.w` (the colour matrix only reads
+    .xyz). Foliage outdoors (material kind 5) is displaced by it, scaled by the height model (tree canopies sway more than
+    flat grass), with gust waves rolling downwind; more leaves blow in strong wind; the ambient wind bed's level follows
+    the same strength (`Ambience.WeatherWind`). `win_weather`: 20 minutes contain both calm and stormy spells, smooth.
+    **Shop / inn interiors (playtest 12):** new constant row `Room` (NConst 25), x = sub_state $20-$23: warm flickering
+    lamp light over the room, cooler corners; browns / oranges (wood, trim) get grain and a lamp sheen, purples (the
+    curtains) soft folds, whites (plaster) a mottled finish darker toward the ceiling; dust motes in the light.

@@ -412,7 +412,7 @@ internal sealed class SideSprites
     /// (ObjSpriteDraw 800E: active, X / Y on screen) but left out of this sprite list $0200 (the 64-sprite list full: the
     /// $07FF rotation drops different objects each frame; $0380 b2 half-rate objects on their off frame) are drawn whole,
     /// objects with any entry in the list are skipped (never twice)</remarks>
-    public void Draw(Data data, byte[] chr, int[] banks, int ctrl, int w, int e, byte[] spr, int[] tag, bool[] lines, bool includeCenter = false, bool missingOnly = false, bool[]? leftMask = null)
+    public void Draw(Data data, byte[] chr, int[] banks, int ctrl, int w, int e, byte[] spr, int[] tag, bool[] lines, bool includeCenter = false, bool missingOnly = false, bool[]? leftMask = null, Func<int, bool>? slotOnly = null)
     {
         if (missingOnly) includeCenter = true;
         Added.Clear();
@@ -428,6 +428,7 @@ internal sealed class SideSprites
         for (int x = 0; x < 0x20; x++)
         {
             if (Ram[0x4A0 + x] == 0) continue;
+            if (slotOnly != null && !slotOnly(x)) continue;            // playtest 12: one class of objects (FxMark)
             int objX = Ram[0x70 + x] | Ram[0x90 + x] << 8;
             int sx = objX - camX;                                       // screen x, may be outside 0..255
             if (missingOnly ? sx is < 0 or > 255 : sx < -e - 64 || sx > 255 + e + 64) continue;

@@ -1292,6 +1292,66 @@ internal static partial class Program
             True(Math.Abs(playerAdded - inv / 2) <= inv / 6, $"the player is filled in on the blink frames the game skips ({playerAdded} of {inv})");
             Eq(0, dup, "the player is only added while blinking (never drawn twice)");
         }),
+        ("win_weather", () =>
+        {
+            // playtest 12: trees move with the weather: one wind from the clock, calm / breezy / stormy spells, gusts
+            double maxJump = 0, minS = 1, maxS = 0; int calm = 0, storm = 0, left = 0, right = 0;
+            var prev = Weather.Wind(0);
+            for (int k = 1; k <= 20 * 60 * 10; k++)
+            {
+                var w = Weather.Wind(k / 10.0);
+                True(w.Strength is >= 0 and <= 1 && w.Gust is >= 0 and <= 1 && w.Dir is >= -1 and <= 1, "wind in range");
+                maxJump = Math.Max(maxJump, Math.Abs(w.Strength - prev.Strength));
+                minS = Math.Min(minS, w.Strength); maxS = Math.Max(maxS, w.Strength);
+                if (w.Strength < 0.1) calm++; if (w.Strength > 0.8) storm++;
+                if (w.Dir < -0.5) left++; if (w.Dir > 0.5) right++;
+                prev = w;
+            }
+            Console.WriteLine($"  win_weather: 20 min: strength {minS:F2}..{maxS:F2}, calm {calm / 10} s, stormy {storm / 10} s, wind left {left / 10} s / right {right / 10} s, largest step per 0.1 s {maxJump:F4}");
+            True(calm > 600 && storm > 600, "both calm and stormy spells within 20 minutes");
+            True(maxJump < 0.02, "the wind changes smoothly");
+            True(Weather.Wind(123.4) == Weather.Wind(123.4), "deterministic");
+        }),
+        ("win_fx_glow", () =>
+        {
+            // playtest 12: shots / boss shots / explosions are found and flagged for the glow (Window.FxMark)
+            var d = TheData.Value;
+            foreach (var (st, keySpec, frames) in new[] { ("group28", "", 480), ("group05", "2528:UP:24 2552:LEFT:35 2587:B:3 2601:B:4 2614:B:4 2629:B:4 2642:B:4 2657:B:4 2701:LEFT:19", 300), ("thunder", "2513:B:120", 440), ("bosse2", "", 480), ("finalboss", "", 600) })
+            {
+                var m = new Machine(d, _ => { }); m.Reset();
+                var stt = StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", st + ".json"));
+                m.LoadState(stt);
+                int f0 = stt.Frame0 ?? stt.Frame;
+                var keys = Keys.Parse(keySpec.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+                m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+                var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+                var ss = new SideSprites();
+                var tot = new int[3]; int bad = 0;
+                for (int f = 0; f < frames; f++)
+                {
+                    ss.Snapshot(m);
+                    m.RunFrame(keys.TryGetValue(f0 + m.Frame, out int b) ? b : 0);
+                    r.Build(m.Ppu.Capture);
+                    var sc = new HdScene(d.NesRgb);
+                    sc.Build(r.Fb, r.Tags, r.LinePal[239], new byte[61440], r.LineScroll, 0);
+                    Window.FxMark(m.Ppu.Capture, r, sc, ss, m);
+                    for (int i = 0; i < 256 * 240; i++)
+                    {
+                        int fl = sc.Info[i * 4 + 2];
+                        if ((fl & HdScene.FShotEnemy) != 0) tot[0]++;
+                        if ((fl & HdScene.FShotPlayer) != 0) tot[1]++;
+                        if ((fl & HdScene.FBoom) != 0) tot[2]++;
+                        if ((fl & 0x70) != 0 && r.Sp[i] == 0) bad++;
+                    }
+                }
+                Console.WriteLine($"  win_fx_glow: {st}: glowing pixel-frames enemy shots {tot[0]}, player shots {tot[1]}, explosions / puffs {tot[2]}");
+                Eq(0, bad, $"{st}: only shown sprite pixels glow");
+                if (st == "group28") Eq(0, tot[1], "nothing fired: no player-shot glow (the sword in hand and items stay plain)");
+                else True(tot.Sum() > 0, $"{st}: projectiles / effects found");
+                if (st == "group05") True(tot[2] > 0, "the kill's death puff glows");
+                if (st == "thunder") True(tot[1] > 0, "the charged sword shot glows");
+            }
+        }),
         ("win_reset_game", () =>
         {
             // playtest 11: Game > Reset game (F8): back to the title, the battery save area kept. Power on, start a new game

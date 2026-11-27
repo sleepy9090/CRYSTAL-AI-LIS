@@ -238,6 +238,53 @@ internal static unsafe partial class Window
 
     /// <summary>playtest 6 ("NES flicker"): in plain play (main_state 1, sub_state 8 SubstPlay, no message window: irq_mode 0) the objects the
     /// game left out of this frame's sprite list are drawn from object RAM, so nothing blinks at 30 Hz</summary>
+    private static readonly byte[] _xSpr = new byte[256 * 240];
+    private static readonly int[] _xTag = new int[256 * 240];
+    private static readonly bool[] _xLines = Enumerable.Repeat(true, 240).ToArray();
+
+    /// <summary>playtest 12 ("enhance the boss lasers and bullets, all the boss effects"): the shown sprite pixels of enemy / boss
+    /// shots (spawn byte $0540 = $FF, IsEnemyShot 26:907C), player shots (slots 2, 4-11) and explosions / puffs (AI $74 boss
+    /// explosion, $08 its shared step, $7D death puff) get HdScene.FShotEnemy / FShotPlayer / FBoom in the scene info: the
+    /// shaders make them glow, bloom and light their surroundings. Gameplay only (main_state 1). Returns the pixels marked</summary>
+    public static int FxMark(ReC.Nes.VideoCapture cap, SceneRaster raster, HdScene sc, SideSprites ss, Machine m)
+    {
+        if (!ss.Valid || ss.Ram[0x40] != 1 || raster.W != 256) return 0;
+        int my = Enumerable.Range(16, 160).FirstOrDefault(y => cap.SprValid[y], -1);
+        if (my < 0) return 0;
+        var rg = cap.Spr[my];
+        var banks = new int[8];
+        for (int k = 0; k < 8; k++) banks[k] = rg.Banks[k];
+        var ram = ss.Ram;
+        int marked = 0;
+        foreach (var (flag, test) in new (byte, Func<int, bool>)[]
+        {
+            (HdScene.FShotEnemy, x => x >= 0x0D && ram[0x540 + x] == 0xFF),
+            (HdScene.FBoom, x => x >= 0x0D && ram[0x4A0 + x] is 0x74 or 0x08 or 0x7D),
+        })
+        {
+            if (!Enumerable.Range(0, 32).Any(x => ram[0x4A0 + x] != 0 && test(x))) continue;
+            ss.Draw(m.Data, m.Ppu.Chr, banks, rg.Ctrl, 256, 0, _xSpr, _xTag, _xLines, includeCenter: true, slotOnly: test);
+            for (int i = 0; i < 256 * 240; i++)
+                if (_xSpr[i] != 0 && raster.Sp[i] != 0) { sc.Info[i * 4 + 2] |= flag; marked++; }
+        }
+        // player sword shots, charge and magic: drawn from the sword's CHR bank (R3 = $41 + sword level, banks $41-$46;
+        // the player himself is bank $40), not by the object sprite pass, so they are found by their tiles
+        // (items and other world objects that share the bank are slots $0D-$1F: their replayed pixels are left out)
+        ss.Draw(m.Data, m.Ppu.Chr, banks, rg.Ctrl, 256, 0, _xSpr, _xTag, _xLines, includeCenter: true, slotOnly: x => x >= 0x0D);
+        for (int i = 0; i < 256 * 240; i++)
+        {
+            int st = raster.SpTag[i];
+            if (raster.Sp[i] == 0 || (st & ReC.Nes.Ppu.TagValid) == 0) continue;
+            int bank = (st & 0x1FFF) >> 6;
+            if (bank is < 0x41 or > 0x46) continue;
+            if (_xSpr[i] != 0) continue;                                        // a world object's pixel
+            int dx = (i & 255) - ram[0x5C1], dy = (i >> 8) - ram[0x5E1];      // the sword in his hand stays plain
+            if (dx is > -14 and < 14 && dy is > -26 and < 8) continue;
+            sc.Info[i * 4 + 2] |= HdScene.FShotPlayer; marked++;
+        }
+        return marked;
+    }
+
     public static int FillFlicker(ReC.Nes.VideoCapture cap, SceneRaster raster, SideSprites ss, Machine m, int hudTop)
     {
         // SubstPlay only (sub_state 8): cut-scenes (the wake-up scene $13 keeps the player object undrawn until he climbs out
@@ -277,10 +324,12 @@ internal static unsafe partial class Window
             else _enh.LiftHd(fb, tags);
             _scene ??= new HdScene(_nesRgb);
             _scene.Build(fb, tags, pal, _enh.HdLift, _raster!.LineScroll, _frameNo);
+            if (_m.Ppu.Capture is { } fxCap) FxMark(fxCap, _raster, _scene, SideSpr, _m);   // playtest 12: glowing shots / explosions
             _gpu.Hp = _m.Mem.RamBytes[0x03C1];               // T35: LIFE meter fill (HudHpBar draws from it)
             _gpu.Hurt = _v.Feedback ? Damage.Hurt : 0; _gpu.LowLife = _v.Feedback && Damage.Low;   // T57
             _gpu.CineAllowed = CineAllowed(_m.Mem.RamBytes[0x40], _m.Mem.RamBytes[0x6F0]);
             _gpu.StoryScene = StoryScene(_m.Mem.RamBytes[0x40], _m.Mem.RamBytes[0x6F0]);   // playtest 7: remade story art
+            _gpu.Room = DialogueReader.InShop(_m.Mem.RamBytes[0x40], _m.Mem.RamBytes[0x41]);   // playtest 12: shop / inn interiors
             if (WideW > 256)                                 // widescreen: the wide copy of the raster, the sides from the area
             {
                 WideAfterFrame(_raster!.Fb);
@@ -425,6 +474,7 @@ internal static unsafe partial class Window
         {
             float lum = s.Mean.R * 0.299f + s.Mean.G * 0.587f + s.Mean.B * 0.114f;
             a.Outdoor = s.Outdoor; a.Hot = s.Hot; a.Icy = s.Icy;
+            a.WeatherWind = Weather.Wind(s.Time).Strength;           // playtest 12: heard as the trees show it
             a.Cave = s.Play * (1 - s.Outdoor) * (1 - s.Hot) * (1 - s.Icy) * Math.Clamp((0.32f - lum) / 0.15f, 0, 1);
         }
         else a.Outdoor = a.Hot = a.Icy = a.Cave = 0;
@@ -759,7 +809,7 @@ internal static unsafe partial class Window
                         int buttons = _input.Read() | (_scripted ? 0 : _pad.Read(now) | MouseButtons());
                         if (!_scripted) buttons = VideoSettings.Turbo(buttons, m.Frame, _v.TurboA, _v.TurboB);   // T38
                         if (_v.Wide > 0) Wide.BeforeFrame(m, data);
-                        if (_v.Wide > 0 || (HdEngine && _v.HdNoFlicker)) SideSpr.Snapshot(m);   // objects + sprite list shown this frame   // widescreen: camera + objects of this frame
+                        if (_v.Wide > 0 || HdEngine) SideSpr.Snapshot(m);   // objects + sprite list shown this frame   // widescreen: camera + objects of this frame
                         m.RunFrame(buttons); _acc -= step; ran = true; ranTotal++;
                         _v.Cheats.Apply(m, (buttons & 0x40) != 0);           // T36 cheats (B = bit 6)
                         if (!_scripted) Speak(m);                            // playtest 6: spoken dialogue
