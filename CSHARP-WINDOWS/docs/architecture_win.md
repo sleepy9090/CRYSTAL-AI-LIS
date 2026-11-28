@@ -784,3 +784,12 @@ CSHARP-WINDOWS/
     drives a finish per armour id (a tint and a metallic highlight sliding across) and a blade glow in the sword's element
     colour (wind, fire, water, thunder; Crystalis white). The shot glow and the light map skip player pixels.
     **Cheats > Walk through walls** (`Machine.NoClip`, see §5 above): `win_ghost` (group08: down / left / right pass walls).
+    **Playtest 13 (cont.):** *Weather only outside:* `Gpu.Outside` = 0 in shops / inns, else the outdoor weight sharpened
+    ((outdoor − 0.55) / 0.3), multiplied into precipitation, lightning and heat; snow also needs it; rain / thunder sound
+    the same rule. *Height parallax:* raised scenery (the background height model, SrcB) leans away from the view centre
+    by up to ~1.5 px, so higher ground slides against lower ground as the camera moves (parallax option). *Bridges:*
+    `tools/bridge_art.py` paints the wooden bridge tiles $000F (planks: weathered boards with grain, a knot, nails at the
+    joints, lit / shadowed edges, dark gaps) and $0051 (twisted rope rail + post), key 27070F, seamless. *Portraits:* the
+    NPC's front view (of the four facing ids `meta & ~3` + 0..3, the one most left-right symmetric with the most detail in
+    its head: a face has eyes, the back of a head does not), Scale2x twice (x4, smooth pixel-art edges), lit from the
+    top left, a soft outline.

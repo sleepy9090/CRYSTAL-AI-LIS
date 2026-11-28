@@ -503,8 +503,9 @@ internal static unsafe partial class Window
             a.WeatherWind = Weather.Wind(s.Time).Strength;           // playtest 12: heard as the trees show it
             // playtest 13: rain outdoors (snow is silent), thunder a moment after each lightning strike
             var sky = Weather.Sky(s.Time);
-            a.Rain = (float)(sky.Precip * s.Outdoor * (1 - Math.Min(1, s.Icy * 2)) * s.Play);
-            if (sky.Strike > _lastStrike && s.Outdoor > 0.3) { a.Thunder(0.5 + 1.8 * ((sky.Strike * 7.31) % 1)); }
+            float outside = DialogueReader.InShop(_m!.Rd(0x40), _m.Rd(0x41)) ? 0 : Math.Clamp((s.Outdoor - 0.55f) / 0.3f, 0, 1);   // not indoors
+            a.Rain = (float)(sky.Precip * outside * (1 - Math.Min(1, s.Icy * 2)) * s.Play);
+            if (sky.Strike > _lastStrike && outside > 0.5) { a.Thunder(0.5 + 1.8 * ((sky.Strike * 7.31) % 1)); }
             if (sky.Strike > _lastStrike) _lastStrike = sky.Strike;
             a.Cave = s.Play * (1 - s.Outdoor) * (1 - s.Hot) * (1 - s.Icy) * Math.Clamp((0.32f - lum) / 0.15f, 0, 1);
         }
@@ -641,7 +642,7 @@ internal static unsafe partial class Window
         _osdShown = Osd.Build(_paused, _fast, _notice, cheats, _help, _v.ShowFps ? Stats.Text : null,
             _remap >= 0 ? $"PRESS A KEY FOR {Input.Names[_remap]}\nNOW: {(_v.KeyBinds[_remap] != 0 ? Input.KeyName(_v.KeyBinds[_remap]) : "DEFAULT KEYS ONLY")}\nBACKSPACE KEEPS IT   ESC CANCELS" : null,
             DebugLines());
-        if (_portrait != null && !_paused) { Osd.Portrait(12, 172, 4, _portrait, _portW, _portH); _osdShown = true; }
+        if (_portrait != null && !_paused) { Osd.Portrait(12, 172, 1, _portrait, _portW, _portH); _osdShown = true; }
         return _osdShown;
     }
     private static bool _osdShown;
@@ -653,6 +654,29 @@ internal static unsafe partial class Window
     /// <summary>playtest 13 ("when talking to NPCs add a face portrait by the text"): while an NPC talks (sub_state $11, a talking
     /// NPC id from Cast.Speaker), its sprite (talk slot $0623) is replayed from the object snapshot (SideSprites), cropped
     /// to its pixels and kept for the overlay; cleared when the talk ends. HD engine (the sprite CHR banks of the capture)</summary>
+    /// <summary>Scale2x (EPX): each pixel into 2 x 2, corners taking a neighbour's colour where two edges agree (0 = clear)</summary>
+    private static (uint[] P, int W, int H) Scale2x(uint[] s, int w, int h)
+    {
+        var o = new uint[w * 2 * h * 2];
+        uint At(int x, int y) => x < 0 || y < 0 || x >= w || y >= h ? 0 : s[y * w + x];
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+            {
+                uint p = At(x, y), a = At(x, y - 1), b = At(x + 1, y), c = At(x - 1, y), d = At(x, y + 1);
+                uint e0 = p, e1 = p, e2 = p, e3 = p;
+                if (a != d && c != b)
+                {
+                    if (c == a) e0 = a;
+                    if (a == b) e1 = b;
+                    if (c == d) e2 = c;
+                    if (d == b) e3 = d;
+                }
+                int ox = x * 2, oy = y * 2, ow = w * 2;
+                o[oy * ow + ox] = e0; o[oy * ow + ox + 1] = e1; o[(oy + 1) * ow + ox] = e2; o[(oy + 1) * ow + ox + 1] = e3;
+            }
+        return (o, w * 2, h * 2);
+    }
+
     private static void UpdatePortrait()
     {
         var m = _m;
@@ -667,7 +691,44 @@ internal static unsafe partial class Window
         var rg = cap.Spr[my];
         var banks = new int[8];
         for (int k = 0; k < 8; k++) banks[k] = rg.Banks[k];
+        // playtest 13: always the front (facing down, standing): the facing offset $0360 and the walk frame $04E0 set to 0 in
+        // the snapshot copy for this replay, then put back
+        var ram = SideSpr.Ram;
+        byte keepDir = ram[0x360 + slot], keepAnim = ram[0x4E0 + slot], keepMeta = ram[0x300 + slot];
+        // the front view is the most left-right symmetric of the facings (0-3): each is replayed and scored, the best is kept
+        int bestDir = 2; double bestSym = -1;
+        // NPCs turn by their sprite id (the facing flag b0 of $0380 is set): candidates = the ids of the pair, and the facings
+        int[] cands = { keepMeta & 0xFC, (keepMeta & 0xFC) + 1, (keepMeta & 0xFC) + 2, (keepMeta & 0xFC) + 3 };   // the four facings
+        for (int dir = 0; dir < 4; dir++)
+        {
+            ram[0x300 + slot] = (byte)cands[dir]; ram[0x360 + slot] = 0; ram[0x4E0 + slot] = 0;
+            SideSpr.Draw(m.Data, m.Ppu.Chr, banks, rg.Ctrl, 256, 0, _pSpr, _pTag, _xLines, includeCenter: true, slotOnly: x => x == slot);
+            int bx0 = 256, bx1 = -1;
+            for (int i = 0; i < 256 * 240; i++) if (_pSpr[i] != 0) { bx0 = Math.Min(bx0, i & 255); bx1 = Math.Max(bx1, i & 255); }
+            if (bx1 < 0) continue;
+            int same = 0, tot = 0;
+            for (int i = 0; i < 256 * 240; i++)
+            {
+                if (_pSpr[i] == 0) continue;
+                int x = i & 255, mx = bx0 + bx1 - x;
+                tot++;
+                if ((_pSpr[(i & ~255) + mx] & 0x0F) == (_pSpr[i] & 0x0F)) same++;
+            }
+            // + detail in the head (colour changes inside its top 10 lines): a face has eyes, the back of a head is one colour
+            int by0 = 240; for (int i = 0; i < 256 * 240; i++) if (_pSpr[i] != 0) { by0 = i >> 8; break; }
+            int changes = 0;
+            for (int y = by0; y < Math.Min(240, by0 + 10); y++)
+                for (int x = bx0 + 1; x <= bx1; x++)
+                {
+                    int a2 = _pSpr[y * 256 + x], b2 = _pSpr[y * 256 + x - 1];
+                    if (a2 != 0 && b2 != 0 && (a2 & 0x0F) != (b2 & 0x0F)) changes++;
+                }
+            double sym = same / (double)Math.Max(1, tot) + 0.03 * changes;
+            if (sym > bestSym + 0.02) { bestSym = sym; bestDir = dir; }
+        }
+        ram[0x300 + slot] = (byte)cands[bestDir]; ram[0x360 + slot] = 0; ram[0x4E0 + slot] = 0;
         SideSpr.Draw(m.Data, m.Ppu.Chr, banks, rg.Ctrl, 256, 0, _pSpr, _pTag, _xLines, includeCenter: true, slotOnly: x => x == slot);
+        ram[0x360 + slot] = keepDir; ram[0x4E0 + slot] = keepAnim; ram[0x300 + slot] = keepMeta;
         int x0 = 256, x1 = -1, y0 = 240, y1 = -1;
         for (int i = 0; i < 256 * 240; i++)
             if (_pSpr[i] != 0) { int x = i & 255, y = i >> 8; x0 = Math.Min(x0, x); x1 = Math.Max(x1, x); y0 = Math.Min(y0, y); y1 = Math.Max(y1, y); }
@@ -683,7 +744,31 @@ internal static unsafe partial class Window
                 int col = pal[0x10 | (sp & 0x0F)] & 0x3F;
                 pix[y * w + x] = (uint)_nesRgb[col] | 0x01000000;          // (nonzero even for black)
             }
-        _portrait = pix; _portW = w; _portH = h;
+        // playtest 13: "more sophisticated": Scale2x twice (smooth pixel-art edges, x4), then shading: a light from the top left
+        // across the figure, a darker lower part, and a soft dark outline around it
+        var (p2, w2, h2) = Scale2x(pix, w, h);
+        var (p4, w4, h4) = Scale2x(p2, w2, h2);
+        var shaded = new uint[w4 * h4];
+        for (int y = 0; y < h4; y++)
+            for (int x = 0; x < w4; x++)
+            {
+                uint c = p4[y * w4 + x];
+                if (c == 0)
+                {
+                    bool edge = false;
+                    for (int k = 0; k < 9 && !edge; k++)
+                    {
+                        int qx = x + k % 3 - 1, qy = y + k / 3 - 1;
+                        if (qx >= 0 && qy >= 0 && qx < w4 && qy < h4 && p4[qy * w4 + qx] != 0) edge = true;
+                    }
+                    if (edge) shaded[y * w4 + x] = 0x01101018;      // outline
+                    continue;
+                }
+                float l = 1.18f - 0.38f * (y / (float)h4) - 0.12f * (x / (float)w4);
+                int r = (int)Math.Min(255, (c >> 16 & 255) * l), g = (int)Math.Min(255, (c >> 8 & 255) * l), b = (int)Math.Min(255, (c & 255) * l);
+                shaded[y * w4 + x] = 0x01000000u | (uint)r << 16 | (uint)g << 8 | (uint)b;
+            }
+        _portrait = shaded; _portW = w4; _portH = h4;
     }
 
     /// <summary>playtest 7: the Video > Debug info lines, from game RAM: area_id $6C / entrance $6D, player slot 1

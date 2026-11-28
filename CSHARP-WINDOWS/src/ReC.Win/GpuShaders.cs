@@ -595,7 +595,7 @@ float3 Weather(float2 p, float t)
         float drift = Col2.w * Col0.w * 26;
         float2 a = Particle(p, 1.2, 12, float2(-4 + drift, 18 + 10 * Room.y), t, 1.2, 2);
         float2 b = Particle(p, 1.45, 18, float2(-6 + drift * 1.4, 30 + 16 * Room.y), t, 1.9, 2);
-        c += float3(0.9, 0.95, 1.0) * (a.x * step(0.3 - 0.2 * Room.y, a.y) * 0.65 + b.x * step(0.45 - 0.25 * Room.y, b.y) * 0.8) * Opt2.z * (0.45 + 1.2 * Room.y);
+        c += float3(0.9, 0.95, 1.0) * (a.x * step(0.3 - 0.2 * Room.y, a.y) * 0.65 + b.x * step(0.45 - 0.25 * Room.y, b.y) * 0.8) * Opt2.z * (0.45 + 1.2 * Room.y) * saturate((Scn.x - 0.55) / 0.3) * (1 - Room.x);   // playtest 13: outside only
     }
     if (Opt2.w > 0.01)                                                // embers rising, flickering
     {
@@ -944,6 +944,10 @@ float4 PSLight(V i) : SV_Target
         // playtest 7: smooth, slow and small (fine 2.5 px cells shifted each row on its own = torn rows over a lava floor)
         off += float2(FN(p * 0.5 + float2(0, t * 5), 9) - 0.5, (FN(p * 0.5 + float2(t * 2, t * 5) + 31, 9) - 0.5) * 0.5) * heat * 0.35;
         off.x += sin(p.y * 0.18 + p.x * 0.03 + t * 2.6) * 0.3 * Room.w * Scn.x * Scn.z;   // playtest 13: heat haze (smooth: no row lines)
+        // playtest 13: height parallax: raised scenery (walls, cliffs, trees: the height model) leans away from the view
+        // centre, so as the camera moves higher ground slides a little against lower ground (up to ~1.5 px at the edges)
+        if (Opt.x > 0.5 && Scn.z > 0.5)
+            off += (p - NES * 0.5) / NES.y * saturate(SrcB.SampleLevel(Lin, s, 0).r) * 3.0;
         a = Albedo(s + off / NES);
     }
     float3 c = a;
