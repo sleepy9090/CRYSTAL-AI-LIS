@@ -797,3 +797,13 @@ CSHARP-WINDOWS/
     its silhouette (the sprite flag 1.5 px to the upper left / lower right, 3 px above / below): edges facing the light
     (top left) a highlight, edges facing away shade, the lower body slightly darker; on top of the built-in hero /
     enemy / NPC / boss art packs and the smooth outlines.
+    **Playtest 14:** *Horizontal lines beside moving characters (widescreen):* the GPU height field's jump flood and
+    pillow passes clamped their reads to x ≤ 511 (the 256-pixel picture at 2x). With the widened picture every pixel
+    right of that column read column 511 of its own row, so a sprite edge crossing it was copied across the rest of the
+    row as relief bands (the GTX 1080 recordings; under Wine the lighting there hid them). The clamp now follows the
+    picture width (`NES.x * 2 - 1`). *No weather indoors:* `Window.IsIndoors` = the area's map is one screen (256 x 240:
+    houses, shops, inns; built once per area from AreaCache); `Gpu.Indoors` zeroes rain / lightning / heat / wind and the
+    shader's outdoor gates (`Equip.z`), and the ambience treats it as indoors (no wind bed, rain or thunder); the HD debug
+    line shows INDOORS (`win_indoors`: $02 / $03 outdoors, the NPC house $C0 indoors). *Widescreen:* HUD rows below the
+    map's last line get the sides' dim fill in the game's columns too (they kept black and a green masked-column strip).
+    `--dump-from F` (with `--dump-window`) dumps every frame from F; `tools/band_scan.py` looks for row bands.

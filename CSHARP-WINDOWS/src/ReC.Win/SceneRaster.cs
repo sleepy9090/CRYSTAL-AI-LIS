@@ -163,7 +163,8 @@ internal sealed class SceneRaster
                     Sp[i] = 0; SpCol[i] = 0; SpTag[i] = 0;
                     if (ax < 0 || ay < 0 || ax >= c!.W || ay >= c.H)
                     {
-                        if (!side) continue;                  // outside the area: the game's black stays
+                        // outside the area (the camera at the map's bottom): the same dim fill as the sides (playtest 14: the
+                        // game's columns kept their black and the masked left column's stray green beside the panel)
                         Fb[i] = BgCol[i] = 0x0F; Bg[i] = 0; BgTag[i] = Tags[i] = 0; NoMap[i] = true;
                         continue;
                     }

@@ -5,7 +5,7 @@
  "confidence": "observed",
  "environment": null,
  "evidence_format": 2,
- "evidence_id": "ev_f474f637ea7a0eb458a4fc07cacd4a91d45316c4fd4fdd2a0a9525790c1bff3c",
+ "evidence_id": "ev_ea21d2bb576e89c5e50147f87796cf5770c7b27590ddcffcc76827210b5d5d06",
  "evidence_links": [],
  "limitations": [
   "Static PE32/PE32+ type/name/language resource inventory; payloads other than RT_GROUP_ICON remain opaque.",
@@ -20,9 +20,9 @@
  ],
  "normalized_result": {
   "artifact": {
-   "bytes": 15942173,
+   "bytes": 15952404,
    "path": "./dist/ReC.exe",
-   "sha256": "a412ddc08509ea7d3770b661059625b496a2c9703fe7198913913ba8e5f9ad92"
+   "sha256": "d84ee856dd47f76b51e005a131203c2304dac13261eccb24880a3ea8f2d4a009"
   },
   "coverage": {
    "examined_entries": 25,
@@ -1069,7 +1069,7 @@
    "format": "pe",
    "kind": "file",
    "selection": null,
-   "sha256": "a412ddc08509ea7d3770b661059625b496a2c9703fe7198913913ba8e5f9ad92"
+   "sha256": "d84ee856dd47f76b51e005a131203c2304dac13261eccb24880a3ea8f2d4a009"
   },
   "local_path": "./dist/ReC.exe",
   "name": "ReC.exe"

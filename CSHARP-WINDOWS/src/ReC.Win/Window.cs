@@ -20,6 +20,8 @@ internal sealed class WindowOptions
     public int Scale = 3, Frames = -1, Frame0 = 214;
     /// <summary>playtest 13: --warp AREA (hex): warp there as soon as normal play is reached (testing / debugging)</summary>
     public int Warp = -1;
+    /// <summary>playtest 14 (checks): with --dump-window, also dump every frame from this run frame on (PATH_NNNN.png)</summary>
+    public int DumpFrom = -1;
     public bool Frame0Given, ScaleGiven, Mute, NoAudio, Turbo, Quiet, Fullscreen;
     public string? SavePath, DataDir, StatePath, Screen, Compare, VideoConfig, DumpWindow, PackDir, ExportTiles, OsdShot;
     public readonly List<string> KeySpecs = new(), MenuCmds = new();
@@ -50,6 +52,7 @@ internal sealed class WindowOptions
                 case "--no-audio": o.NoAudio = true; break;
                 case "--frames": o.Frames = int.Parse(V()); break;
                 case "--warp": o.Warp = Convert.ToInt32(V(), 16); break;
+                case "--dump-from": o.DumpFrom = int.Parse(V()); break;
                 case "--frame0": o.Frame0 = int.Parse(V()); o.Frame0Given = true; break;
                 case "--turbo": o.Turbo = true; break;
                 case "--dump-screen": o.Screen = V(); break;
@@ -344,6 +347,7 @@ internal static unsafe partial class Window
             _gpu.CineAllowed = CineAllowed(_m.Mem.RamBytes[0x40], _m.Mem.RamBytes[0x6F0]);
             _gpu.StoryScene = StoryScene(_m.Mem.RamBytes[0x40], _m.Mem.RamBytes[0x6F0]);   // playtest 7: remade story art
             _gpu.Room = DialogueReader.InShop(_m.Mem.RamBytes[0x40], _m.Mem.RamBytes[0x41]);   // playtest 12: shop / inn interiors
+            _gpu.Indoors = IsIndoors(_m);                                    // playtest 14: no weather in houses
             _gpu.Armor = _m.Mem.RamBytes[0x713]; _gpu.Sword = _m.Mem.RamBytes[0x711];   // playtest 13: equipment finish
             if (WideW > 256)                                 // widescreen: the wide copy of the raster, the sides from the area
             {
@@ -499,11 +503,12 @@ internal static unsafe partial class Window
         if (_v.Ambience && HdEngine && _gpu != null && _scene is { } s)
         {
             float lum = s.Mean.R * 0.299f + s.Mean.G * 0.587f + s.Mean.B * 0.114f;
-            a.Outdoor = s.Outdoor; a.Hot = s.Hot; a.Icy = s.Icy;
+            bool inside = IsIndoors(_m!) || DialogueReader.InShop(_m!.Rd(0x40), _m.Rd(0x41));   // playtest 14: houses, shops, inns
+            a.Outdoor = inside ? 0 : s.Outdoor; a.Hot = s.Hot; a.Icy = s.Icy;
             a.WeatherWind = Weather.Wind(s.Time).Strength;           // playtest 12: heard as the trees show it
             // playtest 13: rain outdoors (snow is silent), thunder a moment after each lightning strike
             var sky = Weather.Sky(s.Time);
-            float outside = DialogueReader.InShop(_m!.Rd(0x40), _m.Rd(0x41)) ? 0 : Math.Clamp((s.Outdoor - 0.55f) / 0.3f, 0, 1);   // not indoors
+            float outside = inside ? 0 : Math.Clamp((s.Outdoor - 0.55f) / 0.3f, 0, 1);   // not indoors
             a.Rain = (float)(sky.Precip * outside * (1 - Math.Min(1, s.Icy * 2)) * s.Play);
             if (sky.Strike > _lastStrike && outside > 0.5) { a.Thunder(0.5 + 1.8 * ((sky.Strike * 7.31) % 1)); }
             if (sky.Strike > _lastStrike) _lastStrike = sky.Strike;
@@ -646,6 +651,22 @@ internal static unsafe partial class Window
         return _osdShown;
     }
     private static bool _osdShown;
+    private static readonly Dictionary<int, bool> _indoor = new();
+    /// <summary>playtest 14 ("weather should not occur inside NPC houses"): a single-screen area (the map is one screen,
+    /// 256 x 240: houses, shops, inns) is indoors whatever its floor looks like (a green floor read as outdoors). Built once
+    /// per area from the area data (AreaCache) in normal play; false until then</summary>
+    public static bool IsIndoors(Machine m)
+    {
+        int area = m.Rd(0x6C);
+        if (_indoor.TryGetValue(area, out bool v)) return v;
+        if (m.Rd(0x40) != 1 || m.Rd(0x41) != 8) return false;
+        AreaCache? c = null;
+        try { c = AreaCache.Build(m.Data, AreaCache.Take(m)); } catch (Exception) { }
+        v = c != null && c.W <= 256 && c.H <= 240;
+        _indoor[area] = v;
+        return v;
+    }
+
     private static uint[]? _portrait;
     private static int _portW, _portH;
     private static readonly byte[] _pSpr = new byte[256 * 240];
@@ -985,6 +1006,8 @@ internal static unsafe partial class Window
                         if (o.Turbo) _acc = 0;
                     }
                     if (ran) { _audio.Speed = _fast ? 4 : 1; _audio.Flush(); Blit(); }   // playtest fix: audio first (rendering may be slow)
+                    if (ran && o.DumpFrom >= 0 && ranTotal >= o.DumpFrom && o.DumpWindow != null && _hwnd != IntPtr.Zero)
+                        DumpWindow(Path.ChangeExtension(o.DumpWindow, null) + $"_{ranTotal:D4}.png");
                 }
                 _last = now;
             }

@@ -414,3 +414,4 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] P31 (2026-11-27, playtest 13): walk-through-walls cheat, NPC face portraits, armour finish + sword element glow.
 - [x] P32 (2026-11-27, playtest 13): weather outside only, height parallax, painted wooden bridges, front-facing smoothed portraits.
 - [x] P33 (2026-11-28, playtest 13): volume shading on all characters and enemies.
+- [x] P34 (2026-11-28, playtest 14): widescreen height clamp (horizontal lines beside characters), no weather / wind indoors (single-screen areas), HUD-row fill below the map, --dump-from.

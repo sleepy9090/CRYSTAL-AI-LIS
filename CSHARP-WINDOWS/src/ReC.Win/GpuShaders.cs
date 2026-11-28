@@ -29,7 +29,7 @@ cbuffer C : register(b0)
     float4 Col0, Col1, Col2;   // T60 display colour matrix rows (brightness, vivid, colour-blind assist)
     float4 Scr;    // widescreen: picture columns (256 or wider), lines (240), side width, -
     float4 Room;   // playtest 12: x = shop / inn interior (1); playtest 13 weather: y = rain / snow, z = lightning, w = heat
-    float4 Equip;  // playtest 13: x = armour id, y = sword (1-4, 5 Crystalis)
+    float4 Equip;  // playtest 13: x = armour id, y = sword (1-4, 5 Crystalis); playtest 14: z = indoors (single-screen area)
 };
 Texture2D SrcA : register(t0);
 Texture2D SrcB : register(t1);
@@ -263,7 +263,7 @@ float4 PSJfa(V i) : SV_Target
         {
             float2 q = o + float2(x, y) * Blur.z;
             bool inside = q.x >= 0 && q.y >= 0 && q.x < NES.x * 2 && q.y < 480;
-            float2 s = SrcA.Load(int3(clamp(q, float2(0, 0), float2(511, 479)), 0)).xy;
+            float2 s = SrcA.Load(int3(clamp(q, float2(0, 0), float2(NES.x * 2 - 1, 479)), 0)).xy;
             float d = dot(o - s, o - s);
             bool take = inside && s.x > -1000 && d < bd;          // selects, no branches (unrolled loop)
             bd = take ? d : bd;
@@ -275,7 +275,9 @@ float4 PSJfa(V i) : SV_Target
 // pillow profile of 1 + the distance to the nearest edge (cap 5), blurred 3x3 (= the 32-bit look's height field)
 float Pillow(float2 o)
 {
-    o = clamp(o, float2(0, 0), float2(511, 479));
+    // playtest 14: the clamp follows the picture width (it was 511 = the 256-pixel picture: in widescreen every pixel right
+    // of column 511 read column 511 of its row, so a sprite edge crossing it streaked across the rest of the row)
+    o = clamp(o, float2(0, 0), float2(NES.x * 2 - 1, 479));
     float2 s = SrcA.Load(int3(o, 0)).xy;
     float d = s.x > -1000 ? length(o - s) : 99;
     float t = 1 - min(1 + d, 5) / 5;
@@ -595,7 +597,7 @@ float3 Weather(float2 p, float t)
         float drift = Col2.w * Col0.w * 26;
         float2 a = Particle(p, 1.2, 12, float2(-4 + drift, 18 + 10 * Room.y), t, 1.2, 2);
         float2 b = Particle(p, 1.45, 18, float2(-6 + drift * 1.4, 30 + 16 * Room.y), t, 1.9, 2);
-        c += float3(0.9, 0.95, 1.0) * (a.x * step(0.3 - 0.2 * Room.y, a.y) * 0.65 + b.x * step(0.45 - 0.25 * Room.y, b.y) * 0.8) * Opt2.z * (0.45 + 1.2 * Room.y) * saturate((Scn.x - 0.55) / 0.3) * (1 - Room.x);   // playtest 13: outside only
+        c += float3(0.9, 0.95, 1.0) * (a.x * step(0.3 - 0.2 * Room.y, a.y) * 0.65 + b.x * step(0.45 - 0.25 * Room.y, b.y) * 0.8) * Opt2.z * (0.45 + 1.2 * Room.y) * saturate((Scn.x - 0.55) / 0.3) * (1 - Room.x) * (1 - Equip.z);   // playtest 13: outside only
     }
     if (Opt2.w > 0.01)                                                // embers rising, flickering
     {
@@ -1116,7 +1118,7 @@ float4 PSLight(V i) : SV_Target
     // has not loaded yet under the split) black, fading in over 4 lines; MeterF.w = status-bar line * 256 + row start
     // playtest 13 weather, outdoors in gameplay: rain (not in icy places, they get snow) = an overcast, wet look, slanted
     // streaks blown by the wind in two layers and splashes; lightning flashes the scene; heat (Room.w) warms the grade
-    float outw = Scn.x * Scn.z;
+    float outw = Scn.x * Scn.z * (1 - Equip.z);                                  // playtest 14: not in houses
     float rainA = Room.y * outw * (1 - saturate(Opt2.z * 2));
     if (rainA > 0.01)
     {

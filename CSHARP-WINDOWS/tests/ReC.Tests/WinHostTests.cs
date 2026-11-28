@@ -1567,6 +1567,21 @@ internal static partial class Program
             Eq(0, blackBody, "no black stand-in in the pod doorway");
             Eq(0, liftedHidden, "hidden sprite pixels have no HD lift / sprite flag (no ghost)");
         }),
+        ("win_indoors", () =>
+        {
+            // playtest 14: no weather in NPC houses (area $C0 has a green floor that reads as outdoors)
+            var d = TheData.Value;
+            foreach (var (area, want) in new[] { (0x02, false), (0x03, false), (0xC0, true) })
+            {
+                var m = new Machine(d, _ => { }); m.Reset();
+                m.LoadState(StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", "group08.json")));
+                for (int f = 0; f < 5; f++) m.RunFrame(0);
+                True(Warp.To(m, area), $"warp to {area:X2}");
+                for (int f = 0; f < 400 && !(m.Rd(0x41) == 8 && m.Rd(0x6C) == area); f++) m.RunFrame(f % 40 == 20 ? 0x80 : 0);
+                Eq(area, m.Rd(0x6C), $"in area {area:X2}");
+                Eq(want, Window.IsIndoors(m), $"area {area:X2} indoors");
+            }
+        }),
         ("win_ghost", () =>
         {
             // playtest 13: Cheats > Walk through walls
@@ -2106,7 +2121,7 @@ internal static partial class Program
                         if (wr.Under[i]) under++;
                         bool side = x < e || x >= e + 256;
                         if (side && (wr.BgTag[i] & Ppu.TagValid) != 0) sideMap++;
-                        if (!side && !wr.Under[i]) { panelPx++; if (wr.Fb[i] == r.Fb[y * 256 + x - e]) panelKept++; }
+                        if (!side && !wr.Under[i] && !wr.NoMap[i]) { panelPx++; if (wr.Fb[i] == r.Fb[y * 256 + x - e]) panelKept++; }   // (playtest 14: past the map = side fill)
                     }
                 {
                     int diffR = 0, diffL = 0, tagR = 0;

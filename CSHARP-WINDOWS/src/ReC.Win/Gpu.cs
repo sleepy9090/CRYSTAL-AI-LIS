@@ -74,9 +74,11 @@ internal sealed unsafe partial class Gpu : IDisposable
     public int Armor, Sword;
     /// <summary>playtest 13: weather only outside: 0 in shops / inns, else the scene's outdoor weight sharpened (houses and caves
     /// read as half-outdoor at most, which now gives nothing)</summary>
-    private float Outside => Room ? 0 : Math.Clamp((_outdoor - 0.55f) / 0.3f, 0, 1);
+    /// <summary>playtest 14: a single-screen area (houses, shops, inns): Window.IsIndoors</summary>
+    public bool Indoors;
+    private float Outside => Room || Indoors ? 0 : Math.Clamp((_outdoor - 0.55f) / 0.3f, 0, 1);
     /// <summary>playtest 9: Video > Debug info > HD scene</summary>
-    public string DebugText => FormattableString.Invariant($"HD PLAY {_play:0.00}  OUTDOOR {_outdoor:0.00}  STORY {StoryScene}/{(_storyOn ? 1 : 0)} {_storyFade:0.00}  FILM {(Cinematic && CineAllowed ? _cineW : 0):0.00}  Q {Quality}");
+    public string DebugText => FormattableString.Invariant($"HD PLAY {_play:0.00}  OUTDOOR {_outdoor:0.00}{(Indoors || Room ? " INDOORS" : "")}  STORY {StoryScene}/{(_storyOn ? 1 : 0)} {_storyFade:0.00}  FILM {(Cinematic && CineAllowed ? _cineW : 0):0.00}  Q {Quality}");
     private bool _storyOn;
     private float _storyFade, _storyMax;
     private (double Strength, double Gust, double Dir) _wind;
@@ -1055,12 +1057,12 @@ internal sealed unsafe partial class Gpu : IDisposable
             _meters[4], _meters[5], _meters[6], _meters[7],
             Cinematic && CineAllowed ? _cineW : 0, _band.Y0 * 256 + _band.Y1, _band.X0 * 1024 + _band.X1, _shotStart,
             Hurt, LowLife ? 1 : 0, Cinematic && _storyOn ? StoryScene : 0, _storyFade,
-            ColorM[0], ColorM[1], ColorM[2], (float)_wind.Strength,                // playtest 12: the weather's wind (Weather.cs)
+            ColorM[0], ColorM[1], ColorM[2], (float)_wind.Strength * (Room || Indoors ? 0 : 1),              // playtest 12: the weather's wind (Weather.cs)
             ColorM[3], ColorM[4], ColorM[5], (float)_wind.Gust,
             ColorM[6], ColorM[7], ColorM[8], (float)_wind.Dir,
             NesW, 240, _sideE, _storyBand,
             Room ? 1 : 0, (float)_sky.Precip * Outside, (float)_sky.Flash * Outside, _hot * Outside * (float)(1 - 0.5 * _wind.Strength),   // room; weather: rain / snow, lightning, heat
-            Armor, Sword, 0, 0,                                             // playtest 13: equipment (player finish)
+            Armor, Sword, Indoors ? 1 : 0, 0,                               // playtest 13: equipment (player finish); 14: z = indoors
         };
         c.CopyTo(_c, 0);
         SetConstants();
