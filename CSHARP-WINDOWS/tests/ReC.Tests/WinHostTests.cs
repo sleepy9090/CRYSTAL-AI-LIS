@@ -1389,6 +1389,7 @@ internal static partial class Program
                     for (int i = 0; i < 256 * 240; i++)
                     {
                         int fl = sc.Info[i * 4 + 2];
+                        if ((fl & HdScene.FPlayer) != 0) continue;       // the player (armour finish / sword), not an effect
                         if ((fl & HdScene.FShotEnemy) != 0) tot[0]++;
                         if ((fl & HdScene.FShotPlayer) != 0) tot[1]++;
                         if ((fl & HdScene.FBoom) != 0) tot[2]++;
@@ -1566,6 +1567,29 @@ internal static partial class Program
             Eq(0, blackBody, "no black stand-in in the pod doorway");
             Eq(0, liftedHidden, "hidden sprite pixels have no HD lift / sprite flag (no ghost)");
         }),
+        ("win_ghost", () =>
+        {
+            // playtest 13: Cheats > Walk through walls
+            var d = TheData.Value;
+            int further = 0;
+            foreach (int pad in new[] { 0x08, 0x04, 0x02, 0x01 })
+            {
+                (int, int) Walk(bool ghost)
+                {
+                    var m = new Machine(d, _ => { }); m.Reset();
+                    m.LoadState(StateFile.Load(Path.Combine(Data.FindDir(), "..", "test", "states", "group08.json")));
+                    var ch = new Cheats(); if (ghost) ch.Parse("ghost");
+                    for (int f = 0; f < 120; f++) { m.RunFrame(pad); ch.Apply(m, false); }
+                    return (m.Rd(0x70) | m.Rd(0x90) << 8, m.Rd(0xB0) | m.Rd(0xD0) << 8);
+                }
+                var (nx, ny) = Walk(false); var (gx, gy) = Walk(true);
+                int dn = pad is 0x08 or 0x04 ? Math.Abs(ny - 0) : 0;
+                int moveN = Math.Abs(nx - gx) + Math.Abs(ny - gy);
+                Console.WriteLine($"  win_ghost: pad {pad:X2}: normal ends at {nx},{ny}, with the cheat at {gx},{gy}");
+                if (moveN > 8) further++;
+            }
+            True(further > 0, "the cheat lets the player pass terrain that stops him normally");
+        }),
         ("win_warp_debug", () =>
         {
             // playtest 7: Cheats > Warp to area, Video > Debug info
@@ -1606,7 +1630,7 @@ internal static partial class Program
             True(m.Rd(0x421) == 0x0F && m.Rd(0x709) == 0xFF && m.Rd(0x340) == 9 && m.Rd(0x341) == 9, "level 15, MP 255, speed 9");
             for (int f = 0; f < 120; f++) { m.RunFrame(f < 60 ? 0x01 : 0x02); ch.Apply(m, false); }
             True(m.Rd(0x40) == 1 && m.Rd(0x41) == 8, "the game plays on with the cheats");
-            Eq(10, Cheats.Names.Length, "ten cheats");
+            Eq(11, Cheats.Names.Length, "eleven cheats");
             var chm = new Cheats(); chm.Parse("spells"); chm.Apply(m, false);
             True(Enumerable.Range(0, 8).All(x => m.Rd(0x6458 + x) == 0x41 + x), "all eight spells in the magic slots");
             // playtest 13: F3 / Debug info > All on / off

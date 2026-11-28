@@ -70,6 +70,8 @@ internal sealed unsafe partial class Gpu : IDisposable
     public int StoryScene;
     /// <summary>playtest 12: a shop or inn interior is on screen (warm lamp light, wood grain, curtain folds, plaster)</summary>
     public bool Room;
+    /// <summary>playtest 13: the equipped armour id ($0713) and sword ($0711): the player's finish and blade glow</summary>
+    public int Armor, Sword;
     /// <summary>playtest 9: Video > Debug info > HD scene</summary>
     public string DebugText => FormattableString.Invariant($"HD PLAY {_play:0.00}  OUTDOOR {_outdoor:0.00}  STORY {StoryScene}/{(_storyOn ? 1 : 0)} {_storyFade:0.00}  FILM {(Cinematic && CineAllowed ? _cineW : 0):0.00}  Q {Quality}");
     private bool _storyOn;
@@ -267,7 +269,7 @@ internal sealed unsafe partial class Gpu : IDisposable
 
     private const uint FmtBgra = 87, FmtRgba8 = 28, FmtRgba8U = 30, FmtRg32U = 17, FmtRgba32F = 2, FmtRgba16F = 10;
     private const uint BindSrv = 8, BindRtv = 0x20;
-    private const int NSrv = 13, NConst = 25;   // playtest 12: + Room
+    private const int NSrv = 13, NConst = 26;   // playtest 12: + Room; 13: + Equip
     private static readonly Guid IidTex2D = new("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
     private static readonly Guid IidDxgiDevice1 = new("77db970f-6276-48ba-ba28-070143b4392c");
 
@@ -1055,6 +1057,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             ColorM[6], ColorM[7], ColorM[8], (float)_wind.Dir,
             NesW, 240, _sideE, _storyBand,
             Room ? 1 : 0, (float)_sky.Precip, (float)_sky.Flash, _hot * (float)(1 - 0.5 * _wind.Strength),   // room; weather: rain / snow, lightning, heat
+            Armor, Sword, 0, 0,                                             // playtest 13: equipment (player finish)
         };
         c.CopyTo(_c, 0);
         SetConstants();

@@ -771,3 +771,16 @@ CSHARP-WINDOWS/
     with `continue`, which silently dropped the HD engine to the 32-bit look until fixed). **Menus:** status / equipment /
     item windows get `MenuFill`: a deep diagonal gradient, a light from the top left, a fine weave, glints, a slow sheen,
     darker edges.
+    **§5 core change (playtest 13): `Machine.NoClip`** (default false) makes ObjMoveStep 26:9947 skip the terrain test
+    for slot 0 (the player's mover), for Cheats > Walk through walls. The player code sets slot 0's `$0460` mask itself
+    every frame (Player 9E6F / 9E62), so a RAM poke cannot do it. Off = the ROM unchanged (all parity checks run with it
+    off). The screen-edge test (ObjScreenEdge) still applies, so exits work.
+    **NPC portraits (playtest 13):** while an NPC talks (sub_state $11, `Cast.Speaker` 0-$FF) `Window.UpdatePortrait`
+    replays the talk slot's sprite (`$0623`) from the object snapshot with the CHR banks and palette of the NPC's own line
+    (the message window rows use other banks), crops its head and shoulders (top 16 lines) and the overlay draws it x4 in a
+    framed glass box under the message window (`Osd.Portrait`), with a soft shadow. HD engine; cleared when the talk ends.
+    **Equipment on the player (playtest 13):** `FxMark` flags the player's body (slot 1 replay) with `FPlayer` 128 and the
+    sword in his hand (sword-bank pixels by the player) with 128 | 64; `Equip` (row 26: armour `$0713`, sword `$0711`)
+    drives a finish per armour id (a tint and a metallic highlight sliding across) and a blade glow in the sword's element
+    colour (wind, fire, water, thunder; Crystalis white). The shot glow and the light map skip player pixels.
+    **Cheats > Walk through walls** (`Machine.NoClip`, see §5 above): `win_ghost` (group08: down / left / right pass walls).

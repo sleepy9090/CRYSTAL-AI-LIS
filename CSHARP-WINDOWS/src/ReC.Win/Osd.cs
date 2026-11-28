@@ -84,6 +84,37 @@ internal static class Osd
             }
     }
 
+    /// <summary>playtest 13: the speaking NPC's portrait: a framed glass box with the sprite (0x00RRGGBB, 0 = clear) scaled up,
+    /// soft-shadowed, a name plate line under it</summary>
+    public static void Portrait(int x0, int y0, int scale, uint[] rgb, int w, int h)
+    {
+        int bw = w * scale + 20, bh = h * scale + 20;
+        Box(x0 - 2, y0 - 2, bw + 4, bh + 4, 0.75f, 0.85f, 1.0f, 0.85f);           // light rim
+        Box(x0, y0, bw, bh, 0.03f, 0.06f, 0.16f, 0.92f);                         // deep glass
+        for (int y = 0; y < bh; y++)                                              // a soft light from the top left
+            for (int x = 0; x < bw; x++)
+            {
+                float l = Math.Max(0, 1 - ((x * 0.6f + y) / (bh * 0.9f)));
+                if (l > 0 && x0 + x < W && y0 + y < H) Over(x0 + x, y0 + y, 0.35f, 0.5f, 0.85f, 0.18f * l);
+            }
+        int ox = x0 + 10, oy = y0 + 10;
+        for (int pass = 0; pass < 2; pass++)
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    uint c = rgb[y * w + x];
+                    if (c == 0) continue;
+                    for (int sy = 0; sy < scale; sy++)
+                        for (int sx = 0; sx < scale; sx++)
+                        {
+                            int px = ox + x * scale + sx + (pass == 0 ? 3 : 0), py = oy + y * scale + sy + (pass == 0 ? 3 : 0);
+                            if (px >= W || py >= H) continue;
+                            if (pass == 0) Over(px, py, 0, 0, 0.05f, 0.45f);
+                            else Over(px, py, (c >> 16 & 255) / 255f, (c >> 8 & 255) / 255f, (c & 255) / 255f, 1);
+                        }
+                }
+    }
+
     private static void Over(int x, int y, float r, float g, float b, float a)
     {
         uint p = Pix[y * W + x];

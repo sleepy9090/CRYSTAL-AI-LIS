@@ -411,3 +411,4 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] P28 (2026-11-27, playtest 13): grass blades sway with the weather wind.
 - [x] P29 (2026-11-27, playtest 13): Debug info under Cheats, ice reflections, rain / snow / storms / heat + sounds, Weather cheat, --warp, leaping fish, glass menu panels.
 - [x] P30 (2026-11-27): Cheats > All magic spells ($6458-$645F = $41-$48).
+- [x] P31 (2026-11-27, playtest 13): walk-through-walls cheat, NPC face portraits, armour finish + sword element glow.

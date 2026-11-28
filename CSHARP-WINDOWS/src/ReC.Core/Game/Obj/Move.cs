@@ -65,6 +65,7 @@ public static class Move
             }
             else ObjUtil.ObjBgProbe(m, x, 0x80);
             int mask = x == 0 ? 0x06 : 0x27;                      // 99C4 (CPX #0 leaves C = 1)
+            if (x == 0 && m.NoClip) continue;                     // host cheat (Windows: walk through walls); off = the ROM
             if ((m.Rd(0x20) & mask & m.Rd(BgMask + x)) != 0) return Step.Blocked;
         }
         // 99D4: commit (PLA PLA = return from ObjMoveSlide)

@@ -20,6 +20,8 @@ internal sealed class HdScene
     public const byte FSprite = 1, FVoid = 2, FUi = 4, FNoMap = 8;   // FNoMap: a widescreen side pixel with no map data
     /// <summary>playtest 12 (Window.FxMark): pixels of an enemy / boss shot, a player shot, an explosion / puff: they glow</summary>
     public const byte FShotEnemy = 16, FShotPlayer = 32, FBoom = 64;
+    /// <summary>playtest 13: the player: 128 = body (armour finish), 128 | 64 = the sword in his hand (element glow)</summary>
+    public const byte FPlayer = 128;
     public readonly byte[] Info = new byte[256 * 240 * 4];
     public readonly float[] Lines = new float[240 * 4];
     public float CamX, CamY, Outdoor, VoidGate, Time;

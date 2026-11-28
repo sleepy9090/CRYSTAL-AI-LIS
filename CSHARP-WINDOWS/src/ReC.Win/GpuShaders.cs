@@ -29,6 +29,7 @@ cbuffer C : register(b0)
     float4 Col0, Col1, Col2;   // T60 display colour matrix rows (brightness, vivid, colour-blind assist)
     float4 Scr;    // widescreen: picture columns (256 or wider), lines (240), side width, -
     float4 Room;   // playtest 12: x = shop / inn interior (1); playtest 13 weather: y = rain / snow, z = lightning, w = heat
+    float4 Equip;  // playtest 13: x = armour id, y = sword (1-4, 5 Crystalis)
 };
 Texture2D SrcA : register(t0);
 Texture2D SrcB : register(t1);
@@ -327,7 +328,7 @@ float4 PSEmit(V i) : SV_Target
             // characters carry a little warm light (visible in dark places; hidden sprites have no lift)
             acc += float3(1.0, 0.8, 0.55) * Inf.Load(int3(o + int2(x, y), 0)).r * 0.35;
             // playtest 12: shots and explosions light up the floor and walls around them in their colour
-            uint ff = (uint)round(Inf.Load(int3(o + int2(x, y), 0)).b * 255) & 0x70;
+            uint ffl = (uint)round(Inf.Load(int3(o + int2(x, y), 0)).b * 255), ff = (ffl & 0x80) != 0 ? 0 : ffl & 0x70;   // (not the player)
             acc += ff == 0 ? float3(0, 0, 0) : (ff & 0x20) != 0 ? float3(0.5, 0.8, 1.0) * 2.4 : (ff & 0x40) != 0 ? float3(1.0, 0.55, 0.2) * 3.2 : float3(1.0, 0.3, 0.55) * 2.6;
         }
     return float4(acc / 4, 1);
@@ -1160,7 +1161,27 @@ float4 PSLight(V i) : SV_Target
     // playtest 12: shots and explosions (Window.FxMark flags 16 / 32 / 64) glow: their own colours pushed past white so the
     // bloom haloes them, a hot core, a fast shimmer; enemy / boss shots red-violet, player shots ice blue, explosions orange
     uint fx = fl & 0x70;
-    if (fx != 0)
+    // playtest 13: equipment on the player (flag 128): the armour's finish on his body (a tint by armour id and a metallic
+    // highlight sliding across), the sword in his hand (128 | 64) glows in its element's colour
+    if ((fl & 0x80) != 0)
+    {
+        float lum2 = dot(a, LUM);
+        if ((fl & 0x40) != 0)
+        {
+            int sw = clamp((int)round(Equip.y), 0, 5);
+            float3 sc2 = sw == 1 ? float3(0.75, 1.0, 0.85) : sw == 2 ? float3(1.0, 0.45, 0.2) : sw == 3 ? float3(0.35, 0.7, 1.0) : sw == 4 ? float3(1.0, 0.9, 0.35) : sw == 5 ? float3(0.95, 0.95, 1.0) : float3(0, 0, 0);
+            c += sc2 * (0.25 + 0.2 * sin(t * 5 + p.y * 0.6)) * (0.4 + lum2);
+        }
+        else
+        {
+            int ar = clamp((int)round(Equip.x), 0, 8);
+            float3 tint = ar == 1 ? float3(0.85, 0.7, 0.5) : ar == 2 ? float3(0.85, 0.75, 0.55) : ar == 3 ? float3(0.75, 0.8, 0.9) : ar == 4 ? float3(0.7, 0.85, 1.0) : ar == 5 ? float3(1.0, 0.85, 0.45) : ar == 6 ? float3(0.85, 0.6, 1.0) : ar == 7 ? float3(0.6, 1.0, 0.7) : ar == 8 ? float3(1.0, 0.95, 0.8) : float3(1, 1, 1);
+            float k = ar == 0 ? 0 : 0.25 + 0.04 * ar;
+            float sheen = exp(-pow(frac((p.x + p.y) * 0.04 - t * 0.35) * 5 - 2.5, 2) * 1.5);
+            c = lerp(c, c * tint * 1.15, k) + tint * sheen * k * 0.35 * (0.3 + lum2);
+        }
+    }
+    else if (fx != 0)
     {
         float3 tint = (fx & 0x20) != 0 ? float3(0.55, 0.85, 1.0) : (fx & 0x40) != 0 ? float3(1.0, 0.62, 0.22) : float3(1.0, 0.35, 0.6);
         float shim = 0.5 + 0.5 * sin(t * 21 + p.x * 0.7 + p.y * 0.4);

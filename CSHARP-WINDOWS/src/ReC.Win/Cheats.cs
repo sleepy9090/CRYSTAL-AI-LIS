@@ -13,13 +13,13 @@ namespace ReC.Win;
 
 internal sealed class Cheats
 {
-    public bool Life, Magic, Gold, Status, Charge, Xp, Items, Level, Speed, Spells;
-    public bool Any => Life || Magic || Gold || Status || Charge || Xp || Items || Level || Speed || Spells;
+    public bool Life, Magic, Gold, Status, Charge, Xp, Items, Level, Speed, Spells, Ghost;
+    public bool Any => Life || Magic || Gold || Status || Charge || Xp || Items || Level || Speed || Spells || Ghost;
 
-    public static readonly string[] Names = { "life", "magic", "gold", "status", "charge", "xp", "items", "level", "speed", "spells" };
-    public static readonly string[] Labels = { "INFINITE LIFE", "INFINITE MAGIC", "MAX GOLD", "NO PARALYSIS / POISON", "INSTANT CHARGE", "QUICK LEVEL-UP", "ALL ITEMS", "MAX LEVEL", "FAST WALK", "ALL MAGIC" };
+    public static readonly string[] Names = { "life", "magic", "gold", "status", "charge", "xp", "items", "level", "speed", "spells", "ghost" };
+    public static readonly string[] Labels = { "INFINITE LIFE", "INFINITE MAGIC", "MAX GOLD", "NO PARALYSIS / POISON", "INSTANT CHARGE", "QUICK LEVEL-UP", "ALL ITEMS", "MAX LEVEL", "FAST WALK", "ALL MAGIC", "WALK THROUGH WALLS" };
 
-    public bool Get(int i) => i switch { 0 => Life, 1 => Magic, 2 => Gold, 3 => Status, 4 => Charge, 5 => Xp, 6 => Items, 7 => Level, 8 => Speed, _ => Spells };
+    public bool Get(int i) => i switch { 0 => Life, 1 => Magic, 2 => Gold, 3 => Status, 4 => Charge, 5 => Xp, 6 => Items, 7 => Level, 8 => Speed, 9 => Spells, _ => Ghost };
     public void Set(int i, bool v)
     {
         switch (i)
@@ -33,7 +33,8 @@ internal sealed class Cheats
             case 6: Items = v; break;
             case 7: Level = v; break;
             case 8: Speed = v; break;
-            default: Spells = v; break;
+            case 9: Spells = v; break;
+            default: Ghost = v; break;
         }
     }
 
@@ -47,6 +48,7 @@ internal sealed class Cheats
     /// <summary>after a frame: the switched-on cheats (gameplay only); bHeld = the B button is down</summary>
     public void Apply(Machine m, bool bHeld)
     {
+        m.NoClip = Ghost;                                           // (also cleared when the cheat goes off)
         if (!Any) return;
         var ram = m.Mem.RamBytes;
         if (ram[0x40] != 1) return;                              // main_state 1 = gameplay (title / menus / ending: no)
@@ -77,6 +79,10 @@ internal sealed class Cheats
         if (Level && (ram[0x0421] != 0x0F || ram[0x0709] != 0xFF)) { ram[0x0421] = 0x0F; ram[0x0709] = 0xFF; ram[0x0708] = 0xFF; }
         if (Speed && ram[0x41] == 8) { ram[0x0340] = 9; ram[0x0341] = 9; }
         // playtest 13: all eight spells (item ids $41-$48, GiveItem 30:D3EB) in the magic slots $6458-$645F
+        // playtest 13: walk through any terrain: ObjMoveStep 26:9947 blocks when ($20 & mask & $0460,X) != 0; slot 0 (the
+        // player's mover) sets its mask itself every frame (9E6F), so the core skips the test (Machine.NoClip). The screen
+        // edge (ObjScreenEdge) still stops him, so exits work
+
         if (Spells) for (int x = 0; x < 8; x++) if (m.Rd(0x6458 + x) != 0x41 + x) m.Wr(0x6458 + x, 0x41 + x);
     }
 

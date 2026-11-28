@@ -118,6 +118,10 @@ public sealed class Machine
     public void EntryFF(int x) => Obj.ObjUtil.ObjPosToTemp(this, x);
 
     // js: game/machine.js rd
+    /// <summary>Windows host cheat (Cheats > Walk through walls): the player's mover (slot 0) ignores terrain in
+    /// ObjMoveStep 26:9947; false = the ROM (architecture_win.md section 5)</summary>
+    public bool NoClip;
+
     public int Rd(int a) { _lb[0]++; return Mem.Rd(a); }
 
     // js: game/machine.js wr

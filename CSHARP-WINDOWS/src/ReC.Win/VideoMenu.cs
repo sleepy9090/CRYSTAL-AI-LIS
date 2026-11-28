@@ -180,7 +180,7 @@ internal static unsafe partial class Window
         {
             "Infinite &life (energy always full)", "Infinite &magic (MP always full)", "&Max gold (60000)",
             "&No paralysis / poison", "Instant sword &charge (hold B)", "&Quick level-up (next kill levels up)",
-            "All &items (the game's own debug item set)", "Max le&vel (level 15, MP 255)", "&Fast walk (speed 9)", "All m&agic spells",
+            "All &items (the game's own debug item set)", "Max le&vel (level 15, MP 255)", "&Fast walk (speed 9)", "All m&agic spells", "&Walk through walls (any terrain)",
         };
         for (int i = 0; i < text.Length; i++) Win32.AppendMenuW(m, 0, (nuint)(IdCheat0 + i), text[i]);
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
@@ -466,7 +466,7 @@ internal static unsafe partial class Window
             case IdShot: Screenshot(); return;
             case IdShotFolder: OpenShotFolder(); return;
             case IdResetKeys: _v.KeyBinds = new int[8]; _input.SetBinds(_v.KeyBinds); Notice("KEYS: DEFAULTS"); SettingsChanged(false); return;
-            case >= IdCheat0 and < IdCheat0 + 10:
+            case >= IdCheat0 and < IdCheat0 + 11:
                 _v.Cheats.Set(id - IdCheat0, !_v.Cheats.Get(id - IdCheat0));
                 Notice(Cheats.Labels[id - IdCheat0] + (_v.Cheats.Get(id - IdCheat0) ? ": ON" : ": OFF"));
                 if (id == IdCheat0 && _v.Cheats.Life && _m != null) _v.Cheats.Apply(_m, false);

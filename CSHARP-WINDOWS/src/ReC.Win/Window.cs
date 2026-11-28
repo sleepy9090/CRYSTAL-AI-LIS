@@ -270,6 +270,13 @@ internal static unsafe partial class Window
             for (int i = 0; i < 256 * 240; i++)
                 if (_xSpr[i] != 0 && raster.Sp[i] != 0) { sc.Info[i * 4 + 2] |= flag; marked++; }
         }
+        // playtest 13: the player's body (slot 1) for the armour finish
+        if (ram[0x4A1] != 0)
+        {
+            ss.Draw(m.Data, m.Ppu.Chr, banks, rg.Ctrl, 256, 0, _xSpr, _xTag, _xLines, includeCenter: true, slotOnly: x => x == 1);
+            for (int i = 0; i < 256 * 240; i++)
+                if (_xSpr[i] != 0 && raster.Sp[i] != 0 && (sc.Info[i * 4 + 2] & 0x70) == 0) sc.Info[i * 4 + 2] |= HdScene.FPlayer;
+        }
         // player sword shots, charge and magic: drawn from the sword's CHR bank (R3 = $41 + sword level, banks $41-$46;
         // the player himself is bank $40), not by the object sprite pass, so they are found by their tiles
         // (items and other world objects that share the bank are slots $0D-$1F: their replayed pixels are left out)
@@ -281,8 +288,8 @@ internal static unsafe partial class Window
             int bank = (st & 0x1FFF) >> 6;
             if (bank is < 0x41 or > 0x46) continue;
             if (_xSpr[i] != 0) continue;                                        // a world object's pixel
-            int dx = (i & 255) - ram[0x5C1], dy = (i >> 8) - ram[0x5E1];      // the sword in his hand stays plain
-            if (dx is > -14 and < 14 && dy is > -26 and < 8) continue;
+            int dx = (i & 255) - ram[0x5C1], dy = (i >> 8) - ram[0x5E1];      // the sword in his hand: its element glow
+            if (dx is > -14 and < 14 && dy is > -26 and < 8) { sc.Info[i * 4 + 2] |= HdScene.FPlayer | HdScene.FBoom; continue; }
             sc.Info[i * 4 + 2] |= HdScene.FShotPlayer; marked++;
         }
         return marked;
@@ -337,6 +344,7 @@ internal static unsafe partial class Window
             _gpu.CineAllowed = CineAllowed(_m.Mem.RamBytes[0x40], _m.Mem.RamBytes[0x6F0]);
             _gpu.StoryScene = StoryScene(_m.Mem.RamBytes[0x40], _m.Mem.RamBytes[0x6F0]);   // playtest 7: remade story art
             _gpu.Room = DialogueReader.InShop(_m.Mem.RamBytes[0x40], _m.Mem.RamBytes[0x41]);   // playtest 12: shop / inn interiors
+            _gpu.Armor = _m.Mem.RamBytes[0x713]; _gpu.Sword = _m.Mem.RamBytes[0x711];   // playtest 13: equipment finish
             if (WideW > 256)                                 // widescreen: the wide copy of the raster, the sides from the area
             {
                 WideAfterFrame(_raster!.Fb);
@@ -628,14 +636,55 @@ internal static unsafe partial class Window
     private static bool BuildOsd()
     {
         if (_notice != null && Clock.Elapsed.TotalMilliseconds > _noticeUntil) _notice = null;
-        if (!_paused && !_fast && _notice == null && !_help && !_osdShown && !_v.ShowFps && _v.Debug.Count == 0 && _remap < 0) return false;
+        if (!_paused && !_fast && _notice == null && !_help && !_osdShown && !_v.ShowFps && _v.Debug.Count == 0 && _remap < 0 && _portrait == null) return false;
         var cheats = Enumerable.Range(0, Cheats.Names.Length).Where(_v.Cheats.Get).Select(i => Cheats.Names[i]).ToList();
         _osdShown = Osd.Build(_paused, _fast, _notice, cheats, _help, _v.ShowFps ? Stats.Text : null,
             _remap >= 0 ? $"PRESS A KEY FOR {Input.Names[_remap]}\nNOW: {(_v.KeyBinds[_remap] != 0 ? Input.KeyName(_v.KeyBinds[_remap]) : "DEFAULT KEYS ONLY")}\nBACKSPACE KEEPS IT   ESC CANCELS" : null,
             DebugLines());
+        if (_portrait != null && !_paused) { Osd.Portrait(12, 172, 4, _portrait, _portW, _portH); _osdShown = true; }
         return _osdShown;
     }
     private static bool _osdShown;
+    private static uint[]? _portrait;
+    private static int _portW, _portH;
+    private static readonly byte[] _pSpr = new byte[256 * 240];
+    private static readonly int[] _pTag = new int[256 * 240];
+
+    /// <summary>playtest 13 ("when talking to NPCs add a face portrait by the text"): while an NPC talks (sub_state $11, a talking
+    /// NPC id from Cast.Speaker), its sprite (talk slot $0623) is replayed from the object snapshot (SideSprites), cropped
+    /// to its pixels and kept for the overlay; cleared when the talk ends. HD engine (the sprite CHR banks of the capture)</summary>
+    private static void UpdatePortrait()
+    {
+        var m = _m;
+        if (m == null || m.Rd(0x41) != 0x11 || m.Ppu.Capture is not { } cap || !SideSpr.Valid) { _portrait = null; return; }
+        int npc = Cast.Speaker(a => m.Rd(a));
+        if (npc is < 0 or >= 0x100) { _portrait = null; return; }
+        int slot = m.Rd(0x623);
+        // the CHR banks and palette of the NPC's own line (the message window rows use other banks)
+        int ny = Math.Clamp(m.Rd(0x5E0 + slot), 0, 239);
+        int my = Enumerable.Range(0, 240).Select(k => (ny + k) % 240).FirstOrDefault(y => cap.SprValid[y], -1);
+        if (my < 0) return;                                          // keep the last one
+        var rg = cap.Spr[my];
+        var banks = new int[8];
+        for (int k = 0; k < 8; k++) banks[k] = rg.Banks[k];
+        SideSpr.Draw(m.Data, m.Ppu.Chr, banks, rg.Ctrl, 256, 0, _pSpr, _pTag, _xLines, includeCenter: true, slotOnly: x => x == slot);
+        int x0 = 256, x1 = -1, y0 = 240, y1 = -1;
+        for (int i = 0; i < 256 * 240; i++)
+            if (_pSpr[i] != 0) { int x = i & 255, y = i >> 8; x0 = Math.Min(x0, x); x1 = Math.Max(x1, x); y0 = Math.Min(y0, y); y1 = Math.Max(y1, y); }
+        if (x1 < 0) return;                                          // not drawn this frame: keep the last one
+        int w = Math.Min(x1 - x0 + 1, 32), h = Math.Min(y1 - y0 + 1, 16);   // the head and shoulders
+        var pix = new uint[w * h];
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+            {
+                var pal = _raster != null ? _raster.LinePal[y0 + y] : m.Ppu.Pal;
+                int sp = _pSpr[(y0 + y) * 256 + x0 + x];
+                if (sp == 0) continue;
+                int col = pal[0x10 | (sp & 0x0F)] & 0x3F;
+                pix[y * w + x] = (uint)_nesRgb[col] | 0x01000000;          // (nonzero even for black)
+            }
+        _portrait = pix; _portW = w; _portH = h;
+    }
 
     /// <summary>playtest 7: the Video > Debug info lines, from game RAM: area_id $6C / entrance $6D, player slot 1
     /// position ($71/$91, $B1/$D1), camera ($02-$05), main_state $40, sub_state $41, irq_mode $51, active object slots
@@ -837,6 +886,7 @@ internal static unsafe partial class Window
                         m.RunFrame(buttons); _acc -= step; ran = true; ranTotal++;
                         _v.Cheats.Apply(m, (buttons & 0x40) != 0);           // T36 cheats (B = bit 6)
                         if (!_scripted) Speak(m);                            // playtest 6: spoken dialogue
+                        if (HdEngine) UpdatePortrait(); else _portrait = null;   // playtest 13: NPC portrait
                         if (_pendingWarp >= 0 && Warp.To(m, _pendingWarp)) _pendingWarp = -1;   // playtest 13: --warp
                         {
                             var ram = m.Mem.RamBytes;                        // T57 damage feedback: a life drop in SubstPlay
