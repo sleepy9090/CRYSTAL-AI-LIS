@@ -793,3 +793,7 @@ CSHARP-WINDOWS/
     NPC's front view (of the four facing ids `meta & ~3` + 0..3, the one most left-right symmetric with the most detail in
     its head: a face has eyes, the back of a head does not), Scale2x twice (x4, smooth pixel-art edges), lit from the
     top left, a soft outline.
+    **Sprite volume (playtest 13, "modernize all characters / enemies"):** every sprite pixel in gameplay gets volume from
+    its silhouette (the sprite flag 1.5 px to the upper left / lower right, 3 px above / below): edges facing the light
+    (top left) a highlight, edges facing away shade, the lower body slightly darker; on top of the built-in hero /
+    enemy / NPC / boss art packs and the smooth outlines.

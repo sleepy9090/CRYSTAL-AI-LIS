@@ -1164,6 +1164,16 @@ float4 PSLight(V i) : SV_Target
     }
     // playtest 12: shots and explosions (Window.FxMark flags 16 / 32 / 64) glow: their own colours pushed past white so the
     // bloom haloes them, a hot core, a fast shimmer; enemy / boss shots red-violet, player shots ice blue, explosions orange
+    // playtest 13: volume on every character and enemy (sprite pixels): their silhouette from the sprite flag around them;
+    // edges facing the light (top left) catch a highlight, edges facing away are shaded, the lower body a little darker
+    if (spr && Opt.w > 0.5 && Scn.z > 0.5)
+    {
+        float sl = (float)(Flags(InfoPx(p + float2(-1.5, -1.5))) & 1), sr = (float)(Flags(InfoPx(p + float2(1.5, 1.5))) & 1);
+        float su = (float)(Flags(InfoPx(p + float2(0, -3))) & 1), sd = (float)(Flags(InfoPx(p + float2(0, 3))) & 1);
+        float lit = (1 - sl) * 0.16 - (1 - sr) * 0.2;
+        float low = su * (1 - sd) * 0.08;
+        c *= 1 + lit - low;
+    }
     uint fx = fl & 0x70;
     // playtest 13: equipment on the player (flag 128): the armour's finish on his body (a tint by armour id and a metallic
     // highlight sliding across), the sword in his hand (128 | 64) glows in its element's colour
