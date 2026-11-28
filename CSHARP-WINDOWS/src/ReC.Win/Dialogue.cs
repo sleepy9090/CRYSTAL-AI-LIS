@@ -24,16 +24,27 @@ internal sealed class DialogueReader
     /// <summary>the page in the text buffer as words, or "" when the buffer is not a text page</summary>
     public static string Page(Func<int, int> rd)
     {
-        var sb = new StringBuilder();
+        var lines = new List<int[]>();
         for (int row = 0; row < 8; row++)
         {
             int o = Buf + row * 32;
             int b0 = rd(o);
             if ((b0 != 0xFE && b0 != 0x40) || rd(o + 1) != 0x1E || rd(o + 31) != 0x1F) return "";   // the frame, attributes, a map buffer
+            lines.Add(Enumerable.Range(2, 29).Select(x => rd(o + x)).ToArray());
+        }
+        return JoinLines(lines);
+    }
+
+    /// <summary>the text of a page from its lines of character codes (the screen reader and MessageText share it, so a
+    /// page decoded from the ROM and the same page read off the screen give the same string)</summary>
+    public static string JoinLines(IEnumerable<int[]> codeLines)
+    {
+        var sb = new StringBuilder();
+        foreach (var codes in codeLines)
+        {
             var line = new StringBuilder();
-            for (int x = 2; x < 31; x++)
+            foreach (int c in codes)
             {
-                int c = rd(o + x);
                 if (c == 0x5F) line.Append("...");                                        // the game's ellipsis tile
                 else if (c is >= 0x20 and < 0x7F && (char.IsAsciiLetterOrDigit((char)c) || " !\"&',-.:;?".Contains((char)c))) line.Append((char)c);
                 else line.Append(' ');                                                     // icons, arrows, the page prompt
@@ -469,5 +480,62 @@ internal sealed class NeuralVoice : IVoice
     {
         try { _p.StandardInput.Close(); if (!_p.WaitForExit(500)) _p.Kill(); } catch (Exception) { }
         _p.Dispose();
+    }
+}
+
+/// <summary>playtest 13 ("the first time speaking to each NPC the audio is delayed a few seconds"): every page of a message
+/// decoded straight from the ROM, as TextPrint 20:853A prints it (talk.js textPrint): $8000 = bank 20, $A000 = the
+/// group's bank TextGroupBank 20:83FE[g], message pointer from 20:8422[g] + id*2; codes 0 end, 1 clear (a new page),
+/// 2 newline, 3 page wait (a new page), 4 player name ($6400), 5 / 6 / 7 strings 20:8A00 / 8A14 / 8A5C, 8 current item
+/// name ($07DC), 9 n spaces, >= $80 dictionary word 20:8900 (a space after it when the next byte is 4-9 or >= $40 but not
+/// $5F, TextPrintStr's peek), else the character. The voice can then make every page as the talk starts.</summary>
+internal static class MessageText
+{
+    public static List<string> Pages(byte[] prg, int group, int id, Func<int, int> ram)
+    {
+        int Bank(int bank, int a) => prg[(bank & 0x1F) * 0x2000 + (a & 0x1FFF)];
+        int r7 = Bank(20, 0x83FE + group);
+        int Rd(int a) => a < 0xA000 ? Bank(20, a) : a < 0xC000 ? Bank(r7, a) : Bank(a < 0xE000 ? 30 : 31, a);
+        int Ptr(int a) => Rd(a) | Rd(a + 1) << 8;
+        var pages = new List<string>();
+        var lines = new List<int[]>();
+        var line = new List<int>();
+        void EndLine() { lines.Add(line.ToArray()); line = new List<int>(); }
+        void EndPage() { EndLine(); string p = DialogueReader.JoinLines(lines); if (p.Length > 0) pages.Add(p); lines.Clear(); }
+        void Str(int a, int max = 64) { for (int i = 0; i < max; i++) { int c = Rd(a + i); if (c == 0) break; line.Add(c); } }
+        int pos = Ptr(Ptr(0x8422 + group * 2) + (id & 0x1F) * 2);
+        for (int guard = 0; guard < 2048; guard++)
+        {
+            int b = Rd(pos);
+            if (b == 0) { EndPage(); break; }
+            if (b == 1) { if (lines.Count > 0 || line.Count > 0) EndPage(); pos++; continue; }
+            if (b == 2) { EndLine(); pos++; continue; }
+            if (b == 3) { EndPage(); pos++; continue; }
+            if (b == 4) { for (int i = 0; i < 16; i++) { int c = ram(0x6400 + i); if (c == 0) break; line.Add(c); } pos++; continue; }
+            if (b is 5 or 6 or 7)
+            {
+                int table = b == 5 ? 0x8A00 : b == 6 ? 0x8A14 : 0x8A5C;
+                Str(Ptr(table + (Rd(pos + 1) << 1 & 0xFF)));
+                int next = Rd(pos + 2);
+                if ((next >= 4 && next < 0x0A) || (next >= 0x40 && next != 0x5F)) line.Add(0x20);
+                pos += 2; continue;
+            }
+            if (b == 8)
+            {
+                int item = ram(0x07DC); if (item == 0xFF) item = 0x49;
+                Str(Ptr(0x8A5C + (item << 1 & 0xFF)));
+                pos++; continue;
+            }
+            if (b == 9) { int n = Rd(pos + 1); if (n == 0) n = 256; for (int i = 0; i < n; i++) line.Add(0x20); pos += 2; continue; }
+            if (b >= 0x80)
+            {
+                Str(Ptr(0x8900 + (b << 1 & 0xFF)));
+                int next = Rd(pos + 1);
+                if ((next >= 4 && next < 0x0A) || (next >= 0x40 && next != 0x5F)) line.Add(0x20);
+                pos++; continue;
+            }
+            line.Add(b); pos++;
+        }
+        return pages;
     }
 }

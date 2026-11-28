@@ -484,9 +484,16 @@ float3 Lawn(float3 a, float2 s, float2 w, float t, int col)
     float3 warm = l * float3(1.25, 1.18, 0.42), cool = l * float3(0.42, 0.95, 0.70) * 0.85;
     float pw = smoothstep(0.45, 0.8, patch), pc = 1 - smoothstep(0.2, 0.5, patch);
     float3 g = lerp(lerp(base, warm, pw * 0.45), cool, pc * 0.4);
-    // blades: thin vertical strokes (fine in x, long in y), leaning with a slow gust
-    float lean = sin(t * 1.1 + w.y * 0.05 + w.x * 0.02) * 0.35;
-    float2 bw = float2(w.x + (frac(w.y / 3) - 0.5) * lean, w.y);
+    // blades: thin vertical strokes (fine in x, long in y). playtest 13: they sway with the weather's wind (Col0.w strength,
+    // Col1.w gust, Col2.w direction): a lean downwind, a sway that quickens with the wind, gust waves rolling across;
+    // the tip of each blade moves, its root stays
+    float ws = Col0.w, wd = Col2.w;
+    float dirs = wd >= 0 ? 1 : -1;
+    float gw = WN(w + float2(-t * (5 + 16 * ws) * dirs, t * 1.5), float2(40, 26));      // a gust front moving downwind
+    float lean = (sin(t * (1.1 + 2.4 * ws) + w.y * 0.05 + w.x * 0.02) * (0.3 + 0.7 * ws) + wd * 1.1 * ws)
+               * (0.45 + 0.9 * gw * (0.4 + 0.6 * Col1.w));
+    float2 bw = float2(w.x + (frac(w.y / 3) + 0.15) * lean, w.y);
+    g *= 1 + 0.16 * ws * smoothstep(0.55, 0.9, gw);                                  // bent blades catch the light
     float bl = WN(bw, float2(0.55, 3.2)), tip = WN(bw + 17.3, float2(0.7, 2.1));
     g *= 1 - 0.3 * smoothstep(0.58, 0.9, bl);
     g *= 1 + 0.2 * smoothstep(0.68, 0.95, tip);

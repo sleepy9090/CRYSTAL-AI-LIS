@@ -1292,6 +1292,33 @@ internal static partial class Program
             True(Math.Abs(playerAdded - inv / 2) <= inv / 6, $"the player is filled in on the blink frames the game skips ({playerAdded} of {inv})");
             Eq(0, dup, "the player is only added while blinking (never drawn twice)");
         }),
+        ("win_pod_walkout", () =>
+        {
+            // playtest 13: "on leaving the cryo chamber the player appears to have 2 sets of legs until he gets control"
+            var d = TheData.Value;
+            var m = new Machine(d, _ => { }); m.Reset();
+            m.Ppu.Capture = new VideoCapture(); m.Ppu.NoPixels = true;
+            var r = new SceneRaster(m.Ppu.Chr) { SpriteLimit = false };
+            var ss = new SideSprites();
+            var keys = Keys.Parse("1250:START 1400:START 1600:START 1700:START 2301:START".Split(' '));
+            int frames = 0, added = 0;
+            while (214 + m.Frame < 3400)
+            {
+                ss.Snapshot(m);
+                m.RunFrame(keys.TryGetValue(214 + m.Frame, out int b) ? b : 0);
+                if (m.Rd(0x40) != 1 || m.Rd(0x6C) != 0 || 214 + m.Frame < 2700) continue;
+                r.Build(m.Ppu.Capture);
+                Window.FillFlicker(m.Ppu.Capture, r, ss, m, 232);
+                frames++;
+                if (ss.Added.Contains(1))
+                {
+                    added++;
+                }
+            }
+            Console.WriteLine($"  win_pod_walkout: {frames} frames in the pod room after the flash, player added by the fill in {added}");
+            True(frames > 500, "the run covers the walk-out");
+            Eq(0, added, "no extra copy of the player while he walks out of the pod");
+        }),
         ("win_weather", () =>
         {
             // playtest 12: trees move with the weather: one wind from the clock, calm / breezy / stormy spells, gusts
@@ -1556,6 +1583,16 @@ internal static partial class Program
             for (int f = 0; f < 120; f++) { m.RunFrame(f < 60 ? 0x01 : 0x02); ch.Apply(m, false); }
             True(m.Rd(0x40) == 1 && m.Rd(0x41) == 8, "the game plays on with the cheats");
             Eq(9, Cheats.Names.Length, "nine cheats");
+            // playtest 13: F3 / Debug info > All on / off
+            var v3 = VideoSettings.Parse("debug=area,voice\n");
+            Window.ToggleAllDebug(v3);
+            Eq(0, v3.Debug.Count, "F3 with some on: all off");
+            Window.ToggleAllDebug(v3);
+            True(v3.Debug.SetEquals(new[] { "area", "voice" }), "F3 again: the same choice back");
+            var v4 = VideoSettings.Parse("");
+            Window.ToggleAllDebug(v4); Window.ToggleAllDebug(v4); Window.ToggleAllDebug(v4);
+            Eq(VideoSettings.DebugNames.Length, v4.Debug.Count, "nothing chosen before: F3 turns every line on");
+            Eq(975, Window.CommandId("debug:all"), "--menu debug:all");
         }),
         ("win_story", () =>
         {
@@ -1685,6 +1722,7 @@ internal static partial class Program
             var dr = new DialogueReader();
             var said = new List<(int F, string T)>(); var stops = new List<int>();
             var speakers = new List<int>();
+            var decoded = new List<string>(); int lastIds = -1, firstSeen = 0;
             for (int f = 0; f < 480; f++)
             {
                 int fn = 2506 + m.Frame;
@@ -1692,11 +1730,16 @@ internal static partial class Program
                 var (say, stop) = dr.Update(m.Rd(0x40), m.Rd(0x51), a => m.Rd(a));
                 if (say != null) said.Add((fn, say));
                 if (say != null) speakers.Add(Cast.Speaker(a => m.Rd(a)));
+                int ids = m.Rd(0x7DF) << 8 | m.Rd(0x7DE);
+                if (m.Rd(0x41) == 0x11 && ids != lastIds && said.Count == 0) { decoded = MessageText.Pages(d.Prg, m.Rd(0x7DF), m.Rd(0x7DE), a => m.Rd(a)); firstSeen = 2506 + m.Frame; }
+                lastIds = ids;
                 if (stop) stops.Add(fn);
             }
             foreach (var (f, t) in said) Console.WriteLine($"  win_dialogue: f{f} say \"{t}\"");
             Console.WriteLine($"  win_dialogue: stop at {string.Join(",", stops)}");
             True(said.Count == 3 && said[2].T.StartsWith("This town"), $"Akahana's 2 pages + the next NPC (UP), each said once ({said.Count})");
+            Console.WriteLine($"  win_dialogue: decoded at f{firstSeen} (shown f{said[0].F}): " + string.Join(" | ", decoded));
+            True(decoded.Count >= 2 && decoded[0] == said[0].T && decoded[1] == said[1].T, "the message decoded from the ROM at the talk start = the pages shown");
             True(said.Count > 0 && said[0].T.Contains("Akahana") && said[0].F < 2701, "page 1 (Akahana) before the first A");
             True(said.Count > 1 && said[1].F > 2701 && said[1].F < 2761 && said[1].T != said[0].T, "page 2 after the first A");
             True(stops.Count >= 1 && stops[0] > 2761 && stops[0] < 2800, "the voice stops when the window closes");

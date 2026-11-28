@@ -93,7 +93,7 @@ internal static unsafe class KokoroServer
                 var f = line.Split('\t', 5);
                 if (f.Length < 5 || !int.TryParse(f[0], out int seq)) continue;
                 string wav = f[3];
-                if (seq < Volatile.Read(ref newest)) { o.WriteLine("SKIP " + wav); o.Flush(); continue; }
+                if (seq != 0 && seq < Volatile.Read(ref newest)) { o.WriteLine("SKIP " + wav); o.Flush(); continue; }   // seq 0 = a prefetch: always made
                 int sid = int.Parse(f[1]);
                 float speed = float.Parse(f[2], System.Globalization.CultureInfo.InvariantCulture);
                 IntPtr text = U8(f[4]);

@@ -77,6 +77,8 @@ internal sealed class VideoSettings
     public bool ShowFps;
     /// <summary>playtest 7: debug lines on screen (Video > Debug info; ini debug=area,pos,..)</summary>
     public readonly HashSet<string> Debug = new();
+    /// <summary>the lines F3 turned off (brought back by the next F3)</summary>
+    public List<string> DebugSaved = new();
     public static readonly string[] DebugNames = { "area", "pos", "state", "objects", "wide", "voice", "hd", "sprites", "input", "audio" };
     public static readonly string[] DebugLabels = { "Current &area", "Player &position + camera", "Game &state (main / sub / IRQ / frame)", "&Objects (active, flicker fill)", "&Widescreen (map lines, offset)", "&Voice (engine, speaker)", "&HD scene (play, story art, film look)", "&Sprites (visible, behind the scenery)", "&Input (pad bytes)", "A&udio (mode, dropouts)" };
     /// <summary>T60 Video > Display: brightness 0..4 (2 = as is), vivid colour, colour-blind assist (0 off, 1 protan, 2 deutan,

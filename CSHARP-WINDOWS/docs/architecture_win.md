@@ -750,3 +750,10 @@ CSHARP-WINDOWS/
     **Shop / inn interiors (playtest 12):** new constant row `Room` (NConst 25), x = sub_state $20-$23: warm flickering
     lamp light over the room, cooler corners; browns / oranges (wood, trim) get grain and a lamp sheen, purples (the
     curtains) soft folds, whites (plaster) a mottled finish darker toward the ceiling; dust motes in the light.
+    **Two pairs of legs leaving the cryo pod (playtest 13):** the walk out of the pod (area $00, sub_state 8) blinks the
+    player on purpose (half-rate flag + invuln_timer, materialising), and the no-flicker fill drew a whole replayed copy
+    over the game's own frames (356 of 701 frames). `FillFlicker` now fills the player (slot 1) only while
+    `invuln_timer` $071A runs and never in area $00 (`win_pod_walkout`: 0 frames; group09's after-hit blink still filled).
+    **Grass in the wind (playtest 13):** the lawn blades (`Lawn`) lean and sway with the weather wind (`Col0.w` /
+    `Col1.w` / `Col2.w`): a lean downwind, a sway that quickens with the strength, gust fronts rolling downwind across
+    the lawn (bent blades a little brighter), the blade tips moving while the roots stay.

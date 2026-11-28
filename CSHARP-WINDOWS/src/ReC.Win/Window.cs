@@ -296,7 +296,11 @@ internal static unsafe partial class Window
         var banks = new int[8];
         for (int k = 0; k < 8; k++) banks[k] = rg.Banks[k];
         for (int y = 0; y < 240; y++) _fLines[y] = y >= 8 && y < hudTop;
-        ss.Draw(m.Data, m.Ppu.Chr, banks, rg.Ctrl, 256, 0, _fSpr, _fTag, _fLines, missingOnly: true);
+        // playtest 13: the player (slot 1) only while his after-hit blink runs (invuln_timer $071A), and never in the cryo-pod
+        // room (area $00): the walk out of the pod blinks him on purpose (materialising), and a whole extra copy over the
+        // game's own frames showed a second pair of legs
+        var sram = ss.Ram;
+        ss.Draw(m.Data, m.Ppu.Chr, banks, rg.Ctrl, 256, 0, _fSpr, _fTag, _fLines, missingOnly: true, slotOnly: x => x != 1 || (sram[0x71A] != 0 && sram[0x6C] != 0));
         return raster.ApplyMissing(_fSpr, _fTag);
     }
 
@@ -387,6 +391,7 @@ internal static unsafe partial class Window
     private static readonly DialogueReader _dialogue = new();
     private static Speech? _speech;
     private static IVoice? _neural;
+    private static int _lastIds = -1;
     private static bool _speechTried;
     private static bool _automated;
     /// <summary>playtest 6: says each message page as it appears (DialogueReader); the voice starts on first use</summary>
@@ -448,6 +453,14 @@ internal static unsafe partial class Window
                 else _speech?.SayXml(Cast.Xml(pg.Npc, pg.Text));
             }
         }
+        // playtest 13: a message id set during gameplay (the NPC script, an event) = its pages are made now, ahead of the window
+        int ids = m.Rd(0x7DF) << 8 | m.Rd(0x7DE);
+        if (ids != _lastIds && m.Rd(0x40) == 1 && _v.Voice && !_muted && _neural is KokoroVoice kp)
+        {
+            try { kp.Prefetch(Cast.Speaker(a => m.Rd(a)), MessageText.Pages(m.Data.Prg, m.Rd(0x7DF), m.Rd(0x7DE), a => m.Rd(a))); }
+            catch (Exception e) when (e is IndexOutOfRangeException or ArgumentException) { }
+        }
+        _lastIds = ids;
         var (say, stop) = _dialogue.Update(m.Rd(0x40), m.Rd(0x51), a => m.Rd(a), m.Ppu.VramRead);
         if (stop) { _speech?.Stop(); _neural?.Stop(); }
         if (say == null || !_v.Voice || _muted || _fast) return;
@@ -1026,6 +1039,15 @@ internal static unsafe partial class Window
     /// <summary>the machine part of ResetGame (tests)</summary>
     public static void ResetMachineForTest(Machine m) => m.Reset();
 
+    /// <summary>playtest 13: F3 / Video > Debug info > All on / off: any on -> all off (the choice kept); none on -> the kept
+    /// choice back, or all of them</summary>
+    public static void ToggleAllDebug(VideoSettings? vs = null)
+    {
+        var v = vs ?? _v;
+        if (v.Debug.Count > 0) { v.DebugSaved = v.Debug.ToList(); v.Debug.Clear(); }
+        else foreach (var k in v.DebugSaved.Count > 0 ? v.DebugSaved : VideoSettings.DebugNames.ToList()) v.Debug.Add(k);
+    }
+
     public static bool ResetGame(bool ask)
     {
         if (_m == null) return false;
@@ -1064,6 +1086,7 @@ internal static unsafe partial class Window
             case 0x20 /* Space */: _fastKey = _fast = true; StatusLine(); if (_paused) Present(); break;
             case 0x7B /* F12 */: Screenshot(); break;                     // T42
             case 0x77 /* F8 */: Command(IdResetGame); break;              // playtest 11: reset game
+            case 0x72 /* F3 */: Command(IdDebugAll); break;               // playtest 13: all debug info on / off
             case 0x71 /* F2 */: Command(IdFps); break;                    // T49
             case 0x70 /* F1 */:
                 _help = !_help; _paused = _help;

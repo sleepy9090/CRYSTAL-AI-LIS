@@ -137,6 +137,8 @@ internal sealed class KokoroVoice : IVoice
     private readonly Dictionary<string, (int Seq, double Pitch, int Idx, string Cache)> _pending = new();
     // playtest 11: sentences of the current page by index, played in order as they come in (cache hits are instant)
     private readonly Dictionary<int, float[]> _ready = new();
+    // playtest 13: sentences being made (cache path -> the pages waiting for them)
+    private readonly Dictionary<string, List<(int Seq, int Idx, double Pitch)>> _inflight = new();
     private int _nextIdx;
     private static string CacheDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "re-c", "voicecache");
 
@@ -202,9 +204,18 @@ internal sealed class KokoroVoice : IVoice
                     byte[] bytes = File.ReadAllBytes(wav);
                     float[] pcm = NeuralVoice.Render(bytes, req.Pitch, AudioOut.Rate);
                     try { Directory.CreateDirectory(CacheDir); File.Move(wav, req.Cache, true); } catch (Exception) { try { File.Delete(wav); } catch (Exception) { } }
-                    lock (_lk) if (req.Seq == _seq) Ready(req.Idx, pcm);
+                    lock (_lk)
+                    {
+                        if (req.Seq == _seq && req.Idx >= 0) Ready(req.Idx, pcm);
+                        if (_inflight.Remove(req.Cache, out var waiters))          // a page that came while it was made
+                            foreach (var w in waiters) if (w.Seq == _seq) Ready(w.Idx, NeuralVoice.Render(bytes, w.Pitch, AudioOut.Rate));
+                    }
                 }
-                else if (line.StartsWith("ERR")) NeuralVoice.Log("kokoro server: " + line);
+                else if (line.StartsWith("ERR"))
+                {
+                    NeuralVoice.Log("kokoro server: " + line);
+                    lock (_lk) _inflight.Remove(req.Cache);
+                }
             }
         }
         catch (Exception e) { NeuralVoice.Log("kokoro server read: " + e.Message); }
@@ -232,6 +243,35 @@ internal sealed class KokoroVoice : IVoice
         return o;
     }
 
+    private int _pf;
+
+    /// <summary>playtest 13: makes every sentence of a message's pages ahead (MessageText, at the talk start): seq 0
+    /// requests the server never skips; results go to the cache, and a page shown meanwhile waits for them</summary>
+    public void Prefetch(int npc, IReadOnlyList<string> pages)
+    {
+        if (_server == null && !_serverDead) StartServer();
+        if (_serverDead || _serverIn == null) return;
+        var (spk, len, pitch) = Pick(npc);
+        try
+        {
+            foreach (var page in pages)
+                foreach (var s in Sentences(page))
+                {
+                    string cache = CachePath(spk, len, s);
+                    if (File.Exists(cache)) continue;
+                    string wav = Path.Combine(_tmp, $"p{++_pf}.wav");
+                    lock (_lk)
+                    {
+                        if (_inflight.ContainsKey(cache)) continue;
+                        _inflight[cache] = new List<(int, int, double)>();
+                        _pending[wav] = (0, pitch, -1, cache);
+                    }
+                    _serverIn.WriteLine(FormattableString.Invariant($"0\t{spk}\t{1 / len:0.000}\t{wav}\t{s.Replace('\t', ' ')}"));
+                }
+        }
+        catch (Exception e) { NeuralVoice.Log("kokoro prefetch: " + e.Message); _serverDead = true; }
+    }
+
     public void Say(int npc, string text)
     {
         var (spk, len, pitch) = Pick(npc);
@@ -253,6 +293,11 @@ internal sealed class KokoroVoice : IVoice
                     {
                         try { var pc = NeuralVoice.Render(File.ReadAllBytes(cache), pitch, AudioOut.Rate); lock (_lk) Ready(i, pc); continue; }
                         catch (Exception) { }
+                    }
+                    lock (_lk)
+                    {
+                        if (_inflight.TryGetValue(cache, out var ws)) { ws.Add((seq, i, pitch)); continue; }   // prefetch is making it
+                        _inflight[cache] = new List<(int, int, double)>();
                     }
                     string wav = Path.Combine(_tmp, $"k{seq}_{i}.wav");
                     lock (_lk) _pending[wav] = (seq, pitch, i, cache);
