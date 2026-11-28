@@ -28,7 +28,7 @@ cbuffer C : register(b0)
     float4 Dmg;    // T57 damage feedback: hit flash 0..1, low life 0 / 1, -, -
     float4 Col0, Col1, Col2;   // T60 display colour matrix rows (brightness, vivid, colour-blind assist)
     float4 Scr;    // widescreen: picture columns (256 or wider), lines (240), side width, -
-    float4 Room;   // playtest 12: x = shop / inn interior (1)
+    float4 Room;   // playtest 12: x = shop / inn interior (1); playtest 13 weather: y = rain / snow, z = lightning, w = heat
 };
 Texture2D SrcA : register(t0);
 Texture2D SrcB : register(t1);
@@ -590,9 +590,11 @@ float3 Weather(float2 p, float t)
     float3 c = 0;
     if (Opt2.z > 0.01)                                                // snow / ice crystals: two layers, near = bigger, faster
     {
-        float2 a = Particle(p, 1.2, 12, float2(-4, 18), t, 1.2, 2);
-        float2 b = Particle(p, 1.45, 18, float2(-6, 30), t, 1.9, 2);
-        c += float3(0.9, 0.95, 1.0) * (a.x * step(0.3, a.y) * 0.65 + b.x * step(0.45, b.y) * 0.8) * Opt2.z;
+        // playtest 13: heavier in snowy spells (Room.y), drifting with the wind
+        float drift = Col2.w * Col0.w * 26;
+        float2 a = Particle(p, 1.2, 12, float2(-4 + drift, 18 + 10 * Room.y), t, 1.2, 2);
+        float2 b = Particle(p, 1.45, 18, float2(-6 + drift * 1.4, 30 + 16 * Room.y), t, 1.9, 2);
+        c += float3(0.9, 0.95, 1.0) * (a.x * step(0.3 - 0.2 * Room.y, a.y) * 0.65 + b.x * step(0.45 - 0.25 * Room.y, b.y) * 0.8) * Opt2.z * (0.45 + 1.2 * Room.y);
     }
     if (Opt2.w > 0.01)                                                // embers rising, flickering
     {
@@ -623,6 +625,75 @@ float4 Reflect(float2 p, float t)
     return 0;
 }
 
+// playtest 13: ice. In icy scenes (Opt2.z) the light blue / cyan / white floor colours are ice: they mirror what stands on
+// them, crisp (a faint shimmer only), characters clearly and scenery faintly, fading away from the foot of the object
+bool IceCol(int ci)
+{
+    int h = ci & 15, lv = ci >> 4;
+    return ((h == 1 || h == 2 || h == 0xC) && lv >= 1) || (h == 0 && lv >= 2);
+}
+float4 ReflectIce(float2 p, float t)
+{
+    [loop] for (int j = 1; j <= 36; j++)
+    {
+        float2 q = float2(p.x, p.y - j);
+        if (q.y < 0) break;
+        float4 iq = InfoPx(q);
+        int cq = (int)round(iq.g * 255 / 4) & 63;
+        if ((Flags(iq) & 1) == 0 && IceCol(cq)) continue;          // still ice: look further up
+        if (Lne.Load(int3(clamp(int(q.y), 0, 239), 0, 0)).z > 0.5 || IsVoid(q)) break;
+        float sy = floor(q.y) + 1;                                     // where the object meets the ice
+        float2 r = float2(p.x + sin(p.y * 2.3 + t * 1.3) * 0.15, 2 * sy - p.y - 0.5);
+        if (r.y < 0 || Lne.Load(int3(clamp(int(r.y), 0, 239), 0, 0)).z > 0.5) break;
+        float fade = 1 - (p.y - sy) / 36;
+        float spr = Inf.SampleLevel(Lin, r / NES, 0).r;
+        float3 c = (Albedo(r / NES) * 2 + Albedo((r + float2(0.7, 0)) / NES) + Albedo((r - float2(0.7, 0)) / NES)) / 4;
+        return float4(c, fade * fade * lerp(0.25, 1, spr));
+    }
+    return 0;
+}
+
+// playtest 13: fish. Open water (kind 2, deep: NES colour < $20), in cells of 48 x 40 world pixels; a cell's fish leaps once in
+// a while (its own period and phase): a 1.1 s arc out of the water and back, silver body tilting along the arc with a dark
+// back, a ring of ripples and a splash where it leaves and re-enters. Returns (colour, coverage); the ring is additive.
+float4 Fish(float2 p, float2 w, float t)
+{
+    float4 o = 0;
+    float2 cs = float2(48, 40);
+    float2 cell0 = floor(w / cs);
+    [unroll] for (int k = 0; k < 4; k++)
+    {
+        float2 cell = cell0 + float2(k % 2, k / 2) - 1;
+        float h = Hash(cell + 51.7);
+        float has = step(0.3, h);                                   // most cells have a fish
+        float per = 4 + 5 * Hash(cell + 3.1), u = frac(t / per + Hash(cell + 9.4)) * per;
+        float2 c0 = (cell + float2(0.3 + 0.4 * Hash(cell + 1.3), 0.4 + 0.3 * Hash(cell + 2.9))) * cs;
+        float dir = Hash(cell + 7.7) > 0.5 ? 1 : -1;
+        float L = 1.1, span = 22;
+        float rr = length((w - c0 - float2(0, 0)) * float2(1, 1.8));
+        float rr2 = length((w - c0 - float2(dir * span, 0)) * float2(1, 1.8));
+        // ripples at the start (from u = 0) and where it falls back (from u = L)
+        float r1 = u < 1.6 ? exp(-pow((rr - u * 9) / 1.2, 2)) * (1 - u / 1.6) : 0;
+        float r2 = u > L && u < L + 1.6 ? exp(-pow((rr2 - (u - L) * 9) / 1.2, 2)) * (1 - (u - L) / 1.6) : 0;
+        o.rgb += float3(0.85, 0.95, 1.0) * (r1 + r2) * 0.45 * has;
+        float air = step(u, L) * has;                               // in the air (no branch: Wine cannot unroll one)
+        float s = saturate(u / L);
+        float2 pos = c0 + float2(dir * span * s, -16 * 4 * s * (1 - s));
+        float ang = atan2(-16 * 4 * (1 - 2 * s), dir * span);
+        float2 d = w - pos;
+        float2 q = float2(d.x * cos(ang) + d.y * sin(ang), -d.x * sin(ang) + d.y * cos(ang));
+        q.x *= dir;
+        float body = length(q * float2(1 / 3.4, 1 / 1.3));
+        float tail = step(-5.2, q.x) * step(q.x, -2.8) * step(abs(q.y), (-2.8 - q.x) * 0.9);
+        float a = max(1 - smoothstep(0.8, 1.0, body), tail) * air;
+        float3 col = lerp(float3(0.82, 0.88, 0.92), float3(0.25, 0.35, 0.45), saturate(-q.y * 0.6 + 0.3));
+        col += 0.35 * exp(-pow((q.y + 0.4) / 0.35, 2));            // a bright line along the side
+        col = lerp(col, float3(0.1, 0.1, 0.1), step(1.6, q.x) * step(abs(q.y + 0.2), 0.35));   // the eye
+        o = float4(lerp(o.rgb, col, a), max(o.a, a));
+    }
+    return o;
+}
+
 // T29: the HUD panel's fill colour gets a soft gloss (lighter band near the top, darker toward the bottom) and a 1-pixel
 // drop shadow under text and frame pixels; every text / frame pixel itself stays exactly its NES colour
 // T34 HUD style (HudC.w): the glyph mask = HUD pixels whose colour is not the panel fill (letters, digits, meters, the
@@ -647,6 +718,28 @@ float3 PanelFill(float2 p, float2 s, float3 fc, float t)
     float sh = HudMask(s - so, fc) * 0.4 + HudMask(s - so + float2(tx.x * 3, 0), fc) * 0.2 +
                HudMask(s - so + float2(0, tx.y * 3), fc) * 0.2 + HudMask(s - so * 1.6, fc) * 0.2;
     return saturate(fc * g * (1 - 0.45 * sh));
+}
+// playtest 13 ("make the inventory screens look up to date"): menu windows (status, equipment, items, outside the HUD rows)
+// get a modern glass panel: a deep diagonal gradient of their colour, a soft light from the top left, a fine diagonal
+// weave, faint glints, a slow sheen sweeping across, darker toward the edges; the glyph drop shadow as in PanelFill
+float3 MenuFill(float2 p, float2 s, float3 fc, float t)
+{
+    float2 uv = p / NES;
+    float diag = saturate(uv.x * 0.45 + uv.y * 0.75);
+    float3 c = lerp(fc * 1.18 + float3(0.02, 0.03, 0.06), fc * 0.42 + float3(0.0, 0.0, 0.03), diag);
+    c += float3(0.25, 0.32, 0.45) * exp(-dot(uv - float2(0.15, 0.08), uv - float2(0.15, 0.08)) * 6) * 0.35;
+    float weave = sin((p.x + p.y) * 1.6) * sin((p.x - p.y) * 1.6);
+    c *= 1 + 0.035 * weave;
+    float sweep = exp(-pow(frac((p.x + p.y * 0.5) / 520 - Cam.z * 0.06) * 6 - 3, 2) * 2);
+    c += float3(0.5, 0.6, 0.8) * sweep * 0.08;
+    float2 gc = floor(p / 9);
+    c += float3(0.6, 0.75, 1.0) * step(0.985, Hash(gc + 7.1)) * (0.5 + 0.5 * sin(Cam.z * 2 + Hash(gc) * 30)) * smoothstep(1.4, 0.2, length(frac(p / 9) * 9 - 4.5)) * 0.25;
+    float2 e = min(uv, 1 - uv);
+    c *= 0.82 + 0.18 * saturate(min(e.x, e.y) * 8);
+    float2 tx = 1.0 / ALB, so = float2(0.9, 0.9) / NES;
+    float sh = HudMask(s - so, fc) * 0.4 + HudMask(s - so + float2(tx.x * 3, 0), fc) * 0.2 +
+               HudMask(s - so + float2(0, tx.y * 3), fc) * 0.2 + HudMask(s - so * 1.6, fc) * 0.2;
+    return saturate(c * (1 - 0.5 * sh));
 }
 float4 LifeMeter(float2 p, float3 panel)
 {
@@ -736,7 +829,7 @@ float3 HudPanel(float3 a, float2 p, float2 s, float4 inf)
     }
     else
     {
-    float3 panel = PanelFill(p, s, fc, t);
+    float3 panel = rows ? PanelFill(p, s, fc, t) : MenuFill(p, s, fc, t);   // playtest 13: menus get the glass panel
     float4 mt = LifeMeter(p, panel);
     if (mt.a > 0) return mt.rgb;
     mt = ForceMeter(p, s, fc);
@@ -849,6 +942,7 @@ float4 PSLight(V i) : SV_Target
         float heat = saturate((lb - lh) * 12) * saturate(lb * 4);
         // playtest 7: smooth, slow and small (fine 2.5 px cells shifted each row on its own = torn rows over a lava floor)
         off += float2(FN(p * 0.5 + float2(0, t * 5), 9) - 0.5, (FN(p * 0.5 + float2(t * 2, t * 5) + 31, 9) - 0.5) * 0.5) * heat * 0.35;
+        off.x += sin(p.y * 0.18 + p.x * 0.03 + t * 2.6) * 0.3 * Room.w * Scn.x * Scn.z;   // playtest 13: heat haze (smooth: no row lines)
         a = Albedo(s + off / NES);
     }
     float3 c = a;
@@ -885,6 +979,19 @@ float4 PSLight(V i) : SV_Target
         {
             float4 rf = Reflect(p, t);
             a = lerp(a, rf.rgb * 0.85 + a * 0.15, rf.a * Opt2.x * 1.6);
+        }
+        // playtest 13: ice floors reflect, with a soft polished sheen
+        if (kind != 2 && Opt2.z > 0.3 && Opt2.x > 0 && QualC.y > 0.5 && (fl & 2) == 0 && !spr && IceCol(col))
+        {
+            float4 rf = ReflectIce(p, t);
+            a = lerp(a, rf.rgb * 0.8 + a * 0.2, rf.a * 0.6 * Opt2.z);
+            a += float3(0.85, 0.95, 1.0) * smoothstep(0.6, 0.95, WN(p + Cam.xy * 0.5, float2(30, 10))) * 0.07 * Opt2.z;
+        }
+        // playtest 13: fish leaping now and then (open water, not ice; gameplay)
+        if (kind == 2 && Opt2.z < 0.3 && Opt.w > 0.5 && Scn.z > 0.5 && (fl & 2) == 0)
+        {
+            float4 fsh = Fish(p, p + Cam.xy, t);
+            a = lerp(a + fsh.rgb * (1 - fsh.a), fsh.rgb, fsh.a);
         }
         // shoreline foam: deep water next to land (or a character wading in it), animated
         if (kind == 2 && col < 0x20 && Opt.w > 0.5)
@@ -1002,6 +1109,31 @@ float4 PSLight(V i) : SV_Target
     c = lerp(c, lerp(float3(0.30, 0.50, 0.12), float3(0.75, 0.45, 0.12), frac(lf.y * 7)), lf.x * step(0.82, lf.y) * 0.8 * Scn.x * Opt.z * Scn.z * (0.35 + 1.3 * Col0.w));   // more leaves in the wind
     // T43: the status bar casts a soft shadow up onto the map: from the last tile row above the panel (the row the game
     // has not loaded yet under the split) black, fading in over 4 lines; MeterF.w = status-bar line * 256 + row start
+    // playtest 13 weather, outdoors in gameplay: rain (not in icy places, they get snow) = an overcast, wet look, slanted
+    // streaks blown by the wind in two layers and splashes; lightning flashes the scene; heat (Room.w) warms the grade
+    float outw = Scn.x * Scn.z;
+    float rainA = Room.y * outw * (1 - saturate(Opt2.z * 2));
+    if (rainA > 0.01)
+    {
+        c *= lerp(float3(1, 1, 1), float3(0.74, 0.78, 0.86), rainA);              // overcast, wet
+        float slant = Col2.w * (0.15 + 0.45 * Col0.w);
+        float streak = 0;
+        [unroll] for (int k = 0; k < 2; k++)
+        {
+            float sc = k == 0 ? 1.0 : 1.7;
+            float2 rp = float2((p.x + p.y * slant) * 0.45 * sc + k * 31.7, (p.y * 0.05 - t * (9 + 5 * k)) * sc);
+            float2 id = floor(rp), fr = frac(rp);
+            float hh = Hash(id + 17 * k);
+            float on = step(1 - 0.10 * (0.4 + Room.y), hh);
+            streak += on * smoothstep(0.12, 0.0, abs(fr.x - 0.3 - 0.4 * Hash(id + 5))) * smoothstep(0.0, 0.35, fr.y) * smoothstep(1.0, 0.55, fr.y) * (k == 0 ? 0.55 : 0.8);
+        }
+        c = lerp(c, float3(0.78, 0.84, 0.95), saturate(streak) * rainA);
+        float2 sp = floor(p / 3);
+        float splash = step(0.988, Hash(sp + floor(t * 9) * 13.1));
+        c += float3(0.6, 0.65, 0.75) * splash * rainA * 0.35;
+    }
+    c += float3(0.8, 0.86, 1.0) * Room.z * outw * 0.9;                           // lightning
+    c *= lerp(float3(1, 1, 1), float3(1.07, 1.0, 0.88), Room.w * outw);         // heat
     // playtest 12: shop / inn interiors (Room.x): a warm lamp light over the room with a gentle flicker, cooler corners;
     // wood (browns / oranges) gets grain and a sheen, the curtains (purples) soft folds, the plaster (whites) a mottled
     // finish darker toward the ceiling; dust motes in the lamp light

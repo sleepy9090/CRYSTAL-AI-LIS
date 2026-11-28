@@ -1338,6 +1338,30 @@ internal static partial class Program
             True(calm > 600 && storm > 600, "both calm and stormy spells within 20 minutes");
             True(maxJump < 0.02, "the wind changes smoothly");
             True(Weather.Wind(123.4) == Weather.Wind(123.4), "deterministic");
+            // playtest 13: rain / snow spells, storms with lightning
+            int wet = 0, flashes = 0, stormy = 0; double lastStrike = -1;
+            for (int k = 0; k < 30 * 60 * 20; k++)
+            {
+                var s = Weather.Sky(k / 20.0);
+                if (s.Precip > 0.3) wet++;
+                if (s.Flash > 0.5) stormy++;
+                if (s.Strike > lastStrike) { flashes++; lastStrike = s.Strike; }
+            }
+            Console.WriteLine($"  win_weather: 30 min: wet {wet / 20} s, bright lightning {stormy / 20.0:F1} s, strikes {flashes}");
+            True(wet > 180 && wet < 30 * 60 * 20 * 0.7, "rain / snow spells, not all the time");
+            True(flashes >= 3, "storms bring lightning");
+            // the sounds: rain a soft bed, thunder clearly louder but not clipping
+            double Rms(Ambience am, int n) { double sum = 0, peak = 0; for (int i = 0; i < n; i++) { var (l, _) = am.Next(); sum += l * l; peak = Math.Max(peak, Math.Abs(l)); } return Math.Max(Math.Sqrt(sum / n), peak * 0); }
+            double Db(double v) => 20 * Math.Log10(Math.Max(v, 1e-9) / 32768);
+            var rain = new Ambience { Rain = 1 };
+            Rms(rain, 44100 * 3);
+            double rainDb = Db(Rms(rain, 44100 * 2));
+            var th = new Ambience(); th.Thunder(0.01);
+            double peakTh = 0; for (int i = 0; i < 44100 * 3; i++) peakTh = Math.Max(peakTh, Math.Abs(th.Next().L));
+            double thDb = Db(Rms(new Func<Ambience>(() => { var t2 = new Ambience(); t2.Thunder(0.01); return t2; })(), 44100));
+            Console.WriteLine($"  win_weather: rain {rainDb:F1} dBFS rms, thunder {thDb:F1} dBFS rms (first second), peak {Db(peakTh):F1} dBFS");
+            True(rainDb is > -42 and < -24, "rain is a soft bed");
+            True(thDb is > -26 and < -8 && peakTh < 30000, "thunder is clearly heard, no clipping");
         }),
         ("win_fx_glow", () =>
         {

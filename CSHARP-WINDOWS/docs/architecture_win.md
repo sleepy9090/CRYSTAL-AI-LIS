@@ -757,3 +757,17 @@ CSHARP-WINDOWS/
     **Grass in the wind (playtest 13):** the lawn blades (`Lawn`) lean and sway with the weather wind (`Col0.w` /
     `Col1.w` / `Col2.w`): a lean downwind, a sway that quickens with the strength, gust fronts rolling downwind across
     the lawn (bent blades a little brighter), the blade tips moving while the roots stay.
+    **Playtest 13 batch:** Debug info moved into the Cheats menu. **Ice reflections:** in icy scenes the light blue /
+    cyan / white floor colours mirror what stands on them (`ReflectIce`: crisp, a faint shimmer, characters clear and
+    scenery faint, fading away from the object's foot) plus a soft polished sheen (HD renders of areas $20 / $28).
+    **Weather:** `Weather.Sky` adds rain / snow spells (about a quarter of the time, heavier in wind) and storms (strong
+    wind + heavy precipitation) with lightning strikes and their time; `Room.y/z/w` = precipitation, flash, heat. Outdoors:
+    rain = an overcast wet grade, two layers of wind-slanted streaks and splashes (icy areas get the snow, heavier and
+    wind-blown instead); lightning brightens the scene; hot areas get a warm grade and a gentle heat haze. Ambience: a
+    rain bed (−38.6 dBFS) and thunder rolling in 0.5-2.3 s after each strike (−20 dBFS, no clipping; `win_weather`).
+    Cheats > Weather (auto / clear / rain / storm; `--menu weather:NAME`) and `--warp AREA` (hex, from normal play) for
+    testing. **Fish:** in open water (not ice), most 48 x 40 cells hold a fish that leaps every 4-9 s: a 1.1 s silver arc
+    tilting with its path, ripple rings where it leaves and lands (branch-free loop: Wine's compiler cannot unroll one
+    with `continue`, which silently dropped the HD engine to the 32-bit look until fixed). **Menus:** status / equipment /
+    item windows get `MenuFill`: a deep diagonal gradient, a light from the top left, a fine weave, glints, a slow sheen,
+    darker edges.

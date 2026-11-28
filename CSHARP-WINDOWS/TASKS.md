@@ -409,3 +409,4 @@ write them into the same task and leave it unchecked (no follow-up tasks).
 - [x] P25 (2026-11-27, playtest 12): weather-driven wind (trees sway, leaves, wind sound), lit shop / inn interiors.
 - [x] P26 (2026-11-27, playtest 13): no second pair of legs leaving the cryo pod.
 - [x] P28 (2026-11-27, playtest 13): grass blades sway with the weather wind.
+- [x] P29 (2026-11-27, playtest 13): Debug info under Cheats, ice reflections, rain / snow / storms / heat + sounds, Weather cheat, --warp, leaping fish, glass menu panels.

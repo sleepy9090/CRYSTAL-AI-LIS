@@ -18,6 +18,8 @@ namespace ReC.Win;
 internal sealed class WindowOptions
 {
     public int Scale = 3, Frames = -1, Frame0 = 214;
+    /// <summary>playtest 13: --warp AREA (hex): warp there as soon as normal play is reached (testing / debugging)</summary>
+    public int Warp = -1;
     public bool Frame0Given, ScaleGiven, Mute, NoAudio, Turbo, Quiet, Fullscreen;
     public string? SavePath, DataDir, StatePath, Screen, Compare, VideoConfig, DumpWindow, PackDir, ExportTiles, OsdShot;
     public readonly List<string> KeySpecs = new(), MenuCmds = new();
@@ -47,6 +49,7 @@ internal sealed class WindowOptions
                 case "--mute": o.Mute = true; break;
                 case "--no-audio": o.NoAudio = true; break;
                 case "--frames": o.Frames = int.Parse(V()); break;
+                case "--warp": o.Warp = Convert.ToInt32(V(), 16); break;
                 case "--frame0": o.Frame0 = int.Parse(V()); o.Frame0Given = true; break;
                 case "--turbo": o.Turbo = true; break;
                 case "--dump-screen": o.Screen = V(); break;
@@ -394,6 +397,7 @@ internal static unsafe partial class Window
     private static int _lastIds = -1;
     private static bool _speechTried;
     private static bool _automated;
+    private static int _pendingWarp = -1;
     /// <summary>playtest 6: says each message page as it appears (DialogueReader); the voice starts on first use</summary>
     /// <summary>playtest 6: the dialogue voice, started with the game (the model loads in the background): Piper from the
     /// voice folder next to the exe, else the Windows voice; %APPDATA%\re-c\voice.log says which and why</summary>
@@ -478,6 +482,7 @@ internal static unsafe partial class Window
         else _speech?.SayXml(Cast.Xml(npc, say));   // each NPC its own voice (gender, age)
     }
     /// <summary>T54: what the ambient sounds play, from the HD scene (gameplay only; nothing without the HD engine)</summary>
+    private static double _lastStrike = -1;
     private static void AmbienceTargets()
     {
         if (_audio == null) return;
@@ -488,9 +493,14 @@ internal static unsafe partial class Window
             float lum = s.Mean.R * 0.299f + s.Mean.G * 0.587f + s.Mean.B * 0.114f;
             a.Outdoor = s.Outdoor; a.Hot = s.Hot; a.Icy = s.Icy;
             a.WeatherWind = Weather.Wind(s.Time).Strength;           // playtest 12: heard as the trees show it
+            // playtest 13: rain outdoors (snow is silent), thunder a moment after each lightning strike
+            var sky = Weather.Sky(s.Time);
+            a.Rain = (float)(sky.Precip * s.Outdoor * (1 - Math.Min(1, s.Icy * 2)) * s.Play);
+            if (sky.Strike > _lastStrike && s.Outdoor > 0.3) { a.Thunder(0.5 + 1.8 * ((sky.Strike * 7.31) % 1)); }
+            if (sky.Strike > _lastStrike) _lastStrike = sky.Strike;
             a.Cave = s.Play * (1 - s.Outdoor) * (1 - s.Hot) * (1 - s.Icy) * Math.Clamp((0.32f - lum) / 0.15f, 0, 1);
         }
-        else a.Outdoor = a.Hot = a.Icy = a.Cave = 0;
+        else { a.Outdoor = a.Hot = a.Icy = a.Cave = 0; a.Rain = 0; }
     }
     private static int[] _nesRgb = Array.Empty<int>();
 
@@ -719,6 +729,7 @@ internal static unsafe partial class Window
         var keys = Keys.Parse(o.KeySpecs);
         _scripted = o.KeySpecs.Count > 0;
         _automated = o.Frames >= 0;                      // test runs (--frames N): no dialogue voice process
+        _pendingWarp = o.Warp;
         var rows = o.Compare != null ? new List<string> { string.Join(',', Csv.CompareColumns()) } : null;
         _muted = o.Mute;
         _m = m;
@@ -826,6 +837,7 @@ internal static unsafe partial class Window
                         m.RunFrame(buttons); _acc -= step; ran = true; ranTotal++;
                         _v.Cheats.Apply(m, (buttons & 0x40) != 0);           // T36 cheats (B = bit 6)
                         if (!_scripted) Speak(m);                            // playtest 6: spoken dialogue
+                        if (_pendingWarp >= 0 && Warp.To(m, _pendingWarp)) _pendingWarp = -1;   // playtest 13: --warp
                         {
                             var ram = m.Mem.RamBytes;                        // T57 damage feedback: a life drop in SubstPlay
                             bool playing = ram[0x40] == 1 && ram[0x41] == 8;

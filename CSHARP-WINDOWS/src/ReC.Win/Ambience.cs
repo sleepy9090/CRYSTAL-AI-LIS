@@ -12,6 +12,12 @@ internal sealed class Ambience
     private const double Fs = 44100;
     /// <summary>targets 0..1, set once per video frame</summary>
     public float Outdoor, Hot, Icy, Cave;
+    /// <summary>playtest 13: rain level 0..1 (outdoors, the weather); Thunder(seconds) queues a rumble</summary>
+    public float Rain;
+    private double _rw, _rh, _rp, _thEnv, _thN, _thN2, _thPh;
+    private long _thDelay;
+    private Bp _rb;
+    public void Thunder(double delaySeconds) => _thDelay = Math.Max(1, (long)(delaySeconds * Fs));
     /// <summary>T58: a heartbeat while life is low (Damage feedback), any graphics mode</summary>
     public bool Heartbeat;
     private double _hbT, _hbA, _hbPh, _hbW;
@@ -52,7 +58,7 @@ internal sealed class Ambience
 
     private double Uni() => (White() + 1) * 0.5;
 
-    public bool Silent => _wo + _wh + _wi + _wc < 1e-4 && Outdoor + Hot + Icy + Cave <= 0 && !Heartbeat && _hbW < 1e-4;
+    public bool Silent => _wo + _wh + _wi + _wc < 1e-4 && Outdoor + Hot + Icy + Cave <= 0 && !Heartbeat && _hbW < 1e-4 && Rain <= 0 && _rw < 1e-4 && _thEnv < 1e-4 && _thDelay <= 0;
 
     /// <summary>one stereo sample (16-bit units)</summary>
     public (double L, double R) Next()
@@ -73,7 +79,7 @@ internal sealed class Ambience
             _hbA *= 0.99975;                                       // ~90 ms
             l += hb; r += hb;
         }
-        if (_wo + _wh + _wi + _wc < 1e-4 && _da < 1e-3) return (l, r);
+        if (_wo + _wh + _wi + _wc < 1e-4 && _da < 1e-3 && Rain <= 0 && _rw < 1e-4 && _thEnv < 1e-4 && _thDelay <= 0) return (l, r);
         // gusts: a new target every 0.6-2 s, eased
         if (--_gustT <= 0) { _gustTo = Uni(); _gustT = (0.6 + 1.4 * Uni()) * Fs; }
         _gust += (_gustTo - _gust) * (1 / (0.8 * Fs));
@@ -153,6 +159,25 @@ internal sealed class Ambience
             _roar += (White() - _roar) * 0.03;
             double f = (pop + _roar * 4800) * _wh;
             l += f * (0.8 + 0.4 * _gust); r += f * (1.2 - 0.4 * _gust);
+        }
+        // playtest 13: rain (a soft hiss with patter, eased in / out) and thunder (a low rumble rolling off over seconds)
+        _rw += (Rain - _rw) * (1 / (1.5 * Fs));
+        if (_rw > 1e-4)
+        {
+            _rh = _rb.Run(White(), 2600, 0.7);
+            double pat = Uni() < 260 / Fs ? (Uni() - 0.5) * 2 : 0;
+            _rp = _rp * 0.9 + pat;
+            double rr = (_rh * 2200 + _rp * 900) * _rw;
+            l += rr * (0.9 + 0.2 * Uni()); r += rr * (0.9 + 0.2 * Uni());
+        }
+        if (_thDelay > 0 && --_thDelay <= 0) _thEnv = Math.Max(_thEnv, 0.6 + 0.4 * Uni());
+        if (_thEnv > 1e-4)
+        {
+            _thN += (White() - _thN) * 0.012;                 // deep: lowpassed noise
+            _thN2 += (_thN - _thN2) * 0.05;
+            double th = _thN2 * 150000 * _thEnv * (0.8 + 0.4 * Math.Sin(_thPh += 2 * Math.PI * 1.3 / Fs));
+            l += th; r += th * 0.92;
+            _thEnv *= 1 - 1 / (1.1 * Fs);
         }
         return (l, r);
     }

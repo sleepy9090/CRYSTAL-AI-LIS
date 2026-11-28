@@ -75,6 +75,7 @@ internal sealed unsafe partial class Gpu : IDisposable
     private bool _storyOn;
     private float _storyFade, _storyMax;
     private (double Strength, double Gust, double Dir) _wind;
+    private (double Precip, double Flash, double Strike) _sky;
     private int _storyKey;
     private int _storyBand;
 
@@ -959,6 +960,7 @@ internal sealed unsafe partial class Gpu : IDisposable
         _camX = sc.CamX; _camY = sc.CamY; _time = sc.Time; _outdoor = sc.Outdoor; _voidGate = sc.VoidGate; _play = sc.Play;
         _icy = sc.Icy; _hot = sc.Hot;
         _wind = Weather.Wind(_time);
+        _sky = Weather.Sky(_time);
         _hudFill = sc.HudFill; _hudTop = sc.HudTop; _hudBottom = sc.HudBottom;
         _meters = Meters(rl, sc.HudFill, Hp);
         if (HudOverlay) _meters[7] = 0;                    // playtest 6: the map continues behind the HUD: no bar shadow on it
@@ -1052,7 +1054,7 @@ internal sealed unsafe partial class Gpu : IDisposable
             ColorM[3], ColorM[4], ColorM[5], (float)_wind.Gust,
             ColorM[6], ColorM[7], ColorM[8], (float)_wind.Dir,
             NesW, 240, _sideE, _storyBand,
-            Room ? 1 : 0, 0, 0, 0,                                          // playtest 12: shop / inn interior
+            Room ? 1 : 0, (float)_sky.Precip, (float)_sky.Flash, _hot * (float)(1 - 0.5 * _wind.Strength),   // room; weather: rain / snow, lightning, heat
         };
         c.CopyTo(_c, 0);
         SetConstants();

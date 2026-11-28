@@ -19,6 +19,7 @@ internal static unsafe partial class Window
     private const int IdCheat0 = 600, IdCheatsOff = 620;     // T36: + Cheats index (life, magic, gold, status, charge, xp)
     private const int IdWarp0 = 700, IdDebug0 = 960;            // playtest 7: + area id; + DebugInfo index
     private const int IdDebugAll = 975;                         // playtest 13: all debug lines on / off (F3)
+    private const int IdWeather0 = 990;                         // playtest 13: + Weather.ForceNames index
     private const int IdFullscreen = 200, IdMenuBar = 201, IdInteger = 202, IdCrop = 203, IdSmooth = 204, IdReset = 205;
     private const int IdScale0 = 210;            // + 1..6
     private const int IdPreset0 = 220;           // + index in VideoSettings.Presets
@@ -61,6 +62,7 @@ internal static unsafe partial class Window
             case "pause": return IdPause;
             case "resetgame": return IdResetGame;
             case "debug:all": return IdDebugAll;
+            case var wn when wn.StartsWith("weather:") && Array.IndexOf(Weather.ForceNames, wn[8..]) >= 0: return IdWeather0 + Array.IndexOf(Weather.ForceNames, wn[8..]);
             case "crt": return IdCrt;
             case "fps": return IdFps;
             case "natural": return IdNatural;
@@ -192,6 +194,19 @@ internal static unsafe partial class Window
             Win32.AppendMenuW(wm, Win32.MF_POPUP, (nuint)gm, $"Areas {g * 16:X2}-{g * 16 + 15:X2}");
         }
         Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)wm, "&Warp to area (from normal play)");
+        {
+            var dm = NewMenu();                            // playtest 7 / 13: debug data on screen (under the FPS line), in Cheats
+            Win32.AppendMenuW(dm, 0, IdDebugAll, "&All on / off\tF3");
+            Win32.AppendMenuW(dm, Win32.MF_SEPARATOR, 0, null);
+            for (int i = 0; i < VideoSettings.DebugNames.Length; i++) Win32.AppendMenuW(dm, 0, (nuint)(IdDebug0 + i), VideoSettings.DebugLabels[i]);
+            Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)dm, "&Debug info");
+        }
+        {
+            var wm2 = NewMenu();                           // playtest 13: the weather (outdoors; snow in icy places)
+            string[] wl = { "&Auto (changes by itself)", "&Clear", "&Rain (snow in icy places)", "&Storm (lightning, blizzard)" };
+            for (int i = 0; i < wl.Length; i++) Win32.AppendMenuW(wm2, 0, (nuint)(IdWeather0 + i), wl[i]);
+            Win32.AppendMenuW(m, Win32.MF_POPUP, (nuint)wm2, "&Weather");
+        }
         Win32.AppendMenuW(m, Win32.MF_SEPARATOR, 0, null);
         Win32.AppendMenuW(m, 0, IdCheatsOff, "&All cheats off");
         return m;
@@ -275,13 +290,6 @@ internal static unsafe partial class Window
         Win32.AppendMenuW(gfx, 0, IdHd, "&HD engine (GPU: 8x layers, lighting, shadows, parallax)");
         Win32.AppendMenuW(gfx, 0, IdCrt, "&CRT look (scanlines, Original graphics)");
         Win32.AppendMenuW(gfx, 0, IdFps, "Show &FPS\tF2");
-        {
-            var dm = NewMenu();                            // playtest 7: debug data on screen (under the FPS line)
-            Win32.AppendMenuW(dm, 0, IdDebugAll, "&All on / off\tF3");
-            Win32.AppendMenuW(dm, Win32.MF_SEPARATOR, 0, null);
-            for (int i = 0; i < VideoSettings.DebugNames.Length; i++) Win32.AppendMenuW(dm, 0, (nuint)(IdDebug0 + i), VideoSettings.DebugLabels[i]);
-            Win32.AppendMenuW(gfx, Win32.MF_POPUP, (nuint)dm, "&Debug info");
-        }
         var disp = NewMenu();
         string[] bn = { "Brightness &1 (darker)", "Brightness &2", "Brightness &3 (as is)", "Brightness &4", "Brightness &5 (brighter)" };
         for (int i = 0; i < 5; i++) Win32.AppendMenuW(disp, 0, (nuint)(IdBright0 + i), bn[i]);
@@ -372,6 +380,7 @@ internal static unsafe partial class Window
         Check(IdPause, _paused); Check(IdMute, _muted); Check(IdCrt, _v.Crt); Check(IdFps, _v.ShowFps);
         for (int i = 0; i < VideoSettings.DebugNames.Length; i++) Check(IdDebug0 + i, _v.Debug.Contains(VideoSettings.DebugNames[i]));
         Check(IdDebugAll, _v.Debug.Count > 0);
+        for (int i = 0; i < 4; i++) Check(IdWeather0 + i, Weather.Force == i);
         for (int i = 0; i < 5; i++) Check(IdBright0 + i, _v.Brightness == i, true);
         for (int i = 0; i < 4; i++) Check(IdWide0 + i, _v.Wide == i, true);
         Check(IdNatural, !_v.Vivid, true); Check(IdVivid, _v.Vivid, true);
@@ -425,6 +434,9 @@ internal static unsafe partial class Window
             case >= IdWarp0 and < IdWarp0 + 256:
                 Notice(_m != null && Warp.To(_m, id - IdWarp0) ? $"WARP TO AREA {id - IdWarp0:X2}" : "WARP: ONLY FROM NORMAL PLAY");
                 return;
+            case >= IdWeather0 and < IdWeather0 + 4:
+                Weather.Force = id - IdWeather0;
+                Notice("WEATHER: " + Weather.ForceNames[Weather.Force].ToUpperInvariant()); Present(); return;
             case IdDebugAll:
                 ToggleAllDebug();
                 Notice(_v.Debug.Count > 0 ? "DEBUG INFO: ON" : "DEBUG INFO: OFF");
