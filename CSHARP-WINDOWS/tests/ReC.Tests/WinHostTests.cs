@@ -1606,7 +1606,9 @@ internal static partial class Program
             True(m.Rd(0x421) == 0x0F && m.Rd(0x709) == 0xFF && m.Rd(0x340) == 9 && m.Rd(0x341) == 9, "level 15, MP 255, speed 9");
             for (int f = 0; f < 120; f++) { m.RunFrame(f < 60 ? 0x01 : 0x02); ch.Apply(m, false); }
             True(m.Rd(0x40) == 1 && m.Rd(0x41) == 8, "the game plays on with the cheats");
-            Eq(9, Cheats.Names.Length, "nine cheats");
+            Eq(10, Cheats.Names.Length, "ten cheats");
+            var chm = new Cheats(); chm.Parse("spells"); chm.Apply(m, false);
+            True(Enumerable.Range(0, 8).All(x => m.Rd(0x6458 + x) == 0x41 + x), "all eight spells in the magic slots");
             // playtest 13: F3 / Debug info > All on / off
             var v3 = VideoSettings.Parse("debug=area,voice\n");
             Window.ToggleAllDebug(v3);

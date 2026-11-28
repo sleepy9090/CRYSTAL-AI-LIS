@@ -13,13 +13,13 @@ namespace ReC.Win;
 
 internal sealed class Cheats
 {
-    public bool Life, Magic, Gold, Status, Charge, Xp, Items, Level, Speed;
-    public bool Any => Life || Magic || Gold || Status || Charge || Xp || Items || Level || Speed;
+    public bool Life, Magic, Gold, Status, Charge, Xp, Items, Level, Speed, Spells;
+    public bool Any => Life || Magic || Gold || Status || Charge || Xp || Items || Level || Speed || Spells;
 
-    public static readonly string[] Names = { "life", "magic", "gold", "status", "charge", "xp", "items", "level", "speed" };
-    public static readonly string[] Labels = { "INFINITE LIFE", "INFINITE MAGIC", "MAX GOLD", "NO PARALYSIS / POISON", "INSTANT CHARGE", "QUICK LEVEL-UP", "ALL ITEMS", "MAX LEVEL", "FAST WALK" };
+    public static readonly string[] Names = { "life", "magic", "gold", "status", "charge", "xp", "items", "level", "speed", "spells" };
+    public static readonly string[] Labels = { "INFINITE LIFE", "INFINITE MAGIC", "MAX GOLD", "NO PARALYSIS / POISON", "INSTANT CHARGE", "QUICK LEVEL-UP", "ALL ITEMS", "MAX LEVEL", "FAST WALK", "ALL MAGIC" };
 
-    public bool Get(int i) => i switch { 0 => Life, 1 => Magic, 2 => Gold, 3 => Status, 4 => Charge, 5 => Xp, 6 => Items, 7 => Level, _ => Speed };
+    public bool Get(int i) => i switch { 0 => Life, 1 => Magic, 2 => Gold, 3 => Status, 4 => Charge, 5 => Xp, 6 => Items, 7 => Level, 8 => Speed, _ => Spells };
     public void Set(int i, bool v)
     {
         switch (i)
@@ -32,7 +32,8 @@ internal sealed class Cheats
             case 5: Xp = v; break;
             case 6: Items = v; break;
             case 7: Level = v; break;
-            default: Speed = v; break;
+            case 8: Speed = v; break;
+            default: Spells = v; break;
         }
     }
 
@@ -75,6 +76,8 @@ internal sealed class Cheats
                 if ((m.Rd(0x6430 + x) & 0x80) != 0) m.Wr(0x6430 + x, Prg.PrgByte(m, 15, 0xBF7F + x));
         if (Level && (ram[0x0421] != 0x0F || ram[0x0709] != 0xFF)) { ram[0x0421] = 0x0F; ram[0x0709] = 0xFF; ram[0x0708] = 0xFF; }
         if (Speed && ram[0x41] == 8) { ram[0x0340] = 9; ram[0x0341] = 9; }
+        // playtest 13: all eight spells (item ids $41-$48, GiveItem 30:D3EB) in the magic slots $6458-$645F
+        if (Spells) for (int x = 0; x < 8; x++) if (m.Rd(0x6458 + x) != 0x41 + x) m.Wr(0x6458 + x, 0x41 + x);
     }
 
     /// <summary>the 17 HP-bar tiles from $2B26 as HudHpBar 26:8CC0 draws them</summary>
